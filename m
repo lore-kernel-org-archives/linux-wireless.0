@@ -1,134 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53220 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754642AbcIULg1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 07:36:27 -0400
-From: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Luca Coelho <luca@coelho.fi>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Beker, Ayala" <ayala.beker@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: RE: [PATCH v3 0/9] Add support for Neighbor Awareness Networking
-Date: Wed, 21 Sep 2016 11:36:22 +0000
-Message-ID: <B2CD83211F5FDD478D7EFFF030D107ED5728D971@hasmsx108.ger.corp.intel.com> (sfid-20160921_133631_228579_3C190727)
+Received: from paleale.coelho.fi ([176.9.41.70]:56516 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755005AbcITObi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Sep 2016 10:31:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ayala.beker@intel.com,
+        andrei.otcheretianski@intel.com, arend.vanspriel@broadcom.com,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 20 Sep 2016 17:31:16 +0300
+Message-Id: <20160920143121.28247-5-luca@coelho.fi> (sfid-20160920_163153_432291_304BB070)
+In-Reply-To: <20160920143121.28247-1-luca@coelho.fi>
 References: <20160920143121.28247-1-luca@coelho.fi>
- <1fea85b0-02f0-964d-ca3d-99453f6de421@broadcom.com>
-In-Reply-To: <1fea85b0-02f0-964d-ca3d-99453f6de421@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Subject: [PATCH v3 4/9] cfg80211: allow the user space to change current NAN configuration
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arend Van Spriel [mailto:arend.vanspriel@broadcom.com]
-> Sent: Wednesday, September 21, 2016 12:40
-> To: Luca Coelho <luca@coelho.fi>; johannes@sipsolutions.net
-> Cc: linux-wireless@vger.kernel.org; Beker, Ayala <ayala.beker@intel.com>;
-> Otcheretianski, Andrei <andrei.otcheretianski@intel.com>; Coelho, Luciano
-> <luciano.coelho@intel.com>
-> Subject: Re: [PATCH v3 0/9] Add support for Neighbor Awareness
-> Networking
-> 
-> 
-> 
-> On 20-9-2016 16:31, Luca Coelho wrote:
-> > From: Luca Coelho <luciano.coelho@intel.com>
-> >
-> > Hi,
-> >
-> > Now v3 of the NAN patchset.  Ayala has taken care of the kbuild bot
-> > compilation errors and of all Arend's comments, except for the one
-> > about adding a helper function instead checking for P2P_DEVICE and NAN
-> > for non-netdev interfaces.
-> >
-> > Comments are welcome, as always.
-> 
-> This series exports three functions to be used by drivers:
-> 
-> void cfg80211_free_nan_func(struct cfg80211_nan_func *f); void
-> cfg80211_nan_match(struct wireless_dev *wdev,
-> 			struct cfg80211_nan_match_params *match, gfp_t
-> gfp); void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
-> 				  u8 inst_id,
-> 				  enum nl80211_nan_func_term_reason
-> reason,
-> 				  u64 cookie, gfp_t gfp);
-> 
-> Some more descriptive text about the use of these functions would be
-> appropriate I think. For example looking at the patch series it seems the
-> responsibility to call cfg80211_free_nan_func() is in the driver although
-> allocation is done by cfg80211.
+From: Ayala Beker <ayala.beker@intel.com>
 
-Regarding the cfg80211_free_nan_func() it is documented in patch "[PATCH v3 3/9] cfg80211: add add_nan_func / del_nan_func"
-Here:
- * @add_nan_func: Add a NAN function. Returns negative value on failure.
- *     On success @nan_func ownership is transferred to the driver and
- *     it may access it outside of the scope of this function. The driver
- *     should free the @nan_func when no longer needed by calling
- *     cfg80211_free_nan_func().
- *     On success the driver should assign an instance_id in the
- *     provided @nan_func.
+Some NAN configuration paramaters may change during the operation of
+the NAN device. For example, a user may want to update master preference
+value when the device gets plugged/unplugged to the power.
+Add API that allows to do so.
 
-All the others are pretty much straight forward. Match and termination events are defined in NAN spec - so it should be easy to know when to call these functions.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/cfg80211.h       | 19 +++++++++++++++++++
+ include/uapi/linux/nl80211.h | 11 +++++++++--
+ net/wireless/nl80211.c       | 42 ++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 17 +++++++++++++++++
+ net/wireless/trace.h         | 24 ++++++++++++++++++++++++
+ 5 files changed, 111 insertions(+), 2 deletions(-)
 
->  Actually, I do not see mac80211 calling it so are
-> we leaking there? I would expect it being called in
-> .del_nan_func() callback and/or .stop_nan().
-
-It is. Look at "[PATCH v3 8/9] mac80211: Implement add_nan_func and rm_nan_func".
-It is called in stop_nan() and nan_func_terminated() callback.
-The nan function can't be freed directly in del_nan_func() - otherwise it would be racy with match/termination notifications.
-
-> Rather than exporting
-> cfg80211_free_nan_func() I would prefer calling
-> cfg80211_nan_func_terminated() and have cfg80211 take care of freeing
-> nan_func resources.
-
-As I already answered, there are some situations when the wdev isn't available and mac80211 can't call cfg80211_nan_func_terminated() - for example nan interface is being stopped (at least it's true for mac80211).
-Also I think that the driver should be able to free the nan function without being forced to send notification to the user space and the other way around.
-
-> 
-> Regards,
-> Arend
-> 
-> > Cheers,
-> > Luca.
-> >
-> >
-> > Ayala Beker (9):
-> >   cfg80211: add start / stop NAN commands
-> >   mac80211: add boilerplate code for start / stop NAN
-> >   cfg80211: add add_nan_func / del_nan_func
-> >   cfg80211: allow the user space to change current NAN configuration
-> >   cfg80211: provide a function to report a match for NAN
-> >   cfg80211: Provide an API to report NAN function termination
-> >   mac80211: implement nan_change_conf
-> >   mac80211: Implement add_nan_func and rm_nan_func
-> >   mac80211: Add API to report NAN function match
-> >
-> >  include/net/cfg80211.h       | 184 ++++++++++++-
-> >  include/net/mac80211.h       |  65 +++++
-> >  include/uapi/linux/nl80211.h | 253 +++++++++++++++++
-> >  net/mac80211/cfg.c           | 208 ++++++++++++++
-> >  net/mac80211/chan.c          |   6 +
-> >  net/mac80211/driver-ops.h    |  80 ++++++
-> >  net/mac80211/ieee80211_i.h   |  17 ++
-> >  net/mac80211/iface.c         |  28 +-
-> >  net/mac80211/main.c          |   8 +
-> >  net/mac80211/offchannel.c    |   4 +-
-> >  net/mac80211/rx.c            |   3 +
-> >  net/mac80211/trace.h         | 133 +++++++++
-> >  net/mac80211/util.c          |  50 +++-
-> >  net/wireless/chan.c          |   2 +
-> >  net/wireless/core.c          |  35 +++
-> >  net/wireless/core.h          |   3 +
-> >  net/wireless/mlme.c          |   1 +
-> >  net/wireless/nl80211.c       | 642
-> ++++++++++++++++++++++++++++++++++++++++++-
-> >  net/wireless/rdev-ops.h      |  58 ++++
-> >  net/wireless/trace.h         |  90 ++++++
-> >  net/wireless/util.c          |  28 +-
-> >  21 files changed, 1888 insertions(+), 10 deletions(-)
-> >
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 093339c..22cc70e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2306,6 +2306,18 @@ struct cfg80211_nan_conf {
+ };
+ 
+ /**
++ * enum cfg80211_nan_conf_changes - indicates changed fields in NAN
++ * configuration
++ *
++ * @CFG80211_NAN_CONF_CHANGED_PREF: master preference
++ * @CFG80211_NAN_CONF_CHANGED_DUAL: dual band operation
++ */
++enum cfg80211_nan_conf_changes {
++	CFG80211_NAN_CONF_CHANGED_PREF = BIT(0),
++	CFG80211_NAN_CONF_CHANGED_DUAL = BIT(1),
++};
++
++/**
+  * struct cfg80211_nan_func_filter - a NAN function Rx / Tx filter
+  *
+  * @filter: the content of the filter
+@@ -2670,6 +2682,9 @@ struct cfg80211_nan_func {
+  *	On success the driver should assign an instance_id in the
+  *	provided @nan_func.
+  * @del_nan_func: Delete a NAN function.
++ * @nan_change_conf: changes NAN configuration. The changed parameters must
++ *	be specified in @changes (using &enum cfg80211_nan_conf_changes);
++ *	All other parameters must be ignored.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2942,6 +2957,10 @@ struct cfg80211_ops {
+ 				struct cfg80211_nan_func *nan_func);
+ 	void	(*del_nan_func)(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 			       u64 cookie);
++	int	(*nan_change_conf)(struct wiphy *wiphy,
++				   struct wireless_dev *wdev,
++				   struct cfg80211_nan_conf *conf,
++				   u32 changes);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 9f3172d..4664904 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -862,6 +862,10 @@
+  *	the response to this command.
+  *	Look at %NL80211_ATTR_SOCKET_OWNER as well.
+  * @NL80211_CMD_DEL_NAN_FUNCTION: Delete a NAN function by cookie.
++ * @NL80211_CMD_CHANGE_NAN_CONFIG: Change current NAN configuration. NAN
++ *	must be operational (%NL80211_CMD_START_NAN was executed).
++ *	It must contain at least one of the following attributes:
++ *	%NL80211_ATTR_NAN_MASTER_PREF, %NL80211_ATTR_NAN_DUAL.
+  *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+@@ -1055,6 +1059,7 @@ enum nl80211_commands {
+ 	NL80211_CMD_STOP_NAN,
+ 	NL80211_CMD_ADD_NAN_FUNCTION,
+ 	NL80211_CMD_DEL_NAN_FUNCTION,
++	NL80211_CMD_CHANGE_NAN_CONFIG,
+ 
+ 	/* add new commands above here */
+ 
+@@ -1904,12 +1909,14 @@ enum nl80211_commands {
+  *	used to pull the stored data for mesh peer in power save state.
+  *
+  * @NL80211_ATTR_NAN_MASTER_PREF: the master preference to be used by
+- *	%NL80211_CMD_START_NAN. Its type is u8 and it can't be 0.
++ *	%NL80211_CMD_START_NAN and optionally with
++ *	%NL80211_CMD_CHANGE_NAN_CONFIG. Its type is u8 and it can't be 0.
+  *	Also, values 1 and 255 are reserved for certification purposes and
+  *	should not be used during a normal device operation.
+  * @NL80211_ATTR_NAN_DUAL: NAN dual band operation config (see
+  *	&enum nl80211_nan_dual_band_conf). This attribute is used with
+- *	%NL80211_CMD_START_NAN.
++ *	%NL80211_CMD_START_NAN and optionally with
++ *	%NL80211_CMD_CHANGE_NAN_CONFIG.
+  * @NL80211_ATTR_NAN_FUNC: a function that can be added to NAN. See
+  *	&enum nl80211_nan_func_attributes for description of this nested
+  *	attribute.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 8ec803b..7058669 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10829,6 +10829,40 @@ static int nl80211_nan_del_func(struct sk_buff *skb,
+ 	return 0;
+ }
+ 
++static int nl80211_nan_change_config(struct sk_buff *skb,
++				     struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct cfg80211_nan_conf conf = {};
++	u32 changed = 0;
++
++	if (wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	if (!wdev->nan_started)
++		return -ENOTCONN;
++
++	if (info->attrs[NL80211_ATTR_NAN_MASTER_PREF]) {
++		conf.master_pref =
++			nla_get_u8(info->attrs[NL80211_ATTR_NAN_MASTER_PREF]);
++		if (conf.master_pref <= 1 || conf.master_pref == 255)
++			return -EINVAL;
++
++		changed |= CFG80211_NAN_CONF_CHANGED_PREF;
++	}
++
++	if (info->attrs[NL80211_ATTR_NAN_DUAL]) {
++		conf.dual = nla_get_u8(info->attrs[NL80211_ATTR_NAN_DUAL]);
++		changed |= CFG80211_NAN_CONF_CHANGED_DUAL;
++	}
++
++	if (!changed)
++		return -EINVAL;
++
++	return rdev_nan_change_conf(rdev, wdev, &conf, changed);
++}
++
+ static int nl80211_get_protocol_features(struct sk_buff *skb,
+ 					 struct genl_info *info)
+ {
+@@ -12203,6 +12237,14 @@ static const struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_CHANGE_NAN_CONFIG,
++		.doit = nl80211_nan_change_config,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_SET_MCAST_RATE,
+ 		.doit = nl80211_set_mcast_rate,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 98c4c3b..11cf83c 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -928,6 +928,23 @@ static inline void rdev_del_nan_func(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int
++rdev_nan_change_conf(struct cfg80211_registered_device *rdev,
++		     struct wireless_dev *wdev,
++		     struct cfg80211_nan_conf *conf, u32 changes)
++{
++	int ret;
++
++	trace_rdev_nan_change_conf(&rdev->wiphy, wdev, conf, changes);
++	if (rdev->ops->nan_change_conf)
++		ret = rdev->ops->nan_change_conf(&rdev->wiphy, wdev, conf,
++						 changes);
++	else
++		ret = -ENOTSUPP;
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *dev,
+ 				   struct cfg80211_acl_data *params)
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 5608984..a3d0a91b 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1911,6 +1911,30 @@ TRACE_EVENT(rdev_start_nan,
+ 		  __entry->dual)
+ );
+ 
++TRACE_EVENT(rdev_nan_change_conf,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 struct cfg80211_nan_conf *conf, u32 changes),
++	TP_ARGS(wiphy, wdev, conf, changes),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u8, master_pref)
++		__field(u8, dual);
++		__field(u32, changes);
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->dual = conf->dual;
++		__entry->changes = changes;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT
++		  ", master preference: %u, dual: %d, changes: %x",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->master_pref,
++		  __entry->dual, __entry->changes)
++);
++
+ DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_nan,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
+ 	TP_ARGS(wiphy, wdev)
+-- 
+2.9.3
