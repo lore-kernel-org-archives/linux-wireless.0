@@ -1,100 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36744 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932235AbcILN5m (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:35001 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbcITD2j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:57:42 -0400
-MIME-Version: 1.0
-In-Reply-To: <877fah5j35.fsf@linux.intel.com>
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
- <20160911172105.GB5493@intel.com> <alpine.DEB.2.10.1609121051050.3049@hadrien>
- <20160912131625.GD957@intel.com> <877fah5j35.fsf@linux.intel.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 12 Sep 2016 15:57:40 +0200
-Message-ID: <CAMuHMdXuvrY987eTOmV+Ltaev=LrsDGuuE0+mmjJB7cAr+19ug@mail.gmail.com> (sfid-20160912_155811_525286_C7DE3CDF)
-Subject: Re: [PATCH 00/26] constify local structures
-To: Felipe Balbi <felipe.balbi@linux.intel.com>
-Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Joe Perches <joe@perches.com>,
-        "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        platform-driver-x86@vger.kernel.org,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        linux-can@vger.kernel.org,
-        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>,
-        Mustafa Ismail <mustafa.ismail@intel.com>,
-        Chien Tin Tung <chien.tin.tung@intel.com>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        driverdevel <devel@driverdev.osuosl.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        tpmdd-devel@lists.sourceforge.net,
-        scsi <linux-scsi@vger.kernel.org>,
-        linux-spi <linux-spi@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 19 Sep 2016 23:28:39 -0400
+Received: by mail-io0-f194.google.com with SMTP id q92so466669ioi.2
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 20:28:39 -0700 (PDT)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: fix debug cal data file
+Date: Mon, 19 Sep 2016 23:26:24 -0400
+Message-Id: <1474341984-19220-1-git-send-email-mar.kolya@gmail.com> (sfid-20160920_052843_815007_DDCFB5D3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 12, 2016 at 3:43 PM, Felipe Balbi
-<felipe.balbi@linux.intel.com> wrote:
-> Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
->> On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
->>> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
->>> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
->>> > > Constify local structures.
->>> > >
->>> > > The semantic patch that makes this change is as follows:
->>> > > (http://coccinelle.lip6.fr/)
->>> >
->>> > Just my two cents but:
->>> >
->>> > 1. You *can* use a static analysis too to find bugs or other issues.
->>> > 2. However, you should manually do the commits and proper commit
->>> >    messages to subsystems based on your findings. And I generally think
->>> >    that if one contributes code one should also at least smoke test changes
->>> >    somehow.
->>> >
->>> > I don't know if I'm alone with my opinion. I just think that one should
->>> > also do the analysis part and not blindly create and submit patches.
->>>
->>> All of the patches are compile tested.  And the individual patches are
->>
->> Compile-testing is not testing. If you are not able to test a commit,
->> you should explain why.
->
-> Dude, Julia has been doing semantic patching for years already and
-> nobody has raised any concerns so far. There's already an expectation
-> that Coccinelle *works* and Julia's sematic patches are sound.
+It got broken by 0b8e3c4ca29fe2c0efd3d41a76e34a657b9f17a4
 
-+1
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-> Besides, adding 'const' is something that causes virtually no functional
-> changes to the point that build-testing is really all you need. Any
-> problems caused by adding 'const' to a definition will be seen by build
-> errors or warnings.
-
-Unfortunately in this particular case they could lead to failures that can only
-be detected at runtime, when failing o write to a read-only piece of memory,
-due to the casting away of the constness of the pointers later.
-Fortunately this was detected during code review (doh...).
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 8f0fd41..7e82947 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -109,6 +109,11 @@ struct ath10k_dump_file_data {
+ 	u8 data[0];
+ } __packed;
+ 
++struct ath10k_debug_cal_data {
++	u32 len;
++	u8 buf[0];
++};
++
+ void ath10k_info(struct ath10k *ar, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+@@ -1453,7 +1458,8 @@ static const struct file_operations fops_fw_dbglog = {
+ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
+ {
+ 	struct ath10k *ar = inode->i_private;
+-	void *buf;
++	struct ath10k_debug_cal_data *data;
++	u32 len;
+ 	u32 hi_addr;
+ 	__le32 addr;
+ 	int ret;
+@@ -1466,12 +1472,15 @@ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
+ 		goto err;
+ 	}
+ 
+-	buf = vmalloc(ar->hw_params.cal_data_len);
+-	if (!buf) {
++	len = ar->hw_params.cal_data_len;
++	data = vmalloc(sizeof(struct ath10k_debug_cal_data) + len);
++	if (!data) {
+ 		ret = -ENOMEM;
+ 		goto err;
+ 	}
+ 
++	data->len = len;
++
+ 	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
+ 
+ 	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
+@@ -1480,21 +1489,20 @@ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
+ 		goto err_vfree;
+ 	}
+ 
+-	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
+-				   ar->hw_params.cal_data_len);
++	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), data->buf, len);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
+ 		goto err_vfree;
+ 	}
+ 
+-	file->private_data = buf;
++	file->private_data = data;
+ 
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+ 	return 0;
+ 
+ err_vfree:
+-	vfree(buf);
++	vfree(data);
+ 
+ err:
+ 	mutex_unlock(&ar->conf_mutex);
+@@ -1506,11 +1514,10 @@ static ssize_t ath10k_debug_cal_data_read(struct file *file,
+ 					  char __user *user_buf,
+ 					  size_t count, loff_t *ppos)
+ {
+-	struct ath10k *ar = file->private_data;
+-	void *buf = file->private_data;
++	struct ath10k_debug_cal_data *data = file->private_data;
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos,
+-				       buf, ar->hw_params.cal_data_len);
++				       data->buf, data->len);
+ }
+ 
+ static int ath10k_debug_cal_data_release(struct inode *inode,
+-- 
+2.7.4
