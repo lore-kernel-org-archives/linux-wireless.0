@@ -1,66 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57033 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753446AbcIPJjQ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42918 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754001AbcITPTd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 05:39:16 -0400
-From: Colin King <colin.king@canonical.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
+        Tue, 20 Sep 2016 11:19:33 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8KFArPo028808
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:32 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0b-0016f401.pphosted.com with ESMTP id 25h5bpb4u0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:31 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH][V2] mwifiex: fix null pointer deference when adapter is null
-Date: Fri, 16 Sep 2016 10:37:31 +0100
-Message-Id: <20160916093731.23346-1-colin.king@canonical.com> (sfid-20160916_113922_199506_0D68EB3D)
+        Shengzhen Li <szli@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/3] mwifiex: fix kernel crash for USB chipsets
+Date: Tue, 20 Sep 2016 20:49:02 +0530
+Message-ID: <1474384744-14096-1-git-send-email-akarwar@marvell.com> (sfid-20160920_171938_101610_BBB910BA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Cathy Luo <cluo@marvell.com>
 
-If adapter is null the error exit path in mwifiex_shutdown_sw is
-to down the semaphore sem and print some debug via mwifiex_dbg.
-However, passing a NULL adapter to mwifiex_dbg causes a null
-pointer deference when accessing adapter->dev.  This fix checks
-for a null adapter at the start of the function and to exit
-without the need to up the semaphore and we also skip the debug
-to avoid the null pointer dereference.
+Following crash issue is observed during TCP traffic stress
+test
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+[ 2253.625439] NMI watchdog: BUG: soft lockup - CPU#3 stuck for 22s!
+[kworker/u17:1:5191]
+[ 2253.625520] Call Trace:
+[ 2253.625527]  [<ffffffffc0b47030>] ? moal_spin_lock+0x30/0x30
+[usb8xxx]
+[ 2253.625533]  [<ffffffffc0ac3ceb>] ? wlan_wmm_lists_empty+0xb/0xf0
+[mlan]
+[ 2253.625537]  [<ffffffffc0ab0ea3>] mlan_main_process+0x1b3/0x720
+[mlan]
+[ 2253.625540]  [<ffffffffc0b337f5>] woal_main_work_queue+0x45/0x80
+[usb8xxx]
+[ 2253.625543]  [<ffffffff8108aaf0>] process_one_work+0x150/0x3f0
+[ 2253.625545]  [<ffffffff8108b1e1>] worker_thread+0x121/0x520
+[ 2253.625547]  [<ffffffff8108b0c0>] ? rescuer_thread+0x330/0x330
+[ 2253.625549]  [<ffffffff81090222>] kthread+0xd2/0xf0
+[ 2253.625551]  [<ffffffff81090150>] ?
+kthread_create_on_node+0x1c0/0x1c0
+[ 2253.625553]  [<ffffffff8179423c>] ret_from_fork+0x7c/0xb0
+[ 2253.625555]  [<ffffffff81090150>] ?
+kthread_create_on_node+0x1c0/0x1c0
+
+In mwifiex_usb_tx_complete(), we are updating port->block_status first
+and then freeing the skb attached to that URB. We may end up attaching
+new skb to URB in a corner case and same will be freed. This results in
+the kernel crash. The problem is solved by changing the sequence.
+
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 9b2e98c..2478ccd 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1369,12 +1369,12 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 	struct mwifiex_private *priv;
- 	int i;
- 
-+	if (!adapter)
-+		goto exit_return;
-+
- 	if (down_interruptible(sem))
- 		goto exit_sem_err;
- 
--	if (!adapter)
--		goto exit_remove;
--
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 	mwifiex_deauthenticate(priv, NULL);
- 
-@@ -1430,10 +1430,10 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 		rtnl_unlock();
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 8a20620..e8283dc 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -273,6 +273,8 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
+ 	} else {
+ 		mwifiex_dbg(adapter, DATA,
+ 			    "%s: DATA\n", __func__);
++		mwifiex_write_data_complete(adapter, context->skb, 0,
++					    urb->status ? -1 : 0);
+ 		for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
+ 			port = &card->port[i];
+ 			if (context->ep == port->tx_data_ep) {
+@@ -282,8 +284,6 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
+ 			}
+ 		}
+ 		adapter->data_sent = false;
+-		mwifiex_write_data_complete(adapter, context->skb, 0,
+-					    urb->status ? -1 : 0);
  	}
  
--exit_remove:
- 	up(sem);
- exit_sem_err:
- 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
-+exit_return:
- 	return 0;
- }
- 
+ 	if (card->mc_resync_flag)
 -- 
-2.7.4
+1.9.1
