@@ -1,79 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54916 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753910AbcIOSNJ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38849 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751218AbcITN43 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:13:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:23 +0300
-Message-Id: <20160915181131.32213-17-luca@coelho.fi> (sfid-20160915_201320_685870_BEF948A8)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 17/25] iwlwifi: add the new 8275 series
+        Tue, 20 Sep 2016 09:56:29 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: RE: [PATCH 2/2] mwifiex: parse WMM IEs from hostapd for mwifiex AP
+Date: Tue, 20 Sep 2016 13:56:17 +0000
+Message-ID: <49139f0275e442c799767018906eab6d@SC-EXCH04.marvell.com> (sfid-20160920_155634_229299_A23AA8CB)
+References: <1357174561-28898-1-git-send-email-bzhao@marvell.com>
+         <1357174561-28898-2-git-send-email-bzhao@marvell.com>
+         (sfid-20130103_015637_973661_B4551387)
+ <1473846871.4423.14.camel@sipsolutions.net>
+In-Reply-To: <1473846871.4423.14.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
-
-Add a new config struct for the new 8275 series and add
-the first PCI ID for it.
-
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c   | 11 +++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
- 3 files changed, 13 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index 6c6725e..cde4f26 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -212,6 +212,17 @@ const struct iwl_cfg iwl8265_2ac_cfg = {
- 	.vht_mu_mimo_supported = true,
- };
- 
-+const struct iwl_cfg iwl8275_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 8275",
-+	.fw_name_pre = IWL8265_FW_PRE,
-+	IWL_DEVICE_8265,
-+	.ht_params = &iwl8000_ht_params,
-+	.nvm_ver = IWL8000_NVM_VERSION,
-+	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+	.vht_mu_mimo_supported = true,
-+};
-+
- const struct iwl_cfg iwl4165_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 4165",
- 	.fw_name_pre = IWL8000_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 63d3f9b..6cecb1a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -445,6 +445,7 @@ extern const struct iwl_cfg iwl7265d_n_cfg;
- extern const struct iwl_cfg iwl8260_2n_cfg;
- extern const struct iwl_cfg iwl8260_2ac_cfg;
- extern const struct iwl_cfg iwl8265_2ac_cfg;
-+extern const struct iwl_cfg iwl8275_2ac_cfg;
- extern const struct iwl_cfg iwl4165_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 74aa416..14c6e94 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -500,6 +500,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x0930, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0950, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0850, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0012, iwl8275_2ac_cfg)},
- 
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
--- 
-2.9.3
+SGkgSm9oYW5uZXMsDQoNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNp
+cHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDE0LCAyMDE2IDM6
+MjUgUE0NCj4gVG86IEJpbmcgWmhhbzsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnDQo+
+IENjOiBKb2huIFcuIExpbnZpbGxlOyBBbWl0a3VtYXIgS2Fyd2FyOyBBdmluYXNoIFBhdGlsOyBO
+aXNoYW50DQo+IFNhcm11a2FkYW07IEZyYW5rIEh1YW5nDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
+Mi8yXSBtd2lmaWV4OiBwYXJzZSBXTU0gSUVzIGZyb20gaG9zdGFwZCBmb3IgbXdpZmlleA0KPiBB
+UA0KPiANCj4gT2J2aW91c2x5IHRoaXMgaXMgYSB2ZXJ5IG9sZCBwYXRjaCwgYnV0IEkgd2FzIGp1
+c3QgbG9va2luZyBhdCB1c2VycyBvZg0KPiBjZmc4MDIxMV9maW5kX3ZlbmRvcl9pZSgpIGFuZCBy
+ZWFsaXplZCB5b3UgaGF2ZSBhIGJ1ZyBoZXJlOg0KPiANCj4gPiArCXZlbmRvcl9pZSA9IGNmZzgw
+MjExX2ZpbmRfdmVuZG9yX2llKFdMQU5fT1VJX01JQ1JPU09GVCwNCj4gPiArCQkJCQnCoMKgwqDC
+oFdMQU5fT1VJX1RZUEVfTUlDUk9TT0ZUXw0KPiA+IFdNTSwNCj4gPiArCQkJCQnCoMKgwqDCoHBh
+cmFtcy0+YmVhY29uLnRhaWwsDQo+ID4gKwkJCQkJwqDCoMKgwqBwYXJhbXMtDQo+ID4gPmJlYWNv
+bi50YWlsX2xlbik7DQo+ID4gKwlpZiAodmVuZG9yX2llKSB7DQo+ID4gKwkJd21tX2llID0gKHN0
+cnVjdCBpZWVlX3R5cGVzX2hlYWRlciAqKXZlbmRvcl9pZTsNCj4gPiArCQltZW1jcHkoJmJzc19j
+ZmctPndtbV9pbmZvLCB3bW1faWUgKyAxLA0KPiA+ICsJCcKgwqDCoMKgwqDCoMKgc2l6ZW9mKGJz
+c19jZmctPndtbV9pbmZvKSk7DQo+ID4gKwkJcHJpdi0+d21tX2VuYWJsZWQgPSAxOw0KPiANCj4g
+WW91IG5lZWQgdG8gY2hlY2sgdGhhdCB0aGUgdmVuZG9yX2llIGlzIGFjdHVhbGx5IGxvbmcgZW5v
+dWdoLg0KPiANCg0KU3VyZS4gSSB3aWxsIHByZXBhcmUgYSBwYXRjaCB0byBhZGRyZXNzIHRoaXMu
+IA0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyIEthcndhcg0K
