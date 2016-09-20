@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33137 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754240AbcIEVeP (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36002 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932484AbcITPu7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2016 17:34:15 -0400
+        Tue, 20 Sep 2016 11:50:59 -0400
+Received: by mail-wm0-f65.google.com with SMTP id b184so4130497wma.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:50:58 -0700 (PDT)
+Subject: Re: Problem with 40Mhz on 2.5GHz with Intel 8260
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <24d0d9c5-7695-9364-c5fa-97e9d52712dc@gmail.com>
+ <CANUX_P1cFXTFk8c7iMZuVwoySMwVKPkLBOTr=sVC+t6xioPa=w@mail.gmail.com>
+ <e22cedce-354f-cd41-f89c-8167f7063cfb@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Volker Mische <volker.mische@gmail.com>
+Message-ID: <79ad55e3-d7f7-0605-3499-a6b289dfb4f6@gmail.com> (sfid-20160920_175106_549962_B9DA556D)
+Date: Tue, 20 Sep 2016 17:50:55 +0200
 MIME-Version: 1.0
-In-Reply-To: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
-References: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 5 Sep 2016 23:34:14 +0200
-Message-ID: <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com> (sfid-20160905_233422_014031_F10C6ECA)
-Subject: Re: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <e22cedce-354f-cd41-f89c-8167f7063cfb@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 March 2016 at 10:39, Arnd Bergmann <arnd@arndb.de> wrote:
-> While fixing another bug, I noticed that bcma manually sets up
-> a dma_mask pointer for its child devices. We have a generic
-> helper for that now, which should be able to cope better with
-> any variations that might be needed to deal with cache coherency,
-> unusual DMA address offsets, iommus, or limited DMA masks, none
-> of which are currently handled here.
->
-> This changes the core to use the of_dma_configure(), like
-> we do for platform devices that are probed directly from
-> DT.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Hi,
 
-I applied this patch and tested on BCM47081 based device. I still got
-bgmac working which surely uses DMA. There is only 1 ARM wireless SoC
-using bcma (BCM47198) but its WiFi core isn't supported by b43.
+On 09/20/2016 08:22 AM, Volker Mische wrote:
+> On 09/20/2016 07:39 AM, Emmanuel Grumbach wrote:
+>> On Mon, Sep 19, 2016 at 5:00 PM, Volker Mische <volker.mische@gmail.com> wrote:
+>>> I'm having connectivity issues with an Intel 8260 on a 2.5GHz network
+>>> when using 40Mhz. I'm getting errors like
+>>>
+>>>     Queue 2 stuck for 10000 ms.
+>>>
+>>> I've upgrade my system to the firmware version 21 (21.373438.0) and
+>>> Kernel 4.8.0-rc6 in hope that it fixes the issue and to be able to debug
+>>> the problem.
+>>>
+>>> I then found the page about platform noise [1]. I don't have any issue
+>>> for several hours now (normally I was hitting the issue every few
+>>> minutes) as I've set the cfg80211_disable_40mhz_24ghz parameter.
 
-Any tips what else to test? SPI core/driver doesn't use DMA. Maybe
-NAND core does, but we don't use it.
+>> We tried a few times to debug those, but they take a very long time to debug
+>> since typically we need lots of reproductions and the firmware team
+>> doesn't always
+>> the time to look at the data immediately so in the end, the people who
+>> reported this
+>> originally went away.
+>> Note that 40MHz on 2.4GHz is not an optimal configuration in crowded
+>> environment,
+>> but if you live in a place where you are pretty much the only one using those
+>> frequencies, then, it can be beneficial.
+> 
+> It's at home. I normally see only one other wifi (I need to check which
+> frequency that one is using).
+> 
+> 
+>> What you can try is to disable low power states (by using power_scheme
+>> in iwlmvm) and see if it helps.
+> 
+> I will try that.
 
---=20
-Rafa=C5=82
+I've set the iwlmvm power_scheme to 1 (and allowed the 40Mhz
+connection). First I thought it's good, but after a while the queue
+still got stuck. Especially after waking up from a suspend (not sure if
+that matters).
+
+What are the next steps?
+
+>>> [1]:
+>>> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#about_platform_noise
+
+Cheers,
+  Volker
