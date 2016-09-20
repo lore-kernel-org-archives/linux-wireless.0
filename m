@@ -1,82 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35158 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754016AbcITGW6 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37402 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751124AbcITNQz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 02:22:58 -0400
-Received: by mail-wm0-f67.google.com with SMTP id 133so1526521wmq.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 23:22:57 -0700 (PDT)
-Subject: Re: Problem with 40Mhz on 2.5GHz with Intel 8260
-References: <24d0d9c5-7695-9364-c5fa-97e9d52712dc@gmail.com>
- <CANUX_P1cFXTFk8c7iMZuVwoySMwVKPkLBOTr=sVC+t6xioPa=w@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-From: Volker Mische <volker.mische@gmail.com>
-Message-ID: <e22cedce-354f-cd41-f89c-8167f7063cfb@gmail.com> (sfid-20160920_082301_981496_F37C77A9)
-Date: Tue, 20 Sep 2016 08:22:54 +0200
+        Tue, 20 Sep 2016 09:16:55 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8KDEbhu026366
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 06:16:54 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0b-0016f401.pphosted.com with ESMTP id 25h5bp9xhj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 06:16:54 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Ganapathi Bhat <gbhat@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v3] mwifiex: cfg80211 set_default_mgmt_key handler
+Date: Tue, 20 Sep 2016 18:46:23 +0530
+Message-ID: <1474377383-12600-1-git-send-email-akarwar@marvell.com> (sfid-20160920_151659_834101_223B9B89)
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P1cFXTFk8c7iMZuVwoySMwVKPkLBOTr=sVC+t6xioPa=w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ganapathi Bhat <gbhat@marvell.com>
 
-On 09/20/2016 07:39 AM, Emmanuel Grumbach wrote:
-> On Mon, Sep 19, 2016 at 5:00 PM, Volker Mische <volker.mische@gmail.com> wrote:
->> I'm having connectivity issues with an Intel 8260 on a 2.5GHz network
->> when using 40Mhz. I'm getting errors like
->>
->>     Queue 2 stuck for 10000 ms.
->>
->> I've upgrade my system to the firmware version 21 (21.373438.0) and
->> Kernel 4.8.0-rc6 in hope that it fixes the issue and to be able to debug
->> the problem.
->>
->> I then found the page about platform noise [1]. I don't have any issue
->> for several hours now (normally I was hitting the issue every few
->> minutes) as I've set the cfg80211_disable_40mhz_24ghz parameter.
->>
->> Now I wonder, is it worth debugging the issue with being on 40MHz or is
->> disabling the proper solution and I should bother.
-> 
-> Well... depends whom you ask and how much time you have :)
+Previously device used to start using IGTK key as Tx key as soon as it
+gets downloaded in add_key(). This patch implements set_default_mgmt_key
+handler. We will update Tx key ID in set_default_mgmt_key().
 
-I really want to get this sorted out.
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: v1 had a dummy handler. v2 addresses a corner case problem
+    pointed by Jouni in which AP may send frames encrypted with new key
+    when some of the stations are still using old key.
+v3: Use eth_broadcast_addr instead of copying broadcast address manually
+    through a local variable.(Kalle Valo)
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 24 ++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
+ drivers/net/wireless/marvell/mwifiex/ioctl.h    |  1 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c  |  5 +++++
+ 4 files changed, 31 insertions(+)
 
-
-> We tried a few times to debug those, but they take a very long time to debug
-> since typically we need lots of reproductions and the firmware team
-> doesn't always
-> the time to look at the data immediately so in the end, the people who
-> reported this
-> originally went away.
-> Note that 40MHz on 2.4GHz is not an optimal configuration in crowded
-> environment,
-> but if you live in a place where you are pretty much the only one using those
-> frequencies, then, it can be beneficial.
-
-It's at home. I normally see only one other wifi (I need to check which
-frequency that one is using).
-
-
-> What you can try is to disable low power states (by using power_scheme
-> in iwlmvm) and see if it helps.
-
-I will try that.
-
-> This setting has a bigger impact than cfg80211_disable_40mhz_24ghz
-> but it can give a hint as where the problem is coming from.
-
-I'll report back.
-
-Should I open a bug report (or use an existing one) or should we keep
-the discussion on the mailing list?
-
-
-Cheers,
-  Volker
-
-
->> [1]:
->> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#about_platform_noise
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index c7f2faa..39ce76a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -484,6 +484,29 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
+ }
+ 
+ /*
++ * CFG802.11 operation handler to set default mgmt key.
++ */
++static int
++mwifiex_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
++				      struct net_device *netdev,
++				      u8 key_index)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(netdev);
++	struct mwifiex_ds_encrypt_key encrypt_key;
++
++	wiphy_dbg(wiphy, "set default mgmt key, key index=%d\n", key_index);
++
++	memset(&encrypt_key, 0, sizeof(struct mwifiex_ds_encrypt_key));
++	encrypt_key.key_len = WLAN_KEY_LEN_CCMP;
++	encrypt_key.key_index = key_index;
++	encrypt_key.is_igtk_def_key = true;
++	eth_broadcast_addr(encrypt_key.mac_addr);
++
++	return mwifiex_send_cmd(priv, HostCmd_CMD_802_11_KEY_MATERIAL,
++				HostCmd_ACT_GEN_SET, true, &encrypt_key, true);
++}
++
++/*
+  * This function sends domain information to the firmware.
+  *
+  * The following information are passed to the firmware -
+@@ -4082,6 +4105,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.leave_ibss = mwifiex_cfg80211_leave_ibss,
+ 	.add_key = mwifiex_cfg80211_add_key,
+ 	.del_key = mwifiex_cfg80211_del_key,
++	.set_default_mgmt_key = mwifiex_cfg80211_set_default_mgmt_key,
+ 	.mgmt_tx = mwifiex_cfg80211_mgmt_tx,
+ 	.mgmt_frame_register = mwifiex_cfg80211_mgmt_frame_register,
+ 	.remain_on_channel = mwifiex_cfg80211_remain_on_channel,
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 18aa525..4b1894b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -78,6 +78,7 @@ enum KEY_TYPE_ID {
+ 	KEY_TYPE_ID_AES,
+ 	KEY_TYPE_ID_WAPI,
+ 	KEY_TYPE_ID_AES_CMAC,
++	KEY_TYPE_ID_AES_CMAC_DEF,
+ };
+ 
+ #define WPA_PN_SIZE		8
+diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+index 7042981..536ab83 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
++++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+@@ -260,6 +260,7 @@ struct mwifiex_ds_encrypt_key {
+ 	u8 is_igtk_key;
+ 	u8 is_current_wep_key;
+ 	u8 is_rx_seq_valid;
++	u8 is_igtk_def_key;
+ };
+ 
+ struct mwifiex_power_cfg {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 49048b4..2a162c3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -598,6 +598,11 @@ static int mwifiex_set_aes_key_v2(struct mwifiex_private *priv,
+ 		memcpy(km->key_param_set.key_params.cmac_aes.key,
+ 		       enc_key->key_material, enc_key->key_len);
+ 		len += sizeof(struct mwifiex_cmac_aes_param);
++	} else if (enc_key->is_igtk_def_key) {
++		mwifiex_dbg(adapter, INFO,
++			    "%s: Set CMAC default Key index\n", __func__);
++		km->key_param_set.key_type = KEY_TYPE_ID_AES_CMAC_DEF;
++		km->key_param_set.key_idx = enc_key->key_index & KEY_INDEX_MASK;
+ 	} else {
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "%s: Set AES Key\n", __func__);
+-- 
+1.9.1
