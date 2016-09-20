@@ -1,137 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42595 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753870AbcIQQGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 12:06:43 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 3/5] wlcore: spi: Populate config firmware data
-Date: Sat, 17 Sep 2016 09:06:31 -0700
-Message-Id: <20160917160633.8767-4-tony@atomide.com> (sfid-20160917_180650_926360_03F4586C)
-In-Reply-To: <20160917160633.8767-1-tony@atomide.com>
-References: <20160917160633.8767-1-tony@atomide.com>
+Received: from mail-by2nam03on0046.outbound.protection.outlook.com ([104.47.42.46]:63584
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753039AbcITTYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Sep 2016 15:24:20 -0400
+Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for
+ Quantenna chipsets
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
+ <1474123851.7623.2.camel@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <3dbea2f0-3440-f2e6-cc04-fd5cf6d1afaa@quantenna.com> (sfid-20160920_212427_942314_635A6AEE)
+Date: Tue, 20 Sep 2016 21:51:51 +0300
+MIME-Version: 1.0
+In-Reply-To: <1474123851.7623.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the config firmware names and make it available
-in platform data.
 
-Let's also fix the order of the struct wilink_family_data
-while at it.
+On 09/17/2016 05:50 PM, Johannes Berg wrote:
+>> drivers/net/wireless/quantenna/qtnfmac/event.c: In function
+>> `qtnf_event_handle_scan_complete':
+>> drivers/net/wireless/quantenna/qtnfmac/event.c:342:2: warning:
+>> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
+>> without a cast [enabled by default]
+> Yes, cfg80211_scan_done() changed fairly recently for sure.
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+We will rebase before submitting next patch revision.
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -79,15 +79,19 @@
- #define WSPI_MAX_NUM_OF_CHUNKS \
- 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
- 
-+static const struct wilink_family_data wl127x_data = {
-+	.name = "wl127x",
-+	.nvs_name = "ti-connectivity/wl127x-nvs.bin",
-+};
- 
--static const struct wilink_family_data *wilink_data;
-+static const struct wilink_family_data wl128x_data = {
-+	.name = "wl128x",
-+	.nvs_name = "ti-connectivity/wl128x-nvs.bin",
-+};
- 
- static const struct wilink_family_data wl18xx_data = {
- 	.name = "wl18xx",
--};
--
--static const struct wilink_family_data wl12xx_data = {
--	.name = "wl12xx",
-+	.cfg_name = "ti-connectivity/wl18xx-conf.bin",
- };
- 
- struct wl12xx_spi_glue {
-@@ -425,10 +429,10 @@ static struct wl1271_if_operations spi_ops = {
- };
- 
- static const struct of_device_id wlcore_spi_of_match_table[] = {
--	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1271", .data = &wl127x_data},
-+	{ .compatible = "ti,wl1273", .data = &wl127x_data},
-+	{ .compatible = "ti,wl1281", .data = &wl128x_data},
-+	{ .compatible = "ti,wl1283", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
-@@ -456,9 +460,9 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 	if (!of_id)
- 		return -ENODEV;
- 
--	wilink_data = of_id->data;
-+	pdev_data->family = of_id->data;
- 	dev_info(&spi->dev, "selected chip family is %s\n",
--		 wilink_data->name);
-+		 pdev_data->family->name);
- 
- 	if (of_find_property(dt_node, "clock-xtal", NULL))
- 		pdev_data->ref_clock_xtal = true;
-@@ -475,13 +479,15 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- static int wl1271_probe(struct spi_device *spi)
- {
- 	struct wl12xx_spi_glue *glue;
--	struct wlcore_platdev_data pdev_data;
-+	struct wlcore_platdev_data *pdev_data;
- 	struct resource res[1];
- 	int ret;
- 
--	memset(&pdev_data, 0x00, sizeof(pdev_data));
-+	pdev_data = devm_kzalloc(&spi->dev, sizeof(*pdev_data), GFP_KERNEL);
-+	if (!pdev_data)
-+		return -ENOMEM;
- 
--	pdev_data.if_ops = &spi_ops;
-+	pdev_data->if_ops = &spi_ops;
- 
- 	glue = devm_kzalloc(&spi->dev, sizeof(*glue), GFP_KERNEL);
- 	if (!glue) {
-@@ -505,7 +511,7 @@ static int wl1271_probe(struct spi_device *spi)
- 		return PTR_ERR(glue->reg);
- 	}
- 
--	ret = wlcore_probe_of(spi, glue, &pdev_data);
-+	ret = wlcore_probe_of(spi, glue, pdev_data);
- 	if (ret) {
- 		dev_err(glue->dev,
- 			"can't get device tree parameters (%d)\n", ret);
-@@ -518,7 +524,7 @@ static int wl1271_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
--	glue->core = platform_device_alloc(wilink_data->name,
-+	glue->core = platform_device_alloc(pdev_data->family->name,
- 					   PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
-@@ -539,8 +545,8 @@ static int wl1271_probe(struct spi_device *spi)
- 		goto out_dev_put;
- 	}
- 
--	ret = platform_device_add_data(glue->core, &pdev_data,
--				       sizeof(pdev_data));
-+	ret = platform_device_add_data(glue->core, pdev_data,
-+				       sizeof(*pdev_data));
- 	if (ret) {
- 		dev_err(glue->dev, "can't add platform data\n");
- 		goto out_dev_put;
--- 
-2.9.3
+>
+>> ./include/net/cfg80211.h:4104:6: note: expected `struct
+>> cfg80211_scan_info *' but argument is of type `u32'
+>> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function
+>> `qtnf_virtual_intf_cleanup':
+>> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:1093:4: warning:
+>> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
+>> without a cast [enabled by default]
+>> ./include/net/cfg80211.h:4104:6: note: expected `struct
+>> cfg80211_scan_info *' but argument is of type `int'
+>>
+> These also seem related.
+>
+>>> +F:   drivers/net/wireless/quantenna/qtnfmac
+>> The include directory is not listed.
+> Should really just stop after quantenna/ I'd think? As long as it's
+> just a single driver, you might as well claim maintenance over
+> everything there :)
+
+Yes, makes sense)
+
+>
+>> I guess some of these static variables could be also const, but
+>> didn't check.
+> I think both bitrates and channels can't be, due to cfg80211 writing
+> some (global) flags there on init.
+>
+> johannes
