@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17969 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934222AbcI0MRF (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:45194 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751443AbcITIoW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 08:17:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: Fix rfc1042 header retrieval in QCA4019 with eth decap
- mode
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <b725ab111d4f49d094d887a6555e9d81@euamsexm01a.eu.qualcomm.com> (sfid-20160927_141715_652580_779847DA)
-Date: Tue, 27 Sep 2016 14:16:57 +0200
+        Tue, 20 Sep 2016 04:44:22 -0400
+Date: Tue, 20 Sep 2016 04:44:19 -0400 (EDT)
+Message-Id: <20160920.044419.79616518616678600.davem@davemloft.net> (sfid-20160920_104431_407027_0720E502)
+To: johannes@sipsolutions.net
+Cc: herbert@gondor.apana.org.au, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, tgraf@suug.ch, tom@herbertland.com,
+        greearb@candelatech.com
+Subject: Re: [v3 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1474284732.6544.2.camel@sipsolutions.net>
+References: <20160919105854.GA12892@gondor.apana.org.au>
+        <1474283023.6544.0.camel@sipsolutions.net>
+        <1474284732.6544.2.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> wrote:
-> Chipset from QCA99X0 onwards (QCA99X0, QCA9984, QCA4019 & future)
-> rx_hdr_status is not padded to align in 4-byte boundary. Define a
-> new hw_params field to handle different alignment behaviour between
-> different hw. This patch fixes improper retrieval of rfc1042 header
-> with QCA4019. This patch along with "ath10k: Properly remove padding
-> from the start of rx payload" will fix traffic failure in ethernet
-> decap mode for QCA4019.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 19 Sep 2016 13:32:12 +0200
+
+> On Mon, 2016-09-19 at 13:03 +0200, Johannes Berg wrote:
+>> On Mon, 2016-09-19 at 18:58 +0800, Herbert Xu wrote:
+>> > 
+>> > v3 fixes a bug in the remove path that causes the element count
+>> > to decrease when it shouldn't, leading to a gigantic hash table
+>> > when it underflows.
+>> > 
+>> Ok, with the BUG_ON() thrown in, this works in the test that was
+>> failing before. I'll run the entire suite again over lunch.
+>> 
 > 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> Ok, the entire test suite passed (with the BUG_ON, but hey).
+> 
+> Dave, let me know what you want to do (or have done, as it may be).
 
-Patch applied to ath-next branch of ath.git, thanks.
+I'll apply this directly to net-next and push it out after some
+build testing.
 
-2f38c3c01de9 ath10k: fix rfc1042 header retrieval in QCA4019 with eth decap mode
-
--- 
-https://patchwork.kernel.org/patch/9249751/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks guys.
