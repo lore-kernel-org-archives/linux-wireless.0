@@ -1,60 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60900 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753151AbcILQgb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 12:36:31 -0400
-Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "Pedersen, Thomas" <twp@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>
- <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>
- <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>
- <1473662637.4201.2.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <6c78bfe8-c760-6331-b188-9cf79334f08d@candelatech.com> (sfid-20160912_183634_664420_5DED29CB)
-Date: Mon, 12 Sep 2016 09:36:29 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:45240 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752132AbcITUMZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Sep 2016 16:12:25 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Franc\[e\]sco" <lolisamurai@waifu.club>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RTL8192EU on rtl8xxxu driver breaks every few minutes
+References: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club>
+Date: Tue, 20 Sep 2016 16:12:23 -0400
+In-Reply-To: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club> (Franc[e]sco's
+        message of "Mon, 19 Sep 2016 21:42:55 +0200")
+Message-ID: <wrfj4m5acouw.fsf@redhat.com> (sfid-20160920_221228_402925_C51C0E79)
 MIME-Version: 1.0
-In-Reply-To: <1473662637.4201.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/11/2016 11:43 PM, Johannes Berg wrote:
-> On Wed, 2016-09-07 at 18:20 +0000, Pedersen, Thomas wrote:
->> On 09/06/2016 12:07 PM, Ben Greear wrote:
->>>
->>> On 09/06/2016 12:00 PM, Thomas Pedersen wrote:
->>>>
->>>> Some drivers (ath10k) report MCS 9 @ 20MHz, which
->>>> technically isn't allowed. To get more meaningful value
->>>> than 0 out of this however, just cap the bitrate for 20MHz
->>>> to MCS 8.
->>>
->>> If it is actually reporting MCS9, why lie about it?  Report it up
->>> the stack as a proper value instead of hiding the issue?
->>
->> Good point, will send a v2 extrapolating the value to 86.5Mb/s.
+"Franc[e]sco" <lolisamurai@waifu.club> writes:
+> Hi, I happen to own a RTL8192EU WiFi dongle which is marked as untested
+> by the rtl8xxxu driver.
 >
-> That makes no sense either, IMHO.
+> I'm on a linux from scratch system using kernel 4.7.3 and wpa_supplicant
+> 2.5.
 >
-> Are you saying that ath10k actually somehow manages to use an invalid
-> bitrate over the air?!
+> The dongle appears to connect and work fine, but after around 10 minutes
+> it deauthenticates and enters and endless loop of authentication
+> timeout. This continues even if I bring the interface down and back up
+> again. The only way to restore the connection is to physically remove
+> and re-plug the usb dongle.
 >
-> It seems more likely that it's actually just misreporting what it's
-> doing, and thus the issue should be fixed in ath10k.
+> I have attached a dmesg log of connecting and entering the auth loop.
 
-I saw ath10k report the same value in my testing.
+Please provide details about the AP you are trying to connect to and iw
+link output.
 
-Hard to know what the actual on-air encoding rate is.
-
-I do know that some ath10k firmware would run 1Mbps encoding
-management frames on 5Mhz, which is also not per spec, for what that is worth.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Jes
