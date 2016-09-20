@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751203AbcILQHz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 12:07:55 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Bastien Nocera <hadess@hadess.net>
-Cc: Hanno Zulla <abos@hanno.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        anthony.wong@canonical.com, linux-wireless@vger.kernel.org
-Subject: Re: Support of rtl8723bs
-References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
-        <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
-        <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
-        <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
-        <1473695458.6389.3.camel@hadess.net>
-Date: Mon, 12 Sep 2016 12:07:53 -0400
-In-Reply-To: <1473695458.6389.3.camel@hadess.net> (Bastien Nocera's message of
-        "Mon, 12 Sep 2016 17:50:58 +0200")
-Message-ID: <wrfj4m5lhzja.fsf@redhat.com> (sfid-20160912_180758_726915_B00F70F3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36489 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751040AbcITGq0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Sep 2016 02:46:26 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n24so493718pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 23:46:26 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de,
+        Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 1/1] rsi: fix memory leak in debugfs entry and supported bands
+Date: Tue, 20 Sep 2016 12:13:04 +0530
+Message-Id: <1474353784-9552-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20160920_084630_708463_3BBB9B2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bastien Nocera <hadess@hadess.net> writes:
-> On Mon, 2016-09-12 at 17:48 +0200, Hanno Zulla wrote:
->> Hi,
->> 
->> > Longer term I think it makes sense to add SDIO support to rtl8xxxu.
->> > The
->> > differences between the USB version and the SDIO version are rather
->> > small.
->> 
->> 
->> This is beyond my expertise, sadly.
->> 
->> Is there a good blueprint / example of a previous case where a USB
->> driver had SDIO support added that one might learn from?
->
-> I don't know on top of my head, sorry. Best look in the kernel sources
-> directly.
+From: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
 
-The issues I am aware of is to start out changing the register access
-macros into function pointers and stick them all into the fileops
-structure. Provide a set of SDIO ones to match the USB ones. Then you
-will need some code to detect the device, as that part will obviously be
-different from the USB device detection.
+Signed-off-by: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-I know there are a few issues to look out for in the hw register init
-files to look out for too, that does some special casing for SDIO, but
-that should be limited. I am happy to point someone in the right
-direction on that when they get to that.
-
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dbb2389..dc64532 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ {
+ 	struct ieee80211_hw *hw = adapter->hw;
++	int i;
+ 
+ 	if (hw) {
+ 		ieee80211_stop_queues(hw);
+@@ -201,7 +202,16 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ 		ieee80211_free_hw(hw);
+ 	}
+ 
++	for (i = 0; i < 2; i++) {
++		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
++
++		kfree(sbands->channels);
++	}
++
++#ifdef CONFIG_RSI_DEBUGFS
+ 	rsi_remove_dbgfs(adapter);
++	kfree(adapter->dfsentry);
++#endif
+ }
+ EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
+ 
+-- 
+2.4.11
