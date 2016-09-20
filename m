@@ -1,41 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42960 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934727AbcI0Pqk (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37458 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751124AbcITNS5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 11:46:40 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 20 Sep 2016 09:18:57 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: RE: [PATCH v2] mwifiex: cfg80211 set_default_mgmt_key handler
+Date: Tue, 20 Sep 2016 13:18:53 +0000
+Message-ID: <68d7c32ee705411685541bf49553f4d3@SC-EXCH04.marvell.com> (sfid-20160920_151901_176829_5831E401)
+References: <1473428038-15308-1-git-send-email-akarwar@marvell.com>
+ <87twdictrh.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87twdictrh.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [1/2] rtlwifi: Add HAL_DEF_WOWLAN case to *_get_hw() routines
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1474736239-9826-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1474736239-9826-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20160927154638.7360C61283@smtp.codeaurora.org> (sfid-20160927_174711_625320_B54448EC)
-Date: Tue, 27 Sep 2016 15:46:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Only rtl8821ae implements WOWLAN; however, the other drivers may receive
-> a call requesting information about this mode. The other drivers need to
-> ignore the request rather than logging that the default branch of the
-> switch statement has been reached.
+Hi Kalle,
+
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Wednesday, September 14, 2016 10:18 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam; Ganapathi Bhat
+> Subject: Re: [PATCH v2] mwifiex: cfg80211 set_default_mgmt_key handler
 > 
-> Reported by: Jean Delvare <jdelvare@suse.de>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Amitkumar Karwar <akarwar@marvell.com> writes:
+> 
+> > From: Ganapathi Bhat <gbhat@marvell.com>
+> >
+> > Previously device used to start using IGTK key as Tx key as soon as it
+> > gets downloaded in add_key(). This patch implements
+> > set_default_mgmt_key handler. We will update Tx key ID in
+> set_default_mgmt_key().
+> >
+> > Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> > Changes in v2: v1 had a dummy handler. v2 addresses a corner case
+> > problem pointed by Jouni in which AP may send frames encrypted with
+> > new key when some of the stations are still using old key.
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 25
+> +++++++++++++++++++++++++
+> >  drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
+> >  drivers/net/wireless/marvell/mwifiex/ioctl.h    |  1 +
+> >  drivers/net/wireless/marvell/mwifiex/sta_cmd.c  |  5 +++++
+> >  4 files changed, 32 insertions(+)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > index 0a03d3f..33e7a74 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> > @@ -484,6 +484,30 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy,
+> > struct net_device *netdev,  }
+> >
+> >  /*
+> > + * CFG802.11 operation handler to set default mgmt key.
+> > + */
+> > +static int
+> > +mwifiex_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
+> > +				      struct net_device *netdev,
+> > +				      u8 key_index)
+> > +{
+> > +	struct mwifiex_private *priv = mwifiex_netdev_get_priv(netdev);
+> > +	struct mwifiex_ds_encrypt_key encrypt_key;
+> > +	const u8 bc_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+> 
+> This should be static const, but...
+> 
+> > +	wiphy_dbg(wiphy, "set default mgmt key, key index=%d\n",
+> key_index);
+> > +
+> > +	memset(&encrypt_key, 0, sizeof(struct mwifiex_ds_encrypt_key));
+> > +	encrypt_key.key_len = WLAN_KEY_LEN_CCMP;
+> > +	encrypt_key.key_index = key_index;
+> > +	encrypt_key.is_igtk_def_key = true;
+> > +	ether_addr_copy(encrypt_key.mac_addr, bc_mac);
+> 
+> ...can't you use eth_broadcast_addr() here?
+> 
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Thanks. We have used eth_broadcast_addr() in updated version.
 
-1cc49a5b5466 rtlwifi: Add HAL_DEF_WOWLAN case to *_get_hw() routines
-8334ffdc8290 rtlwifi: Add explicit values to hw_variables enum
-
--- 
-https://patchwork.kernel.org/patch/9349217/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Amitkumar Karwar
