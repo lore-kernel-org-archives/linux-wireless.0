@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52295 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933499AbcIFTAK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 15:00:10 -0400
-From: Thomas Pedersen <twp@qca.qualcomm.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        Thomas Pedersen <twp@qca.qualcomm.com>
-Subject: [PATCH] mac80211: make mpath path fixing more robust
-Date: Tue, 6 Sep 2016 11:59:00 -0700
-Message-ID: <1473188340-13620-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160906_210030_826930_3549A6D1)
+Received: from cock.li ([185.100.85.212]:50180 "EHLO cock.li"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756421AbcIURpi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Sep 2016 13:45:38 -0400
+Subject: Re: RTL8192EU on rtl8xxxu driver breaks every few minutes
+References: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club>
+ <wrfj4m5acouw.fsf@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: "Franc[e]sco" <lolisamurai@waifu.club>
+Message-ID: <80b8ae50-ca27-674f-0e7e-79b931bae199@waifu.club> (sfid-20160921_194543_088637_754CA7A6)
+Date: Wed, 21 Sep 2016 19:44:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <wrfj4m5acouw.fsf@redhat.com>
+Content-Type: multipart/mixed;
+ boundary="------------099E6E528E3CF4FEEE9FCA65"
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A fixed mpath was not quite being treated as such:
+This is a multi-part message in MIME format.
+--------------099E6E528E3CF4FEEE9FCA65
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 
-1) if a PERR frame was received, a fixed mpath was
-   deactivated.
+Oops, forgot to forward the previous reply to the mailing list.
 
-2) queued path discovery for fixed mpath was potentially
-   being considered, changing mpath state.
+I have attached the output of iw link
 
-3) other mpath flags were potentially being inherited when
-   fixing the mpath. Just assign PATH_FIXED and SN_VALID.
+the AP is an asus dsl-n55u router in 2.4 GHz mode, using WPA2-Personal
+with AES encryption. It's also running a second 5GHz wireless network
+which has a different SSID.
 
-This solves several issues when fixing a mesh path in one
-direction. The reverse direction mpath should probably
-also be fixed, or root announcements at least be enabled.
+Also, this seems to be some kind of power saving kicking in, as the dongle keeps working as long as I keep doing things over ssh.
 
-Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
----
- net/mac80211/mesh_hwmp.c    | 3 ++-
- net/mac80211/mesh_pathtbl.c | 2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index fa7d37c..b747c96 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -757,6 +757,7 @@ static void hwmp_perr_frame_process(struct ieee80211_sub_if_data *sdata,
- 		sta = next_hop_deref_protected(mpath);
- 		if (mpath->flags & MESH_PATH_ACTIVE &&
- 		    ether_addr_equal(ta, sta->sta.addr) &&
-+		    !(mpath->flags & MESH_PATH_FIXED) &&
- 		    (!(mpath->flags & MESH_PATH_SN_VALID) ||
- 		    SN_GT(target_sn, mpath->sn)  || target_sn == 0)) {
- 			mpath->flags &= ~MESH_PATH_ACTIVE;
-@@ -1023,7 +1024,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 		goto enddiscovery;
- 
- 	spin_lock_bh(&mpath->state_lock);
--	if (mpath->flags & MESH_PATH_DELETED) {
-+	if (mpath->flags & (MESH_PATH_DELETED | MESH_PATH_FIXED)) {
- 		spin_unlock_bh(&mpath->state_lock);
- 		goto enddiscovery;
- 	}
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 6db2ddf..8e3d2d1 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -826,7 +826,7 @@ void mesh_path_fix_nexthop(struct mesh_path *mpath, struct sta_info *next_hop)
- 	mpath->metric = 0;
- 	mpath->hop_count = 0;
- 	mpath->exp_time = 0;
--	mpath->flags |= MESH_PATH_FIXED;
-+	mpath->flags = (MESH_PATH_FIXED | MESH_PATH_SN_VALID);
- 	mesh_path_activate(mpath);
- 	spin_unlock_bh(&mpath->state_lock);
- 	mesh_path_tx_pending(mpath);
--- 
-2.1.4
+On 09/20/2016 10:12 PM, Jes Sorensen wrote:
+> "Franc[e]sco" <lolisamurai@waifu.club> writes:
+>> Hi, I happen to own a RTL8192EU WiFi dongle which is marked as untested
+>> by the rtl8xxxu driver.
+>>
+>> I'm on a linux from scratch system using kernel 4.7.3 and wpa_supplicant
+>> 2.5.
+>>
+>> The dongle appears to connect and work fine, but after around 10 minutes
+>> it deauthenticates and enters and endless loop of authentication
+>> timeout. This continues even if I bring the interface down and back up
+>> again. The only way to restore the connection is to physically remove
+>> and re-plug the usb dongle.
+>>
+>> I have attached a dmesg log of connecting and entering the auth loop.
+> Please provide details about the AP you are trying to connect to and iw
+> link output.
+>
+> Jes
+
+
+--------------099E6E528E3CF4FEEE9FCA65
+Content-Type: text/plain; charset=UTF-8;
+ name="rtl8192eu-iw-link.txt"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="rtl8192eu-iw-link.txt"
+
+$ ./iw enx001988001e33 link
+Connected to e0:3f:49:97:0c:68 (on enx001988001e33)
+	SSID: memes
+	freq: 2472
+	RX: 4328394 bytes (26075 packets)
+	TX: 380760 bytes (2785 packets)
+	signal: -60 dBm
+	tx bitrate: 1.0 MBit/s
+
+--------------099E6E528E3CF4FEEE9FCA65--
