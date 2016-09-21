@@ -1,39 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54180 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753297AbcINRDB (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36495 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751635AbcIUQ3a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 13:03:01 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 21 Sep 2016 12:29:30 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
+Date: Wed, 21 Sep 2016 18:29:26 +0200
+Message-ID: <1927662.l0xhZ6GL0u@debian64> (sfid-20160921_182951_220533_454DF8F9)
+In-Reply-To: <20160921101325.GA22263@kroah.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com> <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com> <20160921101325.GA22263@kroah.com>
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: Command 7 handling for USB chipsets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1473686728-8101-2-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160914170300.C2E5761AD5@smtp.codeaurora.org> (sfid-20160914_190304_325594_3B57F2CA)
-Date: Wed, 14 Sep 2016 17:03:00 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Ganapathi Bhat <gbhat@marvell.com>
+On Wednesday, September 21, 2016 12:13:25 PM CEST Greg KH wrote:
+> On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
+> > Ben Greear reported:
+> > > I see lots of instability as soon as I load up the carl9710 NIC.
+> > > My application is going to be poking at it's debugfs files...
+> > >
+> > > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+> > > [carl9170] at addr ffff8801bc1208b0
+> > > Read of size 8 by task btserver/5888
+> > > =======================================================================
+> > > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+> > > -----------------------------------------------------------------------
+> > >
+> > > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+> > >...
+> > 
+> > This breakage was caused by the introduction of intermediate
+> > fops in debugfs by commit 9fd4dcece43a
+> > ("debugfs: prevent access to possibly dead file_operations at file open")
+> > 
+> > Thankfully, the original/real fops are still available in d_fsdata.
+> > 
+> > Reported-by: Ben Greear <greearb@candelatech.com>
+> > Reviewed-by: Nicolai Stange <nicstange@gmail.com>
+> > Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> > Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> > Cc: stable <stable@vger.kernel.org> # 4.7+
+> > ---
+> >  drivers/net/wireless/ath/carl9170/debug.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
+> > index 01a0919..ad7ffd5 100644
+> > --- a/drivers/net/wireless/ath/carl9170/debug.c
+> > +++ b/drivers/net/wireless/ath/carl9170/debug.c
+> > @@ -75,7 +75,7 @@ static ssize_t carl9170_debugfs_read(struct file *file, char __user *userbuf,
+> >  
+> >  	if (!ar)
+> >  		return -ENODEV;
+> > -	dfops = container_of(file->f_path.dentry->d_fsdata,
+> > +	dfops = container_of(debugfs_real_fops(file),
+> >  			     struct carl9170_debugfs_fops, fops);
+> >  
+> >  	if (!dfops->read)
+> > @@ -128,7 +128,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+> >  
+> >  	if (!ar)
+> >  		return -ENODEV;
+> > -	dfops = container_of(file->f_path.dentry->d_fsdata,
+> > +	dfops = container_of(debugfs_real_fops(file),
+> >  			     struct carl9170_debugfs_fops, fops);
+> >  	if (!dfops->write)
+> >  		return -ENOSYS;
 > 
-> Firmware image for newer USB chipsets starts with a command 7 block
-> (special command). It doesn't contain data length field. This patch adds
-> necessary handling.
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> What tree is this against?  I can't apply it to 4.8-rc5, or 4.8-rc7, are
+> you sure it is still needed?
+---
+Yes, the patch is needed. That said I screwed this patch up and as a result
+it is faulty. I'll send out v2 shortly
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
-
-787764676f94 mwifiex: Command 7 handling for USB chipsets
-b7450e248d71 mwifiex: firmware name correction for usb8997 chipset
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9326515/
+Thanks,
+Christian
