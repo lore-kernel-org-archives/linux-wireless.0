@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43504 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750975AbcINKIQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 06:08:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@openwrt.org>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v2] mac80211: check skb_linearize() return value
-Date: Wed, 14 Sep 2016 12:08:11 +0200
-Message-Id: <1473847691-28039-1-git-send-email-johannes@sipsolutions.net> (sfid-20160914_120819_977232_054FC2C3)
+Received: from mail.linuxfoundation.org ([140.211.169.12]:37148 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751387AbcIUKNT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Sep 2016 06:13:19 -0400
+Date: Wed, 21 Sep 2016 12:13:25 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
+Message-ID: <20160921101325.GA22263@kroah.com> (sfid-20160921_121324_018237_CF1BC49A)
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+ <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
+> Ben Greear reported:
+> > I see lots of instability as soon as I load up the carl9710 NIC.
+> > My application is going to be poking at it's debugfs files...
+> >
+> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+> > [carl9170] at addr ffff8801bc1208b0
+> > Read of size 8 by task btserver/5888
+> > =======================================================================
+> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+> > -----------------------------------------------------------------------
+> >
+> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+> >...
+> 
+> This breakage was caused by the introduction of intermediate
+> fops in debugfs by commit 9fd4dcece43a
+> ("debugfs: prevent access to possibly dead file_operations at file open")
+> 
+> Thankfully, the original/real fops are still available in d_fsdata.
+> 
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Reviewed-by: Nicolai Stange <nicstange@gmail.com>
+> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> Acked-by: Kalle Valo <kvalo@codeaurora.org>
+> Cc: stable <stable@vger.kernel.org> # 4.7+
+> ---
+>  drivers/net/wireless/ath/carl9170/debug.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
+> index 01a0919..ad7ffd5 100644
+> --- a/drivers/net/wireless/ath/carl9170/debug.c
+> +++ b/drivers/net/wireless/ath/carl9170/debug.c
+> @@ -75,7 +75,7 @@ static ssize_t carl9170_debugfs_read(struct file *file, char __user *userbuf,
+>  
+>  	if (!ar)
+>  		return -ENODEV;
+> -	dfops = container_of(file->f_path.dentry->d_fsdata,
+> +	dfops = container_of(debugfs_real_fops(file),
+>  			     struct carl9170_debugfs_fops, fops);
+>  
+>  	if (!dfops->read)
+> @@ -128,7 +128,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+>  
+>  	if (!ar)
+>  		return -ENODEV;
+> -	dfops = container_of(file->f_path.dentry->d_fsdata,
+> +	dfops = container_of(debugfs_real_fops(file),
+>  			     struct carl9170_debugfs_fops, fops);
+>  	if (!dfops->write)
+>  		return -ENOSYS;
 
-The A-MSDU TX code (within TXQs) didn't always check the return value
-of skb_linearize() properly, resulting in potentially passing a frag-
-list SKB down to the driver even when it said it can't handle it. Fix
-that.
+What tree is this against?  I can't apply it to 4.8-rc5, or 4.8-rc7, are
+you sure it is still needed?
 
-Fixes: 6e0456b545456 ("mac80211: add A-MSDU tx support")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+thanks,
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index cc8e95554b48..994bc325ca57 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1515,8 +1515,12 @@ out:
- 	spin_unlock_bh(&fq->lock);
- 
- 	if (skb && skb_has_frag_list(skb) &&
--	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST))
--		skb_linearize(skb);
-+	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST)) {
-+		if (skb_linearize(skb)) {
-+			ieee80211_free_txskb(skb);
-+			return NULL;
-+		}
-+	}
- 
- 	return skb;
- }
--- 
-2.8.1
+greg k-h
