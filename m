@@ -1,64 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38926 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751401AbcIQOu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 10:50:59 -0400
-Message-ID: <1474123851.7623.2.camel@sipsolutions.net> (sfid-20160917_165101_840724_FF7C5E9F)
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver
- for Quantenna chipsets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@codeaurora.org>, igor.mitsyanko.os@quantenna.com
-Cc: linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Date: Sat, 17 Sep 2016 16:50:51 +0200
-In-Reply-To: <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:35000 "EHLO
+        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbcIUJkk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Sep 2016 05:40:40 -0400
+Received: by mail-qk0-f177.google.com with SMTP id t7so39967200qkh.2
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2016 02:40:39 -0700 (PDT)
+Subject: Re: [PATCH v3 0/9] Add support for Neighbor Awareness Networking
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20160920143121.28247-1-luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, ayala.beker@intel.com,
+        andrei.otcheretianski@intel.com,
+        Luca Coelho <luciano.coelho@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1fea85b0-02f0-964d-ca3d-99453f6de421@broadcom.com> (sfid-20160921_114048_569387_EFBCD98F)
+Date: Wed, 21 Sep 2016 11:40:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160920143121.28247-1-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> drivers/net/wireless/quantenna/qtnfmac/event.c: In function
-> `qtnf_event_handle_scan_complete':
-> drivers/net/wireless/quantenna/qtnfmac/event.c:342:2: warning:
-> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
-> without a cast [enabled by default]
 
-Yes, cfg80211_scan_done() changed fairly recently for sure.
-
-> ./include/net/cfg80211.h:4104:6: note: expected `struct
-> cfg80211_scan_info *' but argument is of type `u32'
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function
-> `qtnf_virtual_intf_cleanup':
-> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:1093:4: warning:
-> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
-> without a cast [enabled by default]
-> ./include/net/cfg80211.h:4104:6: note: expected `struct
-> cfg80211_scan_info *' but argument is of type `int'
+On 20-9-2016 16:31, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
 > 
+> Hi,
+> 
+> Now v3 of the NAN patchset.  Ayala has taken care of the kbuild bot
+> compilation errors and of all Arend's comments, except for the one
+> about adding a helper function instead checking for P2P_DEVICE and NAN
+> for non-netdev interfaces.
+> 
+> Comments are welcome, as always.
 
-These also seem related.
+This series exports three functions to be used by drivers:
 
-> > +F:   drivers/net/wireless/quantenna/qtnfmac
+void cfg80211_free_nan_func(struct cfg80211_nan_func *f);
+void cfg80211_nan_match(struct wireless_dev *wdev,
+			struct cfg80211_nan_match_params *match, gfp_t gfp);
+void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
+				  u8 inst_id,
+				  enum nl80211_nan_func_term_reason reason,
+				  u64 cookie, gfp_t gfp);
 
-> The include directory is not listed.
+Some more descriptive text about the use of these functions would be
+appropriate I think. For example looking at the patch series it seems
+the responsibility to call cfg80211_free_nan_func() is in the driver
+although allocation is done by cfg80211. Actually, I do not see mac80211
+calling it so are we leaking there? I would expect it being called in
+.del_nan_func() callback and/or .stop_nan(). Rather than exporting
+cfg80211_free_nan_func() I would prefer calling
+cfg80211_nan_func_terminated() and have cfg80211 take care of freeing
+nan_func resources.
 
-Should really just stop after quantenna/ I'd think? As long as it's
-just a single driver, you might as well claim maintenance over
-everything there :)
+Regards,
+Arend
 
-> I guess some of these static variables could be also const, but
-> didn't check.
-
-I think both bitrates and channels can't be, due to cfg80211 writing
-some (global) flags there on init.
-
-johannes
+> Cheers,
+> Luca.
+> 
+> 
+> Ayala Beker (9):
+>   cfg80211: add start / stop NAN commands
+>   mac80211: add boilerplate code for start / stop NAN
+>   cfg80211: add add_nan_func / del_nan_func
+>   cfg80211: allow the user space to change current NAN configuration
+>   cfg80211: provide a function to report a match for NAN
+>   cfg80211: Provide an API to report NAN function termination
+>   mac80211: implement nan_change_conf
+>   mac80211: Implement add_nan_func and rm_nan_func
+>   mac80211: Add API to report NAN function match
+> 
+>  include/net/cfg80211.h       | 184 ++++++++++++-
+>  include/net/mac80211.h       |  65 +++++
+>  include/uapi/linux/nl80211.h | 253 +++++++++++++++++
+>  net/mac80211/cfg.c           | 208 ++++++++++++++
+>  net/mac80211/chan.c          |   6 +
+>  net/mac80211/driver-ops.h    |  80 ++++++
+>  net/mac80211/ieee80211_i.h   |  17 ++
+>  net/mac80211/iface.c         |  28 +-
+>  net/mac80211/main.c          |   8 +
+>  net/mac80211/offchannel.c    |   4 +-
+>  net/mac80211/rx.c            |   3 +
+>  net/mac80211/trace.h         | 133 +++++++++
+>  net/mac80211/util.c          |  50 +++-
+>  net/wireless/chan.c          |   2 +
+>  net/wireless/core.c          |  35 +++
+>  net/wireless/core.h          |   3 +
+>  net/wireless/mlme.c          |   1 +
+>  net/wireless/nl80211.c       | 642 ++++++++++++++++++++++++++++++++++++++++++-
+>  net/wireless/rdev-ops.h      |  58 ++++
+>  net/wireless/trace.h         |  90 ++++++
+>  net/wireless/util.c          |  28 +-
+>  21 files changed, 1888 insertions(+), 10 deletions(-)
+> 
