@@ -1,33 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17812 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755879AbcINMYq (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45506 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751580AbcIVUwq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 08:24:46 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] ath10k: handle testmode events for 10.2 based firmware
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-        <rmanohar@codeaurora.org>
-Message-ID: <20496dae439740198669bc2de651ca50@euamsexm01a.eu.qualcomm.com> (sfid-20160914_142450_914270_59079B0D)
-Date: Wed, 14 Sep 2016 14:24:39 +0200
+        Thu, 22 Sep 2016 16:52:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 22 Sep 2016 23:52:10 +0300
+Message-Id: <20160922205210.1778-11-luca@coelho.fi> (sfid-20160922_225301_721356_D1340DB3)
+In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
+References: <20160922205210.1778-1-luca@coelho.fi>
+Subject: [PATCH 10/10] iwlwifi: mvm: initialise ADD_STA before sending it to the firmware
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> Currently testmode events for 10.x firmware are processed from
-> 10.1 wmi event processing. In order to remove 10.1 firmware support,
-> testmode events should be handled from 10.2 event processing.
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is an old patch, but we already have this functionality in
-ath10k_wmi_10_2_op_rx(). So I'll drop this patch.
+When we unshare a queue, the ADD_STA was not properly
+initialised.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 258a234..fc77188 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -933,7 +933,7 @@ static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
+ 
+ 	/* If aggs should be turned back on - do it */
+ 	if (mvmsta->tid_data[tid].state == IWL_AGG_ON) {
+-		struct iwl_mvm_add_sta_cmd cmd;
++		struct iwl_mvm_add_sta_cmd cmd = {0};
+ 
+ 		mvmsta->tid_disable_agg &= ~BIT(tid);
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9153395/
+2.9.3
