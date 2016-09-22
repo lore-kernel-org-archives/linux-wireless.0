@@ -1,88 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33026 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935566AbcI0Qvm (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33809 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753706AbcIVFc5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 12:51:42 -0400
-Received: by mail-pf0-f181.google.com with SMTP id 21so7637485pfy.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 09:51:41 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Wei-Ning Huang <wnhuang@google.com>,
-        Brian Norris <briannorris@google.com>,
-        Eric Caruso <ejcaruso@chromium.org>, rajatxjain@gmail.com,
-        Rajat Jain <rajatja@google.com>
-Subject: 
-Date: Tue, 27 Sep 2016 09:50:52 -0700
-Message-Id: <1474995052-122337-1-git-send-email-rajatja@google.com> (sfid-20160927_185208_085762_5345E981)
+        Thu, 22 Sep 2016 01:32:57 -0400
+Received: by mail-io0-f178.google.com with SMTP id q92so75427531ioi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2016 22:32:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <968d1def-738f-36da-83bd-b10cc98c8093@gmail.com>
+References: <24d0d9c5-7695-9364-c5fa-97e9d52712dc@gmail.com>
+ <CANUX_P1cFXTFk8c7iMZuVwoySMwVKPkLBOTr=sVC+t6xioPa=w@mail.gmail.com>
+ <e22cedce-354f-cd41-f89c-8167f7063cfb@gmail.com> <79ad55e3-d7f7-0605-3499-a6b289dfb4f6@gmail.com>
+ <CANUX_P1n3aVC=95q1=dJFU=7WYof=adm=P1anyhG0nnr9vKGKA@mail.gmail.com>
+ <d0faec3a-b915-f4f6-5cd4-a4cff7f1dd7b@gmail.com> <CANUX_P1p=8Zxq+GZd8p5NjAaEY7G7p8kdxacr7orpfE8hKKWig@mail.gmail.com>
+ <968d1def-738f-36da-83bd-b10cc98c8093@gmail.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Thu, 22 Sep 2016 08:32:55 +0300
+Message-ID: <CANUX_P0Ai+tzmq90rmHkVP69PZ5c=-kayLOQnmHebLGNeJ3nMw@mail.gmail.com> (sfid-20160922_073301_434293_E8E0E38A)
+Subject: Re: Problem with 40Mhz on 2.5GHz with Intel 8260
+To: Volker Mische <volker.mische@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei-Ning Huang <wnhuang@google.com>
+On Wed, Sep 21, 2016 at 11:19 PM, Volker Mische <volker.mische@gmail.com> wrote:
+> Hi,
+>
+> On 09/21/2016 09:20 AM, Emmanuel Grumbach wrote:
+>>>> can you try to unplug the power cord? I had reports that said that
+>>>> this can help. Again, just a debug step to give us a hint of what you
+>>>> can be experiencing.
+>>>
+>>> Unplug without any module parameters or combined with the
+>>> cfg80211_disable_40mhz_24ghz or power_scheme one?
+>>
+>> Nope - default configuration.
+>
+> the issue also happens when the power cord is unplugged.
 
-Date: Thu, 17 Mar 2016 11:43:16 +0800
-Subject: [PATCH] mwifiex: report wakeup for wowlan
+Ok - thanks for trying.
 
-Enable notifying wakeup source to the PM core. This allow darkresume to
-correctly track wakeup source and mark mwifiex_plt as 'automatic' wakeup
-source.
+>
+>>>> Besides this, we need to go for firmware debugging. But as I said,
+>>>> don't expect this to be fast and easy. Please open a bug in
+>>>> bugzilla.kernel.org. CC linuxwifi@intel.com and we will guide you
+>>>> there on how to provide the information we need.
+>
+> I've filled bug 172431
+>
+> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=172431
 
-Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
- drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
- 2 files changed, 9 insertions(+)
+Saw that. Thanks.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index d3e1561..a5f63e4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
- 		disable_irq_nosync(irq);
- 	}
- 
-+	/* Notify PM core we are wakeup source */
-+	pm_wakeup_event(cfg->dev, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 					  GFP_KERNEL);
- 	cfg = card->plt_wake_cfg;
- 	if (cfg && card->plt_of_node) {
-+		cfg->dev = dev;
- 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
- 		if (!cfg->irq_wifi) {
- 			dev_dbg(dev,
-@@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 		}
- 	}
- 
-+	ret = device_init_wakeup(dev, true);
-+	if (ret)
-+		dev_err(dev, "fail to init wakeup for mwifiex");
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index db837f1..07cdd23 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -155,6 +155,7 @@
- } while (0)
- 
- struct mwifiex_plt_wake_cfg {
-+	struct device *dev;
- 	int irq_wifi;
- 	bool wake_by_wifi;
- };
--- 
-2.8.0.rc3.226.g39d4020
+>
+> Cheers,
+>   Volker
