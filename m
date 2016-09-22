@@ -1,71 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52922 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755887AbcILN0E (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:41092 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbcIVESv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:26:04 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8CDPihu028642
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:26:03 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 25chpmpam7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:26:03 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: Command 7 handling for USB chipsets
-Date: Mon, 12 Sep 2016 18:55:27 +0530
-Message-ID: <1473686728-8101-2-git-send-email-akarwar@marvell.com> (sfid-20160912_152606_958717_F910F3F1)
-In-Reply-To: <1473686728-8101-1-git-send-email-akarwar@marvell.com>
-References: <1473686728-8101-1-git-send-email-akarwar@marvell.com>
+        Thu, 22 Sep 2016 00:18:51 -0400
+Message-ID: <57E35BA9.7050207@candelatech.com> (sfid-20160922_061855_014771_11769471)
+Date: Wed, 21 Sep 2016 21:18:49 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: bruce m beach <brucembeach@gmail.com>,
+        Oleksij Rempel <linux@rempel-privat.de>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k_htc kernel driver regression affecting throughput
+References: <CAArymCks5NN=09EdJ4uaoRrHZciYAkYTES+i62BkfZ4R-W30HQ@mail.gmail.com> <96b0636d-1171-5830-6481-edb991ca8e1a@rempel-privat.de> <CAArymCnJZgUbgCiLqA6-94RAtXYkYeeS9uF71MX9+ou-AbYszg@mail.gmail.com>
+In-Reply-To: <CAArymCnJZgUbgCiLqA6-94RAtXYkYeeS9uF71MX9+ou-AbYszg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
 
-Firmware image for newer USB chipsets starts with a command 7 block
-(special command). It doesn't contain data length field. This patch adds
-necessary handling.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++++
- drivers/net/wireless/marvell/mwifiex/usb.h | 1 +
- 2 files changed, 5 insertions(+)
+On 09/21/2016 08:34 PM, bruce m beach wrote:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 9213516..8a20620 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -1026,6 +1026,10 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 			dnld_cmd = le32_to_cpu(fwdata->fw_hdr.dnld_cmd);
- 			tlen += sizeof(struct fw_header);
- 
-+			/* Command 7 doesn't have data length field */
-+			if (dnld_cmd == FW_CMD_7)
-+				dlen = 0;
-+
- 			memcpy(fwdata->data, &firmware[tlen], dlen);
- 
- 			fwdata->seq_num = cpu_to_le32(fw_seqnum);
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index b4e9246..1b49c52 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -51,6 +51,7 @@
- #define FW_DNLD_TX_BUF_SIZE	620
- #define FW_DNLD_RX_BUF_SIZE	2048
- #define FW_HAS_LAST_BLOCK	0x00000004
-+#define FW_CMD_7		0x00000007
- 
- #define FW_DATA_XMIT_SIZE \
- 	(sizeof(struct fw_header) + dlen + sizeof(u32))
+>>> i.e a lable that the code jumps to and nothing else. At this point I have
+>>> added VendorCommand(), and a debugger via ep0. ( ep0 is a good choice
+>>> since it is available a boot, no matter what) and over the next few
+>>> months I am going to move ->all<- the rom code into ram starting with
+>>> the USB subsystem.
+
+Have you investigated whether you have enough RAM to do this?
+
+I haven't looked at ath9k_htc, but in general, that type of architecture
+is tight on RAM in my experience.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
