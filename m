@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46125 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034381AbcIZOTp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45474 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1034488AbcIVUw0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 10:19:45 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/3] hostap: Use memdup_user() rather than duplicating its
- implementation
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <efa66c16-7998-9ceb-0be6-d62dd249a2dc@users.sourceforge.net>
-References: <efa66c16-7998-9ceb-0be6-d62dd249a2dc@users.sourceforge.net>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        Julia Lawall <julia.lawall@lip6.fr>
-Message-Id: <20160926141944.A5DA06151E@smtp.codeaurora.org> (sfid-20160926_162008_371217_FA769EE1)
-Date: Mon, 26 Sep 2016 14:19:44 +0000 (UTC)
+        Thu, 22 Sep 2016 16:52:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 22 Sep 2016 23:52:08 +0300
+Message-Id: <20160922205210.1778-9-luca@coelho.fi> (sfid-20160922_225242_510981_B12945F7)
+In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
+References: <20160922205210.1778-1-luca@coelho.fi>
+Subject: [PATCH 08/10] iwlwifi: mvm: fix typo in TC_CMD_SEC_KEY_FROM_TABLE
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SF Markus Elfring <elfring@users.sourceforge.net> wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sat, 20 Aug 2016 18:19:43 +0200
-> 
-> Reuse existing functionality from memdup_user() instead of keeping
-> duplicate source code.
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Patch set to Rejected.
+This define should really be TX_CMD_SEC_KEY_FROM_TABLE
 
-[1/3] hostap: Use memdup_user() rather than duplicating i... 2016-08-20 SF Markus El Rejected
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Reason: A similar patch is already applied.
-
-Applying: hostap: Use memdup_user() rather than duplicating its implementation
-Using index info to reconstruct a base tree...
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-Failed to merge in the changes.
-Patch failed at 0001 hostap: Use memdup_user() rather than duplicating its implementation
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 57d29a1..59ca97a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -147,7 +147,7 @@ enum iwl_tx_pm_timeouts {
+  * @TX_CMD_SEC_EXT: extended cipher algorithm.
+  * @TX_CMD_SEC_GCMP: GCMP encryption algorithm.
+  * @TX_CMD_SEC_KEY128: set for 104 bits WEP key.
+- * @TC_CMD_SEC_KEY_FROM_TABLE: for a non-WEP key, set if the key should be taken
++ * @TX_CMD_SEC_KEY_FROM_TABLE: for a non-WEP key, set if the key should be taken
+  *	from the table instead of from the TX command.
+  *	If the key is taken from the key table its index should be given by the
+  *	first byte of the TX command key field.
+@@ -159,7 +159,7 @@ enum iwl_tx_cmd_sec_ctrl {
+ 	TX_CMD_SEC_EXT			= 0x04,
+ 	TX_CMD_SEC_GCMP			= 0x05,
+ 	TX_CMD_SEC_KEY128		= 0x08,
+-	TC_CMD_SEC_KEY_FROM_TABLE	= 0x08,
++	TX_CMD_SEC_KEY_FROM_TABLE	= 0x08,
+ };
+ 
+ /* TODO: how does these values are OK with only 16 bit variable??? */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index ef4bdfc..a3fe73b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -441,7 +441,7 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
+ 		 * one.
+ 		 * Need to handle this.
+ 		 */
+-		tx_cmd->sec_ctl |= TX_CMD_SEC_GCMP | TC_CMD_SEC_KEY_FROM_TABLE;
++		tx_cmd->sec_ctl |= TX_CMD_SEC_GCMP | TX_CMD_SEC_KEY_FROM_TABLE;
+ 		tx_cmd->key[0] = keyconf->hw_key_idx;
+ 		iwl_mvm_set_tx_cmd_pn(info, crypto_hdr);
+ 		break;
 -- 
-https://patchwork.kernel.org/patch/9306999/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.3
