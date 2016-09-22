@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36343 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964859AbcIFRQj (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45412 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S934350AbcIVUwT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 13:16:39 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 06 Sep 2016 22:46:38 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k:  ensure pdev sta kickout threshold is set.
-In-Reply-To: <57CEC0A4.8020808@candelatech.com>
-References: <1472843202-12428-1-git-send-email-greearb@candelatech.com>
- <1473147582638.99419@qti.qualcomm.com> <57CEC0A4.8020808@candelatech.com>
-Message-ID: <258eb1b46e360aeae1cddfa9185ab1ce@codeaurora.org> (sfid-20160906_191642_890576_0C7521E1)
+        Thu, 22 Sep 2016 16:52:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 22 Sep 2016 23:52:00 +0300
+Message-Id: <20160922205210.1778-1-luca@coelho.fi> (sfid-20160922_225244_334573_55AC9A3F)
+Subject: [PATCH 00/10] iwlwifi: updates for 2016-09-22 
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-06 18:42, Ben Greear wrote:
-> On 09/06/2016 12:39 AM, Manoharan, Rajkumar wrote:
->> [...]
->> 
->>> +int ath10k_mac_set_pdev_kickout(struct ath10k *ar)
->>> +{
->>> +       u32 param = ar->wmi.pdev_param->sta_kickout_th;
->>> +       int rv;
->>> +
->>> +       rv = ath10k_wmi_pdev_set_param(ar, param,
->>> +                                      
->>> ar->sta_xretry_kickout_thresh);
->>> +       if (rv) {
->>> +               ath10k_warn(ar, "failed to set sta kickout threshold 
->>> to %d: %d\n",
->>> +                           ar->sta_xretry_kickout_thresh, rv);
->>> +       }
->>> +       return rv;
->>> +}
->>> 
->> Ben,
->> 
->> I plan to get rid of setting station kickout threshold from host. Each 
->> firmware revision (i.e qca988x, qca99x0, ipq4019)  follows different 
->> logic based on hw capability for station kickout and follows different 
->> default paramters. So configuring common threshold will affect 
->> firmware logic. Better to get rid of these configuration from host 
->> driver and let firmware to work with default parameters.
->> 
->> Also I could not find out sta_xretry_kickout_thresh definition in 
->> upstream driver. Have you posted any changes for the same?
-> 
-> Hmm, maybe that last bit is something I added in another patch.  
-> Probably my
-> patch to enable firmware config on a per radio basis (fwcfg in my
-> tree).  Those patches are
-> larger and probably will never make it upstream.
-> 
-> I need a way to configure this kickout, since firmware is kicking out
-> stations when it should
-> not.
-> 
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Could you please explain the scenario?
+Hi,
 
-> Instead of removing the capability, you should instead make it 
-> configurable
-> through debugfs or something like my fwcfg patches, and/or disable the
-> kickout entirely.
-> Since mac80211 can deal with kicking out stations already, the stuff
-> in the firmware just makes
-> things less stable in poor RF environments and/or with stations with
-> flaky power-save and
-> off-channel roaming.
-> 
-I plan to get rid of hardcoded value and fix this through proper netlink 
-interface instead of debugfs. While ago, I posted a change for 
-configuring low ack threshold. It is still pending in my TODO list.
+Here's a series of patches that were pending in our internal tree.
 
-http://comments.gmane.org/gmane.linux.kernel.wireless.general/137645
+I'm changing the process a bit.  From now on I'll send the patches out
+first for review and only later apply them on iwlwifi-next/master and
+send a pull request.  This will make reviews easier and will also
+allow kbuild bot to run tests before I actually apply the patches and
+send a pull request.
 
--Rajkumar
+Please review and let me know if there are any problems.
+
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (2):
+  iwlwifi: mvm: fix typo in TC_CMD_SEC_KEY_FROM_TABLE
+  iwlwifi: mvm: initialise ADD_STA before sending it to the firmware
+
+Johannes Berg (2):
+  iwlwifi: pcie: avoid variable shadowing in TFD helpers
+  iwlwifi: mvm: correct rate_idx bounds-check
+
+Luca Coelho (2):
+  iwlwifi: mvm: bail out if CTDP start operation fails
+  iwlwifi: remove support for fw older than -17 and -22
+
+Oren Givon (1):
+  iwlwifi: add two new 9560 series PCI IDs
+
+Sara Sharon (3):
+  iwlwifi: mvm: cleanup redundant no_power_up_nic_in_init config
+  iwlwifi: mvm: cleanup usage of init_dbg parameter
+  iwlwifi: allow error table address new range
+
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |  6 +--
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c      |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   | 24 +---------
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |  3 +-
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  | 21 +++------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  6 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 43 ++++++++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 24 ++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 -
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 52 +++++++---------------
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c     | 15 +++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 27 ++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c        | 10 +----
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 +
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 19 ++++----
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 47 ++++++++++---------
+ 21 files changed, 110 insertions(+), 204 deletions(-)
+
+-- 
+2.9.3
