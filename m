@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38518 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcI3Ooj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 10:44:39 -0400
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device
- binding
-To: Arnd Bergmann <arnd@arndb.de>
-References: <20160905095128.80560-1-nbd@nbd.name>
- <201609300041.41876.arnd@arndb.de>
- <3334122f-0d79-f910-a414-5b9cafd9901f@nbd.name>
- <201609301636.43363.arnd@arndb.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> (sfid-20160930_164443_122116_B5C89A70)
-Date: Fri, 30 Sep 2016 16:44:34 +0200
-MIME-Version: 1.0
-In-Reply-To: <201609301636.43363.arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:45424 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S939012AbcIVUw1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Sep 2016 16:52:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 22 Sep 2016 23:52:02 +0300
+Message-Id: <20160922205210.1778-3-luca@coelho.fi> (sfid-20160922_225243_774402_90BE5F01)
+In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
+References: <20160922205210.1778-1-luca@coelho.fi>
+Subject: [PATCH 02/10] iwlwifi: mvm: cleanup usage of init_dbg parameter
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-30 16:36, Arnd Bergmann wrote:
-> On Friday 30 September 2016, Felix Fietkau wrote:
->> >> >> + pcie0 {
->> >> >> +         mt76@0,0 {
->> >> >> +                 reg = <0x0000 0 0 0 0>;
->> > 
->> > Maybe have an examplep of a real register address other than zero?
->> This is a real example referring to the first device on a PCI bus.
->> I copy&pasted this from a .dts file that we use in LEDE.
-> 
-> Ok, I see.
-> 
->> >> >> +                 device_type = "pci";
->> >> >> +                 mediatek,mtd-eeprom = <&factory 0x8000>;
->> >> >> +                 mediatek,2ghz = <0>;
->> > 
->> > It's not clear what the possible values for the 2ghz property are,
->> > can you be more verbose in the description? How is <0> different
->> > from no property?
->> 0 means disabled, no property means unchanged (compared to EEPROM).
-> 
-> Maybe have a boolean property instead then to say "mediatek,2ghz-disabled" ?
-> 
-> If zero is the only possible value, there is no need to put a number in there.
-1 is also possible, which will force-enable the capability.
+From: Sara Sharon <sara.sharon@intel.com>
 
-- Felix
+Move the init_dbg check to earlier in the function to simplify the
+code.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 7322c43..8f10780 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -1115,27 +1115,27 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 	 * (for example, if we were in RFKILL)
+ 	 */
+ 	ret = iwl_run_init_mvm_ucode(mvm, false);
+-	if (ret && !iwlmvm_mod_params.init_dbg) {
++
++	if (iwlmvm_mod_params.init_dbg)
++		return 0;
++
++	if (ret) {
+ 		IWL_ERR(mvm, "Failed to run INIT ucode: %d\n", ret);
+ 		/* this can't happen */
+ 		if (WARN_ON(ret > 0))
+ 			ret = -ERFKILL;
+ 		goto error;
+ 	}
+-	if (!iwlmvm_mod_params.init_dbg) {
+-		/*
+-		 * Stop and start the transport without entering low power
+-		 * mode. This will save the state of other components on the
+-		 * device that are triggered by the INIT firwmare (MFUART).
+-		 */
+-		_iwl_trans_stop_device(mvm->trans, false);
+-		ret = _iwl_trans_start_hw(mvm->trans, false);
+-		if (ret)
+-			goto error;
+-	}
+ 
+-	if (iwlmvm_mod_params.init_dbg)
+-		return 0;
++	/*
++	 * Stop and start the transport without entering low power
++	 * mode. This will save the state of other components on the
++	 * device that are triggered by the INIT firwmare (MFUART).
++	 */
++	_iwl_trans_stop_device(mvm->trans, false);
++	ret = _iwl_trans_start_hw(mvm->trans, false);
++	if (ret)
++		goto error;
+ 
+ 	ret = iwl_mvm_load_ucode_wait_alive(mvm, IWL_UCODE_REGULAR);
+ 	if (ret) {
+-- 
+2.9.3
