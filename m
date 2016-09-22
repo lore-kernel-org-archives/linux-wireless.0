@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54878 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752289AbcINHHR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 03:07:17 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "bartosz.markowski@tieto.com" <bartosz.markowski@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: add platform regulatory domain support
-Date: Wed, 14 Sep 2016 07:06:54 +0000
-Message-ID: <871t0nhsdu.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_090721_283220_F2FA5163)
-References: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com>
-        <1470140454-3899-3-git-send-email-bartosz.markowski@tieto.com>
-        <87bmztm8qm.fsf@kamboji.qca.qualcomm.com>
-        <CACKGw+FAwPb2NLW5G8CnGH4X2eCCjUkuJwLoqW9w9rKpDuQJDw@mail.gmail.com>
-In-Reply-To: <CACKGw+FAwPb2NLW5G8CnGH4X2eCCjUkuJwLoqW9w9rKpDuQJDw@mail.gmail.com>       (Bartosz
- Markowski's message of "Tue, 13 Sep 2016 15:57:17 +0200")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx2.suse.de ([195.135.220.15]:50123 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965268AbcIVVBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Sep 2016 17:01:36 -0400
+Date: Thu, 22 Sep 2016 23:01:32 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org
+Subject: Re: rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
+Message-ID: <20160922230132.5aa36918@endymion> (sfid-20160922_230147_361375_B54AD236)
+In-Reply-To: <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
+References: <20160922115116.149c599c@endymion>
+        <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> writes:
+Hi Larry,
 
-> On 12 September 2016 at 17:35, Valo, Kalle <kvalo@qca.qualcomm.com> wrote=
-:
->
->> > +#ifdef CONFIG_ACPI
->> > +#define WRD_METHOD "WRDD"
->> > +#define WRDD_WIFI  (0x07)
->> > +
->> > +static u32 ath10k_mac_wrdd_get_mcc(struct ath10k *ar, union acpi_obje=
-ct *wrdd)
->> > +{
->>
->> I don't think the ifdef is really necessary, acpi.h should handle that
->> (hopefully). Also I changed the error handling to use standard error
->> values and changed the info messages to dbg, they are too spammy in my
->> opinion. Please check carefully my changes in the pending branch:
->>
->> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dp=
-ending&id=3Dfe91745381ec3999d8de6dedb07b396c82539717
->
-> I'm OK with the changes, I have not tried that though, except of
-> reviewing and compiling it (do not have access to the chromebook for
-> next few days). If you want to wait with it until I test it, it's fine
-> too.
+On Thu, 22 Sep 2016 10:09:58 -0500, Larry Finger wrote:
+> Do you build your own kernel, or are you using openSUSE's supplied version? If 
+> the latter, I will need to think how we might debug the issue. If the former, 
+> please add the attached patch.
 
-Ok, I'll wait for few days in case you have time to test it.
+The debug module is in place. The error message was logged 3 times
+today, so I should have some data for you tomorrow.
 
---=20
-Kalle Valo=
+Thanks,
+-- 
+Jean Delvare
+SUSE L3 Support
