@@ -1,57 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:32885 "EHLO
-        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759017AbcIMPFu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 11:05:50 -0400
-Received: by mail-oi0-f49.google.com with SMTP id y2so386755338oie.0
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 08:05:50 -0700 (PDT)
-Subject: Re: Support of rtl8723bs
-To: Hanno Zulla <abos@hanno.de>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Bastien Nocera <hadess@hadess.net>
-References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
- <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
- <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
- <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
- <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
- <4efa3f1a-a91c-7b19-43e3-508cbbd4676e@hanno.de>
-Cc: anthony.wong@canonical.com, linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a9235772-ab37-255c-2fb3-ce2ed1104ad5@lwfinger.net> (sfid-20160913_170607_770187_E6AB3A6E)
-Date: Tue, 13 Sep 2016 10:05:47 -0500
+Received: from mail2.tohojo.dk ([77.235.48.147]:33690 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759542AbcIWT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 15:59:28 -0400
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
+Date: Fri, 23 Sep 2016 21:59:11 +0200
+Message-Id: <20160923195911.4572-4-toke@toke.dk> (sfid-20160923_215935_754766_6EB4EDBF)
+In-Reply-To: <20160923195911.4572-1-toke@toke.dk>
+References: <20160923195911.4572-1-toke@toke.dk>
 MIME-Version: 1.0
-In-Reply-To: <4efa3f1a-a91c-7b19-43e3-508cbbd4676e@hanno.de>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/13/2016 02:47 AM, Hanno Zulla wrote:
-> Hi,
->
->> The issues I am aware of is to start out changing the register access
->> macros into function pointers and stick them all into the fileops
->> structure. Provide a set of SDIO ones to match the USB ones. Then you
->> will need some code to detect the device, as that part will obviously be
->> different from the USB device detection.
->>
->> I know there are a few issues to look out for in the hw register init
->> files to look out for too, that does some special casing for SDIO, but
->> that should be limited. I am happy to point someone in the right
->> direction on that when they get to that.
->
-> I had a brief look into the sources of other drivers implementing SDIO,
-> but not being a kernel-dev, this is out of my league.
->
-> If you decide to reprioritize your TODO-List in favour of adding SDIO
-> sooner, I'll be gladly testing this for you on my hardware (and buy you
-> a beer).
+Small devices can run out of memory from queueing too many packets. If
+VHT is not supported by the PHY, having more than 4 MBytes of total
+queue in the TXQ intermediate queues is not needed, and so we can safely
+limit the memory usage in these cases and avoid OOM.
 
-I received a CherryTrail z8300 device yesterday with RTL8723BS wifi and BT. I 
-have started making the changes that Jes suggested. Once I get something 
-running, I will post patches here for review, and I will also make them 
-available in Bastien's repo.
+Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+---
+ net/mac80211/tx.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-I make no promises on when anything will be available.
-
-Larry
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1ff08be..82f41fc 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1434,6 +1434,8 @@ int ieee80211_txq_setup_flows(struct ieee80211_loca=
+l *local)
+ 	struct fq *fq =3D &local->fq;
+ 	int ret;
+ 	int i;
++	bool supp_vht =3D false;
++	enum nl80211_band band;
+=20
+ 	if (!local->ops->wake_tx_queue)
+ 		return 0;
+@@ -1442,6 +1444,22 @@ int ieee80211_txq_setup_flows(struct ieee80211_loc=
+al *local)
+ 	if (ret)
+ 		return ret;
+=20
++	/*
++	 * If the hardware doesn't support VHT, it is safe to limit the maximum
++	 * queue size. 4 Mbytes is 64 max-size aggregates in 802.11n.
++	 */
++	for (band =3D 0; band < NUM_NL80211_BANDS; band++) {
++		struct ieee80211_supported_band *sband;
++
++		sband =3D local->hw.wiphy->bands[band];
++		if (!sband)
++			continue;
++
++		supp_vht =3D supp_vht || sband->vht_cap.vht_supported;
++	}
++	if (!supp_vht)
++		fq->memory_limit =3D 4 << 20; /* 4 Mbytes */
++
+ 	codel_params_init(&local->cparams);
+ 	local->cparams.interval =3D MS2TIME(100);
+ 	local->cparams.target =3D MS2TIME(20);
+--=20
+2.9.3
