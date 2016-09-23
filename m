@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:35455 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936357AbcI0Q4f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 12:56:35 -0400
-Received: by mail-pf0-f178.google.com with SMTP id s13so7649046pfd.2
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 09:56:35 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+Received: from mail2.tohojo.dk ([77.235.48.147]:33701 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759561AbcIWT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 15:59:28 -0400
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>,
-        Wei-Ning Huang <wnhuang@google.com>,
-        Brian Norris <briannorris@google.com>,
-        Eric Caruso <ejcaruso@chromium.org>, rajatxjain@gmail.com
-Subject: [PATCH] mwifiex: report wakeup for wowlan
-Date: Tue, 27 Sep 2016 09:56:04 -0700
-Message-Id: <1474995364-123069-1-git-send-email-rajatja@google.com> (sfid-20160927_185701_396036_824E4BAE)
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Subject: [PATCH 0/3] Add memory limits to fq.h and mac80211 TXQ
+Date: Fri, 23 Sep 2016 21:59:08 +0200
+Message-Id: <20160923195911.4572-1-toke@toke.dk> (sfid-20160923_215937_824017_4FEE0DD2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable notifying wakeup source to the PM core. This allow darkresume to
-correctly track wakeup source and mark mwifiex_plt as 'automatic' wakeup
-source.
+This is a series of small patches to avoid OOM conditions on small
+wireless devices with the mac80211 intermediate TXQ structure. The
+current default limit in fq.h translates to up to 16 Mbytes of memory
+usage, which can be fatal to a device with 32 MBytes of total RAM.
 
-Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
- drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
- 2 files changed, 9 insertions(+)
+Rather than just change the fq_limit, this ports the memory limit
+mechanism from the fq_codel qdisc. The second patch in the series just
+adds the new fields to the mac80211 'aqm' debugfs file.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index d3e1561..a5f63e4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
- 		disable_irq_nosync(irq);
- 	}
- 
-+	/* Notify PM core we are wakeup source */
-+	pm_wakeup_event(cfg->dev, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 					  GFP_KERNEL);
- 	cfg = card->plt_wake_cfg;
- 	if (cfg && card->plt_of_node) {
-+		cfg->dev = dev;
- 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
- 		if (!cfg->irq_wifi) {
- 			dev_dbg(dev,
-@@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 		}
- 	}
- 
-+	ret = device_init_wakeup(dev, true);
-+	if (ret)
-+		dev_err(dev, "fail to init wakeup for mwifiex");
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index db837f1..07cdd23 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -155,6 +155,7 @@
- } while (0)
- 
- struct mwifiex_plt_wake_cfg {
-+	struct device *dev;
- 	int irq_wifi;
- 	bool wake_by_wifi;
- };
--- 
-2.8.0.rc3.226.g39d4020
+The third patch changes mac80211 to set a lower memory limit for non-VHT
+devices. The assumption is that (a) for 802.11n and lower 4 Mbytes of
+total queue (2048 packets, 64 max-size aggregates) is plenty, and so it
+is safe to simply limit the queue size. And (b) that VHT-capable devices
+are usually installed in systems equipped with more system memory.
+
+Toke H=C3=B8iland-J=C3=B8rgensen (3):
+  fq.h: Port memory limit mechanism from fq_codel
+  mac80211: Export fq memory limit information in debugfs
+  mac80211: Set lower memory limit for non-VHT devices
+
+ include/net/fq.h       |  3 +++
+ include/net/fq_impl.h  |  7 ++++++-
+ net/mac80211/debugfs.c |  8 ++++++++
+ net/mac80211/tx.c      | 18 ++++++++++++++++++
+ 4 files changed, 35 insertions(+), 1 deletion(-)
+
+--=20
+2.9.3
+
+base-commit: fb2a3d5c7c85cb6e8bc88192be919b4ef8d6e630
