@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60492 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754390AbcI2N6b (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35518 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034492AbcIWSKa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 09:58:31 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Rob Herring <robh@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Wei-Ning Huang <wnhuang@chromium.org>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH] mwifiex: parse device tree node for PCIe
-Date: Thu, 29 Sep 2016 13:58:23 +0000
-Message-ID: <0fb142f41f764496bc1242507717f0f7@SC-EXCH04.marvell.com> (sfid-20160929_155835_338929_C87C0C38)
-References: <1473434254-16782-1-git-send-email-akarwar@marvell.com>
- <20160919212753.GA16598@rob-hp-laptop>
-In-Reply-To: <20160919212753.GA16598@rob-hp-laptop>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 23 Sep 2016 14:10:30 -0400
+Received: by mail-oi0-f68.google.com with SMTP id n202so9330769oig.2
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2016 11:10:30 -0700 (PDT)
+Subject: Re: rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
+To: Jean Delvare <jdelvare@suse.de>
+References: <20160922115116.149c599c@endymion>
+ <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
+ <20160923141618.1fcfd809@endymion>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <6feb0feb-eb53-8b6b-4c50-e6ace0cc854a@lwfinger.net> (sfid-20160923_201035_442269_55C7F0A2)
+Date: Fri, 23 Sep 2016 13:10:28 -0500
 MIME-Version: 1.0
+In-Reply-To: <20160923141618.1fcfd809@endymion>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rob,
+On 09/23/2016 07:16 AM, Jean Delvare wrote:
+> Hi Larry,
+>
+> On Thu, 22 Sep 2016 10:09:58 -0500, Larry Finger wrote:
+>> Do you build your own kernel, or are you using openSUSE's supplied version? If
+>> the latter, I will need to think how we might debug the issue. If the former,
+>> please add the attached patch.
+>
+> Lost network this morning, but no error message. We restarted the
+> network service, things were back up and the error message was logged
+> then:
+>
+> rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case 92 not processed
+>
+> So I think this is happening when the interface is put down, and is
+> probably not related with the loss of connectivity. But it would be
+> good to understand and fix it nevertheless.
+>
+> 92 is HAL_DEF_WOWLAN. I see it is handled differently in 2 other
+> rtlwifi drivers: rtl8192cu ignores it, while rtl8821ae processes it:
+>
+> 	case HAL_DEF_WOWLAN:
+> 		if (ppsc->wo_wlan_mode)
+> 			*((bool *)(val)) = true;
+> 		else
+> 			*((bool *)(val)) = false;
+> 		break;
+>
+> I don't know what is the appropriate course of action in the case of
+> the rtl8192ce. Let me know if you need anything else from me.
 
-> From: Rob Herring [mailto:robh@kernel.org]
-> Sent: Tuesday, September 20, 2016 2:58 AM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> devicetree@vger.kernel.org; Wei-Ning Huang; Xinming Hu
-> Subject: Re: [PATCH] mwifiex: parse device tree node for PCIe
-> 
-> On Fri, Sep 09, 2016 at 08:47:34PM +0530, Amitkumar Karwar wrote:
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > This patch derives device tree node from pcie bus layer framework.
-> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> > marvell-8xxx.txt) to accomodate PCIe changes.
-> >
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> >  .../bindings/net/wireless/marvell-8xxx.txt         | 64
-> ++++++++++++++++++++++
-> >  .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 -------------
-> --------
-> 
-> Resend using -M option so I do have to figure out if you added 1 line or
-> changed a bunch.
-> 
-> >  drivers/net/wireless/marvell/mwifiex/pcie.c        | 19 +++++++
-> >  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
-> >  4 files changed, 85 insertions(+), 64 deletions(-)  create mode
-> > 100644 Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> >  delete mode 100644
-> > Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> >
-> > diff --git
-> > a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> > b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> > new file mode 100644
-> > index 0000000..a8a95aa
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> > @@ -0,0 +1,64 @@
-> > +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
-> > +------
-> > +
-> > +This node provides properties for controlling the marvell sdio/pcie
-> wireless device.
-> > +The node is expected to be specified as a child node to the SDIO/PCIE
-> > +controller that connects the device to the system.
-> > +
-> > +Required properties:
-> > +
-> > +  - compatible : should be one of the following:
-> > +	* "marvell,sd8897"
-> > +	* "marvell,sd8997"
-> > +	* "marvell,pcie8997"
-> 
-> PCIe uses vendor and product IDs for compatible strings. Please read the
-> OF PCI bus bindings doc.
-> 
+As the RTL8192CE does not support WOWLAN, the correct response is to ignore that 
+call. Clearly, it has nothing to do with your network drops. One thing you might 
+do is add the appropriate file in /etc/modprobe.d/ so that the module is loaded 
+with the "ips=0" option to see if power save is messing up.
 
-Thanks for review. I have submitted updated version(V3) with this change.
+I am in the process of fixing all the instances where the log entry for the 
+default case does not output the switch variable. With these patches, I will 
+also handle the HAL_DEF_WOWLAN case.
 
-Regards,
-Amitkumar Karwar
+I'm sorry about my original comments regarding patching the kernel. I sent that 
+E-mail before I even read your name and address. As a long-time openSUSE user, I 
+certainly recognize your name and your abilities.
+
+Larry
