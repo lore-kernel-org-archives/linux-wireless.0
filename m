@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56044 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933275AbcISHcn (ORCPT
+Received: from mail-ua0-f174.google.com ([209.85.217.174]:34598 "EHLO
+        mail-ua0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756603AbcIWCnw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:32:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:28 +0300
-Message-Id: <20160919073028.22065-25-luca@coelho.fi> (sfid-20160919_100149_131041_03DAE5F0)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 25/25] iwlwifi: pcie: use LIST_HEAD() macro
+        Thu, 22 Sep 2016 22:43:52 -0400
+Received: by mail-ua0-f174.google.com with SMTP id q42so21346097uaq.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2016 19:43:52 -0700 (PDT)
+MIME-Version: 1.0
+From: David Petrizze <dpetrizze@gmail.com>
+Date: Thu, 22 Sep 2016 20:43:21 -0600
+Message-ID: <CA+PvwyEA-U2OeTrGW+d8B_sEHZYdaM3J79ZcpcC=89MvvYsrCw@mail.gmail.com> (sfid-20160923_044441_201068_98B7CF1E)
+Subject: Broadcom Firmware Rollback
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi all,
 
-There's no need to declare a list and then init it manually,
-just use the LIST_HEAD() macro.
+I'm having issues with broadcom's latest firmware / driver, version
+6.30.163.46. Wireless is solid for about a minute, and then drops
+completely. My research has led me to believe my chip (BCM4331) is no
+longer supported under 6.30.X.X, or has a bug somewhere. I want to
+roll back to the firmware that worked.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+What I'm looking for is a file named broadcom-wl-6.20.*.*.tar.bz2. I
+found my current firmware from http://www.lwfinger.com/b43-firmware/,
+but 6.20.X.X is nowhere to be found. 5.100.X.X is there, but the 4331
+definitely wasn't supported for that one.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 78cb6d2..6fe5546 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -487,15 +487,13 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
- 
- 	while (pending) {
- 		int i;
--		struct list_head local_allocated;
-+		LIST_HEAD(local_allocated);
- 		gfp_t gfp_mask = GFP_KERNEL;
- 
- 		/* Do not post a warning if there are only a few requests */
- 		if (pending < RX_PENDING_WATERMARK)
- 			gfp_mask |= __GFP_NOWARN;
- 
--		INIT_LIST_HEAD(&local_allocated);
--
- 		for (i = 0; i < RX_CLAIM_REQ_ALLOC;) {
- 			struct iwl_rx_mem_buffer *rxb;
- 			struct page *page;
--- 
-2.9.3
+Inside each of these archives on lwfinger is a file called wl_apsta.o,
+where the firmware is extracted from.  Since b43-fwcutter only
+extracts firmware from versions of wl_apsta.o that match specific
+MD5's, I figure 6.20.X.X has to be out there somewhere.
+
+More info can be found from my original post:
+https://bbs.archlinux.org/viewtopic.php?id=217326
+
+...and other people confrim 6.30.X.X being a problem in this ubuntu bug:
+https://bugs.launchpad.net/ubuntu/+source/bcmwl/+bug/1189611
+
+If anyone could point me in the right direction, I would be immensely grateful.
+
+Thank you for your time,
+David
