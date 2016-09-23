@@ -1,44 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50643 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753495AbcIFWEG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 18:04:06 -0400
-Subject: Re: [PATCH v8] mac80211: Move reorder-sensitive TX handlers to after
- TXQ dequeue.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-References: <20160905113042.22271-1-toke@toke.dk>
- <20160906114426.25520-1-toke@toke.dk>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <9063eae7-53c7-a1c0-c973-9dc519cf66cd@nbd.name> (sfid-20160907_000410_924381_638ED8F8)
-Date: Wed, 7 Sep 2016 00:04:02 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160906114426.25520-1-toke@toke.dk>
-Content-Type: text/plain; charset=utf-8
+Received: from smtprelay0167.hostedemail.com ([216.40.44.167]:55857 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1035257AbcIWTCr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 15:02:47 -0400
+Message-ID: <1474657363.1849.9.camel@perches.com> (sfid-20160923_210314_646924_5FD1D0C9)
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Jean Delvare <jdelvare@suse.de>,
+        Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 23 Sep 2016 12:02:43 -0700
+In-Reply-To: <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+References: <1474654333.1849.5.camel@perches.com>
+         <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+         <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-06 13:44, Toke Høiland-Jørgensen wrote:
-> The TXQ intermediate queues can cause packet reordering when more than
-> one flow is active to a single station. Since some of the wifi-specific
-> packet handling (notably sequence number and encryption handling) is
-> sensitive to re-ordering, things break if they are applied before the
-> TXQ.
-> 
-> This splits up the TX handlers and fast_xmit logic into two parts: An
-> early part and a late part. The former is applied before TXQ enqueue,
-> and the latter after dequeue. The non-TXQ path just applies both parts
-> at once.
-> 
-> Because fragments shouldn't be split up or reordered, the fragmentation
-> handler is run after dequeue. Any fragments are then kept in the TXQ and
-> on subsequent dequeues they take precedence over dequeueing from the FQ
-> structure.
-> 
-> This approach avoids having to scatter special cases for when TXQ is
-> enabled, at the cost of making the fast_xmit and TX handler code
-> slightly more complex.
-> 
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+On Fri, 2016-09-23 at 13:59 -0500, Larry Finger wrote:
+> I'm not�familiar with the %#x format. What does it do?
+
+Outputs SPECIAL prefix, it's the same as "0x%x"
+
+lib/vsprintf.c:
+#define SPECIAL	64		/* prefix hex with "0x", octal with "0" */
