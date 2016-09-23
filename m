@@ -1,29 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42308 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751099AbcI3LNV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 07:13:21 -0400
-Message-ID: <1475233995.17481.37.camel@sipsolutions.net> (sfid-20160930_131326_100402_88BB1861)
-Subject: Re: [PATCH v9 1/2] mac80211: Move ieee802111_tx_dequeue() to later
- in tx.c
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Fri, 30 Sep 2016 13:13:15 +0200
-In-Reply-To: <20160922170420.5193-2-toke@toke.dk> (sfid-20160922_190456_435847_847DCAEB)
-References: <20160922170420.5193-1-toke@toke.dk>
-         <20160922170420.5193-2-toke@toke.dk> (sfid-20160922_190456_435847_847DCAEB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtpout.microchip.com ([198.175.253.82]:33626 "EHLO
+        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758866AbcIWNRK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 09:17:10 -0400
+From: <Aditya.Shankar@microchip.com>
+To: <Ganesh.Krishna@microchip.com>, <gregkh@linuxfoundation.org>,
+        <nicolas.ferre@atmel.com>
+CC: <linux-wireless@vger.kernel.org>, <luisbg@osg.samsung.com>
+Subject: Re: staging: wilc1000: kernel Oops while opening the device
+Date: Fri, 23 Sep 2016 13:17:08 +0000
+Message-ID: <1FA4CE79C3B5BA4CB1930722261ABC02CAF96970@CHN-SV-EXMX03.mchp-main.com> (sfid-20160923_151714_040738_D6A612F6)
+References: <c12338f5-0a50-bb55-0b83-0fa705237cf8@atmel.com>
+ <20160919134201.GA25769@kroah.com>
+ <65355EED85AFFB41B861AC69A1D0893DCADB8ACF@CHN-SV-EXMX03.mchp-main.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-09-22 at 19:04 +0200, Toke Høiland-Jørgensen wrote:
-> The TXQ path restructure requires ieee80211_tx_dequeue() to call TX
-> handlers and parts of the xmit_fast path. Move the function to later
-> in tx.c in preparation for this.
+On Thursday 22 September 2016 06:04 PM, Ganesh Krishna - I00112 wrote:
+>> -----Original Message-----
+>> From: Greg Kroah-Hartman [mailto:gregkh@linuxfoundation.org] 
+>> Sent: Monday, September 19, 2016 7:12 PM
+>> To: Nicolas Ferre
+>> Cc: linux-wireless@vger.kernel.org; Aditya Shankar - I16078; Ganesh Krishna - I00112; luisbg@osg.samsung.com
+>> Subject: Re: staging: wilc1000: kernel Oops while opening the device
+>>
+>> On Mon, Sep 19, 2016 at 02:06:02PM +0200, Nicolas Ferre wrote:
+>>> Hi all,
+>>>
+>>> While using the wilc1000 driver with latest 4.8-rc7, I have 
+>>> difficulties to open the device and actually use it as I have this 
+>>> kernel Oops right after the loading of the firmware (wilc1003_firmware.bin).
+>>>
+>>> If I revert back the driver to its 
+>>> b9811891a9f60ca9c314dcab3244c65930c4cf37 state, it works okay. I did 
+>>> this because I tend to think that it might be related to the latest move on this driver to "completion" or "work queues".
+>>> It seems to be a regression from 4.7.
+>>
+>> Ick, not good at all.
+>>
+>> Any chance you can run 'git bisect' to see if you can find the offending patch?
+>>
+>> I thought the maintainers were testing this driver over time :(
 > 
-Applied.
+>> thanks,
+>>
+>> greg k-h
+> 
+> Ick indeed. Maintainers are on it full time. Thank you very much for the flag. While I am only reporting activity, hope to have results soon.
+> Regards,
+> ganesh k 
+> 
+Hi All,
 
-johannes
+bisecting changes on the wilc1000 host driver, I find that this problem seems to occur after the below change. 
+As of now, I only know the where and not the why. So I will continue to figure out why this happens.
+
+commit 2518ac59eb27ed003c5a97e8f9588adafdfe4a8a
+Author: Binoy Jayan <binoy.jayan@linaro.org>
+Date:   Thu Jun 23 11:11:51 2016 +0530
+
+    staging: wilc1000: Replace kthread with workqueue for host interface
+    
+    Deconstruct the kthread / message_queue logic, replacing it with
+    create_singlethread_workqueue() / queue_work() setup, by adding a
+    'struct work_struct' to 'struct host_if_msg'. The current kthread
+    hostIFthread() is converted to a work queue helper with the name
+    'host_if_work'.
+    
+Thanks!
+Aditya
