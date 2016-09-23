@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50222 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752821AbcISJzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 05:55:03 -0400
-Message-ID: <1474278896.4469.26.camel@sipsolutions.net> (sfid-20160919_115508_261438_39410159)
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Date: Mon, 19 Sep 2016 11:54:56 +0200
-In-Reply-To: <1474278634.4469.25.camel@sipsolutions.net> (sfid-20160919_115045_089605_A254E125)
-References: <20160804071846.GA773@gondor.apana.org.au>
-         <20160804074546.GA996@gondor.apana.org.au>
-         <1470377813.2977.14.camel@sipsolutions.net>
-         <20160805104858.GA9297@gondor.apana.org.au>
-         <1470394233.2977.37.camel@sipsolutions.net>
-         <20160918135030.GA7062@gondor.apana.org.au>
-         <20160919084056.GA11875@gondor.apana.org.au>
-         <1474276530.4469.16.camel@sipsolutions.net>
-         <20160919091721.GA12235@gondor.apana.org.au>
-         <1474277244.4469.21.camel@sipsolutions.net>
-         <20160919093434.GA12378@gondor.apana.org.au>
-         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
-         (sfid-20160919_115045_089605_A254E125)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:36195 "EHLO
+        mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758649AbcIWJPd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 05:15:33 -0400
+Received: by mail-pa0-f49.google.com with SMTP id qn7so21080149pac.3
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Sep 2016 02:15:33 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: fix memory leak in brcmf_fill_bss_param
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20160921062327.28729-1-zajec5@gmail.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d02288e7-5a45-703c-ce57-f5bc60583797@broadcom.com> (sfid-20160923_111650_720371_29216453)
+Date: Fri, 23 Sep 2016 11:15:18 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160921062327.28729-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> The stack trace is useless, but my other annotation showed that the
-> table's nelems *underflowed* to -1, so now the worker will continue
-> to try to grow it forever.
+On 21-9-2016 8:23, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This function is called from get_station callback which means that every
+> time user space was getting/dumping station(s) we were leaking 2 KiB.
 > 
 
-And this *was* actually a case of duplication, afaict, since it was
-multiple virtual interfaces on the same device all connecting to the
-same AP.
-
-johannes
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Fixes: 1f0dc59a6de ("brcmfmac: rework .get_station() callback")
+> Cc: stable@vger.kernel.org # 4.2+
+> ---
+> Kalle, ideally this should go as 4.8 fix, but I'm aware it's quite late.
+> If you are not planning to send another pull request, just get it for
+> the next release and let's let stable guys backport it.
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index b8aec5e5..62a7675 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -2533,7 +2533,7 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
+>  				     WL_BSS_INFO_MAX);
+>  	if (err) {
+>  		brcmf_err("Failed to get bss info (%d)\n", err);
+> -		return;
+> +		goto out_kfree;
+>  	}
+>  	si->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
+>  	si->bss_param.beacon_interval = le16_to_cpu(buf->bss_le.beacon_period);
+> @@ -2545,6 +2545,9 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
+>  		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
+>  	if (capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
+>  		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
+> +
+> +out_kfree:
+> +	kfree(buf);
+>  }
+>  
+>  static s32
+> 
