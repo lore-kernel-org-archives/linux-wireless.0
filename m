@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42782 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760414AbcINIMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 04:12:03 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/5] mac80211: remove pointless chanctx NULL check
-Date: Wed, 14 Sep 2016 10:11:57 +0200
-Message-Id: <1473840718-5605-4-git-send-email-johannes@sipsolutions.net> (sfid-20160914_101215_087643_F24F2AB9)
-In-Reply-To: <1473840718-5605-1-git-send-email-johannes@sipsolutions.net>
-References: <1473840718-5605-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35740 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965106AbcIWN2d (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Sep 2016 09:28:33 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+        Colin Ian King <colin.king@canonical.com>,
+        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+        IEEE802.11n WIRELESS DRIVER),
+        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+        IEEE802.11n WIRELESS DRIVER),
+        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: drop unused fields from struct brcmf_pub
+Date: Fri, 23 Sep 2016 15:27:46 +0200
+Message-Id: <20160923132759.21875-1-zajec5@gmail.com> (sfid-20160923_152851_710899_40443642)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-If chanctx is derived as container_of() from a non-NULL pointer,
-it can't ever be NULL. Since we checked conf before, that's true
-here, so remove the useless NULL check.
+They seem to be there from the first day. We calculate these values but
+never use them.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- net/mac80211/cfg.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 3 ---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h     | 4 ----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 --
+ 3 files changed, 9 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 5d4afead804e..e29ff5749944 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2961,10 +2961,6 @@ __ieee80211_channel_switch(struct wiphy *wiphy, struct net_device *dev,
- 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 65e8c87..27cd50a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -519,9 +519,6 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+ 	ndev->needed_headroom += drvr->hdrlen;
+ 	ndev->ethtool_ops = &brcmf_ethtool_ops;
  
- 	chanctx = container_of(conf, struct ieee80211_chanctx, conf);
--	if (!chanctx) {
--		err = -EBUSY;
--		goto out;
--	}
+-	drvr->rxsz = ndev->mtu + ndev->hard_header_len +
+-			      drvr->hdrlen;
+-
+ 	/* set the mac address */
+ 	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
  
- 	ch_switch.timestamp = 0;
- 	ch_switch.device_timestamp = 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 8fa34ca..f16cfc9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -112,15 +112,11 @@ struct brcmf_pub {
+ 
+ 	/* Internal brcmf items */
+ 	uint hdrlen;		/* Total BRCMF header length (proto + bus) */
+-	uint rxsz;		/* Rx buffer size bus module should use */
+ 
+ 	/* Dongle media info */
+ 	char fwver[BRCMF_DRIVER_FIRMWARE_VERSION_LEN];
+ 	u8 mac[ETH_ALEN];		/* MAC address obtained from dongle */
+ 
+-	/* Multicast data packets sent to dongle */
+-	unsigned long tx_multicast;
+-
+ 	struct mac_address addresses[BRCMF_MAX_IFS];
+ 
+ 	struct brcmf_if *iflist[BRCMF_MAX_IFS];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index 9f9024a..a190f53 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2104,8 +2104,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	if ((skb->priority == 0) || (skb->priority > 7))
+ 		skb->priority = cfg80211_classify8021d(skb, NULL);
+ 
+-	drvr->tx_multicast += !!multicast;
+-
+ 	if (fws->avoid_queueing) {
+ 		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+ 		if (rc < 0)
 -- 
-2.8.1
+2.9.3
