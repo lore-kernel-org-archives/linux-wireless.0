@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61563 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932236AbcIBPpP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54216 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754016AbcIXK2D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:45:15 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Colin King <colin.king@canonical.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix memory leak on caldata on error exit path
-Date: Fri, 2 Sep 2016 15:45:09 +0000
-Message-ID: <87r392z4ox.fsf@kamboji.qca.qualcomm.com> (sfid-20160902_174537_447156_824A0653)
-References: <1471268785-11576-1-git-send-email-colin.king@canonical.com>
-In-Reply-To: <1471268785-11576-1-git-send-email-colin.king@canonical.com>
-        (Colin King's message of "Mon, 15 Aug 2016 14:46:25 +0100")
-Content-Type: text/plain; charset="us-ascii"
+        Sat, 24 Sep 2016 06:28:03 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] brcmfmac: fix memory leak in brcmf_fill_bss_param
+In-Reply-To: <20160921062327.28729-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
+ =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
+        message of "Wed, 21 Sep 2016 08:23:24 +0200")
+References: <20160921062327.28729-1-zajec5@gmail.com>
+Date: Sat, 24 Sep 2016 13:27:57 +0300
+Message-ID: <87shsp1tjm.fsf@kamboji.qca.qualcomm.com> (sfid-20160924_122826_705243_C87EB15B)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> writes:
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-> From: Colin Ian King <colin.king@canonical.com>
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
 >
-> caldata is not being free'd on the error exit path, causing
-> a memory leak. kfree it to fix the leak.
+> This function is called from get_station callback which means that every
+> time user space was getting/dumping station(s) we were leaking 2 KiB.
 >
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> Fixes: 1f0dc59a6de ("brcmfmac: rework .get_station() callback")
+> Cc: stable@vger.kernel.org # 4.2+
 > ---
->  drivers/net/wireless/ath/ath10k/pci.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless=
-/ath/ath10k/pci.c
-> index 9a22c47..886337c 100644
-> --- a/drivers/net/wireless/ath/ath10k/pci.c
-> +++ b/drivers/net/wireless/ath/ath10k/pci.c
-> @@ -2725,6 +2725,7 @@ static int ath10k_pci_hif_fetch_cal_eeprom(struct a=
-th10k *ar, void **data,
->  	return 0;
-> =20
->  err_free:
-> +	kfree(caldata);
->  	kfree(data);
-> =20
->  	return -EINVAL;
+> Kalle, ideally this should go as 4.8 fix, but I'm aware it's quite late.
+> If you are not planning to send another pull request, just get it for
+> the next release and let's let stable guys backport it.
 
-I don't think we should free data at all:
+An old memory leak is not severe enough for 4.8 at this stage, so I'll
+queue this to 4.9.
 
-static int ath10k_download_cal_eeprom(struct ath10k *ar)
-{
-	size_t data_len;
-	void *data =3D NULL;
-	int ret;
-
-	ret =3D ath10k_hif_fetch_cal_eeprom(ar, &data, &data_len);
-
-Instead we should free only caldata, right?
+BTW, either my Gnus or my SMTP server (I haven't bothered to check yet
+why exactly) don't like the names with style of "(open list:NETWORKING
+DRIVERS)" in the CC list, I have to edit them away everytime I reply.
+Does anyone have any ideas why that's happening just to me?
 
 --=20
-Kalle Valo=
+Kalle Valo
