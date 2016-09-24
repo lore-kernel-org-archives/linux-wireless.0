@@ -1,76 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38840 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754989AbcIRTy0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56332 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbcIXLTn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 15:54:26 -0400
-Received: by mail-wm0-f41.google.com with SMTP id 1so125078540wmz.1
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2016 12:54:26 -0700 (PDT)
-Subject: Re: [PATCH v2 3/9] cfg80211: add add_nan_func / rm_nan_func
-To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
-References: <20160916083321.5840-1-luca@coelho.fi>
- <20160916083321.5840-4-luca@coelho.fi>
+        Sat, 24 Sep 2016 07:19:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d9c124a1-4d25-0f38-c9dc-a6b20cfa7956@broadcom.com> (sfid-20160918_215438_412049_7DC16B11)
-Date: Sun, 18 Sep 2016 21:54:15 +0200
+Subject: Re: [PATCH 10/25] iwlwifi: mvm: support packet injection
+References: <1474270071.5664.89.camel@coelho.fi>
+        <20160919073028.22065-10-luca@coelho.fi>
+Date: Sat, 24 Sep 2016 14:19:38 +0300
+In-Reply-To: <20160919073028.22065-10-luca@coelho.fi> (Luca Coelho's message
+        of "Mon, 19 Sep 2016 10:30:13 +0300")
+Message-ID: <87oa3d1r5h.fsf@kamboji.qca.qualcomm.com> (sfid-20160924_132316_051238_1C7DC22C)
 MIME-Version: 1.0
-In-Reply-To: <20160916083321.5840-4-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16-9-2016 10:33, Luca Coelho wrote:
-> From: Ayala Beker <ayala.beker@intel.com>
-> 
-> A NAN function can be either publish, subscribe or follow
-> up. Make all the necessary verifications and just pass the
-> request to the driver.
-> Allow the user space application that starts NAN to
-> forbid any other socket to add or remove functions.
-> 
-> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Luca Coelho <luca@coelho.fi> writes:
+
+> From: Sara Sharon <sara.sharon@intel.com>
+>
+> For automatic testing packet injection can be useful.
+> Support injection through debugfs.
+>
+> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
 
-[...]
+The commit log doesn't tell a lot. I started to wonder why use debugfs
+and not the proper interface through mac80211?
 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 7ab18c8..ab16c8e 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -847,6 +847,24 @@
->   *	After this command NAN functions can be added.
->   * @NL80211_CMD_STOP_NAN: Stop the NAN operation, identified by
->   *	its %NL80211_ATTR_WDEV interface.
-> + * @NL80211_CMD_ADD_NAN_FUNCTION: Add a NAN function. The function is defined
-> + *	with %NL80211_ATTR_NAN_FUNC nested attribute. When called, this
-> + *	operation returns the strictly positive and unique instance id
-> + *	(%NL80211_ATTR_NAN_FUNC_INST_ID) and a cookie (%NL80211_ATTR_COOKIE)
-> + *	of the function upon success.
-> + *	Since instance ID's can be re-used, this cookie is the right
-> + *	way to identify the function. This will avoid races when a termination
-> + *	event is handled by the user space after it has already added a new
-> + *	function that got the same instance id from the kernel as the one
-> + *	which just terminated.
-> + *	This cookie may be used in NAN events even before the command
-> + *	returns, so userspace shouldn't process NAN events until it processes
-> + *	the response to this command.
-> + *	Look at %NL80211_ATTR_SOCKET_OWNER as well.
-> + * @NL80211_CMD_RM_NAN_FUNCTION: Remove a NAN function by cookie.
-> + *	This command is also used as a notification sent when a NAN function is
-> + *	terminated. This will contain a %NL80211_ATTR_NAN_FUNC_INST_ID
-> + *	and %NL80211_ATTR_COOKIE attributes.
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+> @@ -917,6 +917,59 @@ static ssize_t iwl_dbgfs_indirection_tbl_write(struct iwl_mvm *mvm,
+>  	return ret ?: count;
+>  }
+>  
+> +static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
+> +					     char *buf, size_t count,
+> +					     loff_t *ppos)
+> +{
+> +	struct iwl_rx_cmd_buffer rxb = {
+> +		._rx_page_order = 0,
+> +		.truesize = 0, /* not used */
+> +		._offset = 0,
+> +	};
+> +	struct iwl_rx_packet *pkt;
+> +	struct iwl_rx_mpdu_desc *desc;
+> +	int bin_len = count / 2;
+> +	int ret = -EINVAL;
+> +
+> +	/* supporting only 9000 descriptor */
+> +	if (!mvm->trans->cfg->mq_rx_supported)
+> +		return -ENOTSUPP;
+> +
+> +	rxb._page = alloc_pages(GFP_ATOMIC, 0);
+> +	if (!rxb._page)
+> +		return -ENOMEM;
+> +	pkt = rxb_addr(&rxb);
+> +
+> +	ret = hex2bin(page_address(rxb._page), buf, bin_len);
+> +	if (ret)
+> +		goto out;
+> +
+> +	/* avoid invalid memory access */
+> +	if (bin_len < sizeof(*pkt) + sizeof(*desc))
+> +		goto out;
+> +
+> +	/* check this is RX packet */
+> +	if (WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd) !=
+> +	    WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))
+> +		goto out;
+> +
+> +	/* check the length in metadata matches actual received length */
+> +	desc = (void *)pkt->data;
+> +	if (le16_to_cpu(desc->mpdu_len) !=
+> +	    (bin_len - sizeof(*desc) - sizeof(*pkt)))
+> +		goto out;
+> +
+> +	local_bh_disable();
+> +	iwl_mvm_rx_mpdu_mq(mvm, NULL, &rxb, 0);
+> +	local_bh_enable();
+> +	ret = 0;
 
-This patch does not show the notification scenario as it is added in
-patch 6. So those three lines could be added by that patch instead to
-keep things logically together.
+But reading from the code makes me suspect that this isn't really normal
+packet injection, more like passing full descriptors to the hw. Did I
+understand correctly?
 
-Regards,
-Arend
+-- 
+Kalle Valo
