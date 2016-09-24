@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56150 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752221AbcICJzO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 05:55:14 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:52870 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754611AbcIXUf0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Sep 2016 16:35:26 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Jean Delvare <jdelvare@suse.de>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not processed' messages
+References: <1474654333.1849.5.camel@perches.com>
+        <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+        <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+        <1474657363.1849.9.camel@perches.com>
+        <20160924175555.01cae6dd@endymion>
+        <1474733754.23838.3.camel@perches.com>
+        <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
+        <1474738358.23838.11.camel@perches.com>
+        <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net>
+        <1474748954.23838.21.camel@perches.com>
+Date: Sat, 24 Sep 2016 16:35:24 -0400
+In-Reply-To: <1474748954.23838.21.camel@perches.com> (Joe Perches's message of
+        "Sat, 24 Sep 2016 13:29:14 -0700")
+Message-ID: <wrfjzimxrq7n.fsf@redhat.com> (sfid-20160924_223554_443218_1030504F)
 MIME-Version: 1.0
-Subject: Re: hostap: Use memdup_user() to reuse code
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1469088884-28469-1-git-send-email-rajan.vaja@gmail.com>
-To: Rajan Vaja <rajan.vaja@gmail.com>
-Cc: j@w1.fi, linux-wireless@vger.kernel.org
-Message-Id: <20160903095513.C099662017@smtp.codeaurora.org> (sfid-20160903_115519_306957_C3405C84)
-Date: Sat,  3 Sep 2016 09:55:13 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajan Vaja <rajan.vaja@gmail.com> wrote:
-> Fix coccicheck warning which recommends to
-> use memdup_user() instead of reimplementing its
-> code.
-> 
-> This patch fixes below coccicheck warnings:
-> 
-> drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3044:9-16: WARNING
-> opportunity for memdup_user
-> drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3806:9-16: WARNING
-> opportunity for memdup_user
-> 
-> Signed-off-by: Rajan Vaja <rajan.vaja@gmail.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Joe Perches <joe@perches.com> writes:
+> On Sat, 2016-09-24 at 14:06 -0500, Larry Finger wrote:
+>> On 09/24/2016 12:32 PM, Joe Perches wrote:
+> []
+>> o Reindent all the switch/case blocks to a more normal
+>>   kernel style (git diff -w would show no changes here)
+>> That sounds like busy work to me, but if you want to do it, go ahead.
+>
+> It's really just to make the comparison case block reductions
+> easier to verify for later steps done
+>
+>> > o cast, spacing and parenthesis reductions
+>> >   Lots of odd and somewhat unique styles in various
+>> >   drivers, looks like too many individual authors without
+>> >   a style guide / code enforcer using slightly different
+>> >   personalized code.  Glancing at the code, it looks to be
+>> >   similar logic, just written in different styles.
+>> Same comment.
+>
+> Same rationale
+>
+>> > o Logic changes like
+>> >   from:
+>> >     if (foo) func(..., bar, ...); else func(..., baz, ...);
+>> >   to:
+>> >     func(..., foo ? bar : baz, ...);
+>> >   to make the case statement code blocks more consistent
+>> >   and emit somewhat smaller object code.
+>> I find if .. else constructs much easier to read than the cond ? xxxx : yyyy 
+>> form. I would reject any such patches.
+>
+> <shrug> I think object code reduction generally a good thing
+> but then again, I'm not a maintainer here.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+I missed this part, but I am with Larry here - 'foo ? bar : boo' are
+just obfuscating the code and far less clear than if or switch
+statements.
 
-8432ebd66205 hostap: Use memdup_user() to reuse code
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9241109/
+Jes
