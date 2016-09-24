@@ -1,99 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:59767
-        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932845AbcILOES (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33705 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758789AbcIXQ5a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 10:04:18 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Sony Chacko <sony.chacko@qlogic.com>,
-        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
-        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
-        Florian Westphal <fw@strlen.de>,
-        Bert Kenward <bkenward@solarflare.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Edward Cree <ecree@solarflare.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Antonio Quartulli <a@unstable.cc>,
-        intel-wired-lan@lists.osuosl.org,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Felipe Balbi <felipe.balbi@linux.intel.com>,
-        Gregory CLEMENT <gregory.clement@free-electrons.com>,
-        Dept-HSGLinuxNICDev@qlogic.com,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        Mugunthan V N <mugunthanvnm@ti.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Steffen Klassert <klassert@mathematik.tu-chemnitz.de>,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Denis Kirjanov <kda@linux-powerpc.org>,
-        Zhao Qiang <qiang.zhao@freescale.com>, netdev@vger.kernel.org,
-        Gerlando Falauto <gerlando.falauto@keymile.com>,
-        linux-wireless@vger.kernel.org, Ion Badulescu <ionut@badula.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Daniele Venzano <venza@brownhat.org>,
-        Alexandre Torgue <alexandre.torgue@st.com>
-Subject: [PATCH 00/15] drivers: net: use IS_ENABLED() instead of checking for built-in or module
-Date: Mon, 12 Sep 2016 10:03:31 -0400
-Message-Id: <1473689026-6983-1-git-send-email-javier@osg.samsung.com> (sfid-20160912_161027_792742_17237D8B)
+        Sat, 24 Sep 2016 12:57:30 -0400
+Received: by mail-oi0-f49.google.com with SMTP id r126so166750490oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Sep 2016 09:57:30 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 0/2] rtlwifi: Add missing values to case statements and simplify debugging
+Date: Sat, 24 Sep 2016 11:57:17 -0500
+Message-Id: <1474736239-9826-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160924_185734_162047_0A95B9A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello David,
+Routines *_get_hw_reg() for some of the drivers were missing entries for
+HAL_DEF_WOWLAN. No action should be taken for these drivers.
 
-This trivial series is similar to [0] for net/ that you already merged, but
-for drivers/net. The patches replaces the open coding to check for a Kconfig
-symbol being built-in or module, with IS_ENABLED() macro that does the same.
+Patch 1 depends on "realtek: Add switch variable to 'switch case not
+processed' messages" submitted by Joe Perches. That patch will log
+missing cases with the hex value. To aid in debugging, the values for
+entries in the hardware variables enum are explicitly defined in hex. 
 
-Using the macro makes the code more readable by helping abstract away some
-of the Kconfig built-in and module enable details.
+Larry Finger (2):
+  rtlwifi: Add HAL_DEF_WOWLAN case to *_get_hw() routines
+  rtlwifi: Add explicit values to hw_variables enum
 
-[0]: https://lkml.org/lkml/2016/9/9/323
-
-Best regards,
-Javier
-
-
-Javier Martinez Canillas (15):
-  3c59x: use IS_ENABLED() instead of checking for built-in or module
-  starfire: use IS_ENABLED() instead of checking for built-in or module
-  ethernet: amd: use IS_ENABLED() instead of checking for built-in or
-    module
-  bnx2: use IS_ENABLED() instead of checking for built-in or module
-  sundance: use IS_ENABLED() instead of checking for built-in or module
-  net/fsl_pq_mdio: use IS_ENABLED() instead of checking for built-in or
-    module
-  i825xx: use IS_ENABLED() instead of checking for built-in or module
-  ixgbe: use IS_ENABLED() instead of checking for built-in or module
-  net: mvneta: use IS_ENABLED() instead of checking for built-in or
-    module
-  natsemi: use IS_ENABLED() instead of checking for built-in or module
-  sfc: use IS_ENABLED() instead of checking for built-in or module
-  sis900: use IS_ENABLED() instead of checking for built-in or module
-  stmmac: use IS_ENABLED() instead of checking for built-in or module
-  hamradio: use IS_ENABLED() instead of checking for built-in or module
-  iwlegacy: use IS_ENABLED() instead of checking for built-in or module
-
- drivers/net/ethernet/3com/3c59x.c            | 2 +-
- drivers/net/ethernet/adaptec/starfire.c      | 2 +-
- drivers/net/ethernet/amd/7990.c              | 6 +++---
- drivers/net/ethernet/amd/amd8111e.c          | 2 +-
- drivers/net/ethernet/broadcom/bnx2.c         | 2 +-
- drivers/net/ethernet/dlink/sundance.c        | 2 +-
- drivers/net/ethernet/freescale/fsl_pq_mdio.c | 8 ++++----
- drivers/net/ethernet/i825xx/82596.c          | 4 ++--
- drivers/net/ethernet/intel/ixgbe/ixgbe.h     | 4 ++--
- drivers/net/ethernet/marvell/mvneta_bm.h     | 2 +-
- drivers/net/ethernet/natsemi/ns83820.c       | 2 +-
- drivers/net/ethernet/sfc/falcon_boards.c     | 4 ++--
- drivers/net/ethernet/sis/sis900.c            | 4 ++--
- drivers/net/ethernet/sis/sis900.h            | 2 +-
- drivers/net/ethernet/stmicro/stmmac/common.h | 2 +-
- drivers/net/hamradio/bpqether.c              | 2 +-
- drivers/net/wireless/intel/iwlegacy/common.h | 4 ++--
- 17 files changed, 27 insertions(+), 27 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   2 +
+ drivers/net/wireless/realtek/rtlwifi/wifi.h        | 208 ++++++++++-----------
+ 8 files changed, 118 insertions(+), 104 deletions(-)
 
 -- 
-2.7.4
+2.6.6
