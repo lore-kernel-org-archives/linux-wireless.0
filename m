@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.217]:34518 "EHLO
-        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754127AbcI0I4z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 04:56:55 -0400
+Received: from mx2.suse.de ([195.135.220.15]:36275 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754881AbcIXP4A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Sep 2016 11:56:00 -0400
+Date: Sat, 24 Sep 2016 17:55:55 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+Message-ID: <20160924175555.01cae6dd@endymion> (sfid-20160924_175628_114314_25313FE4)
+In-Reply-To: <1474657363.1849.9.camel@perches.com>
+References: <1474654333.1849.5.camel@perches.com>
+        <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+        <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+        <1474657363.1849.9.camel@perches.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 27 Sep 2016 10:53:28 +0200
-From: michael-dev <michael-dev@fami-braun.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: Re: [PATCHv2] mac80211: check A-MSDU inner frame source address on AP
- interfaces
-In-Reply-To: <1474963267.5141.11.camel@sipsolutions.net>
-References: <1474802886-27220-1-git-send-email-michael-dev@fami-braun.de>
- (sfid-20160925_132809_451078_E31A6EC3)
- <1474963267.5141.11.camel@sipsolutions.net>
-Message-ID: <dbc9f09e4d932d808fed99ebd02301c0@fami-braun.de> (sfid-20160927_105705_240282_41686FED)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 27.09.2016 10:01, schrieb Johannes Berg:
-> ...
->=20
-> This leaves "eth_80211" uninitialized if has_80211_header is false.
->=20
->> @@ -768,6 +768,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff
->> *skb, struct sk_buff_head *list,
->> =C2=A0		subframe_len =3D sizeof(struct ethhdr) + len;
->> =C2=A0		padding =3D (4 - subframe_len) & 0x3;
->> =C2=A0
->> +		if (unlikely(has_80211_header &&
->> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(iftype =3D=3D NL80211_IFTYPE_AP ||
->> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iftype =3D=3D NL80211_IFTYPE_AP_=
-VLAN) &&
->> +			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0!ether_addr_equal(eth_80211.h_source,
->> eth.h_source)
->> +		=C2=A0=C2=A0=C2=A0))
->> +			goto purge;
->=20
-> And this then compares against uninitialized data, so this won't work.
+Hi Joe, Larry,
 
-but it only compares against eth_80211 if has_80211_header is true due=20
-to order of evaluation, which in turn implies eth_80211 is initialized,=20
-right?
+On Fri, 23 Sep 2016 12:02:43 -0700, Joe Perches wrote:
+> On Fri, 2016-09-23 at 13:59 -0500, Larry Finger wrote:
+> > I'm not familiar with the %#x format. What does it do?
+> 
+> Outputs SPECIAL prefix, it's the same as "0x%x"
+> 
+> lib/vsprintf.c:
+> #define SPECIAL	64		/* prefix hex with "0x", octal with "0" */
 
-michael
+Is hexadecimal actually the best way to display these values? I guess it
+depends how they are listed in the datasheets (if there's anything like
+that for these chips?)
+
+I found it a bit difficult to look up the meaning of the value.
+HAL_DEF_WOWLAN is an enum value, the number is not set and there's no
+comment. I had to count the line numbers, taking blank lines into
+account... I ended up pasting the whole enum to a random C file and
+printing the value of HAL_DEF_WOWLAN to make sure it was 92.
+
+Would it make sense to explicitly set the enum values, or add them as
+comments, to make such look-ups easier?
+
+-- 
+Jean Delvare
+SUSE L3 Support
