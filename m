@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7431 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbcIOOaM (ORCPT
+Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:39889 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754522AbcIXRcm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 10:30:12 -0400
-From: <c_mkenna@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <mkenna@codeaurora.org>,
-        Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Provide provision to get Transmit Power Control stats for 10.4
-Date: Thu, 15 Sep 2016 20:00:19 +0530
-Message-ID: <1473949819-29154-1-git-send-email-c_mkenna@qti.qualcomm.com> (sfid-20160915_163024_933248_F9DA02CB)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sat, 24 Sep 2016 13:32:42 -0400
+Message-ID: <1474738358.23838.11.camel@perches.com> (sfid-20160924_193248_478574_7F631F0A)
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Jean Delvare <jdelvare@suse.de>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Sat, 24 Sep 2016 10:32:38 -0700
+In-Reply-To: <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
+References: <1474654333.1849.5.camel@perches.com>
+         <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+         <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+         <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
+         <1474733754.23838.3.camel@perches.com>
+         <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+(adding Jes Sorensen to recipients)
 
-This patch helps to get the TPC stats for 10.4 fw variants.
+On Sat, 2016-09-24 at 11:35 -0500, Larry Finger wrote:
+> I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers, 
+> and one that sets the enum values for that particular statement to hex values. I 
+> also looked at the other large enums and decided that they never need the human 
+> lookup.
 
-Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |    4 ++++
- 1 file changed, 4 insertions(+)
+Hey Larry.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 38993d7..44a1a8d 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5391,6 +5391,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_PDEV_BSS_CHAN_INFO_EVENTID:
- 		ath10k_wmi_event_pdev_bss_chan_info(ar, skb);
- 		break;
-+	case WMI_10_4_PDEV_TPC_CONFIG_EVENTID:
-+		ath10k_wmi_event_pdev_tpc_config(ar, skb);
-+		break;
- 	default:
- 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
- 		break;
-@@ -8147,6 +8150,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.get_vdev_subtype = ath10k_wmi_10_4_op_get_vdev_subtype,
- 	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
- 	.gen_echo = ath10k_wmi_op_gen_echo,
-+	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
- };
- 
- int ath10k_wmi_attach(struct ath10k *ar)
--- 
-1.7.9.5
+There are many somewhat common realtek wireless drivers.
+
+Not to step on your toes, but what do you think of
+rationalizing the switch/case statements of all the
+realtek drivers in a few steps:
+
+o Reindent all the switch/case blocks to a more normal
+  kernel style (git diff -w would show no changes here)
+
+o cast, spacing and parenthesis reductions
+  Lots of odd and somewhat unique styles in various
+  drivers, looks like too many individual authors without
+  a style guide / code enforcer using slightly different
+  personalized code.  Glancing at the code, it looks to be
+  similar logic, just written in different styles.
+
+o Logic changes like
+  from:
+    if (foo) func(..., bar, ...); else func(..., baz, ...);
+  to:
+    func(..., foo ? bar : baz, ...);
+  to make the case statement code blocks more consistent
+  and emit somewhat smaller object code.
+
+o Consolidation of equivalent function spanning drivers
+  With the style only changes minimized, where possible
+  make the drivers use common ops/callback functions.
+
+Is there any value in that or is Jes' work going to make
+doing any or all of this unnecessary and futile?
