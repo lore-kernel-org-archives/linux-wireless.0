@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35245 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751736AbcIAJHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 05:07:33 -0400
-Message-ID: <1472720848.9608.1.camel@sipsolutions.net> (sfid-20160901_110802_060433_8E4DB42F)
-Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to
- after TXQ dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Thu, 01 Sep 2016 11:07:28 +0200
-In-Reply-To: <8737lk816p.fsf@toke.dk>
-References: <20160824162015.29933-1-toke@toke.dk>
-         <20160830131548.6014-1-toke@toke.dk>
-         <1472677599.5470.13.camel@sipsolutions.net> <87inug81vo.fsf@toke.dk>
-         <1472718860.4249.0.camel@sipsolutions.net> <8737lk816p.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0058.hostedemail.com ([216.40.44.58]:43490 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1759519AbcIXU3T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Sep 2016 16:29:19 -0400
+Message-ID: <1474748954.23838.21.camel@perches.com> (sfid-20160924_222936_164542_3A9FCB2C)
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Jean Delvare <jdelvare@suse.de>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Sat, 24 Sep 2016 13:29:14 -0700
+In-Reply-To: <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net>
+References: <1474654333.1849.5.camel@perches.com>
+         <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+         <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+         <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
+         <1474733754.23838.3.camel@perches.com>
+         <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
+         <1474738358.23838.11.camel@perches.com>
+         <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2016-09-24 at 14:06 -0500, Larry Finger wrote:
+> On 09/24/2016 12:32 PM, Joe Perches wrote:
+[]
+> o Reindent all the switch/case blocks to a more normal
+>   kernel style (git diff -w would show no changes here)
+> That sounds like busy work to me, but if you want to do it, go ahead.
 
-> > They have three possible values ... :)
+It's really just to make the comparison case block reductions
+easier to verify for later steps done
+
+> > o cast, spacing and parenthesis reductions
+> >   Lots of odd and somewhat unique styles in various
+> >   drivers, looks like too many individual authors without
+> >   a style guide / code enforcer using slightly different
+> >   personalized code.  Glancing at the code, it looks to be
+> >   similar logic, just written in different styles.
+> Same comment.
+
+Same rationale
+
+> > o Logic changes like
+> >   from:
+> >     if (foo) func(..., bar, ...); else func(..., baz, ...);
+> >   to:
+> >     func(..., foo ? bar : baz, ...);
+> >   to make the case statement code blocks more consistent
+> >   and emit somewhat smaller object code.
+> I find if .. else constructs much easier to read than the cond ? xxxx : yyyy 
+> form. I would reject any such patches.
+
+<shrug> I think object code reduction generally a good thing
+but then again, I'm not a maintainer here.
+
+> > o Consolidation of equivalent function spanning drivers
+> >   With the style only changes minimized, where possible
+> >   make the drivers use common ops/callback functions.
+> The is no question that there are similar routines in different drivers. I would 
+> like to place as much as possible into common routines, but I never seem to find 
+> the time. There are too many bugs in other things I support to consider these 
+> niceties.
+
+Consolidation generally reduces defects and improves ease of
+updating.
 > 
-> Ah, no, not the handlers themselves. Meant the invoke_tx_handlers()
-> function (or all three of them after my patch; hence the plural). To
-> avoid the "0 means true" confusion you alluded to :)
-> 
-
-Ah. Actually, even I got confused and thought the return value *was*
-the same as the handler.
-
-I think it doesn't matter to be tricky, gcc is probably going to (have
-to) generate exactly the same code like when you explicitly put an if
-statement in there, it seems?
-
-johannes
