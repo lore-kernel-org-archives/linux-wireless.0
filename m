@@ -1,138 +1,249 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59449 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752881AbcIPM4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:56:54 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-09-16
-Date: Fri, 16 Sep 2016 14:56:45 +0200
-Message-Id: <1474030606-16664-1-git-send-email-johannes@sipsolutions.net> (sfid-20160916_145703_369226_00977AF1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35298 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759408AbcIXQ5j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Sep 2016 12:57:39 -0400
+Received: by mail-oi0-f66.google.com with SMTP id n202so10913343oig.2
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Sep 2016 09:57:39 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 2/2] rtlwifi: Add explicit values to hw_variables enum
+Date: Sat, 24 Sep 2016 11:57:19 -0500
+Message-Id: <1474736239-9826-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160924_185743_525631_B72179D5)
+In-Reply-To: <1474736239-9826-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1474736239-9826-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+The entries in this enum may be referenced in debug output. Adding explicit
+values simplifies the lookup.
 
-And here's another set for net-next, it's been a month or so and we have a
-reasonably large number of patches (for a change, mostly because I cleaned
-up some WEP crypto thing and a few static checkers.)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 208 ++++++++++++++--------------
+ 1 file changed, 104 insertions(+), 104 deletions(-)
 
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 02154927c115c7599677df57203988e05b576346:
-
-  net: dsa: bcm_sf2: Get VLAN_PORT_MASK from b53_device (2016-09-11 19:37:02 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-09-16
-
-for you to fetch changes up to fbd05e4a6e82fd573d3aa79e284e424b8d78c149:
-
-  cfg80211: add helper to find an IE that matches a byte-array (2016-09-16 14:49:52 +0200)
-
-----------------------------------------------------------------
-This time we have various things - all across the board:
- * MU-MIMO sniffer support in mac80211
- * a create_singlethread_workqueue() cleanup
- * interface dump filtering that was documented but not implemented
- * support for the new radiotap timestamp field
- * send delBA in two unexpected conditions (as required by the spec)
- * connect keys cleanups - allow only WEP with index 0-3
- * per-station aggregation limit to work around broken APs
- * debugfs improvement for the integrated codel algorithm
-and various other small improvements and cleanups.
-
-----------------------------------------------------------------
-Aviya Erenfeld (2):
-      mac80211: refactor monitor representation in sdata
-      mac80211: add support for MU-MIMO air sniffer
-
-Bhaktipriya Shridhar (1):
-      cfg80211: Remove deprecated create_singlethread_workqueue
-
-Denis Kenzior (1):
-      nl80211: Allow GET_INTERFACE dumps to be filtered
-
-Emmanuel Grumbach (2):
-      cfg80211: clarify the requirements of .disconnect()
-      mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE
-
-Johannes Berg (21):
-      mac80211: add support for radiotap timestamp field
-      mac80211: send delBA on unexpected BlockAck data frames
-      mac80211: send delBA on unexpected BlockAck Request
-      mac80211: simplify TDLS RA lookup
-      mac80211: remove useless open_count check
-      cfg80211: disallow shared key authentication with key index 4
-      nl80211: fix connect keys range check
-      nl80211: only allow WEP keys during connect command
-      cfg80211: wext: only allow WEP keys to be configured before connected
-      cfg80211: validate key index better
-      cfg80211: reduce connect key caching struct size
-      cfg80211: allow connect keys only with default (TX) key
-      mac80211: fix possible out-of-bounds access
-      mac80211: fix scan completed tracing
-      nl80211: always check nla_nest_start() return value
-      nl80211: always check nla_put* return values
-      mac80211: remove unused assignment
-      mac80211: remove pointless chanctx NULL check
-      mac80211: remove sta_remove_debugfs driver callback
-      cfg80211: remove unnecessary pointer-of
-      mac80211_hwsim: statically initialize hwsim_radios list
-
-Luca Coelho (1):
-      cfg80211: add helper to find an IE that matches a byte-array
-
-Maxim Altshul (1):
-      mac80211: RX BA support for sta max_rx_aggregation_subframes
-
-Rajkumar Manoharan (1):
-      mac80211: allow driver to handle packet-loss mechanism
-
-Toke Høiland-Jørgensen (1):
-      mac80211: Re-structure aqm debugfs output and keep CoDel stats per txq
-
- drivers/net/wireless/mac80211_hwsim.c |   3 +-
- include/net/cfg80211.h                |  36 +++++++-
- include/net/ieee80211_radiotap.h      |  21 +++++
- include/net/mac80211.h                |  33 ++++++--
- net/mac80211/agg-rx.c                 |  11 ++-
- net/mac80211/cfg.c                    |  35 ++++++--
- net/mac80211/debugfs.c                | 152 ++++++----------------------------
- net/mac80211/debugfs_netdev.c         |  37 ++++++++-
- net/mac80211/debugfs_sta.c            |  56 ++++++++++++-
- net/mac80211/driver-ops.c             |   2 +-
- net/mac80211/driver-ops.h             |  18 +---
- net/mac80211/ieee80211_i.h            |  11 ++-
- net/mac80211/iface.c                  |  21 +++--
- net/mac80211/main.c                   |   3 +
- net/mac80211/mlme.c                   |  12 ++-
- net/mac80211/pm.c                     |   3 +-
- net/mac80211/rx.c                     |  69 ++++++++++++++-
- net/mac80211/scan.c                   |   2 +-
- net/mac80211/sta_info.c               |   5 +-
- net/mac80211/sta_info.h               |   3 +
- net/mac80211/status.c                 |   8 +-
- net/mac80211/tx.c                     |  21 ++---
- net/mac80211/util.c                   |   3 +-
- net/wireless/core.c                   |   2 +-
- net/wireless/core.h                   |   6 +-
- net/wireless/ibss.c                   |  11 +--
- net/wireless/mlme.c                   |   2 +-
- net/wireless/nl80211.c                |  85 ++++++++++++++++---
- net/wireless/scan.c                   |  58 ++++++-------
- net/wireless/sme.c                    |   3 +
- net/wireless/sysfs.c                  |   2 +-
- net/wireless/util.c                   |  13 +--
- net/wireless/wext-compat.c            |   9 +-
- net/wireless/wext-sme.c               |   5 +-
- 34 files changed, 484 insertions(+), 277 deletions(-)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index c5086c2..595f7d5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -394,110 +394,110 @@ enum io_type {
+ };
+ 
+ enum hw_variables {
+-	HW_VAR_ETHER_ADDR,
+-	HW_VAR_MULTICAST_REG,
+-	HW_VAR_BASIC_RATE,
+-	HW_VAR_BSSID,
+-	HW_VAR_MEDIA_STATUS,
+-	HW_VAR_SECURITY_CONF,
+-	HW_VAR_BEACON_INTERVAL,
+-	HW_VAR_ATIM_WINDOW,
+-	HW_VAR_LISTEN_INTERVAL,
+-	HW_VAR_CS_COUNTER,
+-	HW_VAR_DEFAULTKEY0,
+-	HW_VAR_DEFAULTKEY1,
+-	HW_VAR_DEFAULTKEY2,
+-	HW_VAR_DEFAULTKEY3,
+-	HW_VAR_SIFS,
+-	HW_VAR_R2T_SIFS,
+-	HW_VAR_DIFS,
+-	HW_VAR_EIFS,
+-	HW_VAR_SLOT_TIME,
+-	HW_VAR_ACK_PREAMBLE,
+-	HW_VAR_CW_CONFIG,
+-	HW_VAR_CW_VALUES,
+-	HW_VAR_RATE_FALLBACK_CONTROL,
+-	HW_VAR_CONTENTION_WINDOW,
+-	HW_VAR_RETRY_COUNT,
+-	HW_VAR_TR_SWITCH,
+-	HW_VAR_COMMAND,
+-	HW_VAR_WPA_CONFIG,
+-	HW_VAR_AMPDU_MIN_SPACE,
+-	HW_VAR_SHORTGI_DENSITY,
+-	HW_VAR_AMPDU_FACTOR,
+-	HW_VAR_MCS_RATE_AVAILABLE,
+-	HW_VAR_AC_PARAM,
+-	HW_VAR_ACM_CTRL,
+-	HW_VAR_DIS_Req_Qsize,
+-	HW_VAR_CCX_CHNL_LOAD,
+-	HW_VAR_CCX_NOISE_HISTOGRAM,
+-	HW_VAR_CCX_CLM_NHM,
+-	HW_VAR_TxOPLimit,
+-	HW_VAR_TURBO_MODE,
+-	HW_VAR_RF_STATE,
+-	HW_VAR_RF_OFF_BY_HW,
+-	HW_VAR_BUS_SPEED,
+-	HW_VAR_SET_DEV_POWER,
+-
+-	HW_VAR_RCR,
+-	HW_VAR_RATR_0,
+-	HW_VAR_RRSR,
+-	HW_VAR_CPU_RST,
+-	HW_VAR_CHECK_BSSID,
+-	HW_VAR_LBK_MODE,
+-	HW_VAR_AES_11N_FIX,
+-	HW_VAR_USB_RX_AGGR,
+-	HW_VAR_USER_CONTROL_TURBO_MODE,
+-	HW_VAR_RETRY_LIMIT,
+-	HW_VAR_INIT_TX_RATE,
+-	HW_VAR_TX_RATE_REG,
+-	HW_VAR_EFUSE_USAGE,
+-	HW_VAR_EFUSE_BYTES,
+-	HW_VAR_AUTOLOAD_STATUS,
+-	HW_VAR_RF_2R_DISABLE,
+-	HW_VAR_SET_RPWM,
+-	HW_VAR_H2C_FW_PWRMODE,
+-	HW_VAR_H2C_FW_JOINBSSRPT,
+-	HW_VAR_H2C_FW_MEDIASTATUSRPT,
+-	HW_VAR_H2C_FW_P2P_PS_OFFLOAD,
+-	HW_VAR_FW_PSMODE_STATUS,
+-	HW_VAR_INIT_RTS_RATE,
+-	HW_VAR_RESUME_CLK_ON,
+-	HW_VAR_FW_LPS_ACTION,
+-	HW_VAR_1X1_RECV_COMBINE,
+-	HW_VAR_STOP_SEND_BEACON,
+-	HW_VAR_TSF_TIMER,
+-	HW_VAR_IO_CMD,
+-
+-	HW_VAR_RF_RECOVERY,
+-	HW_VAR_H2C_FW_UPDATE_GTK,
+-	HW_VAR_WF_MASK,
+-	HW_VAR_WF_CRC,
+-	HW_VAR_WF_IS_MAC_ADDR,
+-	HW_VAR_H2C_FW_OFFLOAD,
+-	HW_VAR_RESET_WFCRC,
+-
+-	HW_VAR_HANDLE_FW_C2H,
+-	HW_VAR_DL_FW_RSVD_PAGE,
+-	HW_VAR_AID,
+-	HW_VAR_HW_SEQ_ENABLE,
+-	HW_VAR_CORRECT_TSF,
+-	HW_VAR_BCN_VALID,
+-	HW_VAR_FWLPS_RF_ON,
+-	HW_VAR_DUAL_TSF_RST,
+-	HW_VAR_SWITCH_EPHY_WoWLAN,
+-	HW_VAR_INT_MIGRATION,
+-	HW_VAR_INT_AC,
+-	HW_VAR_RF_TIMING,
+-
+-	HAL_DEF_WOWLAN,
+-	HW_VAR_MRC,
+-	HW_VAR_KEEP_ALIVE,
+-	HW_VAR_NAV_UPPER,
+-
+-	HW_VAR_MGT_FILTER,
+-	HW_VAR_CTRL_FILTER,
+-	HW_VAR_DATA_FILTER,
++	HW_VAR_ETHER_ADDR = 0x0,
++	HW_VAR_MULTICAST_REG = 0x1,
++	HW_VAR_BASIC_RATE = 0x2,
++	HW_VAR_BSSID = 0x3,
++	HW_VAR_MEDIA_STATUS= 0x4,
++	HW_VAR_SECURITY_CONF= 0x5,
++	HW_VAR_BEACON_INTERVAL = 0x6,
++	HW_VAR_ATIM_WINDOW = 0x7,
++	HW_VAR_LISTEN_INTERVAL = 0x8,
++	HW_VAR_CS_COUNTER = 0x9,
++	HW_VAR_DEFAULTKEY0 = 0xa,
++	HW_VAR_DEFAULTKEY1 = 0xb,
++	HW_VAR_DEFAULTKEY2 = 0xc,
++	HW_VAR_DEFAULTKEY3 = 0xd,
++	HW_VAR_SIFS = 0xe,
++	HW_VAR_R2T_SIFS = 0xf,
++	HW_VAR_DIFS = 0x10,
++	HW_VAR_EIFS = 0x11,
++	HW_VAR_SLOT_TIME = 0x12,
++	HW_VAR_ACK_PREAMBLE = 0x13,
++	HW_VAR_CW_CONFIG = 0x14,
++	HW_VAR_CW_VALUES = 0x15,
++	HW_VAR_RATE_FALLBACK_CONTROL= 0x16,
++	HW_VAR_CONTENTION_WINDOW = 0x17,
++	HW_VAR_RETRY_COUNT = 0x18,
++	HW_VAR_TR_SWITCH = 0x19,
++	HW_VAR_COMMAND = 0x1a,
++	HW_VAR_WPA_CONFIG = 0x1b,
++	HW_VAR_AMPDU_MIN_SPACE = 0x1c,
++	HW_VAR_SHORTGI_DENSITY = 0x1d,
++	HW_VAR_AMPDU_FACTOR = 0x1e,
++	HW_VAR_MCS_RATE_AVAILABLE = 0x1f,
++	HW_VAR_AC_PARAM = 0x20,
++	HW_VAR_ACM_CTRL = 0x21,
++	HW_VAR_DIS_Req_Qsize = 0x22,
++	HW_VAR_CCX_CHNL_LOAD = 0x23,
++	HW_VAR_CCX_NOISE_HISTOGRAM = 0x24,
++	HW_VAR_CCX_CLM_NHM = 0x25,
++	HW_VAR_TxOPLimit = 0x26,
++	HW_VAR_TURBO_MODE = 0x27,
++	HW_VAR_RF_STATE = 0x28,
++	HW_VAR_RF_OFF_BY_HW = 0x29,
++	HW_VAR_BUS_SPEED = 0x2a,
++	HW_VAR_SET_DEV_POWER = 0x2b,
++
++	HW_VAR_RCR = 0x2c,
++	HW_VAR_RATR_0 = 0x2d,
++	HW_VAR_RRSR = 0x2e,
++	HW_VAR_CPU_RST = 0x2f,
++	HW_VAR_CHECK_BSSID = 0x30,
++	HW_VAR_LBK_MODE = 0x31,
++	HW_VAR_AES_11N_FIX = 0x32,
++	HW_VAR_USB_RX_AGGR = 0x33,
++	HW_VAR_USER_CONTROL_TURBO_MODE = 0x34,
++	HW_VAR_RETRY_LIMIT = 0x35,
++	HW_VAR_INIT_TX_RATE = 0x36,
++	HW_VAR_TX_RATE_REG = 0x37,
++	HW_VAR_EFUSE_USAGE = 0x38,
++	HW_VAR_EFUSE_BYTES = 0x39,
++	HW_VAR_AUTOLOAD_STATUS = 0x3a,
++	HW_VAR_RF_2R_DISABLE = 0x3b,
++	HW_VAR_SET_RPWM = 0x3c,
++	HW_VAR_H2C_FW_PWRMODE = 0x3d,
++	HW_VAR_H2C_FW_JOINBSSRPT = 0x3e,
++	HW_VAR_H2C_FW_MEDIASTATUSRPT = 0x3f,
++	HW_VAR_H2C_FW_P2P_PS_OFFLOAD = 0x40,
++	HW_VAR_FW_PSMODE_STATUS = 0x41,
++	HW_VAR_INIT_RTS_RATE = 0x42,
++	HW_VAR_RESUME_CLK_ON = 0x43,
++	HW_VAR_FW_LPS_ACTION = 0x44,
++	HW_VAR_1X1_RECV_COMBINE = 0x45,
++	HW_VAR_STOP_SEND_BEACON = 0x46,
++	HW_VAR_TSF_TIMER = 0x47,
++	HW_VAR_IO_CMD = 0x48,
++
++	HW_VAR_RF_RECOVERY = 0x49,
++	HW_VAR_H2C_FW_UPDATE_GTK = 0x4a,
++	HW_VAR_WF_MASK = 0x4b,
++	HW_VAR_WF_CRC = 0x4c,
++	HW_VAR_WF_IS_MAC_ADDR = 0x4d,
++	HW_VAR_H2C_FW_OFFLOAD = 0x4e,
++	HW_VAR_RESET_WFCRC = 0x4f,
++
++	HW_VAR_HANDLE_FW_C2H = 0x50,
++	HW_VAR_DL_FW_RSVD_PAGE = 0x51,
++	HW_VAR_AID = 0x52,
++	HW_VAR_HW_SEQ_ENABLE = 0x53,
++	HW_VAR_CORRECT_TSF = 0x54,
++	HW_VAR_BCN_VALID = 0x55,
++	HW_VAR_FWLPS_RF_ON = 0x56,
++	HW_VAR_DUAL_TSF_RST = 0x57,
++	HW_VAR_SWITCH_EPHY_WoWLAN = 0x58,
++	HW_VAR_INT_MIGRATION = 0x59,
++	HW_VAR_INT_AC = 0x5a,
++	HW_VAR_RF_TIMING = 0x5b,
++
++	HAL_DEF_WOWLAN = 0x5c,
++	HW_VAR_MRC = 0x5d,
++	HW_VAR_KEEP_ALIVE = 0x5e,
++	HW_VAR_NAV_UPPER = 0x5f,
++
++	HW_VAR_MGT_FILTER = 0x60,
++	HW_VAR_CTRL_FILTER = 0x61,
++	HW_VAR_DATA_FILTER = 0x62,
+ };
+ 
+ enum rt_media_status {
+-- 
+2.6.6
