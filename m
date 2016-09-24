@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52608 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752301AbcIHPFu (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34467 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758057AbcIXQfC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 11:05:50 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mwifiex: add PCIe function level reset support
-Date: Thu, 8 Sep 2016 15:05:46 +0000
-Message-ID: <86c718ca301b4da2ba814c049b78e6b3@SC-EXCH04.marvell.com> (sfid-20160908_170555_659964_9408665D)
-References: <1469541704-2880-1-git-send-email-akarwar@marvell.com>
- <20160903154016.4BCE56217C@smtp.codeaurora.org>
-In-Reply-To: <20160903154016.4BCE56217C@smtp.codeaurora.org>
-Content-Type: text/plain; charset="utf-8"
+        Sat, 24 Sep 2016 12:35:02 -0400
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+To: Joe Perches <joe@perches.com>, Jean Delvare <jdelvare@suse.de>
+References: <1474654333.1849.5.camel@perches.com>
+ <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+ <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+ <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
+ <1474733754.23838.3.camel@perches.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net> (sfid-20160924_183508_443633_9FD14177)
+Date: Sat, 24 Sep 2016 11:35:00 -0500
 MIME-Version: 1.0
+In-Reply-To: <1474733754.23838.3.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIEthbGxlIFZhbG8NCj4gU2VudDogU2F0dXJkYXksIFNlcHRlbWJlciAwMywgMjAxNiA5
-OjEwIFBNDQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2Vy
-Lmtlcm5lbC5vcmc7IEFtaXRrdW1hciBLYXJ3YXINCj4gU3ViamVjdDogUmU6IG13aWZpZXg6IGFk
-ZCBQQ0llIGZ1bmN0aW9uIGxldmVsIHJlc2V0IHN1cHBvcnQNCj4gDQo+IEFtaXRrdW1hciBLYXJ3
-YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+IHdyb3RlOg0KPiA+IFRoaXMgcGF0Y2ggaW1wbGVtZW50
-cyBwcmUgYW5kIHBvc3QgRkxSIGhhbmRsZXJzIHRvIHN1cHBvcnQgUENJZSBGTFINCj4gPiBmdW5j
-dGlvbmFsaXR5LiBTb2Z0d2FyZSBjbGVhbnVwIGlzIHBlcmZvcm1lZCBpbiBwcmUtRkxSIHdoZXJl
-YXMNCj4gPiBmaXJtd2FyZSBpcyBkb3dubG9hZGVkIGFuZCBzb2Z0d2FyZSBpcyByZS1pbml0aWFs
-aXNlZCBpbiBwb3N0LUZMUg0KPiA+IGhhbmRsZXIuDQo+ID4NCj4gPiBGb2xsb3dpbmcgY29tbWFu
-ZCB0cmlnZ2VycyBGTFIuDQo+ID4gZWNobyAiMSIgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8kTlVN
-QkVSL3Jlc2V0DQo+ID4NCj4gPiBUaGlzIGZlYXR1cmUgY2FuIGJlIHVzZWQgYXMgYSByZWNvdmVy
-eSBtZWNoYW5pc20gd2hlbiBmaXJtd2FyZSBnZXRzDQo+ID4gaGFuZy4NCj4gPg0KPiA+IFNpZ25l
-ZC1vZmYtYnk6IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+IA0KPiBE
-b2Vzbid0IGFwcGx5IGFueW1vcmUsIHBsZWFzZSByZWJhc2UuDQo+IA0KPiBBcHBseWluZzogbXdp
-ZmlleDogYWRkIFBDSWUgZnVuY3Rpb24gbGV2ZWwgcmVzZXQgc3VwcG9ydA0KPiBmYXRhbDogc2hh
-MSBpbmZvcm1hdGlvbiBpcyBsYWNraW5nIG9yIHVzZWxlc3MNCj4gKGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmMpLg0KPiBSZXBvc2l0b3J5IGxhY2tzIG5lY2Vzc2Fy
-eSBibG9icyB0byBmYWxsIGJhY2sgb24gMy13YXkgbWVyZ2UuDQo+IENhbm5vdCBmYWxsIGJhY2sg
-dG8gdGhyZWUtd2F5IG1lcmdlLg0KPiBQYXRjaCBmYWlsZWQgYXQgMDAwMSBtd2lmaWV4OiBhZGQg
-UENJZSBmdW5jdGlvbiBsZXZlbCByZXNldCBzdXBwb3J0DQo+IA0KDQpJdCBnZXRzIGFwcGxpZWQg
-c21vb3RobHkgaWYgYmVsb3cgcGF0Y2hlcyBhcmUgYXBwbGllZCBmaXJzdC4NCmh0dHBzOi8vcGF0
-Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvOTMxMDQ5OS8gKFt2NSwxLzJdIG13aWZpZXg6IGFkZCBt
-YW51ZmFjdHVyaW5nIG1vZGUgc3VwcG9ydCkNCmh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcv
-cGF0Y2gvOTMxMDUwMS8gKFt2NSwyLzJdIG13aWZpZXg6IGFkZCBjZmc4MDIxMSB0ZXN0bW9kZSBz
-dXBwb3J0KQ0KDQpQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8gcmViYXNlICJQ
-Q0llIGZ1bmN0aW9uIGxldmVsIHJlc2V0IHN1cHBvcnQiLiBJbiB0aGF0IGNhc2UgSSBuZWVkIHRv
-IHJlYmFzZSBhbmQgc2VuZCBhYm92ZSAyIHBhdGNoZXMgYXMgd2VsbC4NCg0KUmVnYXJkcywNCkFt
-aXRrdW1hcg0K
+On 09/24/2016 11:15 AM, Joe Perches wrote:
+> On Sat, 2016-09-24 at 17:55 +0200, Jean Delvare wrote:
+>> Would it make sense to explicitly set the enum values, or add them as
+>> comments, to make such look-ups easier?
+>
+> If you want to create enum->#ENUM structs and
+> "const char *" lookup functions, please be my guest.
+>
+> otherwise, hex is at least a consistent way to display
+> what should be infrequent output.
+
+Displaying those values as hex is OK. As Joe says, they will not be shown very 
+often.
+
+I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers, 
+and one that sets the enum values for that particular statement to hex values. I 
+also looked at the other large enums and decided that they never need the human 
+lookup.
+
+Larry
