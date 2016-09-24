@@ -1,90 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54944 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752666AbcIOSNX (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36653 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932768AbcIXSGt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:13:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:26 +0300
-Message-Id: <20160915181131.32213-20-luca@coelho.fi> (sfid-20160915_201346_798320_5D207841)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 20/25] iwlwifi: mvm: bump max API to 26
+        Sat, 24 Sep 2016 14:06:49 -0400
+Received: by mail-oi0-f67.google.com with SMTP id i193so10989066oib.3
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Sep 2016 11:06:49 -0700 (PDT)
+Subject: Re: [PATCH 2/2] rtlwifi: Add explicit values to hw_variables enum
+To: Joe Perches <joe@perches.com>, kvalo@codeaurora.org
+References: <1474736239-9826-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1474736239-9826-3-git-send-email-Larry.Finger@lwfinger.net>
+ <1474738987.23838.13.camel@perches.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <e2f60a69-0804-083f-289f-cb869edd6de3@lwfinger.net> (sfid-20160924_200652_950736_892A7386)
+Date: Sat, 24 Sep 2016 13:06:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <1474738987.23838.13.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 09/24/2016 12:43 PM, Joe Perches wrote:
+> On Sat, 2016-09-24 at 11:57 -0500, Larry Finger wrote:
+>> The entries in this enum may be referenced in debug output. Adding explicit
+>> values simplifies the lookup.
+>
+> A negative aspect to this style is forced renumbering
+> if a HW_VAR entry is inserted.
+>
+> Is that possible?
 
-The driver now support version 26 of the firmware APIs.
+Any new one would be added at the end.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-index 64690c14..aa575fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-@@ -73,8 +73,8 @@
- /* Highest firmware API version supported */
- #define IWL7260_UCODE_API_MAX	17
- #define IWL7265_UCODE_API_MAX	17
--#define IWL7265D_UCODE_API_MAX	24
--#define IWL3168_UCODE_API_MAX	24
-+#define IWL7265D_UCODE_API_MAX	26
-+#define IWL3168_UCODE_API_MAX	26
- 
- /* Lowest firmware API version supported */
- #define IWL7260_UCODE_API_MIN	16
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index cde4f26..990cf2b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -70,8 +70,8 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	24
--#define IWL8265_UCODE_API_MAX	24
-+#define IWL8000_UCODE_API_MAX	26
-+#define IWL8265_UCODE_API_MAX	26
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	16
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index 4d68985..a2c7946 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	24
-+#define IWL9000_UCODE_API_MAX	26
- 
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	16
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-index 4d78232..ea16185 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL_A000_UCODE_API_MAX	24
-+#define IWL_A000_UCODE_API_MAX	26
- 
- /* Lowest firmware API version supported */
- #define IWL_A000_UCODE_API_MIN	24
--- 
-2.9.3
+Larry
