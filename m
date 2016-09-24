@@ -1,63 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3865 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755939AbcIUK6c (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36589 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935303AbcIXTGc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 06:58:32 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-        <stable@vger.kernel.org>
-Subject: [PATCH] ath10k: fix copy engine 5 destination ring stuck
-Date: Wed, 21 Sep 2016 16:28:06 +0530
-Message-ID: <20160921105806.23980-1-rmanohar@qti.qualcomm.com> (sfid-20160921_125836_308668_6B62B3DC)
+        Sat, 24 Sep 2016 15:06:32 -0400
+Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
+ processed' messages
+To: Joe Perches <joe@perches.com>, Jean Delvare <jdelvare@suse.de>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+References: <1474654333.1849.5.camel@perches.com>
+ <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
+ <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
+ <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
+ <1474733754.23838.3.camel@perches.com>
+ <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
+ <1474738358.23838.11.camel@perches.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net> (sfid-20160924_210654_986380_492BFA57)
+Date: Sat, 24 Sep 2016 14:06:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1474738358.23838.11.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware is running watchdog timer for tracking copy engine ring index
-and write index. Whenever both indices are stuck at same location for
-given duration, watchdog will be trigger to assert target. While
-updating copy engine destination ring write index, driver ensures that
-write index will not be same as read index by finding delta between these
-two indices (CE_RING_DELTA).
+On 09/24/2016 12:32 PM, Joe Perches wrote:
+> (adding Jes Sorensen to recipients)
+>
+> On Sat, 2016-09-24 at 11:35 -0500, Larry Finger wrote:
+>> I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers,
+>> and one that sets the enum values for that particular statement to hex values. I
+>> also looked at the other large enums and decided that they never need the human
+>> lookup.
+>
+> Hey Larry.
+>
+> There are many somewhat common realtek wireless drivers.
+>
+> Not to step on your toes, but what do you think of
+> rationalizing the switch/case statements of all the
+> realtek drivers in a few steps:
+>
+> o Reindent all the switch/case blocks to a more normal
+>   kernel style (git diff -w would show no changes here)
 
-HTT target to host copy engine (CE5) is special case where ring buffers
-will be reused and delta check is not applied while updating write index.
-In rare scenario, whenever CE5 ring is full, both indices will be referring
-same location and this is causing CE ring stuck issue as explained
-above. This issue is originally reported on IPQ4019 during long hour stress
-testing and during veriwave max clients testsuites. The same issue is
-also observed in other chips as well. Fix this by ensuring that write
-index is one less than read index which means that full ring is
-available for receiving data.
+That sounds like busy work to me, but if you want to do it, go ahead.
 
-Cc: stable@vger.kernel.org
-Tested-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ce.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+> o cast, spacing and parenthesis reductions
+>   Lots of odd and somewhat unique styles in various
+>   drivers, looks like too many individual authors without
+>   a style guide / code enforcer using slightly different
+>   personalized code.  Glancing at the code, it looks to be
+>   similar logic, just written in different styles.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 65d8d714e917..00d3f93058db 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -433,6 +433,13 @@ void ath10k_ce_rx_update_write_idx(struct ath10k_ce_pipe *pipe, u32 nentries)
- 	unsigned int nentries_mask = dest_ring->nentries_mask;
- 	unsigned int write_index = dest_ring->write_index;
- 	u32 ctrl_addr = pipe->ctrl_addr;
-+	u32 cur_write_idx = ath10k_ce_dest_ring_write_index_get(ar, ctrl_addr);
-+
-+	/* Prevent CE ring stuck issue that will occur when ring is full.
-+	 * Make sure that write index is 1 less than read index.
-+	 */
-+	if ((cur_write_idx + nentries)  == dest_ring->sw_index)
-+		nentries -= 1;
- 
- 	write_index = CE_RING_IDX_ADD(nentries_mask, write_index, nentries);
- 	ath10k_ce_dest_ring_write_index_set(ar, ctrl_addr, write_index);
--- 
-2.10.0
+Same comment.
+
+> o Logic changes like
+>   from:
+>     if (foo) func(..., bar, ...); else func(..., baz, ...);
+>   to:
+>     func(..., foo ? bar : baz, ...);
+>   to make the case statement code blocks more consistent
+>   and emit somewhat smaller object code.
+
+I find if .. else constructs much easier to read than the cond ? xxxx : yyyy 
+form. I would reject any such patches.
+
+> o Consolidation of equivalent function spanning drivers
+>   With the style only changes minimized, where possible
+>   make the drivers use common ops/callback functions.
+
+The is no question that there are similar routines in different drivers. I would 
+like to place as much as possible into common routines, but I never seem to find 
+the time. There are too many bugs in other things I support to consider these 
+niceties.
+
+> Is there any value in that or is Jes' work going to make
+> doing any or all of this unnecessary and futile?
+
+That is not yet determined. The only driver that is to be replaced at this point 
+is rtl8192cu. Jes only has USB I/O for his driver. We are looking at adding 
+SDIO, and once that is done, PCI should be possible.
+
+Larry
