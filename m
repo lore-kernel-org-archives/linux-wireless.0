@@ -1,32 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:35037 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752569AbcIQPwg (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35426 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756783AbcIXUoj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 11:52:36 -0400
-Received: by mail-oi0-f51.google.com with SMTP id w11so144531397oia.2
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2016 08:52:35 -0700 (PDT)
+        Sat, 24 Sep 2016 16:44:39 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 2/2] brcmfmac: compile fws(ignal) code only with BCDC support enabled
+Date: Sat, 24 Sep 2016 22:44:19 +0200
+Message-Id: <20160924204419.10213-2-zajec5@gmail.com> (sfid-20160924_224528_083754_1595071A)
+In-Reply-To: <20160924204419.10213-1-zajec5@gmail.com>
+References: <20160924204419.10213-1-zajec5@gmail.com>
 MIME-Version: 1.0
-From: bruce m beach <brucembeach@gmail.com>
-Date: Sat, 17 Sep 2016 08:52:34 -0700
-Message-ID: <CAArymCkTyLUsxMsDJXVM=XvmFZAK-uWLLuP3gXSY9_hqcjWHjg@mail.gmail.com> (sfid-20160917_175239_781582_90371CB4)
-Subject: ath9k_htc kernel driver regression affecting throughput
-To: linux-wireless@vger.kernel.org
-Cc: linux@rempel-privat.de
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Hm.. found here one report about bad perfomance on this driver
->> https://ubuntuforums.org/showthread.php?t=2312343
->>
->> affected persons seems to use WEP encryption.
->>
->> What encryption do are you using?
+From: Rafał Miłecki <rafal@milecki.pl>
 
-I just wish I could do some testing on a single machine. Every test
-suite I've seen always involves 2 machines. Why can't I use the wifi
-chip on the mother board and the ar9271(a usb stick) to test basic
-communications on the ar9271. The problem is I don't know where to begin.
+It's not needed by the other (msgbuf) protocol, so let's save some size
+and compile it conditionally.
 
-Bruce
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |  4 +-
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         | 59 ++++++++++++++++++++++
+ 2 files changed, 61 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index 9e4b505..ad3b06e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -27,7 +27,6 @@ brcmfmac-objs += \
+ 		chip.o \
+ 		fwil.o \
+ 		fweh.o \
+-		fwsignal.o \
+ 		p2p.o \
+ 		proto.o \
+ 		common.o \
+@@ -37,7 +36,8 @@ brcmfmac-objs += \
+ 		btcoex.o \
+ 		vendor.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
+-		bcdc.o
++		bcdc.o \
++		fwsignal.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
+ 		commonring.o \
+ 		flowring.o \
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index 8f7c1d7..ba0c1bc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -18,6 +18,7 @@
+ #ifndef FWSIGNAL_H_
+ #define FWSIGNAL_H_
+ 
++#ifdef CONFIG_BRCMFMAC_PROTO_BCDC
+ int brcmf_fws_init(struct brcmf_pub *drvr);
+ void brcmf_fws_deinit(struct brcmf_pub *drvr);
+ bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws);
+@@ -31,5 +32,63 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp);
+ void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
+ void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
+ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
++#else
++static inline int brcmf_fws_init(struct brcmf_pub *drvr)
++{
++	return -ENOTSUPP;
++}
++
++static inline void brcmf_fws_deinit(struct brcmf_pub *drvr)
++{
++}
++
++static inline bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws)
++{
++	return false;
++}
++
++static inline bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
++{
++	return false;
++}
++
++static inline void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen,
++				     struct sk_buff *skb)
++{
++}
++
++static inline int brcmf_fws_process_skb(struct brcmf_if *ifp,
++					struct sk_buff *skb)
++{
++	return -ENOTSUPP;
++}
++
++static inline void brcmf_fws_reset_interface(struct brcmf_if *ifp)
++{
++}
++
++static inline void brcmf_fws_add_interface(struct brcmf_if *ifp)
++{
++}
++
++static inline void brcmf_fws_del_interface(struct brcmf_if *ifp)
++{
++}
++
++static inline void brcmf_fws_bustxfail(struct brcmf_fws_info *fws,
++				       struct sk_buff *skb)
++{
++}
++
++static inline void brcmf_fws_bus_blocked(struct brcmf_pub *drvr,
++					 bool flow_blocked)
++{
++}
++
++static inline void brcmf_fws_rxreorder(struct brcmf_if *ifp,
++				       struct sk_buff *skb)
++{
++}
++#endif
+ 
+ #endif /* FWSIGNAL_H_ */
+-- 
+2.9.3
