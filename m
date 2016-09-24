@@ -1,87 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38350 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754006AbcIIRqj (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:32864 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754611AbcIXUoi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 13:46:39 -0400
-Subject: Re: [PATCH 1/3] ath10k: Ensure there are no stale ar->txqs entries.
-To: Felix Fietkau <nbd@nbd.name>, ath10k@lists.infradead.org
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
- <a9add01b-4d5a-0e1c-d856-64dcf71bdb1c@nbd.name>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <86ebec61-7fd7-dac2-d3da-c008899c138e@candelatech.com> (sfid-20160909_194656_397257_35180584)
-Date: Fri, 9 Sep 2016 10:46:36 -0700
+        Sat, 24 Sep 2016 16:44:38 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 1/2] brcmfmac: initialize fws(ignal) for BCDC protocol only
+Date: Sat, 24 Sep 2016 22:44:18 +0200
+Message-Id: <20160924204419.10213-1-zajec5@gmail.com> (sfid-20160924_224455_987231_7340E227)
 MIME-Version: 1.0
-In-Reply-To: <a9add01b-4d5a-0e1c-d856-64dcf71bdb1c@nbd.name>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/09/2016 10:25 AM, Felix Fietkau wrote:
-> On 2016-08-19 03:26, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> I was seeing kernel crashes due to accessing freed memory
->> while debugging a 9984 firmware that was crashing often.
->>
->> This patch fixes the crashes.  I am not certain if there
->> is a better way or not.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
->>  1 file changed, 10 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 5659ef1..916119c 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -4172,8 +4172,10 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
->>  static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
->>  {
->>  	struct ath10k_txq *artxq = (void *)txq->drv_priv;
->> +	struct ath10k_txq *tmp, *walker;
->>  	struct ath10k_skb_cb *cb;
->>  	struct sk_buff *msdu;
->> +	struct ieee80211_txq *txq_tmp;
->>  	int msdu_id;
->>
->>  	if (!txq)
->> @@ -4182,6 +4184,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
->>  	spin_lock_bh(&ar->txqs_lock);
->>  	if (!list_empty(&artxq->list))
->>  		list_del_init(&artxq->list);
->> +
->> +	/* Remove from ar->txqs in case it still exists there. */
->> +	list_for_each_entry_safe(walker, tmp, &ar->txqs, list) {
->> +		txq_tmp = container_of((void *)walker, struct ieee80211_txq,
->> +				       drv_priv);
->> +		if (txq_tmp == txq)
->> +			list_del(&walker->list);
->> +	}
-> This makes no sense at all. From txq_tmp == txq we can deduce that
-> walker == artxq. In the context above, it already does a
-> list_del_init(&artxq->list).
+From: Rafał Miłecki <rafal@milecki.pl>
 
-This fixed my problem, so something about this matters.
+There are two protocols used by Broadcom FullMAC devices: BCDC and
+msgbuf. They use different ways for (some part of) communication with
+the firmware. Firmware Signaling is required for the first one only
+(BCDC).
 
-Possibly it works around some other race, just possibly it
-is because of some other regression/bug in my driver/kernel.
+So far we were always initializing fws and always calling it's skb
+processing function. It was fws that was passing skb processing to the
+protocol specific function. It was redundant for the msgbuf case.
 
-I thought maybe the issue was that flushing doesn't really work
-for ath10k, so when the upper stack tried to flush and delete
-a station there were still skbs in the driver that were referencing
-the txqs up in mac80211.
+Simply taking few lines of code out of fws allows us to totally avoid
+using it. This simplifies code flow, saves some memory & will allow
+further optimizations like not compiling fwsignal.c.
 
-Also, this bug was triggered by firmware that crashed very often on
-transmit of an skb, so in general there were skbs that were not properly
-transmitted and maybe that also triggers some other bug/race in the
-driver.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 17 ++++++---------
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |  1 +
+ 3 files changed, 25 insertions(+), 17 deletions(-)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 27cd50a..bc3d8ab 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -250,7 +250,17 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	if (eh->h_proto == htons(ETH_P_PAE))
+ 		atomic_inc(&ifp->pend_8021x_cnt);
+ 
+-	ret = brcmf_fws_process_skb(ifp, skb);
++	/* determine the priority */
++	if (skb->priority == 0 || skb->priority > 7)
++		skb->priority = cfg80211_classify8021d(skb, NULL);
++
++	if (drvr->fws && brcmf_fws_skbs_queueing(drvr->fws)) {
++		ret = brcmf_fws_process_skb(ifp, skb);
++	} else {
++		ret = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
++		if (ret < 0)
++			brcmf_txfinalize(ifp, skb, false);
++	}
+ 
+ done:
+ 	if (ret) {
+@@ -405,7 +415,7 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
+ 	struct brcmf_if *ifp;
+ 
+ 	/* await txstatus signal for firmware if active */
+-	if (brcmf_fws_fc_active(drvr->fws)) {
++	if (drvr->fws && brcmf_fws_fc_active(drvr->fws)) {
+ 		if (!success)
+ 			brcmf_fws_bustxfail(drvr->fws, txp);
+ 	} else {
+@@ -1006,11 +1016,13 @@ int brcmf_bus_start(struct device *dev)
+ 	}
+ 	brcmf_feat_attach(drvr);
+ 
+-	ret = brcmf_fws_init(drvr);
+-	if (ret < 0)
+-		goto fail;
++	if (bus_if->proto_type == BRCMF_PROTO_BCDC) {
++		ret = brcmf_fws_init(drvr);
++		if (ret < 0)
++			goto fail;
+ 
+-	brcmf_fws_add_interface(ifp);
++		brcmf_fws_add_interface(ifp);
++	}
+ 
+ 	drvr->config = brcmf_cfg80211_attach(drvr, bus_if->dev,
+ 					     drvr->settings->p2p_enable);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index a190f53..495eaf8 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2100,16 +2100,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	int rc = 0;
+ 
+ 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
+-	/* determine the priority */
+-	if ((skb->priority == 0) || (skb->priority > 7))
+-		skb->priority = cfg80211_classify8021d(skb, NULL);
+-
+-	if (fws->avoid_queueing) {
+-		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+-		if (rc < 0)
+-			brcmf_txfinalize(ifp, skb, false);
+-		return rc;
+-	}
+ 
+ 	/* set control buffer information */
+ 	skcb->if_flags = 0;
+@@ -2155,7 +2145,7 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp)
+ 	struct brcmf_fws_info *fws = ifp->drvr->fws;
+ 	struct brcmf_fws_mac_descriptor *entry;
+ 
+-	if (!ifp->ndev)
++	if (!fws || !ifp->ndev)
+ 		return;
+ 
+ 	entry = &fws->desc.iface[ifp->ifidx];
+@@ -2442,6 +2432,11 @@ void brcmf_fws_deinit(struct brcmf_pub *drvr)
+ 	kfree(fws);
+ }
+ 
++bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws)
++{
++	return !fws->avoid_queueing;
++}
++
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
+ {
+ 	if (!fws->creditmap_received)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index ef0ad85..8f7c1d7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -20,6 +20,7 @@
+ 
+ int brcmf_fws_init(struct brcmf_pub *drvr);
+ void brcmf_fws_deinit(struct brcmf_pub *drvr);
++bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws);
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
+ void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb);
+ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.9.3
