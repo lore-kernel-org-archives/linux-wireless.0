@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35085 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751081AbcIGNoH (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:35137 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S940192AbcIYJWg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2016 09:44:07 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: avoid potential stack overflow in
- brcmf_cfg80211_start_ap()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1473068749-22487-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20160907134406.D3123602A9@smtp.codeaurora.org> (sfid-20160907_154410_987092_58070F37)
-Date: Wed,  7 Sep 2016 13:44:06 +0000 (UTC)
+        Sun, 25 Sep 2016 05:22:36 -0400
+Received: by mail-pf0-f182.google.com with SMTP id s13so21242961pfd.2
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2016 02:22:36 -0700 (PDT)
+From: Baoyou Xie <baoyou.xie@linaro.org>
+To: Jes.Sorensen@redhat.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org,
+        xie.baoyou@zte.com.cn, han.fei@zte.com.cn, tang.qiang007@zte.com.cn
+Subject: [PATCH] rtl8xxxu: mark rtl8192eu_power_off() static
+Date: Sun, 25 Sep 2016 17:22:23 +0800
+Message-Id: <1474795343-25808-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160925_112258_117839_E070A782)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> User-space can choose to omit NL80211_ATTR_SSID and only provide raw
-> IE TLV data. When doing so it can provide SSID IE with length exceeding
-> the allowed size. The driver further processes this IE copying it
-> into a local variable without checking the length. Hence stack can be
-> corrupted and used as exploit.
-> 
-> Cc: stable@vger.kernel.org # v4.7
-> Reported-by: Daxing Guo <freener.gdx@gmail.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+We get 1 warning when building kernel with W=1:
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c:1557:6: warning: no previous prototype for 'rtl8192eu_power_off' [-Wmissing-prototypes]
 
-Thanks, 1 patch applied to wireless-drivers.git:
+In fact, this function is only used in the file in which it is
+declared and don't need a declaration, but can be made static.
+so this patch marks this function with 'static'.
 
-ded89912156b brcmfmac: avoid potential stack overflow in brcmf_cfg80211_start_ap()
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index df54d27..7b5128a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1554,7 +1554,7 @@ static int rtl8192eu_power_on(struct rtl8xxxu_priv *priv)
+ 	return ret;
+ }
+ 
+-void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
++static void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+ 	u16 val16;
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9313305/
+2.7.4
