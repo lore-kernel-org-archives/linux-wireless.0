@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zoot.epublica.de ([78.46.103.157]:34290 "EHLO zoot.epublica.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754579AbcILPsa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 11:48:30 -0400
-Subject: Re: Support of rtl8723bs
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Bastien Nocera <hadess@hadess.net>
-References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
- <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
- <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
-Cc: anthony.wong@canonical.com, linux-wireless@vger.kernel.org
-From: Hanno Zulla <abos@hanno.de>
-Message-ID: <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de> (sfid-20160912_174845_190132_49EFA9CE)
-Date: Mon, 12 Sep 2016 17:48:21 +0200
-MIME-Version: 1.0
-In-Reply-To: <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
-Content-Type: text/plain; charset=windows-1252
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:56457 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934317AbcIYGxC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Sep 2016 02:53:02 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        Michael Braun <michael-dev@fami-braun.de>
+Subject: [PATCH] mac80211: fix CMD_FRAME for AP_VLAN
+Date: Sun, 25 Sep 2016 08:47:15 +0200
+Message-Id: <1474786035-15410-1-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_085309_299000_B93FE309)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When using IEEE 802.11r FT OVER-DS roaming with AP_VLAN, hostapd needs to send
+out a frame using CMD_FRAME for a station assigned to an AP_VLAN interface.
 
-> Longer term I think it makes sense to add SDIO support to rtl8xxxu. The
-> differences between the USB version and the SDIO version are rather
-> small.
+Right now, the userspace needs to give the exact AP_VLAN interface index
+for CMD_FRAME; hostapd does not do this. Additionally, userspace cannot
+use GET_STATION to query the AP_VLAN ifidx, as while GET_STATION finds
+stations assigned to AP_VLAN even if the AP iface is queried, it does not
+return AP_VLAN ifidx (it returns the queried one).
 
-This is beyond my expertise, sadly.
+This breaks IEEE 802.11r over_ds with vlans, as the reply frame does not
+get out. This patch fixes this by using get_sta_bss for CMD_FRAME.
 
-Is there a good blueprint / example of a previous case where a USB
-driver had SDIO support added that one might learn from?
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ net/mac80211/offchannel.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Kind regards,
-
-Hanno
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 55a9c5b..2afd329 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -819,7 +819,10 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		    mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT)
+ 			break;
+ 		rcu_read_lock();
+-		sta = sta_info_get(sdata, mgmt->da);
++		if (ieee80211_vif_is_mesh(&sdata->vif))
++			sta = sta_info_get(sdata, mgmt->da);
++		else
++			sta = sta_info_get_bss(sdata, mgmt->da);
+ 		rcu_read_unlock();
+ 		if (!sta)
+ 			return -ENOLINK;
+-- 
+2.1.4
