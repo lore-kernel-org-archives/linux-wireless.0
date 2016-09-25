@@ -1,84 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:33409 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757479AbcILJna (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:34518 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966335AbcIYQkG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:43:30 -0400
-Received: by mail-pa0-f67.google.com with SMTP id h5so7563010pao.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:43:30 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        johannes.berg@intel.com, hofrat@osadl.org
-Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
-Subject: [PATCH 4/9] rsi: code clean up in file rsi_91x_main.c
-Date: Mon, 12 Sep 2016 15:08:19 +0530
-Message-Id: <bce2e61df900a69d6c43ef2594e5c2b3cff949d5.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114333_792958_4C85D398)
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
+        Sun, 25 Sep 2016 12:40:06 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] mac80211: filter multicast data packets on AP / AP_VLAN
+Date: Sun, 25 Sep 2016 18:39:54 +0200
+Message-Id: <1474821596-12155-2-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184019_110871_5AD57756)
+In-Reply-To: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
+References: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_main.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+This patch adds filtering for multicast data packets on AP_VLAN interfaces that
+have no authorized station connected and changes filtering on AP interfaces to
+not count stations assigned to AP_VLAN interfaces.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_main.c b/drivers/net/wireless/rsi/rsi_91x_main.c
-index 8810862..f82e457 100644
---- a/drivers/net/wireless/rsi/rsi_91x_main.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_main.c
-@@ -86,7 +86,7 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
+This saves airtime and avoids waking up other stations currently authorized in
+this BSS. When using WPA, the packets dropped could not be decrypted by any
+station.
+
+The behaviour when there are no AP_VLAN interfaces is left unchanged.
+When there are AP_VLAN interfaces, this patch
+1. adds filtering multicast data packets sent on AP_VLAN interfaces that
+   have no authorized station connected.
+   No filtering happens on 4addr AP_VLAN interfaces.
+2. makes filtering of multicast data packets sent on AP interfaces depend on
+   the number of authorized stations in this bss not assigned to an AP_VLAN
+   interface.
+
+Therefore, two new num_mcast_sta like counters are added: one for the number of
+authorized stations connected to an AP_VLAN interface and one for the number of
+authorized stations connected to the bss and not assigned to any AP_VLAN. The
+already existing num_mcast_sta counter is left unchanged as it is used by SMPS.
+
+The new counters are exposed in debugfs.
+
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+
+--
+
+v2:
+ - use separate function to inc/dec mcast_sta counters
+ - do not filter in 4addr mode
+ - change description
+ - change filtering on AP interface (do not count AP_VLAN sta)
+ - use new counters regardless of 4addr or not
+ - simplify cfg.c:change_station
+ - remove no-op change in __cleanup_single_sta
+---
+ net/mac80211/cfg.c            | 20 +++++-----------
+ net/mac80211/debugfs_netdev.c | 11 +++++++++
+ net/mac80211/ieee80211_i.h    | 54 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c             |  5 ++--
+ net/mac80211/sta_info.c       | 10 ++------
+ net/mac80211/tx.c             |  5 ++--
+ 6 files changed, 78 insertions(+), 27 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 543b1d4..078e837 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1357,9 +1357,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 		goto out_err;
  
- 	pkt_len -= extended_desc;
- 	skb = dev_alloc_skb(pkt_len + FRAME_DESC_SZ);
--	if (skb == NULL)
-+	if (!skb)
- 		return NULL;
+ 	if (params->vlan && params->vlan != sta->sdata->dev) {
+-		bool prev_4addr = false;
+-		bool new_4addr = false;
+-
+ 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
  
- 	payload_offset = (extended_desc + FRAME_DESC_SZ);
-@@ -111,11 +111,10 @@ static struct sk_buff *rsi_prepare_skb(struct rsi_common *common,
- int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
- {
- 	u8 *frame_desc = NULL, extended_desc = 0;
--	u32 index, length = 0, queueno = 0;
-+	u32 index = 0, length = 0, queueno = 0;
- 	u16 actual_length = 0, offset;
- 	struct sk_buff *skb = NULL;
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+@@ -1369,26 +1366,21 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+ 			}
  
--	index = 0;
- 	do {
- 		frame_desc = &common->rx_data_pkt[index];
- 		actual_length = *(u16 *)&frame_desc[0];
-@@ -131,7 +130,7 @@ int rsi_read_pkt(struct rsi_common *common, s32 rcv_pkt_len)
- 					      (frame_desc + offset),
- 					      length,
- 					      extended_desc);
--			if (skb == NULL)
-+			if (!skb)
- 				goto fail;
+ 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
+-			new_4addr = true;
+ 			__ieee80211_check_fast_rx_iface(vlansdata);
+ 		}
  
- 			rsi_indicate_pkt_to_os(common, skb);
-@@ -198,15 +197,14 @@ struct rsi_hw *rsi_91x_init(void)
- 		return NULL;
+ 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-		    sta->sdata->u.vlan.sta) {
++		    sta->sdata->u.vlan.sta)
+ 			RCU_INIT_POINTER(sta->sdata->u.vlan.sta, NULL);
+-			prev_4addr = true;
+-		}
++
++		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			ieee80211_vif_dec_num_mcast(sta->sdata);
  
- 	adapter->priv = kzalloc(sizeof(*common), GFP_KERNEL);
--	if (adapter->priv == NULL) {
--		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of memory\n",
-+	if (!adapter->priv) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of common cb\n",
- 			__func__);
- 		kfree(adapter);
- 		return NULL;
--	} else {
--		common = adapter->priv;
--		common->priv = adapter;
+ 		sta->sdata = vlansdata;
+ 		ieee80211_check_fast_xmit(sta);
+ 
+-		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
+-		    prev_4addr != new_4addr) {
+-			if (new_4addr)
+-				atomic_dec(&sta->sdata->bss->num_mcast_sta);
+-			else
+-				atomic_inc(&sta->sdata->bss->num_mcast_sta);
+-		}
++		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
++			ieee80211_vif_inc_num_mcast(sta->sdata);
+ 
+ 		ieee80211_send_layer2_update(sta);
  	}
-+	common = adapter->priv;
-+	common->priv = adapter;
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index a5ba739..d97756d 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -477,6 +477,8 @@ IEEE80211_IF_FILE_RW(tdls_wider_bw);
+ IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.ps.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.ps.dtim_count, DEC);
++IEEE80211_IF_FILE(num_mcast_sta_vlan_if, u.vlan.num_mcast_sta_if, ATOMIC);
++IEEE80211_IF_FILE(num_mcast_sta_novlan_if, u.ap.num_mcast_sta_if, ATOMIC);
  
- 	for (ii = 0; ii < NUM_SOFT_QUEUES; ii++)
- 		skb_queue_head_init(&common->tx_queue[ii]);
+ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+@@ -636,6 +638,7 @@ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD(num_mcast_sta);
++	DEBUGFS_ADD(num_mcast_sta_novlan_if);
+ 	DEBUGFS_ADD_MODE(smps, 0600);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+@@ -643,6 +646,11 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
+ }
+ 
++static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD(num_mcast_sta_vlan_if);
++}
++
+ static void add_ibss_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD_MODE(tsf, 0600);
+@@ -746,6 +754,9 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	case NL80211_IFTYPE_AP:
+ 		add_ap_files(sdata);
+ 		break;
++	case NL80211_IFTYPE_AP_VLAN:
++		add_vlan_files(sdata);
++		break;
+ 	case NL80211_IFTYPE_WDS:
+ 		add_wds_files(sdata);
+ 		break;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f56d342..b10e8be 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -289,6 +289,7 @@ struct ieee80211_if_ap {
+ 
+ 	struct ps_data ps;
+ 	atomic_t num_mcast_sta; /* number of stations receiving multicast */
++	atomic_t num_mcast_sta_if; /* num_mcast_sta w/o sta in AP_VLAN */
+ 	enum ieee80211_smps_mode req_smps, /* requested smps mode */
+ 			 driver_smps_mode; /* smps mode request */
+ 
+@@ -305,6 +306,7 @@ struct ieee80211_if_vlan {
+ 
+ 	/* used for all tx if the VLAN is configured to 4-addr mode */
+ 	struct sta_info __rcu *sta;
++	atomic_t num_mcast_sta_if; /* number of stations receiving multicast */
+ };
+ 
+ struct mesh_stats {
+@@ -1496,6 +1498,58 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
+ 	return false;
+ }
+ 
++static inline void
++ieee80211_vif_inc_num_mcast(struct ieee80211_sub_if_data *sdata)
++{
++	if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		return;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		atomic_inc(&sdata->u.ap.num_mcast_sta_if);
++	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		atomic_inc(&sdata->u.vlan.num_mcast_sta_if);
++
++	if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN ||
++	    !sdata->u.vlan.sta) /* except 4addr mode */
++		atomic_inc(&sdata->bss->num_mcast_sta);
++}
++
++static inline void
++ieee80211_vif_dec_num_mcast(struct ieee80211_sub_if_data *sdata)
++{
++	if (sdata->vif.type != NL80211_IFTYPE_AP &&
++	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++		return;
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		atomic_dec(&sdata->u.ap.num_mcast_sta_if);
++	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		atomic_dec(&sdata->u.vlan.num_mcast_sta_if);
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++	    sdata->u.vlan.sta)
++		return; /* 4addr mode */
++
++	atomic_dec(&sdata->bss->num_mcast_sta);
++}
++
++/**
++ * @returns number of multicast stations connected
++ *  -1 if unsupported (no-AP, 4addr mode)
++ */
++static inline int
++ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
++{
++	if (sdata->vif.type == NL80211_IFTYPE_AP)
++		return atomic_read(&sdata->u.ap.num_mcast_sta_if);
++	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
++		 !sdata->u.vlan.sta)
++		return atomic_read(&sdata->u.vlan.num_mcast_sta_if);
++	else
++		return -1;
++}
++
+ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 				     struct ieee80211_rx_status *status,
+ 				     unsigned int mpdu_len,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9dce3b1..4c6adc9 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2160,7 +2160,8 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+ 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
+ 	    (sdata->vif.type != NL80211_IFTYPE_AP_VLAN || !sdata->u.vlan.sta)) {
+-		if (is_multicast_ether_addr(ehdr->h_dest)) {
++		if (is_multicast_ether_addr(ehdr->h_dest) &&
++		    ieee80211_vif_get_num_mcast_if(sdata) != 0) {
+ 			/*
+ 			 * send multicast frames both to higher layers in
+ 			 * local net stack and back to the wireless medium
+@@ -2169,7 +2170,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 			if (!xmit_skb)
+ 				net_info_ratelimited("%s: failed to clone multicast frame\n",
+ 						    dev->name);
+-		} else {
++		} else if (!is_multicast_ether_addr(ehdr->h_dest)) {
+ 			dsta = sta_info_get(sdata, skb->data);
+ 			if (dsta) {
+ 				/*
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 76b737d..216ef65 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1882,10 +1882,7 @@ int sta_info_move_state(struct sta_info *sta,
+ 			if (!sta->sta.support_p2p_ps)
+ 				ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
+ 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+-			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-			     !sta->sdata->u.vlan.sta))
+-				atomic_dec(&sta->sdata->bss->num_mcast_sta);
++			ieee80211_vif_dec_num_mcast(sta->sdata);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 			ieee80211_clear_fast_xmit(sta);
+ 			ieee80211_clear_fast_rx(sta);
+@@ -1893,10 +1890,7 @@ int sta_info_move_state(struct sta_info *sta,
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+ 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
+-			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
+-			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-			     !sta->sdata->u.vlan.sta))
+-				atomic_inc(&sta->sdata->bss->num_mcast_sta);
++			ieee80211_vif_inc_num_mcast(sta->sdata);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+ 			ieee80211_check_fast_xmit(sta);
+ 			ieee80211_check_fast_rx(sta);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5023966..7130862 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -331,9 +331,8 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
+ 			I802_DEBUG_INC(tx->local->tx_handlers_drop_not_assoc);
+ 			return TX_DROP;
+ 		}
+-	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+-			    ieee80211_is_data(hdr->frame_control) &&
+-			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
++	} else if (unlikely(ieee80211_vif_get_num_mcast_if(tx->sdata) != -1 &&
++			    ieee80211_is_data(hdr->frame_control))) {
+ 		/*
+ 		 * No associated STAs - no need to send multicast
+ 		 * frames.
 -- 
-2.4.11
+2.1.4
