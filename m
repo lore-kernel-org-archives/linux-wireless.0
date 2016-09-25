@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42781 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765783AbcIOOGx (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:34501 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966343AbcIYQkD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 10:06:53 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
-Date: Thu, 15 Sep 2016 14:06:48 +0000
-Message-ID: <87k2edb6kp.fsf@kamboji.qca.qualcomm.com> (sfid-20160915_160700_078054_FF02FC00)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-        <1462986153-16318-10-git-send-email-greearb@candelatech.com>
-        <87oa3qefac.fsf@kamboji.qca.qualcomm.com>       <57D96910.2010608@candelatech.com>
-In-Reply-To: <57D96910.2010608@candelatech.com> (Ben Greear's message of "Wed,
-        14 Sep 2016 08:13:20 -0700")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Sun, 25 Sep 2016 12:40:03 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH 0/3] mac80211: multicast with AP_VLAN optimizations
+Date: Sun, 25 Sep 2016 18:39:53 +0200
+Message-Id: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184017_822827_AE04EDA9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Hi,
 
-> On 09/14/2016 07:18 AM, Valo, Kalle wrote:
->> greearb@candelatech.com writes:
->>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> This allows user-space tools to decode debug-log
->>> messages by parsing dmesg or /var/log/messages.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>
->> Don't tracing points already provide the same information?
->
-> Tracing tools are difficult to set up and may not be available on
-> random embedded devices.  And if we are dealing with bug reports from
-> the field, most users will not be able to set it up regardless.
->
-> There are similar ways to print out hex, but the logic below creates
-> specific and parseable logs in the 'dmesg' output and similar.
->
-> I have written a tool that can decode these messages into useful human-re=
-adable
-> text so that I can debug firmware issues both locally and from field repo=
-rts.
->
-> Stock firmware generates similar logs and QCA could write their own decod=
-e logic
-> for their firmware versions.
+this series tries to optimize multicast delivery on access points with
+AP_VLAN interfaces.
 
-Reinventing the wheel by using printk as the delivery mechanism doesn't
-sound like a good idea. IIRC Emmanuel talked about some kind of firmware
-debugging framework, he might have some ideas.
+My setup is as follows: hostapd creates one AP_VLAN interface per station
+(per_sta_vif=1), which enables bridge igmp snooping to decide which
+stations need to receive a multicast packet.
 
---=20
-Kalle Valo=
+This series then
+ - avoids multicast packets by tracking the number of authenticated
+   stations per interface more accurately and drops packets if there is no
+   receiver connected,
+ - converts multicast packets to unicast packets for the most common
+   protocols, so they get delivered faster and more reliable. Additionally,
+   waking up non-receivers in other VLANs is avoided.
+ - speeds up station lookup if there is only one authenticated station
+   assigned to the AP_VLAN interface.
+
+Sincerely,
+M. Braun
+
+Michael Braun (3):
+  mac80211: filter multicast data packets on AP / AP_VLAN
+  mac80211: multicast to unicast conversion
+  mac80211: cache the only AP_VLAN station
+
+ net/mac80211/cfg.c            |  26 +++++-----
+ net/mac80211/debugfs_netdev.c |  38 ++++++++++++++
+ net/mac80211/ieee80211_i.h    |  61 ++++++++++++++++++++++
+ net/mac80211/rx.c             |   5 +-
+ net/mac80211/sta_info.c       |  41 +++++++++++----
+ net/mac80211/tx.c             | 115 ++++++++++++++++++++++++++++++++++++++++--
+ 6 files changed, 258 insertions(+), 28 deletions(-)
+
+-- 
+2.1.4
