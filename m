@@ -1,66 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:34769 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753668AbcI0LZz (ORCPT
+Received: from packetmixer.de ([79.140.42.25]:33681 "EHLO
+        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756166AbcIYUQr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 07:25:55 -0400
-Received: by mail-pf0-f182.google.com with SMTP id l25so5026142pfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 04:25:54 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: replace WARNING on timeout with a simple error
- message
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20160927101224.3534-1-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a084ce54-9b96-fbdc-34b1-7c6429bed24e@broadcom.com> (sfid-20160927_132623_022029_512878B6)
-Date: Tue, 27 Sep 2016 13:25:33 +0200
+        Sun, 25 Sep 2016 16:16:47 -0400
+From: Simon Wunderlich <sw@simonwunderlich.de>
+To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        "openwrt-devel@lists.openwrt.org" <openwrt-devel@lists.openwrt.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k mesh + ap + encryption?
+Date: Sun, 25 Sep 2016 22:16:43 +0200
+Message-ID: <3338244.IC8yTOzn2x@prime> (sfid-20160925_222021_698682_F0CB296D)
+In-Reply-To: <1474669037.16013.9.camel@qca.qualcomm.com>
+References: <2661831.slnB0LOeVt@prime> <5898628.mmcCycDigQ@prime> <1474669037.16013.9.camel@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20160927101224.3534-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; boundary="nextPart6861210.EaRmynagmX"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-9-2016 12:12, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> Even with timeout increased to 950 ms we get WARNINGs from time to time.
-> It mostly happens on A-MPDU stalls (e.g. when station goes out of
-> range). It may take up to 5-10 secods for the firmware to recover and
-> for that time it doesn't process packets.
-> 
-> It's still useful to have a message on time out as it may indicate some
-> firmware problem and incorrect key update. Raising a WARNING however
-> wasn't really that necessary, it doesn't point to any driver bug anymore
-> and backtrace wasn't much useful.
+--nextPart6861210.EaRmynagmX
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Indeed the interesting part would be in another context. So:
+On Friday, September 23, 2016 10:18:49 PM CEST Pedersen, Thomas wrote:
+> On Mon, 2016-09-19 at 08:43 +0200, Simon Wunderlich wrote:
+> 
+> > On Tuesday, September 13, 2016 5:54:38 PM CEST Pedersen, Thomas wrote:
+> > 
+> > > On Tue, 2016-09-13 at 14:30 +0200, Simon Wunderlich wrote:
+> > > 
+> > > 
+> > > > [...]
+> > > >
+> > > >
+> > > >
+> > > > Thanks for the clarification. We will then stick to the 70's branch
+> > > > then.
+> > > > 
+> > > > Does anyone have pointers for the other questions? :) I would believe
+> > > > hat many 
+> > > > people would be interested in running AP + Mesh encrypted at the same
+> > > > time (at 
+> > > > least in the open source community ...).
+> > > 
+> > > 
+> > > 
+> > > We're testing encrypted AP + Mesh quite successfully right now with
+> > > this firmware: https://github.com/kvalo/ath10k-firmware/commit/307cb46b
+> > > 06661ebd3186723b5002de769c7add83, of course that is for a QCA4019 chip.
+> > > Which chip are you using? I can poke the firmware guys for possibility
+> > > of getting a 10.4.3.2 firmware build for it.
+> > 
+> > 
+> > Hi Thomas,
+> > 
+> > thanks for the hint! We are using an older QCA9882. I assume your firmware
+> > will 
+ not work for this one? If you can poke the firmware guys, that
+> > would be great.> 
+> > :)
+> 
+> 
+> Hi Simon,
+> 
+> According to firmware guys the latest code can actually compile down to
+> any chipset, so it should simply be a matter of getting builds released.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index 6d046ba..9e6f60a 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -1161,7 +1161,8 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
->  				 !brcmf_get_pend_8021x_cnt(ifp),
->  				 MAX_WAIT_FOR_8021X_TX);
->  
-> -	WARN_ON(!err);
-> +	if (!err)
-> +		brcmf_err("Timed out waiting for no pending 802.1x packets\n");
->  
->  	return !err;
->  }
-> 
+Hi Thomas,
+
+thats great news, thanks for the heads up!
+
+How are we going to get those builds released? Who can I ask, or do you want 
+to take care of that?
+
+Thanks,
+     Simon
+--nextPart6861210.EaRmynagmX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCgAGBQJX6DCrAAoJEKEr45hCkp6hA1sQALmhd+u6Wepu0P5TDiZ67b3p
+GKe6IYuPKuvnb2B6eZEyvSjm/s6xLEnGkddb/jMJd9lppfDlmtGR+vj7J/CBAkKo
+QHKvXZHtSmTdibf2flGowRt+OdESf+f/ijyyCLU2dcxlPZW1t1Ons64BrA+RYeZI
+8RdNG/3Me3lH14Uw7LpcY8gndKIHPiiRbIAyf7mE+f2QCSxc0pYv8tpccsyDW2fA
+6HNvzVgzjLis+tqzKqxo1WVGFis/EJELXYUqqvLKZ4La9aPLwQrg/dnMZD9u/eQ6
+5QyCPYIN8zGCa2dv8Ddu2cVm4Wy6G8pd3gQLk5PCbkDh8PU9+U/BBhF4sz5aA+PK
+7ljemnlNMZPUh5DNSnkYBDU0hNFT2qe0NljDBH/nvkr0q7d3+uZZ6qmZKXA3j7cN
+kOSlX5xPCXmRBTx0d2BuxdWITeKfBpK79RQ+A8kffEyWtY4U93rPKXBcMrKtf1Oz
+sIlezZnP3cKI/99gMX+P0bsKgK4vDgYYdYGT4ZZ7AcbQt+rgIpT0UcUsMfssBAYG
+/EAIlEnCOuVxdUciNYjD64JzIn2W/EOdyz/RAJuy7XpOehyM/7qe9wbV+YkmcuJZ
+AINofdY5FZc6oUbL7pfhS+jLzb57fx1e41ytN9ySIrrrT0/3w6trHRM1B8zbzbe1
+60rMjhGSNM1HTJdnCbFY
+=5SPc
+-----END PGP SIGNATURE-----
+
+--nextPart6861210.EaRmynagmX--
