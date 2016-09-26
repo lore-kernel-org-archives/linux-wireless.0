@@ -1,58 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:33809 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753706AbcIVFc5 (ORCPT
+Received: from mail.suteba.org.ar ([200.16.134.105]:50982 "EHLO
+        mail.suteba.org.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751643AbcIZQNO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 01:32:57 -0400
-Received: by mail-io0-f178.google.com with SMTP id q92so75427531ioi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2016 22:32:57 -0700 (PDT)
+        Mon, 26 Sep 2016 12:13:14 -0400
+From: Matias Mucciolo <mmucciolo@suteba.org.ar>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix sparse warning: symbol was not declared. Should it be static?
+Date: Mon, 26 Sep 2016 13:13:03 -0300
+Message-ID: <6507342.BIUiKHv64l@varitech> (sfid-20160926_181402_940456_EE73358D)
+In-Reply-To: <20160926155220.GA3319@kroah.com>
+References: <34310025.aMSyYASYEz@varitech> <4399555.QWNJt8EtNN@varitech> <20160926155220.GA3319@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <968d1def-738f-36da-83bd-b10cc98c8093@gmail.com>
-References: <24d0d9c5-7695-9364-c5fa-97e9d52712dc@gmail.com>
- <CANUX_P1cFXTFk8c7iMZuVwoySMwVKPkLBOTr=sVC+t6xioPa=w@mail.gmail.com>
- <e22cedce-354f-cd41-f89c-8167f7063cfb@gmail.com> <79ad55e3-d7f7-0605-3499-a6b289dfb4f6@gmail.com>
- <CANUX_P1n3aVC=95q1=dJFU=7WYof=adm=P1anyhG0nnr9vKGKA@mail.gmail.com>
- <d0faec3a-b915-f4f6-5cd4-a4cff7f1dd7b@gmail.com> <CANUX_P1p=8Zxq+GZd8p5NjAaEY7G7p8kdxacr7orpfE8hKKWig@mail.gmail.com>
- <968d1def-738f-36da-83bd-b10cc98c8093@gmail.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 22 Sep 2016 08:32:55 +0300
-Message-ID: <CANUX_P0Ai+tzmq90rmHkVP69PZ5c=-kayLOQnmHebLGNeJ3nMw@mail.gmail.com> (sfid-20160922_073301_434293_E8E0E38A)
-Subject: Re: Problem with 40Mhz on 2.5GHz with Intel 8260
-To: Volker Mische <volker.mische@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 21, 2016 at 11:19 PM, Volker Mische <volker.mische@gmail.com> wrote:
-> Hi,
->
-> On 09/21/2016 09:20 AM, Emmanuel Grumbach wrote:
->>>> can you try to unplug the power cord? I had reports that said that
->>>> this can help. Again, just a debug step to give us a hint of what you
->>>> can be experiencing.
->>>
->>> Unplug without any module parameters or combined with the
->>> cfg80211_disable_40mhz_24ghz or power_scheme one?
->>
->> Nope - default configuration.
->
-> the issue also happens when the power cord is unplugged.
+- Fixed a sparse warning:
+  wilc_debugfs.c:32:10: warning: symbol 'WILC_DEBUG_LEVEL' was not declared. Should it be static?
 
-Ok - thanks for trying.
+Signed-off-by: Matias Mucciolo <mmucciolo@suteba.org.ar>
+---
+ drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
->>>> Besides this, we need to go for firmware debugging. But as I said,
->>>> don't expect this to be fast and easy. Please open a bug in
->>>> bugzilla.kernel.org. CC linuxwifi@intel.com and we will guide you
->>>> there on how to provide the information we need.
->
-> I've filled bug 172431
->
-> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=172431
-
-Saw that. Thanks.
-
->
-> Cheers,
->   Volker
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index b052628..802bb1d 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -29,7 +29,7 @@ static struct dentry *wilc_dir;
+ #define ERR             BIT(3)
+ 
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
++static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+ 
+ /*
+-- 
+2.1.4
