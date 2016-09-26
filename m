@@ -1,137 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42135 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758329AbcIMVvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 17:51:04 -0400
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 3/5] wlcore: sdio: Populate config firmware data
-Date: Tue, 13 Sep 2016 14:50:41 -0700
-Message-Id: <20160913215043.29454-4-tony@atomide.com> (sfid-20160913_235108_825063_138C04E9)
-In-Reply-To: <20160913215043.29454-1-tony@atomide.com>
-References: <20160913215043.29454-1-tony@atomide.com>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:35979 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965304AbcIZMin (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 08:38:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+References: <20160926102348.8695-1-zajec5@gmail.com> <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
+ <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 26 Sep 2016 14:38:40 +0200
+Message-ID: <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com> (sfid-20160926_143906_869645_FCB5722E)
+Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the config firmware names and make it available
-in platform data.
+On 26 September 2016 at 14:13, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> w=
+rote:
+> On 26 September 2016 at 13:46, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 26-9-2016 12:23, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>
+>>> We need to track 802.1x packets to know if there are any pending ones
+>>> for transmission. This is required for performing key update in the
+>>> firmware.
+>>
+>> The problem we are trying to solve is a pretty old one. The problem is
+>> that wpa_supplicant uses two separate code paths: EAPOL messaging
+>> through data path and key configuration though nl80211.
+>
+> Can I find it described/reported somewhere?
+>
+>
+>>> Unfortunately our old tracking code wasn't very accurate. It was
+>>> treating skb as pending as soon as it was passed by the netif. Actual
+>>> handling packet to the firmware was happening later as brcmfmac
+>>> internally queues them and uses its own worker(s).
+>>
+>> That does not seem right. As soon as we get a 1x packet we need to wait
+>> with key configuration regardless whether it is still in the driver or
+>> handed over to firmware already.
+>
+> OK, thanks.
 
-Let's also fix the order of the struct wilink_family_data
-while at it.
+Actually, it's not OK. I was trying to report/describe/discuss this
+problem for over a week. I couldn't get much of answer from you.
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+I had to come with a patch I worked on for quite some time. Only then
+you decided to react and reply with a reason for a nack. I see this
+patch may be wrong (but it's still hard to know what's going wrong
+without a proper hostapd bug report). I'd expect you to somehow work &
+communicate with open source community.
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index a336493..f949ad2b 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -79,15 +79,19 @@
- #define WSPI_MAX_NUM_OF_CHUNKS \
- 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
- 
-+static const struct wilink_family_data wl127x_data = {
-+	.name = "wl127x",
-+	.nvs_name = "ti-connectivity/wl127x-nvs.bin",
-+};
- 
--static const struct wilink_family_data *wilink_data;
-+static const struct wilink_family_data wl128x_data = {
-+	.name = "wl128x",
-+	.nvs_name = "ti-connectivity/wl128x-nvs.bin",
-+};
- 
- static const struct wilink_family_data wl18xx_data = {
- 	.name = "wl18xx",
--};
--
--static const struct wilink_family_data wl12xx_data = {
--	.name = "wl12xx",
-+	.cfg_name = "ti-connectivity/wl18xx-conf.bin",
- };
- 
- struct wl12xx_spi_glue {
-@@ -425,10 +429,10 @@ static struct wl1271_if_operations spi_ops = {
- };
- 
- static const struct of_device_id wlcore_spi_of_match_table[] = {
--	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
--	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1271", .data = &wl127x_data},
-+	{ .compatible = "ti,wl1273", .data = &wl127x_data},
-+	{ .compatible = "ti,wl1281", .data = &wl128x_data},
-+	{ .compatible = "ti,wl1283", .data = &wl128x_data},
- 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
- 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
-@@ -456,9 +460,9 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 	if (!of_id)
- 		return -ENODEV;
- 
--	wilink_data = of_id->data;
-+	pdev_data->family = of_id->data;
- 	dev_info(&spi->dev, "selected chip family is %s\n",
--		 wilink_data->name);
-+		 pdev_data->family->name);
- 
- 	if (of_find_property(dt_node, "clock-xtal", NULL))
- 		pdev_data->ref_clock_xtal = true;
-@@ -475,13 +479,15 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- static int wl1271_probe(struct spi_device *spi)
- {
- 	struct wl12xx_spi_glue *glue;
--	struct wlcore_platdev_data pdev_data;
-+	struct wlcore_platdev_data *pdev_data;
- 	struct resource res[1];
- 	int ret;
- 
--	memset(&pdev_data, 0x00, sizeof(pdev_data));
-+	pdev_data = devm_kzalloc(&spi->dev, sizeof(*pdev_data), GFP_KERNEL);
-+	if (!pdev_data)
-+		return -ENOMEM;
- 
--	pdev_data.if_ops = &spi_ops;
-+	pdev_data->if_ops = &spi_ops;
- 
- 	glue = devm_kzalloc(&spi->dev, sizeof(*glue), GFP_KERNEL);
- 	if (!glue) {
-@@ -505,7 +511,7 @@ static int wl1271_probe(struct spi_device *spi)
- 		return PTR_ERR(glue->reg);
- 	}
- 
--	ret = wlcore_probe_of(spi, glue, &pdev_data);
-+	ret = wlcore_probe_of(spi, glue, pdev_data);
- 	if (ret) {
- 		dev_err(glue->dev,
- 			"can't get device tree parameters (%d)\n", ret);
-@@ -518,7 +524,7 @@ static int wl1271_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
--	glue->core = platform_device_alloc(wilink_data->name,
-+	glue->core = platform_device_alloc(pdev_data->family->name,
- 					   PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
-@@ -539,8 +545,8 @@ static int wl1271_probe(struct spi_device *spi)
- 		goto out_dev_put;
- 	}
- 
--	ret = platform_device_add_data(glue->core, &pdev_data,
--				       sizeof(pdev_data));
-+	ret = platform_device_add_data(glue->core, pdev_data,
-+				       sizeof(*pdev_data));
- 	if (ret) {
- 		dev_err(glue->dev, "can't add platform data\n");
- 		goto out_dev_put;
--- 
-2.9.3
+--=20
+Rafa=C5=82
