@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49274 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932537AbcIBPwQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:52:16 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: improve wake_tx_queue ops performance
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160817153253.6615-1-rmanohar@qti.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-        <rmanohar@codeaurora.org>
-Message-ID: <2bbb5b5df5f44598ac35860bcf353d08@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175220_670223_46DC54CA)
-Date: Fri, 2 Sep 2016 17:52:08 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:47604 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1034064AbcIZO7a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 10:59:30 -0400
+Message-ID: <1474901966.4519.8.camel@redhat.com> (sfid-20160926_170000_932556_347C45A8)
+Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
+From: Dan Williams <dcbw@redhat.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Mon, 26 Sep 2016 09:59:26 -0500
+In-Reply-To: <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+References: <20160926102348.8695-1-zajec5@gmail.com>
+         <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
+         <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> txqs_lock is interfering with wake_tx_queue submitting more frames.
-> so queues don't get filled in and don't keep firmware/hardware busy
-> enough. This change helps to reduce the txqs_lock contention and
-> wake_tx_queue() blockage to being possible in txrx_unref().
+On Mon, 2016-09-26 at 14:13 +0200, Rafał Miłecki wrote:
+> On 26 September 2016 at 13:46, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+> > 
+> > On 26-9-2016 12:23, Rafał Miłecki wrote:
+> > > 
+> > > From: Rafał Miłecki <rafal@milecki.pl>
+> > > 
+> > > We need to track 802.1x packets to know if there are any pending
+> > > ones
+> > > for transmission. This is required for performing key update in
+> > > the
+> > > firmware.
+> > 
+> > The problem we are trying to solve is a pretty old one. The problem
+> > is
+> > that wpa_supplicant uses two separate code paths: EAPOL messaging
+> > through data path and key configuration though nl80211.
 > 
-> To reduce turn around time of wake_tx_queue ops and to maintain fairness
-> among all txqs, the callback is updated to push first txq alone from
-> pending list for every wake_tx_queue call. Remaining txqs will be
-> processed later upon tx completion.
-> 
-> Below improvements are observed in push-only mode and validated on
-> IPQ4019 platform. With this change, in AP mode ~10Mbps increase is
-> observed in downlink (AP -> STA) traffic and approx. 5-10% of CPU
-> usage is reduced.
-> 
-> Major improvement is observed in 1-hop Mesh mode topology in 11ACVHT80.
-> Compared to Infra mode, CPU overhead is higher in Mesh mode due to path
-> lookup and no fast-xmit support. So reducing spin lock contention is
-> helping in Mesh.
-> 
->              TOT       +change
->            --------    --------
-> TCP DL     545 Mbps    595 Mbps
-> TCP UL     555 Mbps    585 Mbps
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Can I find it described/reported somewhere?
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+If I understand the issue correctly, you can find all this in the
+supplicant code.  Once the supplicant has done whatever it wants to do
+with the data frames that just happen to be EAPOL it then sends the
+keys down to the driver with nl80211.
 
-83e164b7679d ath10k: improve wake_tx_queue ops performance
+But it sounds like, instead of sniffing EAPOL frames in the driver skb
+tracking and sniffing ETH_P_PAE, you should probably implement support
+for NL80211_CMD_CRIT_PROTOCOL_START/NL80211_CMD_CRIT_PROTOCOL_STOP and
+key off the passed-in NL80211_CRIT_PROTO_EAPOL.  At least at the
+beginning of connection setup only EAPOL packets will be allowed
+anyway.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9286083/
+It doesn't seem like the supplicant uses NL80211_CRIT_PROTO_EAPOL yet,
+but that should also be fixed in the supplicant itself.  You should
+probably get some comments from Jouni on how he'd like to see all this
+work.  But generally the less specific sniffing of frames in drivers,
+likely the better.
+
+Dan
+
+> 
+> > 
+> > > 
+> > > Unfortunately our old tracking code wasn't very accurate. It was
+> > > treating skb as pending as soon as it was passed by the netif.
+> > > Actual
+> > > handling packet to the firmware was happening later as brcmfmac
+> > > internally queues them and uses its own worker(s).
+> > 
+> > That does not seem right. As soon as we get a 1x packet we need to
+> > wait
+> > with key configuration regardless whether it is still in the driver
+> > or
+> > handed over to firmware already.
+> 
+> OK, thanks.
