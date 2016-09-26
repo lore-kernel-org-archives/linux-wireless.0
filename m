@@ -1,34 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42111 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750967AbcINGGP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 02:06:15 -0400
-Message-ID: <1473833168.4423.3.camel@sipsolutions.net> (sfid-20160914_080651_574258_44FD74B5)
-Subject: Re: [PATCH] mac80211: allow driver to handle packet-loss mechanism
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 14 Sep 2016 08:06:08 +0200
-In-Reply-To: <e968a9083a9f5fd7e9c04d563288b229@codeaurora.org>
-References: <20160906065624.4062-1-rmanohar@qti.qualcomm.com>
-         <1473684288.29016.38.camel@sipsolutions.net>
-         <e968a9083a9f5fd7e9c04d563288b229@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-vk0-f45.google.com ([209.85.213.45]:36694 "EHLO
+        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161735AbcIZSFe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 14:05:34 -0400
+Received: by mail-vk0-f45.google.com with SMTP id d8so69497848vka.3
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2016 11:05:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <a3435bed-4892-4606-44ac-523e47f57b1b@codeaurora.org>
+References: <CALZLQ=biEM2efkYhkr6PYu7wn_CJTJ9LQg+0VJvf2rMgmKPS9w@mail.gmail.com>
+ <a3435bed-4892-4606-44ac-523e47f57b1b@codeaurora.org>
+From: Vikram <vikrampal@gmail.com>
+Date: Mon, 26 Sep 2016 23:35:33 +0530
+Message-ID: <CALZLQ=anWS6ThxEOnifRcxgYyk3BvWwMUFqTtZdOMcqZYA+igA@mail.gmail.com> (sfid-20160926_200538_613440_88708177)
+Subject: Re: wil6200
+To: Lior David <liord@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > The way you describe this it sounds like somehow you'll be
-> > reporting the indication to userspace from the driver; but you do
-> > not, and cannot do that. The description seems thus misleading?
-> > 
-> Sorry for confusion.. The idea is that driver will report low ack
-> status by ieee80211_report_low_ack and if driver wants to completely
-> rely on firmware algorithm, then this flag will be used to bypass
-> mac80211 packet loss mechanism. does it make sense?
+Hi Lior,
 
-Oh, so you *can* already do that. Please just say that in the commit
-message.
+On 26 September 2016 at 18:19, Lior David <liord@codeaurora.org> wrote:
+> On 9/25/2016 6:15 PM, Vikram wrote:
+>> Hi,
+>>
+>> Could you please let me know as to how to change the mode of wil6200
+>> chip from WBE to WiFi?
+>>
+>> Regards,
+>> Vikram
+>>
+> What is the exact device you are using? Older devices have firmware that only
+> supports WBE mode.
+>
+> Thanks,
+> Lior
 
-johannes
+I'm using Dell Wireless DW1601 7Gbps WiGig 802.11ad 802.11n 2*2 WiFi
+Half Mini Card abgn+ad 2*2:2
+
+Regards,
+Vikram
