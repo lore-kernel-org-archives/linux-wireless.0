@@ -1,52 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59572 "EHLO mx1.redhat.com"
+Received: from mout.web.de ([212.227.17.11]:59322 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752682AbcIRQ0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 12:26:48 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+        id S1034290AbcIZSGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 14:06:47 -0400
+Subject: Re: hostap: Delete an unnecessary jump label in
+ prism2_ioctl_priv_hostapd()
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Joe Perches <joe@perches.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: Stop log spam from each successful interrupt
-References: <1474132155-9330-1-git-send-email-Larry.Finger@lwfinger.net>
-        <1474133525.32273.97.camel@perches.com> <wrfjfuoymeez.fsf@redhat.com>
-        <8760pt7hzv.fsf@kamboji.qca.qualcomm.com>
-Date: Sun, 18 Sep 2016 12:26:46 -0400
-In-Reply-To: <8760pt7hzv.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Sun, 18 Sep 2016 11:02:44 +0300")
-Message-ID: <wrfjh99dkwc9.fsf@redhat.com> (sfid-20160918_182652_202813_A145E126)
+References: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+ <20160926150656.213D961568@smtp.codeaurora.org>
+ <88d5023a-9a59-ab36-8c6c-a146cae803b5@users.sourceforge.net>
+ <874m52zgjy.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <377dc68e-6217-b8ea-f349-7a90948acfaf@users.sourceforge.net> (sfid-20160926_200707_339490_28F8DBDC)
+Date: Mon, 26 Sep 2016 20:06:35 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <874m52zgjy.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->
->> Joe Perches <joe@perches.com> writes:
->>> I think it'd be nicer to use dev_dbg for all these cases
->>> and as well use some new macro that includes the test
->>>
->>> Something like:
->>>
->>> #define rtl8xxxu_dbg(type, fmt, ...)			\
->>> do {							\
->>> 	if (rtl8xxxu_debug & (type))			\
->>> 		dev_dbg(dev, fmt, ##__VA_ARGS__);	\
->>> } while (0)
->>
->> Yuck yuck yuck, no thanks!
->>
->> Any attempt of adding that kinda grossness to the driver will get a
->> NACK.
->
-> Huh, how is that ugly? To me it's the opposite, original code is ugly
-> and Joes' proposal makes sense. Lots of wireless drivers have something
-> similar.
+> hostap is an obsolete driver, it's waste of time doing style fixes to it
+> as nobody maintains it anymore.
 
-Sorry it's a classic case of obfuscating the code for zero gain. If
-someone else likes this kinda wrapper in their code, by all means go
-ahead. In my book it's just bad coding taste.
+Thanks for another bit of your software development attention and this information.
 
-Jes
+Is it easier to understand than the previous response "Reason: The benefit is not clear."?
+
+Regards,
+Markus
