@@ -1,66 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:39400 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753230AbcIAU5L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 16:57:11 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] mac80211: Move reorder-sensitive TX handlers to after
-        TXQ dequeue.
-References: <20160830131548.6014-1-toke@toke.dk>
-        <20160901160312.31540-1-toke@toke.dk>
-        <1472752745.9608.8.camel@sipsolutions.net>
-Date: Thu, 01 Sep 2016 20:30:59 +0200
-In-Reply-To: <1472752745.9608.8.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 01 Sep 2016 19:59:05 +0200")
-Message-ID: <871t1379r0.fsf@toke.dk> (sfid-20160901_225726_279577_16E51ADF)
+Received: from smtp.codeaurora.org ([198.145.29.96]:34244 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbcIZLTN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 07:19:13 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [2/2] mwifiex: fix unaligned read in mwifiex_config_scan()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1471057200-58166-2-git-send-email-pgynther@google.com>
+References: <1471057200-58166-2-git-send-email-pgynther@google.com>
+To: Petri Gynther <pgynther@google.com>
+Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
+        joe@perches.com, akarwar@marvell.com,
+        Petri Gynther <pgynther@google.com>
+Message-Id: <20160926111912.AE5BD6155C@smtp.codeaurora.org> (sfid-20160926_131918_092962_06214609)
+Date: Mon, 26 Sep 2016 11:19:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Petri Gynther <pgynther@google.com> wrote:
+> $ iwconfig mlan0 essid MySSID
+> [   36.930000] Path: /sbin/iwconfig
+> [   36.930000] CPU: 0 PID: 203 Comm: iwconfig Not tainted 4.7.0 #2
+> [   36.940000] task: 866f83a0 ti: 866a6000 task.ti: 866a6000
+> [   36.940000]
+> [ECR   ]: 0x00230400 => Misaligned r/w from 0x8677f403
+> [   36.960000] [EFA   ]: 0x8677f403
+> [   36.960000] [BLINK ]: mwifiex_scan_networks+0x17a/0x198c [mwifiex]
+> [   36.960000] [ERET  ]: mwifiex_scan_networks+0x18a/0x198c [mwifiex]
+> [   36.980000] [STAT32]: 0x00000206 : K         E2 E1
+> [   36.980000] BTA: 0x700736e2   SP: 0x866a7d0c  FP: 0x5faddc84
+> [   37.000000] LPS: 0x806a37ec  LPE: 0x806a37fa LPC: 0x00000000
+> [   37.000000] r00: 0x8677f401  r01: 0x8668aa08 r02: 0x00000001
+> r03: 0x00000000 r04: 0x8668b600 r05: 0x8677f406
+> r06: 0x8702b600 r07: 0x00000000 r08: 0x8702b600
+> r09: 0x00000000 r10: 0x870b3b00 r11: 0x00000000
+> r12: 0x00000000
+> [   37.040000]
+> [   37.040000] Stack Trace:
+> [   37.040000]   mwifiex_scan_networks+0x18a/0x198c [mwifiex]
+> 
+> Root cause:
+> mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
+> 
+> drivers/net/wireless/marvell/mwifiex/fw.h:
+> struct mwifiex_scan_cmd_config {
+>         /*
+>          *  BSS mode to be sent in the firmware command
+>          */
+>         u8 bss_mode;
+> 
+>         /* Specific BSSID used to filter scan results in the firmware */
+>         u8 specific_bssid[ETH_ALEN];
+> 
+>         ...
+> } __packed;
+> 
+> drivers/net/wireless/marvell/mwifiex/scan.c:
+> mwifiex_config_scan(..., struct mwifiex_scan_cmd_config *scan_cfg_out, ...)
+>         ...
+>         if (adapter->ext_scan &&
+>             !is_zero_ether_addr(scan_cfg_out->specific_bssid)) {
+>             ...
+>         }
+> 
+> Since firmware-related struct mwifiex_scan_cmd_config cannot be changed,
+> we need to use the new function is_zero_ether_addr_unaligned() here.
+> 
+> This is v2 of the original patch:
+> [PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
+> 
+> Per Joe's suggestion -- instead of modifying is_zero_ether_addr() --
+> add is_zero_ether_addr_unaligned() and use it where needed.
+> 
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: Joe Perches <joe@perches.com>
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Petri Gynther <pgynther@google.com>
 
->> To avoid having to deal with fragmentation on dequeue, the split is
->> set to be after the fragmentation handler. This means that some
->> reordering of TX handlers is necessary, and some handlers had to be
->> made aware of fragmentation due to this reordering.
->
-> Come to think of it, that's actually counterproductive.
->
-> If a fragment is dropped, or even just if fragments are reordered, the
-> receiver will not be able to defragment the frame, and will thus drop
-> it. Therefore, it's all-or-nothing, and we shouldn't transmit any
-> fragment if we drop/reorder one (*).
->
-> So ... I think you'll just have to deal with fragmentation on the
-> codel/fq/whatever queues and keep fragments together, or do
-> fragmentation afterwards.
+Patch set to Rejected.
 
-Hmm, guess that makes sense. Bugger. Will think about how to do that.
+Reason: As is_zero_ether_addr_unaligned() patch is not applied I can't take
+this. Please resend if that patch is accepted.
 
->
-> johannes
->
-> (*) also, couldn't this mean that we send something completely stupid
-> like
->
-> seq=1,frag=0
-> seq=2,frag=0
-> seq=2,frag=1
-> seq=2,frag=1
->
-> if reordering happened?
+-- 
+https://patchwork.kernel.org/patch/9306999/
 
-(assuming the last line was supposed to read 'seq=1,frag=1')
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Yes, that could happen, in principle (it depends on the fragments' size
-in relation to the FQ quantum).
-
-
-When does fragmentation happen anyway? Is it safe to assume there's no
-aggregation when it does?
-
--Toke
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
