@@ -1,52 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42569 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752389AbcIQPhj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 11:37:39 -0400
-Date: Sat, 17 Sep 2016 08:37:35 -0700
-From: Tony Lindgren <tony@atomide.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34104 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933166AbcIZVv5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 17:51:57 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: Re: [PATCH 0/5] Fix wlcore config firwmare annoyances
-Message-ID: <20160917153735.lokxw5kdgtmvtmge@atomide.com> (sfid-20160917_173743_515306_C9EB292E)
-References: <20160913215043.29454-1-tony@atomide.com>
- <87k2ea7dmm.fsf@kamboji.qca.qualcomm.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: proto: add callback for queuing TX data
+Date: Mon, 26 Sep 2016 23:51:44 +0200
+Message-Id: <20160926215144.9923-1-zajec5@gmail.com> (sfid-20160926_235229_301187_9723C2F0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87k2ea7dmm.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Kalle Valo <kvalo@codeaurora.org> [160917 08:25]:
-> Tony Lindgren <tony@atomide.com> writes:
-> 
-> > Hi all,
-> >
-> > Here are some patches to fix the firmware loading for wl12xx/wl18xx
-> > when the same rootfs is used on multiple WLAN chip variants.
-> >
-> > Regards,
-> >
-> > Tony
-> >
-> > Tony Lindgren (5):
-> >   wlcore: Prepare family to fix nvs file handling
-> >   wlcore: sdio: Populate config firmware data
-> >   wlcore: sdio: Populate config firmware data
-> >   wlcore: Fix config firmware loading issues
-> >   wlcore: wl18xx: Use chip specific configuration firmware
-> 
-> I saw a new warning which I think is a valid one:
-> 
-> drivers/net/wireless/ti/wlcore/main.c: In function 'wlcore_probe':
-> drivers/net/wireless/ti/wlcore/main.c:6518:6: warning: 'ret' may be used uninitialized in this function [-Wuninitialized]
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Oops sorry about that, will check and repost.
+So far our core code was calling brcmf_fws_process_skb which wasn't
+a proper thing to do. If case of devices using msgbuf protocol fwsignal
+shouldn't be used. It was an unnecessary extra layer simply calling
+a protocol specifix txdata function.
 
-Regards,
+Please note we already have txdata callback, but it's used for calls
+between bcdc and fwsignal so it couldn't be simply used there.
 
-Tony
+This makes core code more generic (instead of bcdc/fwsignal specific).
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+There is one 1 CHECK report from checkpatch.pl in this patch:
+CHECK: Comparison to NULL could be written "!proto->hdrpull"
+#157: FILE: drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c:54:
++       if (!proto->tx_queue_data || (proto->hdrpull == NULL) ||
+
+It's caused by a code that was already there and that should be fixed
+in a separated patch. This shouldn't stop this patch from being applied.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c   | 12 ++++++++++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   |  8 +++++++-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c   | 15 +++++----------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h   |  1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c |  6 +++---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c  |  2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h  |  9 +++++++++
+ 7 files changed, 38 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 038a960..384b187 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -326,6 +326,17 @@ brcmf_proto_bcdc_hdrpull(struct brcmf_pub *drvr, bool do_fws,
+ 	return 0;
+ }
+ 
++static int brcmf_proto_bcdc_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
++					  struct sk_buff *skb)
++{
++	struct brcmf_if *ifp = brcmf_get_ifp(drvr, ifidx);
++
++	if (!brcmf_fws_queue_skbs(drvr->fws))
++		return brcmf_proto_txdata(drvr, ifidx, 0, skb);
++
++	return brcmf_fws_process_skb(ifp, skb);
++}
++
+ static int
+ brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
+ 			struct sk_buff *pktbuf)
+@@ -375,6 +386,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->hdrpull = brcmf_proto_bcdc_hdrpull;
+ 	drvr->proto->query_dcmd = brcmf_proto_bcdc_query_dcmd;
+ 	drvr->proto->set_dcmd = brcmf_proto_bcdc_set_dcmd;
++	drvr->proto->tx_queue_data = brcmf_proto_bcdc_tx_queue_data;
+ 	drvr->proto->txdata = brcmf_proto_bcdc_txdata;
+ 	drvr->proto->configure_addr_mode = brcmf_proto_bcdc_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_proto_bcdc_delete_peer;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 1715280..6d046ba 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -239,7 +239,13 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+ 	if (eh->h_proto == htons(ETH_P_PAE))
+ 		atomic_inc(&ifp->pend_8021x_cnt);
+ 
+-	ret = brcmf_fws_process_skb(ifp, skb);
++	/* determine the priority */
++	if ((skb->priority == 0) || (skb->priority > 7))
++		skb->priority = cfg80211_classify8021d(skb, NULL);
++
++	ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
++	if (ret < 0)
++		brcmf_txfinalize(ifp, skb, false);
+ 
+ done:
+ 	if (ret) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index a190f53..5f1a592 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2100,16 +2100,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 	int rc = 0;
+ 
+ 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
+-	/* determine the priority */
+-	if ((skb->priority == 0) || (skb->priority > 7))
+-		skb->priority = cfg80211_classify8021d(skb, NULL);
+-
+-	if (fws->avoid_queueing) {
+-		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+-		if (rc < 0)
+-			brcmf_txfinalize(ifp, skb, false);
+-		return rc;
+-	}
+ 
+ 	/* set control buffer information */
+ 	skcb->if_flags = 0;
+@@ -2442,6 +2432,11 @@ void brcmf_fws_deinit(struct brcmf_pub *drvr)
+ 	kfree(fws);
+ }
+ 
++bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws)
++{
++	return !fws->avoid_queueing;
++}
++
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
+ {
+ 	if (!fws->creditmap_received)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index ef0ad85..96df660 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -20,6 +20,7 @@
+ 
+ int brcmf_fws_init(struct brcmf_pub *drvr);
+ void brcmf_fws_deinit(struct brcmf_pub *drvr);
++bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
+ bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
+ void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb);
+ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index 2b9a2bc..7cc8851 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -782,8 +782,8 @@ static int brcmf_msgbuf_schedule_txdata(struct brcmf_msgbuf *msgbuf, u32 flowid,
+ }
+ 
+ 
+-static int brcmf_msgbuf_txdata(struct brcmf_pub *drvr, int ifidx,
+-			       u8 offset, struct sk_buff *skb)
++static int brcmf_msgbuf_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
++				      struct sk_buff *skb)
+ {
+ 	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
+ 	struct brcmf_flowring *flow = msgbuf->flow;
+@@ -1467,7 +1467,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->hdrpull = brcmf_msgbuf_hdrpull;
+ 	drvr->proto->query_dcmd = brcmf_msgbuf_query_dcmd;
+ 	drvr->proto->set_dcmd = brcmf_msgbuf_set_dcmd;
+-	drvr->proto->txdata = brcmf_msgbuf_txdata;
++	drvr->proto->tx_queue_data = brcmf_msgbuf_tx_queue_data;
+ 	drvr->proto->configure_addr_mode = brcmf_msgbuf_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_msgbuf_delete_peer;
+ 	drvr->proto->add_tdls_peer = brcmf_msgbuf_add_tdls_peer;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+index 26b68c3..d26ff21 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
+@@ -51,7 +51,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
+ 			  drvr->bus_if->proto_type);
+ 		goto fail;
+ 	}
+-	if ((proto->txdata == NULL) || (proto->hdrpull == NULL) ||
++	if (!proto->tx_queue_data || (proto->hdrpull == NULL) ||
+ 	    (proto->query_dcmd == NULL) || (proto->set_dcmd == NULL) ||
+ 	    (proto->configure_addr_mode == NULL) ||
+ 	    (proto->delete_peer == NULL) || (proto->add_tdls_peer == NULL)) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+index 57531f4..34b59fe 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+@@ -33,6 +33,8 @@ struct brcmf_proto {
+ 			  void *buf, uint len);
+ 	int (*set_dcmd)(struct brcmf_pub *drvr, int ifidx, uint cmd, void *buf,
+ 			uint len);
++	int (*tx_queue_data)(struct brcmf_pub *drvr, int ifidx,
++			     struct sk_buff *skb);
+ 	int (*txdata)(struct brcmf_pub *drvr, int ifidx, u8 offset,
+ 		      struct sk_buff *skb);
+ 	void (*configure_addr_mode)(struct brcmf_pub *drvr, int ifidx,
+@@ -74,6 +76,13 @@ static inline int brcmf_proto_set_dcmd(struct brcmf_pub *drvr, int ifidx,
+ {
+ 	return drvr->proto->set_dcmd(drvr, ifidx, cmd, buf, len);
+ }
++
++static inline int brcmf_proto_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
++					    struct sk_buff *skb)
++{
++	return drvr->proto->tx_queue_data(drvr, ifidx, skb);
++}
++
+ static inline int brcmf_proto_txdata(struct brcmf_pub *drvr, int ifidx,
+ 				     u8 offset, struct sk_buff *skb)
+ {
+-- 
+2.9.3
