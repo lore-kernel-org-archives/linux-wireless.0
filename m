@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:35286 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751167AbcIUIAW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52335 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1422721AbcIZRkC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 04:00:22 -0400
-Received: by mail-pf0-f171.google.com with SMTP id z123so16674520pfz.2
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2016 01:00:22 -0700 (PDT)
-Subject: Re: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop
- NAN
-To: Luca Coelho <luca@coelho.fi>,
-        "Beker, Ayala" <ayala.beker@intel.com>,
-        "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-References: <20160916083321.5840-1-luca@coelho.fi>
- <20160916083321.5840-3-luca@coelho.fi>
- <fae482d0-4bcd-6b06-9846-298a3218ab26@broadcom.com>
- <B2CD83211F5FDD478D7EFFF030D107ED57286E64@hasmsx108.ger.corp.intel.com>
- <ab55211c-9e82-38cf-8f7f-effa4b12d72b@broadcom.com>
- <6E2DD73D17E17047917F6A81399A8ED3972503A6@hasmsx109.ger.corp.intel.com>
- <972b9d18-218e-8b46-f56a-eab4c5981d0b@broadcom.com>
- <1474382205.5664.196.camel@coelho.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a392b8e4-31c6-6acf-d7af-9ce33fc2a739@broadcom.com> (sfid-20160921_100026_632781_5A0ADD19)
-Date: Wed, 21 Sep 2016 10:00:16 +0200
+        Mon, 26 Sep 2016 13:40:02 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1474382205.5664.196.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [1/3] mwifiex: fix kernel crash for USB chipsets
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1474384744-14096-1-git-send-email-akarwar@marvell.com>
+References: <1474384744-14096-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Shengzhen Li <szli@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160926174001.EAB7061523@smtp.codeaurora.org> (sfid-20160926_194008_702267_0987F1CA)
+Date: Mon, 26 Sep 2016 17:40:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 20-9-2016 16:36, Luca Coelho wrote:
-> Hi Arend,
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Cathy Luo <cluo@marvell.com>
 > 
-> On Tue, 2016-09-20 at 14:29 +0200, Arend Van Spriel wrote:
->> On 20-9-2016 13:45, Beker, Ayala wrote:
->>> I don't think there is something in common to those interface types
->>> that can fit such a function semantically, so I decided not to
->>> change it.
->>> Do you have any idea?
->>
->> What is common is that these are both non-netdev interface types.
+> Following crash issue is observed during TCP traffic stress
+> test
 > 
-> I tend to agree with you.  I also thought about an
-> ieee80211_has_netdev() function for this, but I didn't check whether
-> this was exactly what we need...
-
-Maybe it does not fit all instances, but quite a few checks are there to
-skip netdev related stuff.
-
-> In any case, do you mind if we address this in a separate patch?
-
-Fine by me.
-
-Regards,
-Arend
-
-> --
-> Cheers,
-> Luca.
+> [ 2253.625439] NMI watchdog: BUG: soft lockup - CPU#3 stuck for 22s!
+> [kworker/u17:1:5191]
+> [ 2253.625520] Call Trace:
+> [ 2253.625527]  [<ffffffffc0b47030>] ? moal_spin_lock+0x30/0x30
+> [usb8xxx]
+> [ 2253.625533]  [<ffffffffc0ac3ceb>] ? wlan_wmm_lists_empty+0xb/0xf0
+> [mlan]
+> [ 2253.625537]  [<ffffffffc0ab0ea3>] mlan_main_process+0x1b3/0x720
+> [mlan]
+> [ 2253.625540]  [<ffffffffc0b337f5>] woal_main_work_queue+0x45/0x80
+> [usb8xxx]
+> [ 2253.625543]  [<ffffffff8108aaf0>] process_one_work+0x150/0x3f0
+> [ 2253.625545]  [<ffffffff8108b1e1>] worker_thread+0x121/0x520
+> [ 2253.625547]  [<ffffffff8108b0c0>] ? rescuer_thread+0x330/0x330
+> [ 2253.625549]  [<ffffffff81090222>] kthread+0xd2/0xf0
+> [ 2253.625551]  [<ffffffff81090150>] ?
+> kthread_create_on_node+0x1c0/0x1c0
+> [ 2253.625553]  [<ffffffff8179423c>] ret_from_fork+0x7c/0xb0
+> [ 2253.625555]  [<ffffffff81090150>] ?
+> kthread_create_on_node+0x1c0/0x1c0
 > 
+> In mwifiex_usb_tx_complete(), we are updating port->block_status first
+> and then freeing the skb attached to that URB. We may end up attaching
+> new skb to URB in a corner case and same will be freed. This results in
+> the kernel crash. The problem is solved by changing the sequence.
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+
+3 patches applied to wireless-drivers-next.git, thanks.
+
+1afac196c167 mwifiex: fix kernel crash for USB chipsets
+5476f8030d9a mwifiex: fix race condition causing tx timeout
+ac3b561721e9 mwifiex: code rearrangement in mwifiex_usb_host_to_card()
+
+-- 
+https://patchwork.kernel.org/patch/9341883/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
