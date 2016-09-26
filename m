@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36383 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754543AbcISKyt (ORCPT
+Received: from smtprelay0017.hostedemail.com ([216.40.44.17]:41397 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756047AbcIZSn0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:54:49 -0400
-Received: by mail-pf0-f196.google.com with SMTP id n24so7122487pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 03:54:48 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de,
-        Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
-Subject: [PATCH] rsi: fix memory leak in debugfs entry and supported bands
-Date: Mon, 19 Sep 2016 16:21:51 +0530
-Message-Id: <1474282311-21541-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20160919_125502_462528_85E989EB)
+        Mon, 26 Sep 2016 14:43:26 -0400
+Message-ID: <1474915401.2238.21.camel@perches.com> (sfid-20160926_204351_064256_A331334D)
+Subject: Re: hostap: Delete an unnecessary jump label in
+ prism2_ioctl_priv_hostapd()
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+Date: Mon, 26 Sep 2016 11:43:21 -0700
+In-Reply-To: <87mviuy0b7.fsf@kamboji.qca.qualcomm.com>
+References: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+         <20160926150656.213D961568@smtp.codeaurora.org>
+         <88d5023a-9a59-ab36-8c6c-a146cae803b5@users.sourceforge.net>
+         <874m52zgjy.fsf@kamboji.qca.qualcomm.com>
+         <1474913885.2238.19.camel@perches.com>
+         <87mviuy0b7.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+On Mon, 2016-09-26 at 21:37 +0300, Kalle Valo wrote:
+> I talked with Jouni and we concluded marking this fully obsolete is the
+> best (so removing the "Maintained" part completelo the shmoo list
+> is not used anymore, that can be removed.
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..dc64532 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
- void rsi_mac80211_detach(struct rsi_hw *adapter)
- {
- 	struct ieee80211_hw *hw = adapter->hw;
-+	int i;
- 
- 	if (hw) {
- 		ieee80211_stop_queues(hw);
-@@ -201,7 +202,16 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
- 		ieee80211_free_hw(hw);
- 	}
- 
-+	for (i = 0; i < 2; i++) {
-+		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
-+
-+		kfree(sbands->channels);
-+	}
-+
-+#ifdef CONFIG_RSI_DEBUGFS
- 	rsi_remove_dbgfs(adapter);
-+	kfree(adapter->dfsentry);
-+#endif
- }
- EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
- 
--- 
-2.4.11
+Well, it would be best if Jouni submitted something.
