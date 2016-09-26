@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:61042 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932448AbcIEP0E (ORCPT
+Received: from smtprelay0162.hostedemail.com ([216.40.44.162]:50625 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1162961AbcIZSSJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2016 11:26:04 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [v2] bcma: use of_dma_configure() to set initial dma mask
-Date: Mon, 05 Sep 2016 17:26:27 +0200
-Message-ID: <6123998.NAlOfyAp5F@wuerfel> (sfid-20160905_172607_770781_056D1088)
-In-Reply-To: <20160903140819.245F06216C@smtp.codeaurora.org>
-References: <20160903140819.245F06216C@smtp.codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 26 Sep 2016 14:18:09 -0400
+Message-ID: <1474913885.2238.19.camel@perches.com> (sfid-20160926_201834_641162_9F732B6D)
+Subject: Re: hostap: Delete an unnecessary jump label in
+ prism2_ioctl_priv_hostapd()
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+Date: Mon, 26 Sep 2016 11:18:05 -0700
+In-Reply-To: <874m52zgjy.fsf@kamboji.qca.qualcomm.com>
+References: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+         <20160926150656.213D961568@smtp.codeaurora.org>
+         <88d5023a-9a59-ab36-8c6c-a146cae803b5@users.sourceforge.net>
+         <874m52zgjy.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, September 3, 2016 2:08:19 PM CEST Kalle Valo wrote:
-> Arnd Bergmann <arnd@arndb.de> wrote:
-> > While fixing another bug, I noticed that bcma manually sets up
-> > a dma_mask pointer for its child devices. We have a generic
-> > helper for that now, which should be able to cope better with
-> > any variations that might be needed to deal with cache coherency,
-> > unusual DMA address offsets, iommus, or limited DMA masks, none
-> > of which are currently handled here.
-> > 
-> > This changes the core to use the of_dma_configure(), like
-> > we do for platform devices that are probed directly from
-> > DT.
-> > 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> 
-> Nobody tested this, so I'll drop the patch.
-> 
+On Mon, 2016-09-26 at 21:01 +0300, Kalle Valo wrote:
+> hostap is an obsolete driver, it's waste of time doing style fixes to it
+> as nobody maintains it anymore.
 
-Should I resend it? I think it's still required.
+Dunno know if Jouni is still maintaining this at all
+but maybe a MAINTAINERS update to mark it obsolete so
+checkpatch warns on unnecessary changes.
+---
+ MAINTAINERS | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Arnd
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6e0a912c3b13..ff293e70fae6 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -5722,7 +5722,7 @@ M:	Jouni Malinen 
+ L:	hostap@shmoo.com (subscribers-only)
+ L:	linux-wireless@vger.kernel.org
+ W:	http://hostap.epitest.fi/
+-S:	Maintained
++S:	Maintained / Obsolete
+ F:	drivers/net/wireless/intersil/hostap/
+ 
+ HP COMPAQ TC1100 TABLET WMI EXTRAS DRIVER
