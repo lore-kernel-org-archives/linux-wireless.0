@@ -1,92 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60639 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41240 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753874AbcIHMQ3 (ORCPT
+        with ESMTP id S1751372AbcIZIwJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 08:16:29 -0400
+        Mon, 26 Sep 2016 04:52:09 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, Andy Gross <andy.gross@linaro.org>
-Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
-References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
-        <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
-Date: Thu, 08 Sep 2016 15:16:21 +0300
-In-Reply-To: <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
-        (Bjorn Andersson's message of "Tue, 6 Sep 2016 15:18:30 -0700")
-Message-ID: <87k2emsi22.fsf@kamboji.qca.qualcomm.com> (sfid-20160908_141647_605764_84E14D7B)
+To: "Sharon\, Sara" <sara.sharon@intel.com>
+Cc: Luca Coelho <luca@coelho.fi>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Coelho\, Luciano" <luciano.coelho@intel.com>
+Subject: Re: [PATCH 10/25] iwlwifi: mvm: support packet injection
+References: <1474270071.5664.89.camel@coelho.fi>
+        <20160919073028.22065-10-luca@coelho.fi>
+        <87oa3d1r5h.fsf@kamboji.qca.qualcomm.com>
+        <84271B8B681983469E84120965EB1B0434D68BCA@HASMSX106.ger.corp.intel.com>
+Date: Mon, 26 Sep 2016 11:52:03 +0300
+In-Reply-To: <84271B8B681983469E84120965EB1B0434D68BCA@HASMSX106.ger.corp.intel.com>
+        (Sara Sharon's message of "Mon, 26 Sep 2016 08:10:08 +0000")
+Message-ID: <8737kn11sc.fsf@kamboji.qca.qualcomm.com> (sfid-20160926_105214_055565_3A0E6D35)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+"Sharon, Sara" <sara.sharon@intel.com> writes:
 
-> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
-> channel, as such it should be a SMD client. This patch makes this
-> transition, now that we have the necessary frameworks available.
+>> The commit log doesn't tell a lot. I started to wonder why use
+>> debugfs and not the proper interface through mac80211?
 >
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
+> This is RX packet injection, not TX. So the injection goes up - from
+> the driver to mac80211. Since we use it to test some mvm data path
+> stuff, we don't want to inject at mac80211 level.
 >
-> Changes since v3:
-> - Made msg_header const in wcn36xx_smd_rsp_process()
+>> But reading from the code makes me suspect that this isn't really
+>> normal packet injection, more like passing full descriptors to the
+>> hw. Did I understand correctly?
 >
-> Changes since v2:
-> - Correct the call to the new ieee80211_scan_completed()
->
->  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
->  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
->  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
->  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
->  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
->  5 files changed, 86 insertions(+), 66 deletions(-)
+> For injecting at driver level we need the injected packet to contain a
+> fake of the HW descriptor for the driver processing. This descriptor
+> isn't being passed to the hw, but to the driver since it is RX. The
+> code isn't creating the descriptor, but it is validating length and
+> other checks to make sure we won't access invalid memory or so.
 
-This doesn't compile for me:
-
-  CC [M]  drivers/net/wireless/ath/wcn36xx/main.o
-  CC [M]  drivers/net/wireless/ath/wcn36xx/dxe.o
-  CC [M]  drivers/net/wireless/ath/wcn36xx/txrx.o
-  CC [M]  drivers/net/wireless/ath/wcn36xx/smd.o
-  CC [M]  drivers/net/wireless/ath/wcn36xx/pmc.o
-  CC [M]  drivers/net/wireless/ath/wcn36xx/debug.o
-  LD [M]  drivers/net/wireless/ath/wcn36xx/wcn36xx.o
-drivers/net/wireless/ath/wcn36xx/smd.o: In function `qcom_smd_get_drvdata':
-/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:87: multiple definition of `qcom_smd_get_drvdata'
-drivers/net/wireless/ath/wcn36xx/main.o:/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:87: first defined here
-drivers/net/wireless/ath/wcn36xx/smd.o: In function `qcom_smd_set_drvdata':
-/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:94: multiple definition of `qcom_smd_set_drvdata'
-drivers/net/wireless/ath/wcn36xx/main.o:/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:94: first defined here
-make[5]: *** [drivers/net/wireless/ath/wcn36xx/wcn36xx.o] Error 1
-
-I fixed it with the diff below. Please let me know if it looks ok to
-you, the patch is not applied yet so it's easy to make changes. The full
-commit in my pending branch:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=dba68ea7a404a9959d0ab44bc13c844187db6d6a
-
---- a/include/linux/soc/qcom/smd.h
-+++ b/include/linux/soc/qcom/smd.h
-@@ -83,14 +83,14 @@ qcom_smd_open_channel(struct qcom_smd_channel *channel,
-        return NULL;
- }
- 
--void *qcom_smd_get_drvdata(struct qcom_smd_channel *channel)
-+static inline void *qcom_smd_get_drvdata(struct qcom_smd_channel *channel)
- {
-        /* This shouldn't be possible */
-        WARN_ON(1);
-        return NULL;
- }
- 
--void qcom_smd_set_drvdata(struct qcom_smd_channel *channel, void *data)
-+static inline void qcom_smd_set_drvdata(struct qcom_smd_channel *channel, void *data)
- {
-        /* This shouldn't be possible */
-        WARN_ON(1);
-
+Ah, makes sense. No need to resend this, but in the future please try to
+explain higher level design like this in the commit log. That avoids a
+lot of guessing (wrong) for me and others.
 
 -- 
 Kalle Valo
