@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50846 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753182AbcI1MtV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58522 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933368AbcIZKp4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 08:49:21 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8SCjCwX019740
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:49:20 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 25r7vna8qs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:49:20 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/8] mwifiex: report error to PCIe for suspend failure
-Date: Wed, 28 Sep 2016 18:18:22 +0530
-Message-ID: <1475066908-11771-2-git-send-email-akarwar@marvell.com> (sfid-20160928_144924_240346_A8C9F172)
-In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
+        Mon, 26 Sep 2016 06:45:56 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+        "Avinash Patil" <avinashp@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        "Sergei Maksimenko" <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>
+Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
+References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+        <87a8f68wae.fsf@kamboji.qca.qualcomm.com>
+        <dfdaca87-dfbd-4677-fbff-45127ccd2e0c@quantenna.com>
+Date: Mon, 26 Sep 2016 13:45:49 +0300
+In-Reply-To: <dfdaca87-dfbd-4677-fbff-45127ccd2e0c@quantenna.com>
+        (IgorMitsyanko's message of "Tue, 20 Sep 2016 22:05:07 +0300")
+Message-ID: <87shsnym5e.fsf@kamboji.qca.qualcomm.com> (sfid-20160926_124559_822206_5485A6E2)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When host_sleep_config command fails, we should return an error to
-PCIe, instead of continuing (and possibly panicking, when we try to keep
-processing a timed-out ioctl after we return "successfully" from
-suspend).
+IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+> On 09/17/2016 04:56 PM, Kalle Valo wrote:
+>> <igor.mitsyanko.os@quantenna.com> writes:
+>>
+>>> +/* FW names */
+>>> +
+>>> +#define QTN_PCI_FW_NAME		"pearl-linux.lzma.img"
+>>
+>> The firmware name gives no indication what this file is about (remember
+>> that linux-firmware.git has a lot of files). Please name it properly,
+>> don't just use what is used in by firmware build scripts :) Take into
+>> account also future hw support, all firmware files need to coexist in
+>> the same repository without user invention. In a way the firmware
+>> filename is part of kernel/userspace interface and needs to be stable.
+>>
+>> For example, you could use something like "qtnfmac/qsr10g.img" (assuming
+>> qsr10g is the name of chip).
+>
+> Ok, we will reconsider our naming conventions, take into account more
+> devices that we need to support in the future.
+> I'm thinking about something like:
+> qtn/fmac_qsr10g.img  <---- FullMAC QSR10G device
+> qtn/fmac_qsr1000.img  <---- FullMAC QSR1000 device
+> qtn/smac_qsr10g.img  <---- SoftMAC QSR10G
+> qtn/smac_qsr10000.img <----- SoftMAC QSR1000
+> etc
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 2833d47..063c707 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -101,7 +101,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
- {
- 	struct mwifiex_adapter *adapter;
- 	struct pcie_service_card *card;
--	int hs_actived;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	if (pdev) {
-@@ -117,7 +116,14 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 
- 	adapter = card->adapter;
- 
--	hs_actived = mwifiex_enable_hs(adapter);
-+	/* Enable the Host Sleep */
-+	if (!mwifiex_enable_hs(adapter)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "cmd: failed to suspend\n");
-+		adapter->hs_enabling = false;
-+		return -EFAULT;
-+	}
-+
- 	flush_workqueue(adapter->workqueue);
- 
- 	/* Indicate device suspended */
+Looks good to me.
+
 -- 
-1.9.1
+Kalle Valo
