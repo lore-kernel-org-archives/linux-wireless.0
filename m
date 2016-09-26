@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:42120 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935319AbcIFTBe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60697 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934308AbcIZPrM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 15:01:34 -0400
-From: Thomas Pedersen <twp@qca.qualcomm.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        Thomas Pedersen <twp@qca.qualcomm.com>
-Subject: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
-Date: Tue, 6 Sep 2016 12:00:17 -0700
-Message-ID: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160906_210455_004286_9495AEAB)
+        Mon, 26 Sep 2016 11:47:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tony Lindgren <tony@atomide.com>
+Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH 1/5] wlcore: Prepare family to fix nvs file handling
+In-Reply-To: <20160917160633.8767-2-tony@atomide.com> (Tony Lindgren's message
+        of "Sat, 17 Sep 2016 09:06:29 -0700")
+References: <20160917160633.8767-1-tony@atomide.com>
+        <20160917160633.8767-2-tony@atomide.com>
+Date: Mon, 26 Sep 2016 18:47:06 +0300
+Message-ID: <878tuezmrp.fsf@kamboji.qca.qualcomm.com> (sfid-20160926_174716_597695_1358C8C8)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (ath10k) report MCS 9 @ 20MHz, which
-technically isn't allowed. To get more meaningful value
-than 0 out of this however, just cap the bitrate for 20MHz
-to MCS 8.
+Tony Lindgren <tony@atomide.com> writes:
 
-Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
----
- net/wireless/util.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> Move struct wilink_family_data to be available for all TI WLAN
+> variants. And fix familiy typo, it should be just family.
+>
+> Looks like wl12xx use two different nvs.bin files and wl18xx
+> uses a different conf.bin file.
+>
+> Signed-off-by: Tony Lindgren <tony@atomide.com>
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 0675f51..5fb0249 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1157,7 +1157,9 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		   58500000,
- 		   65000000,
- 		   78000000,
--		   0,
-+		   /* some drivers report MCS 9 for 20MHz anyway. Clip to MCS 8
-+		    * bitrate as it's closer than 0 */
-+		   78000000,
- 		},
- 		{  13500000,
- 		   27000000,
+Applied to wireless-drivers-next.git, thanks.
+
 -- 
-2.1.4
+Kalle Valo
