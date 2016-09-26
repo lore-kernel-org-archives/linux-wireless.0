@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44101 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754281AbcINONE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33490 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934759AbcIZLMH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 10:13:04 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "greearb@candelatech.com" <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 08/21] ath10k: make firmware text debug messages more
- verbose.
-Date: Wed, 14 Sep 2016 14:12:58 +0000
-Message-ID: <87sht2efiu.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_161308_110493_6ECEFB14)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-        <1462986153-16318-9-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1462986153-16318-9-git-send-email-greearb@candelatech.com>
-        (greearb@candelatech.com's message of "Wed, 11 May 2016 10:02:20        -0700")
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 26 Sep 2016 07:12:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2016-09-19-2
+In-Reply-To: <1474275007.5664.96.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 19 Sep 2016 11:50:07 +0300")
+References: <1474270071.5664.89.camel@coelho.fi>
+        <1474275007.5664.96.camel@coelho.fi>
+Date: Mon, 26 Sep 2016 14:12:03 +0300
+Message-ID: <87h992zzi4.fsf@kamboji.qca.qualcomm.com> (sfid-20160926_131212_726312_6AE647C0)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+Luca Coelho <luca@coelho.fi> writes:
 
-> From: Ben Greear <greearb@candelatech.com>
+> Please drop my previous pull-request. =C2=A0There was a compilation error
+> that I missed to due a missing flag in my .config. =C2=A0I fixed it now a=
+nd
+> this is the new pull request that includes the fix.
 >
-> There are not many of these messages producted by the
-> firmware, but they are generally fairly useful, so print
-> them at info level.
+> Here we go again, now I'm almost catching up with the pending stuff in
+> our internal tree, just in time for 4.9.=C2=A0=C2=A0This pull contains a =
+bunch of
+> fixes to DQA and new HW support code, a few new features and some
+> cleanups.=C2=A0=C2=A0More details in the tag description.
 >
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Let me know if everything's fine (or not). :)
 >
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless=
-/ath/ath10k/wmi.c
-> index 1758b4a..d9e4b77 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -4050,7 +4050,7 @@ void ath10k_wmi_event_debug_print(struct ath10k *ar=
-, struct sk_buff *skb)
->  	/* the last byte is always reserved for the null character */
->  	buf[i] =3D '\0';
-> =20
-> -	ath10k_dbg(ar, ATH10K_DBG_WMI_PRINT, "wmi print '%s'\n", buf);
-> +	ath10k_info(ar, "wmi print '%s'\n", buf);
+> Luca.
+>
+>
+> The following changes since commit 80ba4f1d365af206b9e818d17d22fed02fe5de=
+f0:
+>
+>   mwifiex: fix null pointer deference when adapter is null (2016-09-17 18=
+:26:32 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git =
+tags/iwlwifi-next-for-kalle-2016-09-19-2
 
-Useful to whom and how? I understand that for firmware developers this
-is very valuable information and that's why we have a special debug
-level for it. But I suspect that for normal users these are just
-confusing and unnecessarily spam the log.
+Pulled, thanks.
 
 --=20
-Kalle Valo=
+Kalle Valo
