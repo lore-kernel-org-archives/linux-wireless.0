@@ -1,75 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:36194 "EHLO
-        mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755225AbcIOKtr (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:46182 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S966265AbcIZUYZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 06:49:47 -0400
-Received: by mail-lf0-f51.google.com with SMTP id g62so30071415lfe.3
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2016 03:49:46 -0700 (PDT)
-Subject: Re: brcmf_txfinalize misses 802.1x packet leading to infinite
- WARNINGs
-To: Hante Meuleman <hante.meuleman@broadcom.com>,
-        Hante Meuleman <meuleman@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        brcm80211-dev-list@broadcom.com
-References: <20160915081135.24477-1-zajec5@gmail.com>
- <b4df2418354fdf7eb585a898bf12b19f@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <0f7765be-5a27-f5f6-3361-cfb976d674bc@gmail.com> (sfid-20160915_124954_605906_BE2F6FC2)
-Date: Thu, 15 Sep 2016 12:49:37 +0200
-MIME-Version: 1.0
-In-Reply-To: <b4df2418354fdf7eb585a898bf12b19f@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 26 Sep 2016 16:24:25 -0400
+Message-ID: <1474921450.8149.57.camel@coelho.fi> (sfid-20160926_222429_217088_5E77D4A9)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Date: Mon, 26 Sep 2016 23:24:10 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-QMbnl8INnDnsFLx8DeVP"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2016-09-26
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 September 2016 at 11:20, Hante Meuleman <hante.meuleman@broadcom.com> wrote:
- > Thank you for the extensive debugging. We are looking into this. Arend wrote
- > yesterday to ask for detailed timing on wen eapol is inserted. We want this
- > so we can increase the timeout. This is not a "nice" way to solve the
- > problem, and it should be solved in firmware, but in the meanwhile we do
- > want to increase timer, because we think that ampdu issues can rise at any
- > given moment and even with changes/updates in firmware it might be necessary
- > to increase timeout.
 
-I'm kindly asking to keep replies in related threads :) I'm pretty sure above is
-about problem described in "AMPDU stalls with brcmfmac4366b-pcie.bin triggering
-WARNINGs".
+--=-QMbnl8INnDnsFLx8DeVP
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Kalle,
+
+One more small pull-request intended for 4.9. =C2=A0It seems that I'm
+actually catching up with our internal tree! :) Nothing major here,
+mostly clean-ups and small bug fixes and improvements.
+
+Let me know if everything's fine (or not). :)
+
+Luca.
 
 
- > Second problem is harder, it is good to see that the frame gets returned to
- > driver at some point. Our biggest worry is that a frame remains indefinitely
- > in the firmware, but that appears not to be the case. Now why could this
- > fail. There is one possible reason I found, and that is when a flowring is
- > deleted while it holds the eapol, see flowring.c. It does not call the
- > brcmf_txfinalize, but frees the packet directly. I think this is wrong but
- > need to investigate this in more detail. In the meanwhile, if you keep doing
- > tests I would like to ask you to add a WARN_ON() call to the function
- > __brcmu_pkt_buf_free_skb where you print ***BUG*** so we know where the
- > packet got freed from.
+The following changes since commit 0979a913f879ea39504200d83fb9f275a555a58d=
+:
 
-Please take a look at my e-mail & log (& maybe diff) once again. You really
-quite missed the point.
+  iwlwifi: pcie: use LIST_HEAD() macro (2016-09-19 11:29:35 +0300)
 
-The function brcmf_txfinalize *was* called. I was describing it in my e-mail
-and there is a log:
-[ 1440.414653] brcmfmac: [__brcmf_txfinalize -> __brcmu_pkt_buf_free_skb] [ifp:c72e7c80] ***BUG*** skb:c70ddc00 skb->dev:c72e7800 skb->dev->name:wlan1-1
-Above means that brcmf_txfinalize was called for skb c70ddc00 and it called
-brcmu_pkt_buf_free_skb.
+are available in the git repository at:
 
-My debugging code noticed that it wasn't alright as this packet was still
-pending and pend_8021x_cnt wasn't decreased for him. Please note it was
-brcmf_txfinalize's fault (which was called for 100% sure). For some reason it
-didn't pass if (type == ETH_P_PAE) condition. I already described it and I
-shared my guess of firmware corrupting skb data. I'm now using debugging patch
-which prints copied and current content of skb data in case of fault.
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2016-09-26
 
-You're right I should have used WARN in my ***BUG*** place. It's a stupid habit
-from MIPS devices where backtraces aren't reliable. I printed mini call chain
-on my own instead. I mean this part:
-[__brcmf_txfinalize -> __brcmu_pkt_buf_free_skb]
+for you to fetch changes up to 9cd70e80f7f0df1d6d13d8aeb50a16bf40e2962c:
 
-So please take a look at my e-mail again and let me know if it makes more sense
-now.
-What do you think about my guess of firmware corrupting skb data?
+  iwlwifi: mvm: initialise ADD_STA before sending it to the firmware (2016-=
+09-26 23:15:26 +0300)
+
+----------------------------------------------------------------
+* Some new HW IDs;
+* Small fix in CTDP error handling;
+* Remove support for older firmwares;
+* Clean-ups and a few simple fixes here and there.
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+      iwlwifi: mvm: fix typo in TC_CMD_SEC_KEY_FROM_TABLE
+      iwlwifi: mvm: initialise ADD_STA before sending it to the firmware
+
+Johannes Berg (2):
+      iwlwifi: pcie: avoid variable shadowing in TFD helpers
+      iwlwifi: mvm: correct rate_idx bounds-check
+
+Luca Coelho (2):
+      iwlwifi: mvm: bail out if CTDP start operation fails
+      iwlwifi: remove support for fw older than -17 and -22
+
+Oren Givon (1):
+      iwlwifi: add two new 9560 series PCI IDs
+
+Sara Sharon (3):
+      iwlwifi: mvm: cleanup redundant no_power_up_nic_in_init config
+      iwlwifi: mvm: cleanup usage of init_dbg parameter
+      iwlwifi: allow error table address new range
+
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c         |  6 +++---
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c         |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c         |  2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h       |  1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h      | 24 +--------------=
+---------
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c  |  3 +--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-power.h | 21 ++++++---------=
+------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h    |  6 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c           | 43 +++++++++++++++=
+++++------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c     | 24 +++++++++------=
+---------
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h          |  2 --
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c          | 52 +++++++++++++++=
+++-----------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c        | 15 +++++----------
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c         | 27 ++++-----------=
+------------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c          |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c           | 10 ++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c           |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c        |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c         |  2 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h    | 19 ++++++++-------=
+----
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c          | 47 +++++++++++++++=
+++++++++++----------------------
+ 21 files changed, 110 insertions(+), 204 deletions(-)
+--=-QMbnl8INnDnsFLx8DeVP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJX6YPqAAoJEKFHnKIaPMX6wEIP/RPHzTxwNbU+39BG/l+ZahjQ
+bTx82BJcKsNKDJgE4+O7W/kiK6x51KCOhYJy6G9iX9jXa3KQZ5bjM2KEHJtTE3Lx
+xkY9h9tolpAnQtxE6ZdyDUdWiRsjTuAvw5XG50/+V9FioTnoRjfMVW4DJEKs6kaX
+cgo4DdQjQZLGPSyHLShzeV5fasWKuBXftKVZfCkQzqXwIN0RD3CXvD1yeZMq4ByM
+zo5BY/ccL9lvUy0SeO/X0I86hKhZ/tDBnFzK3mUgCk8shYVJ+uKzNboe4aozVysu
+viFw+s795/W3p1yB6KSzK24P1y8E7DXp0oZiS8gGHQhOM592e7gWOUXUwGIAHaDD
+/Wl7D3B0fswevmWPamxzmqcOlYpUJZfsVtOH2EYqh0mJrgy1q1CX4xWcLmR+8+52
+3rdMwoqZzccOyJUDdFnGoephsKw8AaJws8aEuYhsoX/tZV8ChRApIjAiixyWvb0o
+zzBQKXXwi4fGdUJI/KqNeKr9GLXXcQwReGrDoD5n4RBTy9tIQ0x5Fvhd/FXU0qB/
+VOS3CBE2E1P8GfsX2jPR6dC1vw5/kQX46Nl+8r/SvP9BAW4Nn+hcK12Zbudbo+10
+QqS7p6c8IdNoTc4p8ABz3gdo2CxLt0vXfw4Nr9bRBsotJp09vB7xsBAscQYVKIcH
+PzskVGWhDpXnpfu6oWLz
+=8Sn7
+-----END PGP SIGNATURE-----
+
+--=-QMbnl8INnDnsFLx8DeVP--
