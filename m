@@ -1,96 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49707 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751631AbcI0NEu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:04:50 -0400
-From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
-Date: Tue, 27 Sep 2016 13:04:44 +0000
-Message-ID: <1474981503694.62077@qti.qualcomm.com> (sfid-20160927_150453_887709_D1F14CF4)
-References: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mail-cys01nam02on0044.outbound.protection.outlook.com ([104.47.37.44]:19806
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S941454AbcIZPTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Sep 2016 11:19:15 -0400
+Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for
+ Quantenna chipsets
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
+ <99f0c921-1230-0896-2bc5-4a12eb81dca1@quantenna.com>
+ <87oa3byln4.fsf@kamboji.qca.qualcomm.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
+        "Avinash Patil" <avinashp@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        "Sergei Maksimenko" <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <7ecc6f46-a65f-2342-d495-0decdeeef8fd@quantenna.com> (sfid-20160926_171922_038551_F6C249A9)
+Date: Mon, 26 Sep 2016 15:45:40 +0300
 MIME-Version: 1.0
+In-Reply-To: <87oa3byln4.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-apologies please ignore this , wrong patch due to confusing v4 tag=0A=
- =0A=
-please review,=0A=
-=0A=
-[PATCH] ath10k: Cleanup calling ath10k_htt_rx_h_unchain=0A=
-=0A=
-________________________________________=0A=
-From: Shajakhan, Mohammed Shafi (Mohammed Shafi)=0A=
-Sent: 27 September 2016 18:31=0A=
-To: ath10k@lists.infradead.org=0A=
-Cc: mohammed@codeaurora.org; linux-wireless@vger.kernel.org; Shajakhan, Moh=
-ammed Shafi (Mohammed Shafi)=0A=
-Subject: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain=0A=
-=0A=
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
-=0A=
-'ath10k_htt_rx_h_unchain' is need to be called only if the return=0A=
-value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this=0A=
-change makes it more explicit and avoids doing a skb_peek, fetching=0A=
-rx descriptor pointer, checking rx msdu decap format for the case of=0A=
-ret =3D 0 (unchained msdus). Found this change during code walk through,=0A=
-not sure if this addresses any issue.=0A=
-=0A=
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
----=0A=
- drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++------=0A=
- 1 file changed, 6 insertions(+), 6 deletions(-)=0A=
-=0A=
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireles=
-s/ath/ath10k/htt_rx.c=0A=
-index 7ae9349..e51dace 100644=0A=
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c=0A=
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c=0A=
-@@ -1459,8 +1459,7 @@ static int ath10k_unchain_msdu(struct sk_buff_head *a=
-msdu)=0A=
- }=0A=
-=0A=
- static void ath10k_htt_rx_h_unchain(struct ath10k *ar,=0A=
--                                   struct sk_buff_head *amsdu,=0A=
--                                   bool chained)=0A=
-+                                   struct sk_buff_head *amsdu)=0A=
- {=0A=
-        struct sk_buff *first;=0A=
-        struct htt_rx_desc *rxd;=0A=
-@@ -1471,9 +1470,6 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar=
-,=0A=
-        decap =3D MS(__le32_to_cpu(rxd->msdu_start.common.info1),=0A=
-                   RX_MSDU_START_INFO1_DECAP_FORMAT);=0A=
-=0A=
--       if (!chained)=0A=
--               return;=0A=
--=0A=
-        /* FIXME: Current unchaining logic can only handle simple case of r=
-aw=0A=
-         * msdu chaining. If decapping is other than raw the chaining may b=
-e=0A=
-         * more complex and this isn't handled by the current code. Don't e=
-ven=0A=
-@@ -1550,7 +1546,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_=
-htt *htt)=0A=
-        }=0A=
-=0A=
-        ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);=0A=
--       ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);=0A=
-+=0A=
-+       /* only for ret =3D 1 indicates chained msdus */=0A=
-+       if (ret > 0)=0A=
-+               ath10k_htt_rx_h_unchain(ar, &amsdu);=0A=
-+=0A=
-        ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);=0A=
-        ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);=0A=
-        ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);=0A=
---=0A=
-1.9.1=0A=
-=0A=
+
+On 09/26/2016 01:56 PM, Kalle Valo wrote:
+> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+>
+>> On 09/17/2016 04:46 PM, Kalle Valo wrote:
+>>> <igor.mitsyanko.os@quantenna.com> writes:
+>>>
+>>>> +/* Supported rates to be advertised to the cfg80211 */
+>>>> +static struct ieee80211_rate qtnf_rates[] = {
+>>>> +	{.bitrate = 10, .hw_value = 2, },
+>>>> +	{.bitrate = 20, .hw_value = 4, },
+>>>> +	{.bitrate = 55, .hw_value = 11, },
+>>>> +	{.bitrate = 110, .hw_value = 22, },
+>>>> +	{.bitrate = 60, .hw_value = 12, },
+>>>> +	{.bitrate = 90, .hw_value = 18, },
+>>>> +	{.bitrate = 120, .hw_value = 24, },
+>>>> +	{.bitrate = 180, .hw_value = 36, },
+>>>> +	{.bitrate = 240, .hw_value = 48, },
+>>>> +	{.bitrate = 360, .hw_value = 72, },
+>>>> +	{.bitrate = 480, .hw_value = 96, },
+>>>> +	{.bitrate = 540, .hw_value = 108, },
+>>>> +};
+>>>> +
+>>>> +/* Channel definitions to be advertised to cfg80211 */
+>>>> +static struct ieee80211_channel qtnf_channels_2ghz[] = {
+>>>> +	{.center_freq = 2412, .hw_value = 1, },
+>>>> +	{.center_freq = 2417, .hw_value = 2, },
+>>>> +	{.center_freq = 2422, .hw_value = 3, },
+>>>> +	{.center_freq = 2427, .hw_value = 4, },
+>>>> +	{.center_freq = 2432, .hw_value = 5, },
+>>>> +	{.center_freq = 2437, .hw_value = 6, },
+>>>> +	{.center_freq = 2442, .hw_value = 7, },
+>>>> +	{.center_freq = 2447, .hw_value = 8, },
+>>>> +	{.center_freq = 2452, .hw_value = 9, },
+>>>> +	{.center_freq = 2457, .hw_value = 10, },
+>>>> +	{.center_freq = 2462, .hw_value = 11, },
+>>>> +	{.center_freq = 2467, .hw_value = 12, },
+>>>> +	{.center_freq = 2472, .hw_value = 13, },
+>>>> +	{.center_freq = 2484, .hw_value = 14, },
+>>>> +};
+>>> I guess some of these static variables could be also const, but didn't
+>>> check.
+>> We did some changes to this code recently: will get bands info
+>> (channel list, rates, capabilities etc) from wireless device itself,
+>> it will be in next patch revision.
+> For the initial submission please freeze the driver, otherwise it's pain
+> to review as the driver changes too much in-between review rounds. So at
+> this stage only minimal changes, please.
+>
+> You can continue adding new features and making changes, but do those as
+> follow up patches and use the initial submission as the baseline for the
+> new patches. Once the driver is applied you can submit the rest of the
+> patches adding new features and they will be reviewed similarly like all
+> other wireless patches.
+
+Ok, we will keep patch modification to minimum between revisions, but 
+channels-related changes are something we would like to apply: we're 
+setting SELF_MANAGED bit right now and do not handle regulatory hints 
+from cfg80211, having all the regulatory-related info fixed on device 
+itself (region, per-channel Tx powers, DFS requirements). This info is 
+what was used to pass regulatory authorities certification, and 
+considering seriousness of regulatory compliance requirement it's 
+probably better to use the info that is known to be accepted.
+Would it be acceptable if we keep rates/capabilities logic intact, but 
+will modify channel-related logic in next patch revision?
+
+In a follow-up patches we're considering introducing closer and more 
+flexible integration with cfg80211 regulatory logic, allowing host 
+system itself to provide regulatory info. This will need further legal 
+consideration though: FCC and European commission seem to stricken rules 
+recently, maybe having region fixed on device is a more compliant solution.
+
+
+>
+>>>> +static int
+>>>> +qtnf_event_handle_sta_assoc(struct qtnf_wmac *mac, struct qtnf_vif *vif,
+>>>> +			    const struct qlink_event_sta_assoc *sta_assoc,
+>>>> +			    u16 len)
+>>>> +{
+>>>> +	const u8 *sta_addr;
+>>>> +	u16 frame_control;
+>>>> +	struct station_info sinfo = { 0 };
+>>>> +	size_t payload_len;
+>>>> +	u16 tlv_type;
+>>>> +	u16 tlv_value_len;
+>>>> +	size_t tlv_full_len;
+>>>> +	const struct qlink_tlv_hdr *tlv;
+>>>> +
+>>>> +	if (unlikely(len < sizeof(*sta_assoc))) {
+>>>> +		pr_err("%s: payload is too short (%u < %zu)\n", __func__,
+>>>> +		       len, sizeof(*sta_assoc));
+>>>> +		return -EINVAL;
+>>>> +	}
+>>> I see unlikely() used a lot, I counted 145 times. Not a big issue but I
+>>> don't see the point. In hot path I understand using it, but not
+>>> everywhere.
+>> Agree, but would you suggest that we remove the ones that we already
+>> have but that are not really needed?
+> Up to you really. This isn't important, just something I found a bit
+> odd.
+>
