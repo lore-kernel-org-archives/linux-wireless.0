@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41092 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751365AbcIVESv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51942 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966639AbcIZRiC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 00:18:51 -0400
-Message-ID: <57E35BA9.7050207@candelatech.com> (sfid-20160922_061855_014771_11769471)
-Date: Wed, 21 Sep 2016 21:18:49 -0700
-From: Ben Greear <greearb@candelatech.com>
+        Mon, 26 Sep 2016 13:38:02 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: bruce m beach <brucembeach@gmail.com>,
-        Oleksij Rempel <linux@rempel-privat.de>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k_htc kernel driver regression affecting throughput
-References: <CAArymCks5NN=09EdJ4uaoRrHZciYAkYTES+i62BkfZ4R-W30HQ@mail.gmail.com> <96b0636d-1171-5830-6481-edb991ca8e1a@rempel-privat.de> <CAArymCnJZgUbgCiLqA6-94RAtXYkYeeS9uF71MX9+ou-AbYszg@mail.gmail.com>
-In-Reply-To: <CAArymCnJZgUbgCiLqA6-94RAtXYkYeeS9uF71MX9+ou-AbYszg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [1/9] brcmfmac: ignore 11d configuration errors
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1474283399-14385-2-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-2-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20160926173801.81A9F6159F@smtp.codeaurora.org> (sfid-20160926_193806_065409_B6AC09C7)
+Date: Mon, 26 Sep 2016 17:38:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> From: Hante Meuleman <hante.meuleman@broadcom.com>
+> 
+> 802.11d is not always supported by firmware anymore. Currently the
+> AP configuration of 11d will cause an abort if the ioctl set is
+> failing. This behavior is not correct and the error should be
+> ignored.
+> 
+> Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
+9 patches applied to wireless-drivers-next.git, thanks.
 
-On 09/21/2016 08:34 PM, bruce m beach wrote:
-
->>> i.e a lable that the code jumps to and nothing else. At this point I have
->>> added VendorCommand(), and a debugger via ep0. ( ep0 is a good choice
->>> since it is available a boot, no matter what) and over the next few
->>> months I am going to move ->all<- the rom code into ram starting with
->>> the USB subsystem.
-
-Have you investigated whether you have enough RAM to do this?
-
-I haven't looked at ath9k_htc, but in general, that type of architecture
-is tight on RAM in my experience.
-
-Thanks,
-Ben
+b3589dfe0212 brcmfmac: ignore 11d configuration errors
+704d1c6b56f4 brcmfmac: rework pointer trickery in brcmf_proto_bcdc_query_dcmd()
+bc9816413601 brcmfmac: fix memory leak in brcmf_flowring_add_tdls_peer()
+26305d3d7298 brcmfmac: initialize variable in brcmf_sdiod_regrl()
+8fa5fdec09cd brcmfmac: remove worker from .ndo_set_mac_address() callback
+835680b82f02 brcmfmac: remove unnecessary null pointer check
+2b7425f3629b brcmfmac: fix clearing entry IPv6 address
+a7ed7828ecda brcmfmac: fix out of bound access on clearing wowl wake indicator
+92c313604711 brcmfmac: simplify mapping of auth type
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+https://patchwork.kernel.org/patch/9339033/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
