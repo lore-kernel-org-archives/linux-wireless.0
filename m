@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44602 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932977AbcI1RWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 13:22:31 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michael Braun <michael-dev@fami-braun.de>, kvalo@codeaurora.org,
-        akarwar@marvell.com, nishants@marvell.com,
-        Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-        projekt-wlan@fem.tu-ilmenau.de
-Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on AP interfaces
-References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
-        <wrfja8esdpcb.fsf@redhat.com>
-        <1475076763.4139.42.camel@sipsolutions.net>
-        <wrfj1t04c9ug.fsf@redhat.com>
-        <1475077359.4139.44.camel@sipsolutions.net>
-Date: Wed, 28 Sep 2016 13:22:28 -0400
-In-Reply-To: <1475077359.4139.44.camel@sipsolutions.net> (Johannes Berg's
-        message of "Wed, 28 Sep 2016 17:42:39 +0200")
-Message-ID: <wrfjoa38aqi3.fsf@redhat.com> (sfid-20160928_192242_701594_E895E472)
+Received: from mail-vk0-f50.google.com ([209.85.213.50]:34901 "EHLO
+        mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751950AbcIZBzq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 25 Sep 2016 21:55:46 -0400
+Received: by mail-vk0-f50.google.com with SMTP id 192so35060528vkl.2
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2016 18:55:45 -0700 (PDT)
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org
+From: Xuebing Wang <xbing6@gmail.com>
+Subject: RTL8192CU: about trivial change of removing some 8192c declaration
+ from header file
+Message-ID: <5244f149-9792-e814-7ee2-0a3fd178d306@gmail.com> (sfid-20160926_035551_554139_01ED1C4C)
+Date: Mon, 26 Sep 2016 09:55:39 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-> On Wed, 2016-09-28 at 11:39 -0400, Jes Sorensen wrote:
->
->> > No Jes, you're wrong this time - this is changing internal API so
->> > it does have to touch all users thereof.
->> 
->> Even in this case, change the individual components in individual
->> patches and post them as a set.
->
-> No, still wrong - it has to be committed as a single patch so it
-> doesn't break bisect.
->
->> Changes to staging needs to go in via staging, and rtl8723au is gone
->> from the staging tree.
->> 
->
-> I've previously taken API change patches that touch staging, if people
-> feel so inclined, and I don't think Greg will mind. I'm going to keep
-> doing that unless Dave tells me he won't pull from me when I do it :)
+Hi Larry and Chaoming:
 
-I'll still argue this could be handled better through gradual migration
-rather than one large patch that touches too many places, but if you are
-willing to take it, I am not going to fight you over it :)
+I am trying to do User Mode driver for RTL8192CU (device is Alfa 
+AWUS036NHR which is 802.11 b/g/n), and I am reading RTL8192CU / RTL8192C 
+/ RTLWIFI driver source code.
 
-Jes
+There is a very trivial error that below declarations (in 
+rtl8192cu/hw.h) are already in file 
+drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h
+---
+int rtl92c_download_fw(struct ieee80211_hw *hw);
+void rtl92c_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
+void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
+void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
+              u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
+---
+
+Does it make sense for me to submit a trivial patch to remove these 
+declarations from rtl8192cu/hw.h?
+
+Thanks.
+xuebing
