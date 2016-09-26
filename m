@@ -1,66 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36063 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751765AbcITM1p (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:35503 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965077AbcIZL2d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 08:27:45 -0400
-Received: by mail-wm0-f48.google.com with SMTP id w84so131135255wmg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 05:27:44 -0700 (PDT)
-Subject: Re: [PATCH 1/1] rsi: fix memory leak in debugfs entry and supported
- bands
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-wireless@vger.kernel.org
-References: <1474353784-9552-1-git-send-email-prameela.j04cs@gmail.com>
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de,
-        Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+        Mon, 26 Sep 2016 07:28:33 -0400
+Received: by mail-pf0-f182.google.com with SMTP id s13so30635786pfd.2
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2016 04:28:32 -0700 (PDT)
+Subject: Re: [PATCH 1/2] brcmfmac: initialize fws(ignal) for BCDC protocol
+ only
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20160924204419.10213-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <bf37845b-81d2-2e99-15d3-caef2d1f59eb@broadcom.com> (sfid-20160920_142748_893424_47079561)
-Date: Tue, 20 Sep 2016 14:27:19 +0200
+Message-ID: <d6a7232f-6862-7517-7274-2cacad4c93cf@broadcom.com> (sfid-20160926_132900_515221_A6615752)
+Date: Mon, 26 Sep 2016 13:28:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <1474353784-9552-1-git-send-email-prameela.j04cs@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20160924204419.10213-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20-9-2016 8:43, Prameela Rani Garnepudi wrote:
-> From: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+On 24-9-2016 22:44, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> Signed-off-by: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-
-Now you are exaggerating ;-) One of these should be sufficient. Instead
-some descriptive text in the commit message is required. Describe the
-scenario in which the memory is leaked, ie. during driver unload.
-
-> ---
->  drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+> There are two protocols used by Broadcom FullMAC devices: BCDC and
+> msgbuf. They use different ways for (some part of) communication with
+> the firmware. Firmware Signaling is required for the first one only
+> (BCDC).
 > 
-> diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> index dbb2389..dc64532 100644
-> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-> @@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
->  void rsi_mac80211_detach(struct rsi_hw *adapter)
->  {
->  	struct ieee80211_hw *hw = adapter->hw;
-> +	int i;
->  
->  	if (hw) {
->  		ieee80211_stop_queues(hw);
-> @@ -201,7 +202,16 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
->  		ieee80211_free_hw(hw);
->  	}
->  
-> +	for (i = 0; i < 2; i++) {
+> So far we were always initializing fws and always calling it's skb
+> processing function. It was fws that was passing skb processing to the
+> protocol specific function. It was redundant for the msgbuf case.
+> 
+> Simply taking few lines of code out of fws allows us to totally avoid
+> using it. This simplifies code flow, saves some memory & will allow
+> further optimizations like not compiling fwsignal.c.
 
-Use NUM_NL80211_BANDS instead of hardcoded value.
+Hi Rafał,
+
+Conceptually fwsignal is part of BCDC so you are indeed right when
+saying it is not needed for msgbuf. The signalling is actually part of
+the BCDC message overhead so I would rather see fwsignal only being used
+in BCDC code. Could try and do that on top of this patch, but I would
+prefer dropping these patches.
 
 Regards,
 Arend
 
-> +		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ++++++++++++++++------
+>  .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 17 ++++++---------
+>  .../broadcom/brcm80211/brcmfmac/fwsignal.h         |  1 +
+>  3 files changed, 25 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 27cd50a..bc3d8ab 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -250,7 +250,17 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
+>  	if (eh->h_proto == htons(ETH_P_PAE))
+>  		atomic_inc(&ifp->pend_8021x_cnt);
+>  
+> -	ret = brcmf_fws_process_skb(ifp, skb);
+> +	/* determine the priority */
+> +	if (skb->priority == 0 || skb->priority > 7)
+> +		skb->priority = cfg80211_classify8021d(skb, NULL);
 > +
-> +		kfree(sbands->channels);
+> +	if (drvr->fws && brcmf_fws_skbs_queueing(drvr->fws)) {
+> +		ret = brcmf_fws_process_skb(ifp, skb);
+> +	} else {
+> +		ret = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+> +		if (ret < 0)
+> +			brcmf_txfinalize(ifp, skb, false);
 > +	}
+>  
+>  done:
+>  	if (ret) {
+> @@ -405,7 +415,7 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success)
+>  	struct brcmf_if *ifp;
+>  
+>  	/* await txstatus signal for firmware if active */
+> -	if (brcmf_fws_fc_active(drvr->fws)) {
+> +	if (drvr->fws && brcmf_fws_fc_active(drvr->fws)) {
+>  		if (!success)
+>  			brcmf_fws_bustxfail(drvr->fws, txp);
+>  	} else {
+> @@ -1006,11 +1016,13 @@ int brcmf_bus_start(struct device *dev)
+>  	}
+>  	brcmf_feat_attach(drvr);
+>  
+> -	ret = brcmf_fws_init(drvr);
+> -	if (ret < 0)
+> -		goto fail;
+> +	if (bus_if->proto_type == BRCMF_PROTO_BCDC) {
+> +		ret = brcmf_fws_init(drvr);
+> +		if (ret < 0)
+> +			goto fail;
+>  
+> -	brcmf_fws_add_interface(ifp);
+> +		brcmf_fws_add_interface(ifp);
+> +	}
+>  
+>  	drvr->config = brcmf_cfg80211_attach(drvr, bus_if->dev,
+>  					     drvr->settings->p2p_enable);
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+> index a190f53..495eaf8 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+> @@ -2100,16 +2100,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+>  	int rc = 0;
+>  
+>  	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
+> -	/* determine the priority */
+> -	if ((skb->priority == 0) || (skb->priority > 7))
+> -		skb->priority = cfg80211_classify8021d(skb, NULL);
+> -
+> -	if (fws->avoid_queueing) {
+> -		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+> -		if (rc < 0)
+> -			brcmf_txfinalize(ifp, skb, false);
+> -		return rc;
+> -	}
+>  
+>  	/* set control buffer information */
+>  	skcb->if_flags = 0;
+> @@ -2155,7 +2145,7 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp)
+>  	struct brcmf_fws_info *fws = ifp->drvr->fws;
+>  	struct brcmf_fws_mac_descriptor *entry;
+>  
+> -	if (!ifp->ndev)
+> +	if (!fws || !ifp->ndev)
+>  		return;
+>  
+>  	entry = &fws->desc.iface[ifp->ifidx];
+> @@ -2442,6 +2432,11 @@ void brcmf_fws_deinit(struct brcmf_pub *drvr)
+>  	kfree(fws);
+>  }
+>  
+> +bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws)
+> +{
+> +	return !fws->avoid_queueing;
+> +}
+> +
+>  bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
+>  {
+>  	if (!fws->creditmap_received)
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+> index ef0ad85..8f7c1d7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+> @@ -20,6 +20,7 @@
+>  
+>  int brcmf_fws_init(struct brcmf_pub *drvr);
+>  void brcmf_fws_deinit(struct brcmf_pub *drvr);
+> +bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws);
+>  bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
+>  void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb);
+>  int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
+> 
