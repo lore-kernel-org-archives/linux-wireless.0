@@ -1,82 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37692 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933126AbcI0JYy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54439 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965099AbcIZPG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 05:24:54 -0400
-Received: by mail-wm0-f49.google.com with SMTP id b130so1986472wmc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 02:24:53 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20160926102348.8695-1-zajec5@gmail.com>
- <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
- <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
- <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com> (sfid-20160927_112522_924906_B9977A83)
-Date: Tue, 27 Sep 2016 11:24:32 +0200
+        Mon, 26 Sep 2016 11:06:57 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [2/3] hostap: Delete an unnecessary jump label in
+ prism2_ioctl_priv_hostapd()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+References: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+Message-Id: <20160926150656.54D1A613F9@smtp.codeaurora.org> (sfid-20160926_170718_143401_E5331B1E)
+Date: Mon, 26 Sep 2016 15:06:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-9-2016 14:38, Rafał Miłecki wrote:
-> On 26 September 2016 at 14:13, Rafał Miłecki <zajec5@gmail.com> wrote:
->> On 26 September 2016 at 13:46, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 26-9-2016 12:23, Rafał Miłecki wrote:
->>>> From: Rafał Miłecki <rafal@milecki.pl>
->>>>
->>>> We need to track 802.1x packets to know if there are any pending ones
->>>> for transmission. This is required for performing key update in the
->>>> firmware.
->>>
->>> The problem we are trying to solve is a pretty old one. The problem is
->>> that wpa_supplicant uses two separate code paths: EAPOL messaging
->>> through data path and key configuration though nl80211.
->>
->> Can I find it described/reported somewhere?
->>
->>
->>>> Unfortunately our old tracking code wasn't very accurate. It was
->>>> treating skb as pending as soon as it was passed by the netif. Actual
->>>> handling packet to the firmware was happening later as brcmfmac
->>>> internally queues them and uses its own worker(s).
->>>
->>> That does not seem right. As soon as we get a 1x packet we need to wait
->>> with key configuration regardless whether it is still in the driver or
->>> handed over to firmware already.
->>
->> OK, thanks.
+SF Markus Elfring <elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 20 Aug 2016 18:21:29 +0200
 > 
-> Actually, it's not OK. I was trying to report/describe/discuss this
-> problem for over a week. I couldn't get much of answer from you.
+> Remove a jump label which is unneeded in this function at the end.
 > 
-> I had to come with a patch I worked on for quite some time. Only then
-> you decided to react and reply with a reason for a nack. I see this
-> patch may be wrong (but it's still hard to know what's going wrong
-> without a proper hostapd bug report). I'd expect you to somehow work &
-> communicate with open source community.
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-We do or at least make an honest attempt, but there is more on our plate
-so responses may be delayed. It also does not help when you get anal and
-preachy when we do respond. Also not OK. In this case the delay is
-caused because I had to pick up the thread(s) as Hante is on vacation
-(he needed a break :-p ). However, you started sending patches so I
-decided to look at and respond to those. Sorry if you felt like we left
-you hanging to dry.
+2 patches set to Rejected.
 
-Regards,
-Arend
+9291771 [2/3] hostap: Delete an unnecessary jump label in prism2_ioctl_priv_hostapd()
+9291775 [3/3] hostap: Delete unnecessary initialisations for the variable "ret"
+
+Reason: The benefit is not clear.
+
+-- 
+https://patchwork.kernel.org/patch/9291771/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
