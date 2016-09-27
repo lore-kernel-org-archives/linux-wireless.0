@@ -1,83 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:38206
-        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758817AbcILNYD (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33889 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751962AbcI0WVR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:24:03 -0400
-Date: Mon, 12 Sep 2016 15:23:56 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-cc: linux-renesas-soc@vger.kernel.org, joe@perches.com,
-        kernel-janitors@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
-        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>,
-        Mustafa Ismail <mustafa.ismail@intel.com>,
-        Chien Tin Tung <chien.tin.tung@intel.com>,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
-        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 00/26] constify local structures
-In-Reply-To: <20160912131625.GD957@intel.com>
-Message-ID: <alpine.DEB.2.10.1609121523330.29099@hadrien> (sfid-20160912_152412_626617_1D5727AF)
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr> <20160911172105.GB5493@intel.com> <alpine.DEB.2.10.1609121051050.3049@hadrien> <20160912131625.GD957@intel.com>
+        Tue, 27 Sep 2016 18:21:17 -0400
+Received: by mail-pf0-f175.google.com with SMTP id l25so10069388pfb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 15:21:17 -0700 (PDT)
+Subject: Re: rfkill guidance
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <324c35c6-49ca-174c-db07-674532f3e628@broadcom.com>
+ <1474961105.5141.5.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+From: Jonathan Richardson <jonathan.richardson@broadcom.com>
+Message-ID: <0a8cff88-73aa-8311-7afe-98612161421f@broadcom.com> (sfid-20160928_002122_184964_A6E5B02C)
+Date: Tue, 27 Sep 2016 15:21:14 -0700
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+In-Reply-To: <1474961105.5141.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
++linux-wireless
 
+On 16-09-27 12:25 AM, Johannes Berg wrote:
+> Hi,
+> 
+> You should probably Cc the linux-wireless list, at least :)
+> 
+> But anyway.
+> 
+>> The driver enables/disables one or more regulators controlling a
+>> bluetooth radio using the rfkill_ops set_block function. It's
+>> different in that there is no bluetooth driver in the kernel - it's
+>> controlled with some firmware that gets uploaded to a chip. The only
+>> kernel usage is to power on/off the regulator(s).
+> 
+> Interesting, don't you have to talk to the BT somehow? So the BT can't
+> ever be used from the kernel?
 
-On Mon, 12 Sep 2016, Jarkko Sakkinen wrote:
+Not from the kernel, a user space app interacts with the BT chip and
+kernel. More below.
 
-> On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
-> >
-> >
-> > On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
-> >
-> > > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
-> > > > Constify local structures.
-> > > >
-> > > > The semantic patch that makes this change is as follows:
-> > > > (http://coccinelle.lip6.fr/)
-> > >
-> > > Just my two cents but:
-> > >
-> > > 1. You *can* use a static analysis too to find bugs or other issues.
-> > > 2. However, you should manually do the commits and proper commit
-> > >    messages to subsystems based on your findings. And I generally think
-> > >    that if one contributes code one should also at least smoke test changes
-> > >    somehow.
-> > >
-> > > I don't know if I'm alone with my opinion. I just think that one should
-> > > also do the analysis part and not blindly create and submit patches.
-> >
-> > All of the patches are compile tested.  And the individual patches are
->
-> Compile-testing is not testing. If you are not able to test a commit,
-> you should explain why.
->
-> > submitted to the relevant maintainers.  The individual commit messages
-> > give a more detailed explanation of the strategy used to decide that the
-> > structure was constifiable.  It seemed redundant to put that in the cover
-> > letter, which will not be committed anyway.
->
-> I don't mean to be harsh but I do not care about your thought process
-> *that much* when I review a commit (sometimes it might make sense to
-> explain that but it depends on the context).
->
-> I mostly only care why a particular change makes sense for this
-> particular subsystem. The report given by a static analysis tool can
-> be a starting point for making a commit but it's not sufficient.
-> Based on the report you should look subsystems as individuals.
+> 
+> Is rfkill really even the right concept here then? I mean, from the
+> kernel's POV it doesn't even really have to know there's BT behind
+> that, if there's no relation to BT in the kernel? Then again, the
+> *user* might need to know?
 
-OK, thanks for the feedback.
+> Would you be able to explain the overall system function of this a bit
+> more?
 
-julia
+Sure, I'll tell you what I can. A user space app handles interaction
+between the kernel and BT radio. When the app is started, it enables the
+regulator (via the rfkill driver and userspace sysfs interface) to power
+up the BT chip. The app sends the firmware via a uart to the chip. The
+chip loads the firmware then goes into a lower power mode. When the app
+needs to talk to the chip it toggles a gpio (device wake) before sending
+messages. If the kernel is in a low power mode and the BT chip receives
+a message that requires handling by the app, then a host wake gpio is
+driven to wake up the host (kernel).
+
+In addition to the regulator(s) controlled by the rfkill driver I didn't
+mention the two gpio's previously. The existing rfkill driver does
+nothing with them. It just exports the global gpio # to sysfs which the
+app can read to control via the gpio sysfs interface. These could be
+hard coded in a startup script or something, they aren't that important
+but it does handle the conversion to the global gpio# from 1 of 3 gpio
+controllers on a Cygnus SOC. I'm not sure how to handle that, since the
+gpio's vary across board variants.
+
+I'm not sure rfkill is the right concept either but the app does use the
+rfkill sysfs interface to control the regulators which in turn powers a
+BT radio. The driver could not use the rfkill interface and provide its
+own but would essentially be doing the same thing as rfkill-regulator.c.
+
+> 
+>> The driver is basically a wrapper around controlling regulators.
+>> There's already rfkill-regulator.c but it has no DT support and only
+>> controls 1 regulator. I was considering modifying it until I saw this
+>> thread where Mark objected and it looks like the submitter abandoned
+>> the patchset (http://www.serverphorums.com/read.php?12,870025).
+> 
+> I don't think that's a "killer" thread for this feature really. Yes,
+> people have (quite possibly legitimate) concerns about that, but we
+> should discuss that.
+> 
+>> I couldn't see any way to enable/disable regulators from sysfs so it
+>> looks like the regulator kernel API needs to be used from some
+>> driver.
+> 
+> Indeed, looks like Documentation/ABI/testing/sysfs-class-regulator is
+> all read-only.
+
+There's a regulator driver named userspace-consumer.c that allows
+enable/disable from userspace, but it doesn't support DT either.
+
+> 
+>> Do you think adding DT support and multiple regulators to the
+>> existing driver is the best way to add support for this? Our driver
+>> basically duplicates this and I don't think can be upstreamed the way
+>> it is.
+> 
+> Hard to say, really. Like I said, I'm not really _quite_ sure rfkill is
+> even the right concept, since you're essentially toggling some
+> hardware, but then again it *does* end up being a BT device.
+
+Looking forward to more feedback. I see the options as either rfkill or
+some regulator controller that allows enabling/disabling via sysfs.
+
+> 
+> It also looks like nobody is actually using rfkill-regulator anywhere
+> (in the upstream kernel), so we could just port that entirely to DT,
+> which would be nice.
+> 
+> johannes
+> 
+
+Thanks,
+Jon
