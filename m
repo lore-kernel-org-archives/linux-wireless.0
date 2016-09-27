@@ -1,37 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55815 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750892AbcIIJVp (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36838 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932192AbcI0Low (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 05:21:45 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 27 Sep 2016 07:44:52 -0400
 MIME-Version: 1.0
-Subject: Re: mwifiex: scan: Simplify code
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr>
-To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
-Cc: akarwar@marvell.com, nishants@marvell.com,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Message-Id: <20160909092145.2A21861EAC@smtp.codeaurora.org> (sfid-20160909_112211_148584_EF23EA69)
-Date: Fri,  9 Sep 2016 09:21:45 +0000 (UTC)
+In-Reply-To: <87inthy441.fsf@kamboji.qca.qualcomm.com>
+References: <20160927091428.19223-1-zajec5@gmail.com> <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com>
+ <87inthy441.fsf@kamboji.qca.qualcomm.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 27 Sep 2016 13:44:43 +0200
+Message-ID: <CACna6rwUR_GidhEFNTN+8mGQRpBdUzeM1-0NY65k6-McX7xGVg@mail.gmail.com> (sfid-20160927_134525_098873_ED984A18)
+Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when
+ deleting flowring
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christophe Jaillet <christophe.jaillet@wanadoo.fr> wrote:
-> This patch:
->    - improves code layout
->    - removes a useless memset(0) for some memory allocated with kzalloc
->    - removes a useless if. We know that 'if (chan_band_tlv)' will succeed
->      because it has been tested a few lines above
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+On 27 September 2016 at 13:27, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+>> On 27-9-2016 11:14, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>
+>>> Flowrings contain skbs waiting for transmission that were passed to us
+>>> by netif. It means we checked every one of them looking for 802.1x
+>>> Ethernet type. When deleting flowring we have to use freeing function
+>>> that will check for 802.1x type as well.
+>>>
+>>> Freeing skbs without a proper check was leading to counter not being
+>>> properly decreased. This was triggering a WARNING every time
+>>> brcmf_netdev_wait_pend8021x was called.
+>>
+>> Acked-by: Arend van Spriel <arend@broadcom.com>
+>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>> ---
+>>> Kalle: this isn't important enough for 4.8 as it's too late for that.
+>>>
+>>> I'd like to get it for 4.9 however, as this fixes bug that could lead
+>>> to WARNING on every add_key/del_key call. We was struggling with these
+>>> WARNINGs for some time and this fixes one of two problems causing them.
+>
+> Ok, I'll queue this for 4.9.
+>
+>> Please mark it for stable as well.
+>
+> I can add that. Any ideas how old releases stable releases should this
+> go to?
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+I was analyzing this.
+1) This patch uses brcmf_get_ifp which is available in 4.4+ only.
+2) It applies cleanly to 4.5+ only due to 32f90caa7debd ("brcmfmac:
+Increase nr of supported flowrings.")
+3) 4.4 would also require applying to the patch without broadcom/ subdir
 
-b71165761694 mwifiex: scan: Simplify code
+That said I suggest 4.5+. Any objections?
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9307009/
+--=20
+Rafa=C5=82
