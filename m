@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:37982 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933022AbcIHPbh (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34184 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933305AbcI0MLQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 11:31:37 -0400
-Received: by mail-it0-f49.google.com with SMTP id c198so87614845ith.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2016 08:31:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
-References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
- <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org> <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-Date: Thu, 8 Sep 2016 08:31:36 -0700
-Message-ID: <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com> (sfid-20160908_173204_607461_7A62E276)
-Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+        Tue, 27 Sep 2016 08:11:16 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev <netdev@vger.kernel.org>,
-        lkml <linux-kernel@vger.kernel.org>,
-        Andy Gross <andy.gross@linaro.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 4.9] brcmfmac: use correct skb freeing helper when deleting flowring
+Date: Tue, 27 Sep 2016 14:11:04 +0200
+Message-Id: <20160927121104.5771-1-zajec5@gmail.com> (sfid-20160927_141121_744858_8648FD4E)
+In-Reply-To: <20160927091428.19223-1-zajec5@gmail.com>
+References: <20160927091428.19223-1-zajec5@gmail.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 8, 2016 at 5:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
->
->> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
->> channel, as such it should be a SMD client. This patch makes this
->> transition, now that we have the necessary frameworks available.
->>
->> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> ---
->>
->> Changes since v3:
->> - Made msg_header const in wcn36xx_smd_rsp_process()
->>
->> Changes since v2:
->> - Correct the call to the new ieee80211_scan_completed()
->>
->>  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
->>  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
->>  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
->>  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
->>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
->>  5 files changed, 86 insertions(+), 66 deletions(-)
->
-> This doesn't compile for me:
->
+From: Rafał Miłecki <rafal@milecki.pl>
 
-I thought I mentioned this in the mail, sorry for missing that.
+Flowrings contain skbs waiting for transmission that were passed to us
+by netif. It means we checked every one of them looking for 802.1x
+Ethernet type. When deleting flowring we have to use freeing function
+that will check for 802.1x type as well.
 
-There is a patch for this issue in linux-next already [1] which is
-part of [2], which was part of the pull request to arm-soc for
-inclusion in v4.9.
+Freeing skbs without a proper check was leading to counter not being
+properly decreased. This was triggering a WARNING every time
+brcmf_netdev_wait_pend8021x was called.
 
-[1] https://patchwork.kernel.org/patch/9272457/
-[2] https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/tag/?h=qcom-drivers-for-4.9
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Acked-by: Arend van Spriel <arend@broadcom.com>
+Cc: stable@vger.kernel.org # 4.5+
+---
+V2: Add Cc for stable 4.5+. It doesn't apply cleanly to 4.4 and is not
+    possible for 4.3- due to missing brcmf_get_ifp.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Regards,
-Bjorn
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index b16b367..d0b738d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -234,13 +234,20 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 
+ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+ {
++	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
+ 	struct brcmf_flowring_ring *ring;
++	struct brcmf_if *ifp;
+ 	u16 hash_idx;
++	u8 ifidx;
+ 	struct sk_buff *skb;
+ 
+ 	ring = flow->rings[flowid];
+ 	if (!ring)
+ 		return;
++
++	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
++	ifp = brcmf_get_ifp(bus_if->drvr, ifidx);
++
+ 	brcmf_flowring_block(flow, flowid, false);
+ 	hash_idx = ring->hash_id;
+ 	flow->hash[hash_idx].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
+@@ -249,7 +256,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+ 
+ 	skb = skb_dequeue(&ring->skblist);
+ 	while (skb) {
+-		brcmu_pkt_buf_free_skb(skb);
++		brcmf_txfinalize(ifp, skb, false);
+ 		skb = skb_dequeue(&ring->skblist);
+ 	}
+ 
+-- 
+2.9.3
