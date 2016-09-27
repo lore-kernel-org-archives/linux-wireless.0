@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:33701 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759561AbcIWT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 15:59:28 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 0/3] Add memory limits to fq.h and mac80211 TXQ
-Date: Fri, 23 Sep 2016 21:59:08 +0200
-Message-Id: <20160923195911.4572-1-toke@toke.dk> (sfid-20160923_215937_824017_4FEE0DD2)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3463 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932841AbcI0MCf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 08:02:35 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath10k: Spelling and miscellaneous neatening
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
+References: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
+To: Joe Perches <joe@perches.com>
+CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Message-ID: <760f0e202bb94944b995b12d97c1f158@euamsexm01a.eu.qualcomm.com> (sfid-20160927_140312_585235_EE688660)
+Date: Tue, 27 Sep 2016 14:02:27 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a series of small patches to avoid OOM conditions on small
-wireless devices with the mac80211 intermediate TXQ structure. The
-current default limit in fq.h translates to up to 16 Mbytes of memory
-usage, which can be fatal to a device with 32 MBytes of total RAM.
+Joe Perches <joe@perches.com> wrote:
+> Correct some trivial comment typos.
+> Remove unnecessary parentheses in a long line.
+> Convert a return; before the end of a void function definition to just ;
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-Rather than just change the fq_limit, this ports the memory limit
-mechanism from the fq_codel qdisc. The second patch in the series just
-adds the new fields to the mac80211 'aqm' debugfs file.
+Patch applied to ath-next branch of ath.git, thanks.
 
-The third patch changes mac80211 to set a lower memory limit for non-VHT
-devices. The assumption is that (a) for 802.11n and lower 4 Mbytes of
-total queue (2048 packets, 64 max-size aggregates) is plenty, and so it
-is safe to simply limit the queue size. And (b) that VHT-capable devices
-are usually installed in systems equipped with more system memory.
+e13dbead976d ath10k: spelling and miscellaneous neatening
 
-Toke H=C3=B8iland-J=C3=B8rgensen (3):
-  fq.h: Port memory limit mechanism from fq_codel
-  mac80211: Export fq memory limit information in debugfs
-  mac80211: Set lower memory limit for non-VHT devices
+-- 
+https://patchwork.kernel.org/patch/9304171/
 
- include/net/fq.h       |  3 +++
- include/net/fq_impl.h  |  7 ++++++-
- net/mac80211/debugfs.c |  8 ++++++++
- net/mac80211/tx.c      | 18 ++++++++++++++++++
- 4 files changed, 35 insertions(+), 1 deletion(-)
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
---=20
-2.9.3
-
-base-commit: fb2a3d5c7c85cb6e8bc88192be919b4ef8d6e630
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
