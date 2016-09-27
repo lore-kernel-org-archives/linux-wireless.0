@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55304 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752434AbcICMb6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 08:31:58 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Baoyou Xie <baoyou.xie@linaro.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        arnd@linaro.org, xie.baoyou@zte.com.cn
-Subject: Re: fix:rtl8xxxu_core: mark symbols static where possible
-References: <20160903102822.84E496201B@smtp.codeaurora.org>
-Date: Sat, 03 Sep 2016 08:31:56 -0400
-In-Reply-To: <20160903102822.84E496201B@smtp.codeaurora.org> (Kalle Valo's
-        message of "Sat, 3 Sep 2016 10:28:22 +0000 (UTC)")
-Message-ID: <wrfjpool2mgz.fsf@redhat.com> (sfid-20160903_143221_556552_224C8646)
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35437 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933531AbcI0KF0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 06:05:26 -0400
+Received: by mail-wm0-f43.google.com with SMTP id l132so166684869wmf.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 03:05:25 -0700 (PDT)
+Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when
+ deleting flowring
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20160927091428.19223-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com> (sfid-20160927_120601_515188_9BF7DDE2)
+Date: Tue, 27 Sep 2016 12:05:09 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160927091428.19223-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Baoyou Xie <baoyou.xie@linaro.org> wrote:
->> We get 1 warning about global functions without a declaration
->> in the rtl8xxxu rtl8xxxu_core.c when building with W=1:
->> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:898:1:
->> warning: no previous prototype for 'rtl8xxxu_gen1_h2c_cmd'
->> [-Wmissing-prototypes]
->> 
->> In fact, this function is only used in the file in which it is declared
->> and don't need a declaration, but can be made static.
->> so this patch marks it 'static'.
->> 
->> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
->
-> The title should be "rtl8xxxu: ". See:
->
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject_name
->
-> Also I assume Jes will take this.
+On 27-9-2016 11:14, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Flowrings contain skbs waiting for transmission that were passed to us
+> by netif. It means we checked every one of them looking for 802.1x
+> Ethernet type. When deleting flowring we have to use freeing function
+> that will check for 802.1x type as well.
+> 
+> Freeing skbs without a proper check was leading to counter not being
+> properly decreased. This was triggering a WARNING every time
+> brcmf_netdev_wait_pend8021x was called.
 
-Yes to both accounts!
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> Kalle: this isn't important enough for 4.8 as it's too late for that.
+> 
+> I'd like to get it for 4.9 however, as this fixes bug that could lead
+> to WARNING on every add_key/del_key call. We was struggling with these
+> WARNINGs for some time and this fixes one of two problems causing them.
 
-Thanks,
-Jes
+Please mark it for stable as well.
+
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+> index b16b367..d0b738d 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+> @@ -234,13 +234,20 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+>  
+>  void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+>  {
+> +	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
+>  	struct brcmf_flowring_ring *ring;
+> +	struct brcmf_if *ifp;
+>  	u16 hash_idx;
+> +	u8 ifidx;
+>  	struct sk_buff *skb;
+>  
+>  	ring = flow->rings[flowid];
+>  	if (!ring)
+>  		return;
+> +
+> +	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
+> +	ifp = brcmf_get_ifp(bus_if->drvr, ifidx);
+> +
+>  	brcmf_flowring_block(flow, flowid, false);
+>  	hash_idx = ring->hash_id;
+>  	flow->hash[hash_idx].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
+
+I am not very familiar with flowring code, but I suppose this is just
+initializing the entry for later use, right?
+
+> @@ -249,7 +256,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+>  
+>  	skb = skb_dequeue(&ring->skblist);
+>  	while (skb) {
+> -		brcmu_pkt_buf_free_skb(skb);
+> +		brcmf_txfinalize(ifp, skb, false);
+>  		skb = skb_dequeue(&ring->skblist);
+>  	}
+>  
+> 
