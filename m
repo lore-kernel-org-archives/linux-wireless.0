@@ -1,139 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f171.google.com ([209.85.213.171]:36820 "EHLO
-        mail-yb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933152AbcIPKwI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39990 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750961AbcI0NBj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 06:52:08 -0400
-Received: by mail-yb0-f171.google.com with SMTP id u125so51095065ybg.3
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2016 03:52:02 -0700 (PDT)
+        Tue, 27 Sep 2016 09:01:39 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
+Date: Tue, 27 Sep 2016 18:31:40 +0530
+Message-ID: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160927_150143_078938_12A94E3E)
 MIME-Version: 1.0
-From: Matteo Grandi <grn.matteo@gmail.com>
-Date: Fri, 16 Sep 2016 12:52:01 +0200
-Message-ID: <CAF3cwD3N_Vi-uOf1q+k-8_xM1P-B7Jsj0Z+FchXiMKRTBK-egA@mail.gmail.com> (sfid-20160916_125221_913527_9AC8DF9F)
-Subject: ath10k mesh mode issue
-To: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-I'm using Gateworks Ventana 5410 boards
-(http://www.gateworks.com/product/item/ventana-gw5410-network-processor)
-running Ubuntu Trusty-Ventana kernel v3.14 with a Compex WLE600V5-27
-miniPCIe Qualcomm Atheros QCA9882 wifi dongle installed
-https://www.landashop.com/compex-wle-600v5.html?___store=english&___from_store=default
+'ath10k_htt_rx_h_unchain' is need to be called only if the return
+value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this
+change makes it more explicit and avoids doing a skb_peek, fetching
+rx descriptor pointer, checking rx msdu decap format for the case of
+ret = 0 (unchained msdus). Found this change during code walk through,
+not sure if this addresses any issue.
 
-The aim is to use some of these boards to build a mesh network and
-perform some HT test (it's a part of my MSc thesis).
-I'm trying to configure the devices in mesh mode, but I've encountered
-some problems, this is the dmesg output:
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-root@Yazi:~# iw dev wlan1 interface add mp1 type mp
-root@Yazi:~# iw dev mp1 set freq 5240
-root@Yazi:~# dmesg | grep ath
-[    7.134520] ath10k_pci 0000:07:00.0: pci irq legacy interrupts 0
-irq_mode 0 reset_mode 0
-[    7.349228] ath10k_pci 0000:07:00.0: Direct firmware load failed
-with error -2
-[    7.349245] ath10k_pci 0000:07:00.0: Falling back to user helper
-[    7.417170] ath10k_pci 0000:07:00.0: Direct firmware load failed
-with error -2
-[    7.417189] ath10k_pci 0000:07:00.0: Falling back to user helper
-[    8.589474] ath10k_pci 0000:07:00.0: qca988x hw2.0 (0x4100016c,
-0x043222ff sub 0000:0000) fw 10.2.4.70.54 fwapi 5 bdapi 1 htt-ver 2.1
-wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1 features
-no-p2p,raw-mode
-[    8.589491] ath10k_pci 0000:07:00.0: debug 1 debugfs 1 tracing 0
-dfs 0 testmode 1
-[    8.691670] ath: EEPROM regdomain: 0x0
-[    8.691680] ath: EEPROM indicates default country code should be used
-[    8.691686] ath: doing EEPROM country->regdmn map search
-[    8.691695] ath: country maps to regdmn code: 0x3a
-[    8.691702] ath: Country alpha2 being used: US
-[    8.691706] ath: Regpair used: 0x3a
-root@Yazi:~# ifconfig mp1 up
-SIOCSIFFLAGS: Invalid argument
-root@Yazi:~# dmesg | grep ath
-[    7.134520] ath10k_pci 0000:07:00.0: pci irq legacy interrupts 0
-irq_mode 0 reset_mode 0
-[    7.349228] ath10k_pci 0000:07:00.0: Direct firmware load failed
-with error -2
-[    7.349245] ath10k_pci 0000:07:00.0: Falling back to user helper
-[    7.417170] ath10k_pci 0000:07:00.0: Direct firmware load failed
-with error -2
-[    7.417189] ath10k_pci 0000:07:00.0: Falling back to user helper
-[    8.589474] ath10k_pci 0000:07:00.0: qca988x hw2.0 (0x4100016c,
-0x043222ff sub 0000:0000) fw 10.2.4.70.54 fwapi 5 bdapi 1 htt-ver 2.1
-wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1 features
-no-p2p,raw-mode
-[    8.589491] ath10k_pci 0000:07:00.0: debug 1 debugfs 1 tracing 0
-dfs 0 testmode 1
-[    8.691670] ath: EEPROM regdomain: 0x0
-[    8.691680] ath: EEPROM indicates default country code should be used
-[    8.691686] ath: doing EEPROM country->regdmn map search
-[    8.691695] ath: country maps to regdmn code: 0x3a
-[    8.691702] ath: Country alpha2 being used: US
-[    8.691706] ath: Regpair used: 0x3a
-[  176.983250] ath10k_pci 0000:07:00.0: must load driver with
-rawmode=1 to add mesh interfaces
-
-It seems that the rowmode is NOT enable, but 8 lines above it's seems
-to be ok...
-
-Let me give you some useful details:
-- the lspci output:
-root@Yazi:~# lspci
-00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01)
-01:00.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-01:00.1 System peripheral: PLX Technology, Inc. PEX 8609 8-lane,
-8-Port PCI Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:01.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:04.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:05.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:06.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:07.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:08.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-02:09.0 PCI bridge: PLX Technology, Inc. PEX 8609 8-lane, 8-Port PCI
-Express Gen 2 (5.0 GT/s) Switch with DMA (rev ba)
-07:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac
-Wireless Network Adapter
-08:00.0 Ethernet controller: Marvell Technology Group Ltd. 88E8057
-PCI-E Gigabit Ethernet Controller
-
--the lsmod output:
-root@Yazi:~# lsmod
-Module                  Size  Used by
-arc4                    1687  2
-ath10k_pci             34340  0
-ath10k_core           289147  1 ath10k_pci
-sky2                   53987  0
-mac80211              458056  1 ath10k_core
-ath                    21573  1 ath10k_core
-cfg80211              218260  3 ath,mac80211,ath10k_core
-compat                 24039  4 cfg80211,mac80211,ath10k_pci,ath10k_core
-
-- the firmware currently in use is the firmware-5.bin_10.2.4.70.54
-(renamed firmware-5.bin and with executable permission) located in
-/lib/firmware/ath10k/QCA988X/hw2.0. I retrived it on
-https://github.com/kvalo/ath10k-firmware
-- The backports-4.2.6-1 was crosscompiled with the kernel following
-the official wiki guide provided by Gateworks
-- I've also tried to load the ath10k modules adding the parameter
-rowmode=1 but I had an error "rawmode unknown parameter"
-- in another try I used the firmware "firmware-5.bin_10.2.4.70.6-2"
-after retriving this
-https://github.com/o11s/open80211s/wiki/ath10k-(802.11ac)-for-Mesh-Support
-but nothing is changed...
-
-I'm not an expert so I'm sorry if I miss some basics...
-Hope in your help!
-
-All the best
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 7ae9349..e51dace 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1459,8 +1459,7 @@ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu)
+ }
+ 
+ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
+-				    struct sk_buff_head *amsdu,
+-				    bool chained)
++				    struct sk_buff_head *amsdu)
+ {
+ 	struct sk_buff *first;
+ 	struct htt_rx_desc *rxd;
+@@ -1471,9 +1470,6 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
+ 	decap = MS(__le32_to_cpu(rxd->msdu_start.common.info1),
+ 		   RX_MSDU_START_INFO1_DECAP_FORMAT);
+ 
+-	if (!chained)
+-		return;
+-
+ 	/* FIXME: Current unchaining logic can only handle simple case of raw
+ 	 * msdu chaining. If decapping is other than raw the chaining may be
+ 	 * more complex and this isn't handled by the current code. Don't even
+@@ -1550,7 +1546,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 	}
+ 
+ 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
+-	ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
++
++	/* only for ret = 1 indicates chained msdus */
++	if (ret > 0)
++		ath10k_htt_rx_h_unchain(ar, &amsdu);
++
+ 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
+-- 
+1.9.1
