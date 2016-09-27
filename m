@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0046.outbound.protection.outlook.com ([104.47.42.46]:63584
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753039AbcITTYU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 15:24:20 -0400
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for
- Quantenna chipsets
-To: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34769 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753668AbcI0LZz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 07:25:55 -0400
+Received: by mail-pf0-f182.google.com with SMTP id l25so5026142pfb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 04:25:54 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: replace WARNING on timeout with a simple error
+ message
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
- <1474123851.7623.2.camel@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <3dbea2f0-3440-f2e6-cc04-fd5cf6d1afaa@quantenna.com> (sfid-20160920_212427_942314_635A6AEE)
-Date: Tue, 20 Sep 2016 21:51:51 +0300
+References: <20160927101224.3534-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a084ce54-9b96-fbdc-34b1-7c6429bed24e@broadcom.com> (sfid-20160927_132623_022029_512878B6)
+Date: Tue, 27 Sep 2016 13:25:33 +0200
 MIME-Version: 1.0
-In-Reply-To: <1474123851.7623.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20160927101224.3534-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 27-9-2016 12:12, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Even with timeout increased to 950 ms we get WARNINGs from time to time.
+> It mostly happens on A-MPDU stalls (e.g. when station goes out of
+> range). It may take up to 5-10 secods for the firmware to recover and
+> for that time it doesn't process packets.
+> 
+> It's still useful to have a message on time out as it may indicate some
+> firmware problem and incorrect key update. Raising a WARNING however
+> wasn't really that necessary, it doesn't point to any driver bug anymore
+> and backtrace wasn't much useful.
 
-On 09/17/2016 05:50 PM, Johannes Berg wrote:
->> drivers/net/wireless/quantenna/qtnfmac/event.c: In function
->> `qtnf_event_handle_scan_complete':
->> drivers/net/wireless/quantenna/qtnfmac/event.c:342:2: warning:
->> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
->> without a cast [enabled by default]
-> Yes, cfg80211_scan_done() changed fairly recently for sure.
+Indeed the interesting part would be in another context. So:
 
-We will rebase before submitting next patch revision.
-
->
->> ./include/net/cfg80211.h:4104:6: note: expected `struct
->> cfg80211_scan_info *' but argument is of type `u32'
->> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c: In function
->> `qtnf_virtual_intf_cleanup':
->> drivers/net/wireless/quantenna/qtnfmac/cfg80211.c:1093:4: warning:
->> passing argument 2 of `cfg80211_scan_done' makes pointer from integer
->> without a cast [enabled by default]
->> ./include/net/cfg80211.h:4104:6: note: expected `struct
->> cfg80211_scan_info *' but argument is of type `int'
->>
-> These also seem related.
->
->>> +F:   drivers/net/wireless/quantenna/qtnfmac
->> The include directory is not listed.
-> Should really just stop after quantenna/ I'd think? As long as it's
-> just a single driver, you might as well claim maintenance over
-> everything there :)
-
-Yes, makes sense)
-
->
->> I guess some of these static variables could be also const, but
->> didn't check.
-> I think both bitrates and channels can't be, due to cfg80211 writing
-> some (global) flags there on init.
->
-> johannes
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 6d046ba..9e6f60a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -1161,7 +1161,8 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
+>  				 !brcmf_get_pend_8021x_cnt(ifp),
+>  				 MAX_WAIT_FOR_8021X_TX);
+>  
+> -	WARN_ON(!err);
+> +	if (!err)
+> +		brcmf_err("Timed out waiting for no pending 802.1x packets\n");
+>  
+>  	return !err;
+>  }
+> 
