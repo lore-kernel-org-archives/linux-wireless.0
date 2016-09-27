@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8606 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754586AbcIFHJQ (ORCPT
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:35617 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932356AbcI0L2U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 03:09:16 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: advertize hardware packet loss mechanism
-Date: Tue, 6 Sep 2016 12:38:41 +0530
-Message-ID: <20160906070841.4266-1-rmanohar@qti.qualcomm.com> (sfid-20160906_090920_002490_85FF7F99)
+        Tue, 27 Sep 2016 07:28:20 -0400
+Received: by mail-qk0-f179.google.com with SMTP id t7so12518545qkh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 04:28:15 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: add key management offload feature
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org, hostap@lists.shmoo.com
+References: <1474973796-1873-1-git-send-email-akarwar@marvell.com>
+ <1474973796-1873-2-git-send-email-akarwar@marvell.com>
+Cc: yangzy@marvell.com, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        lihz <lihz@marvell.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f487cf51-bfdd-3ac1-ad2d-43f4a43693e9@broadcom.com> (sfid-20160927_132824_832978_D39785F1)
+Date: Tue, 27 Sep 2016 13:27:54 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1474973796-1873-2-git-send-email-akarwar@marvell.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Indicate hardware (or firmware) supports that CQM packet-loss report
-will be generated based on station kickout algorithm. As of now mac80211
-tracks connection loss by missing msdu counts (50) whereas ath10k
-firmware tracks them by missing ppdus (+ BAR tries). While firmware is
-trying to adapt its rate table, mac80211 might send out low_ack event to
-hostapd. This is causing frequent connect and disconnect iteration under
-noisy environment or when station is roaming around.
+On 27-9-2016 12:56, Amitkumar Karwar wrote:
+> From: lihz <lihz@marvell.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 1 +
- 1 file changed, 1 insertion(+)
+Also the mailing list is no longer at shmoo.com. Should be:
+hostap@lists.infradead.org
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 79525f769db6..bae7662e7207 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7865,6 +7865,7 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ieee80211_hw_set(ar->hw, WANT_MONITOR_VIF);
- 	ieee80211_hw_set(ar->hw, CHANCTX_STA_CSA);
- 	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
-+	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
- 
- 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
- 		ieee80211_hw_set(ar->hw, SW_CRYPTO_CONTROL);
--- 
-2.9.3
+Regards,
+Arend
