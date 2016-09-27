@@ -1,91 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37897 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752686AbcIMSym (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37692 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933126AbcI0JYy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 14:54:42 -0400
-Received: by mail-wm0-f50.google.com with SMTP id 1so218189203wmz.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 11:54:41 -0700 (PDT)
+        Tue, 27 Sep 2016 05:24:54 -0400
+Received: by mail-wm0-f49.google.com with SMTP id b130so1986472wmc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 02:24:53 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <20160926102348.8695-1-zajec5@gmail.com>
+ <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
+ <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+ <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com> (sfid-20160927_112522_924906_B9977A83)
+Date: Tue, 27 Sep 2016 11:24:32 +0200
 MIME-Version: 1.0
-In-Reply-To: <15353347.MUgkgiNHdu@prime>
-References: <2661831.slnB0LOeVt@prime> <87h99kjca5.fsf@kamboji.qca.qualcomm.com>
- <15353347.MUgkgiNHdu@prime>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Tue, 13 Sep 2016 20:54:20 +0200
-Message-ID: <CAFBinCAXz3WiwiGO63NSn9jW5h8D_92=F_ZpEgjXxJr_cSnKeQ@mail.gmail.com> (sfid-20160913_205838_746542_ECE98DFF)
-Subject: Re: ath10k mesh + ap + encryption?
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "openwrt-devel@lists.openwrt.org" <openwrt-devel@lists.openwrt.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Simon,
-
-On Tue, Sep 13, 2016 at 1:13 PM, Simon Wunderlich <sw@simonwunderlich.de> wrote:
-> On Tuesday, September 13, 2016 10:59:31 AM CEST Valo, Kalle wrote:
->> Simon Wunderlich <sw@simonwunderlich.de> writes:
->> > we have done some experiments last week on ath10k, trying to run mesh
->> > (802.11s) and access point at the same time, both encrypted.
->> >
->> > We have tested a recent LEDE (reboot-1519-g42f559e) but with
->> > firmware-5.bin_10.2.4.70.42-2 and the included wpa_supplicant, which gave
->> > us a working encrypted 802.11s network. However, starting an AP at the
->> > same time didn't work (AP doesn't beacon). This wasn't a problem when
->> > 802.11s was running unencrypted.
->> >
->> > We also tested version 10.2.4.97 (from codeaurora), which is now default
->> > in
->> > LEDE. However, this version apparently doesn't support 11s mesh at all
->> > (WMI_SERVICE_MESH_11S is disabled in the service map, but cfg/mac80211
->> > advertises support).
->> >
->> > So here are my questions:
->> >  * Did anyone succesfully run AP and mesh, both encrypted at the same
->> >  time?
->> >  * Do you have any pointers how we could fix this? Could it be fixable in
->> >  the>
->> > driver (i.e. not in firmware)?
->> >
->> >  * Does anyone have an idea if 11s will be supported in future versions? I
->> >
->> > didn't find any changelogs, but having 11s mode no longer in the service
->> > map does not make me optimistic.
+On 26-9-2016 14:38, Rafał Miłecki wrote:
+> On 26 September 2016 at 14:13, Rafał Miłecki <zajec5@gmail.com> wrote:
+>> On 26 September 2016 at 13:46, Arend Van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>> On 26-9-2016 12:23, Rafał Miłecki wrote:
+>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>>
+>>>> We need to track 802.1x packets to know if there are any pending ones
+>>>> for transmission. This is required for performing key update in the
+>>>> firmware.
+>>>
+>>> The problem we are trying to solve is a pretty old one. The problem is
+>>> that wpa_supplicant uses two separate code paths: EAPOL messaging
+>>> through data path and key configuration though nl80211.
 >>
->> Why is LEDE using 10.2.4.97? It seems to be a quite old release and I
->> have no knowledge if anyone even tests that firmware branch with ath10k.
->> I recommend to only use firmware releases from ath10k-firmware.git as we
->> use those internally with ath10k. In any case, don't make any
->> assumptions about future from that firmware branch as it's so old.
-Thanks for clarifying this.
+>> Can I find it described/reported somewhere?
+>>
+>>
+>>>> Unfortunately our old tracking code wasn't very accurate. It was
+>>>> treating skb as pending as soon as it was passed by the netif. Actual
+>>>> handling packet to the firmware was happening later as brcmfmac
+>>>> internally queues them and uses its own worker(s).
+>>>
+>>> That does not seem right. As soon as we get a 1x packet we need to wait
+>>> with key configuration regardless whether it is still in the driver or
+>>> handed over to firmware already.
+>>
+>> OK, thanks.
+> 
+> Actually, it's not OK. I was trying to report/describe/discuss this
+> problem for over a week. I couldn't get much of answer from you.
+> 
+> I had to come with a patch I worked on for quite some time. Only then
+> you decided to react and reply with a reason for a nack. I see this
+> patch may be wrong (but it's still hard to know what's going wrong
+> without a proper hostapd bug report). I'd expect you to somehow work &
+> communicate with open source community.
 
-> This was introduced in December 25th, 2015 after some firmware-related
-> problems. I'm CC'ing Martin Blumenstingl who suggested this change.
->
-> Since then, ath10k is pulling firmware from here (unless ct firmware is used):
->
-> https://source.codeaurora.org/quic/qsdk/oss/firmware/ath10k-firmware/plain/
-> 10.2.4/firmware-5.bin_10.2.4.97-1
-I initially updated to version 10.2.4.70.13-2, but we decided to
-update to the "latest" firmware back then (see the thread at [0])
-With the explanation from Kalle it makes sense to only use the
-firmware binaries distributed in his repo (to ensure that the firmware
-is tested by QCA's internal team).
-
-> However, I don't understand the numbering? 10.2.4.97 > 10.2.4.70, but you say
-> 10.2.4.70.42-2 is more recent? I would have assumed otherwise from the
-> numbers.
-That looks strange to me as well
-
-as a side-note: I am currently preparing and testing a patch to update
-the ath10k-firmware in LEDE to 10.2.4.70.52
-
+We do or at least make an honest attempt, but there is more on our plate
+so responses may be delayed. It also does not help when you get anal and
+preachy when we do respond. Also not OK. In this case the delay is
+caused because I had to pick up the thread(s) as Hante is on vacation
+(he needed a break :-p ). However, you started sending patches so I
+decided to look at and respond to those. Sorry if you felt like we left
+you hanging to dry.
 
 Regards,
-Martin
-
-
-[0] https://www.mail-archive.com/openwrt-devel@lists.openwrt.org/msg35623.html
+Arend
