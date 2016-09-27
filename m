@@ -1,106 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:34603 "EHLO
-        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965060AbcIHIaI (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33513 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752831AbcI0JOm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 04:30:08 -0400
-Received: by mail-yw0-f176.google.com with SMTP id g192so24305258ywh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2016 01:30:08 -0700 (PDT)
+        Tue, 27 Sep 2016 05:14:42 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 4.9] brcmfmac: use correct skb freeing helper when deleting flowring
+Date: Tue, 27 Sep 2016 11:14:28 +0200
+Message-Id: <20160927091428.19223-1-zajec5@gmail.com> (sfid-20160927_111458_177981_A8852189)
 MIME-Version: 1.0
-In-Reply-To: <d65738be-cb30-cedd-562c-814d02a91794@nbd.name>
-References: <20160905095128.80560-1-nbd@nbd.name> <20160905095128.80560-4-nbd@nbd.name>
- <CAHNKnsTwBVmWSis_5EV1mrJM53E6XDhJ=CHWCjihZ839bDXGuA@mail.gmail.com> <d65738be-cb30-cedd-562c-814d02a91794@nbd.name>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Thu, 8 Sep 2016 11:29:42 +0300
-Message-ID: <CAHNKnsQTEuSp6dFTecqP65NU0msEx2pPa56p=0RJjtKB4zp5Fw@mail.gmail.com> (sfid-20160908_103029_143906_E3101F53)
-Subject: Re: [PATCH v3 3/3] mt76: add driver code for MT76x2e
-To: Felix Fietkau <nbd@nbd.name>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2016-09-08 11:25 GMT+03:00 Felix Fietkau <nbd@nbd.name>:
-> On 2016-09-08 09:52, Sergey Ryazanov wrote:
->>> +
->>> +int mt76x2_register_device(struct mt76x2_dev *dev)
->>> +{
->>> +       struct ieee80211_hw *hw = mt76_hw(dev);
->>> +       struct wiphy *wiphy = hw->wiphy;
->>> +       void *status_fifo;
->>> +       int fifo_size;
->>> +       int i, ret;
->>> +
->>> +       fifo_size = roundup_pow_of_two(32 * sizeof(struct mt76x2_tx_status));
->>> +       status_fifo = devm_kzalloc(dev->mt76.dev, fifo_size, GFP_KERNEL);
->>> +       if (!status_fifo)
->>> +               return -ENOMEM;
->>> +
->>> +       kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
->>> +
->>> +       ret = mt76x2_init_hardware(dev);
->>> +       if (ret)
->>> +               return ret;
->>> +
->>> +       hw->queues = 4;
->>> +       hw->max_rates = 1;
->>> +       hw->max_report_rates = 7;
->>> +       hw->max_rate_tries = 1;
->>> +       hw->extra_tx_headroom = 2;
->>> +
->>> +       hw->sta_data_size = sizeof(struct mt76x2_sta);
->>> +       hw->vif_data_size = sizeof(struct mt76x2_vif);
->>> +
->>> +       for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
->>> +               u8 *addr = dev->macaddr_list[i].addr;
->>> +
->>> +               memcpy(addr, dev->mt76.macaddr, ETH_ALEN);
->>> +
->>> +               if (!i)
->>> +                       continue;
->>> +
->>> +               addr[0] |= BIT(1);
->>> +               addr[0] ^= ((i - 1) << 2);
->>> +       }
->>> +       wiphy->addresses = dev->macaddr_list;
->>> +       wiphy->n_addresses = ARRAY_SIZE(dev->macaddr_list);
->>> +
->>> +       wiphy->iface_combinations = if_comb;
->>> +       wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
->>> +
->>> +       wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
->>> +
->>> +       ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
->>> +       INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
->>> +       INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
->>> +
->>> +       dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
->>> +       dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
->>> +
->>> +       ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
->>> +                                  ARRAY_SIZE(mt76x2_rates));
->>> +       if (ret)
->>> +               goto fail;
->>> +
->>> +       mt76x2_init_debugfs(dev);
->>> +
->>> +       return 0;
->>> +
->>> +fail:
->>> +       mt76x2_stop_hardware(dev);
->>> +       return ret;
->>> +}
->>
->> Just curious, almost full chip initialization performed in probe
->> procedure, why not do that in start() callback? In such case we could
->> fully restart chip without module reloading, just with ifdown/ifup
->> circle.
-> Last time I tried that I ran into some weird chip quirks. I do think
-> it's a good idea but I'd rather see this merged first and try again to
-> rework it when I have some more time to figure out what's going on.
->
-Got it. Thank you for explanation.
+From: Rafał Miłecki <rafal@milecki.pl>
 
+Flowrings contain skbs waiting for transmission that were passed to us
+by netif. It means we checked every one of them looking for 802.1x
+Ethernet type. When deleting flowring we have to use freeing function
+that will check for 802.1x type as well.
+
+Freeing skbs without a proper check was leading to counter not being
+properly decreased. This was triggering a WARNING every time
+brcmf_netdev_wait_pend8021x was called.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+Kalle: this isn't important enough for 4.8 as it's too late for that.
+
+I'd like to get it for 4.9 however, as this fixes bug that could lead
+to WARNING on every add_key/del_key call. We was struggling with these
+WARNINGs for some time and this fixes one of two problems causing them.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index b16b367..d0b738d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -234,13 +234,20 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
+ 
+ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+ {
++	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
+ 	struct brcmf_flowring_ring *ring;
++	struct brcmf_if *ifp;
+ 	u16 hash_idx;
++	u8 ifidx;
+ 	struct sk_buff *skb;
+ 
+ 	ring = flow->rings[flowid];
+ 	if (!ring)
+ 		return;
++
++	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
++	ifp = brcmf_get_ifp(bus_if->drvr, ifidx);
++
+ 	brcmf_flowring_block(flow, flowid, false);
+ 	hash_idx = ring->hash_id;
+ 	flow->hash[hash_idx].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
+@@ -249,7 +256,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
+ 
+ 	skb = skb_dequeue(&ring->skblist);
+ 	while (skb) {
+-		brcmu_pkt_buf_free_skb(skb);
++		brcmf_txfinalize(ifp, skb, false);
+ 		skb = skb_dequeue(&ring->skblist);
+ 	}
+ 
 -- 
-Sergey
+2.9.3
