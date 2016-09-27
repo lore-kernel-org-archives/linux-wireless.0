@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:21622 "EHLO
-        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755151AbcIOLlj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20333 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932274AbcI0Oxd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 07:41:39 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] brcmfmac: avoid potential stack overflow in brcmf_cfg80211_start_ap()
-Date: Thu, 15 Sep 2016 12:41:31 +0100
-Message-Id: <1473939694-11006-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160915_134143_419338_C8BFAA70)
+        Tue, 27 Sep 2016 10:53:33 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath9k: change entropy formula for easier understanding
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+To: miaoqing pan <miaoqing@codeaurora.org>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <linux-crypto@vger.kernel.org>, <smueller@chronox.de>,
+        <jason@lakedaemon.net>, <pouyans@qti.qualcomm.com>,
+        Miaoqing Pan <miaoqing@codeaurora.org>
+Message-ID: <e8039ab4dcaa4f31841456ac2d196c92@euamsexm01a.eu.qualcomm.com> (sfid-20160927_165344_947449_D6665A42)
+Date: Tue, 27 Sep 2016 16:53:23 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit ded89912156b1a47d940a0c954c43afbabd0c42c upstream
+miaoqing pan <miaoqing@codeaurora.org> wrote:
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+> 
+> The quality of ADC entropy is 10 bits of min-entropy for
+> a 32-bit value, change '(((x) * 8 * 320) >> 10)' to
+> '(((x) * 8 * 10) >> 5)' for easier understanding.
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
-User-space can choose to omit NL80211_ATTR_SSID and only provide raw
-IE TLV data. When doing so it can provide SSID IE with length exceeding
-the allowed size. The driver further processes this IE copying it
-into a local variable without checking the length. Hence stack can be
-corrupted and used as exploit.
+I need some help here, it this patch ok to take or should I drop it? The
+discussion is available from the patchwork link below if someone needs to
+refresh the memory.
 
-Cc: stable@vger.kernel.org # v4.4, v4.1
-Reported-by: Daxing Guo <freener.gdx@gmail.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
----
- drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-index 5db56a7..b8aec5e5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
-@@ -4527,7 +4527,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 				(u8 *)&settings->beacon.head[ie_offset],
- 				settings->beacon.head_len - ie_offset,
- 				WLAN_EID_SSID);
--		if (!ssid_ie)
-+		if (!ssid_ie || ssid_ie->len > IEEE80211_MAX_SSID_LEN)
- 			return -EINVAL;
- 
- 		memcpy(ssid_le.SSID, ssid_ie->data, ssid_ie->len);
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9270463/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
