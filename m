@@ -1,42 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:51997 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755984AbcILMFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 08:05:50 -0400
-Date: Mon, 12 Sep 2016 20:05:02 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
-        kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
-Subject: Re: [PATCH 3/9] rsi: Added freeing of allocated buffers (sbands and
- dfsentry) Cleanup (spelling mistakes, code format corrections, empty lines
- after declaration)
-Message-ID: <201609122009.NSihCWVh%fengguang.wu@intel.com> (sfid-20160912_140556_507745_CB852597)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49707 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751631AbcI0NEu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 09:04:50 -0400
+From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+        <mohammed@qti.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
+Date: Tue, 27 Sep 2016 13:04:44 +0000
+Message-ID: <1474981503694.62077@qti.qualcomm.com> (sfid-20160927_150453_887709_D1F14CF4)
+References: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9e848b4549d9e919eb3a772e0d292db5eee39b43.1473669618.git.prameela.j04cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Prameela,
-
-[auto build test WARNING on wireless-drivers-next/master]
-[also build test WARNING on v4.8-rc6 next-20160912]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-[Suggest to use git(>=2.9.0) format-patch --base=<commit> (or --base=auto for convenience) to record what (public, well-known) commit your patch series was built on]
-[Check https://git-scm.com/docs/git-format-patch for more information]
-
-url:    https://github.com/0day-ci/linux/commits/Prameela-Rani-Garnepudi/rsi-cleanup-and-added-debug-prints-in-file-rsi_91x_core-c/20160912-184326
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-
-
-coccinelle warnings: (new ones prefixed by >>)
-
->> drivers/net/wireless/rsi/rsi_91x_mac80211.c:209:3-8: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+apologies please ignore this , wrong patch due to confusing v4 tag=0A=
+ =0A=
+please review,=0A=
+=0A=
+[PATCH] ath10k: Cleanup calling ath10k_htt_rx_h_unchain=0A=
+=0A=
+________________________________________=0A=
+From: Shajakhan, Mohammed Shafi (Mohammed Shafi)=0A=
+Sent: 27 September 2016 18:31=0A=
+To: ath10k@lists.infradead.org=0A=
+Cc: mohammed@codeaurora.org; linux-wireless@vger.kernel.org; Shajakhan, Moh=
+ammed Shafi (Mohammed Shafi)=0A=
+Subject: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain=0A=
+=0A=
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
+=0A=
+'ath10k_htt_rx_h_unchain' is need to be called only if the return=0A=
+value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this=0A=
+change makes it more explicit and avoids doing a skb_peek, fetching=0A=
+rx descriptor pointer, checking rx msdu decap format for the case of=0A=
+ret =3D 0 (unchained msdus). Found this change during code walk through,=0A=
+not sure if this addresses any issue.=0A=
+=0A=
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>=0A=
+---=0A=
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++------=0A=
+ 1 file changed, 6 insertions(+), 6 deletions(-)=0A=
+=0A=
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireles=
+s/ath/ath10k/htt_rx.c=0A=
+index 7ae9349..e51dace 100644=0A=
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c=0A=
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c=0A=
+@@ -1459,8 +1459,7 @@ static int ath10k_unchain_msdu(struct sk_buff_head *a=
+msdu)=0A=
+ }=0A=
+=0A=
+ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,=0A=
+-                                   struct sk_buff_head *amsdu,=0A=
+-                                   bool chained)=0A=
++                                   struct sk_buff_head *amsdu)=0A=
+ {=0A=
+        struct sk_buff *first;=0A=
+        struct htt_rx_desc *rxd;=0A=
+@@ -1471,9 +1470,6 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar=
+,=0A=
+        decap =3D MS(__le32_to_cpu(rxd->msdu_start.common.info1),=0A=
+                   RX_MSDU_START_INFO1_DECAP_FORMAT);=0A=
+=0A=
+-       if (!chained)=0A=
+-               return;=0A=
+-=0A=
+        /* FIXME: Current unchaining logic can only handle simple case of r=
+aw=0A=
+         * msdu chaining. If decapping is other than raw the chaining may b=
+e=0A=
+         * more complex and this isn't handled by the current code. Don't e=
+ven=0A=
+@@ -1550,7 +1546,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_=
+htt *htt)=0A=
+        }=0A=
+=0A=
+        ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);=0A=
+-       ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);=0A=
++=0A=
++       /* only for ret =3D 1 indicates chained msdus */=0A=
++       if (ret > 0)=0A=
++               ath10k_htt_rx_h_unchain(ar, &amsdu);=0A=
++=0A=
+        ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);=0A=
+        ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);=0A=
+        ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);=0A=
+--=0A=
+1.9.1=0A=
+=0A=
