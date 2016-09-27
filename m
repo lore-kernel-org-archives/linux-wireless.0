@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41204 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750737AbcI3H3X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 03:29:23 -0400
-Message-ID: <1475220560.17481.7.camel@sipsolutions.net> (sfid-20160930_092927_445991_DD9853EF)
-Subject: Re: [PATCH 2/3] mac80211: multicast to unicast conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Sep 2016 09:29:20 +0200
-In-Reply-To: <1474821596-12155-3-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184001_313936_5CD88310)
-References: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
-         <1474821596-12155-3-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20160925_184001_313936_5CD88310)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:42960 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934727AbcI0Pqk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 11:46:40 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] rtlwifi: Add HAL_DEF_WOWLAN case to *_get_hw() routines
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1474736239-9826-2-git-send-email-Larry.Finger@lwfinger.net>
+References: <1474736239-9826-2-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Message-Id: <20160927154638.7360C61283@smtp.codeaurora.org> (sfid-20160927_174711_625320_B54448EC)
+Date: Tue, 27 Sep 2016 15:46:38 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +static ssize_t ieee80211_if_fmt_unicast(
-> +	const struct ieee80211_sub_if_data *sdata, char *buf, int
-> buflen)
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Only rtl8821ae implements WOWLAN; however, the other drivers may receive
+> a call requesting information about this mode. The other drivers need to
+> ignore the request rather than logging that the default branch of the
+> switch statement has been reached.
+> 
+> Reported by: Jean Delvare <jdelvare@suse.de>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-That's a very ... unusual way to break the lines here - please either
-break after the first argument, or before the function name. You should
-see lots of examples for both.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-However, regardless of that, I don't think that debugfs is an
-appropriate way to configure a production option like this.
+1cc49a5b5466 rtlwifi: Add HAL_DEF_WOWLAN case to *_get_hw() routines
+8334ffdc8290 rtlwifi: Add explicit values to hw_variables enum
 
-> +	int unicast;
+-- 
+https://patchwork.kernel.org/patch/9349217/
 
-bool, quite obviously.
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-> +/* rewrite destination mac address */
-> +static int ieee80211_tx_dnat(struct sk_buff *skb, struct sta_info
-> *sta)
-
-How is this DNAT?
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
