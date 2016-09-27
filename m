@@ -1,52 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53559 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034478AbcIZRtf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 13:49:35 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.eperm.de ([89.247.134.16]:48046 "EHLO mail.eperm.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752183AbcI0PRI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Sep 2016 11:17:08 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au,
+        linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>,
+        Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [v2] RANDOM: ATH9K RNG delivers zero bits of entropy
+Date: Tue, 27 Sep 2016 17:17:02 +0200
+Message-ID: <1477295.yC8zZtqI66@tauon.atsec.com> (sfid-20160927_171719_405477_BA67FCAB)
+In-Reply-To: <2ba03f89daee4f09a88a1238943eb49d@euamsexm01a.eu.qualcomm.com>
+References: <1654172.XfclnXhRmn@positron.chronox.de> <2ba03f89daee4f09a88a1238943eb49d@euamsexm01a.eu.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: brcmfmac: fix memory leak in brcmf_fill_bss_param
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160921062327.28729-1-zajec5@gmail.com>
-References: <20160921062327.28729-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160926174934.8AC1B61650@smtp.codeaurora.org> (sfid-20160926_194940_079253_9F7688DA)
-Date: Mon, 26 Sep 2016 17:49:34 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+Am Dienstag, 27. September 2016, 16:44:16 CEST schrieb Kalle Valo:
+
+Hi Kalle,
+
+> Stephan Mueller <smueller@chronox.de> wrote:
+> > The ATH9K driver implements an RNG which is completely bypassing the
+> > standard Linux HW generator logic.
+> > 
+> > The RNG may or may not deliver entropy. Considering the conservative
+> > approach in treating entropy with respect to non-auditable sources, this
+> > patch changes the delivered entropy value to zero. The RNG still feeds
+> > data into the input_pool but it is assumed to have no entropy.
+> > 
+> > When the ATH9K RNG changes to use the HW RNG framework, it may re-enable
+> > the entropy estimation considering that a user can change that value at
+> > boot and runtime.
+> > 
+> > Reviewed-by: Jason Cooper <jason@lakedaemon.net>
+> > Signed-off-by: Stephan Mueller <smueller@chronox.de>
 > 
-> This function is called from get_station callback which means that every
-> time user space was getting/dumping station(s) we were leaking 2 KiB.
+> Based on the discussion I'm dropping this patch. But the discussion was
+> hard to follow so please let me know if I misunderstood.
+
+I guess the rejection is appropriate, but something needs to be done: 
+add_hwgenerator_randomness should not be used in this scenario.
 > 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Fixes: 1f0dc59a6de ("brcmfmac: rework .get_station() callback")
-> Cc: stable@vger.kernel.org # 4.2+
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Patch set to Rejected.
 
-Patch applied to wireless-drivers-next.git, thanks.
 
-23e9c128adb2 brcmfmac: fix memory leak in brcmf_fill_bss_param
 
--- 
-https://patchwork.kernel.org/patch/9342879/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ciao
+Stephan
