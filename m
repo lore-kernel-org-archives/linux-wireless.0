@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58522 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43212 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933368AbcIZKp4 (ORCPT
+        with ESMTP id S932674AbcI0PsT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 06:45:56 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-        "Avinash Patil" <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        "Sergei Maksimenko" <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        <87a8f68wae.fsf@kamboji.qca.qualcomm.com>
-        <dfdaca87-dfbd-4677-fbff-45127ccd2e0c@quantenna.com>
-Date: Mon, 26 Sep 2016 13:45:49 +0300
-In-Reply-To: <dfdaca87-dfbd-4677-fbff-45127ccd2e0c@quantenna.com>
-        (IgorMitsyanko's message of "Tue, 20 Sep 2016 22:05:07 +0300")
-Message-ID: <87shsnym5e.fsf@kamboji.qca.qualcomm.com> (sfid-20160926_124559_822206_5485A6E2)
+        Tue, 27 Sep 2016 11:48:19 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [V2,
+ 4.9] brcmfmac: use correct skb freeing helper when deleting flowring
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160927121104.5771-1-zajec5@gmail.com>
+References: <20160927121104.5771-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20160927154819.309F561405@smtp.codeaurora.org> (sfid-20160927_174856_058362_BCF4C22F)
+Date: Tue, 27 Sep 2016 15:48:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Flowrings contain skbs waiting for transmission that were passed to us
+> by netif. It means we checked every one of them looking for 802.1x
+> Ethernet type. When deleting flowring we have to use freeing function
+> that will check for 802.1x type as well.
+> 
+> Freeing skbs without a proper check was leading to counter not being
+> properly decreased. This was triggering a WARNING every time
+> brcmf_netdev_wait_pend8021x was called.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> Acked-by: Arend van Spriel <arend@broadcom.com>
+> Cc: stable@vger.kernel.org # 4.5+
 
-> On 09/17/2016 04:56 PM, Kalle Valo wrote:
->> <igor.mitsyanko.os@quantenna.com> writes:
->>
->>> +/* FW names */
->>> +
->>> +#define QTN_PCI_FW_NAME		"pearl-linux.lzma.img"
->>
->> The firmware name gives no indication what this file is about (remember
->> that linux-firmware.git has a lot of files). Please name it properly,
->> don't just use what is used in by firmware build scripts :) Take into
->> account also future hw support, all firmware files need to coexist in
->> the same repository without user invention. In a way the firmware
->> filename is part of kernel/userspace interface and needs to be stable.
->>
->> For example, you could use something like "qtnfmac/qsr10g.img" (assuming
->> qsr10g is the name of chip).
->
-> Ok, we will reconsider our naming conventions, take into account more
-> devices that we need to support in the future.
-> I'm thinking about something like:
-> qtn/fmac_qsr10g.img  <---- FullMAC QSR10G device
-> qtn/fmac_qsr1000.img  <---- FullMAC QSR1000 device
-> qtn/smac_qsr10g.img  <---- SoftMAC QSR10G
-> qtn/smac_qsr10000.img <----- SoftMAC QSR1000
-> etc
+Patch applied to wireless-drivers-next.git, thanks.
 
-Looks good to me.
+7f00ee2bbc63 brcmfmac: use correct skb freeing helper when deleting flowring
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9351797/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
