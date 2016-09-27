@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:35169 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751524AbcIDDZJ (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:36432 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752885AbcI0JDi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 23:25:09 -0400
+        Tue, 27 Sep 2016 05:03:38 -0400
+Received: by mail-wm0-f43.google.com with SMTP id w84so163455310wmg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 02:03:37 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1470641940-26681-1-git-send-email-christophe.jaillet@wanadoo.fr>
-References: <1470641940-26681-1-git-send-email-christophe.jaillet@wanadoo.fr>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 4 Sep 2016 13:24:47 +1000
-Message-ID: <CAGRGNgUP5VmTLzQfT99BqmRO9eKW9Du5e3O7DpdX-rByFSEmEA@mail.gmail.com> (sfid-20160904_052539_025177_37D694DA)
-Subject: Re: [PATCH 2/2] mwifiex: simplify length computation for some memset
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        kernel-janitors <kernel-janitors@vger.kernel.org>
+From: Gucea Doru <gucea.doru@gmail.com>
+Date: Tue, 27 Sep 2016 12:03:35 +0300
+Message-ID: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com> (sfid-20160927_110342_566189_5C6A5F0D)
+Subject: bcmdhd: Strange Power Save messages
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Hello,
 
-On Mon, Aug 8, 2016 at 5:39 PM, Christophe JAILLET
-<christophe.jaillet@wanadoo.fr> wrote:
-> This patch should be a no-op. It just simplifies code by using the name of
-> a variable instead of its type when calling 'sizeof'.
->
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+I am analyzing the Power Save algorithm used on a pair of Nexus 5
+devices. The devices use the bcmdhd Broadcom driver and are Wi-Fi
+Direct connected.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+My test is very simple: I send ping packets from the P2P client
+towards the P2P GO. Before sending a ping packet the P2P client enters
+PS mode (it sends a Null frame with the PWR MGT bit set). A few
+miliseconds later, the P2P client sends the ping request message. Once
+the ping request is ACKed the P2P client exits the PS mode (it sends a
+Null frame with the PWR MGT bit unset) and the P2P GO decides to send
+him the ping reply.
 
-Thanks,
+What is the decision triggering the exit from the PS mode immediately
+after the ping request? I am asking this because 802.11 PS legacy
+specifies that the client should wait for a beacon with TIM set in
+order to wake up: in my case, there is no beacon between the ping
+request message and the Null frame that announces the exit from the PS
+mode.
 
--- 
-Julian Calaby
+For reference, the Wireshark trace can be found at [1].
+SSID: DIRECT-35-Android_Intel
+WPA pass: JYdrhZp3
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+[1] https://drive.google.com/file/d/0B5SBH08PU_ChQk95LWpzekh3VU0/view?usp=sharing
+
+Thank you,
+Doru
