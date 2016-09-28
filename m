@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:39206 "EHLO mail2.tohojo.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:37704 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcI3Mlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:41:52 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
-References: <20160923195911.4572-1-toke@toke.dk>
-        <20160923195911.4572-4-toke@toke.dk>
-        <1475235230.17481.43.camel@sipsolutions.net>
-Date: Fri, 30 Sep 2016 14:41:42 +0200
-In-Reply-To: <1475235230.17481.43.camel@sipsolutions.net> (Johannes Berg's
-        message of "Fri, 30 Sep 2016 13:33:50 +0200")
-Message-ID: <87twcx5zll.fsf@toke.dk> (sfid-20160930_144211_953752_D2708024)
+        id S932591AbcI1PTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 11:19:19 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: johannes@sipsolutions.net, kvalo@codeaurora.org,
+        akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+        projekt-wlan@fem.tu-ilmenau.de
+Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on AP interfaces
+References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+Date: Wed, 28 Sep 2016 11:19:16 -0400
+In-Reply-To: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+        (Michael Braun's message of "Wed, 28 Sep 2016 17:14:32 +0200")
+Message-ID: <wrfja8esdpcb.fsf@redhat.com> (sfid-20160928_171922_743718_CD94FC70)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Fri, 2016-09-23 at 21:59 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Small devices can run out of memory from queueing too many packets.
->> If VHT is not supported by the PHY, having more than 4 MBytes of
->> total queue in the TXQ intermediate queues is not needed, and so we
->> can safely limit the memory usage in these cases and avoid OOM.
+Michael Braun <michael-dev@fami-braun.de> writes:
+> When using WPA security, the station and thus the required key is
+> identified by its mac address when packets are received. So a
+> station usually cannot spoof its source mac address.
 >
-> I kinda see the logic here - we really don't need to queue as much if
-> we can't possibly transmit it out quickly - but it seems to me we
-> should also throw in some kind of limit that's relative to the amount
-> of memory you have on the system?
+> But when a station sends an A-MSDU frame, port control and crypto
+> is done using the outer mac address, while the packets delivered
+> and forwarded use the inner mac address.
+>
+> IEEE 802.11-2012 mandates that the outer source mac address should
+> match the inner source address (section 8.3.2.2). For the
+> destination mac address, matching is not required (section 10.23.15).
+>
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  3 ++-
+>  .../net/wireless/marvell/mwifiex/11n_rxreorder.c   | 18 +++++++-------
+>  drivers/staging/rtl8723au/core/rtw_recv.c          |  2 +-
+>  include/net/cfg80211.h                             |  9 +++----
+>  net/mac80211/rx.c                                  | 11 +++++++--
+>  net/wireless/util.c                                | 28 +++++++++-------------
+>  6 files changed, 38 insertions(+), 33 deletions(-)
 
-Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
-carries a patch for that which just changes the hard-coded default to
-another hard-coded default. Not sure how to get a good value to use,
-though; and deciding on how large a fraction of memory to use for
-packets starts smelling an awful lot like setting policy in the kernel,
-doesn't it?
+I understand the intentions of this patch are all good, but you need to
+not post patches that include both staging and mainline drivers at the
+same time. In general make it a patchset and do one patch per driver.
 
-> I've applied these anyway though. I just don't like your assumption (b)
-> much as the rationale for it.
+Ideally split up changes to generic code into their own patches too.
 
-Right, thanks. I'll come up with a better rationale next time ;)
+Last drivers/staging/rtl8723au is gone - so your patch is going to fail
+to apply anyway.
 
--Toke
+Jes
