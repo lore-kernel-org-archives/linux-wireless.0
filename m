@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from libra.uberspace.de ([95.143.172.171]:50572 "EHLO
-        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753391AbcIDT2U (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 4 Sep 2016 15:28:20 -0400
-From: Matthias Beyer <mail@beyermatthias.de>
-To: gregkh@linuxfoundation.org
-Cc: Matthias Beyer <mail@beyermatthias.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>,
-        Geliang Tang <geliangtang@163.com>,
-        Cihangir Akturk <cakturk@gmail.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/5] drivers: staging: rtl8723au: core: simplify if-break-else
-Date: Sun,  4 Sep 2016 21:26:23 +0200
-Message-Id: <20160904192626.17197-3-mail@beyermatthias.de> (sfid-20160904_212823_554512_B6956426)
-In-Reply-To: <20160904192626.17197-1-mail@beyermatthias.de>
-References: <20160904192626.17197-1-mail@beyermatthias.de>
+Received: from muru.com ([72.249.23.125]:43238 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932829AbcI1PLf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 11:11:35 -0400
+Date: Wed, 28 Sep 2016 08:11:31 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Bruno Herrera <bruherrera@gmail.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH -next] wlcore: sdio: drop kfree for memory allocated with
+ devm_kzalloc
+Message-ID: <20160928151131.xmqarrx5he4kggsp@atomide.com> (sfid-20160928_171138_926265_446B5FD9)
+References: <1475073516-7328-1-git-send-email-weiyj.lk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475073516-7328-1-git-send-email-weiyj.lk@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the if statement breaks/continues the loop, the else block is not
-useful and can be omitted.
+* Wei Yongjun <weiyj.lk@gmail.com> [160928 07:39]:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> It's not necessary to free memory allocated with devm_kzalloc
+> and using kfree leads to a double free.
+> 
+> Fixes: d776fc86b82f ("wlcore: sdio: Populate config firmware data")
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
-Signed-off-by: Matthias Beyer <mail@beyermatthias.de>
-Signed-off-by: Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>
----
- drivers/staging/rtl8723au/core/rtw_mlme.c | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+Oops thanks for catching this:
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
-index 8b8b6a9..da9f298 100644
---- a/drivers/staging/rtl8723au/core/rtw_mlme.c
-+++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
-@@ -244,21 +244,18 @@ static void _rtw_roaming(struct rtw_adapter *padapter,
- 			do_join_r = rtw_do_join(padapter);
- 			if (do_join_r == _SUCCESS)
- 				break;
--			else {
--				DBG_8723A("roaming do_join return %d\n",
--					  do_join_r);
--				pmlmepriv->to_roaming--;
- 
--				if (padapter->mlmepriv.to_roaming > 0)
--					continue;
--				else {
--					DBG_8723A("%s(%d) -to roaming fail, "
--						  "indicate_disconnect\n",
--						  __func__, __LINE__);
--					rtw_indicate_disconnect23a(padapter);
--					break;
--				}
--			}
-+			DBG_8723A("roaming do_join return %d\n", do_join_r);
-+			pmlmepriv->to_roaming--;
-+
-+			if (padapter->mlmepriv.to_roaming > 0)
-+				continue;
-+
-+			DBG_8723A("%s(%d) -to roaming fail, "
-+				  "indicate_disconnect\n",
-+				  __func__, __LINE__);
-+			rtw_indicate_disconnect23a(padapter);
-+			break;
- 		}
- 	}
- }
--- 
-2.9.3
+Acked-by: Tony Lindgren <tony@atomide.com>
+
+> ---
+>  drivers/net/wireless/ti/wlcore/sdio.c | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+> index a6e94b1..47fe7f9 100644
+> --- a/drivers/net/wireless/ti/wlcore/sdio.c
+> +++ b/drivers/net/wireless/ti/wlcore/sdio.c
+> @@ -391,7 +391,6 @@ static void wl1271_remove(struct sdio_func *func)
+>  	pm_runtime_get_noresume(&func->dev);
+>  
+>  	platform_device_unregister(glue->core);
+> -	kfree(glue);
+>  }
+>  
+>  #ifdef CONFIG_PM
+> 
