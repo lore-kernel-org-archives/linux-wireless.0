@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:54020 "EHLO
-        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754766AbcISKsN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64660 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754535AbcI1X7b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:48:13 -0400
-Date: Mon, 19 Sep 2016 18:48:01 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
-Message-ID: <20160919104801.GA12774@gondor.apana.org.au> (sfid-20160919_124819_314016_410EA4FC)
-References: <20160919084056.GA11875@gondor.apana.org.au>
- <1474276530.4469.16.camel@sipsolutions.net>
- <20160919091721.GA12235@gondor.apana.org.au>
- <1474277244.4469.21.camel@sipsolutions.net>
- <20160919093434.GA12378@gondor.apana.org.au>
- <1474278634.4469.25.camel@sipsolutions.net>
- <1474278896.4469.26.camel@sipsolutions.net>
- <1474279330.4469.28.camel@sipsolutions.net>
- <1474279492.4469.29.camel@sipsolutions.net>
- <1474279827.4469.30.camel@sipsolutions.net>
+        Wed, 28 Sep 2016 19:59:31 -0400
+From: Thomas Pedersen <twp@qca.qualcomm.com>
+To: ath10k <ath10k@lists.infradead.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>
+Subject: [PATCH 0/4] ath10k: fix mesh sync operation
+Date: Wed, 28 Sep 2016 16:56:27 -0700
+Message-ID: <20160928235631.9197-1-twp@qca.qualcomm.com> (sfid-20160929_015935_293622_5DEFFE7A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1474279827.4469.30.camel@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 12:10:27PM +0200, Johannes Berg wrote:
-> Btw, for debug I put
-> 
-> BUG_ON(atomic_read(&ht->nelems) < 0);
-> 
-> after the atomic_dec() in __rhashtable_remove_fast_one(). That makes
-> the kernel crash instantly on the buggy code, and I just have to run a
-> single test ("wpas_ctrl_interface_add_many") to get there.
+This patchset introduces a new ieee80211_op offset_tsf(), which gives
+the driver a s64 TSF offset for TSF adjustment. This is more accurate
+than programming absolute TSF since programming delay is avoided.
 
-Aha I see the problem now.  The nelems logic on remove is broken.
-I'll send out a v3.
+ath10k can't get the current TSF or program an absolute TSF, so we
+remove those ops to not mislead the stack and hopefully avoid future
+bugs.
 
-Thanks!
+Tested on QCA4019 with firmware 10.4-3.2.1-0033. After this change
+Toffset remains stable to within 5us.
+
+Thomas Pedersen (4):
+  mac80211: add offset_tsf driver op
+  ath10k: implement offset_tsf ieee80211_op
+  ath10k: remove set/get_tsf ieee80211_ops
+  mac80211: mesh: decrease max drift
+
+ drivers/net/wireless/ath/ath10k/mac.c     | 45 +++++++++++--------------------
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 -
+ drivers/net/wireless/ath/ath10k/wmi.c     |  6 ++---
+ drivers/net/wireless/ath/ath10k/wmi.h     |  8 +++++-
+ include/net/mac80211.h                    |  8 ++++++
+ net/mac80211/debugfs_netdev.c             | 12 ++++++---
+ net/mac80211/driver-ops.c                 | 15 +++++++++++
+ net/mac80211/driver-ops.h                 |  3 +++
+ net/mac80211/mesh_sync.c                  | 12 ++++++---
+ net/mac80211/trace.h                      | 26 ++++++++++++++++++
+ 10 files changed, 94 insertions(+), 42 deletions(-)
+
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.10.0.297.gf6727b0
