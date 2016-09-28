@@ -1,109 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41194 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758167AbcH3Ljf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50152 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754583AbcI1X6S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:39:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:56 +0300
-Message-Id: <1472557142-14782-10-git-send-email-luca@coelho.fi> (sfid-20160830_133939_691621_4FFE8509)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 10/16] iwlwifi: add a new series 9460 with new PCI ID
+        Wed, 28 Sep 2016 19:58:18 -0400
+From: Thomas Pedersen <twp@qca.qualcomm.com>
+To: ath10k <ath10k@lists.infradead.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: remove set/get_tsf ieee80211_ops
+Date: Wed, 28 Sep 2016 16:56:30 -0700
+Message-ID: <20160928235631.9197-4-twp@qca.qualcomm.com> (sfid-20160929_015839_208503_E81BBC05)
+In-Reply-To: <20160928235631.9197-1-twp@qca.qualcomm.com>
+References: <20160928235631.9197-1-twp@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+Neither of these did the right thing:
 
-Add a new series to the 9000 series called 9460.
-In addition, add a new PCI ID that is the 9460 new series.
+- get_tsf just returned 0
+- set_tsf assumed a simple offset was applied against
+  get_tsf(), which works, except in the case of
+  calculating TSF from rx_mactime (actual TSF).
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Just remove them for now. We can reimplement set_tsf in
+terms of TSF increment/decrement in the future if get_tsf
+is ever supported by FW.
+
+Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c   |  4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 27 +++++++++++++------------
- 3 files changed, 17 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c     | 38 -------------------------------
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 -
+ drivers/net/wireless/ath/ath10k/wmi.c     |  4 ----
+ drivers/net/wireless/ath/ath10k/wmi.h     |  1 -
+ 4 files changed, 44 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index b8356a8..5621cf2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -156,8 +156,8 @@ const struct iwl_cfg iwl9260_2ac_cfg = {
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 06bd027..9806546 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6956,42 +6956,6 @@ static void ath10k_sta_rc_update(struct ieee80211_hw *hw,
+ 	ieee80211_queue_work(hw, &arsta->update_wk);
+ }
+ 
+-static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+-{
+-	/*
+-	 * FIXME: Return 0 for time being. Need to figure out whether FW
+-	 * has the API to fetch 64-bit local TSF
+-	 */
+-
+-	return 0;
+-}
+-
+-static void ath10k_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-			   u64 tsf)
+-{
+-	struct ath10k *ar = hw->priv;
+-	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+-	u32 tsf_offset, vdev_param = ar->wmi.vdev_param->set_tsf;
+-	int ret;
+-
+-	/* Workaround:
+-	 *
+-	 * Given tsf argument is entire TSF value, but firmware accepts
+-	 * only TSF offset to current TSF.
+-	 *
+-	 * get_tsf function is used to get offset value, however since
+-	 * ath10k_get_tsf is not implemented properly, it will return 0 always.
+-	 * Luckily all the caller functions to set_tsf, as of now, also rely on
+-	 * get_tsf function to get entire tsf value such get_tsf() + tsf_delta,
+-	 * final tsf offset value to firmware will be arithmetically correct.
+-	 */
+-	tsf_offset = tsf - ath10k_get_tsf(hw, vif);
+-	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
+-					vdev_param, tsf_offset);
+-	if (ret && ret != -EOPNOTSUPP)
+-		ath10k_warn(ar, "failed to set tsf offset: %d\n", ret);
+-}
+-
+ static void ath10k_offset_tsf(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, s64 tsf_offset)
+ {
+@@ -7477,8 +7441,6 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.get_survey			= ath10k_get_survey,
+ 	.set_bitrate_mask		= ath10k_mac_op_set_bitrate_mask,
+ 	.sta_rc_update			= ath10k_sta_rc_update,
+-	.get_tsf			= ath10k_get_tsf,
+-	.set_tsf			= ath10k_set_tsf,
+ 	.offset_tsf			= ath10k_offset_tsf,
+ 	.ampdu_action			= ath10k_ampdu_action,
+ 	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index e64f593..5e399c6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -3464,7 +3464,6 @@ static struct wmi_vdev_param_map wmi_tlv_vdev_param_map = {
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
+-	.set_tsf = WMI_VDEV_PARAM_UNSUPPORTED,
  };
  
--const struct iwl_cfg iwl9000_2ac_cfg = {
--	.name = "Intel(R) Dual Band Wireless AC 9000",
-+const struct iwl_cfg iwl9460_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 9460",
- 	.fw_name_pre = IWL9000_FW_PRE,
- 	IWL_DEVICE_9000,
- 	.ht_params = &iwl9000_ht_params,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 04260fc..a18b57f 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -449,9 +449,9 @@ extern const struct iwl_cfg iwl4165_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
--extern const struct iwl_cfg iwl9000_2ac_cfg;
- extern const struct iwl_cfg iwl9000lc_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_cfg;
-+extern const struct iwl_cfg iwl9460_2ac_cfg;
- extern const struct iwl_cfg iwla000_2ac_cfg;
- #endif /* CONFIG_IWLMVM */
+ static const struct wmi_ops wmi_tlv_ops = {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 430074b..8661400 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -785,7 +785,6 @@ static struct wmi_vdev_param_map wmi_vdev_param_map = {
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
+-	.set_tsf = WMI_VDEV_PARAM_UNSUPPORTED,
+ };
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index bf523f5..d053183 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -504,18 +504,19 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9000_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9000_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
+ /* 10.X WMI VDEV param map */
+@@ -861,7 +860,6 @@ static struct wmi_vdev_param_map wmi_10x_vdev_param_map = {
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
+-	.set_tsf = WMI_VDEV_PARAM_UNSUPPORTED,
+ };
  
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
-@@ -636,7 +637,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
+ static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
+@@ -936,7 +934,6 @@ static struct wmi_vdev_param_map wmi_10_2_4_vdev_param_map = {
+ 	.meru_vc = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.rx_decap_type = WMI_VDEV_PARAM_UNSUPPORTED,
+ 	.bw_nss_ratemask = WMI_VDEV_PARAM_UNSUPPORTED,
+-	.set_tsf = WMI_10X_VDEV_PARAM_TSF_INCREMENT,
+ };
  
- 	if (iwl_trans->cfg->rf_id) {
--		if (cfg == &iwl9000_2ac_cfg &&
-+		if (cfg == &iwl9460_2ac_cfg &&
- 		    iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_LC) {
- 			cfg = &iwl9000lc_2ac_cfg;
- 			iwl_trans->cfg = cfg;
+ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
+@@ -1012,7 +1009,6 @@ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
+ 	.meru_vc = WMI_10_4_VDEV_PARAM_MERU_VC,
+ 	.rx_decap_type = WMI_10_4_VDEV_PARAM_RX_DECAP_TYPE,
+ 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
+-	.set_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
+ 	.inc_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
+ 	.dec_tsf = WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 9d13c6f..3a73b5c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4676,7 +4676,6 @@ struct wmi_vdev_param_map {
+ 	u32 meru_vc;
+ 	u32 rx_decap_type;
+ 	u32 bw_nss_ratemask;
+-	u32 set_tsf;
+ 	u32 inc_tsf;
+ 	u32 dec_tsf;
+ };
 -- 
-2.8.1
+2.10.0.297.gf6727b0
