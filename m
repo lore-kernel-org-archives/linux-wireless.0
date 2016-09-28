@@ -1,39 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56142 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753017AbcIIMLT (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35245 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935141AbcI1Bmf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 08:11:19 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: fix reporting channel survey data
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1472794193-20774-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        <arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <8d2a1b7efdc64924ac340344d036227a@euamsexm01a.eu.qualcomm.com> (sfid-20160909_141122_276241_AC45368F)
-Date: Fri, 9 Sep 2016 14:11:12 +0200
+        Tue, 27 Sep 2016 21:42:35 -0400
+Received: by mail-pf0-f180.google.com with SMTP id s13so11542855pfd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 18:42:34 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Rajat Jain <rajatja@google.com>,
+        Wei-Ning Huang <wnhuang@google.com>,
+        Brian Norris <briannorris@google.com>,
+        Eric Caruso <ejcaruso@chromium.org>, rajatxjain@gmail.com
+Subject: [PATCH] mwifiex: report wakeup for wowlan
+Date: Tue, 27 Sep 2016 18:41:52 -0700
+Message-Id: <1475026912-16265-1-git-send-email-rajatja@google.com> (sfid-20160928_034249_873393_E62D5412)
+In-Reply-To: <1474995364-123069-1-git-send-email-rajatja@google.com>
+References: <1474995364-123069-1-git-send-email-rajatja@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> When user requests for survey dump data, driver is providing wrong survey
-> information. This information we sent is the survey data that we have
-> collected during previous user request.
-> 
-> This issue occurs because we request survey dump for wrong channel. With
-> this change, we correctly display the correct and current survey
-> information to userspace.
-> 
-> Fixes: fa7937e3d5c2 ("ath10k: update bss channel survey information")
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Enable notifying wakeup source to the PM core. This allow darkresume to
+correctly track wakeup source and mark mwifiex_plt as 'automatic' wakeup
+source.
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
+Signed-off-by: Rajat Jain <rajatja@google.com>
+Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
+ drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
+ 2 files changed, 9 insertions(+)
 
-77eb3d693182 ath10k: fix reporting channel survey data
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index d3e1561..a5f63e4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
+ 		disable_irq_nosync(irq);
+ 	}
+ 
++	/* Notify PM core we are wakeup source */
++	pm_wakeup_event(cfg->dev, 0);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+ 					  GFP_KERNEL);
+ 	cfg = card->plt_wake_cfg;
+ 	if (cfg && card->plt_of_node) {
++		cfg->dev = dev;
+ 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
+ 		if (!cfg->irq_wifi) {
+ 			dev_dbg(dev,
+@@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+ 		}
+ 	}
+ 
++	ret = device_init_wakeup(dev, true);
++	if (ret)
++		dev_err(dev, "fail to init wakeup for mwifiex");
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+index db837f1..07cdd23 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.h
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+@@ -155,6 +155,7 @@
+ } while (0)
+ 
+ struct mwifiex_plt_wake_cfg {
++	struct device *dev;
+ 	int irq_wifi;
+ 	bool wake_by_wifi;
+ };
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9310467/
+2.8.0.rc3.226.g39d4020
