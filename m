@@ -1,31 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57298 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755177AbcILJiK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:38:10 -0400
-Message-ID: <1473673088.27358.1.camel@sipsolutions.net> (sfid-20160912_113813_536661_59B2B1A5)
-Subject: Re: [PATCH 1/3 v3] mac80211: RX BA support for sta
- max_rx_aggregation_subframes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Altshul <maxim.altshul@ti.com>,
-        linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Date: Mon, 12 Sep 2016 11:38:08 +0200
-In-Reply-To: <1473673046.27358.0.camel@sipsolutions.net> (sfid-20160912_113732_871651_CB48F9D1)
-References: <20160822141404.12814-1-maxim.altshul@ti.com>
-         <1473673046.27358.0.camel@sipsolutions.net>
-         (sfid-20160912_113732_871651_CB48F9D1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44672 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751888AbcI1KBu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 06:01:50 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath6kl: fix return value in ath6kl_wmi_set_pvb_cmd
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160918063024.2535-1-chaehyun.lim@gmail.com>
+References: <20160918063024.2535-1-chaehyun.lim@gmail.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+        Chaehyun Lim <chaehyun.lim@gmail.com>
+Message-ID: <30b5c8aa25144295b86244424860d80e@euamsexm01a.eu.qualcomm.com> (sfid-20160928_120154_359674_B56139B6)
+Date: Wed, 28 Sep 2016 12:01:41 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-12 at 11:37 +0200, Johannes Berg wrote:
-> 
-> I fixed the indentation of the commit message, please note for the
-> future.
+Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+> When building with W=1, we got one warning as belows:
+> drivers/net/wireless/ath/ath6kl/wmi.c:3509:6: warning: variable ‘ret’
+> set but not used [-Wunused-but-set-variable]
 > 
+> At the end of ath6kl_wmi_set_pvb_cmd, it is returned by 0 regardless of
+> return value of ath6kl_wmi_cmd_send.
+> This patch fixes return value from 0 to ret that has result of
+> ath6kl_wmi_cmd_send execution.
+> 
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 
-Err, what? No, the *debug* message of course.
+Patch applied to ath-next branch of ath.git, thanks.
 
-johannes
+b93015057e31 ath6kl: fix return value in ath6kl_wmi_set_pvb_cmd
+
+-- 
+https://patchwork.kernel.org/patch/9337611/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
