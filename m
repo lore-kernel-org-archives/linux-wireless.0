@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8534 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935521AbcIFTGj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 15:06:39 -0400
-From: Thomas Pedersen <twp@qca.qualcomm.com>
-To: ath10k <ath10k@lists.infradead.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Pedersen <twp@qca.qualcomm.com>
-Subject: [PATCH] ath10k: enable peer stats by default
-Date: Tue, 6 Sep 2016 12:05:28 -0700
-Message-ID: <1473188728-14995-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160906_210650_900403_4F287E18)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:56436 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932960AbcI1Pmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 11:42:49 -0400
+Message-ID: <1475077359.4139.44.camel@sipsolutions.net> (sfid-20160928_174316_571014_43FB1FF7)
+Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on
+ AP interfaces
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Michael Braun <michael-dev@fami-braun.de>, kvalo@codeaurora.org,
+        akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
+        projekt-wlan@fem.tu-ilmenau.de
+Date: Wed, 28 Sep 2016 17:42:39 +0200
+In-Reply-To: <wrfj1t04c9ug.fsf@redhat.com>
+References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+         <wrfja8esdpcb.fsf@redhat.com> <1475076763.4139.42.camel@sipsolutions.net>
+         <wrfj1t04c9ug.fsf@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IFTYPE_MESH_POINT need to rely on these for accurate path
-selection metrics. Other modes will probably also find
-them useful. Enabling peer stats has the side effect of
-reducing max number of STAs from 128 to 118. There should
-be negligible performance impact.
+On Wed, 2016-09-28 at 11:39 -0400, Jes Sorensen wrote:
 
-If users really need 128 STAs and don't mind losing out on
-peer stats, they can still disable them:
+> > No Jes, you're wrong this time - this is changing internal API so
+> > it does have to touch all users thereof.
+> 
+> Even in this case, change the individual components in individual
+> patches and post them as a set.
 
-echo 0 > debugfs/ieee80211/phyn/ath10k/peer_stats
+No, still wrong - it has to be committed as a single patch so it
+doesn't break bisect.
 
-Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 3 +++
- 1 file changed, 3 insertions(+)
+> Changes to staging needs to go in via staging, and rtl8723au is gone
+> from the staging tree.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c9d163e..c0ab4f4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2145,6 +2145,9 @@ static void ath10k_core_register_work(struct work_struct *work)
- 	struct ath10k *ar = container_of(work, struct ath10k, register_work);
- 	int status;
- 
-+	/* peer stats are enabled by default */
-+	set_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags);
-+
- 	status = ath10k_core_probe_fw(ar);
- 	if (status) {
- 		ath10k_err(ar, "could not probe fw (%d)\n", status);
--- 
-2.1.4
+I've previously taken API change patches that touch staging, if people
+feel so inclined, and I don't think Greg will mind. I'm going to keep
+doing that unless Dave tells me he won't pull from me when I do it :)
+
+johannes
