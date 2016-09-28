@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52607 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757498AbcIGNL6 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34173 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932600AbcI1Oio (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2016 09:11:58 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 28 Sep 2016 10:38:44 -0400
+Received: by mail-pf0-f196.google.com with SMTP id 21so2247733pfy.1
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 07:38:44 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Bruno Herrera <bruherrera@gmail.com>,
+        Tony Lindgren <tony@atomide.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH -next] wlcore: sdio: drop kfree for memory allocated with devm_kzalloc
+Date: Wed, 28 Sep 2016 14:38:36 +0000
+Message-Id: <1475073516-7328-1-git-send-email-weiyj.lk@gmail.com> (sfid-20160928_163908_748395_A1889786)
 MIME-Version: 1.0
-Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
-To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
-CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Miaoqing Pan <miaoqing@codeaurora.org>,
-        <stable@vger.kernel.org>,
-        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
-        <giedrius.statkevicius@gmail.com>
-Message-ID: <e61bb634860745818f8c8c99f79f71a0@euamsexm01a.eu.qualcomm.com> (sfid-20160907_151220_867633_ED6E5A6D)
-Date: Wed, 7 Sep 2016 15:11:44 +0200
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
-> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
-> led_pin initial") that broken the WLAN status led on my laptop with
-> AR9287 after suspending and resuming.
-> 
-> Steps to reproduce:
-> * Suspend (laptop)
-> * Resume (laptop)
-> * Observe that the WLAN led no longer turns ON/OFF depending on the
->   status and is always red
-> 
-> Even though for my case it only needs to be set to OUT in ath9k_start
-> but for consistency bring back the IN direction setting as well.
-> 
-> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+It's not necessary to free memory allocated with devm_kzalloc
+and using kfree leads to a double free.
 
-088a60926b66 ath9k: bring back direction setting in ath9k_{start_stop}
+Fixes: d776fc86b82f ("wlcore: sdio: Populate config firmware data")
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/net/wireless/ti/wlcore/sdio.c | 1 -
+ 1 file changed, 1 deletion(-)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9309829/
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index a6e94b1..47fe7f9 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -391,7 +391,6 @@ static void wl1271_remove(struct sdio_func *func)
+ 	pm_runtime_get_noresume(&func->dev);
+ 
+ 	platform_device_unregister(glue->core);
+-	kfree(glue);
+ }
+ 
+ #ifdef CONFIG_PM
