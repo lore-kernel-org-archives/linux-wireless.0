@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51942 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966639AbcIZRiC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 13:38:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/9] brcmfmac: ignore 11d configuration errors
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1474283399-14385-2-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20160926173801.81A9F6159F@smtp.codeaurora.org> (sfid-20160926_193806_065409_B6AC09C7)
-Date: Mon, 26 Sep 2016 17:38:01 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:58021 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754268AbcI1V53 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 17:57:29 -0400
+Message-ID: <1475099847.21839.0.camel@sipsolutions.net> (sfid-20160928_235732_130416_3561E6F7)
+Subject: Re: [PATCH 6/6] cfg80211: reduce connect key caching struct size
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 28 Sep 2016 23:57:27 +0200
+In-Reply-To: <20160928205855.GA27770@w1.fi>
+References: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
+         <1473777868-32429-6-git-send-email-johannes@sipsolutions.net>
+         <20160928205855.GA27770@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> From: Hante Meuleman <hante.meuleman@broadcom.com>
+
+> >  struct cfg80211_cached_keys {
+> > -	struct key_params params[6];
+> > -	u8 data[6][WLAN_MAX_KEY_LEN];
+> > -	int def, defmgmt;
+> > +	struct key_params params[4];
+> > +	u8 data[4][WLAN_KEY_LEN_WEP104];
+> > +	int def;
+> >  };
 > 
-> 802.11d is not always supported by firmware anymore. Currently the
-> AP configuration of 11d will cause an abort if the ioctl set is
-> failing. This behavior is not correct and the error should be
-> ignored.
-> 
-> Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> As noted in our irc discussion, this is not really a good thing to
+> do.
+> WEXT compat code uses this structure for all ciphers, not just static
+> WEP keys. BIP configuration can use key index 4-5 and the key lengths
+> can go up to 32 bytes instead of WLAN_KEY_LEN_WEP104. In other words,
+> this patch should be dropped or reverted since it causes kernel
+> panics due to memory corruption when writing beyond this reduced size
+> structure.
 
-9 patches applied to wireless-drivers-next.git, thanks.
+Yeah, this was obviously a mistake - and smatch even pointed it out to
+me, but I *still* couldn't find it.
 
-b3589dfe0212 brcmfmac: ignore 11d configuration errors
-704d1c6b56f4 brcmfmac: rework pointer trickery in brcmf_proto_bcdc_query_dcmd()
-bc9816413601 brcmfmac: fix memory leak in brcmf_flowring_add_tdls_peer()
-26305d3d7298 brcmfmac: initialize variable in brcmf_sdiod_regrl()
-8fa5fdec09cd brcmfmac: remove worker from .ndo_set_mac_address() callback
-835680b82f02 brcmfmac: remove unnecessary null pointer check
-2b7425f3629b brcmfmac: fix clearing entry IPv6 address
-a7ed7828ecda brcmfmac: fix out of bound access on clearing wowl wake indicator
-92c313604711 brcmfmac: simplify mapping of auth type
+I've just sent a fix to *really* only store the WEP keys, which fixes
+the issue (after I could reproduce it) for me.
 
--- 
-https://patchwork.kernel.org/patch/9339033/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
