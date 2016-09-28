@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37442 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755474AbcIRMth (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64595 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754582AbcI1X6u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 08:49:37 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Christian Lamparter <chunkeey@googlemail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
-Date: Sun, 18 Sep 2016 14:49:33 +0200
-Message-ID: <2731122.i7AxIUFRZe@debian64> (sfid-20160918_144949_967479_F03F0105)
-In-Reply-To: <20160918101455.GA8410@kroah.com>
-References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com> <87d1k17idx.fsf@kamboji.qca.qualcomm.com> <20160918101455.GA8410@kroah.com>
+        Wed, 28 Sep 2016 19:58:50 -0400
+From: Thomas Pedersen <twp@qca.qualcomm.com>
+To: ath10k <ath10k@lists.infradead.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>
+Subject: [PATCH 4/4] mac80211: mesh: decrease max drift
+Date: Wed, 28 Sep 2016 16:56:31 -0700
+Message-ID: <20160928235631.9197-5-twp@qca.qualcomm.com> (sfid-20160929_015853_808488_58FF195B)
+In-Reply-To: <20160928235631.9197-1-twp@qca.qualcomm.com>
+References: <20160928235631.9197-1-twp@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, September 18, 2016 12:14:55 PM CEST Greg KH wrote:
-> On Sun, Sep 18, 2016 at 10:54:18AM +0300, Kalle Valo wrote:
-> > Greg KH <gregkh@linuxfoundation.org> writes:
-> > 
-> > > On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
-> > >> Ben Greear reported:
-> > >> > I see lots of instability as soon as I load up the carl9710 NIC.
-> > >> > My application is going to be poking at it's debugfs files...
-> > >> >
-> > >> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
-> > >> > [carl9170] at addr ffff8801bc1208b0
-> > >> > Read of size 8 by task btserver/5888
-> > >> > =======================================================================
-> > >> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
-> > >> > -----------------------------------------------------------------------
-> > >> >
-> > >> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
-> > >> >...
-> > >> 
-> > >> This breakage was caused by the introduction of intermediate
-> > >> fops in debugfs by commit 9fd4dcece43a
-> > >> ("debugfs: prevent access to possibly dead file_operations at file open")
-> > >
-> > > Because of this, these should all be backported to 4.7-stable, and
-> > > 4.8-stable, right?
-Ok, only b43legacy has debugfs enabled by default. For b43 and carl9170 
-debugfs support is usually disabled.
+The old value was 30ms, which means mesh sync will treat
+any value below as merely TSF drift. This isn't really
+reasonable (typical drift is < 10us/s) since people
+probably want to adjust TSF in smaller increments (for ie.
+beacon collision avoidance) without mesh sync fighting
+back.
 
-Greg, would you take these four patches "as is" for -stable
-or do you want a "minimal version" which just replaces the
+Change max drift adjustment to 0.8ms, so manual TSF
+adjustments can be made in 1ms increments, with some
+margin.
 
-dfops = container_of(file->f_op, ...
+Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
+---
+ net/mac80211/mesh_sync.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-with
-
-dfops = container_of(file->f_path.dentry->d_fsdata, ...
-
-in the three drivers for -stable?
-
-> > Via which tree should these go, Greg's or mine?
-> 
-> I'll take it if you ack it, as it's a debugfs issue.
-For carl9170: Ben Greear has reported:
-"I have verified this fixes my problem in the 4.7 kernel."
-
-But this was with a preliminary/minimal version so I didn't
-add the tested-by tag.
-
-As for b43, I'll see if I have a working b43 in my collection
-somewhere to confirm the issue and the fix. Question is, do
-you want to wait or not?
-
-Regards,
-Christian
+diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
+index 22ca43c..faca22c 100644
+--- a/net/mac80211/mesh_sync.c
++++ b/net/mac80211/mesh_sync.c
+@@ -28,7 +28,7 @@
+  * could be, for instance, in case a neighbor is restarted and its TSF counter
+  * reset.
+  */
+-#define TOFFSET_MAXIMUM_ADJUSTMENT 30000		/* 30 ms */
++#define TOFFSET_MAXIMUM_ADJUSTMENT 800		/* 0.8 ms */
+ 
+ struct sync_method {
+ 	u8 method;
+-- 
+2.10.0.297.gf6727b0
