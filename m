@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54038 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58017 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751168AbcI1Gtz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 02:49:55 -0400
-Message-ID: <1475045391.4139.26.camel@sipsolutions.net> (sfid-20160928_085006_469703_D5C48A2E)
-Subject: Re: rfkill guidance
+        id S1753890AbcI1V4I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 17:56:08 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jonathan Richardson <jonathan.richardson@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-        devicetree <devicetree@vger.kernel.org>,
-        Marek Belisko <marek@goldelico.com>,
-        Mark Rutland <mark.rutland@arm.com>
-Date: Wed, 28 Sep 2016 08:49:51 +0200
-In-Reply-To: <1475044682.4139.18.camel@sipsolutions.net> (sfid-20160928_083815_252455_876B9E2B)
-References: <324c35c6-49ca-174c-db07-674532f3e628@broadcom.com>
-         <1474961105.5141.5.camel@sipsolutions.net>
-         <0a8cff88-73aa-8311-7afe-98612161421f@broadcom.com>
-         (sfid-20160928_002127_321746_FD82CF46) <1475044682.4139.18.camel@sipsolutions.net>
-         (sfid-20160928_083815_252455_876B9E2B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: wext: really don't store non-WEP keys
+Date: Wed, 28 Sep 2016 23:56:00 +0200
+Message-Id: <1475099760-4615-1-git-send-email-johannes@sipsolutions.net> (sfid-20160928_235613_428851_1564A207)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Today we already have all the platform rfkill instances (like the
-> various ACPI ones) that don't live off a device that they control,
-> but instead control the platform's radio functionality. And in some
-> cases, that actually has very similar behaviour to what was proposed
-> in the previous patch, and what you're looking for, in that it
-> sometimes kills power to BT or WiFi chips when soft-disabled (or
-> kicks them off the bus in some other way).
+From: Johannes Berg <johannes.berg@intel.com>
 
-Actually, let me retract that a bit. Obviously they *do* control a
-device or radio, but we don't actually know which one. And that can
-actually become a problem, since we don't even know how they work etc.
+Jouni reported that during (repeated) wext_pmf test runs (from the
+wpa_supplicant hwsim test suite) the kernel crashes. The reason is
+that after the key is set, the wext code still unnecessarily stores
+it into the key cache. Despite smatch pointing out an overflow, I
+failed to identify the possibility for this in the code and missed
+it during development of the earlier patch series.
 
-So IOW, even with the ACPI stuff, there's no real "platform rfkill"
-concept - it's always killing a specific radio.
+In order to fix this, simply check that we never store anything but
+WEP keys into the cache, adding a comment as to why that's enough.
 
-There used to be some rfkill that was just reflecting the button state,
-but I think we got rid of that in favour of reflecting button state
-through hid/input, if it doesn't also control a radio.
+Also, since the cache is still allocated early even if it won't be
+used in many cases, add a comment explaining why - otherwise we'd
+have to roll back key settings to the driver in case of allocation
+failures, which is far more difficult.
 
-So, actually, the more I think about it the more I agree with Mark's
-objection. It doesn't really make sense to have a concept of an rfkill
-and not know what radio it controls.
+Fixes: 89b706fb28e4 ("cfg80211: reduce connect key caching struct size")
+Reported-by: Jouni Malinen <j@w1.fi>
+Bisected-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/wext-compat.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-In your particular case, Jon, it's complicated by the fact that you
-don't want to bind a kernel driver with the rfkill, not sure where
-you'd get a device to tie the rfkill to then.
-
-johannes
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 7b97d43b27e1..2b096c02eb85 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -406,6 +406,10 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 	if (pairwise && !addr)
+ 		return -EINVAL;
+ 
++	/*
++	 * In many cases we won't actually need this, but it's better
++	 * to do it first in case the allocation fails. Don't use wext.
++	 */
+ 	if (!wdev->wext.keys) {
+ 		wdev->wext.keys = kzalloc(sizeof(*wdev->wext.keys),
+ 					  GFP_KERNEL);
+@@ -493,7 +497,13 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		return err;
+ 
+-	if (!addr) {
++	/*
++	 * We only need to store WEP keys, since they're the only keys that
++	 * can be be set before a connection is established and persist after
++	 * disconnecting.
++	 */
++	if (!addr && (params->cipher == WLAN_CIPHER_SUITE_WEP40 ||
++		      params->cipher == WLAN_CIPHER_SUITE_WEP104)) {
+ 		wdev->wext.keys->params[idx] = *params;
+ 		memcpy(wdev->wext.keys->data[idx],
+ 			params->key, params->key_len);
+-- 
+2.8.1
