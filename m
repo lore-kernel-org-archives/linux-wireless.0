@@ -1,51 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36748 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932694AbcI3Nao (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 09:30:44 -0400
-From: Aaron Conole <aconole@redhat.com>
-To: David Miller <davem@davemloft.net>,
-        Pablo Neira Ayuso <pablo@netfilter.org>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-09-29
-References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
-        <20160930.013245.1474369794552343595.davem@davemloft.net>
-Date: Fri, 30 Sep 2016 09:30:40 -0400
-In-Reply-To: <20160930.013245.1474369794552343595.davem@davemloft.net> (David
-        Miller's message of "Fri, 30 Sep 2016 01:32:45 -0400 (EDT)")
-Message-ID: <f7t4m4xtszj.fsf@redhat.com> (sfid-20160930_153143_023896_419784BB)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44872 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932362AbcI1N0n (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Sep 2016 09:26:43 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix debug cal data file
+Date: Wed, 28 Sep 2016 13:26:36 +0000
+Message-ID: <87fuokw3xw.fsf@kamboji.qca.qualcomm.com> (sfid-20160928_152659_838310_1E40C50F)
+References: <1474341984-19220-1-git-send-email-mar.kolya@gmail.com>
+In-Reply-To: <1474341984-19220-1-git-send-email-mar.kolya@gmail.com> (Nikolay
+        Martynov's message of "Mon, 19 Sep 2016 23:26:24 -0400")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
+Nikolay Martynov <mar.kolya@gmail.com> writes:
 
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Thu, 29 Sep 2016 19:57:28 +0300
+> It got broken by 0b8e3c4ca29fe2c0efd3d41a76e34a657b9f17a4
 >
-...
->> Or actually I had one problem. While doing a test merge I noticed that
->> net-next fails to compile for me, but I don't think this is anything
->> wireless related:
->> 
->>   CC      net/netfilter/core.o
->> net/netfilter/core.c: In function 'nf_set_hooks_head':
->> net/netfilter/core.c:96:149: error: 'struct net_device' has no
->> member named 'nf_hooks_ingress'
->
-> Yes, I am aware of this build issue and will tackle it myself if someone
-> doesn't beat me to it.
+> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
 
-Sorry, I introduced this.  I posted a series targetted at nf-next to
-solve this, but it could be merged to net-next instead, if that makes
-sense.
+Good catch, I'll queue this to 4.9.
 
-The patches are here:
+There was one checkpatch warning I fixed:
 
-https://patchwork.ozlabs.org/patch/676287/
-https://patchwork.ozlabs.org/patch/676288/
+drivers/net/wireless/ath/ath10k/debug.c:1477: Prefer vmalloc(sizeof(*data).=
+..) over vmalloc(sizeof(struct ath10k_debug_cal_data)...)
 
+The commit log is quite short so added more information about the bug.
+The full patch is in the pending branch.
 
-Again, sorry for this.
+Author: Nikolay Martynov <mar.kolya@gmail.com>
+Date:   Wed Sep 28 15:11:52 2016 +0300
+
+    ath10k: fix debug cal data file
+   =20
+    Commit 0b8e3c4ca29f ("ath10k: move cal data len to hw_params") broke re=
+trieving
+    the calibration data from cal_data debugfs file. The length of file was=
+ always
+    zero. The reason is:
+   =20
+    static ssize_t ath10k_debug_cal_data_read(struct file *file,
+                                          char __user *user_buf,
+                                          size_t count, loff_t *ppos)
+    {
+        struct ath10k *ar =3D file->private_data;
+        void *buf =3D file->private_data;
+   =20
+   =20
+    This is obviously bogus, private_data cannot contain both struct ath10k=
+ and the
+    buffer. Fix it by introducing a new temporary structure for storing bot=
+h the
+    length of the buffer and the actual buffer, then struct ath10k is not n=
+eeded
+    anymore.
+   =20
+    Fixes: 0b8e3c4ca29f ("ath10k: move cal data len to hw_params")
+    Cc: stable@vger.kernel.org # 4.7+
+    Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+    [kvalo@qca.qualcomm.com: improve commit log, fix a checkpatch warning]
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+--=20
+Kalle Valo=
