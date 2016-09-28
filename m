@@ -1,120 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60467 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755290AbcI2N5m (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28124 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751648AbcI1JtG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 09:57:42 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <rajatja@google.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3] mwifiex: parse device tree node for PCIe
-Date: Thu, 29 Sep 2016 19:26:48 +0530
-Message-ID: <1475157408-17744-1-git-send-email-akarwar@marvell.com> (sfid-20160929_155745_792806_8EB2070C)
+        Wed, 28 Sep 2016 05:49:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: ath10k: fix copy engine 5 destination ring stuck
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160921105806.23980-1-rmanohar@qti.qualcomm.com>
+References: <20160921105806.23980-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <stable@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        <rmanohar@codeaurora.org>
+Message-ID: <69a6e1629c9048da8db94c38bd911466@euamsexm01a.eu.qualcomm.com> (sfid-20160928_114911_193522_7C86DEA7)
+Date: Wed, 28 Sep 2016 11:48:58 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> Firmware is running watchdog timer for tracking copy engine ring index
+> and write index. Whenever both indices are stuck at same location for
+> given duration, watchdog will be trigger to assert target. While
+> updating copy engine destination ring write index, driver ensures that
+> write index will not be same as read index by finding delta between these
+> two indices (CE_RING_DELTA).
+> 
+> HTT target to host copy engine (CE5) is special case where ring buffers
+> will be reused and delta check is not applied while updating write index.
+> In rare scenario, whenever CE5 ring is full, both indices will be referring
+> same location and this is causing CE ring stuck issue as explained
+> above. This issue is originally reported on IPQ4019 during long hour stress
+> testing and during veriwave max clients testsuites. The same issue is
+> also observed in other chips as well. Fix this by ensuring that write
+> index is one less than read index which means that full ring is
+> available for receiving data.
+> 
+> Cc: stable@vger.kernel.org
+> Tested-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-This patch derives device tree node from pcie bus layer framework.
-Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-marvell-8xxx.txt) to accomodate PCIe changes.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: Included vendor and product IDs in compatible strings for PCIe
-chipsets(Rob Herring)
-v3: Patch is created using -M option so that it will only include diff of
-original and renamed files(Rob Herring)
----
- .../{marvell-sd8xxx.txt => marvell-8xxx.txt}         |  8 +++++---
- drivers/net/wireless/marvell/mwifiex/pcie.c          | 20 ++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c       |  3 ++-
- 3 files changed, 27 insertions(+), 4 deletions(-)
- rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
+0628467f97b5 ath10k: fix copy engine 5 destination ring stuck
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-similarity index 91%
-rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index c421aba..dfe5f8e 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,8 +1,8 @@
--Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
- 
--This node provides properties for controlling the marvell sdio wireless device.
--The node is expected to be specified as a child node to the SDIO controller that
-+This node provides properties for controlling the marvell sdio/pcie wireless device.
-+The node is expected to be specified as a child node to the SDIO/PCIE controller that
- connects the device to the system.
- 
- Required properties:
-@@ -10,6 +10,8 @@ Required properties:
-   - compatible : should be one of the following:
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
-+	* "pci11ab,2b42"
-+	* "pci1b4b,2b42"
- 
- Optional properties:
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 063c707..f1eeb73 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,6 +37,23 @@ static struct mwifiex_if_ops pcie_ops;
- 
- static struct semaphore add_remove_card_sem;
- 
-+static const struct of_device_id mwifiex_pcie_of_match_table[] = {
-+	{ .compatible = "pci11ab,2b42" },
-+	{ .compatible = "pci1b4b,2b42" },
-+	{ }
-+};
-+
-+static int mwifiex_pcie_probe_of(struct device *dev)
-+{
-+	if (!dev->of_node ||
-+	    !of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-+		pr_err("pcie device node not available");
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -206,6 +223,9 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
-+	/* device tree node parsing and platform specific configuration*/
-+	mwifiex_pcie_probe_of(&pdev->dev);
-+
- 	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
- 			     MWIFIEX_PCIE)) {
- 		pr_err("%s failed\n", __func__);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 638d30a..f2a7a13 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2218,7 +2218,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
-+		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
-+		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
- 		    adapter->dev->of_node) {
- 			adapter->dt_node = adapter->dev->of_node;
- 			if (of_property_read_u32(adapter->dt_node,
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9343317/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
