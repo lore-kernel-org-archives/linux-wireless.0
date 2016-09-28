@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54216 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754016AbcIXK2D (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50876 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932256AbcI1MuV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 06:28:03 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] brcmfmac: fix memory leak in brcmf_fill_bss_param
-In-Reply-To: <20160921062327.28729-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Wed, 21 Sep 2016 08:23:24 +0200")
-References: <20160921062327.28729-1-zajec5@gmail.com>
-Date: Sat, 24 Sep 2016 13:27:57 +0300
-Message-ID: <87shsp1tjm.fsf@kamboji.qca.qualcomm.com> (sfid-20160924_122826_705243_C87EB15B)
+        Wed, 28 Sep 2016 08:50:21 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8SCnk2T022360
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:21 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+        by mx0a-0016f401.pphosted.com with ESMTP id 25r7vna8wa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:20 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Karthik D A <karthida@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 8/8] mwifiex: fix p2p device doesn't find in scan problem
+Date: Wed, 28 Sep 2016 18:18:28 +0530
+Message-ID: <1475066908-11771-8-git-send-email-akarwar@marvell.com> (sfid-20160928_145024_579963_1C32E50F)
+In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
+References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+From: Karthik D A <karthida@marvell.com>
 
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> This function is called from get_station callback which means that every
-> time user space was getting/dumping station(s) we were leaking 2 KiB.
->
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> Fixes: 1f0dc59a6de ("brcmfmac: rework .get_station() callback")
-> Cc: stable@vger.kernel.org # 4.2+
-> ---
-> Kalle, ideally this should go as 4.8 fix, but I'm aware it's quite late.
-> If you are not planning to send another pull request, just get it for
-> the next release and let's let stable guys backport it.
+Marvell p2p device disappears from the list of p2p peers on the other
+p2p device after disconnection.
 
-An old memory leak is not severe enough for 4.8 at this stage, so I'll
-queue this to 4.9.
+It happens due to a bug in driver. When interface is changed from p2p
+to station, certain variables(bss_type, bss_role etc.) aren't correctly
+updated. This patch corrects them to fix the issue.
 
-BTW, either my Gnus or my SMTP server (I haven't bothered to check yet
-why exactly) don't like the names with style of "(open list:NETWORKING
-DRIVERS)" in the CC list, I have to edit them away everytime I reply.
-Does anyone have any ideas why that's happening just to me?
+Signed-off-by: Karthik D A <karthida@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index e83861f..d9f5445 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1203,6 +1203,12 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
+ 			priv->adapter->curr_iface_comb.p2p_intf--;
+ 			priv->adapter->curr_iface_comb.sta_intf++;
+ 			dev->ieee80211_ptr->iftype = type;
++			if (mwifiex_deinit_priv_params(priv))
++				return -1;
++			if (mwifiex_init_new_priv_params(priv, dev, type))
++				return -1;
++			if (mwifiex_sta_init_cmd(priv, false, false))
++				return -1;
+ 			break;
+ 		case NL80211_IFTYPE_ADHOC:
+ 			if (mwifiex_cfg80211_deinit_p2p(priv))
+-- 
+1.9.1
