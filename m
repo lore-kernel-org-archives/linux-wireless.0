@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57338 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752516AbcICKIW (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:32868 "EHLO
+        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932221AbcI2O6H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 06:08:22 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 29 Sep 2016 10:58:07 -0400
+Received: by mail-pa0-f65.google.com with SMTP id oz2so3552719pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 07:58:07 -0700 (PDT)
+From: Wei Yongjun <weiyj.lk@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-wireless@vger.kernel.org
+Subject: [PATCH -next] mwifiex: fix missing destroy_workqueue() on error in mwifiex_add_virtual_intf()
+Date: Thu, 29 Sep 2016 14:57:56 +0000
+Message-Id: <1475161076-1409-1-git-send-email-weiyj.lk@gmail.com> (sfid-20160929_165811_800235_9D0C0DEF)
 MIME-Version: 1.0
-Subject: Re: rt2x00usb: Fix error return code
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1470926334-24532-1-git-send-email-christophe.jaillet@wanadoo.fr>
-To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Message-Id: <20160903100705.35E6B62023@smtp.codeaurora.org> (sfid-20160903_120854_619320_8C77645C)
-Date: Sat,  3 Sep 2016 10:07:05 +0000 (UTC)
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christophe Jaillet <christophe.jaillet@wanadoo.fr> wrote:
-> We know that 'retval = 0' because it has been tested a few lines above.
-> So, if 'devm_kmalloc' fails, 0 will be returned instead of an error code.
-> Return -ENOMEM instead.
-> 
-> Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Add the missing destroy_workqueue() before return from
+mwifiex_add_virtual_intf() in the error handling case.
 
-410280bac622 rt2x00usb: Fix error return code
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9275379/
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 39ce76a..5fd5876 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3016,6 +3016,8 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+ 		priv->netdev = NULL;
+ 		memset(&priv->wdev, 0, sizeof(priv->wdev));
+ 		priv->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
++		destroy_workqueue(priv->dfs_cac_workqueue);
++		priv->dfs_cac_workqueue = NULL;
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 
