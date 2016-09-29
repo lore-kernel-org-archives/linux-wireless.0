@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33641 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753303AbcI0KMk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 06:12:40 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: replace WARNING on timeout with a simple error message
-Date: Tue, 27 Sep 2016 12:12:24 +0200
-Message-Id: <20160927101224.3534-1-zajec5@gmail.com> (sfid-20160927_121325_291365_BF49830A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:41310 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755404AbcI2Tk5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Sep 2016 15:40:57 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/2] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
+Date: Thu, 29 Sep 2016 15:40:54 -0400
+Message-Id: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160929_214104_395461_6E114DEB)
+In-Reply-To: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Even with timeout increased to 950 ms we get WARNINGs from time to time.
-It mostly happens on A-MPDU stalls (e.g. when station goes out of
-range). It may take up to 5-10 secods for the firmware to recover and
-for that time it doesn't process packets.
+A device running without RX package aggregation could return more data
+in the USB packet than the actual network packet. In this case the
+could would clone the skb but then determine that that there was no
+packet to handle and exit without freeing the cloned skb first.
 
-It's still useful to have a message on time out as it may indicate some
-firmware problem and incorrect key update. Raising a WARNING however
-wasn't really that necessary, it doesn't point to any driver bug anymore
-and backtrace wasn't much useful.
+This has so far only been observed with 8188eu devices, but could
+affect others.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 6d046ba..9e6f60a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1161,7 +1161,8 @@ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp)
- 				 !brcmf_get_pend_8021x_cnt(ifp),
- 				 MAX_WAIT_FOR_8021X_TX);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index b2d7f6e..a96ff17 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5197,7 +5197,12 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
+ 				     sizeof(struct rtl8xxxu_rxdesc16), 128);
  
--	WARN_ON(!err);
-+	if (!err)
-+		brcmf_err("Timed out waiting for no pending 802.1x packets\n");
+-		if (pkt_cnt > 1)
++		/*
++		 * Only clone the skb if there's enough data at the end to
++		 * at least cover the rx descriptor
++		 */
++		if (pkt_cnt > 1 &&
++		    urb_len > (pkt_offset + sizeof(struct rtl8xxxu_rxdesc16)))
+ 			next_skb = skb_clone(skb, GFP_ATOMIC);
  
- 	return !err;
- }
+ 		rx_status = IEEE80211_SKB_RXCB(skb);
 -- 
-2.9.3
+2.7.4
