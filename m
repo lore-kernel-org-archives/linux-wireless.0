@@ -1,62 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:38337 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752218AbcIFHks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 03:40:48 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-        linux-wireless@vger.kernel.org,
-        Pannirselvam Kanagaratnam <pannirk@gmail.com>
-Subject: Re: Debugging RTL8192CU firmware loading on 3.12 powerpc
-Date: Tue, 06 Sep 2016 09:40:41 +0200
-Message-ID: <2747159.ja51ucCDFk@bentobox> (sfid-20160906_094053_498015_DA8049D3)
-In-Reply-To: <d6f2b558-167b-cb48-e924-7bac815817b1@lwfinger.net>
-References: <1586991.4QUcrJhXOm@prime> <d6f2b558-167b-cb48-e924-7bac815817b1@lwfinger.net>
+Received: from mail2.candelatech.com ([208.74.158.173]:34450 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933980AbcI2Orm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Sep 2016 10:47:42 -0400
+Message-ID: <57ED2982.4020002@candelatech.com> (sfid-20160929_164800_661366_38D528A6)
+Date: Thu, 29 Sep 2016 07:47:30 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1791668.jjbnYZ7q0s"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+To: Matteo Grandi <iu5bdp@gmail.com>,
+        LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
+Subject: Re: ath10k stuck on 6Mbps and spam syslog
+References: <CAHdg3xa-mJpxZiDHC0NbaZT1PwnhnCbs2zjZiQbKdSCpHepcSw@mail.gmail.com>
+In-Reply-To: <CAHdg3xa-mJpxZiDHC0NbaZT1PwnhnCbs2zjZiQbKdSCpHepcSw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1791668.jjbnYZ7q0s
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+stock ath10k firmware does not report tx-rate so the kernel always sees 6Mbps.
 
-On Freitag, 2. September 2016 12:53:28 CEST Larry Finger wrote:
-[...]
-> The patch I included in my previous E-mail, and attached here,  does get the
-> firmware loaded correctly. There is still a problem that prevents
-> authentication. I'm still looking for that issue.
+I don't know about the splat..maybe post the function
+that is causing that?
 
-Thanks for the fast update. I am currently testing your patch. It looks like 
-the initial error is now gone. The hostapd also starts but beaconing doesn't 
-seem to work at all (no error from the kernel/hostapd but the device is not 
-sending anything). I am currently checking how beaconing is supposed to work 
-in your driver. Maybe I will spot something useful.
+/home/matteo/linux-imx6/backports4.4.2-i2CAT/net/mac80211/util.c:2621
 
-Kind regards,
-	Sven
---nextPart1791668.jjbnYZ7q0s
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Thanks,
+Ben
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+On 09/29/2016 06:39 AM, Matteo Grandi wrote:
+> Hello all,
+>
+> I'm struggling with a problem related on ath10k drivers:
+> I'm using a Compex WLE600V5-27 (802.11ac) miniPCIe card for some HT
+> tests needed for my thesis.
+> I'm using ath10k drivers for this card, and backports-4.4.2, in
+> particular the firmware-5.bin_10.2.4.70.54 because it seem to be the
+> more recent.
+> I've connected in mesh mode the WLE600V5 card with an 802.11n card
+> (using ath9k drivers) but looking at the station dump, the tx bitrate
+> is stuck on 6.0 Mbit/s for the ath10k. The ath9k one works well and
+> watch -n1 iw <interfacename> station dump
+> let me see changes of the tx rate and MCS on the ath9k during iperf
+> tests, but the ath10k stucks on 6.0 Mbit/s.
+>
+> Then something misterious (for me) happen while the channel
+> assignment: the syslog is spammed by this message:
+>
+> [17554.919459] ------------[ cut here ]------------
+> [17554.919839] WARNING: CPU: 0 PID: 0 at
+> /home/matteo/linux-imx6/backports4.4.2-i2CAT/net/mac80211/util.c:2621
+> ieee80211_calculate_rx_timestamp+0x204/0x278 [mac80211]()
+> [17554.919855] Modules linked in: arc4 sky2 ath10k_pci(O)
+> ath10k_core(O) ath(O) mac80211(O) cfg80211(O) compat(O)
+> [17554.919926] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G        W  O
+> 3.14.48-g408ccb9 #4
+> [17554.919990] [<80015050>] (unwind_backtrace) from [<80011330>]
+> (show_stack+0x10/0x14)
+> [17554.920038] [<80011330>] (show_stack) from [<806537dc>]
+> (dump_stack+0x80/0x90)
+> [17554.920074] [<806537dc>] (dump_stack) from [<8002c578>]
+> (warn_slowpath_common+0x6c/0x88)
+> [17554.920103] [<8002c578>] (warn_slowpath_common) from [<8002c630>]
+> (warn_slowpath_null+0x1c/0x24)
+> [17554.920377] [<8002c630>] (warn_slowpath_null) from [<7f089c74>]
+> (ieee80211_calculate_rx_timestamp+0x204/0x278 [mac80211])
+> [17554.920826] [<7f089c74>] (ieee80211_calculate_rx_timestamp
+> [mac80211]) from [<7f07d724>] (ieee80211_rx_napi+0xcc/0x8d4
+> [mac80211])
+> [17554.921259] [<7f07d724>] (ieee80211_rx_napi [mac80211]) from
+> [<7f117fd0>] (ath10k_wmi_event_mgmt_rx+0x1f4/0x35c [ath10k_core])
+> [17554.921540] [<7f117fd0>] (ath10k_wmi_event_mgmt_rx [ath10k_core])
+> from [<7f10d844>] (ath10k_htc_rx_completion_handler+0x1cc/0x464
+> [ath10k_core])
+> [17554.921706] [<7f10d844>] (ath10k_htc_rx_completion_handler
+> [ath10k_core]) from [<7f157b4c>] (ath10k_pci_process_rx_cb+0x1ac/0x1fc
+> [ath10k_pci])
+> [17554.921773] [<7f157b4c>] (ath10k_pci_process_rx_cb [ath10k_pci])
+> from [<7f15b3ac>] (ath10k_ce_per_engine_service+0x5c/0x94
+> [ath10k_pci])
+> [17554.921835] [<7f15b3ac>] (ath10k_ce_per_engine_service
+> [ath10k_pci]) from [<7f15b464>]
+> (ath10k_ce_per_engine_service_any+0x80/0x88 [ath10k_pci])
+> [17554.921892] [<7f15b464>] (ath10k_ce_per_engine_service_any
+> [ath10k_pci]) from [<7f15a6d8>] (ath10k_pci_tasklet+0x24/0x5c
+> [ath10k_pci])
+> [17554.921946] [<7f15a6d8>] (ath10k_pci_tasklet [ath10k_pci]) from
+> [<800304c8>] (tasklet_action+0x80/0x110)
+> [17554.921979] [<800304c8>] (tasklet_action) from [<800306b8>]
+> (__do_softirq+0x10c/0x248)
+> [17554.922009] [<800306b8>] (__do_softirq) from [<80030a6c>]
+> (irq_exit+0xac/0xf4)
+> [17554.922042] [<80030a6c>] (irq_exit) from [<8000e904>] (handle_IRQ+0x44/0x90)
+> [17554.922072] [<8000e904>] (handle_IRQ) from [<800084f8>]
+> (gic_handle_irq+0x2c/0x5c)
+> [17554.922105] [<800084f8>] (gic_handle_irq) from [<80011e00>]
+> (__irq_svc+0x40/0x50)
+> [17554.922122] Exception stack(0x80917f18 to 0x80917f60)
+> [17554.922141] 7f00:
+>      80917f60 000d3334
+> [17554.922166] 7f20: 5221e106 00000ff7 4d693c44 00000ff7 a7705010
+> 80924060 00000001 a7705014
+> [17554.922190] 7f40: 8096243d 80916000 00000017 80917f60 a6aaaaab
+> 80492940 60000013 ffffffff
+> [17554.922224] [<80011e00>] (__irq_svc) from [<80492940>]
+> (cpuidle_enter_state+0x50/0xe0)
+> [17554.922252] [<80492940>] (cpuidle_enter_state) from [<80492ac8>]
+> (cpuidle_idle_call+0xf8/0x148)
+> [17554.922281] [<80492ac8>] (cpuidle_idle_call) from [<8000ec48>]
+> (arch_cpu_idle+0x8/0x44)
+> [17554.922322] [<8000ec48>] (arch_cpu_idle) from [<80066648>]
+> (cpu_startup_entry+0xfc/0x140)
+> [17554.922362] [<80066648>] (cpu_startup_entry) from [<808c5b08>]
+> (start_kernel+0x360/0x36c)
+> [17554.922379] ---[ end trace 87d4775146813aed ]---
+> [17555.943454] ------------[ cut here ]------------
+>
+> that repeat continuously...
+> Forcing legacy bitrates doesn't change the situation.
+>
+> I made some measurements using iperf, please find it in attachment.
+>
+> Other info:
+>
+> root@Yazi:~# modinfo ath10k_pci
+> filename:
+> /lib/modules/3.14.48-g408ccb9/kernel/drivers/net/wireless/ath/ath10k/ath10k_pci.ko
+> firmware:       ath10k/QCA9377/hw1.0/board.bin
+> firmware:       ath10k/QCA9377/hw1.0/firmware-5.bin
+> firmware:       ath10k/QCA6174/hw3.0/board-2.bin
+> firmware:       ath10k/QCA6174/hw3.0/board.bin
+> firmware:       ath10k/QCA6174/hw3.0/firmware-5.bin
+> firmware:       ath10k/QCA6174/hw3.0/firmware-4.bin
+> firmware:       ath10k/QCA6174/hw2.1/board-2.bin
+> firmware:       ath10k/QCA6174/hw2.1/board.bin
+> firmware:       ath10k/QCA6174/hw2.1/firmware-5.bin
+> firmware:       ath10k/QCA6174/hw2.1/firmware-4.bin
+> firmware:       ath10k/QCA988X/hw2.0/board-2.bin
+> firmware:       ath10k/QCA988X/hw2.0/board.bin
+> firmware:       ath10k/QCA988X/hw2.0/firmware-5.bin
+> firmware:       ath10k/QCA988X/hw2.0/firmware-4.bin
+> firmware:       ath10k/QCA988X/hw2.0/firmware-3.bin
+> firmware:       ath10k/QCA988X/hw2.0/firmware-2.bin
+> firmware:       ath10k/QCA988X/hw2.0/firmware.bin
+> license:        Dual BSD/GPL
+> description:    Driver support for Atheros QCA988X PCIe devices
+> author:         Qualcomm Atheros
+> version:        backported from Linux (v4.4.2-0-g1cb8570) using
+> backports v4.4.2-1-0-gbec4037
+> srcversion:     EBB3D4E36DE49B7EC8057D0
+> alias:          pci:v0000168Cd00000042sv*sd*bc*sc*i*
+> alias:          pci:v0000168Cd00000040sv*sd*bc*sc*i*
+> alias:          pci:v0000168Cd0000003Esv*sd*bc*sc*i*
+> alias:          pci:v0000168Cd00000041sv*sd*bc*sc*i*
+> alias:          pci:v0000168Cd0000003Csv*sd*bc*sc*i*
+> depends:        ath10k_core,compat
+> vermagic:       3.14.48-g408ccb9 SMP mod_unload modversions ARMv7 p2v8
+> parm:           irq_mode:0: auto, 1: legacy, 2: msi (default: 0) (uint)
+> parm:           reset_mode:0: auto, 1: warm only (default: 0) (uint)
+>
+> I don't know if it's only a problem of iw station dump that can't show
+> the tx rate, but the spammed syslog honestly warn me...
+>
+> How shall I check what's wrong and see the HT work?
+>
+> Thanks a lot!
+>
+> Matteo
+>
 
-iQIcBAABCgAGBQJXznL5AAoJEF2HCgfBJntGCGUP/3mYV4uCFDxRXmGyh4PuXeLZ
-/cirqA+7J8eCR91ZuGZfAcotrpipyB+977ZIncdcDLJYiJjGb0214uDAnOWknDwr
-KGv3tbICdGR7QI67CVbQwRVGwQWSuzK4Z/7YfTqmOkfjO3a6Ctf5wWUpJTpN9j9v
-e+mTSH2n1VBC9AhWFmcLkf0Dj0tU+Zh0gWjYzlRH91ixTmQvxyGn+W1pSGYWnxBC
-YB3E/PSRibVlmoxI+KgtEoMrCiU1+VMLbKETby5i/6ZKQtrv2iU2avJSLwPUAhgv
-4HFDavNoNPaqVWQvB34cZ9/Gy3c5BOdVNmvpCTbrlYl1y2si4EcLC0yRsbFZdkJh
-fBfULZmFv0FQDOBJ9hQwM0EhUDZh1ZBiolHO87P+ES4R/doBhDveT9AikPHmJlDY
-TPqNLSCpfsZIld/rAyU+NMPXlgpwYFDFQcUgSz6xfDAERYDGX5bO4E6FY5iXF3bN
-US+hZj1veAA4oehuLORZamMzq6YMpq4YF6/GGeAd8SlUp7OT+DYlieVjb0FT5cwr
-H5XB/Hl5ywmm6UMOD7AE03FhPtwuea5immoja7Npj45J/ou4U6AeZjjzi2h4tnfL
-o8BY0gj8YdaoXs1tyyV6hDNuSpSX1+TN4oLkpYF/X63PXwEQpWHCHr9jw0m3oUQ7
-cGqHBR5tbHJ5Z6YD3Euh
-=9uJG
------END PGP SIGNATURE-----
-
---nextPart1791668.jjbnYZ7q0s--
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
