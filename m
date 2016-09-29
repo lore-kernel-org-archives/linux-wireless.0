@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:33833 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752791AbcIDDWl (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:58518 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934725AbcI2WmD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 23:22:41 -0400
-Received: by mail-it0-f66.google.com with SMTP id e124so5809550ith.1
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Sep 2016 20:22:41 -0700 (PDT)
+        Thu, 29 Sep 2016 18:42:03 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+Date: Fri, 30 Sep 2016 00:41:41 +0200
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20160905095128.80560-1-nbd@nbd.name> <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com> <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name>
+In-Reply-To: <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name>
 MIME-Version: 1.0
-In-Reply-To: <20160811103816.1695-1-maxim.altshul@ti.com>
-References: <20160811103816.1695-1-maxim.altshul@ti.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 4 Sep 2016 13:22:20 +1000
-Message-ID: <CAGRGNgVLbaxPm5oh7hPohMDi1a5RUiMY8VL=71YcnUY_7TJ1pQ@mail.gmail.com> (sfid-20160904_052245_487368_766E1072)
-Subject: Re: [PATCH] Add protection to get_expected_throughput opcode
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201609300041.41876.arnd@arndb.de> (sfid-20160930_004207_801132_10A17A21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Maxim,
+On Thursday 29 September 2016, Felix Fietkau wrote:
+> On 2016-09-08 12:54, Kalle Valo wrote:
+> > Felix Fietkau <nbd@nbd.name> writes:
+> > 
+> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> >> ---
+> >>  .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
+> >>  1 file changed, 26 insertions(+)
+> >>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >> new file mode 100644
+> >> index 0000000..d51c35f
+> >> --- /dev/null
+> >> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+> >> @@ -0,0 +1,26 @@
+> >> +* MediaTek mt76xx devices
+> >> +
+> >> +This node provides properties for configuring the MediaTek mt76xx wireless
+> >> +device. The node is expected to be specified as a child node of the PCI
+> >> +controller to which the wireless chip is connected.
+> >> +
+> >> +Optional properties:
+> >> +
+> >> +- mac-address: See ethernet.txt in the parent directory
+> >> +- local-mac-address: See ethernet.txt in the parent directory
+> >> +- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
+> >> +- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
+> >> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
+> >> +
+> >> +&pcie {
+> >> +	status = "okay";
+> >> +
+> >> +	pcie0 {
+> >> +		mt76@0,0 {
+> >> +			reg = <0x0000 0 0 0 0>;
 
-On Thu, Aug 11, 2016 at 8:38 PM, Maxim Altshul <maxim.altshul@ti.com> wrote:
-> The patch is done with respect to the patch that was applied:
-> [PATCH v3] mac80211: mesh: Add support for HW RC implementation
->
-> 1. Patch adds protection as we discussed
-> 2. Patch changes the function call that is made in the mesh patch
-> to comply with the change.
->
-> Maxim Altshul (1):
->   mac80211: Add protection to get_expected_throughput opcode
->
->  net/mac80211/driver-ops.h | 8 ++++----
->  net/mac80211/sta_info.c   | 2 +-
->  2 files changed, 5 insertions(+), 5 deletions(-)
+Maybe have an examplep of a real register address other than zero?
 
-Where's the patch?
+> >> +			device_type = "pci";
+> >> +			mediatek,mtd-eeprom = <&factory 0x8000>;
+> >> +			mediatek,2ghz = <0>;
 
-Thanks,
+It's not clear what the possible values for the 2ghz property are,
+can you be more verbose in the description? How is <0> different
+from no property?
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+	Arnd
