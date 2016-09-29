@@ -1,40 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35270 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759837AbcISMcd (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60492 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754390AbcI2N6b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 08:32:33 -0400
-Received: by mail-lf0-f66.google.com with SMTP id s64so8303394lfs.2
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 05:32:32 -0700 (PDT)
+        Thu, 29 Sep 2016 09:58:31 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Rob Herring <robh@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Wei-Ning Huang <wnhuang@chromium.org>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH] mwifiex: parse device tree node for PCIe
+Date: Thu, 29 Sep 2016 13:58:23 +0000
+Message-ID: <0fb142f41f764496bc1242507717f0f7@SC-EXCH04.marvell.com> (sfid-20160929_155835_338929_C87C0C38)
+References: <1473434254-16782-1-git-send-email-akarwar@marvell.com>
+ <20160919212753.GA16598@rob-hp-laptop>
+In-Reply-To: <20160919212753.GA16598@rob-hp-laptop>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <87mvj63b9y.fsf@purkki.adurom.net>
-References: <CAJiC63F-O5KeCP+JZjW38uNDc=umXcOZVGma_SyiaTm70fGQ3A@mail.gmail.com>
- <87mvj63b9y.fsf@purkki.adurom.net>
-From: Vidar Haarr <vidar@heidrunbryggeri.no>
-Date: Mon, 19 Sep 2016 14:32:30 +0200
-Message-ID: <CAJiC63GCor0casNZe32DBdR2_sBR=qrPTqr7GDZgCvKY8O_-Fg@mail.gmail.com> (sfid-20160919_143237_406649_8AA3BD9C)
-Subject: Re: [athk9] beacon.c:642 ath9k_calculate_summary_state dump
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 17, 2016 at 3:29 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Vidar Haarr <vidar@heidrunbryggeri.no> writes:
->> sep. 17 11:38:36 edbpc kernel: WARNING: CPU: 0 PID: 1684 at
->> /home/kernel/COD/linux/drivers/net/wireless/ath/ath9k/beacon.c:642
->> ath9k_calculate_summary_state+0x135/0x390 [ath9k]
->
-> Looks like exactly the same problem, but the fix (below) is not in
-> v4.8-rc6. Should be in -rc7 which Linus hopefully releases on Sunday.
-> Please test that and report if the problem continues.
+Hi Rob,
 
-Indeed, I did not check to see if -rc6 included it specifically, I
-just checked github.com/torvalds/linux master branch to see if the fix
-was there just before I sent the email to linux-wireless.
--rc7 seems to have resolved the issue.
+> From: Rob Herring [mailto:robh@kernel.org]
+> Sent: Tuesday, September 20, 2016 2:58 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> devicetree@vger.kernel.org; Wei-Ning Huang; Xinming Hu
+> Subject: Re: [PATCH] mwifiex: parse device tree node for PCIe
+> 
+> On Fri, Sep 09, 2016 at 08:47:34PM +0530, Amitkumar Karwar wrote:
+> > From: Xinming Hu <huxm@marvell.com>
+> >
+> > This patch derives device tree node from pcie bus layer framework.
+> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> > marvell-8xxx.txt) to accomodate PCIe changes.
+> >
+> > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> >  .../bindings/net/wireless/marvell-8xxx.txt         | 64
+> ++++++++++++++++++++++
+> >  .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 -------------
+> --------
+> 
+> Resend using -M option so I do have to figure out if you added 1 line or
+> changed a bunch.
+> 
+> >  drivers/net/wireless/marvell/mwifiex/pcie.c        | 19 +++++++
+> >  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
+> >  4 files changed, 85 insertions(+), 64 deletions(-)  create mode
+> > 100644 Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> >  delete mode 100644
+> > Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> >
+> > diff --git
+> > a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> > b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> > new file mode 100644
+> > index 0000000..a8a95aa
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> > @@ -0,0 +1,64 @@
+> > +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
+> > +------
+> > +
+> > +This node provides properties for controlling the marvell sdio/pcie
+> wireless device.
+> > +The node is expected to be specified as a child node to the SDIO/PCIE
+> > +controller that connects the device to the system.
+> > +
+> > +Required properties:
+> > +
+> > +  - compatible : should be one of the following:
+> > +	* "marvell,sd8897"
+> > +	* "marvell,sd8997"
+> > +	* "marvell,pcie8997"
+> 
+> PCIe uses vendor and product IDs for compatible strings. Please read the
+> OF PCI bus bindings doc.
+> 
 
-Thank you,
--- 
-Vidar
+Thanks for review. I have submitted updated version(V3) with this change.
+
+Regards,
+Amitkumar Karwar
