@@ -1,37 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:47170 "EHLO
-        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752654AbcITBwy (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35001 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbcI2PKm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 21:52:54 -0400
-Date: Tue, 20 Sep 2016 09:52:44 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Thomas Graf <tgraf@suug.ch>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, tom@herbertland.com,
-        Ben Greear <greearb@candelatech.com>
-Subject: Re: [v3 PATCH 1/2] rhashtable: Add rhlist interface
-Message-ID: <20160920015244.GA18318@gondor.apana.org.au> (sfid-20160920_035259_348562_43452293)
-References: <20160919105854.GA12892@gondor.apana.org.au>
- <E1blwIz-0003Mz-HD@gondolin.me.apana.org.au>
- <20160919211621.GA20951@pox.localdomain>
+        Thu, 29 Sep 2016 11:10:42 -0400
+Received: by mail-qt0-f170.google.com with SMTP id 30so13036774qth.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 08:10:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160919211621.GA20951@pox.localdomain>
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Thu, 29 Sep 2016 23:10:39 +0800
+Message-ID: <CAEFj984FqjgqJJCB=b8tZkaAudGRNjwJAw=RtmqP56x89iOZtg@mail.gmail.com> (sfid-20160929_171045_616504_2DD3BA0F)
+Subject: Re: ath10k mesh mode issue
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 11:16:21PM +0200, Thomas Graf wrote:
->
-> Nice, I like how this simplifies users! Is this suitable for
-> ILA as well?
+Try refer the following for latest mesh setup using ath10k:
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/mesh
 
-Does it have duplicate objects and use inelastic_security? If so
-then yes it should switch over to rhlist.
-
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+---
+Chun-Yeow
