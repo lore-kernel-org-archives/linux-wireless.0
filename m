@@ -1,89 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36589 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935303AbcIXTGc (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34294 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932591AbcI2V5Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 15:06:32 -0400
-Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
- processed' messages
-To: Joe Perches <joe@perches.com>, Jean Delvare <jdelvare@suse.de>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-References: <1474654333.1849.5.camel@perches.com>
- <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
- <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
- <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
- <1474733754.23838.3.camel@perches.com>
- <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
- <1474738358.23838.11.camel@perches.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net> (sfid-20160924_210654_986380_492BFA57)
-Date: Sat, 24 Sep 2016 14:06:29 -0500
+        Thu, 29 Sep 2016 17:57:25 -0400
 MIME-Version: 1.0
-In-Reply-To: <1474738358.23838.11.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com>
+References: <20160926102348.8695-1-zajec5@gmail.com> <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
+ <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+ <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com> <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Thu, 29 Sep 2016 23:57:23 +0200
+Message-ID: <CACna6rxg5r=YWh7m1TYAhD5OrG3+KXAWMihs9mgh-EBVfKvt+g@mail.gmail.com> (sfid-20160929_235730_034788_E07090AA)
+Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2016 12:32 PM, Joe Perches wrote:
-> (adding Jes Sorensen to recipients)
+On 27 September 2016 at 11:24, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 26-9-2016 14:38, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> On 26 September 2016 at 14:13, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
+> wrote:
+>>> On 26 September 2016 at 13:46, Arend Van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>> On 26-9-2016 12:23, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>>>
+>>>>> We need to track 802.1x packets to know if there are any pending ones
+>>>>> for transmission. This is required for performing key update in the
+>>>>> firmware.
+>>>>
+>>>> The problem we are trying to solve is a pretty old one. The problem is
+>>>> that wpa_supplicant uses two separate code paths: EAPOL messaging
+>>>> through data path and key configuration though nl80211.
+>>>
+>>> Can I find it described/reported somewhere?
+>>>
+>>>
+>>>>> Unfortunately our old tracking code wasn't very accurate. It was
+>>>>> treating skb as pending as soon as it was passed by the netif. Actual
+>>>>> handling packet to the firmware was happening later as brcmfmac
+>>>>> internally queues them and uses its own worker(s).
+>>>>
+>>>> That does not seem right. As soon as we get a 1x packet we need to wai=
+t
+>>>> with key configuration regardless whether it is still in the driver or
+>>>> handed over to firmware already.
+>>>
+>>> OK, thanks.
+>>
+>> Actually, it's not OK. I was trying to report/describe/discuss this
+>> problem for over a week. I couldn't get much of answer from you.
+>>
+>> I had to come with a patch I worked on for quite some time. Only then
+>> you decided to react and reply with a reason for a nack. I see this
+>> patch may be wrong (but it's still hard to know what's going wrong
+>> without a proper hostapd bug report). I'd expect you to somehow work &
+>> communicate with open source community.
 >
-> On Sat, 2016-09-24 at 11:35 -0500, Larry Finger wrote:
->> I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers,
->> and one that sets the enum values for that particular statement to hex values. I
->> also looked at the other large enums and decided that they never need the human
->> lookup.
->
-> Hey Larry.
->
-> There are many somewhat common realtek wireless drivers.
->
-> Not to step on your toes, but what do you think of
-> rationalizing the switch/case statements of all the
-> realtek drivers in a few steps:
->
-> o Reindent all the switch/case blocks to a more normal
->   kernel style (git diff -w would show no changes here)
+> We do or at least make an honest attempt, but there is more on our plate
+> so responses may be delayed. It also does not help when you get anal and
+> preachy when we do respond. Also not OK. In this case the delay is
+> caused because I had to pick up the thread(s) as Hante is on vacation
+> (he needed a break :-p ). However, you started sending patches so I
+> decided to look at and respond to those. Sorry if you felt like we left
+> you hanging to dry.
 
-That sounds like busy work to me, but if you want to do it, go ahead.
+I believe I get easily irritated due to my communication experience I
+got so far :(
 
-> o cast, spacing and parenthesis reductions
->   Lots of odd and somewhat unique styles in various
->   drivers, looks like too many individual authors without
->   a style guide / code enforcer using slightly different
->   personalized code.  Glancing at the code, it looks to be
->   similar logic, just written in different styles.
 
-Same comment.
+Over a year ago I reported brcmfmac can't recover from failed
+register_netdev(ice). This bug remains unfixed.
 
-> o Logic changes like
->   from:
->     if (foo) func(..., bar, ...); else func(..., baz, ...);
->   to:
->     func(..., foo ? bar : baz, ...);
->   to make the case statement code blocks more consistent
->   and emit somewhat smaller object code.
+In 2014 I reported problem with 80 MHz support. I didn't have hardware
+to fix & test it on my own (you weren't able/allowed to send me one of
+your PCIe cards). In remained broken until I fixed it year later.
 
-I find if .. else constructs much easier to read than the cond ? xxxx : yyyy 
-form. I would reject any such patches.
+You missed my crash bug report about caused by missing eth_type_trans
+and came with patch on your own a month later.
 
-> o Consolidation of equivalent function spanning drivers
->   With the style only changes minimized, where possible
->   make the drivers use common ops/callback functions.
+Earlier this year I reported you problem with BCM4366 and multiple
+interfaces. I didn't get much help. 3 months later I came with patch
+to workaround the problem but you said there's a better way to do
+this. It took me 2 weeks to figure out a new wlioctl API for that
+while all I needed was a simple hint on "interface_remove".
 
-The is no question that there are similar routines in different drivers. I would 
-like to place as much as possible into common routines, but I never seem to find 
-the time. There are too many bugs in other things I support to consider these 
-niceties.
+Right now I'm waiting to get any answer from you about 4366c0
+firmware. It's still less than 2 weeks since I asked for it, but a
+simple ETA would be nice. I'm actually not sure if I should report
+more problems to you to don't distract you from pending things.
 
-> Is there any value in that or is Jes' work going to make
-> doing any or all of this unnecessary and futile?
+Problems with brcmf_netdev_wait_pend8021x were reported multiples
+times for last few months. When I finally got time for that it took me
+a week to debug them.
 
-That is not yet determined. The only driver that is to be replaced at this point 
-is rtl8192cu. Jes only has USB I/O for his driver. We are looking at adding 
-SDIO, and once that is done, PCI should be possible.
 
-Larry
+As you can see, it takes me months to get help on some things. And in
+few cases I never got much help at all. Yes, I was hoping to have you
+more involved into brcmfmac development and problems solving. I guess
+things didn't meet my expectations and I got grumpy & preachy.
+
+--=20
+Rafa=C5=82
