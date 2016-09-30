@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:49861 "EHLO mail2.tohojo.dk"
+Received: from mail2.tohojo.dk ([77.235.48.147]:39206 "EHLO mail2.tohojo.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752895AbcIAIi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 04:38:27 -0400
+        id S932707AbcI3Mlw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 08:41:52 -0400
 From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 To: Johannes Berg <johannes@sipsolutions.net>
 Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to after
-        TXQ dequeue.
-References: <20160824162015.29933-1-toke@toke.dk>
-        <20160830131548.6014-1-toke@toke.dk>
-        <1472677599.5470.13.camel@sipsolutions.net> <87inug81vo.fsf@toke.dk>
-        <1472718860.4249.0.camel@sipsolutions.net>
-Date: Thu, 01 Sep 2016 10:38:22 +0200
-In-Reply-To: <1472718860.4249.0.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 01 Sep 2016 10:34:20 +0200")
-Message-ID: <8737lk816p.fsf@toke.dk> (sfid-20160901_103830_879124_AE36B042)
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
+References: <20160923195911.4572-1-toke@toke.dk>
+        <20160923195911.4572-4-toke@toke.dk>
+        <1475235230.17481.43.camel@sipsolutions.net>
+Date: Fri, 30 Sep 2016 14:41:42 +0200
+In-Reply-To: <1475235230.17481.43.camel@sipsolutions.net> (Johannes Berg's
+        message of "Fri, 30 Sep 2016 13:33:50 +0200")
+Message-ID: <87twcx5zll.fsf@toke.dk> (sfid-20160930_144211_953752_D2708024)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Johannes Berg <johannes@sipsolutions.net> writes:
 
->> > > +static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
->> > > +{
->> > > +	return invoke_tx_handlers_early(tx) ||
->> > > invoke_tx_handlers_late(tx);
->> > > +}
->> > 
->> > Ugh, please, no, don't be tricky where it's not necessary. Now
->> > every
->> > person reading this has to first look up the return type, and then
->> > the
->> > return value, and make sure they understand that success is
->> > actually
->> > the value 0 ... that's way too much to ask.
->> 
->> Noted. Any objections to turning these into bool return types?
+> On Fri, 2016-09-23 at 21:59 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Small devices can run out of memory from queueing too many packets.
+>> If VHT is not supported by the PHY, having more than 4 MBytes of
+>> total queue in the TXQ intermediate queues is not needed, and so we
+>> can safely limit the memory usage in these cases and avoid OOM.
 >
-> They have three possible values ... :)
+> I kinda see the logic here - we really don't need to queue as much if
+> we can't possibly transmit it out quickly - but it seems to me we
+> should also throw in some kind of limit that's relative to the amount
+> of memory you have on the system?
 
-Ah, no, not the handlers themselves. Meant the invoke_tx_handlers()
-function (or all three of them after my patch; hence the plural). To
-avoid the "0 means true" confusion you alluded to :)
+Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
+carries a patch for that which just changes the hard-coded default to
+another hard-coded default. Not sure how to get a good value to use,
+though; and deciding on how large a fraction of memory to use for
+packets starts smelling an awful lot like setting policy in the kernel,
+doesn't it?
+
+> I've applied these anyway though. I just don't like your assumption (b)
+> much as the rationale for it.
+
+Right, thanks. I'll come up with a better rationale next time ;)
 
 -Toke
