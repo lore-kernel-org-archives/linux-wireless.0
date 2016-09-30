@@ -1,62 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36819 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750717AbcJNIkE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:40:04 -0400
-Date: Fri, 14 Oct 2016 17:39:57 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161014083957.GA421@swordfish> (sfid-20161014_104022_848068_6461F78E)
-References: <20161010150358.GA514@swordfish>
- <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net>
- <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net>
- <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net>
- <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net>
- <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56538 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750873AbcI3Xja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 19:39:30 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: "Franc\[e\]sco" <lolisamurai@waifu.club>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: RTL8192EU on rtl8xxxu driver breaks every few minutes
+References: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club>
+        <wrfj4m5acouw.fsf@redhat.com>
+        <80b8ae50-ca27-674f-0e7e-79b931bae199@waifu.club>
+Date: Fri, 30 Sep 2016 19:39:28 -0400
+In-Reply-To: <80b8ae50-ca27-674f-0e7e-79b931bae199@waifu.club> (Franc[e]sco's
+        message of "Wed, 21 Sep 2016 19:44:34 +0200")
+Message-ID: <wrfjr3816jpr.fsf@redhat.com> (sfid-20161001_013933_510967_FA7EA16C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+Content-Type: multipart/mixed; boundary="=-=-="
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (10/13/16 14:49), Andy Lutomirski wrote:
-[..]
-> > >  FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02
-> > > >> 39) == 130
-> >
-> > Yeah, we already know that in this function the aad variable is on the
-> > stack, it explicitly is.
-> >
-> > The question, though, is why precisely that fails in the crypto code.
-> > Can you send the Oops report itself?
-> >
-> 
-> It's failing before that.  With CONFIG_VMAP_STACK=y, the stack may not
-> be physically contiguous and can't be used for DMA, so putting it in a
-> scatterlist is bogus in general, and the crypto code mostly wants a
-> scatterlist.
-> 
-> There are a couple (faster!) APIs for crypto that don't use
-> scatterlists, but I don't think AEAD works with them.
+--=-=-=
+Content-Type: text/plain
 
-given that we have a known issue shouldn't VMAP_STACK be
-disabled for now, or would you rather prefer to mark MAC80211
-as incompatible: "depends on CFG80211 && !VMAP_STACK"?
+"Franc[e]sco" <lolisamurai@waifu.club> writes:
+> Oops, forgot to forward the previous reply to the mailing list.
+>
+> I have attached the output of iw link
+>
+> the AP is an asus dsl-n55u router in 2.4 GHz mode, using WPA2-Personal
+> with AES encryption. It's also running a second 5GHz wireless network
+> which has a different SSID.
+>
+> Also, this seems to be some kind of power saving kicking in, as the
+> dongle keeps working as long as I keep doing things over ssh.
 
-	-ss
+I just pushed a patch into rtl8xxxu-devel which may resolve this issue.
+There were problems with the 8192eu not handling driver reload very
+well. It is possible the network scripts you run would trigger the shut
+down and restart that caused this problem.
+
+I would be interested in knowing if this patch resolves the problem for
+you.
+
+Jes
+
+PS: Please fix your mail client - adding unlisted-recipients to the Cc
+line and cutting out the person you are responding to is really
+annoying.
+
+
+--=-=-=
+Content-Type: text/x-patch
+Content-Disposition: inline;
+ filename=0002-rtl8xxxu-Fix-rtl8192eu-driver-reload-issue.patch
+
+>From 93064d0ae3e9d97c03a3aabd71e6048e1ac82f46 Mon Sep 17 00:00:00 2001
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Date: Fri, 30 Sep 2016 19:18:34 -0400
+Subject: [PATCH 2/2] rtl8xxxu: Fix rtl8192eu driver reload issue
+
+The 8192eu suffered from two issues when reloading the driver.
+
+The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
+23 didn't get set in rtl8192e_enable_rf().
+
+In addition it also seems prone to issues when setting REG_RF_CTRL to
+0 intead of just disabling the RF_ENABLE bit. Similar to what was
+causing issues with the 8188eu.
+
+With this patch I can successfully reload the driver and reassociate
+to an APi with an 8192eu dongle.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index df54d27..a793fed 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1461,7 +1461,9 @@ static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
+ 	int count, ret = 0;
+ 
+ 	/* Turn off RF */
+-	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
++	val8 = rtl8xxxu_read8(priv, REG_RF_CTRL);
++	val8 &= ~RF_ENABLE;
++	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
+ 
+ 	/* Switch DPDT_SEL_P output from register 0x65[2] */
+ 	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
+@@ -1593,6 +1595,10 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
+ 	u32 val32;
+ 	u8 val8;
+ 
++	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
++	val32 |= (BIT(22) | BIT(23));
++	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
++
+ 	val8 = rtl8xxxu_read8(priv, REG_GPIO_MUXCFG);
+ 	val8 |= BIT(5);
+ 	rtl8xxxu_write8(priv, REG_GPIO_MUXCFG, val8);
+-- 
+2.7.4
+
+
+--=-=-=--
