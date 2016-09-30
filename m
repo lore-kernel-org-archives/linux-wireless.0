@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55836 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935780AbcISHal (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:30:41 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Aviya Erenfeld <aviya.erenfeld@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:08 +0300
-Message-Id: <20160919073028.22065-5-luca@coelho.fi> (sfid-20160919_093048_312728_4F5C29C9)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 05/25] iwlwifi: mvm: add support for MU-MIMO air sniffer
+Received: from mx1.redhat.com ([209.132.183.28]:36748 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932694AbcI3Nao (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 09:30:44 -0400
+From: Aaron Conole <aconole@redhat.com>
+To: David Miller <davem@davemloft.net>,
+        Pablo Neira Ayuso <pablo@netfilter.org>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-09-29
+References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
+        <20160930.013245.1474369794552343595.davem@davemloft.net>
+Date: Fri, 30 Sep 2016 09:30:40 -0400
+In-Reply-To: <20160930.013245.1474369794552343595.davem@davemloft.net> (David
+        Miller's message of "Fri, 30 Sep 2016 01:32:45 -0400 (EDT)")
+Message-ID: <f7t4m4xtszj.fsf@redhat.com> (sfid-20160930_153143_023896_419784BB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aviya Erenfeld <aviya.erenfeld@intel.com>
+David Miller <davem@davemloft.net> writes:
 
-enable MU-MIMO air sniffer if it's supported by the NIC
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 29 Sep 2016 19:57:28 +0300
+>
+...
+>> Or actually I had one problem. While doing a test merge I noticed that
+>> net-next fails to compile for me, but I don't think this is anything
+>> wireless related:
+>> 
+>>   CC      net/netfilter/core.o
+>> net/netfilter/core.c: In function 'nf_set_hooks_head':
+>> net/netfilter/core.c:96:149: error: 'struct net_device' has no
+>> member named 'nf_hooks_ingress'
+>
+> Yes, I am aware of this build issue and will tackle it myself if someone
+> doesn't beat me to it.
 
-Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Sorry, I introduced this.  I posted a series targetted at nf-next to
+solve this, but it could be merged to net-next instead, if that makes
+sense.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 9506e65..b7d80b5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -720,6 +720,10 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	if (ret)
- 		iwl_mvm_leds_exit(mvm);
- 
-+	if (mvm->cfg->vht_mu_mimo_supported)
-+		wiphy_ext_feature_set(hw->wiphy,
-+				      NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER);
-+
- 	return ret;
- }
- 
-@@ -2229,6 +2233,10 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
- 	case NL80211_IFTYPE_ADHOC:
- 		iwl_mvm_bss_info_changed_ap_ibss(mvm, vif, bss_conf, changes);
- 		break;
-+	case NL80211_IFTYPE_MONITOR:
-+		if (changes & BSS_CHANGED_MU_GROUPS)
-+			iwl_mvm_update_mu_groups(mvm, vif);
-+		break;
- 	default:
- 		/* shouldn't happen */
- 		WARN_ON_ONCE(1);
--- 
-2.9.3
+The patches are here:
+
+https://patchwork.ozlabs.org/patch/676287/
+https://patchwork.ozlabs.org/patch/676288/
+
+
+Again, sorry for this.
