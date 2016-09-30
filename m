@@ -1,53 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54906 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753780AbcIOSNE (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35908 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752554AbcI3I3n (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:13:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:24 +0300
-Message-Id: <20160915181131.32213-18-luca@coelho.fi> (sfid-20160915_201319_012489_0D9C6252)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: mvm: use setup_timer instead of init_timer and data fields
+        Fri, 30 Sep 2016 04:29:43 -0400
+Received: by mail-pf0-f176.google.com with SMTP id q2so38034181pfj.3
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2016 01:29:43 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <20160926102348.8695-1-zajec5@gmail.com>
+ <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
+ <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
+ <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com>
+ <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com>
+ <CACna6rxg5r=YWh7m1TYAhD5OrG3+KXAWMihs9mgh-EBVfKvt+g@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <96baa7f0-68e5-8d58-d10f-49cb7a257865@broadcom.com> (sfid-20160930_103016_551681_229F679E)
+Date: Fri, 30 Sep 2016 10:29:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <CACna6rxg5r=YWh7m1TYAhD5OrG3+KXAWMihs9mgh-EBVfKvt+g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On 29-9-2016 23:57, Rafał Miłecki wrote:
+> On 27 September 2016 at 11:24, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 26-9-2016 14:38, Rafał Miłecki wrote:
+>>> On 26 September 2016 at 14:13, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>> On 26 September 2016 at 13:46, Arend Van Spriel
+>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>> On 26-9-2016 12:23, Rafał Miłecki wrote:
+>>>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>>>>
+>>>>>> We need to track 802.1x packets to know if there are any pending ones
+>>>>>> for transmission. This is required for performing key update in the
+>>>>>> firmware.
+>>>>>
+>>>>> The problem we are trying to solve is a pretty old one. The problem is
+>>>>> that wpa_supplicant uses two separate code paths: EAPOL messaging
+>>>>> through data path and key configuration though nl80211.
+>>>>
+>>>> Can I find it described/reported somewhere?
+>>>>
+>>>>
+>>>>>> Unfortunately our old tracking code wasn't very accurate. It was
+>>>>>> treating skb as pending as soon as it was passed by the netif. Actual
+>>>>>> handling packet to the firmware was happening later as brcmfmac
+>>>>>> internally queues them and uses its own worker(s).
+>>>>>
+>>>>> That does not seem right. As soon as we get a 1x packet we need to wait
+>>>>> with key configuration regardless whether it is still in the driver or
+>>>>> handed over to firmware already.
+>>>>
+>>>> OK, thanks.
+>>>
+>>> Actually, it's not OK. I was trying to report/describe/discuss this
+>>> problem for over a week. I couldn't get much of answer from you.
+>>>
+>>> I had to come with a patch I worked on for quite some time. Only then
+>>> you decided to react and reply with a reason for a nack. I see this
+>>> patch may be wrong (but it's still hard to know what's going wrong
+>>> without a proper hostapd bug report). I'd expect you to somehow work &
+>>> communicate with open source community.
+>>
+>> We do or at least make an honest attempt, but there is more on our plate
+>> so responses may be delayed. It also does not help when you get anal and
+>> preachy when we do respond. Also not OK. In this case the delay is
+>> caused because I had to pick up the thread(s) as Hante is on vacation
+>> (he needed a break :-p ). However, you started sending patches so I
+>> decided to look at and respond to those. Sorry if you felt like we left
+>> you hanging to dry.
+> 
+> I believe I get easily irritated due to my communication experience I
+> got so far :(
+> 
+> 
+> Over a year ago I reported brcmfmac can't recover from failed
+> register_netdev(ice). This bug remains unfixed.
+> 
+> In 2014 I reported problem with 80 MHz support. I didn't have hardware
+> to fix & test it on my own (you weren't able/allowed to send me one of
+> your PCIe cards). In remained broken until I fixed it year later.
+> 
+> You missed my crash bug report about caused by missing eth_type_trans
+> and came with patch on your own a month later.
+> 
+> Earlier this year I reported you problem with BCM4366 and multiple
+> interfaces. I didn't get much help. 3 months later I came with patch
+> to workaround the problem but you said there's a better way to do
+> this. It took me 2 weeks to figure out a new wlioctl API for that
+> while all I needed was a simple hint on "interface_remove".
+> 
+> Right now I'm waiting to get any answer from you about 4366c0
+> firmware. It's still less than 2 weeks since I asked for it, but a
+> simple ETA would be nice. I'm actually not sure if I should report
+> more problems to you to don't distract you from pending things.
 
-Use setup_timer function instead of initializing timer with the function
-and data fields
+This is a difficult question. All upstream firmware releases for router
+chips are put on hold until further notice. Some decisions have been
+made, but I have not seen a detailed plan to give an ETA.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> Problems with brcmf_netdev_wait_pend8021x were reported multiples
+> times for last few months. When I finally got time for that it took me
+> a week to debug them.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 11c7e15..216aa54 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2050,11 +2050,9 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		baid_data->baid = baid;
- 		baid_data->timeout = timeout;
- 		baid_data->last_rx = jiffies;
--		init_timer(&baid_data->session_timer);
--		baid_data->session_timer.function =
--			iwl_mvm_rx_agg_session_expired;
--		baid_data->session_timer.data =
--			(unsigned long)&mvm->baid_map[baid];
-+		setup_timer(&baid_data->session_timer,
-+			    iwl_mvm_rx_agg_session_expired,
-+			    (unsigned long)&mvm->baid_map[baid]);
- 		baid_data->mvm = mvm;
- 		baid_data->tid = tid;
- 		baid_data->sta_id = mvm_sta->sta_id;
--- 
-2.9.3
+For the pend8021x you were sending a number of messages showing debug
+progress so not sure whether you wanted our feedback on that. If so a
+ping might have done it.
+
+> As you can see, it takes me months to get help on some things. And in
+> few cases I never got much help at all. Yes, I was hoping to have you
+> more involved into brcmfmac development and problems solving. I guess
+> things didn't meet my expectations and I got grumpy & preachy.
+
+Thanks for listing all our failures. Somehow we are very good at getting
+each other grumpy. When we provide a patch and you break it up and
+submit that to Kalle, we get grumpy and it all piles up to the point
+where we have this kind of conversation. As long as it helps to get
+things of our chest I can live with that. Hope you can too. We strive to
+give support to the community, but the priority is low as it is not
+full-time activity.
+
+Regards,
+Arend
