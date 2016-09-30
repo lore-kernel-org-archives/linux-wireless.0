@@ -1,110 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42725 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41908 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932496AbcI3Mnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:43:37 -0400
-Message-ID: <1475239412.17481.59.camel@sipsolutions.net> (sfid-20160930_144341_020560_8A558425)
-Subject: Re: [PATCH v9 2/2] mac80211: Move reorder-sensitive TX handlers to
- after TXQ dequeue
+        id S933300AbcI3KCN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 06:02:13 -0400
+Message-ID: <1475229714.17481.18.camel@sipsolutions.net> (sfid-20160930_120218_154135_19EA9F2D)
+Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on
+ AP interfaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Fri, 30 Sep 2016 14:43:32 +0200
-In-Reply-To: <87y4295zpy.fsf@toke.dk>
-References: <20160922170420.5193-1-toke@toke.dk>
-         <20160922170420.5193-3-toke@toke.dk>
-         <1475231220.17481.32.camel@sipsolutions.net> <87y4295zpy.fsf@toke.dk>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Fri, 30 Sep 2016 12:01:54 +0200
+In-Reply-To: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Because I need to run it anyway for the xmit_fast path on dequeue. I
-> thought doing it this way simplifies the code (at the cost of the
-> handler getting called twice when xmit_fast is not active).
+A few more things:
 
-Ok, that's fair.
+First of all - there's nothing specific to "AP interfaces", which you
+say in the subject, as far as I can tell? That should be removed?
 
-> > I *think* it should commute with the rate control handler, but even
-> > so, wouldn't it make more sense to have rate control late? Assuming
-> > the packets are queued for some amount of time, having rate control
-> > information queued with them would get stale.
+On Wed, 2016-09-28 at 17:14 +0200, Michael Braun wrote:
+> When using WPA security, the station and thus the required key is
+> identified by its mac address when packets are received. So a
+> station usually cannot spoof its source mac address.
 > 
-> Yes, having rate control run at dequeue would be good, and that's
-> what I did initially. However, I found that this would lead to a
-> deadlock because the rate control handler would send out packets in
-> some cases (I forget the details but can go back and check if
-> needed). And since the dequeue function is called with the driver TXQ
-> lock held, that would lead to a deadlock when those packets made it
-> to the driver TX path.
-
-That seems really odd, but I can see how a deadlock happens then.
-
-> So I decided to just keep it this way for now; I plan to go poking
-> into the rate controller later anyway, so moving the handler to later
-> could be part of that.
-
-Sure, that's fair.
-
-> But that handler only sets a few flags? Is
-> tx->sdata->control_port_protocol likely to change while the packet is
-> queued?
-
-Oh right, I confused things there. We check the controlled port much
-earlier, but anyway that should be OK.
-
-> > It's a bit unfortunate that you lose fast-xmit here completely for
-> > the key stuff, but I don't see a good way to avoid that, other than
-> > completely rejiggering all the (possibly affected) queues when keys
-> > change... might be very complex to do that, certainly a follow-up
-> > patch if it's desired.
+> But when a station sends an A-MSDU frame, port control and crypto
+> is done using the outer mac address, while the packets delivered
+> and forwarded use the inner mac address.
 > 
-> Yeah, figured it was better to have something that's correct and then
-> go back and change it if the performance hit turns out to be too
-> high.
+> IEEE 802.11-2012 mandates that the outer source mac address should
+> match the inner source address (section 8.3.2.2). For the
+> destination mac address, matching is not required (section 10.23.15).
 
-Makes sense.
+I think this is wrong. As we do not support DMS (yet), we should adhere
+to 8.3.2.2 and only accept matching TA/SA and DA/RA.
 
-> > This check seems a bit weird though - how could fast-xmit be set
-> > without a TXQ station?
-> 
-> I think that is probably just left over from before I introduced the
-> control flag. Should be fine to remove it.
+And even when we add DMS, we should also restrict it to multicast
+addresses, but that's future work anyway.
 
-Ok.
+> > -			if (ieee80211_data_to_8023(pkt, vif->addr, vif->type))
+> > +			if (ieee80211_data_to_8023(pkt, NULL, vif->addr,
+> > +			    vif->type))
 
-> > 
-> > > 
-> > > +++ b/net/mac80211/util.c
-> > > @@ -3393,11 +3393,18 @@ void ieee80211_txq_get_depth(struct
-> > > ieee80211_txq *txq,
-> > >  			     unsigned long *byte_cnt)
-> > >  {
-> > >  	struct txq_info *txqi = to_txq_info(txq);
-> > > +	u32 frag_cnt = 0, frag_bytes = 0;
-> > > +	struct sk_buff *skb;
-> > > +
-> > > +	skb_queue_walk(&txqi->frags, skb) {
-> > > +		frag_cnt++;
-> > > +		frag_bytes += skb->len;
-> > > +	}
-> > 
-> > I hope this is called infrequently :)
-> 
-> Well, ath10k is the only user. It does get called on each
-> wake_tx_queue, though, so not that infrequently. My reasoning was
-> that since the frags queue is never going to have more than a fairly
-> small number of packets in it (those produced from a single split
-> packet), counting this way is acceptable instead of keeping a state
-> variable up to date. Can change it if you disagree :)
+indentation is bad here - consider running checkpatch
 
-No, I guess you're right, it can't be a long queue.
+>  static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+> > -					  struct sk_buff *skb)
+> > +					  struct sk_buff *skb,
+> > +					  const u8 *ta)
 
-> Not sure if you want a v10, or if you're satisfied with the above
-> comments and will just fix up the nits on merging?
-> 
+[... more mwifiex changes ...]
 
-I'll fix it up. Thanks!
+It's great that you're doing this, but I think this patch should only
+carry the bare minimum change for mwifiex to keep it compiling, with a
+follow-up patch that actually implements the correct checks. That way,
+should any issues arise, it's easier to determine where the problem is
+and to fix/revert it.
 
+> diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
+> index 150dabc..38ba7dd 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_recv.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_recv.c
+> @@ -1687,7 +1687,7 @@ int amsdu_to_msdu(struct rtw_adapter *padapter, struct recv_frame *prframe)
+> >  	skb_pull(skb, prframe->attrib.hdrlen);
+> >  	__skb_queue_head_init(&skb_list);
+>  
+> > -	ieee80211_amsdu_to_8023s(skb, &skb_list, NULL, 0, 0, false);
+> > +	ieee80211_amsdu_to_8023s(skb, &skb_list, NULL, 0, 0, pattrib->ta);
+
+A bit debatable here, but I'd actually also prefer you add NULL here
+first and then submit a separate patch that puts the right thing.
+
+Not that it actually matters, since this driver has been removed
+already... since you have to resubmit anyway though, I'd prefer you
+just put NULL, and then not worry about it from there on.
+
+> > -	if (has_80211_header) {
+> > -		err = __ieee80211_data_to_8023(skb, &eth, addr, iftype);
+> > -		if (err)
+> > -			goto out;
+> > -	}
+
+Good approach to split that :)
+
+> > +		if (unlikely(ta &&
+> > +			     (iftype == NL80211_IFTYPE_AP ||
+> > +			      iftype == NL80211_IFTYPE_AP_VLAN) &&
+> > +			     !ether_addr_equal(ta, eth.h_source)
+> > +		   ))
+> > +			goto purge;
+
+Coding style here is very odd. All those closing parens should be on
+the line before.
+
+Thanks,
 johannes
