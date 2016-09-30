@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56698 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933889AbcIZPV1 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:36616 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932836AbcI3Fcu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 11:21:27 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3] mwifiex: cfg80211 set_default_mgmt_key handler
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1474377383-12600-1-git-send-email-akarwar@marvell.com>
-References: <1474377383-12600-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160926152127.22E4961443@smtp.codeaurora.org> (sfid-20160926_172140_776564_6FA4C79B)
-Date: Mon, 26 Sep 2016 15:21:27 +0000 (UTC)
+        Fri, 30 Sep 2016 01:32:50 -0400
+Date: Fri, 30 Sep 2016 01:32:45 -0400 (EDT)
+Message-Id: <20160930.013245.1474369794552343595.davem@davemloft.net> (sfid-20160930_073255_200808_548427FA)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-09-29
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
+References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Ganapathi Bhat <gbhat@marvell.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 29 Sep 2016 19:57:28 +0300
+
+> this should be the last wireless-drivers-next pull request for 4.9, from
+> now on only important bugfixes. Nothing really special stands out,
+> iwlwifi being most active but other drivers also getting attention. More
+> details in the signed tag. Please let me know if there are any problems.
+
+Pulled, thanks Kalle.
+
+> Or actually I had one problem. While doing a test merge I noticed that
+> net-next fails to compile for me, but I don't think this is anything
+> wireless related:
 > 
-> Previously device used to start using IGTK key as Tx key as soon as it
-> gets downloaded in add_key(). This patch implements set_default_mgmt_key
-> handler. We will update Tx key ID in set_default_mgmt_key().
-> 
-> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>   CC      net/netfilter/core.o
+> net/netfilter/core.c: In function 'nf_set_hooks_head':
+> net/netfilter/core.c:96:149: error: 'struct net_device' has no member named 'nf_hooks_ingress'
 
-Patch applied to wireless-drivers-next.git, thanks.
+Yes, I am aware of this build issue and will tackle it myself if someone
+doesn't beat me to it.
 
-89951db2be53 mwifiex: cfg80211 set_default_mgmt_key handler
-
--- 
-https://patchwork.kernel.org/patch/9341673/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Thanks again.
