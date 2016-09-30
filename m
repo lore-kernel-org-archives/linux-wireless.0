@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from tex.lwn.net ([70.33.254.29]:51991 "EHLO vena.lwn.net"
+Received: from mx1.redhat.com ([209.132.183.28]:57942 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753736AbcJLRU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 13:20:59 -0400
-Date: Wed, 12 Oct 2016 11:20:29 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] docs-rst: sphinxify 802.11 documentation
-Message-ID: <20161012112029.76f94482@lwn.net> (sfid-20161012_192103_421705_48ADC13B)
-In-Reply-To: <1476223710.4118.12.camel@sipsolutions.net>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-        <20161011072119.7ad4e3a3@lwn.net>
-        <1476192636.4118.8.camel@sipsolutions.net>
-        <20161011153911.6a0f778c@lwn.net>
-        <1476223710.4118.12.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        id S1752371AbcI3XfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 19:35:20 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/2] rtl8xxxu: Fix rtl8192eu driver reload issue
+Date: Fri, 30 Sep 2016 19:35:18 -0400
+Message-Id: <1475278518-18527-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161001_013549_191221_884F78A0)
+In-Reply-To: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 12 Oct 2016 00:08:30 +0200
-Johannes Berg <johannes@sipsolutions.net> wrote:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> > As an alternative, one or the other of us could just send it up in
-> > the next couple of days and be done with it.  I'd say the chances of
-> > regressions are pretty small...:)  If you want to do that, feel free
-> > to add my ack.  If you'd rather I sent it, just say the word.  
-> 
-> Ok, fair enough. Please go ahead, I'll ask davem to pull it back in
-> when I need it. You'll get it through to Linus quicker than me :)
+The 8192eu suffered from two issues when reloading the driver.
 
-OK, I'll let it sit in linux-next for a day or two just to observe the
-niceties, then upward it goes.
+The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
+23 didn't get set in rtl8192e_enable_rf().
 
-Thanks,
+In addition it also seems prone to issues when setting REG_RF_CTRL to
+0 intead of just disabling the RF_ENABLE bit. Similar to what was
+causing issues with the 8188eu.
 
-jon
+With this patch I can successfully reload the driver and reassociate
+to an APi with an 8192eu dongle.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index df54d27..a793fed 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1461,7 +1461,9 @@ static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
+ 	int count, ret = 0;
+ 
+ 	/* Turn off RF */
+-	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
++	val8 = rtl8xxxu_read8(priv, REG_RF_CTRL);
++	val8 &= ~RF_ENABLE;
++	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
+ 
+ 	/* Switch DPDT_SEL_P output from register 0x65[2] */
+ 	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
+@@ -1593,6 +1595,10 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
+ 	u32 val32;
+ 	u8 val8;
+ 
++	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
++	val32 |= (BIT(22) | BIT(23));
++	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
++
+ 	val8 = rtl8xxxu_read8(priv, REG_GPIO_MUXCFG);
+ 	val8 |= BIT(5);
+ 	rtl8xxxu_write8(priv, REG_GPIO_MUXCFG, val8);
+-- 
+2.7.4
