@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:11441 "EHLO
-        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756062AbcIKN0X (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Sep 2016 09:26:23 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: joe@perches.com, kernel-janitors@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 08/26] iwlegacy: constify local structures
-Date: Sun, 11 Sep 2016 15:05:50 +0200
-Message-Id: <1473599168-30561-9-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160911_153607_906234_D4E0D551)
-In-Reply-To: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from nbd.name ([46.4.11.11]:38518 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932707AbcI3Ooj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 10:44:39 -0400
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device
+ binding
+To: Arnd Bergmann <arnd@arndb.de>
+References: <20160905095128.80560-1-nbd@nbd.name>
+ <201609300041.41876.arnd@arndb.de>
+ <3334122f-0d79-f910-a414-5b9cafd9901f@nbd.name>
+ <201609301636.43363.arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> (sfid-20160930_164443_122116_B5C89A70)
+Date: Fri, 30 Sep 2016 16:44:34 +0200
+MIME-Version: 1.0
+In-Reply-To: <201609301636.43363.arnd@arndb.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For structure types defined in the same file or local header files, find
-top-level static structure declarations that have the following
-properties:
-1. Never reassigned.
-2. Address never taken
-3. Not passed to a top-level macro call
-4. No pointer or array-typed field passed to a function or stored in a
-variable.
-Declare structures having all of these properties as const.
+On 2016-09-30 16:36, Arnd Bergmann wrote:
+> On Friday 30 September 2016, Felix Fietkau wrote:
+>> >> >> + pcie0 {
+>> >> >> +         mt76@0,0 {
+>> >> >> +                 reg = <0x0000 0 0 0 0>;
+>> > 
+>> > Maybe have an examplep of a real register address other than zero?
+>> This is a real example referring to the first device on a PCI bus.
+>> I copy&pasted this from a .dts file that we use in LEDE.
+> 
+> Ok, I see.
+> 
+>> >> >> +                 device_type = "pci";
+>> >> >> +                 mediatek,mtd-eeprom = <&factory 0x8000>;
+>> >> >> +                 mediatek,2ghz = <0>;
+>> > 
+>> > It's not clear what the possible values for the 2ghz property are,
+>> > can you be more verbose in the description? How is <0> different
+>> > from no property?
+>> 0 means disabled, no property means unchanged (compared to EEPROM).
+> 
+> Maybe have a boolean property instead then to say "mediatek,2ghz-disabled" ?
+> 
+> If zero is the only possible value, there is no need to put a number in there.
+1 is also possible, which will force-enable the capability.
 
-Done using Coccinelle.
-Based on a suggestion by Joe Perches <joe@perches.com>.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
----
-The semantic patch seems too long for a commit log, but is in the cover
-letter.
-
- drivers/net/wireless/intel/iwlegacy/3945.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945.c b/drivers/net/wireless/intel/iwlegacy/3945.c
-index 209dc99..4db327a 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945.c
-@@ -2671,7 +2671,7 @@ const struct il_ops il3945_ops = {
- 	.send_led_cmd = il3945_send_led_cmd,
- };
- 
--static struct il_cfg il3945_bg_cfg = {
-+static const struct il_cfg il3945_bg_cfg = {
- 	.name = "3945BG",
- 	.fw_name_pre = IL3945_FW_PRE,
- 	.ucode_api_max = IL3945_UCODE_API_MAX,
-@@ -2700,7 +2700,7 @@ static struct il_cfg il3945_bg_cfg = {
- 	},
- };
- 
--static struct il_cfg il3945_abg_cfg = {
-+static const struct il_cfg il3945_abg_cfg = {
- 	.name = "3945ABG",
- 	.fw_name_pre = IL3945_FW_PRE,
- 	.ucode_api_max = IL3945_UCODE_API_MAX,
+- Felix
