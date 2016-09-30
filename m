@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:35979 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965304AbcIZMin (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 08:38:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
-References: <20160926102348.8695-1-zajec5@gmail.com> <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
- <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 26 Sep 2016 14:38:40 +0200
-Message-ID: <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com> (sfid-20160926_143906_869645_FCB5722E)
-Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:41180 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933265AbcI3HUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 03:20:44 -0400
+Message-ID: <1475220037.17481.3.camel@sipsolutions.net> (sfid-20160930_092056_454534_C8F7DF11)
+Subject: Re: [PATCH 1/3] mac80211: filter multicast data packets on AP /
+ AP_VLAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 30 Sep 2016 09:20:37 +0200
+In-Reply-To: <1474821596-12155-2-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184004_593715_152E8F66)
+References: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
+         <1474821596-12155-2-git-send-email-michael-dev@fami-braun.de>
+         (sfid-20160925_184004_593715_152E8F66)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 September 2016 at 14:13, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> w=
-rote:
-> On 26 September 2016 at 13:46, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 26-9-2016 12:23, Rafa=C5=82 Mi=C5=82ecki wrote:
->>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>
->>> We need to track 802.1x packets to know if there are any pending ones
->>> for transmission. This is required for performing key update in the
->>> firmware.
->>
->> The problem we are trying to solve is a pretty old one. The problem is
->> that wpa_supplicant uses two separate code paths: EAPOL messaging
->> through data path and key configuration though nl80211.
->
-> Can I find it described/reported somewhere?
->
->
->>> Unfortunately our old tracking code wasn't very accurate. It was
->>> treating skb as pending as soon as it was passed by the netif. Actual
->>> handling packet to the firmware was happening later as brcmfmac
->>> internally queues them and uses its own worker(s).
->>
->> That does not seem right. As soon as we get a 1x packet we need to wait
->> with key configuration regardless whether it is still in the driver or
->> handed over to firmware already.
->
-> OK, thanks.
+[snip]
 
-Actually, it's not OK. I was trying to report/describe/discuss this
-problem for over a week. I couldn't get much of answer from you.
+I think this makes sense, but it's not clear to me why you add two
+counters and keep the old one? It seems to me that it would be
+sufficient to have a single counter per AP/VLAN interface?
 
-I had to come with a patch I worked on for quite some time. Only then
-you decided to react and reply with a reason for a nack. I see this
-patch may be wrong (but it's still hard to know what's going wrong
-without a proper hostapd bug report). I'd expect you to somehow work &
-communicate with open source community.
+The usage in __ieee80211_request_smps_ap() can just be removed since it
+goes to iterate the stations next. That should be a separate, first,
+patch in the series, but after that I don't see a need to keep
+num_mcast_sta, or rather, I see no reason not to remove the VLAN
+stations from the AP's num_mcast_sta, and add a new per-VLAN
+num_mcast_sta.
 
---=20
-Rafa=C5=82
+> +/**
+> + * @returns number of multicast stations connected
+> + *  -1 if unsupported (no-AP, 4addr mode)
+> + */
+> +static inline int
+> +ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
+
+That's not a valid kernel-doc comment, but you've tagged it as one with
+the /** - please fix by removing the /** and the @, and writing a real
+sentence out of that, or by making it a real kernel-doc comment.
+
+johannes
