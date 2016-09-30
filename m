@@ -1,24 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57416 "EHLO sipsolutions.net"
+Received: from mail2.tohojo.dk ([77.235.48.147]:43822 "EHLO mail2.tohojo.dk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756905AbcILJ4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:56:40 -0400
-Message-ID: <1473674196.29016.1.camel@sipsolutions.net> (sfid-20160912_120114_389512_9D5DA3E4)
-Subject: Re: [PATCH] mac80211: fix tim recalculation after PS response
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Date: Mon, 12 Sep 2016 11:56:36 +0200
-In-Reply-To: <20160828111037.46801-1-nbd@nbd.name>
-References: <20160828111037.46801-1-nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S933050AbcI3Of4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 10:35:56 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
+References: <20160923195911.4572-1-toke@toke.dk>
+        <20160923195911.4572-4-toke@toke.dk>
+        <1475235230.17481.43.camel@sipsolutions.net> <87twcx5zll.fsf@toke.dk>
+        <1475239915.17481.63.camel@sipsolutions.net>
+Date: Fri, 30 Sep 2016 16:35:49 +0200
+In-Reply-To: <1475239915.17481.63.camel@sipsolutions.net> (Johannes Berg's
+        message of "Fri, 30 Sep 2016 14:51:55 +0200")
+Message-ID: <87h98x5ube.fsf@toke.dk> (sfid-20160930_163602_164677_27037932)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-08-28 at 13:10 +0200, Felix Fietkau wrote:
-> Handle the case where the mac80211 intermediate queues are empty and
-> the driver has buffered frames
-> 
-Applied.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-johannes
+>> > I kinda see the logic here - we really don't need to queue as much
+>> > if we can't possibly transmit it out quickly - but it seems to me
+>> > we should also throw in some kind of limit that's relative to the
+>> > amount of memory you have on the system?
+>> 
+>> Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
+>> carries a patch for that which just changes the hard-coded default to
+>> another hard-coded default. Not sure how to get a good value to use,
+>> though; and deciding on how large a fraction of memory to use for
+>> packets starts smelling an awful lot like setting policy in the
+>> kernel, doesn't it?
+>
+> Yeah, I agree it does seem awkward.
+>
+> Perhaps we should instead pick a low limit and let users change it
+> more easily (i.e. not debugfs)? I don't know a good answer to this
+> either.
+
+Hmm, I'll talk it over with some of the LEDE people who are more used to
+dealing with these sorts of memory-constrained devices than I am. Will
+send a patch if we come up with a good solution :)
+
+-Toke
