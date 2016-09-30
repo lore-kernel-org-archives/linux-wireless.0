@@ -1,131 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37823 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751543AbcIQN4b (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 09:56:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: <igor.mitsyanko.os@quantenna.com>
-Cc: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-Date: Sat, 17 Sep 2016 16:56:25 +0300
-In-Reply-To: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        (igor mitsyanko os's message of "Tue, 21 Jun 2016 01:11:28 +0300")
-Message-ID: <87a8f68wae.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_155635_148146_87120A26)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:42725 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932496AbcI3Mnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 08:43:37 -0400
+Message-ID: <1475239412.17481.59.camel@sipsolutions.net> (sfid-20160930_144341_020560_8A558425)
+Subject: Re: [PATCH v9 2/2] mac80211: Move reorder-sensitive TX handlers to
+ after TXQ dequeue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Fri, 30 Sep 2016 14:43:32 +0200
+In-Reply-To: <87y4295zpy.fsf@toke.dk>
+References: <20160922170420.5193-1-toke@toke.dk>
+         <20160922170420.5193-3-toke@toke.dk>
+         <1475231220.17481.32.camel@sipsolutions.net> <87y4295zpy.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<igor.mitsyanko.os@quantenna.com> writes:
+> Because I need to run it anyway for the xmit_fast path on dequeue. I
+> thought doing it this way simplifies the code (at the cost of the
+> handler getting called twice when xmit_fast is not active).
 
-> From: Avinash Patil <avinashp@quantenna.com>
->
-> This patch adds support for new FullMAC WiFi driver for Quantenna
-> QSR10G chipsets.
->
-> QSR10G is Quantenna's 8x8, 160M, 11ac offering.
-> QSR10G supports 2 simultaneous WMACs- one 5G and one 2G. 5G WMAC
-> supports 160M, 8x8 configuration.
-> FW supports 8 concurrent virtual interfaces on each WMAC.
->
-> Patch introduces 2 new drivers- qtnfmac.ko for interfacing with
-> kernel/cfg80211 and qtnfmac_pcie.ko for PCIe bus interface.
->
-> Signed-off-by: Dmitrii Lebed <dlebed@quantenna.com>
-> Signed-off-by: Sergei Maksimenko <smaksimenko@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
-> Signed-off-by: Bindu Therthala <btherthala@quantenna.com>
-> Signed-off-by: Huizhao Wang <hwang@quantenna.com>
-> Signed-off-by: Kamlesh Rath <krath@quantenna.com>
-> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Ok, that's fair.
 
-More comments:
+> > I *think* it should commute with the rate control handler, but even
+> > so, wouldn't it make more sense to have rate control late? Assuming
+> > the packets are queued for some amount of time, having rate control
+> > information queued with them would get stale.
+> 
+> Yes, having rate control run at dequeue would be good, and that's
+> what I did initially. However, I found that this would lead to a
+> deadlock because the rate control handler would send out packets in
+> some cases (I forget the details but can go back and check if
+> needed). And since the dequeue function is called with the driver TXQ
+> lock held, that would lead to a deadlock when those packets made it
+> to the driver TX path.
 
-> +/* FW names */
-> +
-> +#define QTN_PCI_FW_NAME		"pearl-linux.lzma.img"
+That seems really odd, but I can see how a deadlock happens then.
 
-The firmware name gives no indication what this file is about (remember
-that linux-firmware.git has a lot of files). Please name it properly,
-don't just use what is used in by firmware build scripts :) Take into
-account also future hw support, all firmware files need to coexist in
-the same repository without user invention. In a way the firmware
-filename is part of kernel/userspace interface and needs to be stable.
+> So I decided to just keep it this way for now; I plan to go poking
+> into the rate controller later anyway, so moving the handler to later
+> could be part of that.
 
-For example, you could use something like "qtnfmac/qsr10g.img" (assuming
-qsr10g is the name of chip).
+Sure, that's fair.
 
-I forgot already, is the firmware image ready for submission to
-linux-firmware.git?
+> But that handler only sets a few flags? Is
+> tx->sdata->control_port_protocol likely to change while the packet is
+> queued?
 
-> +	pr_info("%s: %sregistered mgmt frame type 0x%x\n", __func__,
-> +		reg ? "" : "un", frame_type);
+Oh right, I confused things there. We check the controlled port much
+earlier, but anyway that should be OK.
 
-The driver seems to be quite spammy with info messages:
+> > It's a bit unfortunate that you lose fast-xmit here completely for
+> > the key stuff, but I don't see a good way to avoid that, other than
+> > completely rejiggering all the (possibly affected) queues when keys
+> > change... might be very complex to do that, certainly a follow-up
+> > patch if it's desired.
+> 
+> Yeah, figured it was better to have something that's correct and then
+> go back and change it if the performance hit turns out to be too
+> high.
 
-qtnfmac/cfg80211.c:     pr_info("%s: %sregistered mgmt frame type 0x%x\n", __func__,
-qtnfmac/cfg80211.c:     pr_info("QTNF: %s cipher=%x, idx=%u, pairwise=%u\n", __func__,
-qtnfmac/cfg80211.c:     pr_info("QTNF: %s idx=%u, pairwise=%u\n", __func__, key_index,
-qtnfmac/cfg80211.c:     pr_info("QTNF: %s idx=%u, unicast=%u, multicast=%u\n", __func__,
-qtnfmac/cfg80211.c:     pr_info("QTNF: %s idx=%u\n", __func__, key_index);
-qtnfmac/cfg80211.c:     pr_info("%s: initiator=%d, alpha=%c%c, macid=%d\n", __func__,
-qtnfmac/cfg80211.c:     pr_info("%s: MAX_IF: %zu; MODES: %.4X; RADAR WIDTHS: %.2X\n", __func__,
-qtnfmac/cfg80211.c:     pr_info("macid=%d, phymode=%#x\n", mac->macid, mac->macinfo.phymode);
-qtnfmac/commands.c:                     pr_info("%s: unexpected TLV type: %.4X\n",
-qtnfmac/commands.c:                     pr_info("%s: STA %pM not found\n", __func__, sta_mac);
-qtnfmac/commands.c:     pr_info("country-code from EP: %c%c\n", hwinfo->country_code[0],
-qtnfmac/commands.c:     pr_info("fw_version = %d, num_mac=%d, mac_bitmap=%#x\n",
-qtnfmac/commands.c:                     pr_info("iface limit record count=%zu\n", record_count);
-qtnfmac/commands.c:                     pr_info("MAC%d reported channels %d\n",
-qtnfmac/init.c: pr_info("%s: macid=%d\n", __func__, macid);
-qtnfmac/pcie.c:                 pr_info("enabled PCIE MSI interrupt\n");
-qtnfmac/pcie.c: pr_info("%s: BAR[%u] vaddr=0x%p busaddr=0x%p len=%u\n",
-qtnfmac/pcie.c: pr_info("%s: set mps to %d (was %d, max %d)\n",
-qtnfmac/pcie.c: pr_info("fw download started: fw start addr = 0x%p, size=%d\n",
-qtnfmac/pcie.c: pr_info("fw download completed: totally sent %d blocks\n", blk);
-qtnfmac/pcie.c: pr_info("RC is ready to boot EP...\n");
-qtnfmac/pcie.c: pr_info("starting download firmware %s...\n", bus->fwname);
-qtnfmac/pcie.c:         pr_info("successful init of PCI device %x\n", pdev->device);
-qtnfmac/pcie.c: pr_info("Register Quantenna FullMAC PCIE driver\n");
-qtnfmac/pcie.c: pr_info("Unregister Quantenna FullMAC PCIE driver\n");
-qtnfmac/trans.c:                        pr_info("%s: interrupted\n", __func__);
-qtnfmac/trans.c:        pr_info("%s: skb dropped\n", __func__);
+Makes sense.
 
-Usualle the preference is that driver is quiet until something goes
-wrong. I hope some of these could be debug messages.
+> > This check seems a bit weird though - how could fast-xmit be set
+> > without a TXQ station?
+> 
+> I think that is probably just left over from before I introduced the
+> control flag. Should be fine to remove it.
 
-> --- /dev/null
-> +++ b/drivers/net/wireless/quantenna/qtnfmac/pcie.c
-> @@ -0,0 +1,1374 @@
-> +/**
-> + * Copyright (c) 2015-2016 Quantenna Communications, Inc.
-> + * All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License
-> + * as published by the Free Software Foundation; either version 2
-> + * of the License, or (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + **/
-> +
-> +#undef DEBUG
+Ok.
 
-Why?
+> > 
+> > > 
+> > > +++ b/net/mac80211/util.c
+> > > @@ -3393,11 +3393,18 @@ void ieee80211_txq_get_depth(struct
+> > > ieee80211_txq *txq,
+> > >  			     unsigned long *byte_cnt)
+> > >  {
+> > >  	struct txq_info *txqi = to_txq_info(txq);
+> > > +	u32 frag_cnt = 0, frag_bytes = 0;
+> > > +	struct sk_buff *skb;
+> > > +
+> > > +	skb_queue_walk(&txqi->frags, skb) {
+> > > +		frag_cnt++;
+> > > +		frag_bytes += skb->len;
+> > > +	}
+> > 
+> > I hope this is called infrequently :)
+> 
+> Well, ath10k is the only user. It does get called on each
+> wake_tx_queue, though, so not that infrequently. My reasoning was
+> that since the frags queue is never going to have more than a fairly
+> small number of packets in it (those produced from a single split
+> packet), counting this way is acceptable instead of keeping a state
+> variable up to date. Can change it if you disagree :)
 
--- 
-Kalle Valo
+No, I guess you're right, it can't be a long queue.
+
+> Not sure if you want a v10, or if you're satisfied with the above
+> comments and will just fix up the nits on merging?
+> 
+
+I'll fix it up. Thanks!
+
+johannes
