@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suteba.org.ar ([200.16.134.105]:50982 "EHLO
-        mail.suteba.org.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751643AbcIZQNO (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:62267 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933050AbcI3OhC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 12:13:14 -0400
-From: Matias Mucciolo <mmucciolo@suteba.org.ar>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix sparse warning: symbol was not declared. Should it be static?
-Date: Mon, 26 Sep 2016 13:13:03 -0300
-Message-ID: <6507342.BIUiKHv64l@varitech> (sfid-20160926_181402_940456_EE73358D)
-In-Reply-To: <20160926155220.GA3319@kroah.com>
-References: <34310025.aMSyYASYEz@varitech> <4399555.QWNJt8EtNN@varitech> <20160926155220.GA3319@kroah.com>
+        Fri, 30 Sep 2016 10:37:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+Date: Fri, 30 Sep 2016 16:36:43 +0200
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20160905095128.80560-1-nbd@nbd.name> <201609300041.41876.arnd@arndb.de> <3334122f-0d79-f910-a414-5b9cafd9901f@nbd.name>
+In-Reply-To: <3334122f-0d79-f910-a414-5b9cafd9901f@nbd.name>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201609301636.43363.arnd@arndb.de> (sfid-20160930_163706_977653_B206505A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-- Fixed a sparse warning:
-  wilc_debugfs.c:32:10: warning: symbol 'WILC_DEBUG_LEVEL' was not declared. Should it be static?
+On Friday 30 September 2016, Felix Fietkau wrote:
+> >> >> + pcie0 {
+> >> >> +         mt76@0,0 {
+> >> >> +                 reg = <0x0000 0 0 0 0>;
+> > 
+> > Maybe have an examplep of a real register address other than zero?
+> This is a real example referring to the first device on a PCI bus.
+> I copy&pasted this from a .dts file that we use in LEDE.
 
-Signed-off-by: Matias Mucciolo <mmucciolo@suteba.org.ar>
----
- drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Ok, I see.
 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index b052628..802bb1d 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -29,7 +29,7 @@ static struct dentry *wilc_dir;
- #define ERR             BIT(3)
- 
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
-+static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
- 
- /*
--- 
-2.1.4
+> >> >> +                 device_type = "pci";
+> >> >> +                 mediatek,mtd-eeprom = <&factory 0x8000>;
+> >> >> +                 mediatek,2ghz = <0>;
+> > 
+> > It's not clear what the possible values for the 2ghz property are,
+> > can you be more verbose in the description? How is <0> different
+> > from no property?
+> 0 means disabled, no property means unchanged (compared to EEPROM).
+
+Maybe have a boolean property instead then to say "mediatek,2ghz-disabled" ?
+
+If zero is the only possible value, there is no need to put a number in there.
+
+	Arnd
