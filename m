@@ -1,72 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50869 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750988AbcI1Mtw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 08:49:52 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8SCnXd1022335
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:49:51 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 25r7vna8tx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:49:51 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 5/8] mwifiex: add memrw command information in README
-Date: Wed, 28 Sep 2016 18:18:25 +0530
-Message-ID: <1475066908-11771-5-git-send-email-akarwar@marvell.com> (sfid-20160928_144955_652412_8E774BA3)
-In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:42753 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932707AbcI3Mv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 08:51:59 -0400
+Message-ID: <1475239915.17481.63.camel@sipsolutions.net> (sfid-20160930_145203_899398_A1AD3807)
+Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Fri, 30 Sep 2016 14:51:55 +0200
+In-Reply-To: <87twcx5zll.fsf@toke.dk>
+References: <20160923195911.4572-1-toke@toke.dk>
+         <20160923195911.4572-4-toke@toke.dk>
+         <1475235230.17481.43.camel@sipsolutions.net> <87twcx5zll.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support for this debugfs command is available in driver. This patch
-adds usage information in README file.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/README | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+> > I kinda see the logic here - we really don't need to queue as much
+> > if we can't possibly transmit it out quickly - but it seems to me
+> > we should also throw in some kind of limit that's relative to the
+> > amount of memory you have on the system?
+> 
+> Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
+> carries a patch for that which just changes the hard-coded default to
+> another hard-coded default. Not sure how to get a good value to use,
+> though; and deciding on how large a fraction of memory to use for
+> packets starts smelling an awful lot like setting policy in the
+> kernel, doesn't it?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/README b/drivers/net/wireless/marvell/mwifiex/README
-index 24e649b..588fcbe 100644
---- a/drivers/net/wireless/marvell/mwifiex/README
-+++ b/drivers/net/wireless/marvell/mwifiex/README
-@@ -180,6 +180,29 @@ regrdwr
- 		echo "1 0xa060 0x12" > regrdwr      : Write the MAC register
- 		echo "1 0xa794 0x80000000" > regrdwr
- 		                                    : Write 0x80000000 to MAC register
-+
-+memrw
-+	This command is used to read/write the firmware memory.
-+
-+	Usage:
-+		1) For reading firmware memory location.
-+			echo r <address> 0 > /sys/kernel/debug/mwifiex/mlan0/memrw
-+			cat /sys/kernel/debug/mwifiex/mlan0/memrw
-+		2) For writing value to firmware memory location.
-+			echo w <address> [value] > /sys/kernel/debug/mwifiex/mlan0/memrw
-+
-+	where the parameters are,
-+		<address>:  memory address
-+		[value]:    value to be written
-+
-+	Examples:
-+		echo r 0x4cf70 0 > /sys/kernel/debug/mwifiex/mlan0/memrw
-+		cat /sys/kernel/debug/mwifiex/mlan0/memrw
-+						: Read memory address 0x4cf70
-+		iwpriv mlan0 memrdwr -0x7fff6000 -0x40000000
-+		echo w 0x8000a000 0xc0000000 > /sys/kernel/debug/mwifiex/mlan0/memrw
-+						: Write 0xc0000000 to memory address 0x8000a000
-+
- rdeeprom
- 	This command is used to read the EEPROM contents of the card.
- 
--- 
-1.9.1
+Yeah, I agree it does seem awkward.
+
+Perhaps we should instead pick a low limit and let users change it more
+easily (i.e. not debugfs)? I don't know a good answer to this either.
+
+johannes
