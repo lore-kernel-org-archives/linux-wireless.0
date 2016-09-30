@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f53.google.com ([209.85.213.53]:35078 "EHLO
-        mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757953AbcIMSMJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 14:12:09 -0400
-Received: by mail-vk0-f53.google.com with SMTP id 16so171549385vko.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 11:12:08 -0700 (PDT)
+Received: from mail2.tohojo.dk ([77.235.48.147]:42348 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932357AbcI3OBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 10:01:30 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v9 2/2] mac80211: Move reorder-sensitive TX handlers to
+        after TXQ dequeue
+References: <20160922170420.5193-1-toke@toke.dk>
+        <20160922170420.5193-3-toke@toke.dk>
+        <1475239765.17481.61.camel@sipsolutions.net>
+Date: Fri, 30 Sep 2016 16:01:20 +0200
+In-Reply-To: <1475239765.17481.61.camel@sipsolutions.net> (Johannes Berg's
+        message of "Fri, 30 Sep 2016 14:49:25 +0200")
+Message-ID: <87lgy95vwv.fsf@toke.dk> (sfid-20160930_160134_264946_EF0630BA)
 MIME-Version: 1.0
-In-Reply-To: <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
-References: <CAOMZO5BVB4YTsdzhU2f7jKZop6i1QaGGT2YM3Yw3DbYxeJ-v5w@mail.gmail.com>
- <CAOMZO5C-NTppSiZt_Pc5GLrta06zvZiBwTVmpzhLVOR3f-6VbA@mail.gmail.com> <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 13 Sep 2016 15:12:07 -0300
-Message-ID: <CAOMZO5D9dsYFgkoN_LtMf1sOYcbOg51AkafF7zrQ0NtPjvq7fg@mail.gmail.com> (sfid-20160913_201211_998647_9ACDAD5D)
-Subject: Re: brcmfmac43430-sdio.bin in linux-firmware
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-        Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-On Wed, Aug 24, 2016 at 4:22 PM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
+> Applied, with the nits fixed as discussed.
 
-> I could, but this is handled by Cypress now. I have asked for firmware
-> release tag so I can release it.
+Awesome, thanks!
 
-Have you had a chance to release brcmfmac43430-sdio.bin?
+> Come to think of it, if somebody is bored ;-) perhaps a hwsim option
+> to use TXQs (should be optional I guess) would be nice so we can
+> exercise this code with the wpa_supplicant hwsim tests. That would
+> have caught the TKIP issues etc. pretty early on too, I think.
 
-Thanks!
+Noted. I'll look into that the next time I'm bored ;)
+
+-Toke
