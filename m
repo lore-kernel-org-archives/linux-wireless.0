@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42389 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161169AbcIGL1X (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:33261 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932741AbcI3M4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2016 07:27:23 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mwifiex: handle edmac vendor command
-References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
-        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
-        <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
-        <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
-        <87poon1xka.fsf@kamboji.qca.qualcomm.com>
-        <2320ad20-164e-12c5-0b01-9612a1d24300@broadcom.com>
-Date: Wed, 07 Sep 2016 14:27:17 +0300
-In-Reply-To: <2320ad20-164e-12c5-0b01-9612a1d24300@broadcom.com> (Arend Van
-        Spriel's message of "Mon, 5 Sep 2016 10:33:02 +0200")
-Message-ID: <87bn00x84q.fsf@kamboji.qca.qualcomm.com> (sfid-20160907_132743_316995_2AB6DBB7)
+        Fri, 30 Sep 2016 08:56:51 -0400
+Received: by mail-lf0-f43.google.com with SMTP id t81so37852637lfe.0
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Sep 2016 05:56:50 -0700 (PDT)
+Subject: Re: [PATCH 1/3] cw1200: Don't leak memory if krealloc failes
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+        Solomon Peachy <pizza@shaftnet.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <1475237495-15030-1-git-send-email-jthumshirn@suse.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <25a38254-f0e3-1f4e-de46-688d9fd1b736@cogentembedded.com> (sfid-20160930_145711_645124_2F15C033)
+Date: Fri, 30 Sep 2016 15:56:45 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475237495-15030-1-git-send-email-jthumshirn@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+Hello.
 
-> On 1-9-2016 16:53, Kalle Valo wrote:
+On 9/30/2016 3:11 PM, Johannes Thumshirn wrote:
+
+> The call to krealloc() in wsm_buf_reserve() directly assigns the newly
+> returned memory to buf->begin. This is all fine except when krealloc()
+> failes we loose the ability to free the old memory pointed to by
+
+    Fails.
+
+> buf->begin. If we just create a temporary variable to assign memory to
+> and assign the memory to it we can mitigate the memory leak.
 >
->> Sorry for the delay. I have been thinking about vendor commands quite a
->> lot and I don't think they belong to upstream drivers. For regular use
->> cases (used by normal users) we have nl80211, for developer and testing
->> purposes we have debugfs and for manufacturing type of tests we have
->> nl80211 testmode interface. The focus of development should be adding
->> new functionality to nl80211 (and other generic interfaces), not to
->> driver specific vendor commands.
->> 
->> I know brcm80211 and ti's wlcore have few vendor commands but I'm hoping
->> to remove them sometime soon.
->> 
->> Thoughts?
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> ---
+>  drivers/net/wireless/st/cw1200/wsm.c | 16 +++++++++-------
+>  1 file changed, 9 insertions(+), 7 deletions(-)
 >
-> Grabbing the original commit message for vendor commands:
+> diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
+> index 680d60e..12fad99 100644
+> --- a/drivers/net/wireless/st/cw1200/wsm.c
+> +++ b/drivers/net/wireless/st/cw1200/wsm.c
+> @@ -1807,16 +1807,18 @@ static int wsm_buf_reserve(struct wsm_buf *buf, size_t extra_size)
+>  {
+>  	size_t pos = buf->data - buf->begin;
+>  	size_t size = pos + extra_size;
+> +	u8 *tmp;
 >
-> commit ad7e718c9b4f717823fd920a0103f7b0fb06183f
-> Author: Johannes Berg <johannes.berg@intel.com>
-> Date:   Wed Nov 13 13:37:47 2013 +0100
+>  	size = round_up(size, FWLOAD_BLOCK_SIZE);
 >
->     nl80211: vendor command support
->
->     Add support for vendor-specific commands to nl80211. This is
->     intended to be used for really vendor-specific functionality
->     that can't be implemented in a generic fashion for any reason.
->     It's *NOT* intended to be used for any normal/generic feature
->     or any optimisations that could be implemented across drivers.
->
-> I agree that the effort needs to be made to come up with a solution that
-> is usable by (most of) all drivers in the upstream wireless subsystem.
->
-> The thing with the test mode is that you need to enable it in Kconfig.
+> -	buf->begin = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
+> -	if (buf->begin) {
+> -		buf->data = &buf->begin[pos];
+> -		buf->end = &buf->begin[size];
+> -		return 0;
+> -	} else {
+> -		buf->end = buf->data = buf->begin;
+> +	tmp = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
+> +	if (tmp) {
 
-And that's on purpose. We did not want testmode to be enabled on distro
-kernels, for example.
+    !tmp, you mean?
 
-> We have 1 vendor command in brcmfmac and it used to be under testmode
-> api. However, because of the Kconfig thing it would mean we need a
-> different kernel to do manufacturing testing. Especially when the
-> modules are built-in. The OEMs typically don't like that as they want to
-> do the testing using the same kernel as what ends up in the product.
-> This was our motivation to use the vendor command when that was added.
+> +		wsm_buf_deinit(buf);
+>  		return -ENOMEM;
+>  	}
+> +
+> +	buf->begin = tmp;
+> +	buf->data = &buf->begin[pos];
+> +	buf->end = &buf->begin[size];
+> +	return 0;
+>  }
 
-Is there a specific reason why you can't keep the testmode always
-enabled? Then you would have the same kernel both in manufacturing and
-in "normal mode".
-
-> It does have a nasty side-effect that some will see it as a drop-in
-> replacement of the driver private ioctl-s. To some extent (as mentioned
-> in the commit message above) that should be fine, but we need to make a
-> good effort to move things to nl80211.
-
-Sorry, but I'm way too cynical to buy that :) A "good effort" means that
-in most of cases it will never happen. Once the vendor command is
-accepted into upsteam trees the developer will lose any interest on
-trying to make it a generic interface. That's just how humans work,
-including me.
-
-I do see your and Amitkumar's point how much easier the vendor commands
-make it to implement new driver features and part of me also wants that.
-I just think that in the long run that's detrimental for Linux wireless
-and we end up into having multiple drivers having same features enabled
-via different vendor commands.
-
--- 
-Kalle Valo
+MBR, Sergei
