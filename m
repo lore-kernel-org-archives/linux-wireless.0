@@ -1,50 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6668 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932701AbcIBPxy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:53:54 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43871 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933037AbcI3QOt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 12:14:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2016-09-30
+Date: Fri, 30 Sep 2016 18:14:36 +0200
+Message-Id: <1475252077-6165-1-git-send-email-johannes@sipsolutions.net> (sfid-20160930_181506_042976_5A176583)
 MIME-Version: 1.0
-Subject: Re: ath10k: fix sending frame in management path in push txq logic
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1471514404-24098-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        <arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <d88420cfb8264f28ac04cce477ed5cf1@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175401_528926_7693D290)
-Date: Fri, 2 Sep 2016 17:53:46 +0200
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> In the wake tx queue path, we are not checking if the frame to be sent
-> takes management path or not. For eg. QOS null func frame coming here will
-> take the management path. Since we are not incrementing the descriptor
-> counter (num_pending_mgmt_tx) w.r.t tx management, on tx completion it is
-> possible to see negative values.
-> 
-> When the above counter reaches a negative value, we will not be sending a
-> probe response out.
-> 
->     if (is_presp &&
-> 	ar->hw_params.max_probe_resp_desc_thres < htt->num_pending_mgmt_tx)
-> 
-> For IPQ4019, max_probe_resp_desc_thres (u32) is 24 is compared against
-> num_pending_mgmt_tx (int) and the above condtions comes true if the counter
-> is negative and we drop the probe response.
-> 
-> To avoid this, check on the wake tx queue path as well for the tx path of
-> the frame and increment the appropriate counters
-> 
-> Fixes: cac085524cf1 "ath10k: move mgmt descriptor limit handle under mgmt_tx"
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Hi Dave,
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+Last pull request before the merge window, since it's about to open :)
+It seems that everyone finally agreed on the NAN (neighbor awareness
+networking) APIs, so we have that, along with some other things.
 
-e4fd726f21cd ath10k: fix sending frame in management path in push txq logic
+Let me know if there's any problem.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9287191/
+Thanks,
+johannes
+
+
+
+The following changes since commit c13ed534b8db543e4d8ead3885f4b06585a5771c:
+
+  Merge tag 'mac80211-next-for-davem-2016-09-16' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next (2016-09-18 22:29:08 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-09-30
+
+for you to fetch changes up to bb42f2d13ffcd0baed7547b37d05add51fcd50e1:
+
+  mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue (2016-09-30 14:46:57 +0200)
+
+----------------------------------------------------------------
+This time around, we have
+ * Neighbor Awareness Networking (NAN) APIs
+ * a fix for a previous patch that caused memory corruption
+   in wireless extensions key settings
+ * beacon rate configuration for AP and mesh
+ * memory limits for mac80211's internal TXQs
+ * a (fairly involved) fix for the TXQ vs. crypto problems
+ * direct cfg80211 driver API for WEP keys
+
+----------------------------------------------------------------
+Ayala Beker (9):
+      cfg80211: add start / stop NAN commands
+      mac80211: add boilerplate code for start / stop NAN
+      cfg80211: add add_nan_func / del_nan_func
+      cfg80211: allow the user space to change current NAN configuration
+      cfg80211: provide a function to report a match for NAN
+      cfg80211: Provide an API to report NAN function termination
+      mac80211: implement nan_change_conf
+      mac80211: Implement add_nan_func and rm_nan_func
+      mac80211: Add API to report NAN function match
+
+David Spinadel (1):
+      cfg80211: Add support for static WEP in the driver
+
+Johannes Berg (2):
+      cfg80211: add checks for beacon rate, extend to mesh
+      cfg80211: wext: really don't store non-WEP keys
+
+Pedersen, Thomas (2):
+      mac80211: add offset_tsf driver op and use it for mesh
+      mac80211: mesh: decrease max drift
+
+Purushottam Kushwaha (1):
+      cfg80211: Add support to configure a beacon data rate
+
+Toke Høiland-Jørgensen (5):
+      mac80211: Move ieee802111_tx_dequeue() to later in tx.c
+      fq.h: Port memory limit mechanism from fq_codel
+      mac80211: Export fq memory limit information in debugfs
+      mac80211: Set lower memory limit for non-VHT devices
+      mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue
+
+ include/net/cfg80211.h        |  223 +++++++-
+ include/net/fq.h              |    3 +
+ include/net/fq_impl.h         |    7 +-
+ include/net/mac80211.h        |   75 +++
+ include/uapi/linux/nl80211.h  |  270 ++++++++-
+ net/mac80211/cfg.c            |  208 +++++++
+ net/mac80211/chan.c           |    6 +
+ net/mac80211/debugfs.c        |    8 +
+ net/mac80211/debugfs_netdev.c |   12 +-
+ net/mac80211/driver-ops.c     |   15 +
+ net/mac80211/driver-ops.h     |   83 +++
+ net/mac80211/ieee80211_i.h    |   26 +
+ net/mac80211/iface.c          |   28 +-
+ net/mac80211/main.c           |    8 +
+ net/mac80211/mesh_sync.c      |   12 +-
+ net/mac80211/offchannel.c     |    4 +-
+ net/mac80211/rx.c             |    7 +-
+ net/mac80211/sta_info.c       |   10 +-
+ net/mac80211/trace.h          |  159 ++++++
+ net/mac80211/tx.c             |  351 ++++++++----
+ net/mac80211/util.c           |   61 ++-
+ net/wireless/chan.c           |    2 +
+ net/wireless/core.c           |   35 ++
+ net/wireless/core.h           |    7 +-
+ net/wireless/ibss.c           |    5 +-
+ net/wireless/mlme.c           |    1 +
+ net/wireless/nl80211.c        | 1220 ++++++++++++++++++++++++++++++++---------
+ net/wireless/rdev-ops.h       |   58 ++
+ net/wireless/sme.c            |    6 +-
+ net/wireless/trace.h          |   90 +++
+ net/wireless/util.c           |   30 +-
+ net/wireless/wext-compat.c    |   14 +-
+ net/wireless/wext-sme.c       |    2 +-
+ 33 files changed, 2648 insertions(+), 398 deletions(-)
