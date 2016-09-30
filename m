@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:34901 "EHLO
-        mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751950AbcIZBzq (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:33107 "EHLO
+        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750761AbcI3Gzd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Sep 2016 21:55:46 -0400
-Received: by mail-vk0-f50.google.com with SMTP id 192so35060528vkl.2
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Sep 2016 18:55:45 -0700 (PDT)
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org
-From: Xuebing Wang <xbing6@gmail.com>
-Subject: RTL8192CU: about trivial change of removing some 8192c declaration
- from header file
-Message-ID: <5244f149-9792-e814-7ee2-0a3fd178d306@gmail.com> (sfid-20160926_035551_554139_01ED1C4C)
-Date: Mon, 26 Sep 2016 09:55:39 +0800
+        Fri, 30 Sep 2016 02:55:33 -0400
+Received: by mail-qt0-f170.google.com with SMTP id 11so47847724qtc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 23:55:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAEFj984FqjgqJJCB=b8tZkaAudGRNjwJAw=RtmqP56x89iOZtg@mail.gmail.com>
+References: <CAEFj984FqjgqJJCB=b8tZkaAudGRNjwJAw=RtmqP56x89iOZtg@mail.gmail.com>
+From: Matteo Grandi <iu5bdp@gmail.com>
+Date: Fri, 30 Sep 2016 08:55:32 +0200
+Message-ID: <CAHdg3xZKOOVEqJ8LuO5GC6ifHuDQDbypJOZP8xH4caYEyhpppg@mail.gmail.com> (sfid-20160930_085537_975240_272EB461)
+Subject: Re: ath10k mesh mode issue
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry and Chaoming:
+Hi Chun-Yeoh,
+These https://wireless.wiki.kernel.org/en/users/drivers/ath10k/mesh
+are the staeps that i followed to set-up the mesh.
+Thanks!
 
-I am trying to do User Mode driver for RTL8192CU (device is Alfa 
-AWUS036NHR which is 802.11 b/g/n), and I am reading RTL8192CU / RTL8192C 
-/ RTLWIFI driver source code.
+Matteo
 
-There is a very trivial error that below declarations (in 
-rtl8192cu/hw.h) are already in file 
-drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h
----
-int rtl92c_download_fw(struct ieee80211_hw *hw);
-void rtl92c_set_fw_pwrmode_cmd(struct ieee80211_hw *hw, u8 mode);
-void rtl92c_set_fw_joinbss_report_cmd(struct ieee80211_hw *hw, u8 mstatus);
-void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
-              u8 element_id, u32 cmd_len, u8 *p_cmdbuffer);
----
-
-Does it make sense for me to submit a trivial patch to remove these 
-declarations from rtl8192cu/hw.h?
-
-Thanks.
-xuebing
+2016-09-29 17:10 GMT+02:00 Yeoh Chun-Yeow <yeohchunyeow@gmail.com>:
+> Try refer the following for latest mesh setup using ath10k:
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/mesh
+>
+> ---
+> Chun-Yeow
