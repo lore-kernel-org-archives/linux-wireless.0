@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54448 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751003AbcI1JoY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 05:44:24 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx2.suse.de ([195.135.220.15]:55807 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932878AbcI3NAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Sep 2016 09:00:34 -0400
+Date: Fri, 30 Sep 2016 15:00:32 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Solomon Peachy <pizza@shaftnet.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] cw1200: Don't leak memory if krealloc failes
+Message-ID: <20160930130032.rz66gxmohjakic6c@linux-x5ow.site> (sfid-20160930_150038_664136_9EBF9592)
+References: <1475237495-15030-1-git-send-email-jthumshirn@suse.de>
+ <25a38254-f0e3-1f4e-de46-688d9fd1b736@cogentembedded.com>
 MIME-Version: 1.0
-Subject: Re: [-next] ath10k: fix error return code in ahb
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1474031135-6963-1-git-send-email-weiyj.lk@gmail.com>
-References: <1474031135-6963-1-git-send-email-weiyj.lk@gmail.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-CC: Raja Mani <rmani@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>,
-        "Wei Yongjun" <weiyongjun1@huawei.com>,
-        <ath10k@lists.infradead.org>
-Message-ID: <65bd7c68b413408cbb37dd2ff152d423@euamsexm01a.eu.qualcomm.com> (sfid-20160928_114443_053979_7D68017F)
-Date: Wed, 28 Sep 2016 11:44:16 +0200
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <25a38254-f0e3-1f4e-de46-688d9fd1b736@cogentembedded.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
+On Fri, Sep 30, 2016 at 03:56:45PM +0300, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Fix to return a negative error code from the error handling case
-> instead of 0, as done elsewhere in function ath10k_ahb_probe() or
-> ath10k_ahb_resource_init().
+> On 9/30/2016 3:11 PM, Johannes Thumshirn wrote:
 > 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > The call to krealloc() in wsm_buf_reserve() directly assigns the newly
+> > returned memory to buf->begin. This is all fine except when krealloc()
+> > failes we loose the ability to free the old memory pointed to by
+> 
+>    Fails.
+> 
+> > buf->begin. If we just create a temporary variable to assign memory to
+> > and assign the memory to it we can mitigate the memory leak.
+> > 
+> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> > ---
+> >  drivers/net/wireless/st/cw1200/wsm.c | 16 +++++++++-------
+> >  1 file changed, 9 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
+> > index 680d60e..12fad99 100644
+> > --- a/drivers/net/wireless/st/cw1200/wsm.c
+> > +++ b/drivers/net/wireless/st/cw1200/wsm.c
+> > @@ -1807,16 +1807,18 @@ static int wsm_buf_reserve(struct wsm_buf *buf, size_t extra_size)
+> >  {
+> >  	size_t pos = buf->data - buf->begin;
+> >  	size_t size = pos + extra_size;
+> > +	u8 *tmp;
+> > 
+> >  	size = round_up(size, FWLOAD_BLOCK_SIZE);
+> > 
+> > -	buf->begin = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
+> > -	if (buf->begin) {
+> > -		buf->data = &buf->begin[pos];
+> > -		buf->end = &buf->begin[size];
+> > -		return 0;
+> > -	} else {
+> > -		buf->end = buf->data = buf->begin;
+> > +	tmp = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
+> > +	if (tmp) {
+> 
+>    !tmp, you mean?
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-931eb6b7fee3 ath10k: fix error return code in ahb
+Yes, I've already sent out a v2.
 
 -- 
-https://patchwork.kernel.org/patch/9335759/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
