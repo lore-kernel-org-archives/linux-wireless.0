@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:32951 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932993AbcJLPjM (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36250 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750853AbcJAJ4y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 11:39:12 -0400
-Subject: Re: [PATCH] rtlwifi: Fix regression caused by commit d86e64768859
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
- <87r37mf1gi.fsf@kamboji.qca.qualcomm.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        "Stable [ 4 . 8+ ]" <stable@vger.kernel.org>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        Thorsten Leemhuis <regressions@leemhuis.info>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <704f3dc4-a9b6-3c00-edec-b1499a2c4c60@lwfinger.net> (sfid-20161012_173916_406590_D41E7162)
-Date: Wed, 12 Oct 2016 10:39:09 -0500
+        Sat, 1 Oct 2016 05:56:54 -0400
+Received: by mail-wm0-f51.google.com with SMTP id k125so67124759wma.1
+        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2016 02:56:53 -0700 (PDT)
+Subject: Re: nl80211 fine timing measurement support
+To: Lior David <liord@codeaurora.org>, Luca Coelho <luca@coelho.fi>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <e7096bbb-ba66-e639-b86e-a483dc198b85@codeaurora.org>
+ <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+ <1474353599.5664.125.camel@coelho.fi>
+ <b7022d3c-51ff-96eb-f6f0-319eb5ea66b0@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6b1f015b-2796-9821-25c6-d4d5070939c9@broadcom.com> (sfid-20161001_115736_696489_7E145B2D)
+Date: Sat, 1 Oct 2016 11:56:51 +0200
 MIME-Version: 1.0
-In-Reply-To: <87r37mf1gi.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <b7022d3c-51ff-96eb-f6f0-319eb5ea66b0@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2016 02:53 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
->> the configuration struct for most of the drivers was changed to be
->> constant. The problem is that five of the modified drivers need to be
->> able to update the firmware name based on the exact model of the card.
->> As the file names were stored in one of the members of that struct,
->> these drivers would fail with a kernel BUG splat when they tried to
->> update the firmware name.
+On 20-09-16 22:57, Lior David wrote:
+> On 9/20/2016 9:39 AM, Luca Coelho wrote:
+>> On Mon, 2016-09-19 at 20:42 +0200, Arend Van Spriel wrote:
+>>>
+>>> On 19-9-2016 19:31, Lior David wrote:
+>>>>
+>>>> Hi Johannes,
+>>>>
+>>>> We are working on adding indoor location support to the wil6210
+>>>> 11ad driver. This includes fine timing measurement (FTM) as well as
+>>>> something we call angle of arrival (AOA) which measures azimuth and
+>>>> elevation.
+>>>> Initially we implemented it internally using vendor commands but we
+>>>> would like to upstream it using standard nl80211 API.
+>>>> I noticed a patch you sent some time ago (https://patchwork.kernel.
+>>>> org/patch/7790701/) for adding fine timing measurement support to
+>>>> nl80211, it looks like a good baseline though we do have few issues
+>>>> with it... However I did not see any comments or response on this
+>>>> patch. Can you please update if you plan on eventually submitting
+>>>> this patch?
+>>>
+>>> You can find several FTM related patches in backport-iwlwifi repo on
+>>> kernel.org. See link to git log of nl80211.h there [1].
 >>
->> Rather than reverting the previous commit, I used a suggestion by
->> Johannes Berg and made the firmware file name pointers be local to
->> the routines that update the software variables.
+>> We have a full FTM implementation in our internal tree (which is
+>> published in the URL Arend provided) and we are currently working on
+>> cleaning it up for upstream submission.  You should see patches from us
+>> this week.
 >>
->> The configuration struct of rtl8192cu, which was not touched in the
->> previous patch, is now constantfied.
+> That's great to hear, thanks :-)
+> I reviewed your FTM nl80211 API and have some comments. I can send these
+> comments once you send the cleaned up patch (most are small issues), but there
+> is one issue I would like to raise in advance:
+> In the measurement response you report the final calculated RTT (is this
+> for each burst or calculated from all bursts?). Our implementation
+> reports the raw measurement results (t1, t2, t3, t4 for each measurement
+> as well as TOD and TOA errors at responder and initiator as defined in IEEE
+> P802.11-REVmc/D7.0, 9.6.8.33). Reporting the final RTT does have benefits, so I
+> checked with our location framework developers. The general consensus is they
+> prefer to get the raw results, mainly because there are some useful analysis
+> algorithms they can run, and in addition the firmware may not be strong enough
+> to perform the calculations for deriving the final RTT (it could be done in the
+> driver but I don't think this is a proper place for it). Maybe we should
+> provide option for reporting both raw and RTT results where drivers can
+> support either or both?
+
+If raw results are mainly used for analysis algorithms how about
+providing raw measurement data through debugfs. May even consider adding
+rtt calculation in cfg80211/mac80211 for drivers that choose to provide
+raw measurement data and still only report final RTT in nl80211 api.
+
+Regards,
+Arend
+
+> For reference, we have also implemented FTM internally using vendor
+> commands. The vendor commands API that we defined can be seen at [1],
+> the actual implementation is still under internal review so not yet
+> published.
+> 
+> Thanks,
+> Lior
+> 
+> [1] http://w1.fi/cgit/hostap/commit/?id=fcd85d9a3f2d9d63d0fa57e93446ad467db75b23
+> 
+> 
+>> --
+>> Cheers,
+>> Luca.
 >>
->> Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
->> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable [4.8+] <stable@vger.kernel.org>
->
-> This should be:
->
-> Cc: Stable <stable@vger.kernel.org> # 4.8
-
-I know that info should be at the end of the Cc for Stable; however, versions of 
-git since 2.6 are incorrectly mangling the line and producing the following:
-
-Stable <stable@vger.kernel.org#4.8+>
-
-Of course, the smtp server refuses to send that mail, thus I got creative with 
-my formatting.
-
-Thanks for Thorsten's address. I will try to keep him notified of any future 
-regressions that I find. Thus far, I have only communicated with him indirectly 
-through LKML.
-
-Larry
