@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57099 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752671AbcJJQAd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 12:00:33 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Marty Faltesek <mfaltesek@google.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: cache calibration data when the core is
- stopped
-Date: Mon, 10 Oct 2016 15:59:44 +0000
-Message-ID: <871szojits.fsf@kamboji.qca.qualcomm.com> (sfid-20161010_180037_655653_CCFD80E6)
-References: <1475699037-136212-1-git-send-email-mfaltesek@google.com>
-        <8760p0jlv4.fsf@kamboji.qca.qualcomm.com>
-        <CAOiWkA8yX6bnLWHTwMc21EJHh4tQHpdBH+yKL4Y9WWxufBKaKQ@mail.gmail.com>
-In-Reply-To: <CAOiWkA8yX6bnLWHTwMc21EJHh4tQHpdBH+yKL4Y9WWxufBKaKQ@mail.gmail.com>       (Marty
- Faltesek's message of "Mon, 10 Oct 2016 11:01:05 -0400")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:46658 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750849AbcJAUcT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Oct 2016 16:32:19 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] realtek: rtl8xxxu: Use const init arrays
+References: <459bf15427d92cd052fb2fe080438fd97a8a6cd8.1475343483.git.joe@perches.com>
+        <wrfj37kf6gvd.fsf@redhat.com> <1475352058.1996.1.camel@perches.com>
+Date: Sat, 01 Oct 2016 16:32:17 -0400
+In-Reply-To: <1475352058.1996.1.camel@perches.com> (Joe Perches's message of
+        "Sat, 01 Oct 2016 13:00:58 -0700")
+Message-ID: <wrfjponj4xpq.fsf@redhat.com> (sfid-20161001_223330_078872_A386AFD3)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
-
-> ath10k: cache calibration data when the core is stopped
+Joe Perches <joe@perches.com> writes:
+> On Sat, 2016-10-01 at 14:53 -0400, Jes Sorensen wrote:
+>> Joe Perches <joe@perches.com> writes:
+>> > Make the init arrays const to reduce data.
+>> > $ size drivers/net/wireless/realtek/rtl8xxxu/built-in.o*
+>> > (allyesconfig: x86-32)
+>> >    text	   data	    bss	    dec	    hex	filename
+>> >   80107 13651 58 93816 16e78
+>> > drivers/net/wireless/realtek/rtl8xxxu/built-in.o.new
+>> >   65303 28435 58 93796 16e64
+>> > drivers/net/wireless/realtek/rtl8xxxu/built-in.o.old
+>> In total you grow the kernel by 20 bytes. You reduce the data segment
+>> substantially while growing the text segment instead.
 >
-> Caching calibration data allows it to be accessed when the
-> device is not active.
+> No, not really.   The alignment boundaries move a bit for
+> this particular compilation.  It could go the other way for
+> a different compiler version or set of CONFIG options.
 >
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+> What's important is multiple pages of .data move to .rodata.
 
-Thanks, I'll now send v3.
+Your output shows it moving to the text segment - if it's in a different
+segment, eg. rodata, you should use output demonstrating that to justify
+the change.
 
---=20
-Kalle Valo=
+Jes
