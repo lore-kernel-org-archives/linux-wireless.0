@@ -1,113 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:36057 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752338AbcJJXnI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 19:43:08 -0400
-Received: by mail-qt0-f194.google.com with SMTP id y38so139061qta.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 16:43:08 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:48372 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750771AbcJAM3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Oct 2016 08:29:45 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        Larry.Finger@lwfinger.net, stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] rtl8xxxu: Fix rtl8723bu driver reload issue
+References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
+        <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
+        <20161001115622.GB15156@kroah.com>
+Date: Sat, 01 Oct 2016 08:29:42 -0400
+In-Reply-To: <20161001115622.GB15156@kroah.com> (Greg KH's message of "Sat, 1
+        Oct 2016 13:56:22 +0200")
+Message-ID: <wrfjshsg5k21.fsf@redhat.com> (sfid-20161001_143003_600013_4DEE6929)
 MIME-Version: 1.0
-In-Reply-To: <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
-References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
- <20161004215814.GB31652@localhost> <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
- <20161005163024.GA54237@google.com> <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Date: Mon, 10 Oct 2016 16:43:06 -0700
-Message-ID: <CAKdAkRTKo3JVJPamM44jyG6QuHoQB89FMKj5vo3-z6T+XH1W9Q@mail.gmail.com> (sfid-20161011_014312_863856_4544BD1B)
-Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device unregister
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Brian Norris <briannorris@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Xinming Hu <huxm@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 6, 2016 at 6:03 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Hi Brian,
+Greg KH <greg@kroah.com> writes:
+> On Fri, Sep 30, 2016 at 07:35:17PM -0400, Jes.Sorensen@redhat.com wrote:
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> 
+>> The generic disable_rf() function clears bits 22 and 23 in
+>> REG_RX_WAIT_CCA, however we did not re-enable them again in
+>> rtl8723b_enable_rf()
+>> 
+>> This resolves the problem for me with 8723bu devices not working again
+>> after reloading the driver.
+>> 
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
 >
->> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> owner@vger.kernel.org] On Behalf Of Brian Norris
->> Sent: Wednesday, October 05, 2016 10:00 PM
->> To: Amitkumar Karwar
->> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
->> rajatja@google.com; Xinming Hu
->> Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
->> unregister
->>
->> Hi,
->>
->> On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
->> > > From: Brian Norris [mailto:briannorris@chromium.org]
->> > > Sent: Wednesday, October 05, 2016 3:28 AM
->> > > To: Amitkumar Karwar
->> > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
->> > > rajatja@google.com; briannorris@google.com; Xinming Hu
->> > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
->> > > device unregister
->> > >
->> > > Hi,
->> > >
->> > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
->>
->> > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->> > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
->> > > mwifiex_adapter *adapter)
->> > > >                                 pci_disable_msi(pdev);
->> > > >                }
->> > > >         }
->> > > > +       card->adapter = NULL;
->> > >
->> > > I think you have a similar problem here as in patch 2; there is no
->> > > locking to protect fields in struct pcie_service_card or struct
->> > > sdio_mmc_card below. That problem kind of already exists, except
->> > > that you only write the value of card->adapter once at registration
->> > > time, so it's not actually unsafe. But now that you're introducing a
->> > > second write, you have a problem.
->> > >
->> > > Brian
->> > >
->> >
->> > We have a global "add_remove_card_sem" semaphore in our code for
->> > synchronizing initialization and teardown threads. Ideally "init +
->> > teardown/reboot" should not have a race issue with this logic
->> >
->> > Later there was a loophole introduced in this after using async
->> > firmware download API. During initialization, firmware downloads
->> > asynchronously in a separate thread where might have released the
->> > semaphore. I am working on a patch to fix this.
->> >
->> > So "card->adapter" doesn't need to have locking. Even if we have two
->> > write operations, those two threads can't run simultaneously due to
->> > above mentioned logic.
->>
->> What about writes racing with reads? You have lots of unsynchronized
->> cases that read this, although most of them should be halted by now
->> (e.g., cmd processing). I was looking at suspend() in particular, which
->> I thought you were looking at in this patch series.
+> <formletter>
 >
-> Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
+> This is not the correct way to submit patches for inclusion in the
+> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+> for how to do this properly.
 >
-> Writes won't have race with reads.
->
-> 1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
->         This place is at the beginning of initialization.
->         mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
->         There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
->
-> 2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
->         This place the end of teardown phase.
->         Interrupts are disabled and all cleanup is done. We have "card->adapter" NULL checks at entry point of suspend/remove/resume, if they get called after this.
+> </formletter>
 
-How exactly are you preventing ->suspend() from being called *while*
-you are running mwifiex_unregister_dev()? I.e. user slamming the lid
-of a laptop and throwing it in their backpack?
+DOH Kalle told me to CC stable I took it for granted that you meant CC
+in the email sense. Guess I get to blame my self for looking like a
+fool in public.
 
-Thanks.
+I'll send you an email directly with the SHA once it hits Linus' tree
+instead.
 
--- 
-Dmitry
+Jes
