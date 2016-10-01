@@ -1,34 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44672 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934152AbcJTMmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 08:42:43 -0400
-Message-ID: <1476967356.4929.20.camel@sipsolutions.net> (sfid-20161020_144245_695206_468939B3)
-Subject: Re: [PATCH] cfg80211: allow vendor commands to be sent to nan
- interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 20 Oct 2016 14:42:36 +0200
-In-Reply-To: <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com> (sfid-20161020_144028_808179_AEBFE0A8)
-References: <20161019044747.15921-1-luca@coelho.fi>
-         <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com>
-         (sfid-20161020_144028_808179_AEBFE0A8)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0088.hostedemail.com ([216.40.44.88]:34096 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750839AbcJAUBC (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Oct 2016 16:01:02 -0400
+Message-ID: <1475352058.1996.1.camel@perches.com> (sfid-20161001_220219_126529_30E473B6)
+Subject: Re: [PATCH] realtek: rtl8xxxu: Use const init arrays
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Sat, 01 Oct 2016 13:00:58 -0700
+In-Reply-To: <wrfj37kf6gvd.fsf@redhat.com>
+References: <459bf15427d92cd052fb2fe080438fd97a8a6cd8.1475343483.git.joe@perches.com>
+         <wrfj37kf6gvd.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2016-10-01 at 14:53 -0400, Jes Sorensen wrote:
+> Joe Perches <joe@perches.com> writes:
+> > Make the init arrays const to reduce data.
+> > $ size drivers/net/wireless/realtek/rtl8xxxu/built-in.o* (allyesconfig: x86-32)
+> >    text	   data	    bss	    dec	    hex	filename
+> >   80107	  13651	     58	  93816	  16e78	drivers/net/wireless/realtek/rtl8xxxu/built-in.o.new
+> >   65303	  28435	     58	  93796	  16e64	drivers/net/wireless/realtek/rtl8xxxu/built-in.o.old
+> In total you grow the kernel by 20 bytes. You reduce the data segment
+> substantially while growing the text segment instead.
 
-> Seeing this patch flying by, my itch became unbearable so I cooked up
-> the patch below. Please consider this an RFC and let me know your
-> thoughts.
+No, not really.   The alignment boundaries move a bit for
+this particular compilation.  It could go the other way for
+a different compiler version or set of CONFIG options.
 
-Hah, I had this itch before, but didn't do anything about it yet :)
-
-I like it though, care to submit it properly?
-
-johannes
+What's important is multiple pages of .data move to .rodata.
