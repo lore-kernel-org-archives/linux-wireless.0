@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33013 "EHLO
-        mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753133AbcJMOGd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 10:06:33 -0400
-Date: Thu, 13 Oct 2016 22:45:49 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161013134549.GB583@swordfish> (sfid-20161013_160700_551936_63B73309)
-References: <20161010150358.GA514@swordfish>
- <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net>
- <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net>
- <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net>
- <20161013134252.GA583@swordfish>
+Received: from mx1.redhat.com ([209.132.183.28]:47764 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751032AbcJASxe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 1 Oct 2016 14:53:34 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] realtek: rtl8xxxu: Use const init arrays
+References: <459bf15427d92cd052fb2fe080438fd97a8a6cd8.1475343483.git.joe@perches.com>
+Date: Sat, 01 Oct 2016 14:53:10 -0400
+In-Reply-To: <459bf15427d92cd052fb2fe080438fd97a8a6cd8.1475343483.git.joe@perches.com>
+        (Joe Perches's message of "Sat, 1 Oct 2016 10:39:25 -0700")
+Message-ID: <wrfj37kf6gvd.fsf@redhat.com> (sfid-20161001_205449_238497_22DE952F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161013134252.GA583@swordfish>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (10/13/16 22:42), Sergey Senozhatsky wrote:
-> 
-> On (10/13/16 08:02), Johannes Berg wrote:
-> > On Wed, 2016-10-12 at 22:39 -0700, Andy Lutomirski wrote:
-> > 
-> > > In a pinch, I have these patches sitting around:
-> > > 
-> > > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
-> > > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
-> > 
-> > That truly sounds like something we'd rather avoid in the TX/RX paths
-> > though, which should perform well.
-> 
-> didn't fix.
-> 
-> so I finally had some time to do a better bug-reporter job.
-> 
-> I added a bunch of printk-s and several virt_addr_valid()-s
-> to ieee80211_aes_ccm_encrypt().
-> 
-> and right befoe the Oops I see the following report from
-> virt_addr_valid()
-> 
-> 
->  FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02 >> 39) == 130
+Joe Perches <joe@perches.com> writes:
+> Make the init arrays const to reduce data.
+>
+> $ size drivers/net/wireless/realtek/rtl8xxxu/built-in.o* (allyesconfig: x86-32)
+>    text	   data	    bss	    dec	    hex	filename
+>   80107	  13651	     58	  93816	  16e78	drivers/net/wireless/realtek/rtl8xxxu/built-in.o.new
+>   65303	  28435	     58	  93796	  16e64	drivers/net/wireless/realtek/rtl8xxxu/built-in.o.old
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-that  `(00004100002cba02 >> 39) == 130'   part is
+In total you grow the kernel by 20 bytes. You reduce the data segment
+substantially while growing the text segment instead.
 
-phys_addr_valid()
-{
-	(addr >> boot_cpu_data.x86_phys_bits)
-}
+If any architecture replicates the text segment onto individual numa
+nodes, this would actually be a real loss rather than a win. Some archs
+used to do this, not sure if they are doing it anymore.
 
-	-ss
+I am not against this patch, but I am not sure it's really a win either.
+
+Jes
