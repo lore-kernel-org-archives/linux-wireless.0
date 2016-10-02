@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:60417 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750951AbcJAMQL (ORCPT
+Received: from mail-qt0-f177.google.com ([209.85.216.177]:36456 "EHLO
+        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750845AbcJBQK0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Oct 2016 08:16:11 -0400
-Date: Sat, 1 Oct 2016 13:56:22 +0200
-From: Greg KH <greg@kroah.com>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        Larry.Finger@lwfinger.net, stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] rtl8xxxu: Fix rtl8723bu driver reload issue
-Message-ID: <20161001115622.GB15156@kroah.com> (sfid-20161001_141647_476819_650A0A8F)
-References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
- <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
+        Sun, 2 Oct 2016 12:10:26 -0400
+Received: by mail-qt0-f177.google.com with SMTP id m5so14966852qtb.3
+        for <linux-wireless@vger.kernel.org>; Sun, 02 Oct 2016 09:10:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
+In-Reply-To: <1473188728-14995-1-git-send-email-twp@qca.qualcomm.com>
+References: <1473188728-14995-1-git-send-email-twp@qca.qualcomm.com>
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Mon, 3 Oct 2016 00:03:45 +0800
+Message-ID: <CAEFj986nVFxhMv6hWuvfdOODGsOO-+Zv2=S0BZa6XrL=-W+NUA@mail.gmail.com> (sfid-20161002_181031_030467_8182D3F0)
+Subject: Re: [PATCH] ath10k: enable peer stats by default
+To: Thomas Pedersen <twp@qca.qualcomm.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 07:35:17PM -0400, Jes.Sorensen@redhat.com wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> The generic disable_rf() function clears bits 22 and 23 in
-> REG_RX_WAIT_CCA, however we did not re-enable them again in
-> rtl8723b_enable_rf()
-> 
-> This resolves the problem for me with 8723bu devices not working again
-> after reloading the driver.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 4 ++++
->  1 file changed, 4 insertions(+)
+Hi, Thomas
 
-<formletter>
+On Wed, Sep 7, 2016 at 3:05 AM, Thomas Pedersen <twp@qca.qualcomm.com> wrote:
+> IFTYPE_MESH_POINT need to rely on these for accurate path
+> selection metrics. Other modes will probably also find
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
+Both get expected throughput or get txrate are not available to
+mac80211. So, is this useful by enabling it?
 
-</formletter>
+----
+Chun-Yeow
