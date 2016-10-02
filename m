@@ -1,113 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:34643 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932959AbcJQJRx (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33517 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751967AbcJBWvL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:17:53 -0400
-Received: by mail-io0-f178.google.com with SMTP id r30so181478580ioi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:17:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 17 Oct 2016 10:17:52 +0100
-Message-ID: <CAKv+Gu9ox91i=da0=Ngqt4=r1NpagmMv8URmnSvqvNVAuV=EsA@mail.gmail.com> (sfid-20161017_111800_642455_F22C95D0)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+        Sun, 2 Oct 2016 18:51:11 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: robh+dt@kernel.org, mark.rutland@arm.com, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, nbd@nbd.name
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k-devel@lists.ath9k.org, kvalo@codeaurora.org,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [RFC 3/3] ath9k: add OF configuration to disable the 2.4GHz or 5GHz band
+Date: Mon,  3 Oct 2016 00:50:59 +0200
+Message-Id: <20161002225059.16757-4-martin.blumenstingl@googlemail.com> (sfid-20161003_005114_235027_5225086A)
+In-Reply-To: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
+References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 October 2016 at 10:14, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On 17 October 2016 at 09:33, Johannes Berg <johannes@sipsolutions.net> wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> As the stack can (on x86-64) now be virtually mapped rather than
->> using "normal" kernel memory, Sergey noticed mac80211 isn't using
->> the SG APIs correctly by putting on-stack buffers into SG tables.
->> This leads to kernel crashes.
->>
->> Fix this by allocating the extra fields dynamically on the fly as
->> needed, using a kmem cache.
->>
->> I used per-CPU memory in a previous iteration of this patch, but
->> Ard Biesheuvel pointed out that was also vmalloc'ed on some
->> architectures.
->>
->> Reported-by: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
->> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->
-> Apologies for going back and forth on this, but it appears there may
-> be another way to deal with this.
->
-> First of all, we only need this handling for the authenticated data,
-> and only for CCM and GCM, not CMAC (which does not use scatterlists at
-> all, it simply calls the AES cipher directly)
->
-> So that leaves a fixed 20 bytes for GCM and fixed 32 bytes for CCM,
-> which we could allocate along with the AEAD request, e..g.,
->
-> """
-> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-> index 8e898a6e8de8..c0c33e6ad94e 100644
-> --- a/net/mac80211/aes_ccm.c
-> +++ b/net/mac80211/aes_ccm.c
-> @@ -24,13 +24,17 @@ int ieee80211_aes_ccm_encrypt(struct crypto_aead
-> *tfm, u8 *b_0, u8 *aad,
->  {
->         struct scatterlist sg[3];
->         struct aead_request *aead_req;
-> +       u8 *__aad;
->
->         aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
->         if (!aead_req)
->                 return -ENOMEM;
->
-> +       __aad = (u8 *)aead_req + crypto_aead_reqsize(tfm);
-> +       memcpy(__aad, aad, 2 * AES_BLOCK_SIZE);
-> +
->         sg_init_table(sg, 3);
-> -       sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-> +       sg_set_buf(&sg[0], &__aad[2], be16_to_cpup((__be16 *)__aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, mic_len);
->
-> @@ -49,6 +53,7 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead
-> *tfm, u8 *b_0, u8 *aad,
->  {
->         struct scatterlist sg[3];
->         struct aead_request *aead_req;
-> +       u8 *__aad;
->         int err;
->
->         if (data_len == 0)
-> @@ -58,8 +63,11 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead
-> *tfm, u8 *b_0, u8 *aad,
->         if (!aead_req)
->                 return -ENOMEM;
->
-> +       __aad = (u8 *)aead_req + crypto_aead_reqsize(tfm);
-> +       memcpy(__aad, aad, 2 * AES_BLOCK_SIZE);
-> +
->         sg_init_table(sg, 3);
-> -       sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-> +       sg_set_buf(&sg[0], &__aad[2], be16_to_cpup((__be16 *)__aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, mic_len);
->
-> @@ -90,6 +98,8 @@ struct crypto_aead
-> *ieee80211_aes_key_setup_encrypt(const u8 key[],
->         if (err)
->                 goto free_aead;
->
-> +       crypto_aead_set_reqsize(tfm,
-> +                               crypto_aead_reqsize(tfm) + 2 * AES_BLOCK_SIZE));
->         return tfm;
->
+Some devices are shipped with EEPROMs where a band is enabled which is
+not supported by the actual hardware. Allow disabling the affected
+bands using the new generic IEEE 802.11 bindings.
 
-Darn, it seems crypto_aead_set_reqsize() is internal to the crypto API ... :-(
+This is the OF equivalent to using ath9k_platform_data's disable_2ghz
+and disable_5ghz attributes.
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt | 2 ++
+ drivers/net/wireless/ath/ath9k/init.c                        | 4 ++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+index 9b58ede..042319a 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+@@ -18,6 +18,8 @@ Optional properties:
+ 			kernel firmware loader).
+ - mac-address: See ethernet.txt in the parent directory
+ - local-mac-address: See ethernet.txt in the parent directory
++- disable-ieee80211-2ghz: See ieee80211.txt in the current directory
++- disable-ieee80211-5ghz: See ieee80211.txt in the current directory
+ 
+ 
+ In this example, the node is defined as child node of the PCI controller:
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index b7c8ff9..8b3f906 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -21,6 +21,7 @@
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
++#include <linux/of_ieee80211.h>
+ #include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+@@ -572,6 +573,9 @@ static int ath9k_of_init(struct ath_softc *sc)
+ 
+ 	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
+ 
++	ah->disable_2ghz = of_ieee80211_is_2ghz_disabled(np);
++	ah->disable_5ghz = of_ieee80211_is_5ghz_disabled(np);
++
+ 	if (of_property_read_bool(np, "qca,no-eeprom")) {
+ 		/* ath9k-eeprom-<bus>-<id>.bin */
+ 		scnprintf(eeprom_name, sizeof(eeprom_name),
+-- 
+2.10.0
