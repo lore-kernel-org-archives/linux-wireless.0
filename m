@@ -1,170 +1,370 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48616 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941635AbcJ1HGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 28 Oct 2016 03:06:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-10-28
-Date: Fri, 28 Oct 2016 09:06:13 +0200
-Message-Id: <20161028070614.17583-1-johannes@sipsolutions.net> (sfid-20161028_090629_776345_7C3C4926)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33532 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751702AbcJBW30 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 2 Oct 2016 18:29:26 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, arnd@arndb.de
+Cc: chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 5/7] ath9k: consistently use get_eeprom_rev(ah)
+Date: Mon,  3 Oct 2016 00:29:11 +0200
+Message-Id: <20161002222913.12223-6-martin.blumenstingl@googlemail.com> (sfid-20161003_002938_334491_B55ED25A)
+In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+The AR5416_VER_MASK macro does the same as get_eeprom_rev, except that
+one has to know the actual EEPROM type (and providing a reference to
+that in a variable named "eep"). Additionally the eeprom_*.c
+implementations used the same shifting logic multiple times to get the
+eeprom revision which was also unnecessary duplication of
+get_eeprom_rev.
 
-First update for 4.10 - nothing major, new features as usual (FILS), and
-sometimes we deprecate old stuff (WDS).
+Also use the AR5416_EEP_VER_MINOR_MASK macro where needed and introduce
+a similar macro (AR5416_EEP_VER_MAJOR_MASK) for the major version.
+Finally drop AR9287_EEP_VER_MINOR_MASK since it simply duplicates the
+already defined AR5416_EEP_VER_MINOR_MASK.
 
-I don't have the fixes for the on-stack crypto/SG handling in this tree
-(you already have them via mac80211.git), but we did make sure that the
-fils_aead code doesn't re-introduce such an issue.
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.h      |  4 +--
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 32 ++++++++++------------
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c | 19 +++++++------
+ drivers/net/wireless/ath/ath9k/eeprom_def.c  | 41 +++++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/xmit.c        |  3 +-
+ 5 files changed, 52 insertions(+), 47 deletions(-)
 
-Please pull and let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 6b25e21fa6f26d0f0d45f161d169029411c84286:
-
-  Merge tag 'drm-for-v4.9' of git://people.freedesktop.org/~airlied/linux (2016-10-11 18:12:22 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-10-28
-
-for you to fetch changes up to 088e8df82f91a24728d49d9532cab7ebdee5117f:
-
-  cfg80211: Add support to update connection parameters (2016-10-27 16:03:28 +0200)
-
-----------------------------------------------------------------
-Among various cleanups and improvements, we have the following:
- * client FILS authentication support in mac80211 (Jouni)
- * AP/VLAN multicast improvements (Michael Braun)
- * config/advertising support for differing beacon intervals on
-   multiple virtual interfaces (Purushottam Kushwaha, myself)
- * deprecate the old WDS mode for cfg80211-based drivers, the
-   mode is hardly usable since it doesn't support any "modern"
-   features like WPA encryption (2003), HT (2009) or VHT (2014),
-   I'm not even sure WEP (introduced in 1997) could be done.
-
-----------------------------------------------------------------
-Andrei Otcheretianski (1):
-      cfg80211: allow vendor commands to be sent to nan interface
-
-Arend Van Spriel (1):
-      cfg80211: add generic helper to check interface is running
-
-Emmanuel Grumbach (2):
-      mac80211: allow the driver not to pass the tid to ieee80211_sta_uapsd_trigger
-      mac80211: uapsd_queues is in QoS IE order
-
-Ilan Peer (1):
-      cfg80211: allow aborting in-progress connection atttempts
-
-Johannes Berg (17):
-      mac80211: remove unnecessary mesh check
-      mac80211_hwsim: make multi-channel ops const
-      mac80211: preserve more bits when building QoS header
-      nl80211: correctly use nl80211_nan_srf_policy
-      nl80211: ifdef WoWLAN related policies
-      wireless: radiotap: fix timestamp sampling position values
-      mac80211: fix tid_agg_rx NULL dereference
-      mac80211: improve RX aggregation data in debugfs
-      wireless: deprecate WDS and disable by default
-      cfg80211: fix beacon interval in interface combination iteration
-      cfg80211: mesh: track (and thus validate) beacon interval
-      cfg80211: disallow beacon_int_min_gcd with IBSS
-      cfg80211: validate beacon int as part of iface combinations
-      mac80211: validate new interface's beacon intervals
-      nl80211: move unsplit command advertising to a separate function
-      nl80211: use nla_parse_nested() instead of nla_parse()
-      cfg80211: handle fragmented IEs in splitting
-
-Jouni Malinen (9):
-      cfg80211: Rename SAE_DATA to more generic AUTH_DATA
-      mac80211: Allow AUTH_DATA to be used for FILS
-      cfg80211: Add feature flag for Fast Initial Link Setup (FILS) as STA
-      cfg80211: Define IEEE P802.11ai (FILS) information elements
-      cfg80211: Add Fast Initial Link Setup (FILS) auth algs
-      cfg80211: Add KEK/nonces for FILS association frames
-      mac80211: Add FILS auth alg mapping
-      mac80211: FILS AEAD protection for station mode association frames
-      mac80211: Claim Fast Initial Link Setup (FILS) STA support
-
-Linus Lüssing (1):
-      mac80211_hwsim: suggest nl80211 instead of wext driver in documentation
-
-Michael Braun (5):
-      mac80211: remove unnecessary num_mcast_sta check
-      mac80211: filter multicast data packets on AP / AP_VLAN
-      mac80211: avoid extra memcpy in A-MSDU head creation
-      mac80211: fix A-MSDU outer SA/DA
-      cfg80211: configure multicast to unicast for AP interfaces
-
-Purushottam Kushwaha (2):
-      cfg80211: pass struct to interface combination check/iter
-      cfg80211: support virtual interfaces with different beacon intervals
-
-Sara Sharon (1):
-      mac80211: add a HW flag for supporting HW TX fragmentation
-
-Wei Yongjun (1):
-      cfg80211: fix possible memory leak in cfg80211_iter_combinations()
-
-vamsi krishna (1):
-      cfg80211: Add support to update connection parameters
-
- Documentation/networking/mac80211_hwsim/README     |   2 +-
- drivers/net/wireless/Kconfig                       |  13 +
- drivers/net/wireless/ath/ath10k/mac.c              |   1 +
- drivers/net/wireless/ath/ath9k/init.c              |   6 +
- drivers/net/wireless/broadcom/b43/main.c           |   2 +
- drivers/net/wireless/broadcom/b43legacy/main.c     |   2 +
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  22 +-
- drivers/net/wireless/mac80211_hwsim.c              |  79 ++--
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c     |   6 +-
- drivers/net/wireless/ti/wlcore/main.c              |   1 +
- include/linux/ieee80211.h                          |  26 ++
- include/net/cfg80211.h                             | 150 +++++--
- include/net/ieee80211_radiotap.h                   |   4 +-
- include/net/mac80211.h                             |  19 +-
- include/uapi/linux/nl80211.h                       |  69 +++-
- net/mac80211/Makefile                              |   1 +
- net/mac80211/aes_cmac.c                            |   8 +-
- net/mac80211/aes_cmac.h                            |   4 +
- net/mac80211/agg-rx.c                              |   8 +-
- net/mac80211/cfg.c                                 |  35 +-
- net/mac80211/debugfs.c                             |   1 +
- net/mac80211/debugfs_netdev.c                      |  11 +
- net/mac80211/debugfs_sta.c                         |   9 +-
- net/mac80211/fils_aead.c                           | 344 ++++++++++++++++
- net/mac80211/fils_aead.h                           |  19 +
- net/mac80211/ieee80211_i.h                         |  26 +-
- net/mac80211/iface.c                               |  16 +
- net/mac80211/main.c                                |   5 +
- net/mac80211/mlme.c                                |  60 ++-
- net/mac80211/rx.c                                  |  11 +-
- net/mac80211/sta_info.c                            |  23 +-
- net/mac80211/sta_info.h                            |   4 +-
- net/mac80211/tx.c                                  |  55 ++-
- net/mac80211/util.c                                |  61 +--
- net/mac80211/wme.c                                 |  23 +-
- net/mac80211/wpa.c                                 |   2 +-
- net/wireless/core.c                                |  33 +-
- net/wireless/core.h                                |   4 +-
- net/wireless/mesh.c                                |   2 +
- net/wireless/mlme.c                                |   6 +-
- net/wireless/nl80211.c                             | 445 +++++++++++++--------
- net/wireless/rdev-ops.h                            |  24 ++
- net/wireless/sme.c                                 |   2 +-
- net/wireless/trace.h                               |  37 ++
- net/wireless/util.c                                | 125 ++++--
- 45 files changed, 1385 insertions(+), 421 deletions(-)
- create mode 100644 net/mac80211/fils_aead.c
- create mode 100644 net/mac80211/fils_aead.h
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 8ef8090..5a24fb5 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -99,7 +99,6 @@
+ #define FBIN2FREQ(x, y)		((y) ? (2300 + x) : (4800 + 5 * x))
+ #define ath9k_hw_use_flash(_ah)	(!(_ah->ah_flags & AH_USE_EEPROM))
+ 
+-#define AR5416_VER_MASK (eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK)
+ #define OLC_FOR_AR9280_20_LATER (AR_SREV_9280_20_OR_LATER(ah) && \
+ 				 ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+ #define OLC_FOR_AR9287_10_LATER (AR_SREV_9287_11_OR_LATER(ah) && \
+@@ -121,6 +120,8 @@
+ 
+ #define AR5416_EEP_NO_BACK_VER       0x1
+ #define AR5416_EEP_VER               0xE
++#define AR5416_EEP_VER_MAJOR_SHIFT   12
++#define AR5416_EEP_VER_MAJOR_MASK    0xF000
+ #define AR5416_EEP_VER_MINOR_MASK    0x0FFF
+ #define AR5416_EEP_MINOR_VER_2       0x2
+ #define AR5416_EEP_MINOR_VER_3       0x3
+@@ -177,7 +178,6 @@
+ #define AR9280_TX_GAIN_TABLE_SIZE 22
+ 
+ #define AR9287_EEP_VER               0xE
+-#define AR9287_EEP_VER_MINOR_MASK    0xFFF
+ #define AR9287_EEP_MINOR_VER_1       0x1
+ #define AR9287_EEP_MINOR_VER_2       0x2
+ #define AR9287_EEP_MINOR_VER_3       0x3
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index d466871..76ce109 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -20,12 +20,17 @@
+ 
+ static int ath9k_hw_4k_get_eeprom_ver(struct ath_hw *ah)
+ {
+-	return ((ah->eeprom.map4k.baseEepHeader.version >> 12) & 0xF);
++	u16 version = ah->eeprom.map4k.baseEepHeader.version;
++
++	return (version & AR5416_EEP_VER_MAJOR_MASK) >>
++		AR5416_EEP_VER_MAJOR_SHIFT;
+ }
+ 
+ static int ath9k_hw_4k_get_eeprom_rev(struct ath_hw *ah)
+ {
+-	return ((ah->eeprom.map4k.baseEepHeader.version) & 0xFFF);
++	u16 version = ah->eeprom.map4k.baseEepHeader.version;
++
++	return version & AR5416_EEP_VER_MINOR_MASK;
+ }
+ 
+ #define SIZE_EEPROM_4K (sizeof(struct ar5416_eeprom_4k) / sizeof(u16))
+@@ -136,8 +141,8 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 		goto out;
+ 	}
+ 
+-	PR_EEP("Major Version", pBase->version >> 12);
+-	PR_EEP("Minor Version", pBase->version & 0xFFF);
++	PR_EEP("Major Version", ath9k_hw_4k_get_eeprom_ver(ah));
++	PR_EEP("Minor Version", ath9k_hw_4k_get_eeprom_rev(ah));
+ 	PR_EEP("Checksum", pBase->checksum);
+ 	PR_EEP("Length", pBase->length);
+ 	PR_EEP("RegDomain1", pBase->regDmn[0]);
+@@ -314,14 +319,12 @@ static void ath9k_hw_set_4k_power_cal_table(struct ath_hw *ah,
+ 
+ 	xpdMask = pEepData->modalHeader.xpdGain;
+ 
+-	if ((pEepData->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-	    AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_4k_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2)
+ 		pdGainOverlap_t2 =
+ 			pEepData->modalHeader.pdGainOverlap;
+-	} else {
++	else
+ 		pdGainOverlap_t2 = (u16)(MS(REG_READ(ah, AR_PHY_TPCRG5),
+ 					    AR_PHY_TPCRG5_PD_GAIN_OVERLAP));
+-	}
+ 
+ 	pCalBChans = pEepData->calFreqPier2G;
+ 	numPiers = AR5416_EEP4K_NUM_2G_CAL_PIERS;
+@@ -607,10 +610,8 @@ static void ath9k_hw_4k_set_txpower(struct ath_hw *ah,
+ 
+ 	memset(ratesArray, 0, sizeof(ratesArray));
+ 
+-	if ((pEepData->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-	    AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_4k_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2)
+ 		ht40PowerIncForPdadc = pModal->ht40PowerIncForPdadc;
+-	}
+ 
+ 	ath9k_hw_set_4k_power_per_rate_table(ah, chan,
+ 					     &ratesArray[0], cfgCtl,
+@@ -730,8 +731,7 @@ static void ath9k_hw_4k_set_gain(struct ath_hw *ah,
+ 		SM(pModal->iqCalQCh[0], AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF),
+ 		AR_PHY_TIMING_CTRL4_IQCORR_Q_Q_COFF | AR_PHY_TIMING_CTRL4_IQCORR_Q_I_COFF);
+ 
+-	if ((eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-	    AR5416_EEP_MINOR_VER_3) {
++	if (ath9k_hw_4k_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_3) {
+ 		txRxAttenLocal = pModal->txRxAttenCh[0];
+ 
+ 		REG_RMW_FIELD(ah, AR_PHY_GAIN_2GHZ,
+@@ -1009,16 +1009,14 @@ static void ath9k_hw_4k_set_board_values(struct ath_hw *ah,
+ 	REG_RMW_FIELD(ah, AR_PHY_EXT_CCA0, AR_PHY_EXT_CCA0_THRESH62,
+ 		      pModal->thresh62);
+ 
+-	if ((eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-						AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_4k_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2) {
+ 		REG_RMW_FIELD(ah, AR_PHY_RF_CTL2, AR_PHY_TX_END_DATA_START,
+ 			      pModal->txFrameToDataStart);
+ 		REG_RMW_FIELD(ah, AR_PHY_RF_CTL2, AR_PHY_TX_END_PA_ON,
+ 			      pModal->txFrameToPaOn);
+ 	}
+ 
+-	if ((eep->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-						AR5416_EEP_MINOR_VER_3) {
++	if (ath9k_hw_4k_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_3) {
+ 		if (IS_CHAN_HT40(chan))
+ 			REG_RMW_FIELD(ah, AR_PHY_SETTLING,
+ 				      AR_PHY_SETTLING_SWITCH,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 7f85bd1..daeaf12 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -22,12 +22,17 @@
+ 
+ static int ath9k_hw_ar9287_get_eeprom_ver(struct ath_hw *ah)
+ {
+-	return (ah->eeprom.map9287.baseEepHeader.version >> 12) & 0xF;
++	u16 version = ah->eeprom.map9287.baseEepHeader.version;
++
++	return (version & AR5416_EEP_VER_MAJOR_MASK) >>
++		AR5416_EEP_VER_MAJOR_SHIFT;
+ }
+ 
+ static int ath9k_hw_ar9287_get_eeprom_rev(struct ath_hw *ah)
+ {
+-	return (ah->eeprom.map9287.baseEepHeader.version) & 0xFFF;
++	u16 version = ah->eeprom.map9287.baseEepHeader.version;
++
++	return version & AR5416_EEP_VER_MINOR_MASK;
+ }
+ 
+ static bool __ath9k_hw_ar9287_fill_eeprom(struct ath_hw *ah)
+@@ -132,8 +137,8 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 		goto out;
+ 	}
+ 
+-	PR_EEP("Major Version", pBase->version >> 12);
+-	PR_EEP("Minor Version", pBase->version & 0xFFF);
++	PR_EEP("Major Version", ath9k_hw_ar9287_get_eeprom_ver(ah));
++	PR_EEP("Minor Version", ath9k_hw_ar9287_get_eeprom_rev(ah));
+ 	PR_EEP("Checksum", pBase->checksum);
+ 	PR_EEP("Length", pBase->length);
+ 	PR_EEP("RegDomain1", pBase->regDmn[0]);
+@@ -383,8 +388,7 @@ static void ath9k_hw_set_ar9287_power_cal_table(struct ath_hw *ah,
+ 
+ 	xpdMask = pEepData->modalHeader.xpdGain;
+ 
+-	if ((pEepData->baseEepHeader.version & AR9287_EEP_VER_MINOR_MASK) >=
+-	    AR9287_EEP_MINOR_VER_2)
++	if (ath9k_hw_ar9287_get_eeprom_rev(ah) >= AR9287_EEP_MINOR_VER_2)
+ 		pdGainOverlap_t2 = pEepData->modalHeader.pdGainOverlap;
+ 	else
+ 		pdGainOverlap_t2 = (u16)(MS(REG_READ(ah, AR_PHY_TPCRG5),
+@@ -733,8 +737,7 @@ static void ath9k_hw_ar9287_set_txpower(struct ath_hw *ah,
+ 
+ 	memset(ratesArray, 0, sizeof(ratesArray));
+ 
+-	if ((pEepData->baseEepHeader.version & AR9287_EEP_VER_MINOR_MASK) >=
+-	    AR9287_EEP_MINOR_VER_2)
++	if (ath9k_hw_ar9287_get_eeprom_rev(ah) >= AR9287_EEP_MINOR_VER_2)
+ 		ht40PowerIncForPdadc = pModal->ht40PowerIncForPdadc;
+ 
+ 	ath9k_hw_set_ar9287_power_per_rate_table(ah, chan,
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index e9af4a5..bd5bd62 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -79,12 +79,17 @@ static void ath9k_olc_get_pdadcs(struct ath_hw *ah,
+ 
+ static int ath9k_hw_def_get_eeprom_ver(struct ath_hw *ah)
+ {
+-	return ((ah->eeprom.def.baseEepHeader.version >> 12) & 0xF);
++	u16 version = ah->eeprom.def.baseEepHeader.version;
++
++	return (version & AR5416_EEP_VER_MAJOR_MASK) >>
++		AR5416_EEP_VER_MAJOR_SHIFT;
+ }
+ 
+ static int ath9k_hw_def_get_eeprom_rev(struct ath_hw *ah)
+ {
+-	return ((ah->eeprom.def.baseEepHeader.version) & 0xFFF);
++	u16 version = ah->eeprom.def.baseEepHeader.version;
++
++	return version & AR5416_EEP_VER_MINOR_MASK;
+ }
+ 
+ #define SIZE_EEPROM_DEF (sizeof(struct ar5416_eeprom_def) / sizeof(u16))
+@@ -214,8 +219,8 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 		goto out;
+ 	}
+ 
+-	PR_EEP("Major Version", pBase->version >> 12);
+-	PR_EEP("Minor Version", pBase->version & 0xFFF);
++	PR_EEP("Major Version", ath9k_hw_def_get_eeprom_ver(ah));
++	PR_EEP("Minor Version", ath9k_hw_def_get_eeprom_rev(ah));
+ 	PR_EEP("Checksum", pBase->checksum);
+ 	PR_EEP("Length", pBase->length);
+ 	PR_EEP("RegDomain1", pBase->regDmn[0]);
+@@ -391,27 +396,27 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
+ 	case EEP_TXGAIN_TYPE:
+ 		return pBase->txGainType;
+ 	case EEP_OL_PWRCTRL:
+-		if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_19)
++		if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_19)
+ 			return pBase->openLoopPwrCntl ? true : false;
+ 		else
+ 			return false;
+ 	case EEP_RC_CHAIN_MASK:
+-		if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_19)
++		if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_19)
+ 			return pBase->rcChainMask;
+ 		else
+ 			return 0;
+ 	case EEP_DAC_HPWR_5G:
+-		if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_20)
++		if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_20)
+ 			return pBase->dacHiPwrMode_5G;
+ 		else
+ 			return 0;
+ 	case EEP_FRAC_N_5G:
+-		if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_22)
++		if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_22)
+ 			return pBase->frac_n_5g;
+ 		else
+ 			return 0;
+ 	case EEP_PWR_TABLE_OFFSET:
+-		if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_21)
++		if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_21)
+ 			return pBase->pwr_table_offset;
+ 		else
+ 			return AR5416_PWR_TABLE_OFFSET_DB;
+@@ -434,7 +439,7 @@ static void ath9k_hw_def_set_gain(struct ath_hw *ah,
+ 				  u8 txRxAttenLocal, int regChainOffset, int i)
+ {
+ 	ENABLE_REG_RMW_BUFFER(ah);
+-	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
++	if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_3) {
+ 		txRxAttenLocal = pModal->txRxAttenCh[i];
+ 
+ 		if (AR_SREV_9280_20_OR_LATER(ah)) {
+@@ -603,7 +608,7 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 			      pModal->thresh62);
+ 	}
+ 
+-	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2) {
+ 		REG_RMW_FIELD(ah, AR_PHY_RF_CTL2,
+ 			      AR_PHY_TX_END_DATA_START,
+ 			      pModal->txFrameToDataStart);
+@@ -611,7 +616,7 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 			      pModal->txFrameToPaOn);
+ 	}
+ 
+-	if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_3) {
++	if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_3) {
+ 		if (IS_CHAN_HT40(chan))
+ 			REG_RMW_FIELD(ah, AR_PHY_SETTLING,
+ 				      AR_PHY_SETTLING_SWITCH,
+@@ -619,13 +624,14 @@ static void ath9k_hw_def_set_board_values(struct ath_hw *ah,
+ 	}
+ 
+ 	if (AR_SREV_9280_20_OR_LATER(ah) &&
+-	    AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_19)
++	    ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_19)
+ 		REG_RMW_FIELD(ah, AR_PHY_CCK_TX_CTRL,
+ 			      AR_PHY_CCK_TX_CTRL_TX_DAC_SCALE_CCK,
+ 			      pModal->miscBits);
+ 
+ 
+-	if (AR_SREV_9280_20(ah) && AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_20) {
++	if (AR_SREV_9280_20(ah) &&
++	    ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_20) {
+ 		if (IS_CHAN_2GHZ(chan))
+ 			REG_RMW_FIELD(ah, AR_AN_TOP1, AR_AN_TOP1_DACIPMODE,
+ 					eep->baseEepHeader.dacLpMode);
+@@ -796,8 +802,7 @@ static void ath9k_hw_set_def_power_cal_table(struct ath_hw *ah,
+ 
+ 	pwr_table_offset = ah->eep_ops->get_eeprom(ah, EEP_PWR_TABLE_OFFSET);
+ 
+-	if ((pEepData->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-	    AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2) {
+ 		pdGainOverlap_t2 =
+ 			pEepData->modalHeader[modalIdx].pdGainOverlap;
+ 	} else {
+@@ -1169,10 +1174,8 @@ static void ath9k_hw_def_set_txpower(struct ath_hw *ah,
+ 
+ 	memset(ratesArray, 0, sizeof(ratesArray));
+ 
+-	if ((pEepData->baseEepHeader.version & AR5416_EEP_VER_MINOR_MASK) >=
+-	    AR5416_EEP_MINOR_VER_2) {
++	if (ath9k_hw_def_get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_2)
+ 		ht40PowerIncForPdadc = pModal->ht40PowerIncForPdadc;
+-	}
+ 
+ 	ath9k_hw_set_def_power_per_rate_table(ah, chan,
+ 					       &ratesArray[0], cfgCtl,
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52bfbb9..2f35e7a 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1132,8 +1132,9 @@ static u8 ath_get_rate_txpower(struct ath_softc *sc, struct ath_buf *bf,
+ 		if (is_40) {
+ 			u8 power_ht40delta;
+ 			struct ar5416_eeprom_def *eep = &ah->eeprom.def;
++			u16 eeprom_rev = ah->eep_ops->get_eeprom_rev(ah);
+ 
+-			if (AR5416_VER_MASK >= AR5416_EEP_MINOR_VER_2) {
++			if (eeprom_rev >= AR5416_EEP_MINOR_VER_2) {
+ 				bool is_2ghz;
+ 				struct modal_eep_header *pmodal;
+ 
+-- 
+2.10.0
