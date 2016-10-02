@@ -1,131 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35242 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S945207AbcJaSfb (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34297 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751425AbcJBW3X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 14:35:31 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s8so9356282pfj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 11:35:31 -0700 (PDT)
-Date: Tue, 1 Nov 2016 04:35:22 +1000
-From: John Heenan <john@zgus.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-Message-ID: <20161031183522.GA13315@cube> (sfid-20161031_193555_671786_3335EF71)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Sun, 2 Oct 2016 18:29:23 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, arnd@arndb.de
+Cc: chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 2/7] ath9k: indicate that the AR9003 EEPROM template values are little endian
+Date: Mon,  3 Oct 2016 00:29:08 +0200
+Message-Id: <20161002222913.12223-3-martin.blumenstingl@googlemail.com> (sfid-20161003_002933_174027_AD405FA7)
+In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl8723bu wireless IC shows evidence of a more agressive approach to
-power saving, powering down its RF side when there is no wireless
-interfacing but leaving USB interfacing intact. This makes the wireless
-IC more suitable for use in devices which need to keep their power use
-as low as practical, such as tablets and Surface Pro type devices.
+The eepMisc field was not set explicitly. The default value of 0 means
+that the values in the EEPROM (template) should be interpreted as little
+endian. However, this is not clear until comparing the AR9003 code with
+the other EEPROM formats.
+To make the code easier to understand we explicitly state that the values
+are little endian - there are no functional changes with this patch.
 
-In effect this means that a full initialisation must be performed
-whenever a wireless interface is brought up. It also means that
-interpretations of power status from general wireless registers should
-not be relied on to influence an init sequence.
-
-The patch works by forcing a fuller initialisation and forcing it to
-occur more often in code paths (such as occurs during a low level
-authentication that initiates wireless interfacing).
-
-The initialisation sequence is now more consistent with code based
-directly on vendor code. For example while the vendor derived code
-interprets a register as indcating a particular powered state, it does
-not use this information to influence its init sequence.
-
-The rtl8723bu device has a unique USB VID and PID. This is taken
-advantage of for the patch to ensure only rtl8723bu devices are affected
-by this patch.
-
-With this patch wpa_supplicant reliably and consistently connects with
-an AP. Before a workaround such as executing rmmod and modprobe before
-each call to wpa_supplicant worked with some distributions.
-
-Signed-off-by: John Heenan <john@zgus.com>
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 24 ++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  3 +++
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 04141e5..f36e674 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -79,6 +79,8 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
- #define RTL8XXXU_TX_URB_LOW_WATER	25
- #define RTL8XXXU_TX_URB_HIGH_WATER	32
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ea7b819..270d4ae 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -53,7 +53,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -631,7 +631,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -1210,7 +1210,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -1789,7 +1789,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -2367,7 +2367,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		.txrxMask =  0x33, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 0a4c736..7dc7205 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -69,6 +69,9 @@
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
  
-+#define USB_PRODUCT_ID_RTL8723BU 0xb720
++/* AR5416_EEPMISC_BIG_ENDIAN not set indicates little endian */
++#define AR9300_EEPMISC_LITTLE_ENDIAN 0
 +
- static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- 				  struct rtl8xxxu_rx_urb *rx_urb);
- 
-@@ -3892,6 +3894,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	u8 val8;
- 	u16 val16;
- 	u32 val32;
-+  struct usb_device_descriptor *udesc = &priv->udev->descriptor;
- 
- 	/* Check if MAC is already powered on */
- 	val8 = rtl8xxxu_read8(priv, REG_CR);
-@@ -3900,7 +3903,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
- 	 * initialized. First MAC returns 0xea, second MAC returns 0x00
- 	 */
--	if (val8 == 0xea)
-+	if (val8 == 0xea
-+			|| (udesc->idVendor == USB_VENDOR_ID_REALTEK
-+			&&  udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
- 		macpower = false;
- 	else
- 		macpower = true;
-@@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	struct rtl8xxxu_tx_urb *tx_urb;
- 	unsigned long flags;
- 	int ret, i;
-+	struct usb_device_descriptor *udesc = &priv->udev->descriptor;
- 
- 	ret = 0;
- 
-+	if(udesc->idVendor == USB_VENDOR_ID_REALTEK
-+			&& udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
-+		ret = rtl8xxxu_init_device(hw);
-+		if (ret)
-+			goto error_out;
-+	}
-+
- 	init_usb_anchor(&priv->rx_anchor);
- 	init_usb_anchor(&priv->tx_anchor);
- 	init_usb_anchor(&priv->int_anchor);
-@@ -6080,9 +6093,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 		goto exit;
- 	}
- 
--	ret = rtl8xxxu_init_device(hw);
--	if (ret)
-+	if(!(id->idVendor == USB_VENDOR_ID_REALTEK
-+			&& id->idProduct == USB_PRODUCT_ID_RTL8723BU)) {
-+		ret = rtl8xxxu_init_device(hw);
-+		if (ret)
- 		goto exit;
-+	}
- 
- 	hw->wiphy->max_scan_ssids = 1;
- 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
-@@ -6191,7 +6207,7 @@ static struct usb_device_id dev_table[] = {
- /* Tested by Myckel Habets */
- {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192eu_fops},
--{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0xb720, 0xff, 0xff, 0xff),
-+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, USB_PRODUCT_ID_RTL8723BU, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8723bu_fops},
- #ifdef CONFIG_RTL8XXXU_UNTESTED
- /* Still supported by rtlwifi */
+ #define AR9300_OTP_BASE \
+ 		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
+ #define AR9300_OTP_STATUS \
 -- 
-2.10.1
+2.10.0
