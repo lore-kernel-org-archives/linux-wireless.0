@@ -1,109 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:36062 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751214AbcJNIlK (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34960 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751749AbcJBW31 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:41:10 -0400
-Received: by mail-io0-f176.google.com with SMTP id j37so114036399ioo.3
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 01:41:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
- <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 09:41:08 +0100
-Message-ID: <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com> (sfid-20161014_104135_644164_49AB2EA5)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+        Sun, 2 Oct 2016 18:29:27 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, arnd@arndb.de
+Cc: chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 6/7] ath9k: Make the EEPROM swapping check use the eepmisc register
+Date: Mon,  3 Oct 2016 00:29:12 +0200
+Message-Id: <20161002222913.12223-7-martin.blumenstingl@googlemail.com> (sfid-20161003_002940_421182_B6AB79BB)
+In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 09:39, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On 14 October 2016 at 09:28, Johannes Berg <johannes@sipsolutions.net> wrote:
->>
->>>    1. revert that patch (doing so would need some major adjustments now,
->>>       since it's pretty old and a number of new things were added in the
->>>       meantime)
->>
->> This it will have to be, I guess.
->>
->>>    2. allocate a per-CPU buffer for all the things that we put on the
->>>       stack and use in SG lists, those are:
->>>        * CCM/GCM: AAD (32B), B_0/J_0 (16B)
->>>        * GMAC: AAD (20B), zero (16B)
->>>        * (not sure why CMAC isn't using this API, but it would be like GMAC)
->>
->> This doesn't work - I tried to move the mac80211 buffers, but because
->> we also put the struct aead_request on the stack, and crypto_ccm has
->> the "odata" in there, and we can't separate the odata from that struct,
->> we'd have to also put that into a per-CPU buffer, but it's very big -
->> 456 bytes for CCM, didn't measure the others but I'd expect them to be
->> larger, if different.
->>
->> I don't think we can allocate half a kb for each CPU just to be able to
->> possibly use the acceleration here. We can't even make that conditional
->> on not having hardware crypto in the wifi NIC because drivers are
->> always allowed to pass undecrypted frames, regardless of whether or not
->> HW crypto was attempted, so we don't know upfront if we'll have to
->> decrypt anything in software...
->>
->> Given that, I think we have had a bug in here basically since Ard's
->> patch, we never should've put these structs on the stack. Herbert, you
->> also touched this later and converted the API usage, did you see the
->> way the stack is used here and think it should be OK, or did you simply
->> not realize that?
->>
->> Ard, are you able to help out working on a revert of your patch? That
->> would require also reverting a number of other patches (various fixes,
->> API adjustments, etc. to the AEAD usage), but the more complicated part
->> is that in the meantime Jouni introduced GCMP and CCMP-256, both of
->> which we of course need to retain.
->>
->
-> I am missing some context here, but could you explain what exactly is
-> the problem here?
->
-> Look at this code
->
-> """
-> struct scatterlist sg[3];
->
-> char aead_req_data[sizeof(struct aead_request) +
->     crypto_aead_reqsize(tfm)]
->     __aligned(__alignof__(struct aead_request));
-> struct aead_request *aead_req = (void *) aead_req_data;
->
-> memset(aead_req, 0, sizeof(aead_req_data));
->
-> sg_init_table(sg, 3);
-> sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-> sg_set_buf(&sg[1], data, data_len);
-> sg_set_buf(&sg[2], mic, mic_len);
->
-> aead_request_set_tfm(aead_req, tfm);
-> aead_request_set_crypt(aead_req, sg, sg, data_len, b_0);
-> aead_request_set_ad(aead_req, sg[0].length);
-> """
->
-> I assume the stack buffer itself is not the problem here, but aad,
-> which is allocated on the stack one frame up.
-> Do we really need to revert the whole patch to fix that?
+There are two ways of swapping the EEPROM data in the ath9k driver:
+1) swab16 based on the first two EEPROM "magic" bytes (same for all
+   EEPROM formats)
+2) field and EEPROM format specific swab16/swab32 (different for
+   eeprom_def, eeprom_4k and eeprom_9287)
 
-Ah never mind, this is about 'odata'. Apologies, should have read first
+The result of the first check was used to also enable the second swap.
+This behavior seems incorrect, since the data may only be byte-swapped
+(afterwards the data could be in the correct endianness).
+Thus we introduce a separate check based on the "eepmisc" register
+(which is part of the EEPROM data). When bit 0 is set, then the EEPROM
+format specific values are in "big endian". This is also done by the
+FreeBSD kernel, see [0] for example.
+
+This allows us to parse EEPROMs with the "correct" magic bytes but
+swapped EEPROM format specific values. These EEPROMs (mostly found in
+lantiq and broadcom based big endian MIPS based devices) only worked
+due to platform specific "hacks" which swapped the EEPROM so the
+magic was inverted, which also enabled the format specific swapping.
+With this patch the old behavior is still supported, but neither
+recommended nor needed anymore.
+
+[0]
+https://github.com/freebsd/freebsd/blob/50719b56d9ce8d7d4beb53b16e9edb2e9a4a7a18/sys/dev/ath/ath_hal/ah_eeprom_9287.c#L351
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c | 57 ++++++++++++++++++++++++---------
+ 1 file changed, 41 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a449588..0e46797 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -155,11 +155,19 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
+ 	return ret;
+ }
+ 
++#ifdef __BIG_ENDIAN
++#define EXPECTED_EEPMISC_ENDIAN AR5416_EEPMISC_BIG_ENDIAN
++#else
++#define EXPECTED_EEPMISC_ENDIAN 0
++#endif
++
+ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
+ {
+ 	u16 magic;
+ 	u16 *eepdata;
++	u8 eepmisc;
+ 	int i;
++	bool needs_byteswap = false;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
+@@ -167,36 +175,53 @@ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
+ 		return -EIO;
+ 	}
+ 
+-	*swap_needed = false;
+ 	if (swab16(magic) == AR5416_EEPROM_MAGIC) {
++		needs_byteswap = true;
++		ath_dbg(common, EEPROM,
++			"EEPROM needs byte-swapping to correct endianness.\n");
++	} else if (magic != AR5416_EEPROM_MAGIC) {
++		if (ath9k_hw_use_flash(ah)) {
++			ath_dbg(common, EEPROM,
++				"Ignoring invalid EEPROM magic (0x%04x).\n",
++				magic);
++		} else {
++			ath_err(common,
++				"Invalid EEPROM magic (0x%04x).\n", magic);
++			return -EINVAL;
++		}
++	}
++
++	if (needs_byteswap) {
+ 		if (ah->ah_flags & AH_NO_EEP_SWAP) {
+ 			ath_info(common,
+ 				 "Ignoring endianness difference in EEPROM magic bytes.\n");
+ 		} else {
+-			*swap_needed = true;
+-		}
+-	} else if (magic != AR5416_EEPROM_MAGIC) {
+-		if (ath9k_hw_use_flash(ah))
+-			return 0;
++			eepdata = (u16 *)(&ah->eeprom);
+ 
+-		ath_err(common,
+-			"Invalid EEPROM Magic (0x%04x).\n", magic);
+-		return -EINVAL;
++			for (i = 0; i < size; i++)
++				eepdata[i] = swab16(eepdata[i]);
++		}
+ 	}
+ 
+-	eepdata = (u16 *)(&ah->eeprom);
+-
+-	if (*swap_needed) {
+-		ath_dbg(common, EEPROM,
+-			"EEPROM Endianness is not native.. Changing.\n");
++	*swap_needed = false;
+ 
+-		for (i = 0; i < size; i++)
+-			eepdata[i] = swab16(eepdata[i]);
++	eepmisc = ah->eep_ops->get_eepmisc(ah);
++	if ((eepmisc & AR5416_EEPMISC_BIG_ENDIAN) != EXPECTED_EEPMISC_ENDIAN) {
++		if (ah->ah_flags & AH_NO_EEP_SWAP) {
++			ath_info(common,
++				 "Ignoring endianness difference in eepmisc register.\n");
++		} else {
++			*swap_needed = true;
++			ath_dbg(common, EEPROM,
++				"EEPROM needs swapping according to the eepmisc register.\n");
++		}
+ 	}
+ 
+ 	return 0;
+ }
+ 
++#undef EXPECTED_EEPMISC_VAL
++
+ bool ath9k_hw_nvram_validate_checksum(struct ath_hw *ah, int size)
+ {
+ 	u32 i, sum = 0;
+-- 
+2.10.0
