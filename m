@@ -1,71 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57618 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932463AbcJRTUY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 15:20:24 -0400
-Message-ID: <1476818413.6425.50.camel@sipsolutions.net> (sfid-20161018_212050_191899_D5D64397)
-Subject: Re: sequence diagrams in rst documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jani Nikula <jani.nikula@linux.intel.com>,
-        Markus Heiser <markus.heiser@darmarit.de>
-Cc: Jonathan Corbet <corbet@lwn.net>, linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Date: Tue, 18 Oct 2016 21:20:13 +0200
-In-Reply-To: <87eg3dvhdi.fsf@intel.com>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-         <20161011072119.7ad4e3a3@lwn.net>
-         <1476193466.4118.10.camel@sipsolutions.net>
-         <1476194038.4118.11.camel@sipsolutions.net>
-         <1476791021.6425.25.camel@sipsolutions.net>
-         <B9AC83F3-AA14-414B-B538-81436620E432@darmarit.de>
-         <1476799968.6425.33.camel@sipsolutions.net> <87eg3dvhdi.fsf@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36626 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbcJBW3V (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 2 Oct 2016 18:29:21 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, arnd@arndb.de
+Cc: chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 1/7] ath9k: Add a #define for the EEPROM "eepmisc" endianness bit
+Date: Mon,  3 Oct 2016 00:29:07 +0200
+Message-Id: <20161002222913.12223-2-martin.blumenstingl@googlemail.com> (sfid-20161003_002932_614159_AEAE1B0B)
+In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This replaces a magic number with a named #define. Additionally it
+removes two "eeprom format" specific #defines for the "big endianness"
+bit which are the same on all eeprom formats.
 
-> This could probably be argued either way...
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 1 -
+ drivers/net/wireless/ath/ath9k/eeprom.h        | 4 +++-
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 2 +-
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    | 2 +-
+ 6 files changed, 8 insertions(+), 6 deletions(-)
 
-Yeah, I guess it could :)
-
-> My view has been all along that we should prefer to use existing
-> extensions written and maintained by others. Perhaps we (the kind of
-> royal "we" of which I'm personally really not part of) could take on
-> maintainership of some extensions in the interest of improving kernel
-> documentation, but I think the goal should be that the extensions are
-> maintained outside of the kernel tree, that the extensions are
-> generally usable, and have a chance of attracting attention and
-> contributions from outside of the kernel community. (Note that this
-> doesn't preclude us from shipping the extensions in the kernel tree,
-> as long as it's updated from the upstream, not forked.)
-
-Right. I tend to agree, though in the particular case I'm looking at
-we'd probably have to fork outside the kernel, forming a new upstream,
-and then ship that version (or perhaps rewrite it, forming a new
-upstream, and then ship that - doesn't matter all that much)
-
-> (This is one part of me being unhappy about making it easy to run
-> arbitrary scripts to produce documentation; those will never be
-> generic, and we'll never be able to offload their maintenance outside
-> of the kernel. We should not think that we have some really special
-> needs in the kernel.)
-
-I agree that we don't necessarily have any special needs (*), but in
-cases like this (**) it does seem more practical to just ship the
-plugin with the kernel. Whether or not a separate "upstream" is formed
-for it could be a secondary question, although it does seem better to
-do so.
-
-(*) although not wanting to ship binary files *is* kinda special :)
-
-(**) where the upstream is essentially dead (for all I can tell) and
-severely limited to the point where a rewrite will be a better choice.
-
-Anyway, I'll have to see if we (Intel Linux WiFi team) actually want to
-do things this way. Using the existing blockdiag/seqdiag is practical
-since it all exists already. OTOH, a simpler and better-looking
-solution would also be nice, so if we do go this way I'll investigate
-more what we can do around this.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 08607d7..ea7b819 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3468,7 +3468,8 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 					AR5416_OPFLAGS_N_5G_HT20));
+ 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags.opFlags &
+ 					AR5416_OPFLAGS_N_5G_HT40));
+-	PR_EEP("Big Endian", !!(pBase->opCapFlags.eepMisc & 0x01));
++	PR_EEP("Big Endian", !!(pBase->opCapFlags.eepMisc &
++				AR5416_EEPMISC_BIG_ENDIAN));
+ 	PR_EEP("RF Silent", pBase->rfSilent);
+ 	PR_EEP("BT option", pBase->blueToothOptions);
+ 	PR_EEP("Device Cap", pBase->deviceCap);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 107bcfb..0a4c736 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -38,7 +38,6 @@
+ #define AR9300_NUM_CTLS_2G           12
+ #define AR9300_NUM_BAND_EDGES_5G     8
+ #define AR9300_NUM_BAND_EDGES_2G     4
+-#define AR9300_EEPMISC_BIG_ENDIAN    0x01
+ #define AR9300_EEPMISC_WOW           0x02
+ #define AR9300_CUSTOMER_DATA_SIZE    20
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
+index 4465c65..c466ada 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/eeprom.h
+@@ -161,6 +161,9 @@
+ #define AR5416_EEP_TXGAIN_ORIGINAL         0
+ #define AR5416_EEP_TXGAIN_HIGH_POWER       1
+ 
++/* Endianness of EEPROM content */
++#define AR5416_EEPMISC_BIG_ENDIAN          0x01
++
+ #define AR5416_EEP4K_START_LOC                64
+ #define AR5416_EEP4K_NUM_2G_CAL_PIERS         3
+ #define AR5416_EEP4K_NUM_2G_CCK_TARGET_POWERS 3
+@@ -191,7 +194,6 @@
+ #define AR9287_NUM_CTLS              	12
+ #define AR9287_NUM_BAND_EDGES        	4
+ #define AR9287_PD_GAIN_ICEPTS           1
+-#define AR9287_EEPMISC_BIG_ENDIAN       0x01
+ #define AR9287_EEPMISC_WOW              0x02
+ #define AR9287_MAX_CHAINS               2
+ #define AR9287_ANT_16S                  32
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+index 5da0826..780cb49 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
+@@ -154,7 +154,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 					AR5416_OPFLAGS_N_5G_HT20));
+ 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
+ 					AR5416_OPFLAGS_N_5G_HT40));
+-	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
++	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
+ 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
+ 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
+ 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+index 1a019a3..f483ba2 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
+@@ -150,7 +150,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 					AR5416_OPFLAGS_N_5G_HT20));
+ 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
+ 					AR5416_OPFLAGS_N_5G_HT40));
+-	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
++	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
+ 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
+ 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
+ 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+index 959682f..39b1b27 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
+@@ -232,7 +232,7 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
+ 					AR5416_OPFLAGS_N_5G_HT20));
+ 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
+ 					AR5416_OPFLAGS_N_5G_HT40));
+-	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
++	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
+ 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
+ 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
+ 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
+-- 
+2.10.0
