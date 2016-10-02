@@ -1,162 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:36423 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932656AbcJURQV (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36622 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750822AbcJBW3U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 13:16:21 -0400
-Received: by mail-pf0-f176.google.com with SMTP id e6so59915184pfk.3
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 10:16:21 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        rajatja@google.com, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh@kernel.org>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH v5] mwifiex: parse device tree node for PCIe
-Date: Fri, 21 Oct 2016 10:15:56 -0700
-Message-Id: <1477070156-109965-1-git-send-email-rajatja@google.com> (sfid-20161021_191627_694649_93619E19)
-In-Reply-To: <20161021020609.GA18359@localhost>
-References: <20161021020609.GA18359@localhost>
+        Sun, 2 Oct 2016 18:29:20 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, arnd@arndb.de
+Cc: chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+Date: Mon,  3 Oct 2016 00:29:06 +0200
+Message-Id: <20161002222913.12223-1-martin.blumenstingl@googlemail.com> (sfid-20161003_002931_985521_28304FF6)
+In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+There are two types of swapping the EEPROM data in the ath9k driver.
+Before this series one type of swapping could not be used without the
+other.
 
-This patch derives device tree node from pcie bus layer framework, and
-fixes a minor memory leak in mwifiex_pcie_probe() (in failure path).
-Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-marvell-8xxx.txt) to accomodate PCIe changes.
+The first type of swapping looks at the "magic bytes" at the start of
+the EEPROM data and performs swab16 on the EEPROM contents if needed.
+The second type of swapping is EEPROM format specific and swaps
+specific fields within the EEPROM itself (swab16, swab32 - depends on
+the EEPROM format).
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
-v2: Included vendor and product IDs in compatible strings for PCIe
-chipsets(Rob Herring)
-v3: Patch is created using -M option so that it will only include diff of
-original and renamed files(Rob Herring)
-Resend v3: Resending the patch because I missed to include device tree mailing
-while sending v3.
-v4: Fix error handling, also move-on even if no device tree node is present.
-v5: Update commit log to include memory leak, return -EINVAL instead of -1.
+With this series the second part now looks at the EEPMISC register
+inside the EEPROM, which uses a bit to indicate if the EEPROM data
+is Big Endian (this is also done by the FreeBSD kernel).
+This has a nice advantage: currently there are some out-of-tree hacks
+(in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
+Big Endian system (= no swab16 is performed) but the EEPROM itself
+indicates that it's data is Little Endian. Until now the out-of-tree
+code simply did a swab16 before passing the data to ath9k, so ath9k
+first did the swab16 - this also enabled the format specific swapping.
+These out-of-tree hacks are still working with the new logic, but it
+is recommended to remove them. This implementation is based on a
+discussion with Arnd Bergmann who raised concerns about the
+robustness and portability of the swapping logic in the original OF
+support patch review, see [0].
 
- .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++--
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 39 +++++++++++++++++++---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
- 3 files changed, 42 insertions(+), 8 deletions(-)
- rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
+After a second round of patches (= v1 of this series) neither Arnd
+Bergmann nor I were really happy with the complexity of the EEPROM
+swapping logic. Based on a discussion (see [1] and [2]) we decided
+that ath9k should use a defined format (specifying the endianness
+of the data - I went with __le16 and __le32) when accessing the
+EEPROM fields. A benefit of this is that we enable the EEPMISC based
+swapping logic by default, just like the FreeBSD driver, see [3]. On
+the devices which I have tested (see below) ath9k now works without
+having to specify the "endian_check" field in ath9k_platform_data (or
+a similar logic which could provide this via devicetree) as ath9k now
+detects the endianness automatically. Only EEPROMs which are mangled
+by some out-of-tree code still need the endian_check flag (or one can
+simply remove that mangling from the out-of-tree code).
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-similarity index 91%
-rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index c421aba..dfe5f8e 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,8 +1,8 @@
--Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
- 
--This node provides properties for controlling the marvell sdio wireless device.
--The node is expected to be specified as a child node to the SDIO controller that
-+This node provides properties for controlling the marvell sdio/pcie wireless device.
-+The node is expected to be specified as a child node to the SDIO/PCIE controller that
- connects the device to the system.
- 
- Required properties:
-@@ -10,6 +10,8 @@ Required properties:
-   - compatible : should be one of the following:
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
-+	* "pci11ab,2b42"
-+	* "pci1b4b,2b42"
- 
- Optional properties:
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3c3c4f1..7c44f88 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,6 +37,22 @@ static struct mwifiex_if_ops pcie_ops;
- 
- static struct semaphore add_remove_card_sem;
- 
-+static const struct of_device_id mwifiex_pcie_of_match_table[] = {
-+	{ .compatible = "pci11ab,2b42" },
-+	{ .compatible = "pci1b4b,2b42" },
-+	{ }
-+};
-+
-+static int mwifiex_pcie_probe_of(struct device *dev)
-+{
-+	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-+		pr_err("pcie device node not available");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -178,6 +194,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent)
- {
- 	struct pcie_service_card *card;
-+	int ret;
- 
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
- 		 pdev->vendor, pdev->device, pdev->revision);
-@@ -199,13 +216,27 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
--	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
--			     MWIFIEX_PCIE)) {
--		pr_err("%s failed\n", __func__);
--		return -1;
-+	/* device tree node parsing and platform specific configuration*/
-+	if (pdev->dev.of_node) {
-+		ret = mwifiex_pcie_probe_of(&pdev->dev);
-+		if (ret) {
-+			dev_err(&pdev->dev,
-+				"required compatible string missing\n");
-+			goto err_free;
-+		}
- 	}
- 
-+	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
-+			       MWIFIEX_PCIE);
-+	if (ret) {
-+		pr_err("%s failed\n", __func__);
-+		goto err_free;
-+	}
- 	return 0;
-+
-+err_free:
-+	kfree(card);
-+	return ret;
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 2a162c3..c8dccf5 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2218,7 +2218,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
-+		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
-+		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
- 		    adapter->dev->of_node) {
- 			adapter->dt_node = adapter->dev->of_node;
- 			if (of_property_read_u32(adapter->dt_node,
+Testing:
+- tested by myself on AR9287 with Big Endian EEPROM
+- tested by myself on AR9227 with Little Endian EEPROM
+- tested by myself on AR9381 (using the ar9003_eeprom implementation,
+  which did not suffer from this whole problem)
+- how do we proceed with testing? maybe we could keep this in a
+  feature-branch and add these patches to LEDE once we have an ACK to
+  get more people to test this
+
+This series depends on my other series (v7):
+"add devicetree support to ath9k" - see [4]
+
+Changes since v1:
+- reworked description in the cover-letter to describe the reasons
+  behind the new patch 7
+- reworked patch "Set the "big endian" bit of the AR9003 EEPROM
+  templates" as ar9003_eeprom.c sets all values as Little Endian, thus
+  the Big Endian bit should never be set (the new patch makes this
+  clear)
+- dropped "ath9k: Make EEPROM endianness swapping configurable via
+  devicetree" as it is not needed anymore with the new logic from
+  patch 7
+- added patches 4 and 5 as small cleanup (this made it easier to
+  implement the le{16,32}_to_cpu() changes where needed)
+
+
+[0] http://www.spinics.net/lists/linux-wireless/msg152634.html
+[1] https://marc.info/?l=linux-wireless&m=147250597503174&w=2
+[2] https://marc.info/?l=linux-wireless&m=147254388611344&w=2
+[3] https://github.com/freebsd/freebsd/blob/50719b56d9ce8d7d4beb53b16e9edb2e9a4a7a18/sys/dev/ath/ath_hal/ah_eeprom_9287.c#L351
+[4] https://marc.info/?l=linux-wireless&m=147544488619822&w=2
+
+Martin Blumenstingl (7):
+  ath9k: Add a #define for the EEPROM "eepmisc" endianness bit
+  ath9k: indicate that the AR9003 EEPROM template values are little
+    endian
+  ath9k: Add an eeprom_ops callback for retrieving the eepmisc value
+  ath9k: replace eeprom_param EEP_MINOR_REV with get_eeprom_rev
+  ath9k: consistently use get_eeprom_rev(ah)
+  ath9k: Make the EEPROM swapping check use the eepmisc register
+  ath9k: define all EEPROM fields in Little Endian format
+
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c    |   2 +-
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c     |   6 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  21 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |   4 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c        |  42 ++++---
+ drivers/net/wireless/ath/ath9k/eeprom.h        |  85 +++++++------
+ drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 137 +++++++++------------
+ drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 129 +++++++++----------
+ drivers/net/wireless/ath/ath9k/eeprom_def.c    | 163 ++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/xmit.c          |   3 +-
+ 10 files changed, 289 insertions(+), 303 deletions(-)
+
 -- 
-2.8.0.rc3.226.g39d4020
+2.10.0
