@@ -1,135 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:33880 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753745AbcJXUXi (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34254 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751501AbcJBVry (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 16:23:38 -0400
-Received: by mail-pf0-f180.google.com with SMTP id r16so104528279pfg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 13:23:38 -0700 (PDT)
-Date: Mon, 24 Oct 2016 13:23:33 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
- remove_card
-Message-ID: <20161024202332.GD968@localhost> (sfid-20161024_222344_116988_10FF2B62)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
- <1477318892-22877-5-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477318892-22877-5-git-send-email-akarwar@marvell.com>
+        Sun, 2 Oct 2016 17:47:54 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v7 3/3] ath9k: parse the device configuration from an OF node
+Date: Sun,  2 Oct 2016 23:47:43 +0200
+Message-Id: <20161002214743.2263-4-martin.blumenstingl@googlemail.com> (sfid-20161002_234802_344919_9D1995E7)
+In-Reply-To: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
+References: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+ <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 24, 2016 at 07:51:32PM +0530, Amitkumar Karwar wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> This patch ensures to wait for firmware dump completion in
-> mwifiex_remove_card().
-> 
-> For sdio interface, reset_trigger variable is used to identify
-> if mwifiex_sdio_remove() is called by sdio_work during reset or
-> the call is from sdio subsystem.
-> 
-> This patch fixes a kernel crash observed during reboot when firmware
-> dump operation is in process.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c |  2 ++
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++++-
->  2 files changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 986bf07..4512e86 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -528,6 +528,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->  	if (!adapter || !adapter->priv_num)
->  		return;
->  
-> +	cancel_work_sync(&pcie_work);
+This allows setting the MAC address and specifying that the firmware
+will be requested from userspace (because there might not be a hardware
+EEPROM connected to the chip) for ath9k based PCI devices using
+the device tree.
 
-Is there a good reason you have to cancel the work? What if you were
-just to finish it (i.e., flush_work())?
+There is some out-of-tree code to "convert devicetree to
+ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
+obsolete with this patch.
 
-In any case, I think this is fine, so for the PCIe bits:
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 42 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-> +
->  	if (user_rmmod && !adapter->mfg_mode) {
->  #ifdef CONFIG_PM_SLEEP
->  		if (adapter->is_suspended)
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index 4cad1c2..f974260 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -46,6 +46,15 @@
->   */
->  static u8 user_rmmod;
->  
-> +/* reset_trigger variable is used to identify if mwifiex_sdio_remove()
-> + * is called by sdio_work during reset or the call is from sdio subsystem.
-> + * We will cancel sdio_work only if the call is from sdio subsystem.
-> + */
-> +static u8 reset_triggered;
-> +
-> +static void mwifiex_sdio_work(struct work_struct *work);
-> +static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
-> +
->  static struct mwifiex_if_ops sdio_ops;
->  static unsigned long iface_work_flags;
->  
-> @@ -289,6 +298,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
->  	if (!adapter || !adapter->priv_num)
->  		return;
->  
-> +	if (!reset_triggered)
-> +		cancel_work_sync(&sdio_work);
-> +
->  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
->  
->  	if (user_rmmod && !adapter->mfg_mode) {
-> @@ -2290,7 +2302,9 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
->  	 * discovered and initializes them from scratch.
->  	 */
->  
-> +	reset_triggered = 1;
->  	mwifiex_sdio_remove(func);
-> +	reset_triggered = 0;
-
-Boy that's ugly! Couldn't you just create something like
-__mwifiex_sdio_remove(), which does everything except the
-cancel_work_sync()? Then you'd do this for the .remove() callback:
-
-	cancel_work_sync(&sdio_work);
-	__mwifiex_sdio_remove(func);
-
-and for mwifiex_recreate_adapter() you'd just call
-__mwifiex_sdio_remove()? The static variable that simply serves as a
-(non-reentrant) function call parameter seems like a really poor
-alternative to this simple refactoring.
-
-Or you could just address the TODO in this function, and you wouldn't
-have to do this dance at all...
-
-Brian
-
->  
->  	/* power cycle the adapter */
->  	sdio_claim_host(func);
-> @@ -2621,7 +2635,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
->  		mwifiex_sdio_card_reset_work(save_adapter);
->  }
->  
-> -static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
->  /* This function resets the card */
->  static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
->  {
-> -- 
-> 1.9.1
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index cfa3fe8..b7c8ff9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -555,6 +557,42 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
++	const char *mac;
++	char eeprom_name[100];
++	int ret;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (of_property_read_bool(np, "qca,no-eeprom")) {
++		/* ath9k-eeprom-<bus>-<id>.bin */
++		scnprintf(eeprom_name, sizeof(eeprom_name),
++			  "ath9k-eeprom-%s-%s.bin",
++			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
++
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++	ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -611,6 +649,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
+-- 
+2.10.0
