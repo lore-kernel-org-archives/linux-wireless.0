@@ -1,93 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33937 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbcJEEIX (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:55073 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752636AbcJCLOX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 00:08:23 -0400
-Received: by mail-oi0-f66.google.com with SMTP id r132so11470389oig.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 21:08:22 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 5/8] rtlwifi: rtl8723ae: Remove address of Free Software Foundation
-Date: Tue,  4 Oct 2016 23:08:07 -0500
-Message-Id: <1475640490-5895-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20161005_060828_924872_52A5F8DD)
-In-Reply-To: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
+        Mon, 3 Oct 2016 07:14:23 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [PATCHv2 1/3] mac80211: fix CMD_FRAME for AP_VLAN
+Date: Mon,  3 Oct 2016 13:14:15 +0200
+Message-Id: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161003_131427_265805_ADB81E75)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since this driver was added to the kernel, the checkpatch script was
-modified to request that the address of the FSF not be included.
+When using IEEE 802.11r FT OVER-DS roaming with AP_VLAN, hostapd needs to
+send out a frame using CMD_FRAME for a station assigned to an AP_VLAN
+interface.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Right now, the userspace needs to give the exact AP_VLAN interface index
+for CMD_FRAME; hostapd does not do this. Additionally, userspace cannot
+use GET_STATION to query the AP_VLAN ifidx, as while GET_STATION finds
+stations assigned to AP_VLAN even if the AP iface is queried, it does not
+return AP_VLAN ifidx (it returns the queried one).
+
+This breaks IEEE 802.11r over_ds with vlans, as the reply frame does not
+get out. This patch fixes this by using get_sta_bss for CMD_FRAME.
+
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Cc: projekt-wlan@fem.tu-ilmenau.de
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.h             | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h             | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.h | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c            | 4 ----
- 4 files changed, 16 deletions(-)
+ net/mac80211/offchannel.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.h
-index 5711105..a113780 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
-index 9d1fe25..2e668fc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.h
-index bcd64a2..45719fd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_bt_coexist.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-index c7be934..77c1004 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 55a9c5b..688744c 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -819,7 +819,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 		    mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT)
+ 			break;
+ 		rcu_read_lock();
+-		sta = sta_info_get(sdata, mgmt->da);
++		sta = sta_info_get_bss(sdata, mgmt->da);
+ 		rcu_read_unlock();
+ 		if (!sta)
+ 			return -ENOLINK;
 -- 
-2.6.6
+2.1.4
