@@ -1,560 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59650 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbcJSQhj (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:55092 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752987AbcJCLO3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 12:37:39 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: Yauhen Kharuzhy <jekhor@gmail.com>,
-        Ben Greear <greearb@candelatech.com>
-Subject: crypto: aesni - add ccm(aes) algorithm implementation
-Date: Wed, 19 Oct 2016 09:37:26 -0700
-Message-Id: <1476895046-16549-1-git-send-email-greearb@candelatech.com> (sfid-20161019_183742_982746_7BE914CD)
+        Mon, 3 Oct 2016 07:14:29 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        akarwar@marvell.com, nishants@marvell.com
+Subject: [PATCHv3 3/3] mwifiex: check A-MSDU inner frame source address on AP interfaces
+Date: Mon,  3 Oct 2016 13:14:17 +0200
+Message-Id: <1475493257-21841-3-git-send-email-michael-dev@fami-braun.de> (sfid-20161003_131431_744719_1ED01892)
+In-Reply-To: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de>
+References: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yauhen Kharuzhy <jekhor@gmail.com>
+When using WPA security, the station and thus the required key is
+identified by its mac address when packets are received. So a
+station usually cannot spoof its source mac address.
 
-Add ccm(aes) implementation from linux-wireless mailing list (see
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/126679).
+But when a station sends an A-MSDU frame, port control and crypto
+is done using the outer mac address, while the packets delivered
+and forwarded use the inner mac address.
+This might affect ARP/IP filtering on the AccessPoint.
 
-This eliminates FPU context store/restore overhead existing in more
-general ccm_base(ctr(aes-aesni),aes-aesni) case in MAC calculation.
+IEEE 802.11-2012 mandates that the outer source mac address should
+match the inner source address (section 8.3.2.2). For the destination
+mac address, matching is not required, as a wifi client may send all
+its traffic to the AP in order to have it forwarded.
 
-Convert this patch to new AEAD API.
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 
-Signed-off-by: Yauhen Kharuzhy <jekhor@gmail.com>
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Cc: projekt-wlan@fem.tu-ilmenau.de
+Cc: akarwar@marvell.com
+Cc: nishants@marvell.com
+---
+ drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/arch/x86/crypto/aesni-intel_glue.c b/arch/x86/crypto/aesni-intel_glue.c
-index 5b7fa14..087a952 100644
---- a/arch/x86/crypto/aesni-intel_glue.c
-+++ b/arch/x86/crypto/aesni-intel_glue.c
-@@ -36,6 +36,7 @@
- #include <asm/crypto/aes.h>
- #include <crypto/ablk_helper.h>
- #include <crypto/scatterwalk.h>
-+#include <crypto/aead.h>
- #include <crypto/internal/aead.h>
- #include <linux/workqueue.h>
- #include <linux/spinlock.h>
-@@ -529,6 +530,456 @@ static int ctr_crypt(struct blkcipher_desc *desc,
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 49d0efe..f4469d7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -30,7 +30,8 @@
+  * layer.
+  */
+ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+-					  struct sk_buff *skb)
++					  struct sk_buff *skb,
++					  const u8 *ta)
+ {
+ 	struct rxpd *local_rx_pd = (struct rxpd *)(skb->data);
+ 	int ret;
+@@ -45,7 +46,7 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+ 		skb_trim(skb, le16_to_cpu(local_rx_pd->rx_pkt_length));
  
- 	return err;
- }
-+
-+static int __ccm_setkey(struct crypto_aead *tfm, const u8 *in_key,
-+		      unsigned int key_len)
-+{
-+	struct crypto_aes_ctx *ctx = crypto_aead_ctx(tfm);
-+
-+	return aes_set_key_common(crypto_aead_tfm(tfm), ctx, in_key, key_len);
-+}
-+
-+static int __ccm_setauthsize(struct crypto_aead *tfm, unsigned int authsize)
-+{
-+	if ((authsize & 1) || authsize < 4)
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+static int set_msg_len(u8 *block, unsigned int msglen, int csize)
-+{
-+	__be32 data;
-+
-+	memset(block, 0, csize);
-+	block += csize;
-+
-+	if (csize >= 4)
-+		csize = 4;
-+	else if (msglen > (1 << (8 * csize)))
-+		return -EOVERFLOW;
-+
-+	data = cpu_to_be32(msglen);
-+	memcpy(block - csize, (u8 *)&data + 4 - csize, csize);
-+
-+	return 0;
-+}
-+
-+static int ccm_init_mac(struct aead_request *req, u8 maciv[], u32 msglen)
-+{
-+	struct crypto_aead *aead = crypto_aead_reqtfm(req);
-+	__be32 *n = (__be32 *)&maciv[AES_BLOCK_SIZE - 8];
-+	u32 l = req->iv[0] + 1;
-+
-+	/* verify that CCM dimension 'L' is set correctly in the IV */
-+	if (l < 2 || l > 8)
-+		return -EINVAL;
-+
-+	/* verify that msglen can in fact be represented in L bytes */
-+	if (l < 4 && msglen >> (8 * l))
-+		return -EOVERFLOW;
-+
-+	/*
-+	 * Even if the CCM spec allows L values of up to 8, the Linux cryptoapi
-+	 * uses a u32 type to represent msglen so the top 4 bytes are always 0.
-+	 */
-+	n[0] = 0;
-+	n[1] = cpu_to_be32(msglen);
-+
-+	memcpy(maciv, req->iv, AES_BLOCK_SIZE - l);
-+
-+	/*
-+	 * Meaning of byte 0 according to CCM spec (RFC 3610/NIST 800-38C)
-+	 * - bits 0..2	: max # of bytes required to represent msglen, minus 1
-+	 *                (already set by caller)
-+	 * - bits 3..5	: size of auth tag (1 => 4 bytes, 2 => 6 bytes, etc)
-+	 * - bit 6	: indicates presence of authenticate-only data
-+	 */
-+	maciv[0] |= (crypto_aead_authsize(aead) - 2) << 2;
-+	if (req->assoclen)
-+		maciv[0] |= 0x40;
-+
-+	memset(&req->iv[AES_BLOCK_SIZE - l], 0, l);
-+	return set_msg_len(maciv + AES_BLOCK_SIZE - l, msglen, l);
-+}
-+
-+static int compute_mac(struct crypto_aes_ctx *ctx, u8 mac[], u8 *data, int n,
-+		       unsigned int ilen, u8 *idata)
-+{
-+	unsigned int bs = AES_BLOCK_SIZE;
-+	u8 *odata = mac;
-+	int datalen, getlen;
-+
-+	datalen = n;
-+
-+	/* first time in here, block may be partially filled. */
-+	getlen = bs - ilen;
-+	if (datalen >= getlen) {
-+		memcpy(idata + ilen, data, getlen);
-+		crypto_xor(odata, idata, bs);
-+
-+		aesni_enc(ctx, odata, odata);
-+		datalen -= getlen;
-+		data += getlen;
-+		ilen = 0;
-+	}
-+
-+	/* now encrypt rest of data */
-+	while (datalen >= bs) {
-+		crypto_xor(odata, data, bs);
-+
-+		aesni_enc(ctx, odata, odata);
-+
-+		datalen -= bs;
-+		data += bs;
-+	}
-+
-+	/* check and see if there's leftover data that wasn't
-+	 * enough to fill a block.
-+	 */
-+	if (datalen) {
-+		memcpy(idata + ilen, data, datalen);
-+		ilen += datalen;
-+	}
-+	return ilen;
-+}
-+
-+static unsigned int get_data_to_compute(struct crypto_aes_ctx *ctx, u8 mac[],
-+					u8 *idata, struct scatterlist *sg,
-+					unsigned int len, unsigned int ilen)
-+{
-+	struct scatter_walk walk;
-+	u8 *data_src;
-+	int n;
-+
-+	scatterwalk_start(&walk, sg);
-+
-+	while (len) {
-+		n = scatterwalk_clamp(&walk, len);
-+		if (!n) {
-+			scatterwalk_start(&walk, sg_next(walk.sg));
-+			n = scatterwalk_clamp(&walk, len);
-+		}
-+		data_src = scatterwalk_map(&walk);
-+
-+		ilen = compute_mac(ctx, mac, data_src, n, ilen, idata);
-+		len -= n;
-+
-+		scatterwalk_unmap(data_src);
-+		scatterwalk_advance(&walk, n);
-+		scatterwalk_done(&walk, 0, len);
-+	}
-+
-+	/* any leftover needs padding and then encrypted */
-+	if (ilen) {
-+		int padlen;
-+		u8 *odata = mac;
-+
-+		padlen = AES_BLOCK_SIZE - ilen;
-+		memset(idata + ilen, 0, padlen);
-+		crypto_xor(odata, idata, AES_BLOCK_SIZE);
-+
-+		aesni_enc(ctx, odata, odata);
-+		ilen = 0;
-+	}
-+	return ilen;
-+}
-+
-+static void ccm_calculate_auth_mac(struct aead_request *req,
-+				   struct crypto_aes_ctx *ctx, u8 mac[],
-+				   struct scatterlist *src,
-+				   unsigned int cryptlen)
-+{
-+	unsigned int ilen;
-+	u8 idata[AES_BLOCK_SIZE];
-+	u32 len = req->assoclen;
-+
-+	aesni_enc(ctx, mac, mac);
-+
-+	if (len) {
-+		struct __packed {
-+			__be16 l;
-+			__be32 h;
-+		} *ltag = (void *)idata;
-+
-+		/* prepend the AAD with a length tag */
-+		if (len < 0xff00) {
-+			ltag->l = cpu_to_be16(len);
-+			ilen = 2;
-+		} else  {
-+			ltag->l = cpu_to_be16(0xfffe);
-+			ltag->h = cpu_to_be32(len);
-+			ilen = 6;
-+		}
-+
-+		ilen = get_data_to_compute(ctx, mac, idata,
-+					   req->src, req->assoclen,
-+					   ilen);
-+	} else {
-+		ilen = 0;
-+	}
-+
-+	/* compute plaintext into mac */
-+	if (cryptlen) {
-+		ilen = get_data_to_compute(ctx, mac, idata,
-+					   src, cryptlen, ilen);
-+	}
-+}
-+
-+static int __ccm_encrypt(struct aead_request *req)
-+{
-+	struct crypto_aead *aead = crypto_aead_reqtfm(req);
-+	struct crypto_aes_ctx *ctx = aes_ctx(crypto_aead_ctx(aead));
-+	struct blkcipher_desc desc = { .info = req->iv };
-+	struct blkcipher_walk walk;
-+	struct scatterlist src[3], dst[3], *pdst, *sg;
-+	u8 __aligned(8) mac[AES_BLOCK_SIZE];
-+	u32 len = req->cryptlen;
-+	int err;
-+
-+	err = ccm_init_mac(req, mac, len);
-+	if (err)
-+		return err;
-+
-+	sg_init_table(src, 3);
-+	sg_set_buf(src, mac, sizeof(mac));
-+	sg = scatterwalk_ffwd(src + 1, req->src, req->assoclen);
-+	if (sg != src + 1)
-+		sg_chain(src, 2, sg);
-+
-+	pdst = src;
-+	if (req->src != req->dst) {
-+		sg_init_table(dst, 3);
-+		sg_set_buf(dst, mac, sizeof(mac));
-+		sg = scatterwalk_ffwd(dst + 1, req->dst, req->assoclen);
-+		if (sg != dst + 1)
-+			sg_chain(dst, 2, sg);
-+		pdst = dst;
-+	}
-+
-+	ccm_calculate_auth_mac(req, ctx, mac, sg_next(src), len);
-+
-+	len += sizeof(mac);
-+	blkcipher_walk_init(&walk, pdst, src, len);
-+	err = blkcipher_aead_walk_virt_block(&desc, &walk, aead,
-+					     AES_BLOCK_SIZE);
-+
-+	while ((len = walk.nbytes) >= AES_BLOCK_SIZE) {
-+		aesni_ctr_enc(ctx, walk.dst.virt.addr, walk.src.virt.addr,
-+			      len & AES_BLOCK_MASK, walk.iv);
-+		len &= AES_BLOCK_SIZE - 1;
-+		err = blkcipher_walk_done(&desc, &walk, len);
-+	}
-+	if (walk.nbytes) {
-+		ctr_crypt_final(ctx, &walk);
-+		err = blkcipher_walk_done(&desc, &walk, 0);
-+	}
-+
-+	if (err)
-+		return err;
-+
-+	/* copy authtag to end of dst */
-+	scatterwalk_map_and_copy(mac, sg_next(pdst), req->cryptlen,
-+				 crypto_aead_authsize(aead), 1);
-+	return 0;
-+}
-+
-+static int __ccm_decrypt(struct aead_request *req)
-+{
-+	struct crypto_aead *aead = crypto_aead_reqtfm(req);
-+	struct crypto_aes_ctx *ctx = aes_ctx(crypto_aead_ctx(aead));
-+	unsigned int authsize = crypto_aead_authsize(aead);
-+	struct blkcipher_desc desc = { .info = req->iv };
-+	struct blkcipher_walk walk;
-+	struct scatterlist src[3], dst[3], *pdst, *sg;
-+	u8 __aligned(8) authtag[AES_BLOCK_SIZE], mac[AES_BLOCK_SIZE];
-+	u32 len;
-+	int err;
-+
-+	if (req->cryptlen < authsize)
-+		return -EINVAL;
-+
-+	err = ccm_init_mac(req, mac, req->cryptlen - authsize);
-+	if (err)
-+		return err;
-+
-+	sg_init_table(src, 3);
-+	sg_set_buf(src, authtag, sizeof(authtag));
-+	sg = scatterwalk_ffwd(src + 1, req->src, req->assoclen);
-+	if (sg != src + 1)
-+		sg_chain(src, 2, sg);
-+
-+	pdst = src;
-+	if (req->src != req->dst) {
-+		sg_init_table(dst, 3);
-+		sg_set_buf(dst, authtag, sizeof(authtag));
-+		sg = scatterwalk_ffwd(dst + 1, req->dst, req->assoclen);
-+		if (sg != dst + 1)
-+			sg_chain(dst, 2, sg);
-+
-+		pdst = dst;
-+	}
-+
-+	scatterwalk_map_and_copy(authtag, sg_next(src),
-+				 req->cryptlen - authsize, authsize, 0);
-+
-+	blkcipher_walk_init(&walk, pdst, src,
-+			    req->cryptlen - authsize + sizeof(mac));
-+	err = blkcipher_aead_walk_virt_block(&desc, &walk, aead,
-+					     AES_BLOCK_SIZE);
-+
-+	while ((len = walk.nbytes) >= AES_BLOCK_SIZE) {
-+		aesni_ctr_enc(ctx, walk.dst.virt.addr, walk.src.virt.addr,
-+			      len & AES_BLOCK_MASK, walk.iv);
-+		len &= AES_BLOCK_SIZE - 1;
-+		err = blkcipher_walk_done(&desc, &walk, len);
-+	}
-+	if (walk.nbytes) {
-+		ctr_crypt_final(ctx, &walk);
-+		err = blkcipher_walk_done(&desc, &walk, 0);
-+	}
-+
-+	ccm_calculate_auth_mac(req, ctx, mac, sg_next(pdst),
-+			       req->cryptlen - authsize);
-+	if (err)
-+		return err;
-+
-+	/* compare calculated auth tag with the stored one */
-+	if (crypto_memneq(mac, authtag, authsize))
-+		return -EBADMSG;
-+	return 0;
-+}
-+
-+struct ccm_async_ctx {
-+	struct crypto_aes_ctx ctx;
-+	struct crypto_aead *fallback;
-+};
-+
-+static inline struct
-+ccm_async_ctx *get_ccm_ctx(struct crypto_aead *aead)
-+{
-+	return (struct ccm_async_ctx *)
-+		PTR_ALIGN((u8 *)
-+		crypto_aead_ctx(aead), AESNI_ALIGN);
-+}
-+
-+static int ccm_init(struct crypto_aead *tfm)
-+{
-+	struct crypto_aead *crypto_tfm;
-+	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
-+		PTR_ALIGN((u8 *)crypto_aead_ctx(tfm), AESNI_ALIGN);
-+
-+	crypto_tfm = crypto_alloc_aead("ccm(aes)", 0,
-+		CRYPTO_ALG_ASYNC | CRYPTO_ALG_NEED_FALLBACK);
-+	if (IS_ERR(crypto_tfm))
-+		return PTR_ERR(crypto_tfm);
-+
-+	ctx->fallback = crypto_tfm;
-+	return 0;
-+}
-+
-+static void ccm_exit(struct crypto_aead *tfm)
-+{
-+	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
-+		PTR_ALIGN((u8 *)crypto_aead_ctx(tfm), AESNI_ALIGN);
-+
-+	if (!IS_ERR_OR_NULL(ctx->fallback))
-+		crypto_free_aead(ctx->fallback);
-+}
-+
-+static int ccm_setkey(struct crypto_aead *aead, const u8 *in_key,
-+		      unsigned int key_len)
-+{
-+	struct crypto_tfm *tfm = crypto_aead_tfm(aead);
-+	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
-+		PTR_ALIGN((u8 *)crypto_aead_ctx(aead), AESNI_ALIGN);
-+	int err;
-+
-+	err = __ccm_setkey(aead, in_key, key_len);
-+	if (err)
-+		return err;
-+
-+	/*
-+	 * Set the fallback transform to use the same request flags as
-+	 * the hardware transform.
-+	 */
-+	ctx->fallback->base.crt_flags &= ~CRYPTO_TFM_REQ_MASK;
-+	ctx->fallback->base.crt_flags |=
-+			tfm->crt_flags & CRYPTO_TFM_REQ_MASK;
-+	return crypto_aead_setkey(ctx->fallback, in_key, key_len);
-+}
-+
-+static int ccm_setauthsize(struct crypto_aead *aead, unsigned int authsize)
-+{
-+	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
-+		PTR_ALIGN((u8 *)crypto_aead_ctx(aead), AESNI_ALIGN);
-+	int err;
-+
-+	err = __ccm_setauthsize(aead, authsize);
-+	if (err)
-+		return err;
-+
-+	return crypto_aead_setauthsize(ctx->fallback, authsize);
-+}
-+
-+static int ccm_encrypt(struct aead_request *req)
-+{
-+	int ret;
-+
-+	if (!irq_fpu_usable()) {
-+		struct crypto_aead *aead = crypto_aead_reqtfm(req);
-+		struct ccm_async_ctx *ctx = get_ccm_ctx(aead);
-+		struct crypto_aead *fallback = ctx->fallback;
-+
-+		char aead_req_data[sizeof(struct aead_request) +
-+				   crypto_aead_reqsize(fallback)]
-+		__aligned(__alignof__(struct aead_request));
-+		struct aead_request *aead_req = (void *) aead_req_data;
-+
-+		memset(aead_req, 0, sizeof(aead_req_data));
-+		aead_request_set_tfm(aead_req, fallback);
-+		aead_request_set_ad(aead_req, req->assoclen);
-+		aead_request_set_crypt(aead_req, req->src, req->dst,
-+				       req->cryptlen, req->iv);
-+		aead_request_set_callback(aead_req, req->base.flags,
-+					  req->base.complete, req->base.data);
-+		ret = crypto_aead_encrypt(aead_req);
-+	} else {
-+		kernel_fpu_begin();
-+		ret = __ccm_encrypt(req);
-+		kernel_fpu_end();
-+	}
-+	return ret;
-+}
-+
-+static int ccm_decrypt(struct aead_request *req)
-+{
-+	int ret;
-+
-+	if (!irq_fpu_usable()) {
-+		struct crypto_aead *aead = crypto_aead_reqtfm(req);
-+		struct ccm_async_ctx *ctx = get_ccm_ctx(aead);
-+		struct crypto_aead *fallback = ctx->fallback;
-+
-+		char aead_req_data[sizeof(struct aead_request) +
-+				   crypto_aead_reqsize(fallback)]
-+		__aligned(__alignof__(struct aead_request));
-+		struct aead_request *aead_req = (void *) aead_req_data;
-+
-+		memset(aead_req, 0, sizeof(aead_req_data));
-+		aead_request_set_tfm(aead_req, fallback);
-+		aead_request_set_ad(aead_req, req->assoclen);
-+		aead_request_set_crypt(aead_req, req->src, req->dst,
-+				       req->cryptlen, req->iv);
-+		aead_request_set_callback(aead_req, req->base.flags,
-+					  req->base.complete, req->base.data);
-+		ret = crypto_aead_decrypt(aead_req);
-+	} else {
-+		kernel_fpu_begin();
-+		ret = __ccm_decrypt(req);
-+		kernel_fpu_end();
-+	}
-+	return ret;
-+}
- #endif
+ 		ieee80211_amsdu_to_8023s(skb, &list, priv->curr_addr,
+-					 priv->wdev.iftype, 0, NULL);
++					 priv->wdev.iftype, 0, ta);
  
- static int ablk_ecb_init(struct crypto_tfm *tfm)
-@@ -1437,7 +1888,45 @@ static struct aead_alg aesni_aead_algs[] = { {
- 		.cra_ctxsize		= sizeof(struct cryptd_aead *),
- 		.cra_module		= THIS_MODULE,
- 	},
--} };
-+}, {
-+	.ivsize		= AES_BLOCK_SIZE,
-+	.maxauthsize	= AES_BLOCK_SIZE,
-+	.setkey		= __ccm_setkey,
-+	.setauthsize	= __ccm_setauthsize,
-+	.encrypt	= __ccm_encrypt,
-+	.decrypt	= __ccm_decrypt,
-+	.base = {
-+		.cra_name		= "__ccm-aes-aesni",
-+		.cra_driver_name	= "__driver-ccm-aes-aesni",
-+		.cra_priority		= 0,
-+		.cra_flags		= CRYPTO_ALG_INTERNAL,
-+		.cra_blocksize		= 1,
-+		.cra_ctxsize		= sizeof(struct crypto_aes_ctx) +
-+						AESNI_ALIGN - 1,
-+		.cra_alignmask		= 0,
-+		.cra_module		= THIS_MODULE,
-+	},
-+}, {
-+	.base = {
-+		.cra_name		= "ccm(aes)",
-+		.cra_driver_name	= "ccm-aes-aesni",
-+		.cra_priority		= 700,
-+		.cra_flags		= CRYPTO_ALG_NEED_FALLBACK,
-+		.cra_blocksize		= 1,
-+		.cra_ctxsize		= AESNI_ALIGN - 1 +
-+						sizeof(struct ccm_async_ctx),
-+		.cra_alignmask		= 0,
-+		.cra_module		= THIS_MODULE,
-+	},
-+	.init		= ccm_init,
-+	.exit		= ccm_exit,
-+	.ivsize		= AES_BLOCK_SIZE,
-+	.maxauthsize	= AES_BLOCK_SIZE,
-+	.setkey		= ccm_setkey,
-+	.setauthsize	= ccm_setauthsize,
-+	.encrypt	= ccm_encrypt,
-+	.decrypt	= ccm_decrypt,
-+}};
- #else
- static struct aead_alg aesni_aead_algs[0];
- #endif
-diff --git a/crypto/testmgr.c b/crypto/testmgr.c
-index c727fb0..2a765ca 100644
---- a/crypto/testmgr.c
-+++ b/crypto/testmgr.c
-@@ -1991,6 +1991,10 @@ static const struct alg_test_desc alg_test_descs[] = {
- 		.alg = "__driver-cbc-twofish-avx",
- 		.test = alg_test_null,
- 	}, {
-+		.alg = "__driver-ccm-aes-aesni",
-+		.test = alg_test_null,
-+		.fips_allowed = 1,
-+	}, {
- 		.alg = "__driver-ecb-aes-aesni",
- 		.test = alg_test_null,
- 		.fips_allowed = 1,
+ 		while (!skb_queue_empty(&list)) {
+ 			struct rx_packet_hdr *rx_hdr;
+@@ -76,9 +77,10 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+ /* This function will process the rx packet and forward it to kernel/upper
+  * layer.
+  */
+-static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
++static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload,
++				    const u8 *ta)
+ {
+-	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload);
++	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload, ta);
+ 
+ 	if (!ret)
+ 		return 0;
+@@ -119,7 +121,7 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
+ 		}
+ 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+ 		if (rx_tmp_ptr)
+-			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
++			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr, tbl->ta);
+ 	}
+ 
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+@@ -161,7 +163,7 @@ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
+ 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
+ 		tbl->rx_reorder_ptr[i] = NULL;
+ 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
+-		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
++		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr, tbl->ta);
+ 	}
+ 
+ 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
+@@ -568,12 +570,12 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
+ 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid, ta);
+ 	if (!tbl) {
+ 		if (pkt_type != PKT_TYPE_BAR)
+-			mwifiex_11n_dispatch_pkt(priv, payload);
++			mwifiex_11n_dispatch_pkt(priv, payload, ta);
+ 		return ret;
+ 	}
+ 
+ 	if ((pkt_type == PKT_TYPE_AMSDU) && !tbl->amsdu) {
+-		mwifiex_11n_dispatch_pkt(priv, payload);
++		mwifiex_11n_dispatch_pkt(priv, payload, ta);
+ 		return ret;
+ 	}
+ 
+-- 
+2.1.4
