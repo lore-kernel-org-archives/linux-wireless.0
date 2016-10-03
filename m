@@ -1,80 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:41321 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751378AbcJEOCM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 10:02:12 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
-        queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 05 Oct 2016 16:02:02 +0200
-In-Reply-To: <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Tue, 23 Aug 2016 09:59:42 +0300")
-Message-ID: <87k2dm6git.fsf@toke.dk> (sfid-20161005_160215_604220_BE6BF42F)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15623 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750890AbcJCHrD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Oct 2016 03:47:03 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Marty Faltesek <mfaltesek@google.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
+Date: Mon, 3 Oct 2016 07:46:54 +0000
+Message-ID: <87fuodswlu.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_094707_584259_35D160FA)
+References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
+In-Reply-To: <1473801118-103112-1-git-send-email-mfaltesek@google.com> (Marty
+        Faltesek's message of "Tue, 13 Sep 2016 17:11:58 -0400")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Marty Faltesek <mfaltesek@google.com> writes:
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+> Caching calibration data allows it to be accessed when the
+> device is not active.
 >
->>>>> This is great work but due to the regressions I'm not sure if this
->>>>> will be ready for 4.9. To get more testing time I wonder if we should
->>>>> wait for 4.10? IMHO applying this in the end of the cycle is too risky
->>>>> and we should try to maximise the time linux-next by applying this
->>>>> just after -rc1 is released.
->>>>>
->>>>> Thoughts?
->>>>
->>>> Well, now that we understand what is causing the throughput regression=
-s,
->>>> fixing them should be fairly straight forward (yeah, famous last words,
->>>> but still...). I already have a patch for the fast path and will go po=
-ke
->>>> at the slow path next. It'll probably require another workaround or tw=
-o,
->>>> so I guess it won't be the architecturally clean ideal solution; but it
->>>> would make it possible to have something that works for 4.9 and then
->>>> iterate for a cleaner design for 4.10.
->>>
->>> But if we try to rush this to 4.9 it won't be in linux-next for long. We
->>> are now in -rc3 and let's say that the patches are ready to apply in two
->>> weeks. That would leave us only two weeks of -next time before the merge
->>> window, which I think is not enough for a controversial patch like this
->>> one. There might be other bugs lurking which haven't been found yet.
->>
->> What, other hidden bugs? Unpossible! :)
->
-> Yeah, right ;)
->
->> Would it be possible to merge the partial solution (which is ready now,
->> basically) and fix the slow path in a separate patch later?
->
-> What do you mean with partial solution? You mean ath9k users would
-> suffer from regressions until they are fixed? We can't do that.
->
->> (Just spit-balling here; I'm still fairly new to this process. But I am
->> concerned that we'll hit a catch-22 where we can't get wider testing
->> before it's "ready" and we can't prove that it's "ready" until we've had
->> wider testing...)
->
-> I understand your point, but I don't want to rush this to 4.9 and then
-> start getting lots of bug reports and eventually forced to revert it. If
-> we just found a new serious regression the chances are that there are
-> more lurking somewhere and this patch is just not ready yet.
+> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
 
-So, the changes to mac80211 that fixes the known regressions of this
-patch have gone in. Any chance of seeing this merged during the current
-merge window? :)
+No comma in the title, please.
 
--Toke
+What tree did you use as the baseline? This doesn't seem to apply to
+ath.git:
+
+Applying: ath10k: cache calibration data when the core is stopped.
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath=
+10k/core.c).
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 ath10k: cache calibration data when the core is stoppe=
+d.
+
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1227,6 +1227,42 @@ success:
+>  	return 0;
+>  }
+> =20
+> +int
+> +ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
+> +{
+> +	u32 hi_addr;
+> +	__le32 addr;
+> +	int ret;
+
+I think this function should be in debug.c. That way the code is not
+wasting memory if DEBUGFS is disabled.=20
+
+> +	vfree(*buf);
+> +	*buf =3D vmalloc(QCA988X_CAL_DATA_LEN);
+> +	if (!*buf) {
+> +		return -EAGAIN;
+> +	}
+
+Is it really necessary to allocate memory every time? What if allocate
+it only once when module is loaded, just like with
+ar->debug.fw_crash_data?
+
+Also please note that this patch (which I'm queuing to 4.9) touches the
+same area:
+
+ath10k: fix debug cal data file
+
+https://patchwork.kernel.org/patch/9340953/
+
+> +	hi_addr =3D host_interest_item_address(HI_ITEM(hi_board_data));
+> +
+> +	ret =3D ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
+> +
+> +	if (ret) {
+> +		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
+> +	} else {
+> +		ret =3D ath10k_hif_diag_read(ar, le32_to_cpu(addr), *buf,
+> +					   QCA988X_CAL_DATA_LEN);
+> +		if (ret) {
+> +			ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
+> +		}
+> +	}
+
+We try to avoid using else branches so that only error handling is
+indented and the main code flow is not.
+
+> +	/*
+> +	 * We are up now, so no need to cache calibration data.
+> +	 */
+> +	vfree(ar->cal_data);
+> +        ar->cal_data =3D NULL;
+
+Indentation looks wrongs here.
+
+> @@ -1757,6 +1799,11 @@ void ath10k_core_stop(struct ath10k *ar)
+>  	lockdep_assert_held(&ar->conf_mutex);
+>  	ath10k_debug_stop(ar);
+> =20
+> +	/*
+> +	 * Cache caclibration data while stopped.
+> +	 */
+> +	ath10k_cal_data_alloc(ar, &ar->cal_data);
+
+I like the idea that the calibration data is copied during stop(), but
+can you do this from debug.c? For example, add ath10k_debug_stop() and
+call it from there? I don't think any of this should be in core.c.
+
+--=20
+Kalle Valo=
