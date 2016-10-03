@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58899 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755269AbcJNNKn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 09:10:43 -0400
-Message-ID: <1476450635.31114.42.camel@sipsolutions.net> (sfid-20161014_151049_007103_7C55AE25)
-Subject: Re: [PATCH] mac80211: aes_ccm: move struct aead_req off the stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, luto@amacapital.net,
-        sergey.senozhatsky.work@gmail.com, netdev@vger.kernel.org,
-        herbert@gondor.apana.org.au, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        j@w1.fi
-Date: Fri, 14 Oct 2016 15:10:35 +0200
-In-Reply-To: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20161014_150908_308224_F47D6BD7)
-References: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org>
-         (sfid-20161014_150908_308224_F47D6BD7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-it0-f42.google.com ([209.85.214.42]:35858 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752384AbcJCNsU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Oct 2016 09:48:20 -0400
+Received: by mail-it0-f42.google.com with SMTP id 188so34436509iti.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 06:48:15 -0700 (PDT)
+Received: from hash (CPE0018e7fe5281-CM18593342f28f.cpe.net.cable.rogers.com. [99.236.145.239])
+        by smtp.gmail.com with ESMTPSA id j69sm1629616iod.8.2016.10.03.06.48.13
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 03 Oct 2016 06:48:13 -0700 (PDT)
+Received: from bob by hash with local (Exim 4.84_2)
+        (envelope-from <me@bobcopeland.com>)
+        id 1br3YJ-0002m1-Ft
+        for linux-wireless@vger.kernel.org; Mon, 03 Oct 2016 09:45:07 -0400
+Date: Mon, 3 Oct 2016 09:45:07 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Subject: Final 4.8 w-t build is wt-2016-10-03
+Message-ID: <20161003134507.GA9911@localhost> (sfid-20161003_154843_008383_9E69D3D2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Per the subject, Linus released 4.8 yesterday so, unless I broke something
+in recent conflict resolutions, wireless-testing is on pause until the
+merge window closes in two weeks.  Have a happy (Canadian) thanksgiving!
 
-> So use kzalloc
+https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git
 
-Do we really need kzalloc()? We have things on the stack right now, and
-don't initialize, so surely we don't really need to zero things?
-
-> This only addresses one half of the problem. The other problem, i.e.,
-> the fact that the aad[] array lives on the stack of the caller, is
-> handled adequately imo by the change proposed by Johannes.
-
-But if we allocate things anyway, is it worth expending per-CPU buffers
-on these?
-
-johannes
+-- 
+Bob Copeland %% http://bobcopeland.com/
