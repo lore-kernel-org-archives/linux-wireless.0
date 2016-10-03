@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skprod3.natinst.com ([130.164.80.24]:34278 "EHLO ni.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751502AbcJCSBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 14:01:14 -0400
-From: James Minor <james.minor@ni.com>
-To: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org
-Cc: kvalo@qca.qualcomm.com, julia.cartwright@ni.com,
-        steve.derosier@lairdtech.com, James Minor <james.minor@ni.com>
-Subject: [PATCH 3/3] ath6kl: configure SDIO when power is reapplied
-Date: Mon, 3 Oct 2016 13:00:04 -0500
-Message-Id: <1475517604-17710-4-git-send-email-james.minor@ni.com> (sfid-20161003_200120_726948_BA7E0195)
-In-Reply-To: <1475517604-17710-1-git-send-email-james.minor@ni.com>
-References: <1475510510-16906-1-git-send-email-james.minor@ni.com>
- <1475517604-17710-1-git-send-email-james.minor@ni.com>
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.219]:15312 "EHLO
+        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751583AbcJCLDn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Oct 2016 07:03:43 -0400
+Subject: Re: [PATCH] mac80211: fix CMD_FRAME for AP_VLAN
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1474786035-15410-1-git-send-email-michael-dev@fami-braun.de>
+ <1475235707.17481.44.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+From: "M. Braun" <michael-dev@fami-braun.de>
+Message-ID: <c9271e31-a000-1b60-edbf-33524b10e185@fami-braun.de> (sfid-20161003_130346_745931_6CA01741)
+Date: Mon, 3 Oct 2016 13:03:30 +0200
+MIME-Version: 1.0
+In-Reply-To: <1475235707.17481.44.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When power is removed from the device, all of the SDIO settings
-return to default.  Fix that by reconfiguring after power is
-applied.
+Am 30.09.2016 um 13:41 schrieb Johannes Berg:
+>> -		sta = sta_info_get(sdata, mgmt->da);
+>> +		if (ieee80211_vif_is_mesh(&sdata->vif))
+>> +			sta = sta_info_get(sdata, mgmt->da);
+>> +		else
+>> +			sta = sta_info_get_bss(sdata, mgmt->da);
+>>
+> I don't see why you need to distinguish between mesh and non-mesh
+> here?
+> get_bss() will ignore the BSS pointer if it's NULL, and that will
+> always be the case when the type is mesh, so ... why?
 
-Signed-off-by: James Minor <james.minor@ni.com>
-Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+because the in ieee80211_mgmt_tx the
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 8261e24..c2df075 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -75,6 +75,8 @@ struct ath6kl_sdio {
- #define CMD53_ARG_FIXED_ADDRESS 0
- #define CMD53_ARG_INCR_ADDRESS  1
- 
-+static int ath6kl_sdio_config(struct ath6kl *ar);
-+
- static inline struct ath6kl_sdio *ath6kl_sdio_priv(struct ath6kl *ar)
- {
- 	return ar->hif_priv;
-@@ -526,8 +528,15 @@ static int ath6kl_sdio_power_on(struct ath6kl *ar)
- 	 */
- 	msleep(10);
- 
-+	ret = ath6kl_sdio_config(ar);
-+	if (ret) {
-+		ath6kl_err("Failed to config sdio: %d\n", ret);
-+		goto out;
-+	}
-+
- 	ar_sdio->is_disabled = false;
- 
-+out:
- 	return ret;
- }
- 
--- 
-1.9.1
+>        case NL80211_IFTYPE_AP:
+>        case NL80211_IFTYPE_AP_VLAN:
+>        case NL80211_IFTYPE_P2P_GO:
+> ...
+>                rcu_read_lock();
+>                if (ieee80211_vif_is_mesh(&sdata->vif))
+>                        sta = sta_info_get(sdata, mgmt->da);
+>                else
+>                        sta = sta_info_get_bss(sdata, mgmt->da);
+>                rcu_read_unlock();
+>
+
+does it the same way and I wanted to go safe and not change the mesh path.
+
+michael
