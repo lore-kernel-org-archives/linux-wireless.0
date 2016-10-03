@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:48878 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934973AbcJXNmW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 09:42:22 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if requested
-Date: Mon, 24 Oct 2016 15:42:18 +0200
-Message-ID: <3178350.ZYYEYN7rIx@prime> (sfid-20161024_154224_969876_E47D2A04)
-In-Reply-To: <1477316004.4085.17.camel@sipsolutions.net>
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com> <20161024121129.GA8925@prodigo.lan> <1477316004.4085.17.camel@sipsolutions.net>
+Received: from mx1.redhat.com ([209.132.183.28]:46256 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752200AbcJCMet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Oct 2016 08:34:49 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix big-endian problem reporting mactime
+References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
+        <1475178055-16924-3-git-send-email-Jes.Sorensen@redhat.com>
+        <87shsdsxj9.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 03 Oct 2016 08:34:47 -0400
+In-Reply-To: <87shsdsxj9.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Mon, 03 Oct 2016 10:26:50 +0300")
+Message-ID: <wrfjint93920.fsf@redhat.com> (sfid-20161003_143453_063908_2188A87E)
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1764233.q8U2H1WGkq"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1764233.q8U2H1WGkq
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> The full RX descriptor is converted so converting tsfl again would
+>> return it to it's original endian value.
+>>
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> I'll add:
+>
+> Cc: stable@vger.kernel.org # 4.8+
 
-On Monday, October 24, 2016 3:33:24 PM CEST Johannes Berg wrote:
-> > > I think it would be reasonable only if the target channel is the
-> > > one we are using and we have done CSA. But when scanning non-
-> > > operative channels I don't think this could work.
-> > 
-> > this has been sleeping for a while.. :)
-> > Would it make sense to rebase it and resubmit it for inclusion?
-> > 
-> > Given the previous discussion we could change the logic as:
-> > * always passively scan DFS channels that are not usable
-> > * always actively scan DFS channels that are usable (i.e. CAC was
-> > performed).
-> 
-> Doesn't that contradict what you said above?
-> 
-> If we scan, don't we possibly lose our CAC result anyway, since we went
-> off-channel? In FCC at least? In ETSI I think we're allowed to do that
-> for a bit?
+Appreciate it!
 
-I believe going off-channel was allowed in general - in fact, some routers CAC 
-all channels on boot up and then keep the "usable" state forever.
-
-Otherwise, it would be pretty much impossible to perform CSAs to another DFS 
-channel.
-
-Cheers,
-     Simon
---nextPart1764233.q8U2H1WGkq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCgAGBQJYDg+6AAoJEKEr45hCkp6hEvwP/isjDZaJ0iXOkxdzEW8oiUJ5
-L2RLV6Hutx9sJGQ39ouNP7yzl3Dw0BmRjTgMaqhBJxrEF6dyd3rDGrTqqNx6dZtT
-XF7K06y8V7JUS+9GkvyT6ewMYPrqqCFYuVCOLS34PuAMYZIdHeQgvklIyyG+3EEb
-RtUPRupsO3dkiFrqODRJYBjGvIqy0r2tBBeLnoHnRvUb9NtzVg4L+UdQHAUX4HSO
-/yqTVK3RZEiBNrwhNyUA63OGMGvzkfvUvt/C0xiPChfQ0QFeAwIhnjvDzS1Jwy6F
-BmnnKmH3eFcRBdZ9lggkH4m2PEvsMdKR1DDdM6qXRIFa24EowY8nnW/DJHFZsHbR
-mkoV1qY/FVB5zEXJc6B+6C82coMbw7G+QjxS/MrS8Ldi4cLVB0zvcmWBSKhTkNL+
-gDA1W6jyaKHHxleOH4WM+XzYOImntIptGIu6KcWnW4/e/jwa2LK/YhRf6tRx3Fbu
-qCFfEtf0hYPidA8TVChszxazetfkb4nqTGgTuag+g/9ZiZSrAoR1mtul8HZivpHp
-oJ+Pey0zqtdNx0M0/dREFL2aRpG8GZMCHj7FZc6nklSOJO6eR2Nv16fehtwA5+yk
-aDTqqNk4xy22PCFDjIbn4iKRIXbUGe8NUt6qUJrfRanCNFfRhNgNieuEZqok0xCX
-XDQBSU/nOAeEYXoizYoX
-=2Xgk
------END PGP SIGNATURE-----
-
---nextPart1764233.q8U2H1WGkq--
+Jes
