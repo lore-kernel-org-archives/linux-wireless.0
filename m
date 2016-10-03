@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933072AbcJLMxp (ORCPT
+Received: from mail-it0-f46.google.com ([209.85.214.46]:36897 "EHLO
+        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752200AbcJCPow (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:53:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Mathias Kresin <dev@kresin.me>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [v2] rt2x00: add support for mac addr from device tree
-References: <1472195813-30471-1-git-send-email-dev@kresin.me>
-        <20160927155057.A4182616F6@smtp.codeaurora.org>
-        <CABwW5nn9gGpzBQq3ag1MhsA-bxGop93=C7mjZG9nmi26G4ar5A@mail.gmail.com>
-        <87shskwaxh.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 12 Oct 2016 15:53:37 +0300
-In-Reply-To: <87shskwaxh.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 28 Sep 2016 13:55:38 +0300")
-Message-ID: <87mvi9g23y.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_145403_812911_01949E50)
+        Mon, 3 Oct 2016 11:44:52 -0400
+Received: by mail-it0-f46.google.com with SMTP id j69so122741897itb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 08:44:51 -0700 (PDT)
+Date: Mon, 3 Oct 2016 11:41:42 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: Final 4.8 w-t build is wt-2016-10-03
+Message-ID: <20161003154142.GA30743@localhost> (sfid-20161003_174456_595574_41CFDBC2)
+References: <20161003134507.GA9911@localhost>
+ <1651822.AbJigUgJvV@debian64>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1651822.AbJigUgJvV@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On Mon, Oct 03, 2016 at 04:42:58PM +0200, Christian Lamparter wrote:
+> Hello,
+> 
+> On Monday, October 3, 2016 9:45:07 AM CEST Bob Copeland wrote:
+> > Per the subject, Linus released 4.8 yesterday so, unless I broke something
+> > in recent conflict resolutions, wireless-testing is on pause until the
+> > merge window closes in two weeks.  Have a happy (Canadian) thanksgiving!
+> > 
+> > https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git
+> 
+> Thanks for the timely update. 
+> I have a request: can you please pull Linus' kernel tags?
+> Currently the last tag from Linus' is v4.4-rc4 [0] and
+> everything between v4.4-rc5 and v4.8 is missing?!
 
->> I thought about _adding_ a devicetree binding document before sending
->> the patch. But in the end it would be an empty file, since I neither
->> add any bindings nor introduce a compatible string. I'm just add
->> support for the generic of_get_mac_address() devicetree property,
->> which is meant to be used via a devicetree pci childnode.
->>
->> I grepped though the 4.7 code and found a few driver using
->> of_get_mac_address() without having a devicetree binding document:
->>
->> - drivers/net/usb/smsc95xx.c
->> - drivers/net/usb/smsc75xx.c
->> - drivers/net/ethernet/marvell/sky2.c
->> - drivers/net/ethernet/cavium/thunder/thunder_bgx.c
->> - drivers/net/ethernet/wiznet/w5100-spi.c
->> - drivers/net/ethernet/arc/emac_main.c
->>
->> Just let me know if you are still the opinion that a devicetree
->> binding document is required to get this patch accepted.
->
-> I'm not familiar enough device tree to really comment. Can someone from
-> the device tree list (CCed) help?
->
-> Full patch here:
->
-> https://patchwork.kernel.org/patch/9300893/
-
-I didn't get any comments so I guess we don't need to document the use
-of mac-address in the driver binding document. At least
-Documentation/devicetree/bindings/net/ethernet.txt supports that, even
-if rt2x00 is a wireless driver.
-
-Unless I get any objections I'm planning to apply this to
-wireless-drivers-next (once it's open again).
+Sure, I can start including them.  I stopped pushing them in 4.4 era
+because I thought it might be too cluttered to have these non-wt tags
+sitting around, but it's no problem to go back and push the old ones
+and do that going forward.
 
 -- 
-Kalle Valo
+Bob Copeland %% http://bobcopeland.com/
