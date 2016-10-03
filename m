@@ -1,118 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5611 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753657AbcJYWpX (ORCPT
+Received: from mail-it0-f41.google.com ([209.85.214.41]:36773 "EHLO
+        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbcJCXjv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 18:45:23 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 4/8] cfg80211: Add Fast Initial Link Setup (FILS) auth algs
-Date: Wed, 26 Oct 2016 01:42:33 +0300
-Message-ID: <1477435357-8495-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004530_713662_473E2E22)
-In-Reply-To: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
+        Mon, 3 Oct 2016 19:39:51 -0400
+Received: by mail-it0-f41.google.com with SMTP id 188so49066264iti.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 16:39:50 -0700 (PDT)
+Date: Mon, 3 Oct 2016 19:36:42 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: Final 4.8 w-t build is wt-2016-10-03
+Message-ID: <20161003233642.GB9911@localhost> (sfid-20161004_013955_216033_4BD35DEF)
+References: <20161003134507.GA9911@localhost>
+ <1651822.AbJigUgJvV@debian64>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1651822.AbJigUgJvV@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This defines authentication algorithms for FILS (IEEE 802.11ai).
+On Mon, Oct 03, 2016 at 04:42:58PM +0200, Christian Lamparter wrote:
+> Thanks for the timely update. 
+> I have a request: can you please pull Linus' kernel tags?
+> Currently the last tag from Linus' is v4.4-rc4 [0] and
+> everything between v4.4-rc5 and v4.8 is missing?!
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/linux/ieee80211.h    |  3 +++
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/nl80211.c       | 21 +++++++++++++++++++--
- 3 files changed, 28 insertions(+), 2 deletions(-)
+I've done this now.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a80516f..9a523d9 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1576,6 +1576,9 @@ struct ieee80211_vht_operation {
- #define WLAN_AUTH_SHARED_KEY 1
- #define WLAN_AUTH_FT 2
- #define WLAN_AUTH_SAE 3
-+#define WLAN_AUTH_FILS_SK 4
-+#define WLAN_AUTH_FILS_SK_PFS 5
-+#define WLAN_AUTH_FILS_PK 6
- #define WLAN_AUTH_LEAP 128
- 
- #define WLAN_AUTH_CHALLENGE_LEN 128
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 39e1647..5d36e83 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3663,6 +3663,9 @@ enum nl80211_bss_status {
-  * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
-  * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
-  * @NL80211_AUTHTYPE_SAE: Simultaneous authentication of equals
-+ * @NL80211_AUTHTYPE_FILS_SK: Fast Initial Link Setup shared key
-+ * @NL80211_AUTHTYPE_FILS_SK_PFS: Fast Initial Link Setup shared key with PFS
-+ * @NL80211_AUTHTYPE_FILS_PK: Fast Initial Link Setup public key
-  * @__NL80211_AUTHTYPE_NUM: internal
-  * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
-  * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
-@@ -3675,6 +3678,9 @@ enum nl80211_auth_type {
- 	NL80211_AUTHTYPE_FT,
- 	NL80211_AUTHTYPE_NETWORK_EAP,
- 	NL80211_AUTHTYPE_SAE,
-+	NL80211_AUTHTYPE_FILS_SK,
-+	NL80211_AUTHTYPE_FILS_SK_PFS,
-+	NL80211_AUTHTYPE_FILS_PK,
- 
- 	/* keep last */
- 	__NL80211_AUTHTYPE_NUM,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 36dd300..ebd7eaf 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3762,12 +3762,23 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
- 		if (!(rdev->wiphy.features & NL80211_FEATURE_SAE) &&
- 		    auth_type == NL80211_AUTHTYPE_SAE)
- 			return false;
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_FILS) &&
-+		    (auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+		     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+		     auth_type == NL80211_AUTHTYPE_FILS_PK))
-+			return false;
- 		return true;
- 	case NL80211_CMD_CONNECT:
- 	case NL80211_CMD_START_AP:
- 		/* SAE not supported yet */
- 		if (auth_type == NL80211_AUTHTYPE_SAE)
- 			return false;
-+		/* FILS not supported yet */
-+		if (auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+		    auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+		    auth_type == NL80211_AUTHTYPE_FILS_PK)
-+			return false;
- 		return true;
- 	default:
- 		return false;
-@@ -7796,12 +7807,18 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 	if (!nl80211_valid_auth_type(rdev, auth_type, NL80211_CMD_AUTHENTICATE))
- 		return -EINVAL;
- 
--	if (auth_type == NL80211_AUTHTYPE_SAE &&
-+	if ((auth_type == NL80211_AUTHTYPE_SAE ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_PK) &&
- 	    !info->attrs[NL80211_ATTR_AUTH_DATA])
- 		return -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_AUTH_DATA]) {
--		if (auth_type != NL80211_AUTHTYPE_SAE)
-+		if (auth_type != NL80211_AUTHTYPE_SAE &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_SK &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_SK_PFS &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_PK)
- 			return -EINVAL;
- 		auth_data = nla_data(info->attrs[NL80211_ATTR_AUTH_DATA]);
- 		auth_data_len = nla_len(info->attrs[NL80211_ATTR_AUTH_DATA]);
 -- 
-1.9.1
+Bob Copeland %% http://bobcopeland.com/
