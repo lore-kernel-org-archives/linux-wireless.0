@@ -1,72 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:34943 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932434AbcJMN4v (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:56:51 -0400
-MIME-Version: 1.0
-In-Reply-To: <1476358075.1999.5.camel@tiscali.nl>
-References: <1476349269.3880.18.camel@coelho.fi> <20161013102155.14547-1-luca@coelho.fi>
- <1476358075.1999.5.camel@tiscali.nl>
-From: Chris Rorvick <chris@rorvick.com>
-Date: Thu, 13 Oct 2016 08:56:38 -0500
-Message-ID: <CAEUsAPaqyxA1=3ktisBO3Vrw9ygi7PSrk32Rw+iyHVe_WB1oyg@mail.gmail.com> (sfid-20161013_155710_940401_686005F6)
-Subject: Re: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, linuxwifi@intel.com,
-        emmanuel.grumbach@intel.com, johannes@sipsolutions.net,
-        kvalo@codeaurora.org, oren.givon@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Paul Bolle <pebolle@tiscali.nl>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:33775 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751660AbcJCKHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 3 Oct 2016 06:07:04 -0400
+Message-ID: <1475489220.5817.0.camel@sipsolutions.net> (sfid-20161003_120713_950456_C04FA3D8)
+Subject: Re: pull-request: mac80211-next 2016-09-30
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Mon, 03 Oct 2016 12:07:00 +0200
+In-Reply-To: <20161003.015401.1915647209236695770.davem@davemloft.net>
+References: <1475252077-6165-1-git-send-email-johannes@sipsolutions.net>
+         <20161003.015401.1915647209236695770.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+On Mon, 2016-10-03 at 01:54 -0400, David Miller wrote:
+> 
+> Could you please look into this and send me a new pull request with
+> the conflicts resolved?
+> 
 
-> On Thu, 2016-10-13 at 13:21 +0300, Luca Coelho wrote:
-> Could you please give this a spin? I have tested it with some handmade
-> ACPI tables in QEMU and it seems to work fine now.
+Sure, will do (tomorrow, we have a holiday today).
 
-Tested-by: Chris Rorvick <chris@rorvick.com>
+Would you prefer I send you the merge resolution for your tree, or just
+pull in net for a new pull request?
 
-I think the debug output looks as expected, see below for the first 20
-lines or so.  And, more importantly, everything seems to be working!
-:-)
-
-Thanks!
-
-Chris
-
-==========
-
-iwlwifi 0000:3a:00.0: L1 Enabled - LTR Disabled
-iwlwifi: module verification failed: signature and/or required key
-missing - tainting kernel
-Intel(R) Wireless WiFi driver for Linux
-Copyright(c) 2003- 2015 Intel Corporation
-iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
-iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load
-firmware 'iwlwifi-8000C-24.ucode'
-iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-24.ucode
-failed with error -2
-iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load
-firmware 'iwlwifi-8000C-23.ucode'
-iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-23.ucode
-failed with error -2
-iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load
-firmware 'iwlwifi-8000C-22.ucode'
-iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-22.ucode
-failed with error -2
-iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load
-firmware 'iwlwifi-8000C-21.ucode'
-iwlwifi 0000:3a:00.0: U iwl_req_fw_callback Loaded firmware file
-'iwlwifi-8000C-21.ucode' (2394060 bytes).
-iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware unknown TLV: 48
-iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware GSCAN is supported but
-capabilities TLV is unavailable
-iwlwifi 0000:3a:00.0: U splc_get_pwr_limit No element for the WiFi
-domain returned by the SPLC method.
-iwlwifi 0000:3a:00.0: U set_dflt_pwr_limit Default power limit set to 0
-iwlwifi 0000:3a:00.0: loaded firmware version 21.302800.0 op_mode iwlmvm
-iwlwifi 0000:3a:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+johannes
