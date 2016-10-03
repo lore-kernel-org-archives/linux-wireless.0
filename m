@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:35858 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752384AbcJCNsU (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34381 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751021AbcJCICN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 09:48:20 -0400
-Received: by mail-it0-f42.google.com with SMTP id 188so34436509iti.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 06:48:15 -0700 (PDT)
-Received: from hash (CPE0018e7fe5281-CM18593342f28f.cpe.net.cable.rogers.com. [99.236.145.239])
-        by smtp.gmail.com with ESMTPSA id j69sm1629616iod.8.2016.10.03.06.48.13
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 03 Oct 2016 06:48:13 -0700 (PDT)
-Received: from bob by hash with local (Exim 4.84_2)
-        (envelope-from <me@bobcopeland.com>)
-        id 1br3YJ-0002m1-Ft
-        for linux-wireless@vger.kernel.org; Mon, 03 Oct 2016 09:45:07 -0400
-Date: Mon, 3 Oct 2016 09:45:07 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Subject: Final 4.8 w-t build is wt-2016-10-03
-Message-ID: <20161003134507.GA9911@localhost> (sfid-20161003_154843_008383_9E69D3D2)
+        Mon, 3 Oct 2016 04:02:13 -0400
+Received: by mail-wm0-f51.google.com with SMTP id 197so23032365wmk.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 01:02:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
+References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 3 Oct 2016 10:02:11 +0200
+Message-ID: <CA+BoTQkwSX954pPEh3oYzL62H9y4Y6UuPVLSxxxCkM5AznY7NA@mail.gmail.com> (sfid-20161003_100218_842891_F05B747E)
+Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
+To: Marty Faltesek <mfaltesek@google.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Per the subject, Linus released 4.8 yesterday so, unless I broke something
-in recent conflict resolutions, wireless-testing is on pause until the
-merge window closes in two weeks.  Have a happy (Canadian) thanksgiving!
+On 13 September 2016 at 23:11, Marty Faltesek <mfaltesek@google.com> wrote:
+[...]
+> +int
+> +ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
+> +{
+> +       u32 hi_addr;
+> +       __le32 addr;
+> +       int ret;
+> +
+> +       vfree(*buf);
+> +       *buf =3D vmalloc(QCA988X_CAL_DATA_LEN);
 
-https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git
+Shouldn't you use ar->hw_params to get hw-specific caldata length?
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+
+[...]
+> @@ -1714,6 +1750,12 @@ int ath10k_core_start(struct ath10k *ar, enum ath1=
+0k_firmware_mode mode)
+>
+>         INIT_LIST_HEAD(&ar->arvifs);
+>
+> +       /*
+> +        * We are up now, so no need to cache calibration data.
+> +        */
+
+The comment style is:
+
+ /* comment */
+
+If it's multi-line it should be:
+
+ /* comment
+  * comment
+  */
+
+Ditto for other instances.
+
+
+[...]
+> @@ -1757,6 +1799,11 @@ void ath10k_core_stop(struct ath10k *ar)
+>         lockdep_assert_held(&ar->conf_mutex);
+>         ath10k_debug_stop(ar);
+>
+> +       /*
+> +        * Cache caclibration data while stopped.
+
+typo. "calibration"
+
+
+Micha=C5=82
