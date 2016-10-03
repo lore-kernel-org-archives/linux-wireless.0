@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49418 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753615AbcJRUMV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22822 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753077AbcJCVPr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 16:12:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Tue, 18 Oct 2016 23:12:07 +0300
-Message-Id: <20161018201213.18873-2-luca@coelho.fi> (sfid-20161018_221226_146969_58C2DEFD)
-In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
-References: <20161018201213.18873-1-luca@coelho.fi>
-Subject: [PATCH 1/7] wireless: radiotap: fix timestamp sampling position values
+        Mon, 3 Oct 2016 17:15:47 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Xu, Peng" <pxu@qca.qualcomm.com>
+Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+Date: Mon, 3 Oct 2016 21:15:24 +0000
+Message-ID: <20161003211523.GA6585@jouni.qca.qualcomm.com> (sfid-20161003_231551_583405_1CE5D2EC)
+References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+ <1471330367.16783.23.camel@sipsolutions.net>
+ <20160816123441.GA3678@jouni.qca.qualcomm.com>
+ <1472198948.390.20.camel@sipsolutions.net>
+ <1473674982.29016.10.camel@sipsolutions.net>
+In-Reply-To: <1473674982.29016.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-The values don't match the radiotap spec, corrected that.
-
-Reported-by: Oz Shalev <oz.shalev@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/ieee80211_radiotap.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
-index ba07b9d..d0e7e3f 100644
---- a/include/net/ieee80211_radiotap.h
-+++ b/include/net/ieee80211_radiotap.h
-@@ -333,9 +333,9 @@ enum ieee80211_radiotap_type {
- #define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_NS			0x0003
- #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_MASK			0x00F0
- #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_BEGIN_MDPU		0x0000
--#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_MPDU		0x0010
-+#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ		0x0010
- #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_PPDU		0x0020
--#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ		0x0030
-+#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_MPDU		0x0030
- #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_UNKNOWN		0x00F0
- 
- #define IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT			0x00
--- 
-2.9.3
+T24gTW9uLCBTZXAgMTIsIDIwMTYgYXQgMTI6MDk6NDJQTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
+cm90ZToNCj4gSSBoYXZlIG5vIG1ham9yIG9iamVjdGlvbnMgdG8gdGhpcy4gSG93ZXZlciwgYSBm
+ZXcgdGhpbmdzOg0KPiANCj4gMSkgYXJlIHlvdSBwbGFubmluZyB0byBhZGQgc3VwcG9ydCBmb3Ig
+dGhpcyBpbnRvIGEga2VybmVsIGRyaXZlciBhdA0KPiDCoCDCoGFsbCwgYW55d2F5Pw0KPiAyKSBh
+cmUgeW91IHBsYW5uaW5nIHRvIGhhdmUgYSBkcml2ZXIgdXBzdHJlYW0gdGhhdCBjb250YWlucyB0
+aGUgbm93DQo+IMKgIMKgbmVjZXNzYXJ5IHBhcnNpbmc/DQo+IA0KPiBEZXBlbmRpbmcgb24gdGhl
+IGFuc3dlcnMsIEkgc3VwcG9zZSB3ZSBjb3VsZC9zaG91bGQgbWVyZ2UgdGhpczoNCj4gDQo+IG5v
+IMKgKiDCoDogZG9uJ3QgbWVyZ2UNCj4geWVzIG5vIDogbWVyZ2UNCj4geWVzIHllczogZG9uJ3Qg
+bWVyZ2UsIHB1dCBwYXJzaW5nIGludG8gY2ZnODAyMTENCj4gDQo+IEkgZ3Vlc3M/DQoNClRoZSBt
+YWluIGdvYWwgb2YgdGhpcyB3YXMgdG8gc2VlIGlmIHdlIGNhbiByZWR1Y2UgYWN0dWFsIGRyaXZl
+cg0KaW1wbGVtZW50YXRpb24gc2l6ZSBhbmQgbWF5YmUgZXZlbiBtb3JlIHNvIHRvIHByZXBhcmUg
+Zm9yIDgwMi4xMWF4DQpjaGFuZ2VzIChpLmUuLCBzZWUgd2hhdCB3ZSBhcmUgZG9pbmcgY3VycmVu
+dGx5IGZvciBjb25maWd1cmluZyBIVC9WSFQgaW4NCmEgd2F5IHRoYXQgY291bGQgYmUgZG9uZSBi
+ZXR0ZXIpLg0KDQpBcyB5b3Ugbm90ZWQgZWFybGllciwgdGhpcyB3b3VsZCBub3QgcmVhbGx5IGFs
+bG93IHRoZSBkcml2ZXIgdG8gZHJvcCBpdHMNCkhUL1ZIVCByZWxhdGVkIHBhcnNpbmcgb3BlcmF0
+aW9ucyB3aXRob3V0IG1ha2luZyBzdXJlIHVzZXIgc3BhY2UNCmNvbXBvbmVudHMgd2VyZSB1cGRh
+dGVkIGFzIHdlbGwuIFRoZSBhcHByb2FjaCB0byBhdm9pZCB0aGF0IGlzIHRoYXQNCiJwYXJzaW5n
+IGludG8gY2ZnODAyMTEiLg0KDQpMb29raW5nIGF0IHRoZSBjdXJyZW50IGluLXRyZWUgZHJpdmVy
+cywgaXQgbG9va3MgbGlrZSBmb2xsb3dpbmcNCmFwcHJvYWNoZXMgaGF2ZSBiZWVuIHVzZWQ6DQoN
+CmF0aDZrbDoNClVzZSBjZmc4MDIxMV9nZXRfY2hhbmRlZl90eXBlKCZpbmZvLT5jaGFuZGVmKSAh
+PSBOTDgwMjExX0NIQU5fTk9fSFQgdG8NCmRldGVybWluZSB3aGV0aGVyIEhUIGlzIGVuYWJsZWQu
+IE5vIFZIVCBzdXBwb3J0LiBIVC1yZXF1aXJlZCBjYXNlIG5vdA0KY292ZXJlZC4gTm8gcGFyc2lu
+ZyBvZiBIVC9WSFQgSUVzIHVzZWQuDQoNCmJyY21mbWFjOg0KVXNlcyBpbmZvLT5jaGFuZGVmLiBO
+b3QgY2xlYXIgaG93IEhUL1ZIVCBjb3VsZCBiZSBkaXNhYmxlZCBvciByZXF1aXJlZC4NCk5vdGU6
+IFBhcnNlcyBCZWFjb24gSUVzIGZvciBDb3VudHJ5IGFuZCBTU0lEIChhcyBiYWNrdXAgZm9yIHNz
+aWQgPT0NCk5VTEwhPyksIFJTTiwgV1BBLg0KDQptd2lmaWV4Og0KVXNlcyBpbmZvLT5jaGFuZGVm
+LiBQYXJzZXMgQmVhY29uIHRhaWw6IEVuYWJsZXMgVkhUIGJhc2VkIG9uIHNlYXJjaGluZw0KaW5m
+by0+YmVhY29uLnRhaWwgZm9yIFZIVCBDYXBhYmlsaXR5IGVsZW1lbnQuIFBhcnNlcyBIVCBDYXBh
+YmlsaXR5IHRvDQpkZXRlcm1pbmUgd2hldGhlciBIVCBpcyB0byBiZSBzdXBwb3J0ZWQgYW5kIGFs
+c28gdG8gc2V0IHZhcmlvdXMgSFQNCnBhcmFtZXRlcnMuIERvZXMgbm90IHNlZW0gdG8gaGF2ZSBz
+dXBwb3J0IGZvciBIVC9WSFQtcmVxdWlyZWQuDQoNCg0KU28gSSBndWVzcyB0aGVyZSBjb3VsZCBi
+ZSBzb21lIGNvZGUgc2hhcmluZyBhbmQgY2xlYW51cCBkb25lIHdpdGggdGhlDQpleGlzdGluZyBp
+bi10cmVlIGRyaXZlcnMuIEVzcGVjaWFsbHkgdGhlIG13aWZpZXggZXhhbXBsZSBsb29rcyBsaWtl
+DQpzb21ldGhpbmcgdGhhdCB0cmlnZ2VyZWQgdXMgdG8gbG9vayBhdCB0aGlzLiBJJ20gbm90IHN1
+cmUgd2UnZCBwcm9wb3NlDQphZGRpbmcgYW55IG5ldyBkcml2ZXIgd2l0aCB0aGUgZHJpdmVyIGNv
+ZGUgaXRzZWxmIGRvaW5nIEhUL1ZIVCBJRQ0KcGFyc2luZyBhbmQgc2luY2UgYXRoNmtsIGRpZCBu
+b3QgZG8gdGhpcyBlaXRoZXIsIEkgZG9uJ3Qgc2VlIHVzIGNoYW5naW5nDQpleGlzdGluZyBpbi10
+cmVlIGRyaXZlcnMgdG8gdXNlIHRoaXMgZWl0aGVyLg0KDQpJJ20gbm90IHN1cmUgdGhlcmUgd291
+bGQgcmVhbGx5IGJlIGVub3VnaCBqdXN0aWZpY2F0aW9uIHRvIGFkZCB0aGlzDQpzcGVjaWZpYyBw
+YXRjaCBkdWUgdG8gdGhlIGFzc3VtZWQgdXNlciBzcGFjZSB1cGRhdGUuIEFkZGluZyBzb21lIG9m
+IHRoZQ0KSFQvVkhUIGVsZW1lbnQgcGFyc2luZyBpbiBjZmc4MDIxMSBtaWdodCBiZW5lZml0IG9u
+IG9yIHR3byBvZiB0aGUNCmluLXRyZWUgZHJpdmVycyBpZiB0aGVpciBtYWludGFpbmVycyBhcmUg
+aW50ZXJlc3RlZCBpbiB0aGF0LiBUaGF0IHNhaWQsDQp3aXRob3V0IGFkZGl0aW9uYWwgaW50ZXJl
+c3QsIEknbSBzdGFydGluZyB0byBsZWFuIHRvd2FyZHMgdXNpbmcgdGhpcyBhcw0KYW4gZXhhbXBs
+ZSBvZiB3aGF0IHR5cGUgb2YgcGFyYW1ldGVycyB3ZSBuZWVkIHRvIGFkZCBmb3IgSEUgZnJvbSB0
+aGUNCmJlZ2lubmluZyBhbmQgbm90IG1lcmdlIHRoaXMgcGF0Y2guDQoNCi0tIA0KSm91bmkgTWFs
+aW5lbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUEdQIGlkIEVG
+Qzg5NUZB
