@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50148 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S943508AbcJSOzL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45125 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752098AbcJCHY0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:55:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 10:27:21 +0300
-Message-Id: <20161019072726.22018-3-luca@coelho.fi> (sfid-20161019_165529_856153_3B701361)
-In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
-References: <20161019072726.22018-1-luca@coelho.fi>
-Subject: [PATCH 2/7] iwlwifi: mvm: use ssize_t for len in iwl_debugfs_mem_read()
+        Mon, 3 Oct 2016 03:24:26 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes.Sorensen@redhat.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org
+Subject: Re: [PATCH 1/2] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
+References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
+        <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com>
+Date: Mon, 03 Oct 2016 10:24:20 +0300
+In-Reply-To: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com> (Jes
+        Sorensen's message of "Thu, 29 Sep 2016 15:40:54 -0400")
+Message-ID: <871szxuc7v.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_092429_739162_5EFAE17A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Jes.Sorensen@redhat.com writes:
 
-In iwl_dbgfs_mem_read(), the len variable may become negative and is
-compared to < 0 (an error case).  Comparing size_t (which is unsigned)
-to < 0 causes a warning on certain platforms (like i386):
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> A device running without RX package aggregation could return more data
+> in the USB packet than the actual network packet. In this case the
+> could would clone the skb but then determine that that there was no
+> packet to handle and exit without freeing the cloned skb first.
+>
+> This has so far only been observed with 8188eu devices, but could
+> affect others.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561:5-8: WARNING: Unsigned expression compared with zero: len < 0
+Before I commit I'll add:
 
-To prevent that, use ssize_t for len instead.
+Cc: stable@vger.kernel.org # 4.8+
 
-Fixes: commit 2b55f43f8e47 ("iwlwifi: mvm: Add mem debugfs entry")
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 539d718..06805a6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1529,8 +1529,8 @@ static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
- 		.data = { &cmd, },
- 		.len = { sizeof(cmd) },
- 	};
--	size_t delta, len;
--	ssize_t ret;
-+	size_t delta;
-+	ssize_t ret, len;
- 
- 	hcmd.id = iwl_cmd_id(*ppos >> 24 ? UMAC_RD_WR : LMAC_RD_WR,
- 			     DEBUG_GROUP, 0);
 -- 
-2.9.3
+Kalle Valo
