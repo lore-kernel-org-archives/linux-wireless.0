@@ -1,105 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58978 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S938751AbcJXOWm (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:48745 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751583AbcJCKxD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 10:22:42 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <dmitry.torokhov@gmail.com>, <briannorris@google.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 5/5] mwifiex: wait for firmware dump completion in remove_card
-Date: Mon, 24 Oct 2016 19:51:32 +0530
-Message-ID: <1477318892-22877-5-git-send-email-akarwar@marvell.com> (sfid-20161024_162245_253501_B5551CD2)
-In-Reply-To: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+        Mon, 3 Oct 2016 06:53:03 -0400
+Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on AP
+ interfaces
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+ <1475229714.17481.18.camel@sipsolutions.net>
+Cc: kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+From: Michael Braun <michael.braun@fem.tu-ilmenau.de>
+Message-ID: <f9d33317-f23f-9d5e-8e9e-1e63eff1882a@fem.tu-ilmenau.de> (sfid-20161003_125307_207097_AD61F5A3)
+Date: Mon, 3 Oct 2016 12:44:48 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1475229714.17481.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Am 30.09.2016 um 12:01 schrieb Johannes Berg:
+> A few more things:
+> 
+> First of all - there's nothing specific to "AP interfaces", which you
+> say in the subject, as far as I can tell? That should be removed?
 
-This patch ensures to wait for firmware dump completion in
-mwifiex_remove_card().
+>> if (unlikely(ta &&
+>>+			     (iftype == NL80211_IFTYPE_AP ||
+>>+			      iftype == NL80211_IFTYPE_AP_VLAN) &&
+>>+			     !ether_addr_equal(ta, eth.h_source)
+>>+		   ))
+>>+			goto purge;
 
-For sdio interface, reset_trigger variable is used to identify
-if mwifiex_sdio_remove() is called by sdio_work during reset or
-the call is from sdio subsystem.
+So the A-MSDU packets are only dropped if received by an interface in AP
+or AP_VLAN mode, not on client side, as my original issue was about
+arp/ip filters being circumvented on AP side.
 
-This patch fixes a kernel crash observed during reboot when firmware
-dump operation is in process.
+>> IEEE 802.11-2012 mandates that the outer source mac address should
+>> match the inner source address (section 8.3.2.2). For the
+>> destination mac address, matching is not required (section 10.23.15).
+> 
+> I think this is wrong. As we do not support DMS (yet), we should adhere
+> to 8.3.2.2 and only accept matching TA/SA and DA/RA.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  2 ++
- drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++++-
- 2 files changed, 16 insertions(+), 1 deletion(-)
+IEEE 802.11-2012 8.3.2.2 contains the note "NOTE—It is possible to have
+different DA and SA parameter values in A-MSDU subframe headers of the
+same A-MSDU as long as they all map to the same Address 1 and Address 2
+parameter values."
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 986bf07..4512e86 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -528,6 +528,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	cancel_work_sync(&pcie_work);
-+
- 	if (user_rmmod && !adapter->mfg_mode) {
- #ifdef CONFIG_PM_SLEEP
- 		if (adapter->is_suspended)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 4cad1c2..f974260 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -46,6 +46,15 @@
-  */
- static u8 user_rmmod;
- 
-+/* reset_trigger variable is used to identify if mwifiex_sdio_remove()
-+ * is called by sdio_work during reset or the call is from sdio subsystem.
-+ * We will cancel sdio_work only if the call is from sdio subsystem.
-+ */
-+static u8 reset_triggered;
-+
-+static void mwifiex_sdio_work(struct work_struct *work);
-+static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
-+
- static struct mwifiex_if_ops sdio_ops;
- static unsigned long iface_work_flags;
- 
-@@ -289,6 +298,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	if (!reset_triggered)
-+		cancel_work_sync(&sdio_work);
-+
- 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
- 
- 	if (user_rmmod && !adapter->mfg_mode) {
-@@ -2290,7 +2302,9 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 	 * discovered and initializes them from scratch.
- 	 */
- 
-+	reset_triggered = 1;
- 	mwifiex_sdio_remove(func);
-+	reset_triggered = 0;
- 
- 	/* power cycle the adapter */
- 	sdio_claim_host(func);
-@@ -2621,7 +2635,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
- 		mwifiex_sdio_card_reset_work(save_adapter);
- }
- 
--static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
- /* This function resets the card */
- static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- {
--- 
-1.9.1
+I conclude that embedding multicast in unicast A-MSDU frames is
+generally allowed, because "mapping" does not mean "be identical".
+
+Regards,
+M. Braun
