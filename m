@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34105 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932869AbcJMQlt (ORCPT
+Received: from server1.vittgam.net ([213.239.197.142]:38079 "EHLO
+        mail.vittgam.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751872AbcJCKGe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 12:41:49 -0400
-Received: by mail-lf0-f65.google.com with SMTP id x23so7785747lfi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 09:41:05 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 2/5] ath6kl: Updated TARG_VTOP macro with default value
-Date: Thu, 13 Oct 2016 18:39:26 +0200
-Message-Id: <1476376769-4708-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20161013_184156_554914_8190ACF3)
-In-Reply-To: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
+        Mon, 3 Oct 2016 06:06:34 -0400
+Date: Mon, 3 Oct 2016 12:00:56 +0200
+From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
+To: <kvalo@codeaurora.org>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@venema.h4ckr.net>
+Cc: <stable@vger.kernel.org>
+Subject: [PATCH] ath9k: Move generic entries below specific ones in ath_pci_id_table.
+Message-ID: <ath9k-patch-20161003@vittgam.net> (sfid-20161003_120639_760442_B5FFD06B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A minor modification of the TARG_VTOP macro.
-The AR6004 VTOP macro is used as default (for all
-chip's except AR6003)
+If generic entries are positioned above specific ones, then the
+former will be matched first and used instead of the latter.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
 ---
- drivers/net/wireless/ath/ath6kl/target.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index d5eeeae..c6c49b0 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -331,11 +331,11 @@ struct host_interest {
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -26,7 +26,6 @@
+ 	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+-	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
  
- /* Convert a Target virtual address into a Target physical address */
- #define AR6003_VTOP(vaddr) ((vaddr) & 0x001fffff)
--#define AR6004_VTOP(vaddr) (vaddr)
-+#define DEFAULT_VTOP(vaddr) (vaddr)
+ #ifdef CONFIG_ATH9K_PCOEM
+ 	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
+@@ -37,7 +36,7 @@
+ 	  .driver_data = ATH9K_PCI_LED_ACT_HI },
+ #endif
  
- #define TARG_VTOP(target_type, vaddr) \
- 	(((target_type) == TARGET_TYPE_AR6003) ? AR6003_VTOP(vaddr) : \
--	(((target_type) == TARGET_TYPE_AR6004) ? AR6004_VTOP(vaddr) : 0))
-+	DEFAULT_VTOP(vaddr))
+-	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
++	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
  
- #define ATH6KL_FWLOG_PAYLOAD_SIZE		1500
+ #ifdef CONFIG_ATH9K_PCOEM
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+@@ -85,7 +84,11 @@
+ 			 0x10CF, /* Fujitsu */
+ 			 0x1536),
+ 	  .driver_data = ATH9K_PCI_D3_L1_WAR },
++#endif
  
--- 
-2.1.4
++	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
++
++#ifdef CONFIG_ATH9K_PCOEM
+ 	/* AR9285 card for Asus */
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+ 			 0x002B,
