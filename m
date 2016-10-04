@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:54332 "EHLO
-        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754579AbcJSDcP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46043 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbcJDMqN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 23:32:15 -0400
-Date: Wed, 19 Oct 2016 11:31:57 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
-Message-ID: <20161019033157.GA1457@gondor.apana.org.au> (sfid-20161019_053223_380457_744A085D)
-References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
- <1476689310.19992.1.camel@sipsolutions.net>
- <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
- <CALCETrUWW2A1XK7BzcajTcBzg58SDUCTE35Hj1vmbywTLCe2vQ@mail.gmail.com>
- <CAKv+Gu-25OvTSbyE06Ln8N+HsqNyV1T6oOudK2tyAAOmmXXqgA@mail.gmail.com>
+        Tue, 4 Oct 2016 08:46:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Wei-Ning Huang <wnhuang@google.com>,
+        Brian Norris <briannorris@google.com>,
+        Eric Caruso <ejcaruso@chromium.org>,
+        Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [v2] mwifiex: report wakeup for wowlan
+References: <1475027104-17423-1-git-send-email-rajatja@google.com>
+        <20161003130407.4D94161803@smtp.codeaurora.org>
+        <CACK8Z6Fe34xdvd5-=3dNmqKXYC=Qr9+kpG46eCV7uFArLW+yyQ@mail.gmail.com>
+Date: Tue, 04 Oct 2016 15:46:03 +0300
+In-Reply-To: <CACK8Z6Fe34xdvd5-=3dNmqKXYC=Qr9+kpG46eCV7uFArLW+yyQ@mail.gmail.com>
+        (Rajat Jain's message of "Mon, 3 Oct 2016 17:16:19 -0700")
+Message-ID: <87vax8p9is.fsf@kamboji.qca.qualcomm.com> (sfid-20161004_144618_400351_4C6780BC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu-25OvTSbyE06Ln8N+HsqNyV1T6oOudK2tyAAOmmXXqgA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 17, 2016 at 06:21:14PM +0100, Ard Biesheuvel wrote:
+Rajat Jain <rajatja@google.com> writes:
+
+> Hello Kalie,
 >
-> Annoyingly, all this complication with scatterlists etc is for doing
-> asynchronous crypto via DMA capable crypto accelerators, and the
-> networking code (ipsec as well as mac80211, afaik) only allow
-> synchronous in the first place, given that they execute in softirq
-> context.
+> On Mon, Oct 3, 2016 at 6:04 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rajat Jain <rajatja@google.com> wrote:
+>>> Enable notifying wakeup source to the PM core in case of
+>>> a wake on wireless LAN event.
+>>>
+>>> Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
+>>> Signed-off-by: Rajat Jain <rajatja@google.com>
+>>> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+>>> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
+>>> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+>>
+>> The commit log doesn't give any background info. Does this fix a bug or
+>> why is it needed?
+>
+> Some of chromeos' features (called "darkresume" in chromeos
+> terminology) use and track the wake up sources using the wakeup
+> attributes in sysfs. Since the wireless device can wake up the host,
+> hence we wanted to add it as a wakeup source to the system, and in the
+> case of an actual wakeup event, trigger to the PM core that it was
+> indeed caused by the device and it increments the different counters
+> etc. In the absence of this patch,  the feature wasn't working very
+> well (as it was apparently confused about the cause of wake up).
 
-I'm still thinking about the issue (in particular, whether we
-should continue to rely on the request context being SG-capable
-or allow it to be on the stack for AEAD).
+Thanks, makes sense. Please add that to the commit and send v3.
 
-But IPsec definitely supports async crypto.  In fact it was the
-very first user of async crypto.
-
-mac80211 on the other hand is currently sync-only.
-
-Cheers,
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Kalle Valo
