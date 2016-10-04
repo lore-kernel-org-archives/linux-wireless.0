@@ -1,97 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36019 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753982AbcJDS1f (ORCPT
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:34746 "EHLO
+        mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751980AbcJDARB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 14:27:35 -0400
-Received: by mail-wm0-f47.google.com with SMTP id k125so222704255wma.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 11:27:34 -0700 (PDT)
+        Mon, 3 Oct 2016 20:17:01 -0400
+Received: by mail-yw0-f173.google.com with SMTP id g192so118591504ywh.1
+        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 17:17:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzY+yDnf6AOb4=yRo8jRCYD4FWJ0uBvmQnUSemwXQa2PQrg@mail.gmail.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
- <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
- <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com> <CABPxzY+yDnf6AOb4=yRo8jRCYD4FWJ0uBvmQnUSemwXQa2PQrg@mail.gmail.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Tue, 4 Oct 2016 21:27:32 +0300
-Message-ID: <CANfLQrZs5EyTEMupsR=1M9gqo7ar88g6RHObJ=4fj3J3dkTtvQ@mail.gmail.com> (sfid-20161004_202749_235390_0FF95073)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20161003130407.4D94161803@smtp.codeaurora.org>
+References: <1475027104-17423-1-git-send-email-rajatja@google.com> <20161003130407.4D94161803@smtp.codeaurora.org>
+From: Rajat Jain <rajatja@google.com>
+Date: Mon, 3 Oct 2016 17:16:19 -0700
+Message-ID: <CACK8Z6Fe34xdvd5-=3dNmqKXYC=Qr9+kpG46eCV7uFArLW+yyQ@mail.gmail.com> (sfid-20161004_021709_036494_B67C028F)
+Subject: Re: [v2] mwifiex: report wakeup for wowlan
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Wei-Ning Huang <wnhuang@google.com>,
+        Brian Norris <briannorris@google.com>,
+        Eric Caruso <ejcaruso@chromium.org>,
+        Rajat Jain <rajatxjain@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 4, 2016 at 3:37 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Tue, Oct 4, 2016 at 5:09 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>>
->>>>
->>>> On 29-09-16 13:32, Gucea Doru wrote:
->>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->>>>>> What is the decision triggering the exit from the PS mode immediately
->>>>>> after the ping request? I am asking this because 802.11 PS legacy
->>>>>> specifies that the client should wait for a beacon with TIM set in
->>>>>> order to wake up: in my case, there is no beacon between the ping
->>>>>> request message and the Null frame that announces the exit from the PS
->>>>>> mode.
->>>>>
->>>>>
->>>>> Any help would be highly appreciated :)
->>>>
->>>> Actually though I already sent you are reply, but alas here it is.
->>>>
->>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
->>>> drivers. Regardless your question is more for firmware running on the
->>>> device. So like the same behavior would be observed when using brcmfmac
->>>> with same firmware.
->>>>
->>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
->>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
->>>>> shall issue a PS Poll". In my capture there are cases when the STA
->>>>> exits the PS mode without waiting for a beacon.
->>>>
->>>> It is a bit tricky, but the standard does not explicitly say the STA
->>>> should be in power-save at any other time. So it is difficult to say
->>>> what event occurred on the STA side to exit PS mode. Also STA means
->>>> P2P-Client as you say. That means that you have multiple interfaces:
->>>> regular STA and P2P-Client. So is the STA connected to some other AP or
->>>> just not connected. wpa_supplicant will do intermittent scan or initiate
->>>> scheduled scan by which firmware will scan at a certain interval. That
->>>> is just some things I can come up with and I am sure there are more.
->>
->> I agree that there may be some events belonging to the regular STA
->> interface that could trigger the Null Frame (which includes the exit
->> from PS Mode). However, I would expect to see some management frames
->> in the air before/after the Null Packet (e.g.: a Probe request in case
->> of a scheduled scan). But in my case the trigger for the Null frame
->> seems to be the ping request packet, the scenario is the same every
->> time: ping request -> Block ACK -> Null Frame (Wireshark trace
->> confirms this behavior).
->>
->> I thought that you had a power save optimization algorithm that keeps
->> the card on a few milliseconds just to see if we can have a fast reply
->> from the peer. Does this ring a bell? :)
->>
->> On Sat, Oct 1, 2016 at 3:02 PM, Krishna Chaitanya
->> <chaitanya.mgit@gmail.com> wrote:
->>> Keeping the STA aside, as far as AP is concerned the STA is still in PS,
->>> so it should set the TIM/DTIM bit to 1 before sending out data to the STA.
->>
->> Not necessarily, see section 10.2.1.6/l from IEEE Std 802.11-2012:
->> "When an AP is informed that a STA has changed to the Active mode,
->> then the AP shall send buffered BUs (if any exist) to the STA without
->> waiting for a PS Poll...."
-> Yes, but in this case the STA did not inform AP (as per sniffer captures)?
-> so AP should set TIM/DTIM...
+Hello Kalie,
 
-The STA _did_ inform the AP.
+On Mon, Oct 3, 2016 at 6:04 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rajat Jain <rajatja@google.com> wrote:
+>> Enable notifying wakeup source to the PM core in case of
+>> a wake on wireless LAN event.
+>>
+>> Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
+>> Signed-off-by: Rajat Jain <rajatja@google.com>
+>> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+>> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
+>> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+>
+> The commit log doesn't give any background info. Does this fix a bug or
+> why is it needed?
 
-If you take a look at the packet traces you'll see that the STA sends
-a NULL frame saying that it will exit Power Save Mode. According to
-the specification the AP can send the buffered frames.
+Some of chromeos' features (called "darkresume" in chromeos
+terminology) use and track the wake up sources using the wakeup
+attributes in sysfs. Since the wireless device can wake up the host,
+hence we wanted to add it as a wakeup source to the system, and in the
+case of an actual wakeup event, trigger to the PM core that it was
+indeed caused by the device and it increments the different counters
+etc. In the absence of this patch,  the feature wasn't working very
+well (as it was apparently confused about the cause of wake up).
+
+Thanks,
+
+Rajat
