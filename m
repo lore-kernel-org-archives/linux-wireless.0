@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48308 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754148AbcJLGzu (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53530 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752901AbcJDKfE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 02:55:50 -0400
-Message-ID: <1476253524.7776.8.camel@coelho.fi> (sfid-20161012_085639_533175_B2050A30)
-From: Luca Coelho <luca@coelho.fi>
-To: Chris Rorvick <chris@rorvick.com>, Paul Bolle <pebolle@tiscali.nl>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 12 Oct 2016 09:25:24 +0300
-In-Reply-To: <CAEUsAPYDPCP0NBaTmy4xqFJhAS4xFQYinoNTknxFT23ef0dk4w@mail.gmail.com>
-References: <20161010071943.4717-1-chris@rorvick.com>
-         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
-         <CAEUsAPYDPCP0NBaTmy4xqFJhAS4xFQYinoNTknxFT23ef0dk4w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
+        Tue, 4 Oct 2016 06:35:04 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: check hw_status in suspend and resume handlers
+Date: Tue, 4 Oct 2016 16:04:13 +0530
+Message-ID: <1475577253-1126-2-git-send-email-akarwar@marvell.com> (sfid-20161004_123506_822448_30814106)
+In-Reply-To: <1475577253-1126-1-git-send-email-akarwar@marvell.com>
+References: <1475577253-1126-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chris,
-On Tue, 2016-10-11 at 09:09 -0500, Chris Rorvick wrote:
-> On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> > > This is not coming from the NIC itself, but from the platform's ACPI
-> > > tables.  Can you tell us which platform you are using?
-> 
-> 
-> Interesting.  I'm running a Dell XPS 13 9350.  I replaced the
-> factory-provided Broadcom card with an AC 8260.  I can update the
-> commit log to reflect this.
+From: Xinming Hu <huxm@marvell.com>
 
-Okay, so this makes sense.  Those entries are probably formatted for
-the Broadcom card, which the iwlwifi driver obviously doesn't
-understand.  The best we can do, as I already said, is to ignore values
-we don't understand.
+We have observed a kernel crash when system immediately suspends
+after booting. There is a race between suspend and driver
+initialization paths.
+This patch adds hw_status checks to fix the problem
 
-I will also check what is the correct procedure in such cases, because
-it is possible, in theory, that the format *matches* but applies only
-to another device.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-
-> > > If this is really bothering you, I guess I could apply this patch for
-> > > now.  But as I said, this is not solving the actual problem.
-> > 
-> > 
-> > Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
-> > imply one needs to act on this message, while warn does imply that
-> > action is needed.
-> 
-> 
-> Agreed.  I still think making this a warning is appropriate, but it
-> seems pretty clear this is not an error.  This has nothing to do with
-> how much it bothers me.  An error tells the user something needs to be
-> fixed, but in this case the interface is working fine.  Making it a
-> warning with an improved message will result in fewer people wasting
-> their time.
-
-Yes, so I'll try to stop wasting people's timing by trying to do the
-correct thing without bothering the user at all. :)
-
-Thanks for pointing this all out!
-
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ba9e068..376e01c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -122,7 +122,8 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 
+ 	if (pdev) {
+ 		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
++		if (!card || !card->adapter ||
++		    card->adapter->hw_status != MWIFIEX_HW_STATUS_READY) {
+ 			pr_err("Card or adapter structure is not valid\n");
+ 			return 0;
+ 		}
+@@ -166,7 +167,8 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 
+ 	if (pdev) {
+ 		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
++		if (!card || !card->adapter ||
++		    card->adapter->hw_status != MWIFIEX_HW_STATUS_READY) {
+ 			pr_err("Card or adapter structure is not valid\n");
+ 			return 0;
+ 		}
+-- 
+1.9.1
