@@ -1,60 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53524 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751948AbcJDKe4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34938 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753904AbcJDJK0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 06:34:56 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: reset card->adapter during device unregister
-Date: Tue, 4 Oct 2016 16:04:12 +0530
-Message-ID: <1475577253-1126-1-git-send-email-akarwar@marvell.com> (sfid-20161004_123500_694952_60991E08)
+        Tue, 4 Oct 2016 05:10:26 -0400
+Subject: Re: 802.11ad chip
+To: Vikram <vikrampal@gmail.com>, linux-wireless@vger.kernel.org
+References: <CALZLQ=Y+J8D6ChXhBjw6dCZPHCRTR0zWm1JRs7_ZsC9_+skA0Q@mail.gmail.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <0e0b14ee-8a3a-b7d3-915a-b3c124f82462@codeaurora.org> (sfid-20161004_111036_233619_21B4D135)
+Date: Tue, 4 Oct 2016 12:10:16 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CALZLQ=Y+J8D6ChXhBjw6dCZPHCRTR0zWm1JRs7_ZsC9_+skA0Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 10/3/2016 8:13 AM, Vikram wrote:
+> Hi,
+> 
+> I want to purchase a 802.11ad chip which works with wil6210 linux
+> driver on latest stable kernel 4.7.4. I want to test some 802.11ad
+> WiGig functionalities.
+> 
+> Please suggest me as to which one to buy.
+> 
+> Regards,
+> Vikram
+> 
+Acer has a few laptops with a compatible 11ad chip. You can go to this site:
+http://www.acer.com/ac/en/US/content/professional-models/laptops/travelmatep6
+and filter "wireless LAN Standard" by "IEEE 802.11a/b/g/n/ac/ad"
+on the left.
+Also the TP-Link AD7200 router contains a compatible 11ad chip:
+https://www.amazon.com/TP-Link-AD7200-Wireless-Tri-Band-Talon/dp/B01FRP2758
 
-card->adapter gets initialized during device registration.
-As it's not cleared, we may end up accessing invalid memory
-in some corner cases. This patch fixes the problem.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
- drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index f1eeb73..ba9e068 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 				pci_disable_msi(pdev);
- 	       }
- 	}
-+	card->adapter = NULL;
- }
- 
- /* This function initializes the PCI-E host memory space, WCB rings, etc.
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 8718950..4cad1c2 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 	struct sdio_mmc_card *card = adapter->card;
- 
- 	if (adapter->card) {
-+		card->adapter = NULL;
- 		sdio_claim_host(card->func);
- 		sdio_disable_func(card->func);
- 		sdio_release_host(card->func);
--- 
-1.9.1
+Thanks,
+Lior
