@@ -1,130 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35792 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761947AbcJaICf (ORCPT
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:33127 "EHLO
+        mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752220AbcJDMiD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 04:02:35 -0400
-Received: by mail-pf0-f193.google.com with SMTP id s8so8096931pfj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:35 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: [PATCH 02/12] mwifiex: check tx_hw_pending before downloading sleep confirm
-Date: Mon, 31 Oct 2016 16:02:10 +0800
-Message-Id: <1477900940-10549-2-git-send-email-huxinming820@marvell.com> (sfid-20161031_090243_562816_6AE49123)
-In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+        Tue, 4 Oct 2016 08:38:03 -0400
+Received: by mail-yw0-f177.google.com with SMTP id i129so128732468ywb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 05:38:02 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
+References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
+ <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
+ <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
+ <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 4 Oct 2016 18:07:41 +0530
+Message-ID: <CABPxzY+yDnf6AOb4=yRo8jRCYD4FWJ0uBvmQnUSemwXQa2PQrg@mail.gmail.com> (sfid-20161004_143811_787679_116E5BD3)
+Subject: Re: bcmdhd: Strange Power Save messages
+To: Gucea Doru <gucea.doru@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
-
-This patch will only allow downloading sleep confirm
-when no tx done interrupt is pending in the hardware.
-
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-
-Change-Id: I6d6955b4a2de0ad791ca28f0f635d636a2c7e406
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 4 ++--
- drivers/net/wireless/marvell/mwifiex/init.c   | 1 +
- drivers/net/wireless/marvell/mwifiex/main.h   | 1 +
- drivers/net/wireless/marvell/mwifiex/pcie.c   | 5 +++++
- 4 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 9075be5..25a7475 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1118,14 +1118,14 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- void
- mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
- {
--	if (!adapter->cmd_sent &&
-+	if (!adapter->cmd_sent && !atomic_read(&adapter->tx_hw_pending) &&
- 	    !adapter->curr_cmd && !IS_CARD_RX_RCVD(adapter))
- 		mwifiex_dnld_sleep_confirm_cmd(adapter);
- 	else
- 		mwifiex_dbg(adapter, CMD,
- 			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
- 			    (adapter->cmd_sent) ? "D" : "",
--			    (adapter->data_sent) ? "T" : "",
-+			    atomic_read(&adapter->tx_hw_pending) ? "T" : "",
- 			    (adapter->curr_cmd) ? "C" : "",
- 			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 82839d9..b36cb3f 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -270,6 +270,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->adhoc_11n_enabled = false;
- 
- 	mwifiex_wmm_init(adapter);
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 
- 	sleep_cfm_buf = (struct mwifiex_opt_sleep_confirm *)
- 					adapter->sleep_cfm->data;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index d61fe3a..7f67f23 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -857,6 +857,7 @@ struct mwifiex_adapter {
- 	atomic_t rx_pending;
- 	atomic_t tx_pending;
- 	atomic_t cmd_pending;
-+	atomic_t tx_hw_pending;
- 	struct workqueue_struct *workqueue;
- 	struct work_struct main_work;
- 	struct workqueue_struct *rx_workqueue;
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 063c707..4aa5d91 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -516,6 +516,7 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
- 		}
- 	}
- 
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 	return 0;
- }
- 
-@@ -689,6 +690,7 @@ static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
- 		card->tx_buf_list[i] = NULL;
- 	}
- 
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 	return;
- }
- 
-@@ -1126,6 +1128,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 							    -1);
- 			else
- 				mwifiex_write_data_complete(adapter, skb, 0, 0);
-+			atomic_dec(&adapter->tx_hw_pending);
- 		}
- 
- 		card->tx_buf_list[wrdoneidx] = NULL;
-@@ -1218,6 +1221,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		wrindx = (card->txbd_wrptr & reg->tx_mask) >> reg->tx_start_ptr;
- 		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 		card->tx_buf_list[wrindx] = skb;
-+		atomic_inc(&adapter->tx_hw_pending);
- 
- 		if (reg->pfu_enabled) {
- 			desc2 = card->txbd_ring[wrindx];
-@@ -1295,6 +1299,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- done_unmap:
- 	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 	card->tx_buf_list[wrindx] = NULL;
-+	atomic_dec(&adapter->tx_hw_pending);
- 	if (reg->pfu_enabled)
- 		memset(desc2, 0, sizeof(*desc2));
- 	else
--- 
-1.8.1.4
+On Tue, Oct 4, 2016 at 5:09 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>>
+>>>
+>>> On 29-09-16 13:32, Gucea Doru wrote:
+>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+>>>>> What is the decision triggering the exit from the PS mode immediately
+>>>>> after the ping request? I am asking this because 802.11 PS legacy
+>>>>> specifies that the client should wait for a beacon with TIM set in
+>>>>> order to wake up: in my case, there is no beacon between the ping
+>>>>> request message and the Null frame that announces the exit from the PS
+>>>>> mode.
+>>>>
+>>>>
+>>>> Any help would be highly appreciated :)
+>>>
+>>> Actually though I already sent you are reply, but alas here it is.
+>>>
+>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
+>>> drivers. Regardless your question is more for firmware running on the
+>>> device. So like the same behavior would be observed when using brcmfmac
+>>> with same firmware.
+>>>
+>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
+>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
+>>>> shall issue a PS Poll". In my capture there are cases when the STA
+>>>> exits the PS mode without waiting for a beacon.
+>>>
+>>> It is a bit tricky, but the standard does not explicitly say the STA
+>>> should be in power-save at any other time. So it is difficult to say
+>>> what event occurred on the STA side to exit PS mode. Also STA means
+>>> P2P-Client as you say. That means that you have multiple interfaces:
+>>> regular STA and P2P-Client. So is the STA connected to some other AP or
+>>> just not connected. wpa_supplicant will do intermittent scan or initiate
+>>> scheduled scan by which firmware will scan at a certain interval. That
+>>> is just some things I can come up with and I am sure there are more.
+>
+> I agree that there may be some events belonging to the regular STA
+> interface that could trigger the Null Frame (which includes the exit
+> from PS Mode). However, I would expect to see some management frames
+> in the air before/after the Null Packet (e.g.: a Probe request in case
+> of a scheduled scan). But in my case the trigger for the Null frame
+> seems to be the ping request packet, the scenario is the same every
+> time: ping request -> Block ACK -> Null Frame (Wireshark trace
+> confirms this behavior).
+>
+> I thought that you had a power save optimization algorithm that keeps
+> the card on a few milliseconds just to see if we can have a fast reply
+> from the peer. Does this ring a bell? :)
+>
+> On Sat, Oct 1, 2016 at 3:02 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> Keeping the STA aside, as far as AP is concerned the STA is still in PS,
+>> so it should set the TIM/DTIM bit to 1 before sending out data to the STA.
+>
+> Not necessarily, see section 10.2.1.6/l from IEEE Std 802.11-2012:
+> "When an AP is informed that a STA has changed to the Active mode,
+> then the AP shall send buffered BUs (if any exist) to the STA without
+> waiting for a PS Poll...."
+Yes, but in this case the STA did not inform AP (as per sniffer captures)?
+so AP should set TIM/DTIM...
