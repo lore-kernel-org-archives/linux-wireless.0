@@ -1,220 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49453 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752015AbcJJMIK (ORCPT
+Received: from mail-yw0-f175.google.com ([209.85.161.175]:34820 "EHLO
+        mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754037AbcJDSyl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 08:08:10 -0400
-From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-        <usdutt@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-        <pkushwah@qti.qualcomm.com>
-Subject: [PATCH] cfg80211: Check radar_detect and num_different_channels with beacon interface combinations.
-Date: Mon, 10 Oct 2016 17:37:36 +0530
-Message-ID: <1476101256-29782-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20161010_140814_667652_F4C7D352)
+        Tue, 4 Oct 2016 14:54:41 -0400
+Received: by mail-yw0-f175.google.com with SMTP id t193so60274411ywc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 11:54:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANfLQrZs5EyTEMupsR=1M9gqo7ar88g6RHObJ=4fj3J3dkTtvQ@mail.gmail.com>
+References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
+ <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
+ <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
+ <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
+ <CABPxzY+yDnf6AOb4=yRo8jRCYD4FWJ0uBvmQnUSemwXQa2PQrg@mail.gmail.com> <CANfLQrZs5EyTEMupsR=1M9gqo7ar88g6RHObJ=4fj3J3dkTtvQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 5 Oct 2016 00:24:19 +0530
+Message-ID: <CABPxzYJZ3y82+aMb6pjWEOpO56yQceBgtyjv90bftGCeVxkF4A@mail.gmail.com> (sfid-20161004_205445_336514_F6A864B7)
+Subject: Re: bcmdhd: Strange Power Save messages
+To: Gucea Doru <gucea.doru@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit enhances the current beacon interval validation to also consider
-the "radar_detect" and "num_different_channels".
+On Tue, Oct 4, 2016 at 11:57 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+> On Tue, Oct 4, 2016 at 3:37 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Tue, Oct 4, 2016 at 5:09 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+>>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
+>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>
+>>>>>
+>>>>> On 29-09-16 13:32, Gucea Doru wrote:
+>>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+>>>>>>> What is the decision triggering the exit from the PS mode immediately
+>>>>>>> after the ping request? I am asking this because 802.11 PS legacy
+>>>>>>> specifies that the client should wait for a beacon with TIM set in
+>>>>>>> order to wake up: in my case, there is no beacon between the ping
+>>>>>>> request message and the Null frame that announces the exit from the PS
+>>>>>>> mode.
+>>>>>>
+>>>>>>
+>>>>>> Any help would be highly appreciated :)
+>>>>>
+>>>>> Actually though I already sent you are reply, but alas here it is.
+>>>>>
+>>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
+>>>>> drivers. Regardless your question is more for firmware running on the
+>>>>> device. So like the same behavior would be observed when using brcmfmac
+>>>>> with same firmware.
+>>>>>
+>>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
+>>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
+>>>>>> shall issue a PS Poll". In my capture there are cases when the STA
+>>>>>> exits the PS mode without waiting for a beacon.
+>>>>>
+>>>>> It is a bit tricky, but the standard does not explicitly say the STA
+>>>>> should be in power-save at any other time. So it is difficult to say
+>>>>> what event occurred on the STA side to exit PS mode. Also STA means
+>>>>> P2P-Client as you say. That means that you have multiple interfaces:
+>>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
+>>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
+>>>>> scheduled scan by which firmware will scan at a certain interval. That
+>>>>> is just some things I can come up with and I am sure there are more.
+>>>
+>>> I agree that there may be some events belonging to the regular STA
+>>> interface that could trigger the Null Frame (which includes the exit
+>>> from PS Mode). However, I would expect to see some management frames
+>>> in the air before/after the Null Packet (e.g.: a Probe request in case
+>>> of a scheduled scan). But in my case the trigger for the Null frame
+>>> seems to be the ping request packet, the scenario is the same every
+>>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
+>>> confirms this behavior).
+>>>
+>>> I thought that you had a power save optimization algorithm that keeps
+>>> the card on a few milliseconds just to see if we can have a fast reply
+>>> from the peer. Does this ring a bell? :)
+>>>
+>>> On Sat, Oct 1, 2016 at 3:02 PM, Krishna Chaitanya
+>>> <chaitanya.mgit@gmail.com> wrote:
+>>>> Keeping the STA aside, as far as AP is concerned the STA is still in PS,
+>>>> so it should set the TIM/DTIM bit to 1 before sending out data to the STA.
+>>>
+>>> Not necessarily, see section 10.2.1.6/l from IEEE Std 802.11-2012:
+>>> "When an AP is informed that a STA has changed to the Active mode,
+>>> then the AP shall send buffered BUs (if any exist) to the STA without
+>>> waiting for a PS Poll...."
+>> Yes, but in this case the STA did not inform AP (as per sniffer captures)?
+>> so AP should set TIM/DTIM...
+>
+> The STA _did_ inform the AP.
+>
+> If you take a look at the packet traces you'll see that the STA sends
+> a NULL frame saying that it will exit Power Save Mode. According to
+> the specification the AP can send the buffered frames.
+Yeah, sorry i thought AP is sending the ping request.
+But still as STA is sending "ping request" with PM=0, the state at
+AP should be updated treating STA as active, so sending NULL data +
+PM=0 is redundant.
 
-Rename "cfg80211_validate_beacon_int" to "cfg80211_validate_beacon_combination"
-as the validation considers other parameters.
 
-Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
----
- net/wireless/core.h    |  7 +++++--
- net/wireless/mesh.c    |  7 +++++++
- net/wireless/nl80211.c | 32 ++++++++++++++------------------
- net/wireless/util.c    | 49 ++++++++++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 72 insertions(+), 23 deletions(-)
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 21e3188..e39c8a9 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -474,8 +474,11 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
- 			   const u8 *rates, unsigned int n_rates,
- 			   u32 *mask);
- 
--int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
--				 enum nl80211_iftype iftype, u32 beacon_int);
-+int
-+cfg80211_validate_beacon_combination(struct cfg80211_registered_device *rdev,
-+				     enum nl80211_iftype iftype,
-+				     struct cfg80211_chan_def *chandef,
-+				     u32 beacon_int);
- 
- void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 			       enum nl80211_iftype iftype, int num);
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index fa2066b..1d864b4 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -178,6 +178,13 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 				     NL80211_IFTYPE_MESH_POINT))
- 		return -EINVAL;
- 
-+	err = cfg80211_validate_beacon_combination(rdev,
-+						   NL80211_IFTYPE_MESH_POINT,
-+						   &setup->chandef,
-+						   setup->beacon_interval);
-+	if (err)
-+		return err;
-+
- 	err = rdev_join_mesh(rdev, dev, conf, setup);
- 	if (!err) {
- 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 903cd5a..eb2bfae 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3807,11 +3807,6 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	params.dtim_period =
- 		nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
- 
--	err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr->iftype,
--					   params.beacon_interval);
--	if (err)
--		return err;
--
- 	/*
- 	 * In theory, some of these attributes should be required here
- 	 * but since they were not used when the command was originally
-@@ -3899,6 +3894,13 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 					   wdev->iftype))
- 		return -EINVAL;
- 
-+	err = cfg80211_validate_beacon_combination(rdev,
-+						   dev->ieee80211_ptr->iftype,
-+						   &params.chandef,
-+						   params.beacon_interval);
-+	if (err)
-+		return err;
-+
- 	if (info->attrs[NL80211_ATTR_TX_RATES]) {
- 		err = nl80211_parse_tx_bitrate_mask(info, &params.beacon_rate);
- 		if (err)
-@@ -8157,11 +8159,6 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		ibss.beacon_interval =
- 			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
- 
--	err = cfg80211_validate_beacon_int(rdev, NL80211_IFTYPE_ADHOC,
--					   ibss.beacon_interval);
--	if (err)
--		return err;
--
- 	if (!rdev->ops->join_ibss)
- 		return -EOPNOTSUPP;
- 
-@@ -8188,6 +8185,12 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
- 
-+	err = cfg80211_validate_beacon_combination(rdev, NL80211_IFTYPE_ADHOC,
-+						   &ibss.chandef,
-+						   ibss.beacon_interval);
-+	if (err)
-+		return err;
-+
- 	if (!cfg80211_reg_can_beacon(&rdev->wiphy, &ibss.chandef,
- 				     NL80211_IFTYPE_ADHOC))
- 		return -EINVAL;
-@@ -9419,17 +9422,10 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 			    nla_get_u32(info->attrs[NL80211_ATTR_MCAST_RATE])))
- 			return -EINVAL;
- 
--	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL]) {
-+	if (info->attrs[NL80211_ATTR_BEACON_INTERVAL])
- 		setup.beacon_interval =
- 			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
- 
--		err = cfg80211_validate_beacon_int(rdev,
--						   NL80211_IFTYPE_MESH_POINT,
--						   setup.beacon_interval);
--		if (err)
--			return err;
--	}
--
- 	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
- 		setup.dtim_period =
- 			nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index fe39ece..c5cf3b7 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1558,24 +1558,67 @@ bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
- }
- EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
- 
--int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
--				 enum nl80211_iftype iftype, u32 beacon_int)
-+int
-+cfg80211_validate_beacon_combination(struct cfg80211_registered_device *rdev,
-+				     enum nl80211_iftype iftype,
-+				     struct cfg80211_chan_def *chandef,
-+				     u32 beacon_int)
- {
- 	struct wireless_dev *wdev;
--	int res = 0;
-+	int res = 0, i;
- 	u32 bi_prev, tmp_bi;
- 	struct iface_combination_params params;
-+	struct ieee80211_channel *ch;
-+	enum cfg80211_chan_mode chmode;
-+	struct ieee80211_channel
-+		*used_channels[CFG80211_MAX_NUM_DIFFERENT_CHANNELS];
- 
- 	if (beacon_int < 10 || beacon_int > 10000)
- 		return -EINVAL;
- 
- 	memset(&params, 0, sizeof(params));
-+	memset(used_channels, 0, sizeof(used_channels));
-+	used_channels[0] = chandef->chan;
-+	params.num_different_channels = 1;
- 	params.iftype_num[iftype] = 1;
- 
-+	res = cfg80211_chandef_dfs_required(&rdev->wiphy, chandef, iftype);
-+	if (res < 0)
-+		return res;
-+	if (res)
-+		params.radar_detect = BIT(chandef->width);
-+
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->beacon_interval)
- 			continue;
- 
-+		mutex_lock_nested(&wdev->mtx, 1);
-+		__acquire(wdev->mtx);
-+		cfg80211_get_chan_state(wdev, &ch, &chmode,
-+					&params.radar_detect);
-+		wdev_unlock(wdev);
-+
-+		switch (chmode) {
-+		case CHAN_MODE_UNDEFINED:
-+			break;
-+		case CHAN_MODE_SHARED:
-+			for (i = 0; i < CFG80211_MAX_NUM_DIFFERENT_CHANNELS; i++)
-+				if (!used_channels[i] || used_channels[i] == ch)
-+					break;
-+
-+			if (i == CFG80211_MAX_NUM_DIFFERENT_CHANNELS)
-+				return -EBUSY;
-+
-+			if (!used_channels[i]) {
-+				used_channels[i] = ch;
-+				params.num_different_channels++;
-+			}
-+			break;
-+		case CHAN_MODE_EXCLUSIVE:
-+			params.num_different_channels++;
-+			break;
-+		}
-+
- 		params.iftype_num[wdev->iftype]++;
- 	}
- 
+
+
 -- 
-1.9.1
+Thanks,
+Regards,
+Chaitanya T K.
