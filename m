@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50150 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S943067AbcJSOzT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31732 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751664AbcJDMkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:55:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 10:27:19 +0300
-Message-Id: <20161019072726.22018-1-luca@coelho.fi> (sfid-20161019_165530_382362_99145C59)
-Subject: [PATCH 0/7] iwlwifi: updates intended for v4.9 2016-10-19
+        Tue, 4 Oct 2016 08:40:11 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: Remove extraneous error message in tx alloc
+Date: Tue, 4 Oct 2016 18:09:32 +0530
+Message-ID: <1475584772-4091-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161004_144014_351516_FFD4CD7E)
+In-Reply-To: <1475584772-4091-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1475584772-4091-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Hi,
+Remove extraneous error message in 'ath10k_htt_tx_alloc_cont_frag_desc'
+as the caller 'ath10k_htt_tx_alloc' already dumps a proper error
+message
 
-Here are a few fixes that I'm planning to send for v4.9.  Nothing
-major, here's what they are about:
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-* some fixes for suspend/resume with unified FW images;
-* a fix for a false-positive lockdep report;
-* a fix for multi-queue that caused an unnecessary 1 second latency;
-* a fix for an ACPI parsing bug that caused a misleading error
-  message;
-
-I'll leave this in my pending branch for a while to get kbuild bot
-reports and then I'll send a pull-request.
-
-Please review.
-
-Cheers,
-Luca.
-
-
-Haim Dreyfuss (1):
-  iwlwifi: mvm: comply with fw_restart mod param on suspend
-
-Johannes Berg (1):
-  iwlwifi: pcie: mark command queue lock with separate lockdep class
-
-Luca Coelho (4):
-  iwlwifi: mvm: use ssize_t for len in iwl_debugfs_mem_read()
-  iwlwifi: mvm: fix d3_test with unified D0/D3 images
-  iwlwifi: pcie: fix SPLC structure parsing
-  iwlwifi: mvm: fix netdetect starting/stopping for unified images
-
-Sara Sharon (1):
-  iwlwifi: mvm: wake the wait queue when the RX sync counter is zero
-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 49 ++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c     | 33 ++++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 79 ++++++++++++++---------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  8 +++
- 9 files changed, 128 insertions(+), 53 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 786fbd7..4255c1a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -283,10 +283,8 @@ static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
+ 	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
+ 						  &htt->frag_desc.paddr,
+ 						  GFP_KERNEL);
+-	if (!htt->frag_desc.vaddr) {
+-		ath10k_err(ar, "failed to alloc fragment desc memory\n");
++	if (!htt->frag_desc.vaddr)
+ 		return -ENOMEM;
+-	}
+ 
+ 	return 0;
+ }
 -- 
-2.9.3
+1.9.1
