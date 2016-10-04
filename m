@@ -1,105 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47570 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753983AbcJFNDH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 09:03:07 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v2 1/2] mwifiex: reset card->adapter during device
- unregister
-Date: Thu, 6 Oct 2016 13:03:02 +0000
-Message-ID: <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com> (sfid-20161006_150320_842820_62E4B165)
-References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
- <20161004215814.GB31652@localhost>
- <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
- <20161005163024.GA54237@google.com>
-In-Reply-To: <20161005163024.GA54237@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40173 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932220AbcJDHtE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 03:49:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2016-10-04
+Date: Tue,  4 Oct 2016 09:31:28 +0200
+Message-Id: <1475567338-28291-1-git-send-email-johannes@sipsolutions.net> (sfid-20161004_094910_838873_973BC061)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+Hi Dave,
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Brian Norris
-> Sent: Wednesday, October 05, 2016 10:00 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> rajatja@google.com; Xinming Hu
-> Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
-> unregister
-> 
-> Hi,
-> 
-> On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
-> > > From: Brian Norris [mailto:briannorris@chromium.org]
-> > > Sent: Wednesday, October 05, 2016 3:28 AM
-> > > To: Amitkumar Karwar
-> > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> > > rajatja@google.com; briannorris@google.com; Xinming Hu
-> > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
-> > > device unregister
-> > >
-> > > Hi,
-> > >
-> > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
-> 
-> > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
-> > > mwifiex_adapter *adapter)
-> > > >  				pci_disable_msi(pdev);
-> > > >  	       }
-> > > >  	}
-> > > > +	card->adapter = NULL;
-> > >
-> > > I think you have a similar problem here as in patch 2; there is no
-> > > locking to protect fields in struct pcie_service_card or struct
-> > > sdio_mmc_card below. That problem kind of already exists, except
-> > > that you only write the value of card->adapter once at registration
-> > > time, so it's not actually unsafe. But now that you're introducing a
-> > > second write, you have a problem.
-> > >
-> > > Brian
-> > >
-> >
-> > We have a global "add_remove_card_sem" semaphore in our code for
-> > synchronizing initialization and teardown threads. Ideally "init +
-> > teardown/reboot" should not have a race issue with this logic
-> >
-> > Later there was a loophole introduced in this after using async
-> > firmware download API. During initialization, firmware downloads
-> > asynchronously in a separate thread where might have released the
-> > semaphore. I am working on a patch to fix this.
-> >
-> > So "card->adapter" doesn't need to have locking. Even if we have two
-> > write operations, those two threads can't run simultaneously due to
-> > above mentioned logic.
-> 
-> What about writes racing with reads? You have lots of unsynchronized
-> cases that read this, although most of them should be halted by now
-> (e.g., cmd processing). I was looking at suspend() in particular, which
-> I thought you were looking at in this patch series.
+Here's a version with the conflicts resolved - had to jigger some
+code around, but it's all described in the merge commit message.
 
-Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
+Let me know if there's any problem.
 
-Writes won't have race with reads.
+Thanks,
+johannes
 
-1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
-	This place is at the beginning of initialization. 
-	mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
-	There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
 
-2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
-	This place the end of teardown phase.
-	Interrupts are disabled and all cleanup is done. We have "card->adapter" NULL checks at entry point of suspend/remove/resume, if they get called after this.
-	
-Regards,
-Amitkumar
+
+The following changes since commit 9a8dd213d2a38349e5ea2ca8888400952112b45c:
+
+  Merge branch 'ncsi-next' (2016-10-04 02:11:58 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-10-04
+
+for you to fetch changes up to 1e1430d5282bc3a572465ef3261eea793d98a653:
+
+  Merge remote-tracking branch 'net-next/master' into mac80211-next (2016-10-04 09:46:44 +0200)
+
+----------------------------------------------------------------
+This time around, we have
+ * Neighbor Awareness Networking (NAN) APIs
+ * a fix for a previous patch that caused memory corruption
+   in wireless extensions key settings
+ * beacon rate configuration for AP and mesh
+ * memory limits for mac80211's internal TXQs
+ * a (fairly involved) fix for the TXQ vs. crypto problems
+ * direct cfg80211 driver API for WEP keys
+
+This also pulls in net-next to fix the merge conflicts, see
+the merge commit for more details.
+
+----------------------------------------------------------------
+Ayala Beker (9):
+      cfg80211: add start / stop NAN commands
+      mac80211: add boilerplate code for start / stop NAN
+      cfg80211: add add_nan_func / del_nan_func
+      cfg80211: allow the user space to change current NAN configuration
+      cfg80211: provide a function to report a match for NAN
+      cfg80211: Provide an API to report NAN function termination
+      mac80211: implement nan_change_conf
+      mac80211: Implement add_nan_func and rm_nan_func
+      mac80211: Add API to report NAN function match
+
+David Spinadel (1):
+      cfg80211: Add support for static WEP in the driver
+
+Johannes Berg (3):
+      cfg80211: add checks for beacon rate, extend to mesh
+      cfg80211: wext: really don't store non-WEP keys
+      Merge remote-tracking branch 'net-next/master' into mac80211-next
+
+Pedersen, Thomas (2):
+      mac80211: add offset_tsf driver op and use it for mesh
+      mac80211: mesh: decrease max drift
+
+Purushottam Kushwaha (1):
+      cfg80211: Add support to configure a beacon data rate
+
+Toke Høiland-Jørgensen (5):
+      mac80211: Move ieee802111_tx_dequeue() to later in tx.c
+      fq.h: Port memory limit mechanism from fq_codel
+      mac80211: Export fq memory limit information in debugfs
+      mac80211: Set lower memory limit for non-VHT devices
+      mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue
+
+ include/net/cfg80211.h        |  223 +++++++-
+ include/net/fq.h              |    3 +
+ include/net/fq_impl.h         |    7 +-
+ include/net/mac80211.h        |   75 +++
+ include/uapi/linux/nl80211.h  |  270 ++++++++-
+ net/mac80211/cfg.c            |  208 +++++++
+ net/mac80211/chan.c           |    6 +
+ net/mac80211/debugfs.c        |    8 +
+ net/mac80211/debugfs_netdev.c |   12 +-
+ net/mac80211/driver-ops.c     |   15 +
+ net/mac80211/driver-ops.h     |   83 +++
+ net/mac80211/ieee80211_i.h    |   26 +
+ net/mac80211/iface.c          |   28 +-
+ net/mac80211/main.c           |    8 +
+ net/mac80211/mesh_sync.c      |   12 +-
+ net/mac80211/offchannel.c     |    4 +-
+ net/mac80211/rx.c             |    7 +-
+ net/mac80211/sta_info.c       |   10 +-
+ net/mac80211/trace.h          |  159 ++++++
+ net/mac80211/tx.c             |  420 +++++++++-----
+ net/mac80211/util.c           |   61 ++-
+ net/wireless/chan.c           |    2 +
+ net/wireless/core.c           |   35 ++
+ net/wireless/core.h           |    7 +-
+ net/wireless/ibss.c           |    5 +-
+ net/wireless/mlme.c           |    1 +
+ net/wireless/nl80211.c        | 1220 ++++++++++++++++++++++++++++++++---------
+ net/wireless/rdev-ops.h       |   58 ++
+ net/wireless/sme.c            |    6 +-
+ net/wireless/trace.h          |   90 +++
+ net/wireless/util.c           |   30 +-
+ net/wireless/wext-compat.c    |   14 +-
+ net/wireless/wext-sme.c       |    2 +-
+ 33 files changed, 2682 insertions(+), 433 deletions(-)
