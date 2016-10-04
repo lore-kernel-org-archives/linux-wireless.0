@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33524 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752293AbcJDO7P (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:51716 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752772AbcJDAIC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 10:59:15 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: add cc_wraparound type for QCA9888 and QCA9884
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1474026327-7065-1-git-send-email-akolli@qti.qualcomm.com>
-References: <1474026327-7065-1-git-send-email-akolli@qti.qualcomm.com>
-To: <akolli@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Anilkumar Kolli <akolli@qti.qualcomm.com>,
-        <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <6ec942c23a6144d9a15af4fa8f1238fd@euamsexm01a.eu.qualcomm.com> (sfid-20161004_165917_934822_90D8F67A)
-Date: Tue, 4 Oct 2016 16:58:43 +0200
+        Mon, 3 Oct 2016 20:08:02 -0400
+Date: Mon, 03 Oct 2016 20:07:59 -0400 (EDT)
+Message-Id: <20161003.200759.1639996239635020627.davem@davemloft.net> (sfid-20161004_020825_278800_A0C9B320)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-09-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1475489220.5817.0.camel@sipsolutions.net>
+References: <1475252077-6165-1-git-send-email-johannes@sipsolutions.net>
+        <20161003.015401.1915647209236695770.davem@davemloft.net>
+        <1475489220.5817.0.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-akolli@qti.qualcomm.com wrote:
-> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Mon, 03 Oct 2016 12:07:00 +0200
+
+> On Mon, 2016-10-03 at 01:54 -0400, David Miller wrote:
+>> 
+>> Could you please look into this and send me a new pull request with
+>> the conflicts resolved?
+>> 
 > 
-> During offchannel scan, iw survey dump shows wrong values.
-> Fix this by assigning cycle counter wranarround type for
-> QCA9888 and QCA9884, they share same config with QCA4019.
+> Sure, will do (tomorrow, we have a holiday today).
 > 
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> Would you prefer I send you the merge resolution for your tree, or just
+> pull in net for a new pull request?
 
-Patch applied to ath-next branch of ath.git, thanks.
-
-bafe492610d5 ath10k: add cc_wraparound type for QCA9888 and QCA9884
-
--- 
-https://patchwork.kernel.org/patch/9335581/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Resolve it using net-next since that is what I will pull it into.
