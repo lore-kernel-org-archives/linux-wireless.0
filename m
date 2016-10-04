@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:33183 "EHLO
-        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932675AbcJMQlt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49462 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753742AbcJDPkO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 12:41:49 -0400
-Received: by mail-lf0-f43.google.com with SMTP id x79so148663235lff.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 09:40:53 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 0/5] ath6kl: non WMI data service support
-Date: Thu, 13 Oct 2016 18:39:24 +0200
-Message-Id: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161013_184155_071475_1BEF514F)
+        Tue, 4 Oct 2016 11:40:14 -0400
+Date: Tue, 4 Oct 2016 21:09:24 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: ath10k: Cleanup calling ath10k_htt_rx_h_unchain
+Message-ID: <20161004153924.GA4203@atheros-ThinkPad-T61> (sfid-20161004_174018_519624_DD1041A3)
+References: <1474981314-15987-1-git-send-email-mohammed@qca.qualcomm.com>
+ <2cb38dba80294e6da1005ac0927d01eb@euamsexm01a.eu.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2cb38dba80294e6da1005ac0927d01eb@euamsexm01a.eu.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series is intended to prepare the ath6kl driver
-for newer chipsets that doesn't use the current WMI data
-endpoints for data traffic.
+On Tue, Oct 04, 2016 at 05:30:17PM +0200, Kalle Valo wrote:
+> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > 
+> > 'ath10k_htt_rx_h_unchain' is need to be called only if the return
+> > value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this
+> > change makes it more explicit and avoids doing a skb_peek, fetching
+> > rx descriptor pointer, checking rx msdu decap format for the case of
+> > ret = 0 (unchained msdus). Found this change during code walk through,
+> > not sure if this addresses any issue.
+> > 
+> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Failed to apply to pending branch
+> 
+> error: patch failed: drivers/net/wireless/ath/ath10k/htt_rx.c:1550
+> error: drivers/net/wireless/ath/ath10k/htt_rx.c: patch does not apply
+> stg import: Diff does not apply cleanly
 
-The chipset I have been working with (and used for testing)
-is QCA6584. It is SDIO based (at least the variant I have
-been using) with 802.11p WAVE DSRC capabilities.
-
-This chipset is different from the AR600X family in that
-it does not use the WMI data services (service id's 0x101
-to 0x104 ) for data traffic.
-Instead it uses the HTT data service for data and wmi unified
-for control messages.
-It is also different when it comes to mailbox addresses
-and HTC header format as well, but these differences are not
-part of this patch series.
-
-Erik Stromdahl (5):
-  ath6kl: HTC mbox tx complete cb support
-  ath6kl: Updated TARG_VTOP macro with default value
-  ath6kl: Added disable credit flow ctrl for mbox
-  ath6kl: Updated credit setup
-  ath6kl: service connect rewrite
-
- drivers/net/wireless/ath/ath6kl/core.h     |   3 +
- drivers/net/wireless/ath/ath6kl/htc-ops.h  |   2 +-
- drivers/net/wireless/ath/ath6kl/htc.h      |   4 +-
- drivers/net/wireless/ath/ath6kl/htc_mbox.c |  75 +++++-------
- drivers/net/wireless/ath/ath6kl/htc_pipe.c |  16 +--
- drivers/net/wireless/ath/ath6kl/init.c     | 187 +++++++++++++++++------------
- drivers/net/wireless/ath/ath6kl/target.h   |   4 +-
- 7 files changed, 156 insertions(+), 135 deletions(-)
-
--- 
-2.1.4
+[shafi] thanks, will rebase/fix this and send a v2
+> 
+> Patch set to Changes Requested.
+> 
+> -- 
+> https://patchwork.kernel.org/patch/9351833/
+> 
+> Documentation about submitting wireless patches and checking status
+> from patchwork:
+> 
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> 
