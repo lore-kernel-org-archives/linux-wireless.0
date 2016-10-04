@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60852 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754049AbcJUMbm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 08:31:42 -0400
-Message-ID: <1477053099.4068.42.camel@sipsolutions.net> (sfid-20161021_143146_597279_137FBA49)
-Subject: Re: sequence diagrams in rst documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Date: Fri, 21 Oct 2016 14:31:39 +0200
-In-Reply-To: <1476863488.5927.10.camel@sipsolutions.net>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-         <20161011072119.7ad4e3a3@lwn.net>
-         <1476193466.4118.10.camel@sipsolutions.net>
-         <1476194038.4118.11.camel@sipsolutions.net>
-         <1476791021.6425.25.camel@sipsolutions.net>
-         <20161018175236.75c8c4e2@lwn.net>
-         <1476863488.5927.10.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:59233 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752903AbcJDUby (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 16:31:54 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [PATCH 1/3] mac80211: remove unnecessary num_mcast_sta user
+Date: Tue,  4 Oct 2016 22:31:47 +0200
+Message-Id: <1475613109-17609-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161004_223158_691662_AA1542B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Checking for num_mcast_sta in __ieee80211_request_smps_ap() is unnecessary,
+as sta list will be empty in this case anyway, so list_for_each_entry(sta,
+...) will exit immediately.
 
-> > 	https://pythonhosted.org/sphinxcontrib-aafig/
-> > 
-> > I've not actually played with it at all, but I like the idea that
-> > we'd have readable diagrams in the source docs as well...
-> 
-> Well, maybe. I agree having it readable in the source docs as well is
-> nice, but for sequence diagrams in particular, I don't think
-> 
->     +-------+         +-----------+
->     | Hello +-------->+ aafigure! |
->     +-------+         +-----------+
-> 
-> really beats
-> 
->    Hello -> aafigure!
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ net/mac80211/cfg.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-
-I found another one:
-
-https://pypi.python.org/pypi/sphinxcontrib-plantuml
-
-That one has really nice output and features, but ends up being a
-*java* (of all the things) tool that the thing calls out to ...
-
-
-Perhaps we can have a compromise and embed the raw text when the
-tooling isn't all installed, so you can still build useful
-documentation, but to get all the "prettiness" you might have to
-install more dependencies?
-
-johannes
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 543b1d4..24133f5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2313,13 +2313,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ 	    smps_mode == IEEE80211_SMPS_AUTOMATIC)
+ 		return 0;
+ 
+-	 /* If no associated stations, there's no need to do anything */
+-	if (!atomic_read(&sdata->u.ap.num_mcast_sta)) {
+-		sdata->smps_mode = smps_mode;
+-		ieee80211_queue_work(&sdata->local->hw, &sdata->recalc_smps);
+-		return 0;
+-	}
+-
+ 	ht_dbg(sdata,
+ 	       "SMPS %d requested in AP mode, sending Action frame to %d stations\n",
+ 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
+-- 
+2.1.4
