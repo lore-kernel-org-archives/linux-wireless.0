@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35490 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751465AbcJBVsC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26140 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752297AbcJDPuO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 17:48:02 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v7 0/3] add devicetree support to ath9k
-Date: Sun,  2 Oct 2016 23:47:40 +0200
-Message-Id: <20161002214743.2263-1-martin.blumenstingl@googlemail.com> (sfid-20161002_234807_110069_4443EEB9)
-In-Reply-To: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
-References: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+        Tue, 4 Oct 2016 11:50:14 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
+Date: Tue, 4 Oct 2016 21:19:59 +0530
+Message-ID: <1475596199-4563-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161004_175017_683984_70CAF2E5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support for configuring ath9k based devices via
-devicetree. This was tested on PCI(e) based devices. This should work
-for AHB based devices as well (adding more AHB specific properties may
-still be needed) as soon as the ath79 platform is ready to populate the
-ath9k wmac via devicetree.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Changes since v6:
-- updated documentation to reflect that "reg" is a mandatory attribute
-- dropped "qca,clk-25mhz" as it is only useful for AHB devices. OF
-  support for AHB devices needs more work, so we can still introduce it
-  later
-- removed qca,disable-2ghz and qca,disable-5ghz as these will be
-  introduced as generic bindings in a separate series
+'ath10k_htt_rx_h_unchain' needs to be called only if the return
+value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this
+change makes it more explicit and avoids doing a skb_peek, fetching
+rx descriptor pointer, checking rx msdu decap format for the case of
+ret = 0 (unchained msdus). Found this change during code walk through,
+not sure if this addresses any issue.
 
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v2 rebased over top of master tree]
 
-Changes since v5:
-- updated the example in the documentation (keeping it at a bare
-  minimum: removed the PCI bridge, use a better real-world example with
-  less-confusing device/fn numbers, added the actual size of the config
-  space to the reg property)
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-
-Martin Blumenstingl (3):
-  Documentation: dt: net: add ath9k wireless device binding
-  ath9k: add a helper to get the string representation of ath_bus_type
-  ath9k: parse the device configuration from an OF node
-
- .../devicetree/bindings/net/wireless/qca,ath9k.txt | 30 ++++++++++++++++
- drivers/net/wireless/ath/ath.h                     |  6 ++++
- drivers/net/wireless/ath/ath9k/init.c              | 42 ++++++++++++++++++++++
- drivers/net/wireless/ath/main.c                    |  7 ++++
- 4 files changed, 85 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 0b4c156..285b235 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1463,8 +1463,7 @@ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu)
+ }
+ 
+ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
+-				    struct sk_buff_head *amsdu,
+-				    bool chained)
++				    struct sk_buff_head *amsdu)
+ {
+ 	struct sk_buff *first;
+ 	struct htt_rx_desc *rxd;
+@@ -1475,9 +1474,6 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
+ 	decap = MS(__le32_to_cpu(rxd->msdu_start.common.info1),
+ 		   RX_MSDU_START_INFO1_DECAP_FORMAT);
+ 
+-	if (!chained)
+-		return;
+-
+ 	/* FIXME: Current unchaining logic can only handle simple case of raw
+ 	 * msdu chaining. If decapping is other than raw the chaining may be
+ 	 * more complex and this isn't handled by the current code. Don't even
+@@ -1555,7 +1551,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 
+ 	num_msdus = skb_queue_len(&amsdu);
+ 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
+-	ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
++
++	/* only for ret = 1 indicates chained msdus */
++	if (ret > 0)
++		ath10k_htt_rx_h_unchain(ar, &amsdu);
++
+ 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
+ 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
 -- 
-2.10.0
+1.7.9.5
