@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49177 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40343 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754458AbcJEOoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 10:44:55 -0400
+        id S1754100AbcJDITc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 04:19:32 -0400
+Message-ID: <1475569169.5324.13.camel@sipsolutions.net> (sfid-20161004_101952_789017_28846916)
+Subject: Re: [PATCH] mac80211: fix CMD_FRAME for AP_VLAN
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [RFC 3/3] mac80211: validate DA/SA during A-MSDU decapsulation
-Date: Wed,  5 Oct 2016 16:44:50 +0200
-Message-Id: <1475678690-29226-3-git-send-email-johannes@sipsolutions.net> (sfid-20161005_164522_047337_37933996)
-In-Reply-To: <1475678690-29226-1-git-send-email-johannes@sipsolutions.net>
-References: <1475678690-29226-1-git-send-email-johannes@sipsolutions.net>
+To: "M. Braun" <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 04 Oct 2016 10:19:29 +0200
+In-Reply-To: <fb4aeb32-8a13-92e6-a84e-12a6228dc7a1@fami-braun.de>
+References: <1474786035-15410-1-git-send-email-michael-dev@fami-braun.de>
+         <fb4aeb32-8a13-92e6-a84e-12a6228dc7a1@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2016-10-03 at 13:31 +0200, M. Braun wrote:
+> Am 03.10.2016 um 13:03 schrieb M. Braun:
+> > 
+> > because the in ieee80211_mgmt_tx the
+> 
+> ups, that was the patch itself.
+> 
+> I think I carried it over from ieee80211_add_key, that does
+> 
+> > 
+> > 
+> >        if (mac_addr) {
+> >                if (ieee80211_vif_is_mesh(&sdata->vif))
+> >                        sta = sta_info_get(sdata, mac_addr);
+> >                else
+> >                        sta = sta_info_get_bss(sdata, mac_addr);
+> > 
+> 
 
-As pointed out by Michael Braun, we don't check inner L2 addresses
-during A-MSDU decapsulation, leading to the possibility that, for
-example, a station associated to an AP sends frames as though they
-came from somewhere else.
+Ok, so that's there, but I still don't see the point - sta->sdata->bss
+will be NULL for any mesh STA.
 
-Fix this problem by letting cfg80211 validate the addresses, as
-indicated by passing in the ones that need to be validated.
+Thomas, do you remember anything about why you did this back in commit
+ff973af74aa6932ca4758266bccec68e8135ddf7
+Author: Thomas Pedersen <thomas@cozybit.com>
+Date:   Tue May 3 16:57:12 2011 -0700
 
-Reported-by: Michael Braun <michael-dev@fami-braun.de>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 20 +++++++++++++++++++-
- 1 file changed, 19 insertions(+), 1 deletion(-)
+    nl80211: allow installing keys for a meshif
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index cf53fe1a0aa2..a47bbc973f2d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2299,6 +2299,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	struct sk_buff_head frame_list;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
- 	struct ethhdr ethhdr;
-+	const u8 *check_da = ethhdr.h_dest, *check_sa = ethhdr.h_source;
- 
- 	if (unlikely(!ieee80211_is_data(fc)))
- 		return RX_CONTINUE;
-@@ -2322,6 +2323,23 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 		default:
- 			return RX_DROP_UNUSABLE;
- 		}
-+		check_da = NULL;
-+		check_sa = NULL;
-+	} else switch (rx->sdata->vif.type) {
-+		case NL80211_IFTYPE_AP:
-+		case NL80211_IFTYPE_AP_VLAN:
-+			check_da = NULL;
-+			break;
-+		case NL80211_IFTYPE_STATION:
-+			if (!rx->sta ||
-+			    !test_sta_flag(rx->sta, WLAN_STA_TDLS_PEER))
-+				check_sa = NULL;
-+			break;
-+		case NL80211_IFTYPE_MESH_POINT:
-+			check_sa = NULL;
-+			break;
-+		default:
-+			break;
- 	}
- 
- 	if (is_multicast_ether_addr(hdr->addr1))
-@@ -2338,7 +2356,7 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
- 				 rx->sdata->vif.type,
- 				 rx->local->hw.extra_tx_headroom,
--				 NULL, NULL);
-+				 check_da, check_sa);
- 
- 	while (!skb_queue_empty(&frame_list)) {
- 		rx->skb = __skb_dequeue(&frame_list);
--- 
-2.8.1
+?
+
+(yeah, long shot, it's 5.5 years ago ...)
+
+johannes
