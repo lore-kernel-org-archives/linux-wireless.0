@@ -1,58 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49430 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932707AbcJRUMX (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43149 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753935AbcJDRIz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 16:12:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Tue, 18 Oct 2016 23:12:09 +0300
-Message-Id: <20161018201213.18873-4-luca@coelho.fi> (sfid-20161018_221230_138902_29F23C09)
-In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
-References: <20161018201213.18873-1-luca@coelho.fi>
-Subject: [PATCH 3/7] mac80211: improve RX aggregation data in debugfs
+        Tue, 4 Oct 2016 13:08:55 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2 1/2] mwifiex: reset card->adapter during device unregister
+Date: Tue, 4 Oct 2016 22:38:24 +0530
+Message-ID: <1475600905-2997-1-git-send-email-akarwar@marvell.com> (sfid-20161004_190905_878489_4E1A0C36)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-When the driver sets the SUPPORTS_REORDERING_BUFFER hardware flag,
-the debugfs data for RX aggregation sessions won't even indicate
-that a session is open. Since the previous fix to store the dialog
-token separately, we can indicate that it's open and add the token
-so that there's at least some data (ssn is not available.)
+card->adapter gets initialized during device registration.
+As it's not cleared, we may end up accessing invalid memory
+in some corner cases. This patch fixes the problem.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- net/mac80211/debugfs_sta.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+v2: Same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 14ec63a..f6003b8 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -199,13 +199,18 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
- 		       "TID\t\tRX\tDTKN\tSSN\t\tTX\tDTKN\tpending\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f1eeb73..ba9e068 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 				pci_disable_msi(pdev);
+ 	       }
+ 	}
++	card->adapter = NULL;
+ }
  
- 	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		bool tid_rx_valid;
-+
- 		tid_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[i]);
- 		tid_tx = rcu_dereference(sta->ampdu_mlme.tid_tx[i]);
-+		tid_rx_valid = test_bit(i, sta->ampdu_mlme.agg_session_valid);
+ /* This function initializes the PCI-E host memory space, WCB rings, etc.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 8718950..4cad1c2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
  
- 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
--		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
-+		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x",
-+			       tid_rx_valid);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
--				tid_rx ? sta->ampdu_mlme.tid_rx_token[i] : 0);
-+			       tid_rx_valid ?
-+					sta->ampdu_mlme.tid_rx_token[i] : 0);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
- 				tid_rx ? tid_rx->ssn : 0);
- 
+ 	if (adapter->card) {
++		card->adapter = NULL;
+ 		sdio_claim_host(card->func);
+ 		sdio_disable_func(card->func);
+ 		sdio_release_host(card->func);
 -- 
-2.9.3
+1.9.1
