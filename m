@@ -1,102 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55827 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943740AbcJSPAx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:00:53 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        Guenter Roeck <linux@roeck-us.net>
-Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-watchdog@vger.kernel.org,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: [char-misc-next 3/5] nfc: mei: use module_mei_cl_driver macro
-Date: Wed, 19 Oct 2016 16:33:29 +0300
-Message-Id: <1476884011-20645-4-git-send-email-tomas.winkler@intel.com> (sfid-20161019_174201_929276_68EEC5CF)
-In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
-References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44310 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752123AbcJDPeT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 11:34:19 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [2/4] ath10k: implement offset_tsf ieee80211_op
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160928235631.9197-3-twp@qca.qualcomm.com>
+References: <20160928235631.9197-3-twp@qca.qualcomm.com>
+To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <ab600f17c1044dce96d9e58f26ebeb63@euamsexm01a.eu.qualcomm.com> (sfid-20161004_173423_230779_853EA43C)
+Date: Tue, 4 Oct 2016 17:34:12 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace boilerplate driver registration with module_mei_cl_driver
-macro in pn544 and microread devices.
+"Pedersen, Thomas" <twp@qca.qualcomm.com> wrote:
+> Current set_tsf is implemented in terms of TSF_INCREMENT
+> only. Instead support new WMI command TSF_DECREMENT and
+> export these through offset_tsf. Advantage is we get
+> more accurate TSF adjustments, and don't calculate wrong
+> offset in case absolute TSF was calculated from rx_mactime
+> (actual TSF).
+> 
+> The new WMI command is available in firmware
+> 10.4-3.2.1-00033 for QCA4019 chips. Old drivers on new
+> firmware or vice versa shouldn't  be a problem since
+> get/set tsf logic was already broken.
+> 
+> Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/nfc/microread/mei.c | 23 +----------------------
- drivers/nfc/pn544/mei.c     | 23 +----------------------
- 2 files changed, 2 insertions(+), 44 deletions(-)
+Depends on:
 
-diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
-index 3092501f26c4..eb5eddf1794e 100644
---- a/drivers/nfc/microread/mei.c
-+++ b/drivers/nfc/microread/mei.c
-@@ -82,28 +82,7 @@ static struct mei_cl_driver microread_driver = {
- 	.remove = microread_mei_remove,
- };
- 
--static int microread_mei_init(void)
--{
--	int r;
--
--	pr_debug(DRIVER_DESC ": %s\n", __func__);
--
--	r = mei_cldev_driver_register(&microread_driver);
--	if (r) {
--		pr_err(MICROREAD_DRIVER_NAME ": driver registration failed\n");
--		return r;
--	}
--
--	return 0;
--}
--
--static void microread_mei_exit(void)
--{
--	mei_cldev_driver_unregister(&microread_driver);
--}
--
--module_init(microread_mei_init);
--module_exit(microread_mei_exit);
-+module_mei_cl_driver(microread_driver);
- 
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION(DRIVER_DESC);
-diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
-index 46d0eb24eef9..ad57a8ec00d6 100644
---- a/drivers/nfc/pn544/mei.c
-+++ b/drivers/nfc/pn544/mei.c
-@@ -82,28 +82,7 @@ static struct mei_cl_driver pn544_driver = {
- 	.remove = pn544_mei_remove,
- };
- 
--static int pn544_mei_init(void)
--{
--	int r;
--
--	pr_debug(DRIVER_DESC ": %s\n", __func__);
--
--	r = mei_cldev_driver_register(&pn544_driver);
--	if (r) {
--		pr_err(PN544_DRIVER_NAME ": driver registration failed\n");
--		return r;
--	}
--
--	return 0;
--}
--
--static void pn544_mei_exit(void)
--{
--	mei_cldev_driver_unregister(&pn544_driver);
--}
--
--module_init(pn544_mei_init);
--module_exit(pn544_mei_exit);
-+module_mei_cl_driver(pn544_driver);
- 
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION(DRIVER_DESC);
+3a53731df7e2 mac80211: mesh: decrease max drift
+354d381baf11 mac80211: add offset_tsf driver op and use it for mesh
+
+2 patches set to Awaiting Upstream.
+
+9355377 [2/4] ath10k: implement offset_tsf ieee80211_op
+9355375 [3/4] ath10k: remove set/get_tsf ieee80211_ops
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9355377/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
