@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39411 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751121AbcJEEuq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43049 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752027AbcJDPCn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 00:50:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Aaron Conole <aconole@redhat.com>
-Cc: David Miller <davem@davemloft.net>,
-        Pablo Neira Ayuso <pablo@netfilter.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-09-29
-References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
-        <20160930.013245.1474369794552343595.davem@davemloft.net>
-        <f7t4m4xtszj.fsf@redhat.com>
-Date: Wed, 05 Oct 2016 07:50:39 +0300
-In-Reply-To: <f7t4m4xtszj.fsf@redhat.com> (Aaron Conole's message of "Fri, 30
-        Sep 2016 09:30:40 -0400")
-Message-ID: <87bmyzpffk.fsf@kamboji.qca.qualcomm.com> (sfid-20161005_065110_120102_20E82B53)
+        Tue, 4 Oct 2016 11:02:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/2] ath: export alpha2 helper
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1470140454-3899-2-git-send-email-bartosz.markowski@tieto.com>
+References: <1470140454-3899-2-git-send-email-bartosz.markowski@tieto.com>
+To: Bartosz Markowski <bartosz.markowski@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Michal Kazior" <michal.kazior@tieto.com>,
+        Bartosz Markowski <bartosz.markowski@tieto.com>
+Message-ID: <7569987251e5403ebe0c30061dd7db5c@euamsexm01a.eu.qualcomm.com> (sfid-20161004_170247_998319_C8E694AA)
+Date: Tue, 4 Oct 2016 17:02:36 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Aaron Conole <aconole@redhat.com> writes:
+Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
+> From: Michal Kazior <michal.kazior@tieto.com>
+> 
+> This will be helpful for drivers that can acquire
+> alpha2 regulatory codes.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-> David Miller <davem@davemloft.net> writes:
->
->> From: Kalle Valo <kvalo@codeaurora.org>
->> Date: Thu, 29 Sep 2016 19:57:28 +0300
->>
-> ...
->>> Or actually I had one problem. While doing a test merge I noticed that
->>> net-next fails to compile for me, but I don't think this is anything
->>> wireless related:
->>> 
->>>   CC      net/netfilter/core.o
->>> net/netfilter/core.c: In function 'nf_set_hooks_head':
->>> net/netfilter/core.c:96:149: error: 'struct net_device' has no
->>> member named 'nf_hooks_ingress'
->>
->> Yes, I am aware of this build issue and will tackle it myself if someone
->> doesn't beat me to it.
->
-> Sorry, I introduced this.  I posted a series targetted at nf-next to
-> solve this, but it could be merged to net-next instead, if that makes
-> sense.
->
-> The patches are here:
->
-> https://patchwork.ozlabs.org/patch/676287/
-> https://patchwork.ozlabs.org/patch/676288/
+2 patches applied to ath-next branch of ath.git, thanks.
 
-net-next still fails to compile for me. I verified that these two
-patches fix it but I don't see them in net-next yet.
+d291d8e0592a ath: export alpha2 helper
+209b2a68de76 ath10k: add platform regulatory domain support
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9256535/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
