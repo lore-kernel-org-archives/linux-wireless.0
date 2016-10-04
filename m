@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58003 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40423 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752282AbcJNJZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 05:25:58 -0400
-Message-ID: <1476437149.31114.27.camel@sipsolutions.net> (sfid-20161014_112621_142637_977E5CBD)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+        id S1754268AbcJDI3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 04:29:31 -0400
+Message-ID: <1475569759.5324.22.camel@sipsolutions.net> (sfid-20161004_102935_286017_DBB63EF5)
+Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on
+ AP interfaces
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Date: Fri, 14 Oct 2016 11:25:49 +0200
-In-Reply-To: <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com> (sfid-20161014_112151_166035_C00E6A9E)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         <1476366354.4904.31.camel@sipsolutions.net>
-         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
-         <1476429916.4382.12.camel@sipsolutions.net>
-         <1476433699.31114.6.camel@sipsolutions.net>
-         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
-         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
-         <1476434561.31114.7.camel@sipsolutions.net>
-         <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
-         <1476435303.31114.14.camel@sipsolutions.net>
-         <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
-         <1476436248.31114.21.camel@sipsolutions.net>
-         <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com>
-         (sfid-20161014_112151_166035_C00E6A9E)
+To: Michael Braun <michael.braun@fem.tu-ilmenau.de>
+Cc: kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Tue, 04 Oct 2016 10:29:19 +0200
+In-Reply-To: <f9d33317-f23f-9d5e-8e9e-1e63eff1882a@fem.tu-ilmenau.de>
+References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
+         <1475229714.17481.18.camel@sipsolutions.net>
+         <f9d33317-f23f-9d5e-8e9e-1e63eff1882a@fem.tu-ilmenau.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-14 at 10:21 +0100, Ard Biesheuvel wrote:
 
-> It is annotated with a TODO, though :-)
+> > First of all - there's nothing specific to "AP interfaces", which
+> > you say in the subject, as far as I can tell? That should be
+> > removed?
 > 
-> 38320c70d282b (Herbert Xu               2008-01-28 19:35:05
-> -0800  41)
->  * TODO: Use spare space in skb for this where possible.
+> > 
+> > > 
+> > > if (unlikely(ta &&
+> > > +			     (iftype == NL80211_IFTYPE_AP ||
+> > > +			      iftype == NL80211_IFTYPE_AP_VLAN)
+> > > &&
+> > > +			     !ether_addr_equal(ta, eth.h_source)
+> > > +		   ))
+> > > +			goto purge;
+> 
+> So the A-MSDU packets are only dropped if received by an interface in
+> AP or AP_VLAN mode, not on client side, as my original issue was
+> about arp/ip filters being circumvented on AP side.
 
-I saw that, but I don't think generally there will be spare space for
-it - the stuff there is likely far too big. Anyway ... same problem
-that we have.
+D'oh. Not paying attention, I guess.
 
-I'm not inclined to allocate ~500 bytes temporarily for every frame
-either though.
+Nevertheless, why should this be conditional on the interface type? It
+seems to me that we should apply this to any type? What if, for
+example, another BSS client sends an A-MSDU encrypted with the GTK and
+then fakes something inside that way? We verify today that only
+multicast frames can be encrypted with the GTK, but that applies to the
+outer header, so we're susceptible to a variant of the hole-196 attack,
+afaict?
 
-Maybe we could try to manage it in mac80211, we'd "only" need 5 AEAD
-structs (which are today on the stack) in parallel for each key (4 TX,
-1 RX), but in a typical case of having 3 keys that's already 7.5K worth
-of memory that we almost never use. Again, with more complexity, we
-could know that the TX will not be used if the driver does the TX, but
-the single RX one we'd need unconditionally... decisions decisions...
+> > > IEEE 802.11-2012 mandates that the outer source mac address
+> > > should match the inner source address (section 8.3.2.2). For the
+> > > destination mac address, matching is not required (section
+> > > 10.23.15).
+> > 
+> > I think this is wrong. As we do not support DMS (yet), we should
+> > adhere to 8.3.2.2 and only accept matching TA/SA and DA/RA.
+> 
+> IEEE 802.11-2012 8.3.2.2 contains the note "NOTE—It is possible to
+> have different DA and SA parameter values in A-MSDU subframe headers
+> of the same A-MSDU as long as they all map to the same Address 1 and
+> Address 2 parameter values."
+> 
+> I conclude that embedding multicast in unicast A-MSDU frames is
+> generally allowed, because "mapping" does not mean "be identical".
+
+Yeah, I saw this. It's not clear to me that they intended this wording
+to be about multicast though. I'm not really sure what they had in mind
+here, but there's an exception for multicast for DMS, which would seem
+pointless if they had intended this "mapping" to be about multicast.
+
+Then again, I don't know of any "address mapping" service or the like
+in the spec either.
 
 johannes
