@@ -1,35 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34891 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755781AbcJVTRg (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35921 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750877AbcJDNes (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Oct 2016 15:17:36 -0400
-Received: by mail-wm0-f49.google.com with SMTP id c78so39357405wme.0
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2016 12:17:35 -0700 (PDT)
-Subject: Re: [PATCH v3 3/9] cfg80211: add add_nan_func / del_nan_func
-To: johannes@sipsolutions.net
-References: <20160920143121.28247-1-luca@coelho.fi>
- <20160920143121.28247-4-luca@coelho.fi>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        ayala.beker@intel.com, andrei.otcheretianski@intel.com,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6fb30815-b8c8-aff4-86af-d7f496da91b5@broadcom.com> (sfid-20161022_211738_254386_517227D5)
-Date: Sat, 22 Oct 2016 21:17:20 +0200
+        Tue, 4 Oct 2016 09:34:48 -0400
+Date: Tue, 4 Oct 2016 08:34:46 -0500
+From: Rob Herring <robh@kernel.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        rajatja@google.com, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH RESEND v3] mwifiex: parse device tree node for PCIe
+Message-ID: <20161004133446.GD3065@rob-hp-laptop> (sfid-20161004_153450_387294_7889D14C)
+References: <1475167183-18376-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20160920143121.28247-4-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475167183-18376-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20-09-16 16:31, Luca Coelho wrote:
-> +		.flags = GENL_ADMIN_PERM,
+On Thu, Sep 29, 2016 at 10:09:43PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> This patch derives device tree node from pcie bus layer framework.
+> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> marvell-8xxx.txt) to accomodate PCIe changes.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v2: Included vendor and product IDs in compatible strings for PCIe
+> chipsets(Rob Herring)
+> v3: Patch is created using -M option so that it will only include diff of
+> original and renamed files(Rob Herring)
+> Resend v3: Resending the patch because I missed to include device tree mailing
+> while sending v3.
+> ---
+>  .../{marvell-sd8xxx.txt => marvell-8xxx.txt}         |  8 +++++---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c          | 20 ++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c       |  3 ++-
+>  3 files changed, 27 insertions(+), 4 deletions(-)
+>  rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> similarity index 91%
+> rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> index c421aba..dfe5f8e 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> @@ -1,8 +1,8 @@
+> -Marvell 8897/8997 (sd8897/sd8997) SDIO devices
+> +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
+>  ------
+>  
+> -This node provides properties for controlling the marvell sdio wireless device.
+> -The node is expected to be specified as a child node to the SDIO controller that
+> +This node provides properties for controlling the marvell sdio/pcie wireless device.
 
-Hi Johannes,
+Capitalize SDIO/PCIe
 
-Recently the nl80211_ops flags were changed to GENL_UNS_ADMIN_PERM so
-should the NAN commands use that as well?
+> +The node is expected to be specified as a child node to the SDIO/PCIE controller that
+>  connects the device to the system.
+>  
+>  Required properties:
+> @@ -10,6 +10,8 @@ Required properties:
+>    - compatible : should be one of the following:
+>  	* "marvell,sd8897"
+>  	* "marvell,sd8997"
+> +	* "pci11ab,2b42"
+> +	* "pci1b4b,2b42"
 
-Regards,
-Arend
+The string is pciVVVV,DDDD. Looks like you have vendor and device 
+swapped.
+
+Rob
