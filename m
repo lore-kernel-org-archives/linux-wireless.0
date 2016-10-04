@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35156 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933476AbcJFSHT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 14:07:19 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v4 3/3] mwifiex: check hw_status in suspend and resume handlers
-Date: Thu, 6 Oct 2016 23:36:26 +0530
-Message-ID: <1475777186-20486-3-git-send-email-akarwar@marvell.com> (sfid-20161006_200729_791169_70ED30D4)
-In-Reply-To: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
-References: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:42435 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753565AbcJDNZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 09:25:55 -0400
+Message-ID: <1475587551.5324.57.camel@sipsolutions.net> (sfid-20161004_152558_169669_C0633797)
+Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Xu, Peng" <pxu@qca.qualcomm.com>
+Date: Tue, 04 Oct 2016 15:25:51 +0200
+In-Reply-To: <20161003211523.GA6585@jouni.qca.qualcomm.com>
+References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+         <1471330367.16783.23.camel@sipsolutions.net>
+         <20160816123441.GA3678@jouni.qca.qualcomm.com>
+         <1472198948.390.20.camel@sipsolutions.net>
+         <1473674982.29016.10.camel@sipsolutions.net>
+         <20161003211523.GA6585@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have observed a kernel crash when system immediately suspends
-after booting. There is a race between suspend and driver initialization
-paths. This patch adds hw_status checks in suspend/resume to fix this issue
-and other corner cases.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: Return failure in suspend/resume handler in this scenario.
-v3: Handle "hw_status" not READY cases carefully. Return 0 if
-init or shutdown is in progress. Return -EBUSY if firmware download
-failed or command timeout ocurred(non-recoverable). (Brian Norris)
-v4: In resume, we need not return failure.
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 19 +++++++++++++++----
- 1 file changed, 15 insertions(+), 4 deletions(-)
+> The main goal of this was to see if we can reduce actual driver
+> implementation size and maybe even more so to prepare for 802.11ax
+> changes (i.e., see what we are doing currently for configuring HT/VHT
+> in a way that could be done better).
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 1e27dbf..e7c6980 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -121,13 +121,22 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
--		pr_err("Card or adapter structure is not valid\n");
-+	if (!card || !card->adapter ||
-+	    card->adapter->hw_status == MWIFIEX_HW_STATUS_RESET ||
-+	    card->adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY) {
-+		pr_err("Card or adapter structure is not valid or hw_status shows failure\n");
- 		return 0;
- 	}
- 
- 	adapter = card->adapter;
- 
-+	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING ||
-+	    adapter->hw_status == MWIFIEX_HW_STATUS_INIT_DONE ||
-+	    adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) {
-+		pr_err("We are in the middle of initialzaion or closing\n");
-+		return -EBUSY;
-+	}
-+
- 	/* Enable the Host Sleep */
- 	if (!mwifiex_enable_hs(adapter)) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -160,8 +169,10 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
--		pr_err("Card or adapter structure is not valid\n");
-+
-+	if (!card || !card->adapter ||
-+	    card->adapter->hw_status != MWIFIEX_HW_STATUS_READY) {
-+		pr_err("Card or adapter structure is not valid or hw_status is not ready\n");
- 		return 0;
- 	}
- 
--- 
-1.9.1
+Fair enough.
+
+> Looking at the current in-tree drivers, it looks like following
+> approaches have been used:
+> 
+> ath6kl:
+> Use cfg80211_get_chandef_type(&info->chandef) != NL80211_CHAN_NO_HT
+> to determine whether HT is enabled. No VHT support. HT-required case
+> not covered. No parsing of HT/VHT IEs used.
+
+Hmm. Wouldn't the supported rates IE still advertise the cookie for HT
+only, to make sure HT-required was done?
+
+[snip other drivers]
+
+> So I guess there could be some code sharing and cleanup done with the
+> existing in-tree drivers. Especially the mwifiex example looks like
+> something that triggered us to look at this. I'm not sure we'd
+> propose adding any new driver with the driver code itself doing
+> HT/VHT IE parsing and since ath6kl did not do this either, I don't
+> see us changing existing in-tree drivers to use this either.
+
+Maybe Marvell folks would like to change something there.
+
+> I'm not sure there would really be enough justification to add this
+> specific patch due to the assumed user space update. Adding some of
+> the HT/VHT element parsing in cfg80211 might benefit on or two of the
+> in-tree drivers if their maintainers are interested in that.
+
+Right, I agree. If we want to unify/combine anything, the best place to
+do that would just be cfg80211 at this point. Adding both the API and
+the parsing seems fairly pointless now, and evidently drivers can live
+with the status quo.
+
+>  That said, without additional interest, I'm starting to lean towards
+> using this as an example of what type of parameters we need to add
+> for HE from the beginning and not merge this patch.
+
+Ok. I agree that for HE we should consider this more carefully. I
+haven't looked at HE AP side yet, so I don't really know what might be
+needed there, but when we get to it we can discuss it.
+
+I'll drop this patch then, and if Broadcom or you (ath6kl) want to add
+more parsing to the respective drivers we can consider code sharing
+with mwifiex that seems to have a more (but not fully) complete version
+in there - probably would have to be rewritten for cfg80211, but still.
+
+johannes
