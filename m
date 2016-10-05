@@ -1,287 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12629 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751346AbcJ2Fvo (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35813 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752001AbcJEEIY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Oct 2016 01:51:44 -0400
-Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 1/7] wil6210: fix net queue stop/wake
-Date: Sat, 29 Oct 2016 08:51:21 +0300
-Message-Id: <1477720287-17606-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161029_075151_268259_D9052F8B)
-In-Reply-To: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Wed, 5 Oct 2016 00:08:24 -0400
+Received: by mail-oi0-f65.google.com with SMTP id d132so1599555oib.2
+        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 21:08:24 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 7/8] rtlwifi: rtl8192c: Remove address of Free Software Foundation
+Date: Tue,  4 Oct 2016 23:08:09 -0500
+Message-Id: <1475640490-5895-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20161005_060831_184264_7B7315F1)
+In-Reply-To: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Since this driver was added to the kernel, the checkpatch script was
+modified to request that the address of the FSF not be included.
 
-Driver calls to netif_tx_stop_all_queues/netif_tx_wake_all_queues are
-inconsistent. In several cases, driver can get to a situation where net
-queues are stopped forever and data cannot be sent.
-
-The fix is to stop net queues if there is at least one vring which is
-"full" and to wake net queues if all vrings are not "full".
-
-Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/wil6210/main.c    |  12 +++-
- drivers/net/wireless/ath/wil6210/netdev.c  |   2 +-
- drivers/net/wireless/ath/wil6210/txrx.c    | 110 ++++++++++++++++++++++++++---
- drivers/net/wireless/ath/wil6210/wil6210.h |   6 ++
- drivers/net/wireless/ath/wil6210/wmi.c     |   3 +-
- 5 files changed, 117 insertions(+), 16 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c  | 4 ----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h  | 4 ----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h  | 4 ----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/main.c       | 4 ----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 4 ----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h | 4 ----
+ 6 files changed, 24 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index e7130b5..b04ff87 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -213,7 +213,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 	memset(&sta->stats, 0, sizeof(sta->stats));
- }
- 
--static bool wil_ap_is_connected(struct wil6210_priv *wil)
-+static bool wil_is_connected(struct wil6210_priv *wil)
- {
- 	int i;
- 
-@@ -267,7 +267,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 	case NL80211_IFTYPE_STATION:
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 		wil_bcast_fini(wil);
--		netif_tx_stop_all_queues(ndev);
-+		wil_update_net_queues_bh(wil, NULL, true);
- 		netif_carrier_off(ndev);
- 
- 		if (test_bit(wil_status_fwconnected, wil->status)) {
-@@ -283,8 +283,12 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 		break;
- 	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_P2P_GO:
--		if (!wil_ap_is_connected(wil))
-+		if (!wil_is_connected(wil)) {
-+			wil_update_net_queues_bh(wil, NULL, true);
- 			clear_bit(wil_status_fwconnected, wil->status);
-+		} else {
-+			wil_update_net_queues_bh(wil, NULL, false);
-+		}
- 		break;
- 	default:
- 		break;
-@@ -516,6 +520,8 @@ int wil_priv_init(struct wil6210_priv *wil)
- 	INIT_LIST_HEAD(&wil->pending_wmi_ev);
- 	INIT_LIST_HEAD(&wil->probe_client_pending);
- 	spin_lock_init(&wil->wmi_ev_lock);
-+	spin_lock_init(&wil->net_queue_lock);
-+	wil->net_queue_stopped = 1;
- 	init_waitqueue_head(&wil->wq);
- 
- 	wil->wmi_wq = create_singlethread_workqueue(WIL_NAME "_wmi");
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index 61de5e9..713b967 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -229,7 +229,7 @@ int wil_if_add(struct wil6210_priv *wil)
- 	netif_tx_napi_add(ndev, &wil->napi_tx, wil6210_netdev_poll_tx,
- 			  WIL6210_NAPI_BUDGET);
- 
--	netif_tx_stop_all_queues(ndev);
-+	wil_update_net_queues_bh(wil, NULL, true);
- 
- 	rc = register_netdev(ndev);
- 	if (rc < 0) {
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 4c38520..4ac9ba0 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -88,6 +88,18 @@ static inline int wil_vring_wmark_high(struct vring *vring)
- 	return vring->size/4;
- }
- 
-+/* returns true if num avail descriptors is lower than wmark_low */
-+static inline int wil_vring_avail_low(struct vring *vring)
-+{
-+	return wil_vring_avail_tx(vring) < wil_vring_wmark_low(vring);
-+}
-+
-+/* returns true if num avail descriptors is higher than wmark_high */
-+static inline int wil_vring_avail_high(struct vring *vring)
-+{
-+	return wil_vring_avail_tx(vring) > wil_vring_wmark_high(vring);
-+}
-+
- /* wil_val_in_range - check if value in [min,max) */
- static inline bool wil_val_in_range(int val, int min, int max)
- {
-@@ -1780,6 +1792,89 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
- 	return rc;
- }
- 
-+/**
-+ * Check status of tx vrings and stop/wake net queues if needed
-+ *
-+ * This function does one of two checks:
-+ * In case check_stop is true, will check if net queues need to be stopped. If
-+ * the conditions for stopping are met, netif_tx_stop_all_queues() is called.
-+ * In case check_stop is false, will check if net queues need to be waked. If
-+ * the conditions for waking are met, netif_tx_wake_all_queues() is called.
-+ * vring is the vring which is currently being modified by either adding
-+ * descriptors (tx) into it or removing descriptors (tx complete) from it. Can
-+ * be null when irrelevant (e.g. connect/disconnect events).
-+ *
-+ * The implementation is to stop net queues if modified vring has low
-+ * descriptor availability. Wake if all vrings are not in low descriptor
-+ * availability and modified vring has high descriptor availability.
-+ */
-+static inline void __wil_update_net_queues(struct wil6210_priv *wil,
-+					   struct vring *vring,
-+					   bool check_stop)
-+{
-+	int i;
-+
-+	if (vring)
-+		wil_dbg_txrx(wil, "vring %d, check_stop=%d, stopped=%d",
-+			     (int)(vring - wil->vring_tx), check_stop,
-+			     wil->net_queue_stopped);
-+	else
-+		wil_dbg_txrx(wil, "check_stop=%d, stopped=%d",
-+			     check_stop, wil->net_queue_stopped);
-+
-+	if (check_stop == wil->net_queue_stopped)
-+		/* net queues already in desired state */
-+		return;
-+
-+	if (check_stop) {
-+		if (!vring || unlikely(wil_vring_avail_low(vring))) {
-+			/* not enough room in the vring */
-+			netif_tx_stop_all_queues(wil_to_ndev(wil));
-+			wil->net_queue_stopped = true;
-+			wil_dbg_txrx(wil, "netif_tx_stop called\n");
-+		}
-+		return;
-+	}
-+
-+	/* check wake */
-+	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
-+		struct vring *cur_vring = &wil->vring_tx[i];
-+		struct vring_tx_data *txdata = &wil->vring_tx_data[i];
-+
-+		if (!cur_vring->va || !txdata->enabled || cur_vring == vring)
-+			continue;
-+
-+		if (wil_vring_avail_low(cur_vring)) {
-+			wil_dbg_txrx(wil, "vring %d full, can't wake\n",
-+				     (int)(cur_vring - wil->vring_tx));
-+			return;
-+		}
-+	}
-+
-+	if (!vring || wil_vring_avail_high(vring)) {
-+		/* enough room in the vring */
-+		wil_dbg_txrx(wil, "calling netif_tx_wake\n");
-+		netif_tx_wake_all_queues(wil_to_ndev(wil));
-+		wil->net_queue_stopped = false;
-+	}
-+}
-+
-+void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
-+			   bool check_stop)
-+{
-+	spin_lock(&wil->net_queue_lock);
-+	__wil_update_net_queues(wil, vring, check_stop);
-+	spin_unlock(&wil->net_queue_lock);
-+}
-+
-+void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
-+			      bool check_stop)
-+{
-+	spin_lock_bh(&wil->net_queue_lock);
-+	__wil_update_net_queues(wil, vring, check_stop);
-+	spin_unlock_bh(&wil->net_queue_lock);
-+}
-+
- netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- {
- 	struct wil6210_priv *wil = ndev_to_wil(ndev);
-@@ -1822,14 +1917,10 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	/* set up vring entry */
- 	rc = wil_tx_vring(wil, vring, skb);
- 
--	/* do we still have enough room in the vring? */
--	if (unlikely(wil_vring_avail_tx(vring) < wil_vring_wmark_low(vring))) {
--		netif_tx_stop_all_queues(wil_to_ndev(wil));
--		wil_dbg_txrx(wil, "netif_tx_stop : ring full\n");
--	}
--
- 	switch (rc) {
- 	case 0:
-+		/* shall we stop net queues? */
-+		wil_update_net_queues_bh(wil, vring, true);
- 		/* statistics will be updated on the tx_complete */
- 		dev_kfree_skb_any(skb);
- 		return NETDEV_TX_OK;
-@@ -1978,10 +2069,9 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
- 		txdata->last_idle = get_cycles();
- 	}
- 
--	if (wil_vring_avail_tx(vring) > wil_vring_wmark_high(vring)) {
--		wil_dbg_txrx(wil, "netif_tx_wake : ring not full\n");
--		netif_tx_wake_all_queues(wil_to_ndev(wil));
--	}
-+	/* shall we wake net queues? */
-+	if (done)
-+		wil_update_net_queues(wil, vring, false);
- 
- 	return done;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index a949cd6..12cd81b 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -624,6 +624,8 @@ struct wil6210_priv {
- 	 * - consumed in thread by wmi_event_worker
- 	 */
- 	spinlock_t wmi_ev_lock;
-+	spinlock_t net_queue_lock; /* guarding stop/wake netif queue */
-+	int net_queue_stopped; /* netif_tx_stop_all_queues invoked */
- 	struct napi_struct napi_rx;
- 	struct napi_struct napi_tx;
- 	/* keep alive */
-@@ -886,6 +888,10 @@ int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size);
- int wil_bcast_init(struct wil6210_priv *wil);
- void wil_bcast_fini(struct wil6210_priv *wil);
- 
-+void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
-+			   bool should_stop);
-+void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
-+			      bool check_stop);
- netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev);
- int wil_tx_complete(struct wil6210_priv *wil, int ringid);
- void wil6210_unmask_irq_tx(struct wil6210_priv *wil);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index fae4f12..890960e 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -548,7 +548,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 	if ((wdev->iftype == NL80211_IFTYPE_STATION) ||
- 	    (wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)) {
- 		if (rc) {
--			netif_tx_stop_all_queues(ndev);
- 			netif_carrier_off(ndev);
- 			wil_err(wil,
- 				"%s: cfg80211_connect_result with failure\n",
-@@ -588,7 +587,7 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 
- 	wil->sta[evt->cid].status = wil_sta_connected;
- 	set_bit(wil_status_fwconnected, wil->status);
--	netif_tx_wake_all_queues(ndev);
-+	wil_update_net_queues_bh(wil, NULL, false);
- 
- out:
- 	if (rc)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c
+index 316be5f..bdc132b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.c
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
+index 6a72d0c..441604f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/dm_common.h
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h
+index 864806c..c5fa14b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.h
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/main.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/main.c
+index 918b1d1..889bd13 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/main.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/main.c
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 27e3d5f..94dd25c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
+index 2024125..d11261e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.h
+@@ -11,10 +11,6 @@
+  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+  * more details.
+  *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
+- *
+  * The full GNU General Public License is included in this distribution in the
+  * file called LICENSE.
+  *
 -- 
-1.9.1
+2.6.6
