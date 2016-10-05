@@ -1,32 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33612 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750804AbcJYHOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 03:14:46 -0400
-Message-ID: <1477379678.4390.2.camel@sipsolutions.net> (sfid-20161025_091450_037704_72DAD34F)
-Subject: Re: Bayesian rate control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Bj=F6rn?= Smedman <bjornsmedman@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Date: Tue, 25 Oct 2016 09:14:38 +0200
-In-Reply-To: <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com> (sfid-20161024_221706_899024_253AA60D)
-References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
-         <1477286912.4085.1.camel@sipsolutions.net>
-         <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com>
-         (sfid-20161024_221706_899024_253AA60D)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([184.105.139.130]:57462 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751527AbcJEAZb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 4 Oct 2016 20:25:31 -0400
+Date: Tue, 04 Oct 2016 20:25:28 -0400 (EDT)
+Message-Id: <20161004.202528.768645047812953671.davem@davemloft.net> (sfid-20161005_022536_528615_78902DBB)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-10-04
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1475567338-28291-1-git-send-email-johannes@sipsolutions.net>
+References: <1475567338-28291-1-git-send-email-johannes@sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-24 at 22:17 +0200, Björn Smedman wrote:
-> 
-> Are there any cards out there that support VHT and use s/w rate
-> control (Minstrel)? Just in case I run out of search space. :P
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue,  4 Oct 2016 09:31:28 +0200
 
-Maybe something that's usable with brcmsmac? Not sure I'd recommend
-buying Broadcom NICs though at this point, with them having been bought
-out and all (and their upstream support is somewhat spotty, so you
-might have a hard time finding the right NIC)
+> Here's a version with the conflicts resolved - had to jigger some
+> code around, but it's all described in the merge commit message.
+> 
+> Let me know if there's any problem.
 
-johannes
+Pulled, thanks for resolving this.
