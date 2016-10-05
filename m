@@ -1,109 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:49165 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932352AbcJXOxj (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36776 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754490AbcJEQlm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 10:53:39 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if requested
-Date: Mon, 24 Oct 2016 16:53:30 +0200
-Message-ID: <3164753.QVH0CDzpbV@prime> (sfid-20161024_165343_975880_DDEF709D)
-In-Reply-To: <1477319916.4085.29.camel@sipsolutions.net>
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com> <4116422.yZP7iyh9mq@prime> <1477319916.4085.29.camel@sipsolutions.net>
+        Wed, 5 Oct 2016 12:41:42 -0400
+Received: by mail-pf0-f175.google.com with SMTP id i85so39058285pfa.3
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 09:41:42 -0700 (PDT)
+Date: Wed, 5 Oct 2016 09:41:38 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v2 2/2] mwifiex: check hw_status in suspend and resume
+ handlers
+Message-ID: <20161005164138.GB54237@google.com> (sfid-20161005_184146_571182_04E06921)
+References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
+ <1475600905-2997-2-git-send-email-akarwar@marvell.com>
+ <20161004210435.GA31652@localhost>
+ <39b7881045ec42628a4ffa654840681e@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1924920.4O7cC1z8Cr"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <39b7881045ec42628a4ffa654840681e@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1924920.4O7cC1z8Cr
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Hi Amit,
 
-On Monday, October 24, 2016 4:38:36 PM CEST Johannes Berg wrote:
-> On Mon, 2016-10-24 at 16:36 +0200, Simon Wunderlich wrote:
-> > On Monday, October 24, 2016 4:16:02 PM CEST Johannes Berg wrote:
-> > > On Mon, 2016-10-24 at 15:42 +0200, Simon Wunderlich wrote:
-> > > > Otherwise, it would be pretty much impossible to perform CSAs to
-> > > > another DFS channel.
-> > > 
-> > > I was told that to do that you'd need another NIC that's pre-
-> > > CAC'ing another channel.
+On Wed, Oct 05, 2016 at 12:26:36PM +0000, Amitkumar Karwar wrote:
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > Sent: Wednesday, October 05, 2016 2:35 AM
+> > To: Amitkumar Karwar
+> > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > rajatja@google.com; briannorris@google.com; Xinming Hu
+> > Subject: Re: [PATCH v2 2/2] mwifiex: check hw_status in suspend and
+> > resume handlers
 > > 
-> > Here is the portion from ETSI 301 893 v1.8.1 [1] (the most recent one
-> > to my knowledege), section 4.7.1.4 which describes operation from
-> >
-> > master devices (Access Points):
-> > [...]
+> > On Tue, Oct 04, 2016 at 10:38:25PM +0530, Amitkumar Karwar wrote:
+> > > From: Xinming Hu <huxm@marvell.com>
+> > >
+> > > We have observed a kernel crash when system immediately suspends after
+> > > booting. There is a race between suspend and driver initialization
+> > > paths.
+> > > This patch adds hw_status checks to fix the problem
+> > >
+> > > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > ---
+> > > v2: Return failure in suspend/resume handler in this scenario.
+> > > ---
+> > >  drivers/net/wireless/marvell/mwifiex/pcie.c | 10 ++++++----
+> > >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > index ba9e068..fa6bf85 100644
+> > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > @@ -122,9 +122,10 @@ static int mwifiex_pcie_suspend(struct device
+> > > *dev)
+> > >
+> > >  	if (pdev) {
+> > >  		card = pci_get_drvdata(pdev);
+> > > -		if (!card || !card->adapter) {
+> > > +		if (!card || !card->adapter ||
+> > > +		    card->adapter->hw_status != MWIFIEX_HW_STATUS_READY) {
+> > 
+> > Wait, is there no locking on the 'hw_status' field? That is inherently
+> > an unsafe race all on its own; you're not guaranteed that this will be
+> > read/written atomically. And you also aren't guaranteed that writes to
+> > this happen in the order they appear in the code -- in other words,
+> > reading this flag doesn't necessarily guarantee that initialization is
+> > actually complete (even if that's very likely to be true, given that
+> > it's probably just a single-instruction word-access, and any prior HW
+> > polling or interrupts likely have done some synchronization and can't be
+> > reordered).
+> > actually complete
 > 
-> Yeah I'm pretty sure there are differences in ETSI vs. FCC. Perhaps the
-> information I was told about was for FCC. But perhaps it's all just
-> completely wrong :)
+> Here is the brief info on how "hw_status" flag is updated.
+> 1) It gets changed incrementally during initialization.
+>     MWIFIEX_HW_STATUS_INITIALIZING -> MWIFIEX_HW_STATUS_INIT_DONE -> MWIFIEX_HW_STATUS_READY
+> 
+> 2) Status will remain READY once driver+firmware is up and running.
+> 
+> 3) Below is status during teardown
+> MWIFIEX_HW_STATUS_READY -> MWIFIEX_HW_STATUS_RESET -> MWIFIEX_HW_STATUS_CLOSING -> MWIFIEX_HW_STATUS_NOT_READY
+> 
+> As the events occur one after another, we don't expect a race and
+> don't need locking here for the flag. Flag status
+> MWIFIEX_HW_STATUS_READY guarantees that initialization is completed.
 
-I think I've found the right specification [1] for FCC. They doesn't state so 
-explicitly that it is allowed, but I don't see any remark that this behaviour 
-is forbidden, either. The important section is 5.1.1 Master devices in 905462 
-D02 UNII DFS Compliance Procedures New Rules v02, which is pretty similar to 
-ETSI. They say:
+It seems like, as with patch 1, you're mostly arguing about the writes
+to this variable. But writes race with reads as well; how do you
+guarantee that you're not seeing incorrect values of 'hw_status' here in
+suspend() -- e.g., either old or new values of it, or even
+partially-written values, if for some reason the compiler decides it
+can't read/write this all in one go?
 
-<snip>
-a)
-The Master Device will use  DFS  in order to detect  Radar Waveforms with 
-received signal strength above the DFS Detection Threshold in the 5250 - 5350
-MHz and 5470 - 5725 MHz bands.  DFS is not required in the 5150 - 5250 MHz or 
-5725 - 5825 MHz bands. 
-b)
-Before initiating a network on a Channel, the Master Device will perform a 
-Channel Availability Check for a specified time duration (Channel Availability 
-Check Time) to ensure that there is no radar system operating on the 
-Channel, using DFS described under subsection a) above.
-c) The  Master Device initiates a U-NII network by transmitting control 
-signals that will enable other U-NII devices to Associate with the Master 
-Device.
-d)
-During normal operation, the Master Device will monitor the Channel
-(In-Service Monitoring) to ensure that there is no radar system operating on 
-the Channel, using DFS described under a).
-e)
-If the Master Device has detected a Radar Waveform during In-Service 
-Monitoring as described under d), the Operating Channel of the U-
-NII network is no longer an Available Channel.  The Master Device will
-instruct all associated Client Device(s) to stop transmitting on this 
-Channel within the Channel Move Time. The transmissions  during  the 
-Channel  Move  Time will be  limited  to  the  Channel  Closing Transmission 
-Time. 
-</snap>
+> In worst case scenario, only first system suspend attempt issued
+> immediately after system boot will be aborted with BUSY error. I
+> think, that should be fine.
 
-Again, no explicit "on installation" here, but there is also nothing saying 
-that we can not check/operate on other channels in the meantime. (NOTE: going 
-off-channel while operating is a different topic).
+(For the record, my concern about -EBUSY is separate from my concern
+about the potential race condition.)
 
-Cheers,
-     Simon
+> Let me know if you have any concerns.
 
-[1] https://apps.fcc.gov/oetcf/kdb/forms/FTSSearchResultPage.cfm?
-switch=P&id=27155
---nextPart1924920.4O7cC1z8Cr
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Sorry, I probably didn't completely flesh out my thought here.
 
------BEGIN PGP SIGNATURE-----
+I think I was concerned about a failed initialization causing the system
+to never enter suspend again. So specifically: what happens if (e.g.)
+the firmware fails to load? AFAICT, the device doesn't actually unbind
+itself from the driver, so instead, you have a device in limbo that will
+always return -EBUSY in suspend(), and your system can never again enter
+suspend. Am I correct? If so, that doesn't sound great.
 
-iQIcBAABCgAGBQJYDiBqAAoJEKEr45hCkp6hgAcQALWZ1E9Ro5Ms1vKgBobFqwWh
-GyfJsyT5diGhinV89r8n6x9EwmndnQQZSrk9w9EuIFJclAi6cKW1v9G8BbohMmni
-041TZdqqZ2FK5+AZVnT6JhHyHawfmAVeuAMD+PVzjCwz4ug16gSvq9Vgr2s8uxiF
-DaIxgMQqW2yJw5PBhySHW920lnIU3s8ySPlNz5gjxMVbQyKMvQYkAWR3KP2bhIS4
-lrBVvXyUPHdeFQERFbH1qq/C1vR4zxM4HQeMn11ASJW70E4bQKOlMpPbcPceLwWM
-qbcQT7O0Id5skS7Zgtf6buKpc+yKtRUxcuxTL6KDc/2IAWEhvQKpyYKcaablqzMh
-sMr8s236HifyXXyTQ9pJifVpL3Vox/SHn0MMB1XB/2uFEeajDEMFyNDywE0Cqz/s
-prAu/s0w6ZU3FJ917tc8sOpwS2884TzanwkPOee5szQHMXQvznkSlJgD9X8VwS+t
-fV1CYBEGYfg/LlscAbqjq9QHynbEB/SDc6HCJAaLXEhr7rCnfHN2J483cSxX7iba
-KPKHp5XBJ5t4+jHdSDesLaZBeZC4DkmuYIHMyXVNjjYirNqnlie58+nEdDojqXpc
-KkQwKkAcZ1uideh1gtB6qat96CuvTQeXbozlg4DFVVJfEzBuI+BesDZQ1R2jFxNL
-kD9iSbvR/R/JIr3mewCU
-=jib6
------END PGP SIGNATURE-----
+> > This is probably better than nothing, but it's not very good.
+> > 
+> > >  			pr_err("Card or adapter structure is not valid\n");
+> > > -			return 0;
+> > > +			return -EBUSY;
+> > 
+> > So the above cases all mean that the driver hasn't finished loading,
+> > right?
+> > 
+> > !card => can't happen (PCIe probe() would have failed
+> > mwifiex_add_card()), but fine to check
+> 
+> NULL "card" or "card->adapter" pointers are expected in below cases
+> 1) Driver initialization failed after downloading the firmware. Driver is performing cleanup in init failure path. Now system suspends.
+> 2) Race of teardown + suspend
+>  
+> > 
+> > !card->adapter => only happens after patch 1; i.e., when tearing down
+> > the device and detaching it from the driver
+> > 
+> > card->adapter->hw_status != MWIFIEX_HW_STATUS_READY => FW is not loaded
+> > (i.e., in the process of starting or stopping FW?)
+> > 
+> > I guess all of those cases make sense to be -EBUSY.
 
---nextPart1924920.4O7cC1z8Cr--
+^^ I'm second-guessing my claim here then.
+
+> Yes. we can keep -EBUSY for all of the cases.
+
+Brian
