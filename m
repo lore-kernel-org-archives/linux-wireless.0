@@ -1,74 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37515 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754177AbcJRToW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 15:44:22 -0400
-Received: by mail-wm0-f48.google.com with SMTP id c78so12531052wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2016 12:44:22 -0700 (PDT)
-Received: from localhost.localdomain (127.7.150.83.ftth.as8758.net. [83.150.7.127])
-        by smtp.gmail.com with ESMTPSA id za1sm60719759wjb.8.2016.10.18.12.44.16
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 18 Oct 2016 12:44:17 -0700 (PDT)
-Subject: Re: Intel 7260 not working on 4.4.24 / armv7
+Received: from s3.sipsolutions.net ([5.9.151.49]:47951 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752428AbcJEJvK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 05:51:10 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
- <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
- <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
- <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
- <fa098763-cdf6-03f8-6d75-0fa9dfb270e4@gmail.com>
- <1476817578.6425.40.camel@sipsolutions.net>
-From: Oliver Zemann <oliver.zemann@gmail.com>
-Message-ID: <1dce4f5d-b905-9f26-17f3-d8b1ae0d1b13@gmail.com> (sfid-20161018_214426_857029_72ADE60C)
-Date: Tue, 18 Oct 2016 21:44:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <1476817578.6425.40.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Cc: "M . Braun" <michael-dev@fami-braun.de>,
+        Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: discard multicast and 4-addr A-MSDUs
+Date: Wed,  5 Oct 2016 11:51:05 +0200
+Message-Id: <1475661065-32721-1-git-send-email-johannes@sipsolutions.net> (sfid-20161005_115113_707751_D6A7E1CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there some way to disable the bluetooth functionality?
+From: Johannes Berg <johannes.berg@intel.com>
 
+In mac80211, multicast A-MSDUs are accepted in many cases that
+they shouldn't be accepted in:
+ * drop A-MSDUs with a multicast A1 (RA), as required by the
+   spec in 9.11 (802.11-2012 version)
+ * drop A-MSDUs with a 4-addr header, since the fourth address
+   can't actually be useful for them; unless 4-address frame
+   format is actually requested, even though the fourth address
+   is still not useful in this case, but ignored
 
-Am 18.10.2016 um 21:06 schrieb Johannes Berg:
-> On Tue, 2016-10-18 at 18:22 +0200, Oliver Zemann wrote:
->> Because of the problems with the ath10 card, i bought an intel 7260
->> (mpcie) wifi card. Unfortunately it is also not working.
->> I get tons of those messages:
->>
->> [  175.777030] usb 1-1: new full-speed USB device number 2 using
->> orion-ehci
->> [  175.933953] usb 1-1: New USB device found, idVendor=8087,
->> idProduct=07dc
->> [  175.940681] usb 1-1: New USB device strings: Mfr=0, Product=0,
->> SerialNumber=0
->> [  175.966954] Bluetooth: hci0: read Intel version:
->> 3707100180012d0d00
->> [  175.973313] Bluetooth: hci0: Intel Bluetooth firmware file:
->> intel/ibt-hw-37.7.10-fw-1.80.1.2d.d.bseq
->> [  176.183954] Bluetooth: hci0: Intel Bluetooth firmware patch
->> completed
->> and activated
->> [  176.749831] usb 1-1: USB disconnect, device number 2
-> This is odd. However, it's entirely related to the NICs *Bluetooth*
-> function, which lives on USB.
->
->> What's confusing me is that this device is connected through pcie,
->> not usb. When i use lspci i get:
->> [root@alarm log]# lspci
->> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev
->> 04)
->> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev
->> 04)
->> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac
->> Wireless Network Adapter (rev ff)
->>
->> So the other card is seen as pci device, but the intel is not. I am
->> really lost now.
-> The NICs *WiFi* function should be a PCIe device, but the USB
-> connect/disconnect cycles suggest that there's something wrong with the
-> electrical connection, which presumably causes the PCIe part of the
-> device to never appear on the bus.
->
-> johannes
+Accepting the first case, in particular, is very problematic
+since it allows anyone else with possession of a GTK to send
+unicast frames encapsulated in a multicast A-MSDU, even when
+the AP has client isolation enabled.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6175db385ba7..3ac2f1cba317 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2308,16 +2308,22 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	if (!(status->rx_flags & IEEE80211_RX_AMSDU))
+ 		return RX_CONTINUE;
+ 
+-	if (ieee80211_has_a4(hdr->frame_control) &&
+-	    rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-	    !rx->sdata->u.vlan.sta)
+-		return RX_DROP_UNUSABLE;
++	if (unlikely(ieee80211_has_a4(hdr->frame_control))) {
++		switch (rx->sdata->vif.type) {
++		case NL80211_IFTYPE_AP_VLAN:
++			if (!rx->sdata->u.vlan.sta)
++				return RX_DROP_UNUSABLE;
++			break;
++		case NL80211_IFTYPE_STATION:
++			if (!rx->sdata->u.mgd.use_4addr)
++				return RX_DROP_UNUSABLE;
++			break;
++		default:
++			return RX_DROP_UNUSABLE;
++		}
++	}
+ 
+-	if (is_multicast_ether_addr(hdr->addr1) &&
+-	    ((rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-	      rx->sdata->u.vlan.sta) ||
+-	     (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	      rx->sdata->u.mgd.use_4addr)))
++	if (is_multicast_ether_addr(hdr->addr1))
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	skb->dev = dev;
+-- 
+2.8.1
