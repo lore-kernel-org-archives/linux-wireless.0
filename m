@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40882 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbcJRFi7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 01:38:59 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 18 Oct 2016 11:08:58 +0530
-From: akolli@codeaurora.org
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath10k: add per peer htt tx stats support for 10.4
-In-Reply-To: <87vawygo2w.fsf@kamboji.qca.qualcomm.com>
-References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
- <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
- <87vawygo2w.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <dde8d02e9ebf2eb9f37bb36c528548c2@codeaurora.org> (sfid-20161018_073926_395527_0C55FD37)
+Received: from s3.sipsolutions.net ([5.9.151.49]:47473 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753296AbcJEITP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 04:19:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: "M . Braun" <michael-dev@fami-braun.de>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: discard multicast and 4-addr A-MSDUs
+Date: Wed,  5 Oct 2016 10:19:11 +0200
+Message-Id: <1475655551-13504-1-git-send-email-johannes@sipsolutions.net> (sfid-20161005_101921_386301_30B9F665)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-On 2016-10-12 10:29, Valo, Kalle wrote:
-> <akolli@qti.qualcomm.com> writes:
-> 
->> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->> 
->> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
->> event, Firmware sends one HTT event for every four PPDUs.
->> HTT payload has success pkts/bytes, failed pkts/bytes, retry
->> pkts/bytes and rate info per ppdu.
->> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
->> which are nowadays enabled by default.
->> 
->> Parse peer stats and update the tx rate information per STA.
->> 
->> tx rate, Peer stats are tested on QCA4019 with Firmware version
->> 10.4-3.2.1-00028.
->> 
->> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
-> 
-> This and patch 2 add few new warnings:
-> 
-> drivers/net/wireless/ath/ath10k/htt_rx.c: In function
-> 'ath10k_htt_fetch_peer_stats':
-> drivers/net/wireless/ath/ath10k/htt_rx.c:2279:3: warning: too many
-> arguments for format [-Wformat-extra-args]
-> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17: warning: incorrect
-> type in assignment (different base types)
-> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    expected unsigned
-> int [unsigned] [usertype] peer_id
-> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    got restricted
-> __le16 [usertype] peer_id
-> drivers/net/wireless/ath/ath10k/debugfs_sta.c:84: space required
-> before the open parenthesis '('
+In mac80211, multicast A-MSDUs are accepted in many cases that
+they shouldn't be accepted in:
+ * drop A-MSDUs with a multicast A1 (RA), as required by the
+   spec in 9.11 (802.11-2012 version)
+ * drop A-MSDUs with a 4-addr header, since the fourth address
+   can't actually be useful for them; this was already done in
+   the case where 4-addr behaviour was requested, but bizarrely
+   not in the common cases
 
-I will fix and send V2.
+Accepting the first case, in particular, is very problematic
+since it allows anyone else with possession of a GTK to send
+unicast frames encapsulated in a multicast A-MSDU, even when
+the AP has client isolation enabled.
 
-Thanks,
-Anil.
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6175db385ba7..31aadc769021 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2308,16 +2308,10 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	if (!(status->rx_flags & IEEE80211_RX_AMSDU))
+ 		return RX_CONTINUE;
+ 
+-	if (ieee80211_has_a4(hdr->frame_control) &&
+-	    rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-	    !rx->sdata->u.vlan.sta)
++	if (ieee80211_has_a4(hdr->frame_control))
+ 		return RX_DROP_UNUSABLE;
+ 
+-	if (is_multicast_ether_addr(hdr->addr1) &&
+-	    ((rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+-	      rx->sdata->u.vlan.sta) ||
+-	     (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
+-	      rx->sdata->u.mgd.use_4addr)))
++	if (is_multicast_ether_addr(hdr->addr1))
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	skb->dev = dev;
+-- 
+2.8.1
