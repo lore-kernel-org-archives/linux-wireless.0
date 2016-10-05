@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:43050 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752942AbcJJRMc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 13:12:32 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        netdev@vger.kernel.org
-Subject: [PATCH v6 1/4] mac80211: remove unnecessary num_mcast_sta user
-Date: Mon, 10 Oct 2016 19:12:20 +0200
-Message-Id: <1476119543-24509-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161010_191249_573153_59D759FC)
+Received: from mail2.tohojo.dk ([77.235.48.147]:44758 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753530AbcJEQzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 12:55:38 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
+        queues.
+References: <20160706193417.13080-1-toke@toke.dk>
+        <20160805160346.10545-1-toke@toke.dk>
+        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
+        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
+        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> <87k2dm6git.fsf@toke.dk>
+        <878tu2okv7.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 05 Oct 2016 18:55:33 +0200
+In-Reply-To: <878tu2okv7.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Wed, 05 Oct 2016 18:50:52 +0300")
+Message-ID: <87d1jeenwa.fsf@toke.dk> (sfid-20161005_185548_399334_2B7360E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checking for num_mcast_sta in __ieee80211_request_smps_ap() is unnecessary,
-as sta list will be empty in this case anyway, so list_for_each_entry(sta,
-...) will exit immediately.
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- net/mac80211/cfg.c | 7 -------
- 1 file changed, 7 deletions(-)
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>>>
+>>> I understand your point, but I don't want to rush this to 4.9 and then
+>>> start getting lots of bug reports and eventually forced to revert it. If
+>>> we just found a new serious regression the chances are that there are
+>>> more lurking somewhere and this patch is just not ready yet.
+>>
+>> So, the changes to mac80211 that fixes the known regressions of this
+>> patch have gone in.
+>
+> I guess you mean this commit:
+>
+> bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ de=
+queue
+>
+> (Just making sure that I have the same commit in my tree when I apply
+> this)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 543b1d4..24133f5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2313,13 +2313,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
- 	    smps_mode == IEEE80211_SMPS_AUTOMATIC)
- 		return 0;
- 
--	 /* If no associated stations, there's no need to do anything */
--	if (!atomic_read(&sdata->u.ap.num_mcast_sta)) {
--		sdata->smps_mode = smps_mode;
--		ieee80211_queue_work(&sdata->local->hw, &sdata->recalc_smps);
--		return 0;
--	}
--
- 	ht_dbg(sdata,
- 	       "SMPS %d requested in AP mode, sending Action frame to %d stations\n",
- 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
--- 
-2.1.4
+Yup, that's the one :)
+
+>> Any chance of seeing this merged during the current merge window? :)
+>
+> I sent last new feature ("-next") patches for 4.9 last week, sorry. So
+> this has to wait for 4.10.
+
+Ah, right, I think I got my merge windows confused. You already said you
+wouldn't take it for 4.9. So I guess what I'm asking is for you to put
+it into the appropriate -next tree so it can get some wider exposure
+ahead of the *next* merge window...
+
+> And I assume I need to take v5:
+>
+> https://patchwork.kernel.org/patch/9311037/
+
+Yes. Haven't noticed anything that changed since that might conflict
+with it, but let me know if I missed something and you want a refreshed
+version.
+
+-Toke
