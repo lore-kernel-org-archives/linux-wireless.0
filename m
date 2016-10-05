@@ -1,105 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:35001 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbcJNIjW (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:35736 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbcJEQjt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:39:22 -0400
-Received: by mail-io0-f178.google.com with SMTP id i202so113435501ioi.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 01:39:21 -0700 (PDT)
+        Wed, 5 Oct 2016 12:39:49 -0400
+Received: by mail-oi0-f48.google.com with SMTP id d132so77046909oib.2
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 09:39:49 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1476433699.31114.6.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 09:39:20 +0100
-Message-ID: <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com> (sfid-20161014_103946_427497_053F91A9)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
+In-Reply-To: <87fuodswlu.fsf@kamboji.qca.qualcomm.com>
+References: <1473801118-103112-1-git-send-email-mfaltesek@google.com> <87fuodswlu.fsf@kamboji.qca.qualcomm.com>
+From: Marty Faltesek <mfaltesek@google.com>
+Date: Wed, 5 Oct 2016 12:39:48 -0400
+Message-ID: <CAOiWkA_fuhzPeF7qPP0hLN3KTZUOi6_te5Zc3+vxKQ9GRj0VBw@mail.gmail.com> (sfid-20161005_183953_743310_CB8D6834)
+Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 09:28, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Mon, Oct 3, 2016 at 3:46 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Marty Faltesek <mfaltesek@google.com> writes:
 >
->>    1. revert that patch (doing so would need some major adjustments now,
->>       since it's pretty old and a number of new things were added in the
->>       meantime)
+>> Caching calibration data allows it to be accessed when the
+>> device is not active.
+>>
+>> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
 >
-> This it will have to be, I guess.
+> No comma in the title, please.
 >
->>    2. allocate a per-CPU buffer for all the things that we put on the
->>       stack and use in SG lists, those are:
->>        * CCM/GCM: AAD (32B), B_0/J_0 (16B)
->>        * GMAC: AAD (20B), zero (16B)
->>        * (not sure why CMAC isn't using this API, but it would be like GMAC)
+> What tree did you use as the baseline? This doesn't seem to apply to
+> ath.git:
+
+We use backports 20160122 which has not been updated since earlier this year.
+I can forward port it to your tree, and make sure
+it builds but won't be able to test it. Will that be OK?
+
 >
-> This doesn't work - I tried to move the mac80211 buffers, but because
-> we also put the struct aead_request on the stack, and crypto_ccm has
-> the "odata" in there, and we can't separate the odata from that struct,
-> we'd have to also put that into a per-CPU buffer, but it's very big -
-> 456 bytes for CCM, didn't measure the others but I'd expect them to be
-> larger, if different.
+> Applying: ath10k: cache calibration data when the core is stopped.
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/core.c).
+> Repository lacks necessary blobs to fall back on 3-way merge.
+> Cannot fall back to three-way merge.
+> Patch failed at 0001 ath10k: cache calibration data when the core is stopped.
 >
-> I don't think we can allocate half a kb for each CPU just to be able to
-> possibly use the acceleration here. We can't even make that conditional
-> on not having hardware crypto in the wifi NIC because drivers are
-> always allowed to pass undecrypted frames, regardless of whether or not
-> HW crypto was attempted, so we don't know upfront if we'll have to
-> decrypt anything in software...
+>> --- a/drivers/net/wireless/ath/ath10k/core.c
+>> +++ b/drivers/net/wireless/ath/ath10k/core.c
+>> @@ -1227,6 +1227,42 @@ success:
+>>       return 0;
+>>  }
+>>
+>> +int
+>> +ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
+>> +{
+>> +     u32 hi_addr;
+>> +     __le32 addr;
+>> +     int ret;
 >
-> Given that, I think we have had a bug in here basically since Ard's
-> patch, we never should've put these structs on the stack. Herbert, you
-> also touched this later and converted the API usage, did you see the
-> way the stack is used here and think it should be OK, or did you simply
-> not realize that?
+> I think this function should be in debug.c. That way the code is not
+> wasting memory if DEBUGFS is disabled.
+
+ok.
+
 >
-> Ard, are you able to help out working on a revert of your patch? That
-> would require also reverting a number of other patches (various fixes,
-> API adjustments, etc. to the AEAD usage), but the more complicated part
-> is that in the meantime Jouni introduced GCMP and CCMP-256, both of
-> which we of course need to retain.
+>> +     vfree(*buf);
+>> +     *buf = vmalloc(QCA988X_CAL_DATA_LEN);
+>> +     if (!*buf) {
+>> +             return -EAGAIN;
+>> +     }
 >
+> Is it really necessary to allocate memory every time? What if allocate
+> it only once when module is loaded, just like with
+> ar->debug.fw_crash_data?
 
-I am missing some context here, but could you explain what exactly is
-the problem here?
+yup, good suggestion.
 
-Look at this code
+>
+> Also please note that this patch (which I'm queuing to 4.9) touches the
+> same area:
+>
+> ath10k: fix debug cal data file
+>
+> https://patchwork.kernel.org/patch/9340953/
 
-"""
-struct scatterlist sg[3];
-
-char aead_req_data[sizeof(struct aead_request) +
-    crypto_aead_reqsize(tfm)]
-    __aligned(__alignof__(struct aead_request));
-struct aead_request *aead_req = (void *) aead_req_data;
-
-memset(aead_req, 0, sizeof(aead_req_data));
-
-sg_init_table(sg, 3);
-sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-sg_set_buf(&sg[1], data, data_len);
-sg_set_buf(&sg[2], mic, mic_len);
-
-aead_request_set_tfm(aead_req, tfm);
-aead_request_set_crypt(aead_req, sg, sg, data_len, b_0);
-aead_request_set_ad(aead_req, sg[0].length);
-"""
-
-I assume the stack buffer itself is not the problem here, but aad,
-which is allocated on the stack one frame up.
-Do we really need to revert the whole patch to fix that?
+I've modified this too, and this won't be necessary, so can you drop
+it? If not, let me know and I'll
+pull it in and make sure I'm based off it too.
