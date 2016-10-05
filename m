@@ -1,142 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50737 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1759492AbcJYQa0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 12:30:26 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH 5/5] mwifiex: wait for firmware dump completion in
- remove_card
-Date: Tue, 25 Oct 2016 16:30:20 +0000
-Message-ID: <254e0132255b4f7d94c04261afd1f510@SC-EXCH04.marvell.com> (sfid-20161025_183038_094293_F8F88912)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
- <1477318892-22877-5-git-send-email-akarwar@marvell.com>
- <20161024202332.GD968@localhost>
-In-Reply-To: <20161024202332.GD968@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Received: from nbd.name ([46.4.11.11]:56269 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751328AbcJESgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 14:36:36 -0400
+Subject: Re: [RFC 0/3] of: add common bindings to (de)activate IEEE 802.11
+ bands
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Rob Herring <robh+dt@kernel.org>
+References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
+ <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
+ <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <23f49efe-ddef-ea16-00de-7477e4872d82@nbd.name> (sfid-20161005_203640_617183_197DF074)
+Date: Wed, 5 Oct 2016 20:36:27 +0200
 MIME-Version: 1.0
+In-Reply-To: <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+On 2016-10-05 20:25, Martin Blumenstingl wrote:
+> On Mon, Oct 3, 2016 at 5:22 PM, Rob Herring <robh+dt@kernel.org> wrote:
+>> On Sun, Oct 2, 2016 at 5:50 PM, Martin Blumenstingl
+>> <martin.blumenstingl@googlemail.com> wrote:
+>>> There are at least two drivers (ath9k and mt76) out there, where
+>>> devicetree authors need to override the enabled bands.
+>>>
+>>> For ath9k there is only one use-case: disabling a band which has been
+>>> incorrectly enabled by the vendor in the EEPROM (enabling a band is not
+>>> possible because the calibration data would be missing in the EEPROM).
+>>> The mt76 driver (currently pending for review) however allows enabling
+>>> and disabling the 2.4GHz and 5GHz band, see [0].
+>>>
+>>> Based on the discussion of (earlier versions of) my ath9k devicetree
+>>> patch it was suggested [1] that we use enable- and disable- properties.
+>>> The current patch implements:
+>>> - bands can be enabled or disabled with the corresponding property
+>>> - if both (disable and enable) properties are given and a driver asks
+>>>   whether the band is enabled then the logic will return false (= not
+>>>   enabled, preferring the disabled flag)
+>>> - if both (disable and enable) properties are given and a driver asks
+>>>   whether the band is disabled then the logic will return true (again,
+>>>   preferring the disabled flag over the enabled flag)
+>>>
+>>> We can still change the logic to do what the mt76 driver does (I am
+>>> fine with both solutions):
+>>> - property not available: driver decides which bands to enable
+>>> - property set to 0: disable the band
+>>> - property set to 1: enable the band
+>>
+>> I prefer this way. Really, I'd prefer just a boolean disable property.
+>> I'm not sure why you need the enable. We usually have these tri-state
+>> properties when you want not present to mean use the bootloader or
+>> default setting. Try to make not present the most common case.
+> Felix: could you please give a few details why mt76 can not only
+> disable but also enable a specific band?
+> There is no specific comment in the sources [0] why this is needed.
+> All other drivers that I am aware of (ath9k, rt2x00) only allow
+> disabling a specific band, they never enable it (this has to be done
+> explicitly by the EEPROM).
+None of the devices use it at the moment, I probably added it when I
+played with a device that had broken EEPROM data. I guess I decided to
+do it this way because on many devices the band capability field simply
+cannot be trusted.
+I guess I would be okay with just having a disable property and adding
+an enable property later only if we end up actually needing it.
 
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Tuesday, October 25, 2016 1:54 AM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> dmitry.torokhov@gmail.com; Xinming Hu
-> Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
-> remove_card
-> 
-> On Mon, Oct 24, 2016 at 07:51:32PM +0530, Amitkumar Karwar wrote:
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > This patch ensures to wait for firmware dump completion in
-> > mwifiex_remove_card().
-> >
-> > For sdio interface, reset_trigger variable is used to identify if
-> > mwifiex_sdio_remove() is called by sdio_work during reset or the call
-> > is from sdio subsystem.
-> >
-> > This patch fixes a kernel crash observed during reboot when firmware
-> > dump operation is in process.
-> >
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> >  drivers/net/wireless/marvell/mwifiex/pcie.c |  2 ++
-> > drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++++-
-> >  2 files changed, 16 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > index 986bf07..4512e86 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > @@ -528,6 +528,8 @@ static void mwifiex_pcie_remove(struct pci_dev
-> *pdev)
-> >  	if (!adapter || !adapter->priv_num)
-> >  		return;
-> >
-> > +	cancel_work_sync(&pcie_work);
-> 
-> Is there a good reason you have to cancel the work? What if you were
-> just to finish it (i.e., flush_work())?
-
-I assume if work is running, cancel_work_sync() will wait until completion. Otherwise it will cancel queued work. Firmware dump takes 20-30 seconds to complete. I think, it's ok to cancel it if work is just queued and not running yet. Reboot taking significant time due to our wait in remove handler may not be a good experience from end user point of view.
-
-If you prefer flush_work(), I can use the same.
-
-> 
-> In any case, I think this is fine, so for the PCIe bits:
-> 
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> 
-> > +
-> >  	if (user_rmmod && !adapter->mfg_mode) {  #ifdef CONFIG_PM_SLEEP
-> >  		if (adapter->is_suspended)
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > index 4cad1c2..f974260 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > @@ -46,6 +46,15 @@
-> >   */
-> >  static u8 user_rmmod;
-> >
-> > +/* reset_trigger variable is used to identify if
-> > +mwifiex_sdio_remove()
-> > + * is called by sdio_work during reset or the call is from sdio
-> subsystem.
-> > + * We will cancel sdio_work only if the call is from sdio subsystem.
-> > + */
-> > +static u8 reset_triggered;
-> > +
-> > +static void mwifiex_sdio_work(struct work_struct *work); static
-> > +DECLARE_WORK(sdio_work, mwifiex_sdio_work);
-> > +
-> >  static struct mwifiex_if_ops sdio_ops;  static unsigned long
-> > iface_work_flags;
-> >
-> > @@ -289,6 +298,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
-> >  	if (!adapter || !adapter->priv_num)
-> >  		return;
-> >
-> > +	if (!reset_triggered)
-> > +		cancel_work_sync(&sdio_work);
-> > +
-> >  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
-> >
-> >  	if (user_rmmod && !adapter->mfg_mode) { @@ -2290,7 +2302,9 @@
-> static
-> > void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
-> >  	 * discovered and initializes them from scratch.
-> >  	 */
-> >
-> > +	reset_triggered = 1;
-> >  	mwifiex_sdio_remove(func);
-> > +	reset_triggered = 0;
-> 
-> Boy that's ugly! Couldn't you just create something like
-> __mwifiex_sdio_remove(), which does everything except the
-> cancel_work_sync()? Then you'd do this for the .remove() callback:
-> 
-> 	cancel_work_sync(&sdio_work);
-> 	__mwifiex_sdio_remove(func);
-> 
-> and for mwifiex_recreate_adapter() you'd just call
-> __mwifiex_sdio_remove()? The static variable that simply serves as a
-> (non-reentrant) function call parameter seems like a really poor
-> alternative to this simple refactoring.
-
-Thanks a lot for the suggestion.
-I will use this approach in updated version.
-
-Regards,
-Amitkumar
+- Felix
