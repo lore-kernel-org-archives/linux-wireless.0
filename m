@@ -1,48 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp3-1.goneo.de ([85.220.129.38]:46388 "EHLO smtp3-1.goneo.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943678AbcJSPCR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:02:17 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: sequence diagrams in rst documentation
-From: Markus Heiser <markus.heiser@darmarit.de>
-In-Reply-To: <87eg3dvhdi.fsf@intel.com>
-Date: Wed, 19 Oct 2016 17:02:00 +0200
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Jonathan Corbet <corbet@lwn.net>,
-        linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Message-Id: <40E20C55-88BE-4639-9901-E4073A07713B@darmarit.de> (sfid-20161019_170237_814341_E67165B7)
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net> <20161011072119.7ad4e3a3@lwn.net> <1476193466.4118.10.camel@sipsolutions.net> <1476194038.4118.11.camel@sipsolutions.net> <1476791021.6425.25.camel@sipsolutions.net> <B9AC83F3-AA14-414B-B538-81436620E432@darmarit.de> <1476799968.6425.33.camel@sipsolutions.net> <87eg3dvhdi.fsf@intel.com>
-To: Jani Nikula <jani.nikula@linux.intel.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:37456 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753002AbcJES6L (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 14:58:11 -0400
+Subject: Re: ath10k: device stops working ("failed to install key for vdev"
+ error in kernel log)
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <bdd2b4f1-114b-f114-c908-fc0f57b08ce8@candelatech.com> (sfid-20161005_205815_558571_B3C54CBB)
+Date: Wed, 5 Oct 2016 11:58:10 -0700
+MIME-Version: 1.0
+In-Reply-To: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 10/05/2016 11:51 AM, Martin Blumenstingl wrote:
+>> [54064.293597] ath10k_pci 0000:02:00.0: failed to install key for vdev
+>> 0 peer [AP MAC addr]: -145
+>> [54064.301234] wlan0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from
+>> hardware (-145)
+>> [54067.305703] ath10k_pci 0000:02:00.0: failed to install key for vdev
+>> 0 peer [AP MAC addr]: -145
+>> [54067.313307] wlan0: failed to set key (1, ff:ff:ff:ff:ff:ff) to
+>> hardware (-145)
+> it just happened again:
+> ...
+> [130266.948005] ath10k_pci 0000:02:00.0: failed to install key for
+> vdev 0 peer [AP MAC address]: -145
+> [130266.955697] wlan0: failed to remove key (2, ff:ff:ff:ff:ff:ff)
+> from hardware (-145)
+> [130269.964069] ath10k_pci 0000:02:00.0: failed to install key for
+> vdev 0 peer [AP MAC address]: -145
+> [130269.971775] wlan0: failed to set key (2, ff:ff:ff:ff:ff:ff) to
+> hardware (-145)
+> [172198.889700] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
+> info request
+> [172201.897770] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
+> info request
+>
+> I tried to get more information from the firmware by looking at the
+> fw_* debugfs files:
+> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_reset_stats
+> fw_crash_counter                0
+> fw_warm_reset_counter           4
+> fw_cold_reset_counter           0
+> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats
+> cat: can't open '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats':
+> Resource temporarily unavailable
+> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump
+> cat: can't open
+> '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump': No data
+> available
+> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
+> 0x00000000 0
+> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_checksums
+> firmware-N.bin          9d340dd9
+> athwlan                 8d25deed
+> otp                     f3efeb4f
+> codeswap                00000000
+> board-N.bin             bebc7c08
+> board                   bebc7c08
+>
+> This is still with firmware 10.2.4.70.54.
+> Please let me know if you need further information.
 
-Am 18.10.2016 um 16:52 schrieb Jani Nikula <jani.nikula@linux.intel.com>:
+Not sure about your firmware exactly, but the timeout might happen because
+firmware has leaked and/or run-out of resources, fails to insert the key,
+and then it just doesn't respond instead of sending an event.  So, driver
+gets the timeout message and who knows what state your system is in.
 
->> *Only* adding the PNG would be awful, I'd have to keep track of the
->> corresponding source elsewhere, and perhaps couldn't even GPL it
->> because then I couldn't distribute the PNG without corresponding
->> source...
->> 
->> Adding the source text would really be the only practical choice, but
->> doing so makes it easy to mismatch things, and also very easy to use
->> proprietary services for it that may go away at any time, etc.
-> 
-> Agreed. And there are other problems with attaching binaries (although
-> I'd say we should fix them too) [1].
-> 
-> [1] http://lkml.kernel.org/r/02a78907-933d-3f61-572e-28154b16b9e5@redhat.com
+I hit this when doing capacity tests, and I modified my firmware to always
+send an event, and driver to deal with it.  I also fixed some resource leaks
+and tuned firmware objects to make sure I do not hit the key exhaustion state.
 
-Hmm, I was not briefed that binaries are problematic. I have seen
-GIFs e.g. [2] and PDFs with a long history (when I worked with the media
-documentation), so I thought binaries are OK.
+What is your test scenario in this case?
 
-Can you give me some more hints to understand in what ways they are
-problematic?  / sorry if my question seems dump /
+Thanks,
+Ben
 
-[2] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/log/Documentation/DocBook/v4l/fieldseq_tb.gif?h=v3.0
 
--- Markus --
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
