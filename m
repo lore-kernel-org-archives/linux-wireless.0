@@ -1,99 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34297 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751425AbcJBW3X (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36608 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933013AbcJERp5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:29:23 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, arnd@arndb.de
-Cc: chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 2/7] ath9k: indicate that the AR9003 EEPROM template values are little endian
-Date: Mon,  3 Oct 2016 00:29:08 +0200
-Message-Id: <20161002222913.12223-3-martin.blumenstingl@googlemail.com> (sfid-20161003_002933_174027_AD405FA7)
-In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
- <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+        Wed, 5 Oct 2016 13:45:57 -0400
+Received: by mail-wm0-f50.google.com with SMTP id k125so280951130wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 10:45:56 -0700 (PDT)
+MIME-Version: 1.0
+From: Daniel Drake <drake@endlessm.com>
+Date: Wed, 5 Oct 2016 11:45:55 -0600
+Message-ID: <CAD8Lp44ZMgEijQ3QdZCf=mAXmuV5F4_eMD=AKod8ps-h8X_2xQ@mail.gmail.com> (sfid-20161005_194605_967030_B81949D1)
+Subject: ath9k excessive delay in handling EAPOL frames
+To: linux-wireless@vger.kernel.org
+Cc: Linux Upstreaming Team <linux@endlessm.com>,
+        ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The eepMisc field was not set explicitly. The default value of 0 means
-that the values in the EEPROM (template) should be interpreted as little
-endian. However, this is not clear until comparing the AR9003 code with
-the other EEPROM formats.
-To make the code easier to understand we explicitly state that the values
-are little endian - there are no functional changes with this patch.
+Hi,
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  3 +++
- 2 files changed, 8 insertions(+), 5 deletions(-)
+As this is remote problem debugging I haven't gathered quite as much
+info as I would like, and won't be investigating further immediately,
+but I would like to share what I have found so far, maybe it is useful
+knowledge and we can revisit later.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ea7b819..270d4ae 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -53,7 +53,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -631,7 +631,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -1210,7 +1210,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -1789,7 +1789,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -2367,7 +2367,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		.txrxMask =  0x33, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_LITTLE_ENDIAN,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 0a4c736..7dc7205 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -69,6 +69,9 @@
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
- 
-+/* AR5416_EEPMISC_BIG_ENDIAN not set indicates little endian */
-+#define AR9300_EEPMISC_LITTLE_ENDIAN 0
-+
- #define AR9300_OTP_BASE \
- 		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
- #define AR9300_OTP_STATUS \
--- 
-2.10.0
+With the following hardware on Linux 4.4, we cannot connect to our
+office WPA2-PSK network. Other networks seem fine.
+
+02:00.0 Network controller [0280]: Qualcomm Atheros QCA9565 / AR9565
+Wireless Network Adapter [168c:0036] (rev 01)
+Subsystem: AzureWave Device [1a3b:218d]
+Kernel driver in use: ath9k
+
+The logs show:
+
+wpa_supplicant[585]: wlp2s0: SME: Trying to authenticate with
+0c:11:67:33:8d:50 (SSID='Endless' freq=2457 MHz)
+kernel: wlp2s0: authenticate with 0c:11:67:33:8d:50
+NetworkManager[620]: <info> [1474483556.0677] device (wlp2s0):
+supplicant interface state: inactive -> authenticating
+kernel: wlp2s0: send auth to 0c:11:67:33:8d:50 (try 1/3)
+kernel: wlp2s0: send auth to 0c:11:67:33:8d:50 (try 2/3)
+kernel: wlp2s0: send auth to 0c:11:67:33:8d:50 (try 3/3)
+wpa_supplicant[585]: wlp2s0: Trying to associate with
+0c:11:67:33:8d:50 (SSID='Endless' freq=2457 MHz)
+kernel: wlp2s0: authenticated
+NetworkManager[620]: <info> [1474483558.1078] device (wlp2s0):
+supplicant interface state: authenticating -> associating
+kernel: wlp2s0: associate with 0c:11:67:33:8d:50 (try 1/3)
+kernel: wlp2s0: associate with 0c:11:67:33:8d:50 (try 2/3)
+kernel: wlp2s0: associate with 0c:11:67:33:8d:50 (try 3/3)
+wpa_supplicant[585]: wlp2s0: Associated with 0c:11:67:33:8d:50
+kernel: wlp2s0: RX AssocResp from 0c:11:67:33:8d:50 (capab=0x431 status=0 aid=5)
+kernel: wlp2s0: associated
+kernel: wlp2s0: deauthenticated from 0c:11:67:33:8d:50 (Reason:
+23=IEEE8021X_FAILED)
+
+Using monitor mode from another station, I observe:
+
+- STA sends association request
+- AP sends association response 0.01s later, STA acks
+- AP sends EAPOL 0.002s later, STA acks
+- AP sends another EAPOL 0.1s later, STA acks
+- AP sends deauthentication 0.3s later (presumably a timeout waiting
+for EAPOL response), STA acks
+- STA sends another association request 0.5s later
+- AP replies with Deauthentication (can't associated as you are deauthed)
+- STA sends another association request 1s later
+- AP replies with Deauthentication again
+- STA sends EAPOL response message, a full 2 seconds after the first
+EAPOL was received
+
+It is as if the processing of incoming frames is getting stuck for 2
+seconds, even though they were already ACKed. i.e. The first
+association requests succeeds immediately but the processing of the
+AssocResp frame (and the following EAPOLs and deauth) is delayed by
+more than 2 seconds, far longer than the AP is willing to wait.
+
+I have confirmed this perspective in the wpa_supplicant debug logs
+too, there is 2 seconds of RX silence after the first association
+request is sent before all the frames come in at once.
+
+Hope this partial info is useful in some way, I'll come back to this
+problem as time permits.
+
+Daniel
