@@ -1,320 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50339 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48053 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754804AbcJMLrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 07:47:07 -0400
-Message-ID: <1476359179.4904.16.camel@sipsolutions.net> (sfid-20161013_134846_406418_5DF3578B)
-Subject: Re: [PATCH v10] cfg80211: Provision to allow the support for
- different beacon intervals
+        id S1752436AbcJEKT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 06:19:56 -0400
+Message-ID: <1475662791.4994.39.camel@sipsolutions.net> (sfid-20161005_122005_062210_5AD7B710)
+Subject: Re: [PATCH 3/3] mac80211: multicast to unicast conversion
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Thu, 13 Oct 2016 13:46:19 +0200
-In-Reply-To: <1476277011-6937-1-git-send-email-pkushwah@qti.qualcomm.com>
-References: <1476277011-6937-1-git-send-email-pkushwah@qti.qualcomm.com>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        netdev <netdev@vger.kernel.org>
+Date: Wed, 05 Oct 2016 12:19:51 +0200
+In-Reply-To: <1475643324-2845-3-git-send-email-michael-dev@fami-braun.de>
+References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
+         <1475643324-2845-3-git-send-email-michael-dev@fami-braun.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
++netdev
 
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -421,6 +421,8 @@ static int brcmf_vif_change_validate(struct
-> brcmf_cfg80211_info *cfg,
->  		.num_different_channels = 1,
->  		.radar_detect = 0,
->  		.iftype_num = {0},
-> +		.beacon_gcd = 0,
-> +		.diff_bi = false,
->  	};
->  
->  	list_for_each_entry(pos, &cfg->vif_list, list)
-> @@ -446,6 +448,8 @@ static int brcmf_vif_add_validate(struct
-> brcmf_cfg80211_info *cfg,
->  		.num_different_channels = 1,
->  		.radar_detect = 0,
->  		.iftype_num = {0},
-> +		.beacon_gcd = 0,
-> +		.diff_bi = false,
->  	};
+> IEEE802.11-2012 proposes directed multicast service (DMS) using A-
+> MSDU frames and a station initiated control protocol. It has the
+> advantage that the station can recover the destination multicast mac
+> address, but it is not backward compatible with non QOS stations and
+> does not enable the administrator of a BSS to force this mode of
+> operation within a BSS. Additionally, it would require both the ap
+> and the station to implement the control protocol, which is optional
+> on both ends. Furthermore, I've seen a few mobile phone stations
+> locally that indicate qos support but won't complete DHCP if their
+> broadcasts are encapsulated as A-MSDU. Though they work fine with
+> this series approach.
 
-You don't need this now, since the default is 0/false, so we don't have
-to touch this file. I already removed some of the other useless
-initializers in the previous patch, and will edit this out as well - no
-need to resend.
- 
->  	list_for_each_entry(pos, &cfg->vif_list, list)
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 21bbe44..f0bcd55 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -784,11 +784,15 @@ struct cfg80211_csa_settings {
->   * @iftype_num: array with the numbers of interfaces of each
+Presumably those phones also don't even try to use DMS, right?
+
+> This patch therefore does not opt to implement DMS but instead just
+> replicates the packet and changes the destination address. As this
+> works fine with ARP, IPv4 and IPv6, it is limited to these protocols
+> and normal 802.11 multicast frames are send out for all other payload
+> protocols.
+
+How did you determine that it "works fine"?
+
+I see at least one undesirable impact of this, which DMS doesn't have;
+it breaks a client's MUST NOT requirement from RFC 1122:
+
+         An ICMP error message MUST NOT be sent as the result of
+         receiving:
+[...]
+         *    a datagram sent as a link-layer broadcast, or
+[...]
+
+since the client can no longer realize that the datagram was in fact
+sent as a link-layer broadcast (or multicast).
+
+>  include/net/cfg80211.h        |   5 ++
+>  include/uapi/linux/nl80211.h  |   7 +++
+>  net/mac80211/cfg.c            |  14 ++++++
+>  net/mac80211/debugfs_netdev.c |  29 ++++++++++++
+>  net/mac80211/ieee80211_i.h    |   1 +
+>  net/mac80211/tx.c             | 103
+> ++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/nl80211.c        |  33 ++++++++++++++
+>  net/wireless/rdev-ops.h       |  11 +++++
+>  net/wireless/trace.h          |  19 ++++++++
+>  9 files changed, 222 insertions(+)
+
+You should split the patch into cfg80211 and mac80211, IMHO it's big
+enough to do that.
+
+> + * @set_ap_unicast: set the multicast to unicast flag for a AP
 > interface
->   *	type.  The index is the interface type as specified in
-> &enum
->   *	nl80211_iftype.
-> + * @beacon_gcd: a value specifying GCD of all beaconing interfaces.
-> + * @diff_bi: a flag which denotes beacon intervals are different or
-> same.
 
-I think I'll rename both to beacon_* or *_bi, but I don't really like
-the difference in naming here.
+That API name isn't very descriptive, I'm sure we can do something
+better there.
 
->   */
->  struct iface_combination_params {
->  	int num_different_channels;
->  	u8 radar_detect;
->  	int iftype_num[NUM_NL80211_IFTYPES];
-> +	u32 beacon_gcd;
-> +	bool diff_bi;
->  };
->  
->  /**
-> @@ -3100,6 +3104,12 @@ struct ieee80211_iface_limit {
->   *	only in special cases.
->   * @radar_detect_widths: bitmap of channel widths supported for
-> radar detection
->   * @radar_detect_regions: bitmap of regions supported for radar
-> detection
-> + * @beacon_int_min_gcd: This interface combination supports
-> different
-> + *	beacon intervals.
-> + *	= 0 - all beacon intervals for different interface must be
-> same.
-> + *	> 0 - any beacon interval for the interface part of this
-> combination AND
-> + *	      *GCD* of all beacon intervals from beaconing
-> interfaces of this
-> + *	      combination must be greator or equal to this value.
+Also, perhaps we should structure this already like we would DMS, with
+a per-station toggle or even list of multicast addresses?
 
-typo: greater - will also fix
+> @@ -2261,6 +2266,8 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_MESH_PEER_AID,
+>  
+> +	NL80211_ATTR_UNICAST,
 
->   * With this structure the driver can describe which interface
->   * combinations it supports concurrently.
-> @@ -3120,7 +3130,7 @@ struct ieee80211_iface_limit {
->   *  };
->   *
->   *
-> - * 2. Allow #{AP, P2P-GO} <= 8, channels = 1, 8 total:
-> + * 2. Allow #{AP, P2P-GO} <= 8, BI min gcd = 10, channels = 1, 8
-> total:
->   *
->   *  struct ieee80211_iface_limit limits2[] = {
->   *	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) |
-> @@ -3131,6 +3141,7 @@ struct ieee80211_iface_limit {
->   *	.n_limits = ARRAY_SIZE(limits2),
->   *	.max_interfaces = 8,
->   *	.num_different_channels = 1,
-> + *	.beacon_int_min_gcd = 10,
->   *  };
->   *
->   *
-> @@ -3158,6 +3169,7 @@ struct ieee80211_iface_combination {
->  	bool beacon_int_infra_match;
->  	u8 radar_detect_widths;
->  	u8 radar_detect_regions;
-> +	u32 beacon_int_min_gcd;
->  };
->  
->  struct ieee80211_txrx_stypes {
-> diff --git a/include/uapi/linux/nl80211.h
-> b/include/uapi/linux/nl80211.h
-> index 56368e9..3c19cca 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -4280,6 +4280,9 @@ enum nl80211_iface_limit_attrs {
->   *	of supported channel widths for radar detection.
->   * @NL80211_IFACE_COMB_RADAR_DETECT_REGIONS: u32 attribute
-> containing the bitmap
->   *	of supported regulatory regions for radar detection.
-> + * @NL80211_IFACE_COMB_BI_MIN_GCD: u32 attribute specifying the
-> minimum GCD of
-> + *	different beacon intervals supported by all the interface
-> combinations
-> + *	in this group (if not present, all beacon interval must
-> match).
+missing docs, but likely doesn't matter after the comment above
 
-beacon intervals
-
->   * @NUM_NL80211_IFACE_COMB: number of attributes
->   * @MAX_NL80211_IFACE_COMB: highest attribute number
->   *
-> @@ -4287,8 +4290,8 @@ enum nl80211_iface_limit_attrs {
->   *	limits = [ #{STA} <= 1, #{AP} <= 1 ], matching BI,
-> channels = 1, max = 2
->   *	=> allows an AP and a STA that must match BIs
->   *
-> - *	numbers = [ #{AP, P2P-GO} <= 8 ], channels = 1, max = 8
-> - *	=> allows 8 of AP/GO
-> + *	numbers = [ #{AP, P2P-GO} <= 8 ], BI min gcd, channels =
-> 1, max = 8,
-> + *	=> allows 8 of AP/GO that can have BI gcd >= min gcd
->   *
->   *	numbers = [ #{STA} <= 2 ], channels = 2, max = 2
->   *	=> allows two STAs on different channels
-> @@ -4314,6 +4317,7 @@ enum nl80211_if_combination_attrs {
->  	NL80211_IFACE_COMB_NUM_CHANNELS,
->  	NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
->  	NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
-> +	NL80211_IFACE_COMB_BI_MIN_GCD,
->  
->  	/* keep last */
->  	NUM_NL80211_IFACE_COMB,
-> diff --git a/net/wireless/core.h b/net/wireless/core.h
-> index 08d2e94..21e3188 100644
-> --- a/net/wireless/core.h
-> +++ b/net/wireless/core.h
-> @@ -475,7 +475,7 @@ int ieee80211_get_ratemask(struct
-> ieee80211_supported_band *sband,
->  			   u32 *mask);
->  
->  int cfg80211_validate_beacon_int(struct cfg80211_registered_device
-> *rdev,
-> -				 u32 beacon_int);
-> +				 enum nl80211_iftype iftype, u32
-> beacon_int);
->  
->  void cfg80211_update_iface_num(struct cfg80211_registered_device
-> *rdev,
->  			       enum nl80211_iftype iftype, int num);
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index c510810..903cd5a 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1075,6 +1075,10 @@ static int
-> nl80211_put_iface_combinations(struct wiphy *wiphy,
->  		     nla_put_u32(msg,
-> NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
->  				c->radar_detect_regions)))
->  			goto nla_put_failure;
-> +		if (c->beacon_int_min_gcd &&
-> +		    nla_put_u32(msg, NL80211_IFACE_COMB_BI_MIN_GCD,
-> +				c->beacon_int_min_gcd))
-> +			goto nla_put_failure;
->  
->  		nla_nest_end(msg, nl_combi);
->  	}
-> @@ -3803,7 +3807,8 @@ static int nl80211_start_ap(struct sk_buff
-> *skb, struct genl_info *info)
->  	params.dtim_period =
->  		nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
->  
-> -	err = cfg80211_validate_beacon_int(rdev,
-> params.beacon_interval);
-> +	err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr-
-> >iftype,
-> +					   params.beacon_interval);
->  	if (err)
->  		return err;
->  
-> @@ -8152,7 +8157,8 @@ static int nl80211_join_ibss(struct sk_buff
-> *skb, struct genl_info *info)
->  		ibss.beacon_interval =
->  			nla_get_u32(info-
-> >attrs[NL80211_ATTR_BEACON_INTERVAL]);
->  
-> -	err = cfg80211_validate_beacon_int(rdev,
-> ibss.beacon_interval);
-> +	err = cfg80211_validate_beacon_int(rdev,
-> NL80211_IFTYPE_ADHOC,
-> +					   ibss.beacon_interval);
->  	if (err)
->  		return err;
->  
-> @@ -9417,7 +9423,9 @@ static int nl80211_join_mesh(struct sk_buff
-> *skb, struct genl_info *info)
->  		setup.beacon_interval =
->  			nla_get_u32(info-
-> >attrs[NL80211_ATTR_BEACON_INTERVAL]);
->  
-> -		err = cfg80211_validate_beacon_int(rdev,
-> setup.beacon_interval);
-> +		err = cfg80211_validate_beacon_int(rdev,
-> +						   NL80211_IFTYPE_ME
-> SH_POINT,
-> +						   setup.beacon_inte
-> rval);
->  		if (err)
->  			return err;
->  	}
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index 0d69b25..3f3d684 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -1559,24 +1559,49 @@ bool
-> ieee80211_chandef_to_operating_class(struct cfg80211_chan_def
-> *chandef,
->  EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
->  
->  int cfg80211_validate_beacon_int(struct cfg80211_registered_device
-> *rdev,
-> +				 enum nl80211_iftype iftype,
->  				 u32 beacon_int)
->  {
->  	struct wireless_dev *wdev;
->  	int res = 0;
-> +	u32 bi_prev, tmp_bi;
-> +	struct iface_combination_params params = {
-> +		.num_different_channels = 0,
-> +		.radar_detect = 0,
-> +		.iftype_num = {0},
-> +		.beacon_gcd = beacon_int,	/* GCD(n) = n */
-> +		.diff_bi = false,
-> +	};
->  
->  	if (beacon_int < 10 || beacon_int > 10000)
->  		return -EINVAL;
->  
-> +	params.iftype_num[iftype] = 1;
-> +	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-> +		if (!wdev->beacon_interval)
-> +			continue;
+> +static int ieee80211_set_ap_unicast(struct wiphy *wiphy, struct
+> net_device *dev,
+> +				    const bool unicast)
+> +{
+> +	struct ieee80211_sub_if_data *sdata =
+> IEEE80211_DEV_TO_SUB_IF(dev);
 > +
-> +		params.iftype_num[wdev->iftype]++;
+> +	if (sdata->vif.type != NL80211_IFTYPE_AP)
+> +		return -1;
+
+Was this not documented but also intended to apply to its dependent
+VLANs?
+
+> +static ssize_t
+> +ieee80211_if_fmt_unicast(const struct ieee80211_sub_if_data *sdata,
+> +			 char *buf, int buflen)
+> +{
+> +	const struct ieee80211_if_ap *ifap = &sdata->u.ap;
+> +
+> +	return snprintf(buf, buflen, "0x%x\n", ifap->unicast);
+> +}
+> +
+> +static ssize_t
+> +ieee80211_if_parse_unicast(struct ieee80211_sub_if_data *sdata,
+> +			   const char *buf, int buflen)
+> +{
+> +	struct ieee80211_if_ap *ifap = &sdata->u.ap;
+> +	u8 val;
+> +	int ret;
+> +
+> +	ret = kstrtou8(buf, 0, &val);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ifap->unicast = val ? 1 : 0;
+> +
+> +	return buflen;
+> +}
+> +
+> +IEEE80211_IF_FILE_RW(unicast);
+
+No need for this, at least the setter, any more.
+
+> +/* Check if multicast to unicast conversion is needed and do it.
+> + * Returns 1 if skb was freed and should not be send out. */
+
+wrong comment style :)
+
+> +static int
+> +ieee80211_tx_multicast_to_unicast(struct ieee80211_sub_if_data
+> *sdata,
+> +				  struct sk_buff *skb,
+> u32  info_flags)
+> +{
+> +	struct ieee80211_local *local = sdata->local;
+> +	const struct ethhdr *eth = (void *)skb->data;
+> +	const struct vlan_ethhdr *ethvlan = (void *)skb->data;
+> +	struct sta_info *sta, *prev = NULL;
+> +	struct sk_buff *cloned_skb;
+> +	u16 ethertype;
+> +
+> +	/* multicast to unicast conversion only for AP interfaces */
+> +	switch (sdata->vif.type) {
+> +	case NL80211_IFTYPE_AP_VLAN:
+> +		sta = rcu_dereference(sdata->u.vlan.sta);
+> +		if (sta) /* 4addr */
+> +			return 0;
+> +	case NL80211_IFTYPE_AP:
+> +		break;
+> +	default:
+> +		return 0;
 > +	}
 > +
->  	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
->  		if (!wdev->beacon_interval)
->  			continue;
->  		if (wdev->beacon_interval != beacon_int) {
-> -			res = -EINVAL;
-> +			params.diff_bi = true;
-> +			/* Get the GCD */
-> +			bi_prev = wdev->beacon_interval;
-> +			while (bi_prev != 0) {
-> +				tmp_bi = bi_prev;
-> +				bi_prev = params.beacon_gcd %
-> bi_prev;
-> +				params.beacon_gcd = tmp_bi;
-> +			}
->  			break;
->  		}
->  	}
->  
-> -	return res;
-> +	res = cfg80211_check_combinations(&rdev->wiphy, &params);
-> +	return (res < 0) ? res : 0;
->  }
->  
->  int cfg80211_iter_combinations(struct wiphy *wiphy,
-> @@ -1652,6 +1677,14 @@ int cfg80211_iter_combinations(struct wiphy
-> *wiphy,
->  		if ((all_iftypes & used_iftypes) != used_iftypes)
->  			goto cont;
->  
-> +		if (params->beacon_gcd) {
-> +			if (c->beacon_int_min_gcd &&
-> +			    params->beacon_gcd < c-
-> >beacon_int_min_gcd)
-> +				return -EINVAL;
-> +			if (!c->beacon_int_min_gcd && params-
-> >diff_bi)
-> +				goto cont;
+> +	/* check runtime toggle for this bss */
+> +	if (!sdata->bss->unicast)
+> +		return 0;
+> +
+> +	/* check if this is a multicast frame */
+> +	if (!is_multicast_ether_addr(eth->h_dest))
+> +		return 0;
+
+That should probably come first, would make this far easier to read.
+
+> +		if (unlikely(!memcmp(eth->h_source, sta->sta.addr,
+> ETH_ALEN)))
+> +			/* do not send back to source */
+> +			continue;
+
+ether_addr_something, instead of memcmp?
+
+> +		if (unlikely(is_multicast_ether_addr(sta-
+> >sta.addr))) {
+> +			WARN_ONCE(1, "sta with multicast address
+> %pM",
+> +				  sta->sta.addr);
+> +			continue;
 > +		}
-> 
-Otherwise looks good.
+
+Err, no, remove this... it cannot happen. We could move the check into
+cfg80211 from mac80211, but we surely shouldn't add it into the TX
+hotpath!
+
+> +		if (prev) {
+> +			cloned_skb = skb_clone(skb, GFP_ATOMIC);
+> +			if (likely(!ieee80211_change_da(cloned_skb,
+> prev)))
+> +				ieee80211_subif_start_xmit(cloned_sk
+> b,
+> +							   cloned_sk
+> b->dev);
+
+I'm not very happy with this recursion, but I guess it can't be avoided
+easily. However, you can easily call the more
+sensible __ieee80211_subif_start_xmit() instead of this one.
+
+> +	unicast = nla_data(info->attrs[NL80211_ATTR_UNICAST]);
+
+What's this supposed to mean?
 
 johannes
