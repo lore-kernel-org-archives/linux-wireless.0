@@ -1,81 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54469 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:58404 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758623AbcJRHBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 03:01:04 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-10-18
-Date: Tue, 18 Oct 2016 09:00:57 +0200
-Message-Id: <1476774058-9279-1-git-send-email-johannes@sipsolutions.net> (sfid-20161018_090132_899373_8424B95A)
+        id S1751932AbcJEUeU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 16:34:20 -0400
+Subject: Re: [RFC 0/3] of: add common bindings to (de)activate IEEE 802.11
+ bands
+To: Rob Herring <robh+dt@kernel.org>
+References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
+ <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
+ <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com>
+ <23f49efe-ddef-ea16-00de-7477e4872d82@nbd.name>
+ <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <a8b3e633-fc5e-31ec-9e44-0ee4be58d8bc@nbd.name> (sfid-20161005_223423_673303_522FFC50)
+Date: Wed, 5 Oct 2016 22:34:14 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 2016-10-05 22:31, Rob Herring wrote:
+> On Wed, Oct 5, 2016 at 1:36 PM, Felix Fietkau <nbd@nbd.name> wrote:
+>> On 2016-10-05 20:25, Martin Blumenstingl wrote:
+>>> On Mon, Oct 3, 2016 at 5:22 PM, Rob Herring <robh+dt@kernel.org> wrote:
+>>>> On Sun, Oct 2, 2016 at 5:50 PM, Martin Blumenstingl
+>>>> <martin.blumenstingl@googlemail.com> wrote:
+>>>>> There are at least two drivers (ath9k and mt76) out there, where
+>>>>> devicetree authors need to override the enabled bands.
+>>>>>
+>>>>> For ath9k there is only one use-case: disabling a band which has been
+>>>>> incorrectly enabled by the vendor in the EEPROM (enabling a band is not
+>>>>> possible because the calibration data would be missing in the EEPROM).
+>>>>> The mt76 driver (currently pending for review) however allows enabling
+>>>>> and disabling the 2.4GHz and 5GHz band, see [0].
+>>>>>
+>>>>> Based on the discussion of (earlier versions of) my ath9k devicetree
+>>>>> patch it was suggested [1] that we use enable- and disable- properties.
+>>>>> The current patch implements:
+>>>>> - bands can be enabled or disabled with the corresponding property
+>>>>> - if both (disable and enable) properties are given and a driver asks
+>>>>>   whether the band is enabled then the logic will return false (= not
+>>>>>   enabled, preferring the disabled flag)
+>>>>> - if both (disable and enable) properties are given and a driver asks
+>>>>>   whether the band is disabled then the logic will return true (again,
+>>>>>   preferring the disabled flag over the enabled flag)
+>>>>>
+>>>>> We can still change the logic to do what the mt76 driver does (I am
+>>>>> fine with both solutions):
+>>>>> - property not available: driver decides which bands to enable
+>>>>> - property set to 0: disable the band
+>>>>> - property set to 1: enable the band
+>>>>
+>>>> I prefer this way. Really, I'd prefer just a boolean disable property.
+>>>> I'm not sure why you need the enable. We usually have these tri-state
+>>>> properties when you want not present to mean use the bootloader or
+>>>> default setting. Try to make not present the most common case.
+>>> Felix: could you please give a few details why mt76 can not only
+>>> disable but also enable a specific band?
+>>> There is no specific comment in the sources [0] why this is needed.
+>>> All other drivers that I am aware of (ath9k, rt2x00) only allow
+>>> disabling a specific band, they never enable it (this has to be done
+>>> explicitly by the EEPROM).
+>> None of the devices use it at the moment, I probably added it when I
+>> played with a device that had broken EEPROM data. I guess I decided to
+>> do it this way because on many devices the band capability field simply
+>> cannot be trusted.
+>> I guess I would be okay with just having a disable property and adding
+>> an enable property later only if we end up actually needing it.
+> 
+> If EEPROM is commonly wrong or missing, then seems like you want to
+> plan ahead and support both enable and disable.
+> 
+> The other approach I've mentioned before is just put raw EEPROM data
+> into DT to override the EEPROM. This would be better if there's a
+> large number of settings you need.
+So far, other EEPROM settings didn't need to be changed.
 
-As I mention in the tag message, the most urgent fix here is for
-the VMAP_STACK vs. software crypto usage. I ended up applying Ard's
-fix that dynamically allocates everything in one go, perhaps we'll
-find a better solution in the future, but in the meantime this will
-get things working again (rather than crashing or getting BUG_ON),
-and normally it's a rarely used code path since hardware crypto is
-used for almost all devices.
-
-Please pull, or let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 6b25e21fa6f26d0f0d45f161d169029411c84286:
-
-  Merge tag 'drm-for-v4.9' of git://people.freedesktop.org/~airlied/linux (2016-10-11 18:12:22 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-10-18
-
-for you to fetch changes up to f4a067f9ffca603b45f7e82ddd2ba50e5904cea3:
-
-  mac80211: move struct aead_req off the stack (2016-10-17 16:14:04 +0200)
-
-----------------------------------------------------------------
-This is relatively small, mostly to get the SG/crypto
-from stack removal fix that crashes things when VMAP
-stack is used in conjunction with software crypto.
-
-Aside from that, we have:
- * a fix for AP_VLAN usage with the nl80211 frame command
- * two fixes (and two preparation patches) for A-MSDU, one
-   to discard group-addressed (multicast) and unexpected
-   4-address A-MSDUs, the other to validate A-MSDU inner
-   MAC addresses properly to prevent controlled port bypass
-
-----------------------------------------------------------------
-Ard Biesheuvel (1):
-      mac80211: move struct aead_req off the stack
-
-Johannes Berg (4):
-      mac80211: discard multicast and 4-addr A-MSDUs
-      cfg80211: let ieee80211_amsdu_to_8023s() take only header-less SKB
-      cfg80211: add ability to check DA/SA in A-MSDU decapsulation
-      mac80211: validate DA/SA during A-MSDU decapsulation
-
-Michael Braun (1):
-      mac80211: fix CMD_FRAME for AP_VLAN
-
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  2 +-
- include/net/cfg80211.h                             | 32 ++++++++++----
- net/mac80211/aes_ccm.c                             | 46 ++++++++++++-------
- net/mac80211/aes_ccm.h                             |  8 ++--
- net/mac80211/aes_gcm.c                             | 43 +++++++++++-------
- net/mac80211/aes_gcm.h                             |  6 ++-
- net/mac80211/aes_gmac.c                            | 26 +++++------
- net/mac80211/aes_gmac.h                            |  4 ++
- net/mac80211/offchannel.c                          |  2 +-
- net/mac80211/rx.c                                  | 51 +++++++++++++++++-----
- net/mac80211/wpa.c                                 | 22 ++++------
- net/wireless/util.c                                | 34 +++++++--------
- 12 files changed, 175 insertions(+), 101 deletions(-)
+- Felix
