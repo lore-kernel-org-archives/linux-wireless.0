@@ -1,77 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38427 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753493AbcJWTmL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Oct 2016 15:42:11 -0400
-Received: by mail-wm0-f53.google.com with SMTP id c78so78678739wme.1
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2016 12:42:10 -0700 (PDT)
-Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
-To: Jonas Gorski <jonas.gorski@gmail.com>
-References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
- <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
- <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
- <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
- <bffb5d2b-03f3-f451-dd01-ef2c796bfc30@gmail.com>
- <CAOiHx==nbvwiiMZaqg5okdM6ab9ZLc+JOPdHdJJMUh9uhEt3PQ@mail.gmail.com>
- <43544382-075a-6437-8f72-133a907d9def@gmail.com>
- <CAOiHx=kWh3P=Ye1Bnd35pRvwWyOdqEyYFVXvTTz60_Hj4TDFFg@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Oliver Zemann <oliver.zemann@gmail.com>
-Message-ID: <faedb36a-d99c-5891-e9c6-40ecc4d54748@gmail.com> (sfid-20161023_214215_331594_5D3D59FB)
-Date: Sun, 23 Oct 2016 21:42:08 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAOiHx=kWh3P=Ye1Bnd35pRvwWyOdqEyYFVXvTTz60_Hj4TDFFg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:47985 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753085AbcJEKBV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 06:01:21 -0400
+Message-ID: <1475661677.4994.27.camel@sipsolutions.net> (sfid-20161005_120124_711448_0B8D4E82)
+Subject: Re: [PATCH 2/3] mac80211: filter multicast data packets on AP /
+ AP_VLAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Wed, 05 Oct 2016 12:01:17 +0200
+In-Reply-To: <1475643324-2845-2-git-send-email-michael-dev@fami-braun.de>
+References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
+         <1475643324-2845-2-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, but its still not working. I dont get any error now when i do 
-modprobe and installed is the wle900
+Please also add "v3" to the subject line, e.g. using --subject-prefix
+'PATCH v3' when using git send-email.
 
-[root@alarm alarm]# rmmod ath10k_pci
-[root@alarm alarm]# modprobe ath10k_pci irq_mode=1
+> +static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	// add num_mcast_sta_vlan using name num_mcast_sta
 
-but:
+Please don't use // style comments.
 
-[root@alarm alarm]# dmesg | grep ath10k
-[  220.356314] ath10k_pci 0000:02:00.0: Refused to change power state, 
-currently in D3
-[  220.394265] ath10k_pci 0000:02:00.0: failed to wake up device : -110
-[  220.400770] ath10k_pci: probe of 0000:02:00.0 failed with error -110
+> +static inline void
+> +ieee80211_vif_inc_num_mcast(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	if (sdata->vif.type != NL80211_IFTYPE_AP &&
+> +	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+> +		return;
 
-[root@alarm alarm]# cat /proc/cmdline
-console=ttyS0,115200 root=/dev/mmcblk0p1 rw rootwait ath10k_pci.irq_mode=1
+That's pointless, given this:
 
-Thanks for your patience
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP)
+> +		atomic_inc(&sdata->u.ap.num_mcast_sta);
+> +	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+> +		atomic_inc(&sdata->u.vlan.num_mcast_sta);
+> +}
+> +
+> +static inline void
+> +ieee80211_vif_dec_num_mcast(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	if (sdata->vif.type != NL80211_IFTYPE_AP &&
+> +	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
+> +		return;
+> +
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP)
+> +		atomic_dec(&sdata->u.ap.num_mcast_sta);
+> +	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+> +		atomic_dec(&sdata->u.vlan.num_mcast_sta);
 
-Regards
-Oli
+Same here.
 
-Am 23.10.2016 um 21:33 schrieb Jonas Gorski:
-> On 23 October 2016 at 17:53, Oliver Zemann <oliver.zemann@gmail.com> wrote:
->> Thanks for that info Jonas. I passed optargs=irq_mode=1 in /boot/uEnv.txt on
->> archlinux arm (kernel 4.4.23) and verified with
->>
->> [root@alarm ~]# cat /proc/cmdline
->> console=ttyS0,115200 root=/dev/mmcblk0p1 rw rootwait irq_mode=1
->>
->> But it still does not work:
->>
->> [root@alarm ~]# rmmod ath10k_pci
->> [root@alarm ~]# modprobe ath10k_pci
->> [   28.791404] ath10k_pci 0000:02:00.0: Refused to change power state,
->> currently in D3
->> [   28.829352] ath10k_pci 0000:02:00.0: failed to wake up device : -110
->> [   28.835861] ath10k_pci: probe of 0000:02:00.0 failed with error -110
->>
->> Did i do something wrong? If somehow possible, i would prefer to not rebuild
->> the kernel and somehow configure the existing one without changes.
-> For the kernel command line you need to prefix with the module name,
-> i.e. "ath10k_pci.irq_mode=1". Alternative is while modprobing with
-> "modprobe ath10_pci irq_mode=1". See
-> <https://www.kernel.org/doc/Documentation/kernel-parameters.txt> for
-> details.
->
-> Regards
-> Jonas
+> +}
+> +
+> +/* This function returns the number of multicast stations connected
+> to this
+> + * interface. It returns -1 if that number is not tracked, that is
+> for netdevs
+> + * not in AP or AP_VLAN mode or when using 4addr. */
+> +static inline int
+> +ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
+> +{
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP)
+> +		return atomic_read(&sdata->u.ap.num_mcast_sta);
+> +	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
+> +		 !sdata->u.vlan.sta)
+> +		return atomic_read(&sdata->u.vlan.num_mcast_sta);
+> +	else
+> +		return -1;
+
+All the "else" branches are useless since you return immediately inside
+each if.
+
+> -       } else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
+> -                           ieee80211_is_data(hdr->frame_control) &&
+> -                           !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
+> +       } else if (unlikely(ieee80211_vif_get_num_mcast_if(tx->sdata) == 0 &&
+> +                           ieee80211_is_data(hdr->frame_control))) {
+
+any particular reason to invert the order of the checks? seems checking
+for data first should be faster/cheaper from the cache, than accessing
+the counters?
+
+johannes
