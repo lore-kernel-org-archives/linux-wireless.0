@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57912 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753338AbcJNJK7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 05:10:59 -0400
-Message-ID: <1476436248.31114.21.camel@sipsolutions.net> (sfid-20161014_111138_333756_0E067CDB)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Date: Fri, 14 Oct 2016 11:10:48 +0200
-In-Reply-To: <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com> (sfid-20161014_110501_838823_6646CA89)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         <1476366354.4904.31.camel@sipsolutions.net>
-         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
-         <1476429916.4382.12.camel@sipsolutions.net>
-         <1476433699.31114.6.camel@sipsolutions.net>
-         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
-         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
-         <1476434561.31114.7.camel@sipsolutions.net>
-         <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
-         <1476435303.31114.14.camel@sipsolutions.net>
-         <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
-         (sfid-20161014_110501_838823_6646CA89)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35832 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751320AbcJEQa2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 5 Oct 2016 12:30:28 -0400
+Received: by mail-pf0-f176.google.com with SMTP id s13so90316383pfd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 09:30:27 -0700 (PDT)
+Date: Wed, 5 Oct 2016 09:30:24 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
+ unregister
+Message-ID: <20161005163024.GA54237@google.com> (sfid-20161005_183031_687873_09772CEC)
+References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
+ <20161004215814.GB31652@localhost>
+ <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-14 at 10:05 +0100, Ard Biesheuvel wrote:
-> 
-> Indeed. And the decrypt path does the same for auth_tag[].
+Hi,
 
-Hadn't gotten that far, due to the BUG_ON() in CONFIG_DEBUG_SG in the
-encrypt path :)
+On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > Sent: Wednesday, October 05, 2016 3:28 AM
+> > To: Amitkumar Karwar
+> > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > rajatja@google.com; briannorris@google.com; Xinming Hu
+> > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
+> > unregister
+> > 
+> > Hi,
+> > 
+> > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
 
-> But that still means there are two separate problems here, one which
-> affects the WPA code, and one that only affects the generic CCM
-> chaining mode (but not the accelerated arm64 implementation)
+> > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
+> > mwifiex_adapter *adapter)
+> > >  				pci_disable_msi(pdev);
+> > >  	       }
+> > >  	}
+> > > +	card->adapter = NULL;
+> > 
+> > I think you have a similar problem here as in patch 2; there is no
+> > locking to protect fields in struct pcie_service_card or struct
+> > sdio_mmc_card below. That problem kind of already exists, except that
+> > you only write the value of card->adapter once at registration time, so
+> > it's not actually unsafe. But now that you're introducing a second
+> > write, you have a problem.
+> > 
+> > Brian
+> > 
+> 
+> We have a global "add_remove_card_sem" semaphore in our code for
+> synchronizing initialization and teardown threads. Ideally "init +
+> teardown/reboot" should not have a race issue with this logic
+> 
+> Later there was a loophole introduced in this after using async
+> firmware download API. During initialization, firmware downloads
+> asynchronously in a separate thread where might have released the
+> semaphore. I am working on a patch to fix this.
+> 
+> So "card->adapter" doesn't need to have locking. Even if we have two
+> write operations, those two threads can't run simultaneously due to
+> above mentioned logic.
 
-Yes. The generic CCM chaining still doesn't typically have a request on
-the stack though. In fact, ESP (net/ipv4/esp4.c) for example will do
-temporary allocations with kmalloc for every frame, it seems.
+What about writes racing with reads? You have lots of unsynchronized
+cases that read this, although most of them should be halted by now
+(e.g., cmd processing). I was looking at suspend() in particular, which
+I thought you were looking at in this patch series.
 
-> Unsurprisingly, I would strongly prefer those to be fixed properly
-> rather than backing out my patch, but I'm happy to help out whichever
-> solution we reach consensus on.
-
-Yeah, obviously, it would be good to use the accelerated versions after
-all.
-
-> I will check whether this removes the issue when not using
-> crypto/ccm.ko
-
-Ok. I think we can probably live with having those 48 bytes in per-CPU
-buffers, but I suppose we don't really want to have ~500.
-
-johannes
+Brian
