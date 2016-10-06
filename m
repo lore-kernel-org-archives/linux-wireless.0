@@ -1,37 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45449 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751802AbcJCH0y (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:35796 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965335AbcJFJfZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 03:26:54 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix big-endian problem reporting mactime
-References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
-        <1475178055-16924-3-git-send-email-Jes.Sorensen@redhat.com>
-Date: Mon, 03 Oct 2016 10:26:50 +0300
-In-Reply-To: <1475178055-16924-3-git-send-email-Jes.Sorensen@redhat.com> (Jes
-        Sorensen's message of "Thu, 29 Sep 2016 15:40:55 -0400")
-Message-ID: <87shsdsxj9.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_092658_268805_2110AFCB)
+        Thu, 6 Oct 2016 05:35:25 -0400
+Received: by mail-io0-f194.google.com with SMTP id p26so602552ioo.2
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 02:35:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161005115013.GA22099@symbol-HP-ZBook-15>
+References: <20161005115013.GA22099@symbol-HP-ZBook-15>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 6 Oct 2016 20:35:03 +1100
+Message-ID: <CAGRGNgWCxLUz0=EUgtNQ5pLo2wCEpsMeNQHYCpKfh12irp6NDg@mail.gmail.com> (sfid-20161006_113540_234289_39C47D8D)
+Subject: Re: [PATCH] [wl18xx] Fix memory leakage if kzalloc fails
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        sahu.rameshwar73@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+Hi,
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Wed, Oct 5, 2016 at 10:50 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> This patch is added to properly handle memory leak if kzalloc fails
+> in wl18xx_scan_send() and wl18xx_scan_sched_scan_config()
+
+What memory leak?
+
+> Signed-off-by: Souptick Joarder <jrdr.linux@gmail.com>
+> Signed-off-by: Rameshwar Sahu <sahu.rameshwar73@gmail.com>
+
+Why two signed-off-bys?
+
+> ---
+>  drivers/net/wireless/ti/wl18xx/scan.c | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 >
-> The full RX descriptor is converted so converting tsfl again would
-> return it to it's original endian value.
+> diff --git a/drivers/net/wireless/ti/wl18xx/scan.c b/drivers/net/wireless/ti/wl18xx/scan.c
+> index 4e522154..aed22e1 100644
+> --- a/drivers/net/wireless/ti/wl18xx/scan.c
+> +++ b/drivers/net/wireless/ti/wl18xx/scan.c
+> @@ -41,14 +41,13 @@ static void wl18xx_adjust_channels(struct wl18xx_cmd_scan_params *cmd,
+>  static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>                             struct cfg80211_scan_request *req)
+>  {
+> -       struct wl18xx_cmd_scan_params *cmd;
+> +       struct wl18xx_cmd_scan_params *cmd = NULL;
+>         struct wlcore_scan_channels *cmd_channels = NULL;
+>         int ret;
 >
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>         cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+>         if (!cmd) {
+> -               ret = -ENOMEM;
+> -               goto out;
+> +               return -ENOMEM;
+>         }
+>
+>         /* scan on the dev role if the regular one is not started */
+> @@ -59,7 +58,7 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>
+>         if (WARN_ON(cmd->role_id == WL12XX_INVALID_ROLE_ID)) {
+>                 ret = -EINVAL;
+> -               goto out;
+> +               goto err_cmd_free;
+>         }
+>
+>         cmd->scan_type = SCAN_TYPE_SEARCH;
+> @@ -84,7 +83,7 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>         cmd_channels = kzalloc(sizeof(*cmd_channels), GFP_KERNEL);
+>         if (!cmd_channels) {
+>                 ret = -ENOMEM;
+> -               goto out;
+> +               goto err_cmd_free;
+>         }
+>
+>         wlcore_set_scan_chan_params(wl, cmd_channels, req->channels,
+> @@ -153,6 +152,7 @@ static int wl18xx_scan_send(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+>
+>  out:
+>         kfree(cmd_channels);
+> +err_cmd_free:
 
-I'll add:
+kfree(NULL) is valid, so therefore the out: and err_cmd_free: labels
+are equivalent from a memory freeing perspective, so where exactly are
+we leaking memory in this function?
 
-Cc: stable@vger.kernel.org # 4.8+
+>         kfree(cmd);
+>         return ret;
+>  }
+> @@ -171,7 +171,7 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
+>                                   struct cfg80211_sched_scan_request *req,
+>                                   struct ieee80211_scan_ies *ies)
+>  {
+> -       struct wl18xx_cmd_scan_params *cmd;
+> +       struct wl18xx_cmd_scan_params *cmd = NULL;
+>         struct wlcore_scan_channels *cmd_channels = NULL;
+>         struct conf_sched_scan_settings *c = &wl->conf.sched_scan;
+>         int ret;
+> @@ -185,15 +185,14 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
+>
+>         cmd = kzalloc(sizeof(*cmd), GFP_KERNEL);
+>         if (!cmd) {
+> -               ret = -ENOMEM;
+> -               goto out;
+> +               return -ENOMEM;
+>         }
+>
+>         cmd->role_id = wlvif->role_id;
+>
+>         if (WARN_ON(cmd->role_id == WL12XX_INVALID_ROLE_ID)) {
+>                 ret = -EINVAL;
+> -               goto out;
+> +               goto err_cmd_free;
+>         }
+>
+>         cmd->scan_type = SCAN_TYPE_PERIODIC;
+> @@ -218,7 +217,7 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
+>         cmd_channels = kzalloc(sizeof(*cmd_channels), GFP_KERNEL);
+>         if (!cmd_channels) {
+>                 ret = -ENOMEM;
+> -               goto out;
+> +               goto err_cmd_free;
+>         }
+>
+>         /* configure channels */
+> @@ -296,6 +295,7 @@ int wl18xx_scan_sched_scan_config(struct wl1271 *wl,
+>
+>  out:
+>         kfree(cmd_channels);
+> +err_cmd_free:
+
+Same question here.
+
+>         kfree(cmd);
+>         return ret;
+>  }
+> --
+> 1.9.1
+>
+
+
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
