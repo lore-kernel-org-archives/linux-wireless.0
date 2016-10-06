@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46256 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752200AbcJCMet (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 08:34:49 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix big-endian problem reporting mactime
-References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
-        <1475178055-16924-3-git-send-email-Jes.Sorensen@redhat.com>
-        <87shsdsxj9.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 03 Oct 2016 08:34:47 -0400
-In-Reply-To: <87shsdsxj9.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Mon, 03 Oct 2016 10:26:50 +0300")
-Message-ID: <wrfjint93920.fsf@redhat.com> (sfid-20161003_143453_063908_2188A87E)
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34618 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752434AbcJFU3J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Oct 2016 16:29:09 -0400
+Received: by mail-oi0-f41.google.com with SMTP id n132so35225983oih.1
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 13:29:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87r37ukjr5.fsf@kamboji.qca.qualcomm.com>
+References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
+ <87fuodswlu.fsf@kamboji.qca.qualcomm.com> <CAOiWkA_fuhzPeF7qPP0hLN3KTZUOi6_te5Zc3+vxKQ9GRj0VBw@mail.gmail.com>
+ <87r37ukjr5.fsf@kamboji.qca.qualcomm.com>
+From: Marty Faltesek <mfaltesek@google.com>
+Date: Thu, 6 Oct 2016 16:29:08 -0400
+Message-ID: <CAOiWkA92pCLz3jbbhcs0ba_mbwfUscrdGVN_D2W03PANBp_DmQ@mail.gmail.com> (sfid-20161006_222913_713681_4993A31E)
+Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes.Sorensen@redhat.com writes:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> The full RX descriptor is converted so converting tsfl again would
->> return it to it's original endian value.
->>
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> I'll add:
->
-> Cc: stable@vger.kernel.org # 4.8+
+OK the v2 patch is not based on 9340953. If you  queue this in 4.10 as
+planned then just let me know and
+I'll rev v3 based on top of 9340953.
 
-Appreciate it!
-
-Jes
+On Thu, Oct 6, 2016 at 3:40 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Marty Faltesek <mfaltesek@google.com> writes:
+>
+>> On Mon, Oct 3, 2016 at 3:46 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>>> Marty Faltesek <mfaltesek@google.com> writes:
+>>>
+>>>> Caching calibration data allows it to be accessed when the
+>>>> device is not active.
+>>>>
+>>>> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+>>>
+>>> No comma in the title, please.
+>>>
+>>> What tree did you use as the baseline? This doesn't seem to apply to
+>>> ath.git:
+>>
+>> We use backports 20160122 which has not been updated since earlier this year.
+>> I can forward port it to your tree, and make sure
+>> it builds but won't be able to test it. Will that be OK?
+>
+> Sure, I can test it.
+>
+>>> Also please note that this patch (which I'm queuing to 4.9) touches the
+>>> same area:
+>>>
+>>> ath10k: fix debug cal data file
+>>>
+>>> https://patchwork.kernel.org/patch/9340953/
+>>
+>> I've modified this too, and this won't be necessary, so can you drop
+>> it? If not, let me know and I'll pull it in and make sure I'm based
+>> off it too.
+>
+> Actually I was first planning to push 9340953 to 4.9 and take your patch
+> to 4.10. But your patch is a cleaner approach to this and maybe I should
+> push that to 4.9 instead? Need to think a bit more.
+>
+> --
+> Kalle Valo
