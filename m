@@ -1,145 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12629 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751512AbcJ2Fvp (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33123 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752899AbcJFR2V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Oct 2016 01:51:45 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 2/7] wil6210: add support for power save enable / disable
-Date: Sat, 29 Oct 2016 08:51:22 +0300
-Message-Id: <1477720287-17606-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161029_075151_823034_7DDEE1C4)
-In-Reply-To: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 6 Oct 2016 13:28:21 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v2 2/2] mwifiex: check hw_status in suspend and resume
+ handlers
+Date: Thu, 6 Oct 2016 17:28:16 +0000
+Message-ID: <8034f06fde284121a50552d697c3bf87@SC-EXCH04.marvell.com> (sfid-20161006_192844_880477_A5B4B19D)
+References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
+ <1475600905-2997-2-git-send-email-akarwar@marvell.com>
+ <20161004210435.GA31652@localhost>
+ <39b7881045ec42628a4ffa654840681e@SC-EXCH04.marvell.com>
+ <20161005164138.GB54237@google.com>
+In-Reply-To: <20161005164138.GB54237@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New power management wmi commands provide the ability to change
-the device power save profile (enable / disable power save).
+Hi Brain,
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 32 ++++++++++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 ++
- drivers/net/wireless/ath/wil6210/wmi.c      | 34 +++++++++++++++++++++++++++++
- 3 files changed, 67 insertions(+), 1 deletion(-)
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Wednesday, October 05, 2016 10:12 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> rajatja@google.com; Xinming Hu
+> Subject: Re: [PATCH v2 2/2] mwifiex: check hw_status in suspend and
+> resume handlers
+> 
+> Hi Amit,
+> 
+> On Wed, Oct 05, 2016 at 12:26:36PM +0000, Amitkumar Karwar wrote:
+> > > From: Brian Norris [mailto:briannorris@chromium.org]
+> > > Sent: Wednesday, October 05, 2016 2:35 AM
+> > > To: Amitkumar Karwar
+> > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > > rajatja@google.com; briannorris@google.com; Xinming Hu
+> > > Subject: Re: [PATCH v2 2/2] mwifiex: check hw_status in suspend and
+> > > resume handlers
+> > >
+> > > On Tue, Oct 04, 2016 at 10:38:25PM +0530, Amitkumar Karwar wrote:
+> > > > From: Xinming Hu <huxm@marvell.com>
+> > > >
+> > > > We have observed a kernel crash when system immediately suspends
+> > > > after booting. There is a race between suspend and driver
+> > > > initialization paths.
+> > > > This patch adds hw_status checks to fix the problem
+> > > >
+> > > > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > > ---
+> > > > v2: Return failure in suspend/resume handler in this scenario.
+> > > > ---
+> > > >  drivers/net/wireless/marvell/mwifiex/pcie.c | 10 ++++++----
+> > > >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > > >
+> > > > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > index ba9e068..fa6bf85 100644
+> > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > @@ -122,9 +122,10 @@ static int mwifiex_pcie_suspend(struct device
+> > > > *dev)
+> > > >
+> > > >  	if (pdev) {
+> > > >  		card = pci_get_drvdata(pdev);
+> > > > -		if (!card || !card->adapter) {
+> > > > +		if (!card || !card->adapter ||
+> > > > +		    card->adapter->hw_status !=
+> MWIFIEX_HW_STATUS_READY) {
+> > >
+> > > Wait, is there no locking on the 'hw_status' field? That is
+> > > inherently an unsafe race all on its own; you're not guaranteed that
+> > > this will be read/written atomically. And you also aren't guaranteed
+> > > that writes to this happen in the order they appear in the code --
+> > > in other words, reading this flag doesn't necessarily guarantee that
+> > > initialization is actually complete (even if that's very likely to
+> > > be true, given that it's probably just a single-instruction
+> > > word-access, and any prior HW polling or interrupts likely have done
+> > > some synchronization and can't be reordered).
+> > > actually complete
+> >
+> > Here is the brief info on how "hw_status" flag is updated.
+> > 1) It gets changed incrementally during initialization.
+> >     MWIFIEX_HW_STATUS_INITIALIZING -> MWIFIEX_HW_STATUS_INIT_DONE ->
+> > MWIFIEX_HW_STATUS_READY
+> >
+> > 2) Status will remain READY once driver+firmware is up and running.
+> >
+> > 3) Below is status during teardown
+> > MWIFIEX_HW_STATUS_READY -> MWIFIEX_HW_STATUS_RESET ->
+> > MWIFIEX_HW_STATUS_CLOSING -> MWIFIEX_HW_STATUS_NOT_READY
+> >
+> > As the events occur one after another, we don't expect a race and
+> > don't need locking here for the flag. Flag status
+> > MWIFIEX_HW_STATUS_READY guarantees that initialization is completed.
+> 
+> It seems like, as with patch 1, you're mostly arguing about the writes
+> to this variable. But writes race with reads as well; how do you
+> guarantee that you're not seeing incorrect values of 'hw_status' here in
+> suspend() -- e.g., either old or new values of it, or even partially-
+> written values, if for some reason the compiler decides it can't
+> read/write this all in one go?
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index d117240..c6dd7a3 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1424,6 +1424,34 @@ static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
- 	mutex_unlock(&wil->mutex);
- }
- 
-+static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
-+				       struct net_device *dev,
-+				       bool enabled, int timeout)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	enum wmi_ps_profile_type ps_profile;
-+	int rc;
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_PS_CONFIG, wil->fw_capabilities)) {
-+		wil_err(wil, "set_power_mgmt not supported\n");
-+		return -EOPNOTSUPP;
-+	}
-+
-+	wil_dbg_misc(wil, "enabled=%d, timeout=%d\n",
-+		     enabled, timeout);
-+
-+	if (enabled)
-+		ps_profile = WMI_PS_PROFILE_TYPE_DEFAULT;
-+	else
-+		ps_profile = WMI_PS_PROFILE_TYPE_PS_DISABLED;
-+
-+	rc  = wmi_ps_dev_profile_cfg(wil, ps_profile);
-+	if (rc)
-+		wil_err(wil, "wmi_ps_dev_profile_cfg failed (%d)\n", rc);
-+
-+	return rc;
-+}
-+
- static struct cfg80211_ops wil_cfg80211_ops = {
- 	.add_virtual_intf = wil_cfg80211_add_iface,
- 	.del_virtual_intf = wil_cfg80211_del_iface,
-@@ -1450,6 +1478,7 @@ static struct cfg80211_ops wil_cfg80211_ops = {
- 	/* P2P device */
- 	.start_p2p_device = wil_cfg80211_start_p2p_device,
- 	.stop_p2p_device = wil_cfg80211_stop_p2p_device,
-+	.set_power_mgmt = wil_cfg80211_set_power_mgmt,
- };
- 
- static void wil_wiphy_init(struct wiphy *wiphy)
-@@ -1466,7 +1495,8 @@ static void wil_wiphy_init(struct wiphy *wiphy)
- 				 BIT(NL80211_IFTYPE_MONITOR);
- 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
--			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
-+			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
-+			WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 	dev_dbg(wiphy_dev(wiphy), "%s : flags = 0x%08x\n",
- 		__func__, wiphy->flags);
- 	wiphy->probe_resp_offload =
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 12cd81b..4b22ea4 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -819,6 +819,8 @@ int wmi_delba_tx(struct wil6210_priv *wil, u8 ringid, u16 reason);
- int wmi_delba_rx(struct wil6210_priv *wil, u8 cidxtid, u16 reason);
- int wmi_addba_rx_resp(struct wil6210_priv *wil, u8 cid, u8 tid, u8 token,
- 		      u16 status, bool amsdu, u16 agg_wsize, u16 timeout);
-+int wmi_ps_dev_profile_cfg(struct wil6210_priv *wil,
-+			   enum wmi_ps_profile_type ps_profile);
- int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
- 			 u8 dialog_token, __le16 ba_param_set,
- 			 __le16 ba_timeout, __le16 ba_seq_ctrl);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 890960e..8c60437 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1563,6 +1563,40 @@ int wmi_addba_rx_resp(struct wil6210_priv *wil, u8 cid, u8 tid, u8 token,
- 	return rc;
- }
- 
-+int wmi_ps_dev_profile_cfg(struct wil6210_priv *wil,
-+			   enum wmi_ps_profile_type ps_profile)
-+{
-+	int rc;
-+	struct wmi_ps_dev_profile_cfg_cmd cmd = {
-+		.ps_profile = ps_profile,
-+	};
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_ps_dev_profile_cfg_event evt;
-+	} __packed reply;
-+	u32 status;
-+
-+	wil_dbg_wmi(wil, "Setting ps dev profile %d\n", ps_profile);
-+
-+	reply.evt.status = cpu_to_le32(WMI_PS_CFG_CMD_STATUS_ERROR);
-+
-+	rc = wmi_call(wil, WMI_PS_DEV_PROFILE_CFG_CMDID, &cmd, sizeof(cmd),
-+		      WMI_PS_DEV_PROFILE_CFG_EVENTID, &reply, sizeof(reply),
-+		      100);
-+	if (rc)
-+		return rc;
-+
-+	status = le32_to_cpu(reply.evt.status);
-+
-+	if (status != WMI_PS_CFG_CMD_STATUS_SUCCESS) {
-+		wil_err(wil, "ps dev profile cfg failed with status %d\n",
-+			status);
-+		rc = -EINVAL;
-+	}
-+
-+	return rc;
-+}
-+
- void wmi_event_flush(struct wil6210_priv *wil)
- {
- 	struct pending_wmi_event *evt, *t;
--- 
-1.9.1
+Got it. I think, we need to define "hw_status" as atomic variable to resolve the issue. I will create separate patch for this.
+
+> 
+> > In worst case scenario, only first system suspend attempt issued
+> > immediately after system boot will be aborted with BUSY error. I
+> > think, that should be fine.
+> 
+> (For the record, my concern about -EBUSY is separate from my concern
+> about the potential race condition.)
+> 
+> > Let me know if you have any concerns.
+> 
+> Sorry, I probably didn't completely flesh out my thought here.
+> 
+> I think I was concerned about a failed initialization causing the system
+> to never enter suspend again. So specifically: what happens if (e.g.)
+> the firmware fails to load? AFAICT, the device doesn't actually unbind
+> itself from the driver, so instead, you have a device in limbo that will
+> always return -EBUSY in suspend(), and your system can never again enter
+> suspend. Am I correct? If so, that doesn't sound great.
+
+You are right. I will add an extra check for this so that both the cases would be handled
+Case 1:
+	Firmware has gone bad or has failed to initialize. We will return zero here, so that it won't block subsequent suspend attempts.
+Case 2:
+	Init or teardown is in process. We will return -EBUSY here. Next suspend attempt would be successful.
+
+I will submit v3 with these changes shortly.
+
+Regards,
+Amitkumar
