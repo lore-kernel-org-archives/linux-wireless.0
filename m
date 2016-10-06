@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ore.jhcloos.com ([198.147.22.87]:40890 "EHLO ore.jhcloos.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752580AbcJ3Wda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 18:33:30 -0400
-From: James Cloos <cloos@jhcloos.com>
-To: linux-wireless@vger.kernel.org
-Subject: Backwards 11ac 
-Date: Sun, 30 Oct 2016 16:50:35 -0400
-Message-ID: <m3oa21ftno.fsf@carbon.jhcloos.org> (sfid-20161030_233931_971020_29939274)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25388 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941846AbcJFIkM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Oct 2016 04:40:12 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] ath10k: Remove extraneous error message in tx alloc
+Date: Thu, 6 Oct 2016 14:09:48 +0530
+Message-ID: <1475743188-12007-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161006_104031_624938_4024C92B)
+In-Reply-To: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I recently received my turris omnia and put it into operation yesterday.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-(It is only doing wireless; I have a different box for my main router.)
+Remove extraneous error message in 'ath10k_htt_tx_alloc_cont_frag_desc'
+as the caller 'ath10k_htt_tx_alloc' already dumps a proper error
+message
 
-All of the machines on the wlan show backwards transfer speeds; they
-upload reasonable fast but downloads are in the kbit/s range.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v2 rebased over top of tree]
 
-That applies to the both the 11ac-capable machines and the 11n-on-2.4
-machines.
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Luci's status/overview page shows 'Bitrate: 6 Mbit/s' for the ath10k and
-'Bitrate: 61.5 Mbit/s' for the ath9k.
-
-(The two wireless cards in it are:
-
-01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network Adapter (PCI-Express) (rev 01)
-02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter
-)
-
-Googling has not helped me figure out how to get propper bandwidth.
-All of the search results were about wan links, not about wlan links.
-
-What should I look at to diagnose this?
-
--JimC
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 786fbd7..4255c1a 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -283,10 +283,8 @@ static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
+ 	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
+ 						  &htt->frag_desc.paddr,
+ 						  GFP_KERNEL);
+-	if (!htt->frag_desc.vaddr) {
+-		ath10k_err(ar, "failed to alloc fragment desc memory\n");
++	if (!htt->frag_desc.vaddr)
+ 		return -ENOMEM;
+-	}
+ 
+ 	return 0;
+ }
 -- 
-James Cloos <cloos@jhcloos.com>         OpenPGP: 0x997A9F17ED7DAEA6
+1.9.1
