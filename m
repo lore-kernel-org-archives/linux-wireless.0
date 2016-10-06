@@ -1,42 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41841 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754488AbcJLH5c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 03:57:32 -0400
-Message-ID: <1476259048.5271.15.camel@sipsolutions.net> (sfid-20161012_095831_453812_24AED2FD)
-Subject: Re: [PATCH] mac80211: fix A-MSDU outer SA/DA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Wed, 12 Oct 2016 09:57:28 +0200
-In-Reply-To: <1476258794.5271.12.camel@sipsolutions.net>
-References: <1476118360-29009-1-git-send-email-michael-dev@fami-braun.de>
-         <1476258794.5271.12.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33217 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751476AbcJFRbF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Oct 2016 13:31:05 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v3 1/3] mwifiex: reset card->adapter during device unregister
+Date: Thu, 6 Oct 2016 23:00:26 +0530
+Message-ID: <1475775028-20306-1-git-send-email-akarwar@marvell.com> (sfid-20161006_193110_100454_B83A2ACC)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-12 at 09:53 +0200, Johannes Berg wrote:
-> On Mon, 2016-10-10 at 18:52 +0200, Michael Braun wrote:
-> > 
-> > According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer
-> > SA/DA of A-MSDU frames need to be changed depending on FromDS/ToDS
-> > values.
-> 
-> "Need to" is perhaps a bit strongly worded, but whatever :)
-> 
-> I was going to write a long reply and whatever - but I think that's
-> all moot. As far as I can tell, you got this completely wrong, as
-> you're changing the *inner* headers, not the *outer* header as you
-> should?
+From: Xinming Hu <huxm@marvell.com>
 
-Oh, no, my mistake - this happens before 802.3->.11 conversion.
+card->adapter gets initialized during device registration.
+As it's not cleared, we may end up accessing invalid memory
+in some corner cases. This patch fixes the problem.
 
-So this does look correct, but I don't like that you write to
-amsdu_hdr.h_{source,dest} twice after the patch.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v3: Same as v1 and v2
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-I think you should have da and sa variables and set those, and then
-memcpy only once.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f1eeb73..ba9e068 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 				pci_disable_msi(pdev);
+ 	       }
+ 	}
++	card->adapter = NULL;
+ }
+ 
+ /* This function initializes the PCI-E host memory space, WCB rings, etc.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 8718950..4cad1c2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	if (adapter->card) {
++		card->adapter = NULL;
+ 		sdio_claim_host(card->func);
+ 		sdio_disable_func(card->func);
+ 		sdio_release_host(card->func);
+-- 
+1.9.1
