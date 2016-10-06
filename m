@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18250 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753900AbcJLNvV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35119 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933476AbcJFSHI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:51:21 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: David Hutchison <dhutchison@bluemesh.net>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: QCA9887 Firmware Memory Usage
-Date: Wed, 12 Oct 2016 13:51:08 +0000
-Message-ID: <8760oxfzg4.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_155126_890529_8B64D1FD)
-References: <CA+i30h8YsG7mce5FMwGw2fRNAn3USYV6K==QMjMQVeSGB0dj=w@mail.gmail.com>
-In-Reply-To: <CA+i30h8YsG7mce5FMwGw2fRNAn3USYV6K==QMjMQVeSGB0dj=w@mail.gmail.com>       (David
- Hutchison's message of "Thu, 6 Oct 2016 15:59:40 -0600")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 6 Oct 2016 14:07:08 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v4 2/3] mwifiex: remove redundant pdev check in suspend/resume handlers
+Date: Thu, 6 Oct 2016 23:36:25 +0530
+Message-ID: <1475777186-20486-2-git-send-email-akarwar@marvell.com> (sfid-20161006_200710_460454_A391EEA1)
+In-Reply-To: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
+References: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Hutchison <dhutchison@bluemesh.net> writes:
+to_pci_dev() would just do struct offset arithmetic on struct
+device to get 'pdev' pointer. We never get NULL pdev pointer
 
-> I am using a Mikrotik hAP AC Lite which has a QCA9887 radio. It
-> appears to be working; however ath10k ( or the qca9887 firmware ) is
-> utilizing 15 - 20mb of memory. I applied the kfree(caldata) patch, to
-> insure there is no memory leak.
->
-> It doesn't appear to be leaking, and it will run Ok with the high
-> memory footprint. However the Mikrotik hAP AC Lite is only a 64mb
-> platform; so when I initialize the 2nd radio with ath9k I get OOMs.
->
-> It just doesn't seem right that when ath10k + qca9887 is in AP mode
-> that it's utilizing as much memory as it is. I don't think the issue
-> is with ath10k, I think it's the qca9887 firmware (
-> firmware-5.bin_10.2.4-1.0-00013 ).
->
-> Is there a newer build available that may potentially fix these memory
-> issues? The latest one available on
-> https://github.com/kvalo/ath10k-firmware/blob/master/QCA9887/hw1.0/firmwa=
-re-5.bin_10.2.4-1.0-00013
-> is 2 months old. Perhaps there is a newer build to test that may have
-> the fix?
->
-> Any thoughts as to what it could be? I can provide more information if ne=
-eded.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+New patch introduced in v3 as per inputs from Brian Norris.
+v4: Same as v3
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-64MB of RAM nowadays is not much and ath10k is not really tested in such
-setups AFAIK. I guess you could try if reducing TARGET_10X_NUM_MSDU_DESC
-helps with the memory consumption, but no idea if that would even work
-without further modifications to ath10k.
-
-Also if you have fq-codel&co enabled that might increase memory
-consumption. Adding linux-wireless as people there might have better
-ideas.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ba9e068..1e27dbf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -120,14 +120,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
+@@ -164,14 +159,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
+-- 
+1.9.1
