@@ -1,70 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f171.google.com ([209.85.213.171]:34771 "EHLO
-        mail-yb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751708AbcJMX5e (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4631 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941774AbcJFIkE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 19:57:34 -0400
-Received: by mail-yb0-f171.google.com with SMTP id o189so11777776yba.1
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 16:57:34 -0700 (PDT)
+        Thu, 6 Oct 2016 04:40:04 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2 1/2] ath10k: clean up HTT tx buffer allocation and free
+Date: Thu, 6 Oct 2016 14:09:47 +0530
+Message-ID: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161006_114920_826758_3B57023A)
 MIME-Version: 1.0
-In-Reply-To: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
-From: Steve deRosier <derosier@gmail.com>
-Date: Thu, 13 Oct 2016 16:57:32 -0700
-Message-ID: <CALupW3CrY5sZYBcx5Bd3E_M_Kx2sx8_N9h_uexvg_DSO0c-tJA@mail.gmail.com> (sfid-20161014_015738_524715_0569BC72)
-Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-On Thu, Oct 13, 2016 at 9:39 AM, Erik Stromdahl
-<erik.stromdahl@gmail.com> wrote:
-> This patch series is intended to prepare the ath6kl driver
-> for newer chipsets that doesn't use the current WMI data
-> endpoints for data traffic.
->
-> The chipset I have been working with (and used for testing)
-> is QCA6584. It is SDIO based (at least the variant I have
-> been using) with 802.11p WAVE DSRC capabilities.
->
-> This chipset is different from the AR600X family in that
-> it does not use the WMI data services (service id's 0x101
-> to 0x104 ) for data traffic.
-> Instead it uses the HTT data service for data and wmi unified
-> for control messages.
-> It is also different when it comes to mailbox addresses
-> and HTC header format as well, but these differences are not
-> part of this patch series.
->
+cleanup 'ath10k_htt_tx_alloc' by introducing the API's
+'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
+re-use them whereever needed
 
-I've only taken a quick look and I'll make specific comments to
-specific patches later, but I've got to ask the question, should these
-changes go into ath6kl or be a new driver?
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v2 rebased over top of tree]
 
-Just because the number starts with 6000 doesn't mean it's a ath6kl
-chip. The 10k series chips all start with 9000 for example, but they
-rate their own driver.
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 76 ++++++++++++++++++++++----------
+ 1 file changed, 52 insertions(+), 24 deletions(-)
 
-You state that all of the underpinnings of the communication with the
-chip are totally different:
-* Doesn't use WMI
-* Different mailboxing
-* Different HTC layer
-
-If all of the commands and all of the communication layers to the chip
-are totally different, then perhaps it isn't an ath6kl chip. So if
-it's largely similar, then OK, but seems to me with the changes you're
-saying above, it's mostly different.
-
-I'm saying all that without any knowledge of this chip. My experience
-is limited to various versions of the 6003 and 6004 chips.
-
-Just trying to stimulate discussion here.
-
-Thanks,
-- Steve
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index ae5b33f..786fbd7 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -229,6 +229,33 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
+ 	idr_remove(&htt->pending_tx, msdu_id);
+ }
+ 
++static void ath10k_htt_tx_free_cont_txbuf(struct ath10k_htt *htt)
++{
++	size_t size;
++
++	if (!htt->txbuf.vaddr)
++		return;
++
++	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
++	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
++			  htt->txbuf.paddr);
++}
++
++static int ath10k_htt_tx_alloc_cont_txbuf(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
++
++	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
++	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
++					      &htt->txbuf.paddr,
++					      GFP_KERNEL);
++	if (!htt->txbuf.vaddr)
++		return -ENOMEM;
++
++	return 0;
++}
++
+ static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
+ {
+ 	size_t size;
+@@ -310,10 +337,26 @@ static int ath10k_htt_tx_alloc_txq(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
++static void ath10k_htt_tx_free_txdone_fifo(struct ath10k_htt *htt)
++{
++	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
++	kfifo_free(&htt->txdone_fifo);
++}
++
++static int ath10k_htt_tx_alloc_txdone_fifo(struct ath10k_htt *htt)
++{
++	int ret;
++	size_t size;
++
++	size = roundup_pow_of_two(htt->max_num_pending_tx);
++	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
++	return ret;
++}
++
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+-	int ret, size;
++	int ret;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
+ 		   htt->max_num_pending_tx);
+@@ -321,13 +364,9 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 	spin_lock_init(&htt->tx_lock);
+ 	idr_init(&htt->pending_tx);
+ 
+-	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
+-	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
+-						  &htt->txbuf.paddr,
+-						  GFP_KERNEL);
+-	if (!htt->txbuf.vaddr) {
+-		ath10k_err(ar, "failed to alloc tx buffer\n");
+-		ret = -ENOMEM;
++	ret = ath10k_htt_tx_alloc_cont_txbuf(htt);
++	if (ret) {
++		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
+ 		goto free_idr_pending_tx;
+ 	}
+ 
+@@ -343,8 +382,7 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 		goto free_frag_desc;
+ 	}
+ 
+-	size = roundup_pow_of_two(htt->max_num_pending_tx);
+-	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
++	ret = ath10k_htt_tx_alloc_txdone_fifo(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc txdone fifo: %d\n", ret);
+ 		goto free_txq;
+@@ -359,10 +397,7 @@ free_frag_desc:
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
+ 
+ free_txbuf:
+-	size = htt->max_num_pending_tx *
+-			  sizeof(struct ath10k_htt_txbuf);
+-	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-			  htt->txbuf.paddr);
++	ath10k_htt_tx_free_cont_txbuf(htt);
+ 
+ free_idr_pending_tx:
+ 	idr_destroy(&htt->pending_tx);
+@@ -388,22 +423,15 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+ 
+ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ {
+-	int size;
++	tasklet_kill(&htt->txrx_compl_task);
+ 
+ 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
+ 	idr_destroy(&htt->pending_tx);
+ 
+-	if (htt->txbuf.vaddr) {
+-		size = htt->max_num_pending_tx *
+-				  sizeof(struct ath10k_htt_txbuf);
+-		dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-				  htt->txbuf.paddr);
+-	}
+-
++	ath10k_htt_tx_free_cont_txbuf(htt);
+ 	ath10k_htt_tx_free_txq(htt);
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
+-	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
+-	kfifo_free(&htt->txdone_fifo);
++	ath10k_htt_tx_free_txdone_fifo(htt);
+ }
+ 
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+-- 
+1.9.1
