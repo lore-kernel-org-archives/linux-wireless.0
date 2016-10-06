@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34418 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750927AbcJDWYZ (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:35691 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbcJFIH1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 18:24:25 -0400
-Received: by mail-pf0-f181.google.com with SMTP id e6so24318972pfk.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 15:24:25 -0700 (PDT)
-Date: Tue, 4 Oct 2016 15:24:22 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [2/8] mwifiex: report error to PCIe for suspend failure
-Message-ID: <20161004222422.GB4646@localhost> (sfid-20161005_002428_474976_DD38BE93)
-References: <1475066908-11771-2-git-send-email-akarwar@marvell.com>
+        Thu, 6 Oct 2016 04:07:27 -0400
+Received: by mail-wm0-f46.google.com with SMTP id f193so274320084wmg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 01:07:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475066908-11771-2-git-send-email-akarwar@marvell.com>
+In-Reply-To: <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
+References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
+ <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
+ <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
+ <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com> <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
+From: Gucea Doru <gucea.doru@gmail.com>
+Date: Thu, 6 Oct 2016 11:07:24 +0300
+Message-ID: <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com> (sfid-20161006_100734_903466_5142010E)
+Subject: Re: bcmdhd: Strange Power Save messages
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 28, 2016 at 06:18:22PM +0530, Amitkumar Karwar wrote:
-> When host_sleep_config command fails, we should return an error to
-> PCIe, instead of continuing (and possibly panicking, when we try to keep
-> processing a timed-out ioctl after we return "successfully" from
-> suspend).
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 4-10-2016 13:39, Gucea Doru wrote:
+>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>
+>>>>
+>>>> On 29-09-16 13:32, Gucea Doru wrote:
+>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+>>>>>> What is the decision triggering the exit from the PS mode immediately
+>>>>>> after the ping request? I am asking this because 802.11 PS legacy
+>>>>>> specifies that the client should wait for a beacon with TIM set in
+>>>>>> order to wake up: in my case, there is no beacon between the ping
+>>>>>> request message and the Null frame that announces the exit from the PS
+>>>>>> mode.
+>>>>>
+>>>>>
+>>>>> Any help would be highly appreciated :)
+>>>>
+>>>> Actually though I already sent you are reply, but alas here it is.
+>>>>
+>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
+>>>> drivers. Regardless your question is more for firmware running on the
+>>>> device. So like the same behavior would be observed when using brcmfmac
+>>>> with same firmware.
+>>>>
+>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
+>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
+>>>>> shall issue a PS Poll". In my capture there are cases when the STA
+>>>>> exits the PS mode without waiting for a beacon.
+>>>>
+>>>> It is a bit tricky, but the standard does not explicitly say the STA
+>>>> should be in power-save at any other time. So it is difficult to say
+>>>> what event occurred on the STA side to exit PS mode. Also STA means
+>>>> P2P-Client as you say. That means that you have multiple interfaces:
+>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
+>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
+>>>> scheduled scan by which firmware will scan at a certain interval. That
+>>>> is just some things I can come up with and I am sure there are more.
+>>
+>> I agree that there may be some events belonging to the regular STA
+>> interface that could trigger the Null Frame (which includes the exit
+>> from PS Mode). However, I would expect to see some management frames
+>> in the air before/after the Null Packet (e.g.: a Probe request in case
+>> of a scheduled scan). But in my case the trigger for the Null frame
+>> seems to be the ping request packet, the scenario is the same every
+>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
+>> confirms this behavior).
+>>
+>> I thought that you had a power save optimization algorithm that keeps
+>> the card on a few milliseconds just to see if we can have a fast reply
+>> from the peer. Does this ring a bell? :)
+>
+> It does not. That would be implemented in firmware. As said I am working
+> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
+>
 
-In case it helps to note this: this is what's already done in sdio.c,
-and adding this patch prevented some crashes on my system with pcie.c.
+Arend, could you please redirect me to a Broadcom firmware maintainer?
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Brian Norris <briannorris@chromium.org>
-
-You might want to fixup usb.c to do the same.
-
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 2833d47..063c707 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -101,7 +101,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
->  {
->  	struct mwifiex_adapter *adapter;
->  	struct pcie_service_card *card;
-> -	int hs_actived;
->  	struct pci_dev *pdev = to_pci_dev(dev);
->  
->  	if (pdev) {
-> @@ -117,7 +116,14 @@ static int mwifiex_pcie_suspend(struct device *dev)
->  
->  	adapter = card->adapter;
->  
-> -	hs_actived = mwifiex_enable_hs(adapter);
-> +	/* Enable the Host Sleep */
-> +	if (!mwifiex_enable_hs(adapter)) {
-> +		mwifiex_dbg(adapter, ERROR,
-> +			    "cmd: failed to suspend\n");
-> +		adapter->hs_enabling = false;
-> +		return -EFAULT;
-> +	}
-> +
->  	flush_workqueue(adapter->workqueue);
->  
->  	/* Indicate device suspended */
+Thank you,
+Doru
