@@ -1,64 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43006 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752653AbcJLMZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:25:26 -0400
-Message-ID: <1476275121.5271.28.camel@sipsolutions.net> (sfid-20161012_142540_813358_94826DA1)
-Subject: Re: [PATCH v2] mac80211: fix A-MSDU outer SA/DA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Felix Fietkau <nbd@openwrt.org>
-Date: Wed, 12 Oct 2016 14:25:21 +0200
-In-Reply-To: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de>
-References: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2104 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750868AbcJFHn4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Oct 2016 03:43:56 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Marty Faltesek <mfaltesek@google.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
+Date: Thu, 6 Oct 2016 07:40:48 +0000
+Message-ID: <87r37ukjr5.fsf@kamboji.qca.qualcomm.com> (sfid-20161006_094400_006267_105B0379)
+References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
+        <87fuodswlu.fsf@kamboji.qca.qualcomm.com>
+        <CAOiWkA_fuhzPeF7qPP0hLN3KTZUOi6_te5Zc3+vxKQ9GRj0VBw@mail.gmail.com>
+In-Reply-To: <CAOiWkA_fuhzPeF7qPP0hLN3KTZUOi6_te5Zc3+vxKQ9GRj0VBw@mail.gmail.com>       (Marty
+ Faltesek's message of "Wed, 5 Oct 2016 12:39:48 -0400")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-12 at 12:57 +0200, Michael Braun wrote:
-> According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer
-> SA/DA of A-MSDU frames need to be changed depending on FromDS/ToDS
-> values.
+Marty Faltesek <mfaltesek@google.com> writes:
 
-actually ...
+> On Mon, Oct 3, 2016 at 3:46 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrot=
+e:
+>> Marty Faltesek <mfaltesek@google.com> writes:
+>>
+>>> Caching calibration data allows it to be accessed when the
+>>> device is not active.
+>>>
+>>> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+>>
+>> No comma in the title, please.
+>>
+>> What tree did you use as the baseline? This doesn't seem to apply to
+>> ath.git:
+>
+> We use backports 20160122 which has not been updated since earlier this y=
+ear.
+> I can forward port it to your tree, and make sure
+> it builds but won't be able to test it. Will that be OK?
 
->  	struct ieee80211_hdr *hdr;
+Sure, I can test it.
 
-802.11 header
+>> Also please note that this patch (which I'm queuing to 4.9) touches the
+>> same area:
+>>
+>> ath10k: fix debug cal data file
+>>
+>> https://patchwork.kernel.org/patch/9340953/
+>
+> I've modified this too, and this won't be necessary, so can you drop
+> it? If not, let me know and I'll pull it in and make sure I'm based
+> off it too.
 
-> -	struct ethhdr amsdu_hdr;
-> +	struct ethhdr *amsdu_hdr;
->  	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
+Actually I was first planning to push 9340953 to 4.9 and take your patch
+to 4.10. But your patch is a cleaner approach to this and maybe I should
+push that to 4.9 instead? Need to think a bit more.
 
-802.11 header length
-
-> +	data = skb_push(skb, sizeof(*amsdu_hdr));
-
-push ethernet header in
-
-> +	memmove(data, data + sizeof(*amsdu_hdr), hdr_len);
-
-move 802.11 header from back to front
-
-> +	hdr = data;
-
-hdr is at the beginning of the frame
-
-> +	amsdu_hdr = data + hdr_len;
-
-amsdu_hdr is actually the *inner* header after all.
-
-
-So, I actually think my first instinct that you were erroneously
-changing the inner header *was* right.
-
-
-Seems like this code should be inserted towards the end of
-ieee80211_amsdu_aggregate() instead, where it's adding the RFC 1042
-header?
-
-Need Felix to take a look, I guess.
-
-johannes
+--=20
+Kalle Valo=
