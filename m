@@ -1,58 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56994 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754877AbcJVUaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Oct 2016 16:30:13 -0400
-Message-ID: <1477168206.4123.6.camel@sipsolutions.net> (sfid-20161022_223017_935583_C739AA7C)
-Subject: Re: sequence diagrams in rst documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Heiser <markus.heiser@darmarit.de>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Date: Sat, 22 Oct 2016 22:30:06 +0200
-In-Reply-To: <A533ED1D-9F0F-420D-9835-723F33D6CA83@darmarit.de>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-         <20161011072119.7ad4e3a3@lwn.net>
-         <1476193466.4118.10.camel@sipsolutions.net>
-         <1476194038.4118.11.camel@sipsolutions.net>
-         <1476791021.6425.25.camel@sipsolutions.net>
-         <20161018175236.75c8c4e2@lwn.net>
-         <1476863488.5927.10.camel@sipsolutions.net>
-         <1477053099.4068.42.camel@sipsolutions.net> <87k2d1q2qx.fsf@intel.com>
-         <1477055055.4068.46.camel@sipsolutions.net>
-         <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
-         <1477084793.4068.63.camel@sipsolutions.net>
-         <A533ED1D-9F0F-420D-9835-723F33D6CA83@darmarit.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40732 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751201AbcJFRbZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 6 Oct 2016 13:31:25 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v3 3/3] mwifiex: check hw_status in suspend and resume handlers
+Date: Thu, 6 Oct 2016 23:00:28 +0530
+Message-ID: <1475775028-20306-3-git-send-email-akarwar@marvell.com> (sfid-20161006_193128_121047_EED5E6DF)
+In-Reply-To: <1475775028-20306-1-git-send-email-akarwar@marvell.com>
+References: <1475775028-20306-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-10-22 at 18:37 +0200, Markus Heiser wrote:
+We have observed a kernel crash when system immediately suspends
+after booting. There is a race between suspend and driver initialization
+paths. This patch adds hw_status checks in suspend/resume to fix this issue
+and other corner cases.
 
-> Yeah, I thought something similar. But is the import of the extension
-> a sufficient criteria? 
-> 
-> About ".. math::"; I guess we have to check if math extension AND
-> pdflatex is installed.
-> 
-> What do you suppose?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: Return failure in suspend/resume handler in this scenario.
+v3: Handle "hw_status" not READY cases carefully. Return 0 if
+init or shutdown is in progress. Return -EBUSY if firmware download
+failed or command timeout ocurred(non-recoverable). (Brian Norris)
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
 
-TBH, I only considered this briefly, but decided that somebody who went
-to the effort of installing the sphinx extension would likely not mind
-to get a subsequent error when it tries to use something that's not
-installed.
-
-I was, in fact, quite surprised that I even could install (on Debian)
-the plantuml sphinx extension without plantuml, which seems odd.
-
-In fact, I think it would be *preferable* to only check the extension ;
-we should print a message from the dummy plugin to let them know what
-extensions they need, and if they then go to the effort of installing
-it they probably don't just not mind getting errors on dependencies,
-but actually would *prefer* that, since otherwise it can be daunting to
-try to figure out what *else* you actually have to install.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 1e27dbf..cc18e4d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -121,13 +121,22 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		pr_err("Card or adapter structure is not valid\n");
++	if (!card || !card->adapter ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_RESET ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY) {
++		pr_err("Card or adapter structure is not valid or hw_status not ready\n");
+ 		return 0;
+ 	}
+ 
+ 	adapter = card->adapter;
+ 
++	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_INIT_DONE ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) {
++		pr_err("We are in the middle of initialzaion or closing\n");
++		return -EBUSY;
++	}
++
+ 	/* Enable the Host Sleep */
+ 	if (!mwifiex_enable_hs(adapter)) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -160,13 +169,23 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		pr_err("Card or adapter structure is not valid\n");
++
++	if (!card || !card->adapter ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_RESET ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY) {
++		pr_err("Card or adapter structure is not valid or hw_status not ready\n");
+ 		return 0;
+ 	}
+ 
+ 	adapter = card->adapter;
+ 
++	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_INIT_DONE ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) {
++		pr_err("We are in the middle of initialzaion or closing\n");
++		return -EBUSY;
++	}
++
+ 	if (!adapter->is_suspended) {
+ 		mwifiex_dbg(adapter, WARN,
+ 			    "Device already resumed\n");
+-- 
+1.9.1
