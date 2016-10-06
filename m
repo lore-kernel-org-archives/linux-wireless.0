@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30920 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43928 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932799AbcJZVqq (ORCPT
+        with ESMTP id S1752345AbcJFHbt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:46:46 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 7/9] mac80211: Add FILS auth alg mapping
-Date: Thu, 27 Oct 2016 00:42:04 +0300
-Message-ID: <1477518126-823-8-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234649_856819_B43AB932)
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+        Thu, 6 Oct 2016 03:31:49 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/2] ath10k: clean up HTT tx buffer allocation and free
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1475584772-4091-2-git-send-email-mohammed@qca.qualcomm.com>
+References: <1475584772-4091-2-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <dc6b3afe60574d7bb60e1913da3f1ad4@euamsexm01a.eu.qualcomm.com> (sfid-20161006_093153_150002_BEA6DA1D)
+Date: Thu, 6 Oct 2016 09:31:41 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/mlme.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> cleanup 'ath10k_htt_tx_alloc' by introducing the API's
+> 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
+> re-use them whereever needed
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b6222f2..b815f2d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2618,6 +2618,9 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	case WLAN_AUTH_LEAP:
- 	case WLAN_AUTH_FT:
- 	case WLAN_AUTH_SAE:
-+	case WLAN_AUTH_FILS_SK:
-+	case WLAN_AUTH_FILS_SK_PFS:
-+	case WLAN_AUTH_FILS_PK:
- 		break;
- 	case WLAN_AUTH_SHARED_KEY:
- 		if (ifmgd->auth_data->expected_transaction != 4) {
-@@ -4479,6 +4482,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_AUTHTYPE_SAE:
- 		auth_alg = WLAN_AUTH_SAE;
- 		break;
-+	case NL80211_AUTHTYPE_FILS_SK:
-+		auth_alg = WLAN_AUTH_FILS_SK;
-+		break;
-+	case NL80211_AUTHTYPE_FILS_SK_PFS:
-+		auth_alg = WLAN_AUTH_FILS_SK_PFS;
-+		break;
-+	case NL80211_AUTHTYPE_FILS_PK:
-+		auth_alg = WLAN_AUTH_FILS_PK;
-+		break;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
+Patch 1 doesn't apply and the conflict was not trivial
+
+error: patch failed: drivers/net/wireless/ath/ath10k/htt_tx.c:388
+error: drivers/net/wireless/ath/ath10k/htt_tx.c: patch does not apply
+stg import: Diff does not apply cleanly
+error: patch failed: drivers/net/wireless/ath/ath10k/htt_tx.c:283
+error: drivers/net/wireless/ath/ath10k/htt_tx.c: patch does not apply
+stg import: Diff does not apply cleanly
+
+2 patches set to Changes Requested.
+
+9361741 [1/2] ath10k: clean up HTT tx buffer allocation and free
+9361743 [2/2] ath10k: Remove extraneous error message in tx alloc
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9361741/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
