@@ -1,93 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34815 "EHLO
-        mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753722AbcJDUiJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38969 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754556AbcJGLnP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 16:38:09 -0400
-Received: by mail-pa0-f48.google.com with SMTP id rz1so21337159pab.1
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 13:38:09 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>,
-        Wei-Ning Huang <wnhuang@google.com>,
-        Brian Norris <briannorris@google.com>,
-        Eric Caruso <ejcaruso@chromium.org>, rajatxjain@gmail.com
-Subject: [PATCH v3] mwifiex: report wakeup for wowlan
-Date: Tue,  4 Oct 2016 13:37:42 -0700
-Message-Id: <1475613462-93384-1-git-send-email-rajatja@google.com> (sfid-20161004_223816_770335_FF55122F)
-In-Reply-To: <87vax8p9is.fsf@kamboji.qca.qualcomm.com>
-References: <87vax8p9is.fsf@kamboji.qca.qualcomm.com>
+        Fri, 7 Oct 2016 07:43:15 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v5] ath9k: Switch to using mac80211 intermediate software queues.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160902140030.11798-1-toke@toke.dk>
+References: <20160902140030.11798-1-toke@toke.dk>
+To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Message-Id: <20161007114314.E5CEE61AF6@smtp.codeaurora.org> (sfid-20161007_134319_416294_13616422)
+Date: Fri,  7 Oct 2016 11:43:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register the WLAN device as a wakeup source since it can
-wake the system via wake-on-wireless-lan. In an actual wowlan
-event, notify the PM core that we are the current wakeup source.
-This allows the PM core to update the wakeup attributes in /sys.
+Toke Høiland-Jørgensen wrote:
+> This switches ath9k over to using the mac80211 intermediate software
+> queueing mechanism for data packets. It removes the queueing inside the
+> driver, except for the retry queue, and instead pulls from mac80211 when
+> a packet is needed. The retry queue is used to store a packet that was
+> pulled but can't be sent immediately.
+> 
+> The old code path in ath_tx_start that would queue packets has been
+> removed completely, as has the qlen limit tunables (since there's no
+> longer a queue in the driver to limit).
+> 
+> Based on Tim's original patch set, but reworked quite thoroughly.
+> 
+> Cc: Tim Shepard <shep@alum.mit.edu>
+> Cc: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-This was causing wakeup issues on chromeos as the system was
-apparently confused about the wakeup source.
+Depends on:
 
-Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v3: Fix the commit log
-v2: Fix the commit log
+bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
- drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
- 2 files changed, 9 insertions(+)
+Patch set to Awaiting Upstream.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index d3e1561..a5f63e4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
- 		disable_irq_nosync(irq);
- 	}
- 
-+	/* Notify PM core we are wakeup source */
-+	pm_wakeup_event(cfg->dev, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 					  GFP_KERNEL);
- 	cfg = card->plt_wake_cfg;
- 	if (cfg && card->plt_of_node) {
-+		cfg->dev = dev;
- 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
- 		if (!cfg->irq_wifi) {
- 			dev_dbg(dev,
-@@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 		}
- 	}
- 
-+	ret = device_init_wakeup(dev, true);
-+	if (ret)
-+		dev_err(dev, "fail to init wakeup for mwifiex");
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index db837f1..07cdd23 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -155,6 +155,7 @@
- } while (0)
- 
- struct mwifiex_plt_wake_cfg {
-+	struct device *dev;
- 	int irq_wifi;
- 	bool wake_by_wifi;
- };
 -- 
-2.8.0.rc3.226.g39d4020
+https://patchwork.kernel.org/patch/9311037/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
