@@ -1,75 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40723 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754595AbcJFRbQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55211 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbcJGLZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 13:31:16 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 2/3] mwifiex: remove redundant pdev check in suspend/resume handlers
-Date: Thu, 6 Oct 2016 23:00:27 +0530
-Message-ID: <1475775028-20306-2-git-send-email-akarwar@marvell.com> (sfid-20161006_193120_950446_52CB557D)
-In-Reply-To: <1475775028-20306-1-git-send-email-akarwar@marvell.com>
-References: <1475775028-20306-1-git-send-email-akarwar@marvell.com>
+        Fri, 7 Oct 2016 07:25:46 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/2] rtl8xxxu: Fix rtl8723bu driver reload issue
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
+References: <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20161007112446.2056361AC6@smtp.codeaurora.org> (sfid-20161007_132551_538398_389C1F23)
+Date: Fri,  7 Oct 2016 11:24:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to_pci_dev() would just do struct offset arithmetic on struct
-device to get 'pdev' pointer. We never get NULL pdev pointer
+Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> The generic disable_rf() function clears bits 22 and 23 in
+> REG_RX_WAIT_CCA, however we did not re-enable them again in
+> rtl8723b_enable_rf()
+> 
+> This resolves the problem for me with 8723bu devices not working again
+> after reloading the driver.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Cc: stable@vger.kernel.org # 4.7+
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-New patch prepared as per inputs from Brian Norris.
-It wasn't part of v1 and v2 series
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+2 patches applied to wireless-drivers.git, thanks.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ba9e068..1e27dbf 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -120,14 +120,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		pr_err("Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
-@@ -164,14 +159,9 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		pr_err("Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
+ab05e5ec81c7 rtl8xxxu: Fix rtl8723bu driver reload issue
+29d5e6fbd65b rtl8xxxu: Fix rtl8192eu driver reload issue
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9359015/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
