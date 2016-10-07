@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:52991 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752504AbcJKJlp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2016 05:41:45 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH] mac80211: fix sequence number allocation regression
-References: <20161011092831.85565-1-nbd@nbd.name>
-Date: Tue, 11 Oct 2016 11:39:58 +0200
-In-Reply-To: <20161011092831.85565-1-nbd@nbd.name> (Felix Fietkau's message of
-        "Tue, 11 Oct 2016 11:28:31 +0200")
-Message-ID: <8760oz4429.fsf@toke.dk> (sfid-20161011_114445_736411_87DB131C)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28727 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752298AbcJGO7K (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Oct 2016 10:59:10 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>
+Subject: [PATCH 0/2] ath10k: add support for tx bitrate
+Date: Fri, 7 Oct 2016 20:28:50 +0530
+Message-ID: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161007_165913_975142_34A092AA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-> The recent commit that moved around TX handlers dropped the sequence
-> number allocation at the end of ieee80211_tx_dequeue and calls
-> ieee80211_tx_h_sequence instead (for the non-fast-xmit case).
-> However, it did not change the fast-xmit sequence allocation condition
-> in ieee80211_xmit_fast_finish, which skipped seqno alloc if intermediate
-> tx queues are being used.
->
-> Drop the now obsolete condition.
->
-> Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to aft=
-er TXQ dequeue")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+This patch series adds support for tx bitrate using 
+.sta_statistics callback.
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+tx bitrate tested on QCA4019 using iw.
 
-(Think this was introduced in the merging of mac80211-next and net-next?)
+Anilkumar Kolli (2):
+  ath10k: add per peer htt tx stats support for 10.4
+  ath10k: add support for per sta tx bitrate
 
--Toke
+ drivers/net/wireless/ath/ath10k/core.h        |   17 ++++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++
+ drivers/net/wireless/ath/ath10k/htt.c         |    2 +
+ drivers/net/wireless/ath/ath10k/htt.h         |   25 +++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c      |  125 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h         |   10 +-
+ 6 files changed, 191 insertions(+), 1 deletion(-)
+
+-- 
+1.7.9.5
