@@ -1,70 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57178 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753004AbcJNHZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 03:25:31 -0400
-Message-ID: <1476429916.4382.12.camel@sipsolutions.net> (sfid-20161014_092541_208009_922C51BD)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 09:25:16 +0200
-In-Reply-To: <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com> (sfid-20161013_235018_225755_5BCF27D2)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         <1476366354.4904.31.camel@sipsolutions.net>
-         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
-         (sfid-20161013_235018_225755_5BCF27D2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33957 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753572AbcJGO7s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Oct 2016 10:59:48 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: add support for per sta tx bitrate
+Date: Fri, 7 Oct 2016 20:28:52 +0530
+Message-ID: <1475852332-18217-3-git-send-email-akolli@qti.qualcomm.com> (sfid-20161007_165953_438062_78912E98)
+In-Reply-To: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
+References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-13 at 14:49 -0700, Andy Lutomirski wrote:
-> 
-> It's failing before that.  With CONFIG_VMAP_STACK=y, the stack may
-> not be physically contiguous and can't be used for DMA, so putting it
-> in a scatterlist is bogus in general, and the crypto code mostly
-> wants a scatterlist.
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-I see, so all this stuff is getting inlined, and we crash in
-sg_set_buf() because it does sg_set_page() and that obviously needs to
-do virt_to_page(), which is invalid on this address now.
-With CONFIG_DEBUG_SG we'd have hit the BUG_ON there instead.
+Per STA tx bitrate info is filled from peer stats.
+Export per sta txrate info to cfg80211/nl80211
 
-It does indeed look like AEAD doesn't have any non-SG API.
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-So ultimately, the bug already goes back to Ard's commit 7ec7c4a9a686
-("mac80211: port CCMP to cryptoapi's CCM driver") since that already
-potentially used stack space for DMA.
-
-Since we don't have any space in the SKB or anywhere else at this point
-(other than the stack that we can't use), I see two ways out of this:
-
-   1. revert that patch (doing so would need some major adjustments now,
-      since it's pretty old and a number of new things were added in the
-      meantime)
-   2. allocate a per-CPU buffer for all the things that we put on the
-      stack and use in SG lists, those are:
-       * CCM/GCM: AAD (32B), B_0/J_0 (16B)
-       * GMAC: AAD (20B), zero (16B)
-       * (not sure why CMAC isn't using this API, but it would be like
-      GMAC)
-
-Thoughts?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 9955fea0802a..7daf9927a1ef 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -77,6 +77,19 @@ void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	sinfo->rx_duration = arsta->rx_duration;
+ 	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
++
++	if (!arsta->txrate.legacy && !arsta->txrate.nss)
++		return;
++
++	if(arsta->txrate.legacy) {
++		sinfo->txrate.legacy = arsta->txrate.legacy;
++	} else {
++		sinfo->txrate.mcs = arsta->txrate.mcs;
++		sinfo->txrate.nss = arsta->txrate.nss;
++		sinfo->txrate.bw = arsta->txrate.bw;
++	}
++	sinfo->txrate.flags = arsta->txrate.flags;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_TX_BITRATE;
+ }
+ 
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
+-- 
+1.7.9.5
