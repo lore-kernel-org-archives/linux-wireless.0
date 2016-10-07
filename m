@@ -1,193 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12629 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12196 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751512AbcJ2Fvx (ORCPT
+        with ESMTP id S1752621AbcJGHmV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Oct 2016 01:51:53 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 6/7] wil6210: support NL80211_ATTR_WIPHY_RETRY_SHORT
-Date: Sat, 29 Oct 2016 08:51:26 +0300
-Message-Id: <1477720287-17606-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161029_075158_045842_37B6C791)
-In-Reply-To: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 7 Oct 2016 03:42:21 -0400
+From: "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH v8] cfg80211: Provision to allow the support for different
+ beacon intervals
+Date: Fri, 7 Oct 2016 07:42:13 +0000
+Message-ID: <6c2abcf3f79b4cf6996b69e1a7aa590d@aphydexm01b.ap.qualcomm.com> (sfid-20161007_094225_221618_3353D292)
+References: <1472649972-6649-1-git-send-email-pkushwah@qti.qualcomm.com>
+         <1473675843.29016.18.camel@sipsolutions.net>
+         <c6f1a958d7f941b5a7dc8564d3f1c371@aphydexm01f.ap.qualcomm.com>
+         (sfid-20160916_083438_618523_AC15A50F)
+ <1474981379.5141.37.camel@sipsolutions.net>
+         <0b626d7836be4cce8ea4868538fe66d3@aphydexm01f.ap.qualcomm.com>
+ <1475061661.4139.40.camel@sipsolutions.net>
+In-Reply-To: <1475061661.4139.40.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
-
-Add support for setting retry limit for short frames,
-using NL80211_CMD_SET_WIPHY with the attribute
-NL80211_ATTR_WIPHY_RETRY_SHORT.
-Update wiphy->retry_short from the FW default when interface
-is brought up.
-
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 21 ++++++++++
- drivers/net/wireless/ath/wil6210/main.c     | 15 ++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  2 +
- drivers/net/wireless/ath/wil6210/wmi.c      | 59 +++++++++++++++++++++++++++++
- 4 files changed, 97 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 533872a..22078b0 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -702,6 +702,26 @@ static int wil_cfg80211_disconnect(struct wiphy *wiphy,
- 	return rc;
- }
- 
-+static int wil_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
-+{
-+	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	int rc;
-+
-+	/* these parameters are explicitly not supported */
-+	if (changed & (WIPHY_PARAM_RETRY_LONG |
-+		       WIPHY_PARAM_FRAG_THRESHOLD |
-+		       WIPHY_PARAM_RTS_THRESHOLD))
-+		return -ENOTSUPP;
-+
-+	if (changed & WIPHY_PARAM_RETRY_SHORT) {
-+		rc = wmi_set_mgmt_retry(wil, wiphy->retry_short);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	return 0;
-+}
-+
- int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 			 struct cfg80211_mgmt_tx_params *params,
- 			 u64 *cookie)
-@@ -1489,6 +1509,7 @@ static struct cfg80211_ops wil_cfg80211_ops = {
- 	.abort_scan = wil_cfg80211_abort_scan,
- 	.connect = wil_cfg80211_connect,
- 	.disconnect = wil_cfg80211_disconnect,
-+	.set_wiphy_params = wil_cfg80211_set_wiphy_params,
- 	.change_virtual_intf = wil_cfg80211_change_iface,
- 	.get_station = wil_cfg80211_get_station,
- 	.dump_station = wil_cfg80211_dump_station,
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 65a487c..70f9c07 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -693,6 +693,19 @@ static int wil_target_reset(struct wil6210_priv *wil)
- 	return 0;
- }
- 
-+static void wil_collect_fw_info(struct wil6210_priv *wil)
-+{
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
-+	u8 retry_short;
-+	int rc;
-+
-+	rc = wmi_get_mgmt_retry(wil, &retry_short);
-+	if (!rc) {
-+		wiphy->retry_short = retry_short;
-+		wil_dbg_misc(wil, "FW retry_short: %d\n", retry_short);
-+	}
-+}
-+
- void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- {
- 	le32_to_cpus(&r->base);
-@@ -966,6 +979,8 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 			return rc;
- 		}
- 
-+		wil_collect_fw_info(wil);
-+
- 		if (wil->platform_ops.notify) {
- 			rc = wil->platform_ops.notify(wil->platform_handle,
- 						      WIL_PLATFORM_EVT_FW_RDY);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d65a5e6..b449f84 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -821,6 +821,8 @@ int wmi_addba_rx_resp(struct wil6210_priv *wil, u8 cid, u8 tid, u8 token,
- 		      u16 status, bool amsdu, u16 agg_wsize, u16 timeout);
- int wmi_ps_dev_profile_cfg(struct wil6210_priv *wil,
- 			   enum wmi_ps_profile_type ps_profile);
-+int wmi_set_mgmt_retry(struct wil6210_priv *wil, u8 retry_short);
-+int wmi_get_mgmt_retry(struct wil6210_priv *wil, u8 *retry_short);
- int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
- 			 u8 dialog_token, __le16 ba_param_set,
- 			 __le16 ba_timeout, __le16 ba_seq_ctrl);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index e726548..2971ddf 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -1599,6 +1599,65 @@ int wmi_ps_dev_profile_cfg(struct wil6210_priv *wil,
- 	return rc;
- }
- 
-+int wmi_set_mgmt_retry(struct wil6210_priv *wil, u8 retry_short)
-+{
-+	int rc;
-+	struct wmi_set_mgmt_retry_limit_cmd cmd = {
-+		.mgmt_retry_limit = retry_short,
-+	};
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_set_mgmt_retry_limit_event evt;
-+	} __packed reply;
-+
-+	wil_dbg_wmi(wil, "Setting mgmt retry short %d\n", retry_short);
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT, wil->fw_capabilities))
-+		return -ENOTSUPP;
-+
-+	reply.evt.status = WMI_FW_STATUS_FAILURE;
-+
-+	rc = wmi_call(wil, WMI_SET_MGMT_RETRY_LIMIT_CMDID, &cmd, sizeof(cmd),
-+		      WMI_SET_MGMT_RETRY_LIMIT_EVENTID, &reply, sizeof(reply),
-+		      100);
-+	if (rc)
-+		return rc;
-+
-+	if (reply.evt.status != WMI_FW_STATUS_SUCCESS) {
-+		wil_err(wil, "set mgmt retry limit failed with status %d\n",
-+			reply.evt.status);
-+		rc = -EINVAL;
-+	}
-+
-+	return rc;
-+}
-+
-+int wmi_get_mgmt_retry(struct wil6210_priv *wil, u8 *retry_short)
-+{
-+	int rc;
-+	struct {
-+		struct wmi_cmd_hdr wmi;
-+		struct wmi_get_mgmt_retry_limit_event evt;
-+	} __packed reply;
-+
-+	wil_dbg_wmi(wil, "getting mgmt retry short\n");
-+
-+	if (!test_bit(WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT, wil->fw_capabilities))
-+		return -ENOTSUPP;
-+
-+	reply.evt.mgmt_retry_limit = 0;
-+	rc = wmi_call(wil, WMI_GET_MGMT_RETRY_LIMIT_CMDID, NULL, 0,
-+		      WMI_GET_MGMT_RETRY_LIMIT_EVENTID, &reply, sizeof(reply),
-+		      100);
-+	if (rc)
-+		return rc;
-+
-+	if (retry_short)
-+		*retry_short = reply.evt.mgmt_retry_limit;
-+
-+	return 0;
-+}
-+
- int wmi_abort_scan(struct wil6210_priv *wil)
- {
- 	int rc;
--- 
-1.9.1
+PiBIb3dldmVyLCBpdCBzZWVtcyBwcmV0dHkgZWFzeSB0byBzb2x2ZSBieSBwYXNzaW5nIGFub3Ro
+ZXIgYm9vbCB0aGF0IGluZGljYXRlcyAiYWxsIHRoZSBzYW1lIj8NClllcyAuIFRoYW5rcyAuIA0K
+V2UgYXJlIHBsYW5uaW5nIHRvIGdldCB0aGUgZm9sbG93aW5nIGNoYW5nZXMgaW4gMiBjb21taXRz
+IC4gTGV0IG1lIGtub3cgeW91ciBjb25zZW50IC4gDQoxLiBjZmc4MDIxMTogUHJvdmlzaW9uIHRv
+IGFsbG93IHRoZSBzdXBwb3J0IGZvciBkaWZmZXJlbnQgYmVhY29uIGludGVydmFscy4gKCBXb3Vs
+ZCBsaWtlIHRvIGdvIHdpdGggdGhpcyBpbiBhIHNlcGFyYXRlIGNvbW1pdCBhcyB0aGUgY3VycmVu
+dCBpbmZyYXN0cnVjdHVyZSBhbHNvIGRvZXMgbm90IHN1cHBvcnQgdGhlIHZhbGlkYXRpb24gb2Yg
+cmFkYXJfZGV0ZWN0IC8gbnVtX2RpZmZlcmVudF9jaGFubmVsICkgLiANCjIuIGNmZzgwMjExIDog
+Q2hlY2sgcmFkYXJfZGV0ZWN0IGFuZCBudW1fZGlmZmVyZW50X2NoYW5uZWxzIHdpdGggYmVhY29u
+IGludGVyZmFjZSBjb21iaW5hdGlvbnMuDQoNClJlZ2FyZHMsDQpQdXJ1c2hvdHRhbQ0KDQoNCi0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9o
+YW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBXZWRuZXNkYXksIFNlcHRlbWJlciAyOCwg
+MjAxNiA0OjUxIFBNDQpUbzogVW5kZWthcmksIFN1bmlsIER1dHQgPHVzZHV0dEBxdGkucXVhbGNv
+bW0uY29tPjsgS3VzaHdhaGEsIFB1cnVzaG90dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29t
+Pg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpv
+dW5pQHFjYS5xdWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFy
+bmF0aEBxY2EucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2OF0gY2ZnODAyMTE6
+IFByb3Zpc2lvbiB0byBhbGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBpbnRl
+cnZhbHMNCg0KSGksDQoNCj4gSW4gUEFUQ0ggdjggLCBjZmc4MDIxMV92YWxpZGF0ZV9iZWFjb25f
+aW50IC0+IA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyBjYXJyaWVzIHRoZSBhcmd1bWVu
+dCBpZnR5cGVfbnVtICwgd2hpY2ggDQo+IGFsc28gY29uc2lkZXJzIHRoZSAibmV3IGludGVyZmFj
+ZSIgdGhhdCBpcyBnZXR0aW5nIGFkZGVkLg0KDQpBaCwgcmlnaHQsIEkgcmVtZW1iZXIgbm93LCBz
+b3JyeS4NCg0KPiBUaHVzICwgaW4gdGhlIGV4YW1wbGUgeW91IGhhdmUgcXVvdGVkIGFib3ZlICwg
+dGhlIGlmdHlwZV9udW0gc2hhbGwgDQo+IHJlcHJlc2VudCAyICggQVAgKyBBUCApICwgYW5kIHRo
+dXMgdGhlIG1pbl9nY2Qgb2J0YWluZWQgb3V0IG9mIA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0
+aW9ucyAoY2ZnODAyMTFfZ2V0X2JlYWNvbl9pbnRfbWluX2djZCkgc2hhbGwgYmUNCj4gNTAgZm9y
+IHRoZSBleGFtcGxlIDEgYW5kIDIwMCBmb3IgdGhlIGV4YW1wbGUgMiAuIFRodXMgLCBjb25zaWRl
+cmluZyANCj4gdGhlIHR3byBleGFtcGxlcyBtZW50aW9uZWQgYWJvdmUgLCB0aGUgc2Vjb25kIEFQ
+IHNob3VsZCBzdWNjZWVkIGZvciANCj4gImV4YW1wbGUgMSIgdnMgZmFpbHVyZSBmb3IgImV4YW1w
+bGUgMiIgd2l0aCBwYXRjaA0KPiBWOCAsIGlzbid0ID8NCg0KWWVhaCwgSSB0cmllZCB0byBzaW1w
+bGlmeSBhbmQgZGlkIHNvIHRvbyBtdWNoLiBJIGJlbGlldmUgeW91IGFyZSwgZm9yIHRoaXMgcHVy
+cG9zZSwgaWdub3JpbmcgZm9yIGV4YW1wbGUgcmFkYXIgZGV0ZWN0aW9uLg0KDQpTaW5jZSB5b3Un
+cmUgcGFzc2luZyAwIGZvciBudW1fZGlmZmVyZW50X2NoYW5uZWxzIGFuZCByYWRhcl9kZXRlY3Qs
+IHlvdSBtaWdodCBmaW5kIGEgY29tYmluYXRpb24gaXNuJ3QgYWN0dWFsbHkgY3VycmVudGx5IHVz
+YWJsZSwgYnV0IHRoYXQgYWxsb3dzIHRoZSBuZXcgYmVhY29uIGludGVydmFsIGNvbmZpZ3VyYXRp
+b24uDQoNClNvIEkgdGhpbmsgb3ZlcmFsbCB0aGlzIHdpbGwgb25seSB3b3JrIHJpZ2h0IGlmIGl0
+J3MgZG9uZSB3aXRoIGFsbCBuZWNlc3NhcnkgaW5mb3JtYXRpb24sIG5vPw0KDQpUcnlpbmcgdG8g
+Y29uc3RydWN0IGFub3RoZXIgZXhhbXBsZSAuLi4gbGV0J3Mgc2F5IHBlcm1pdHRlZCBjb21iaW5h
+dGlvbnMgYXJlDQoNCsKgKiBnbyA9IDMsIGNoYW5uZWxzID0gMSwgbWluX2Jjbl9nY2QgPSA1MA0K
+wqAqIGdvID0gMywgY2hhbm5lbHMgPSAyLCBtaW5fYmNuX2djZCA9IDEwMA0KDQood2hpY2ggaXNu
+J3QgYWN0dWFsbHkgYWxsIHRoYXQgZmFyLWZldGNoZWQsIHNpbmNlIGNoYW5uZWwgaG9wcGluZyB0
+YWtlcw0KdGltZSkNCg0KRm9yIHNpbXBsaWZpY2F0aW9uLCBzYXkgeW91IGFscmVhZHkgaGF2ZSB0
+d28gR09zIGFjdGl2ZSBvbiBkaWZmZXJlbnQgY2hhbm5lbHMgKHdpdGggQkkgMTAwKSwgYW5kIHdh
+bnQgdG8gYWRkIGFub3RoZXIgb25lIC0gd2l0aCBiZWFjb24gaW50ZXJ2YWwgNTAgLSB0aGlzIGlz
+bid0IHBvc3NpYmxlLCBidXQgSSBkb24ndCB0aGluayB5b3VyIGNvZGUgd291bGQgZGV0ZWN0IGl0
+Pw0KDQpPciwgcGVyaGFwcyBJJ20gcmVhZGluZyB0aGlzIHdyb25nLCBpZiB5b3VyIGNvZGUgKmRv
+ZXMqIGRldGVjdCBpdCB0aGVuIGNoYW5naW5nIHRoZSBzY2VuYXJpbyBhIGJpdCB0byBoYXZlIGp1
+c3QgYSBzaW5nbGUgY2hhbm5lbCwgeW91ciBjb2RlIHdvdWxkIHByZXZlbnQgaXQgZXZlbiB0aG91
+Z2ggaXQncyBhbGxvd2VkPw0KDQoNCj4gVGhlIGN1cnJlbnQgYmVoYXZpb3Igb2YgdGhlIGtlcm5l
+bCBpcyB0byBub3QgYWxsb3cgdGhlIGNvbmZpZ3VyYXRpb24gDQo+IG9mIGRpZmZlcmVudCBiZWFj
+b24gaW50ZXJ2YWxzIGFuZCBvdXIgZXhwZWN0YXRpb24gaXMgdGhhdCB0aGlzIG5ldyANCj4gcGF0
+Y2ggc2hvdWxkIGJlIGJhY2t3YXJkIGNvbXBhdGlibGUgd2l0aCB0aGUgZXhpc3RpbmcgYmVoYXZp
+b3IuDQoNCkNvcnJlY3QsIGFuZCBJIGFncmVlLCB3ZSBzaG91bGRuJ3QgYnJlYWsgdGhhdC4NCg0K
+PiBOb3cgLCBpZiB3ZSBnbyB3aXRoIHRoaXMgYXBwcm9hY2ggb2YgImludHJvZHVjaW5nIGEgbmV3
+IGFyZ3VtZW50IHRvIA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyB3aGljaCBzaGFsbCBi
+ZSB0aGUgR0NEIG9mIGFsbCB0aGUgZXhpc3RpbmcgDQo+IGNvbWJpbmF0aW9ucyB0byBjaGVjayBh
+Z2FpbnN0IHRoZSByZXNwZWN0aXZlIA0KPiAiZGlmZl9iZWFjb25faW50X2djZF9taW4iIiAswqDC
+oGNvbnNpZGVyIHRoZSBjYXNlICggc2FtZSBvbmUgd2hpY2ggaXMgDQo+IG1lbnRpb25lZCBhYm92
+ZSApIHRoYXQgd2UgaGF2ZSBhIHNpbmdsZSBBUCBpbnRlcmZhY2UgKCBiZWFjb24gaW50ZXJ2YWwg
+DQo+ID0gMzAwICkgLCBhbmQgYSBuZXcgQVAgaXMgZ2V0dGluZyBhZGRlZCAoIGJlYWNvbiBpbnRl
+cnZhbCA9DQo+IDE1MCApLMKgwqB3aXRoIHRoZSBmb2xsb3dpbmcgYWxsb3dlZCBjb21iaW5hdGlv
+bnM6DQo+IA0KPiAxKSAqIGFwID0gMg0KPiDCoMKgwqDCoMKgwqDCoMKgZGlmZl9iZWFjb25faW50
+X2djZF9taW4gPSAwICggcmF0aGVyIG5vdCBzcGVjaWZpZWQgKQ0KPiAyKcKgwqAqIGFwID0gMg0K
+PiDCoMKgwqDCoMKgwqBkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiA9IDEwMA0KPiANCj4gVGhlIEdD
+RCBjYWxjdWxhdGVkIGlzIDE1MCAuIGNmZzgwMjExX2l0ZXJfY29tYmluYXRpb25zIHNoYWxsIHJl
+dHVybiANCj4gc3VjY2VzcyBmb3IgYm90aCB0aGUgc2NlbmFyaW9zICggMSBhbmQgMiApIChUaGUg
+aW50ZW50aW9uIGhlcmUgaXMgdG8gDQo+IGNvbXBhcmUgd2l0aCBvbmx5IHRoZSBub256ZXJvICIg
+ZGlmZl9iZWFjb25faW50X2djZF9taW4iICkNCj4gDQo+IFRoaXMgc3VjY2VzcyBmcm9tICJjZmc4
+MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyIgZG9lcyBub3QgcmVwcmVzZW50IGlmIA0KPiB0aGUgR0NE
+IHBhc3NlZCBpcyBjb21wYXJlZCBhZ2FpbnN0IGEgMCAvIG5vbiB6ZXJvIA0KPiAiZGlmZl9iZWFj
+b25faW50X2djZF9taW4iICwgaXNuJ3QgPw0KPiANCj4gVGh1cyAsIHdlIGFyZSB0cnlpbmcgdG8g
+c29sdmUgdGhpcyBwcm9ibGVtICwgYnkgZ2V0dGluZyB0aGUgDQo+ICJkaWZmX2JlYWNvbl9pbnRf
+Z2NkX21pbiIgZm9yIHRoZSByZXNwZWN0aXZlIGludGVyZmFjZSBjb21iaW5hdGlvbiAsIA0KPiBi
+ZWZvcmUgY29tcGFyaW5nIGl0IHdpdGggdGhlIGNhbGN1bGF0ZWQgR0NELg0KDQpPaC4gSSB0aGlu
+ayBJIGZpbmFsbHkgdW5kZXJzdGFuZCB5b3VyIGNvbmNlcm4gLSBnb29kIHBvaW50IQ0KDQpMZXQg
+bWUgc2VlIGlmIEkgdW5kZXJzdGFuZCBjb3JyZWN0bHkgLSB5b3UncmUgc2F5aW5nIHRoYXQgaWYg
+SSBmaXJzdCBjYWxjdWxhdGXCoA0KDQrCoCBnID0gR0NEKGFsbCBCSXMsIGluY2x1ZGluZyB0aGUg
+bmV3IG9uZSkNCg0KYW5kIHRoZW4gZG8NCg0KwqAgY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMo
+Li4uIGV4aXN0aW5nIHZhcmlhYmxlcyAuLi4sIGcpDQoNCnRoZW4gSSBjYW5ub3QgYWNjdXJhdGVs
+eSBkZXRlcm1pbmUgd2hldGhlciBvciBub3QgSSBjYW4gdXNlIGEgY29tYmluYXRpb24gdGhhdCBk
+b2Vzbid0IHNwZWNpZnkgYSBtaW5fYmVhY29uX2ludGVydmFsX2djZCwgeW91IGNhbid0IGtub3cg
+aWYgdGhlICJhbGwgQklzIiB3ZXJlIHRoZSBzYW1lLCBvciBub3QuDQoNClRoYXQncyBhY3R1YWxs
+eSBhIHZlcnkgZ29vZCBwb2ludC4NCg0KSG93ZXZlciwgaXQgc2VlbXMgcHJldHR5IGVhc3kgdG8g
+c29sdmUgYnkgcGFzc2luZyBhbm90aGVyIGJvb2wgdGhhdCBpbmRpY2F0ZXMgImFsbCB0aGUgc2Ft
+ZSI/DQoNCmpvaGFubmVzDQo=
