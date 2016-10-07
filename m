@@ -1,57 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38418 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54884 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753251AbcJZGuK (ORCPT
+        with ESMTP id S1754019AbcJGLW6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 02:50:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: Re: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
-References: <20161017220342.1627073-1-arnd@arndb.de>
-        <20161017221355.1861551-7-arnd@arndb.de>
-Date: Wed, 26 Oct 2016 09:49:58 +0300
-In-Reply-To: <20161017221355.1861551-7-arnd@arndb.de> (Arnd Bergmann's message
-        of "Tue, 18 Oct 2016 00:13:40 +0200")
-Message-ID: <87zilr61ux.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_085016_449325_F1FE5DE7)
+        Fri, 7 Oct 2016 07:22:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [1/2] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com>
+References: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20161007112258.241FA61AD5@smtp.codeaurora.org> (sfid-20161007_132303_111943_D4A50856)
+Date: Fri,  7 Oct 2016 11:22:58 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> A device running without RX package aggregation could return more data
+> in the USB packet than the actual network packet. In this case we
+> could would clone the skb but then determine that that there was no
+> packet to handle and exit without freeing the cloned skb first.
+> 
+> This has so far only been observed with 8188eu devices, but could
+> affect others.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Cc: stable@vger.kernel.org # 4.8+
 
-> A bugfix added a sanity check around the assignment and use of the
-> 'is_11d' variable, which looks correct to me, but as the function is
-> rather complex already, this confuses the compiler to the point where
-> it can no longer figure out if the variable is always initialized
-> correctly:
->
-> brcm80211/brcmfmac/cfg80211.c: In function =E2=80=98brcmf_cfg80211_start_=
-ap=E2=80=99:
-> brcm80211/brcmfmac/cfg80211.c:4586:10: error: =E2=80=98is_11d=E2=80=99 ma=
-y be used uninitialized in this function [-Werror=3Dmaybe-uninitialized]
->
-> This adds an initialization for the newly introduced case in which
-> the variable should not really be used, in order to make the warning
-> go away.
->
-> Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
-> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-> Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+2 patches applied to wireless-drivers.git, thanks.
 
-Via which tree are you planning to submit this? Should I take it?
+1e54134ccad0 rtl8xxxu: Fix memory leak in handling rxdesc16 packets
+8a55698f2f29 rtl8xxxu: Fix big-endian problem reporting mactime
 
---=20
-Kalle Valo
+-- 
+https://patchwork.kernel.org/patch/9356961/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
