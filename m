@@ -1,77 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:38153 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751334AbcJZVEy (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:43499 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756487AbcJGNMc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:04:54 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 7/8] mac80211: FILS AEAD protection for station mode
- association frames
-Date: Wed, 26 Oct 2016 21:04:51 +0000
-Message-ID: <20161026210448.GA9549@jouni.qca.qualcomm.com> (sfid-20161026_230458_722934_40F30382)
-References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
- <1477435489-8555-3-git-send-email-jouni@qca.qualcomm.com>
- <1477460999.4059.13.camel@sipsolutions.net>
-In-Reply-To: <1477460999.4059.13.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Fri, 7 Oct 2016 09:12:32 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        netdev@vger.kernel.org
+Subject: [PATCH v4 3/4] cfg80211: configure multicast to unicast for AP interfaces
+Date: Fri,  7 Oct 2016 15:12:23 +0200
+Message-Id: <1475845944-27680-3-git-send-email-michael-dev@fami-braun.de> (sfid-20161007_151245_986868_F112AB1D)
+In-Reply-To: <1475845944-27680-1-git-send-email-michael-dev@fami-braun.de>
+References: <1475845944-27680-1-git-send-email-michael-dev@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 07:49:59AM +0200, Johannes Berg wrote:
-> > +static u8 *fils_find_session(u8 *pos, u8 *end)
+This add a userspace toggle to configure multicast to unicast.
 
-> Hmm. I think we should try to write this in terms of cfg80211_find_ie,
-> or perhaps cfg80211_find_ie_match, maybe we need to extend those but
-> this won't be the only one using the 255 escape.
->=20
-> Perhaps just making the eid passed there be a u16, and extending the
-> EID definitions appropriately?
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ include/net/cfg80211.h       |  6 ++++++
+ include/uapi/linux/nl80211.h | 10 ++++++++++
+ net/wireless/nl80211.c       | 36 ++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 12 ++++++++++++
+ net/wireless/trace.h         | 19 +++++++++++++++++++
+ 5 files changed, 83 insertions(+)
 
-Will do that based on our discussion on the details (a new wrapper
-function).
-
-> > +	if (!session) {
-> > +		sdata_info(sdata,
-
-> Should we really print the message this prominently? It seems like an
-> error case that we may not want to log at all, in case somebody tries
-> to flood us with such frames?
-...
-> Likewise here. Perhaps make these mlme_dbg() or so instead?
-
-These are pretty useful messages for debugging at least now that FILS is
-still so new.. Once it gets more mature and has documented
-interoperability between independent implementations, we may consider
-removing the messages since they would not really show up during normal
-operations and would not help much an actual end user. Anyway, I'll
-replace them with mlme_dbg() for now.
-
-> > +	if (req->fils_nonces)
-> > +		assoc_data_len +=3D 2 * FILS_NONCE_LEN;
->=20
-> Is this really correct? It seems like a bit of an artifact of initially
-> having had the nonces in a variable part of the struct?
->=20
-> Or perhaps they have to go into the frame in some place that I missed?
-> Please add a comment if so.
-
-Ah, looks like I forgot that there and req->fils_kek_len for that
-matter. I had initially thought of adding these as dynamically allocated
-components at the end of the buffer, but after seeing how req->ie[] was
-used, gave up on that extra complexity and simply used fixed size arrays
-since both the KEK and FILS nonces do have a known fixed size and we can
-easily "waste" that memory in struct ieee80211_mgd_assoc_data for
-non-FILS cases without causing any noticeable impact.
-
-> Also, you're never checking req->fils_nonces_set, so you can get rid of
-> that.
-
-Indeed. I'll make the cfg80211 patch enforce that both the KEK and
-nonces are set since they are both needed for all FILS cases and remove
-fils_nonces_set from mac80211.
-
---=20
-Jouni Malinen                                            PGP id EFC895FA=
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b550314..6ab8940 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2460,6 +2460,8 @@ struct cfg80211_qos_map {
+  *
+  * @set_wds_peer: set the WDS peer for a WDS interface
+  *
++ * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
++ *
+  * @rfkill_poll: polls the hw rfkill line, use cfg80211 reporting
+  *	functions to adjust rfkill hw state
+  *
+@@ -2722,6 +2724,10 @@ struct cfg80211_ops {
+ 	int	(*set_wds_peer)(struct wiphy *wiphy, struct net_device *dev,
+ 				const u8 *addr);
+ 
++	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
++					    struct net_device *dev,
++					    const bool enabled);
++
+ 	void	(*rfkill_poll)(struct wiphy *wiphy);
+ 
+ #ifdef CONFIG_NL80211_TESTMODE
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 2206941..1b9e87b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -599,6 +599,9 @@
+  *
+  * @NL80211_CMD_SET_WDS_PEER: Set the MAC address of the peer on a WDS interface.
+  *
++ * @NL80211_CMD_SET_MULTICAST_TO_UNICAST: Configure if AP interface should
++ *      perform multicast to unicast conversion (per-BSS).
++ *
+  * @NL80211_CMD_JOIN_MESH: Join a mesh. The mesh ID must be given, and initial
+  *	mesh config parameters may be given.
+  * @NL80211_CMD_LEAVE_MESH: Leave the mesh network -- no special arguments, the
+@@ -1026,6 +1029,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_ABORT_SCAN,
+ 
++	NL80211_CMD_SET_MULTICAST_TO_UNICAST,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1867,6 +1872,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MESH_PEER_AID: Association ID for the mesh peer (u16). This is
+  *	used to pull the stored data for mesh peer in power save state.
+  *
++ * @NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED: Multicast packets should be
++ *      send out as unicast to all stations.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2261,6 +2269,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MESH_PEER_AID,
+ 
++	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f02653a..57b5d70 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -409,6 +409,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 		.len = VHT_MUMIMO_GROUPS_DATA_LEN
+ 	},
+ 	[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR] = { .len = ETH_ALEN },
++	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_U8, },
+ };
+ 
+ /* policy for the key attributes */
+@@ -1538,6 +1539,7 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 				goto nla_put_failure;
+ 		}
+ 		CMD(set_wds_peer, SET_WDS_PEER);
++		CMD(set_multicast_to_unicast, SET_MULTICAST_TO_UNICAST);
+ 		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
+ 			CMD(tdls_mgmt, TDLS_MGMT);
+ 			CMD(tdls_oper, TDLS_OPER);
+@@ -2164,6 +2166,32 @@ static int nl80211_set_wds_peer(struct sk_buff *skb, struct genl_info *info)
+ 	return rdev_set_wds_peer(rdev, dev, bssid);
+ }
+ 
++static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
++					    struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	const struct nlattr *nla;
++	bool enabled;
++
++	if (!info->attrs[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED])
++		return -EINVAL;
++
++	if (netif_running(dev))
++		return -EBUSY;
++
++	if (!rdev->ops->set_multicast_to_unicast)
++		return -EOPNOTSUPP;
++
++	if (wdev->iftype != NL80211_IFTYPE_AP)
++		return -EOPNOTSUPP;
++
++	nla = info->attrs[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED];
++	enabled = nla_get_flag(nla);
++	return rdev_set_multicast_to_unicast(rdev, dev, enabled);
++}
++
+ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev;
+@@ -11574,6 +11602,14 @@ static const struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_SET_MULTICAST_TO_UNICAST,
++		.doit = nl80211_set_multicast_to_unicast,
++		.policy = nl80211_policy,
++		.flags = GENL_UNS_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_JOIN_MESH,
+ 		.doit = nl80211_join_mesh,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 85ff30b..7d93c3d 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -562,6 +562,18 @@ static inline int rdev_set_wds_peer(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int
++rdev_set_multicast_to_unicast(struct cfg80211_registered_device *rdev,
++			      struct net_device *dev,
++			      const bool enabled)
++{
++	int ret;
++	trace_rdev_set_multicast_to_unicast(&rdev->wiphy, dev, enabled);
++	ret = rdev->ops->set_multicast_to_unicast(&rdev->wiphy, dev, enabled);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline void rdev_rfkill_poll(struct cfg80211_registered_device *rdev)
+ {
+ 	trace_rdev_rfkill_poll(&rdev->wiphy);
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 72b5255..8c9aa57 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2940,6 +2940,25 @@ DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
+ 	TP_ARGS(wiphy, wdev)
+ );
++
++TRACE_EVENT(rdev_set_multicast_to_unicast,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 const bool enabled),
++	TP_ARGS(wiphy, netdev, enabled),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(bool, enabled)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->enabled = enabled;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", unicast: %s",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG,
++		  BOOL_TO_STR(__entry->enabled))
++);
+ #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+2.1.4
