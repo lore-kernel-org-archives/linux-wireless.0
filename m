@@ -1,131 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43448 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754833AbcJUVT5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 17:19:57 -0400
-Message-ID: <1477084793.4068.63.camel@sipsolutions.net> (sfid-20161021_232001_766618_35970376)
-Subject: Re: sequence diagrams in rst documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Markus Heiser <markus.heiser@darmarit.de>
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Date: Fri, 21 Oct 2016 23:19:53 +0200
-In-Reply-To: <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-         <20161011072119.7ad4e3a3@lwn.net>
-         <1476193466.4118.10.camel@sipsolutions.net>
-         <1476194038.4118.11.camel@sipsolutions.net>
-         <1476791021.6425.25.camel@sipsolutions.net>
-         <20161018175236.75c8c4e2@lwn.net>
-         <1476863488.5927.10.camel@sipsolutions.net>
-         <1477053099.4068.42.camel@sipsolutions.net> <87k2d1q2qx.fsf@intel.com>
-         <1477055055.4068.46.camel@sipsolutions.net>
-         <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:44459 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752735AbcJGMRo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 7 Oct 2016 08:17:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v7,
+ 1/3] Documentation: dt: net: add ath9k wireless device binding
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161002214743.2263-2-martin.blumenstingl@googlemail.com>
+References: <20161002214743.2263-2-martin.blumenstingl@googlemail.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+        julian.calaby@gmail.com, bjorn@mork.no, linux@rempel-privat.de,
+        nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Message-Id: <20161007121743.E625B61AF8@smtp.codeaurora.org> (sfid-20161007_141749_188253_788D6121)
+Date: Fri,  7 Oct 2016 12:17:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-21 at 18:11 +0200, Markus Heiser wrote:
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> wrote:
+> Add documentation how devicetree can be used to configure ath9k based
+> devices.
+> 
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 
-> Yes and No. It depends on the tools (toolchains) we want to use.
-> As far as I can see from a abstract POV it should by simple for
-> math:: / since we already use/need LaTeX for PDF, for other tools
-> I have to look.
+Looks good to me but missing the ack from DT maintainers, will wait for
+that.
 
-Not sure if we were talking past each other - but the pass-through is
-actually really simple - example patch below.
+3 patches set to Deferred.
 
-This makes it output an SVG (with fallback to PNG even) into the HTML,
-a PDF into the PDF, and plain pre-formatted text for both when the
-plantuml sphinx plugin isn't installed.
+9359805 [v7,1/3] Documentation: dt: net: add ath9k wireless device binding
+9359801 [v7,2/3] ath9k: add a helper to get the string representation of ath_bus_type
+9359803 [v7,3/3] ath9k: parse the device configuration from an OF node
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9359805/
 
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-diff --git a/Documentation/conf.py b/Documentation/conf.py
-index bf6f310e5170..2c00ab6f0baf 100644
---- a/Documentation/conf.py
-+++ b/Documentation/conf.py
-@@ -34,7 +34,8 @@ from load_config import loadConfig
- # Add any Sphinx extension module names here, as strings. They can be
- # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
- # ones.
--extensions = ['kernel-doc', 'rstFlatTable', 'kernel_include', 'cdomain']
-+extensions = ['kernel-doc', 'rstFlatTable', 'kernel_include', 'cdomain',
-+              'plantuml']
- 
- # The name of the math extension changed on Sphinx 1.4
- if minor > 3:
-@@ -494,6 +495,9 @@ pdf_documents = [
- kerneldoc_bin = '../scripts/kernel-doc'
- kerneldoc_srctree = '..'
- 
-+plantuml_output_format = "svg"
-+plantuml_latex_output_format = "pdf"
-+
- # ------------------------------------------------------------------------------
- # Since loadConfig overwrites settings from the global namespace, it has to be
- # the last statement in the conf.py file
-diff --git a/Documentation/driver-api/index.rst b/Documentation/driver-api/index.rst
-index 8e259c5d0322..e0d4f24b6039 100644
---- a/Documentation/driver-api/index.rst
-+++ b/Documentation/driver-api/index.rst
-@@ -7,6 +7,12 @@ of device drivers.  This document is an only somewhat organized collection
- of some of those interfaces — it will hopefully get better over time!  The
- available subsections can be seen below.
- 
-+.. uml::
-+
-+   Alice -> Bob: Hi!
-+   Alice <- Bob: How are you?
-+
-+
- .. class:: toc-title
- 
- 	   Table of contents
-diff --git a/Documentation/sphinx/dummy.py b/Documentation/sphinx/dummy.py
-new file mode 100644
-index 000000000000..cfac42886ebd
---- /dev/null
-+++ b/Documentation/sphinx/dummy.py
-@@ -0,0 +1,24 @@
-+from sphinx.util.compat import Directive
-+from docutils import nodes
-+from docutils.parsers.rst import directives
-+
-+class IgnoreOptions(object):
-+    def __getitem__(self, key):
-+        return directives.unchanged
-+
-+def create_setup(directives):
-+    def setup(app):
-+        for d in directives:
-+            class TextDirective(Directive):
-+                has_content = True
-+                option_spec = IgnoreOptions()
-+
-+                def run(self):
-+                    text = '\n'.join(self.content)
-+                    return [nodes.literal_block('', text,
-+                                          classes=['code',
-+                                                   'missing-plugin',
-+                                                   'missing-plugin-%s' % d])]
-+
-+            app.add_directive(d, TextDirective)
-+    return setup
-diff --git a/Documentation/sphinx/plantuml.py b/Documentation/sphinx/plantuml.py
-new file mode 100644
-index 000000000000..0007bc7f24fd
---- /dev/null
-+++ b/Documentation/sphinx/plantuml.py
-@@ -0,0 +1,7 @@
-+# -*- coding: utf-8 -*-
-+from dummy import create_setup
-+
-+try:
-+    from sphinxcontrib.plantuml import *
-+except:
-+    setup = create_setup(['uml'])
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
