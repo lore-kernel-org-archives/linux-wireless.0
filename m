@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:44410 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933158AbcJTSiC (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52535 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750918AbcJGEvi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 14:38:02 -0400
-Date: Thu, 20 Oct 2016 14:38:00 -0400 (EDT)
-Message-Id: <20161020.143800.2192559431314444033.davem@davemloft.net> (sfid-20161020_204123_342168_2663ECF0)
-To: johannes@sipsolutions.net
-Cc: jarod@redhat.com, linux-kernel@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        qca_merez@qca.qualcomm.com, simon@thekelleys.org.uk,
-        stas.yakovlev@gmail.com, inaky.perez-gonzalez@intel.com
-Subject: Re: [PATCH net-next v2 3/9] net: use core MTU range checking in
- wireless drivers
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1476987755.14078.3.camel@sipsolutions.net>
-References: <20161020175524.6184-1-jarod@redhat.com>
-        <20161020175524.6184-4-jarod@redhat.com>
-        <1476987755.14078.3.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Fri, 7 Oct 2016 00:51:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Rameshwar Sahu <sahu.rameshwar73@gmail.com>
+Subject: Re: [PATCH] [wl18xx] Fix memory leakage if kzalloc fails
+References: <20161005115013.GA22099@symbol-HP-ZBook-15>
+        <CAGRGNgWCxLUz0=EUgtNQ5pLo2wCEpsMeNQHYCpKfh12irp6NDg@mail.gmail.com>
+        <CAFqt6zYpMJKrX51--eHXKSEcgb+KVJ7ULjoL==DNKyOeOB5_4Q@mail.gmail.com>
+Date: Fri, 07 Oct 2016 07:50:46 +0300
+In-Reply-To: <CAFqt6zYpMJKrX51--eHXKSEcgb+KVJ7ULjoL==DNKyOeOB5_4Q@mail.gmail.com>
+        (Souptick Joarder's message of "Fri, 7 Oct 2016 00:21:13 +0530")
+Message-ID: <87oa2w2255.fsf@purkki.adurom.net> (sfid-20161007_065142_720792_A3DA28DD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 20 Oct 2016 20:22:35 +0200
+Souptick Joarder <jrdr.linux@gmail.com> writes:
 
-> On Thu, 2016-10-20 at 13:55 -0400, Jarod Wilson wrote:
->> - set max_mtu in wil6210 driver
->> - set max_mtu in atmel driver
->> - set min/max_mtu in cisco airo driver, remove airo_change_mtu
->> - set min/max_mtu in ipw2100/ipw2200 drivers, remove
->> libipw_change_mtu
->> - set min/max_mtu in p80211netdev, remove wlan_change_mtu
->> - set min/max_mtu in net/mac80211/iface.c and remove ieee80211_change_mtu
-> 
-> For the mac80211 part,
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> Dave, I'm assuming you'll pick this up, but if you prefer not to I can
-> also coordinate with Kalle to take this through our trees.
+> Hi Julian,
+>
+>
+> On Thu, Oct 6, 2016 at 3:05 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> Hi,
+>>
+>> On Wed, Oct 5, 2016 at 10:50 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>>> This patch is added to properly handle memory leak if kzalloc fails
+>>> in wl18xx_scan_send() and wl18xx_scan_sched_scan_config()
+>>
+>> What memory leak?
+>
+> My Apologies here. I was addressing here about freeing the invalid memories.
+> But I put wrong description. I will resend this patch with proper
+> descriptions and addressing your comments.
 
-Yeah I'll get this, thanks for asking.
+Also the prefix in the title should be "wl18xx: ", not "[wl18xx]". See:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject_name
+
+-- 
+Kalle Valo
