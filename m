@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49440 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932726AbcJRUMX (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.218]:25260 "EHLO
+        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754693AbcJHKNi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 16:12:23 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 18 Oct 2016 23:12:10 +0300
-Message-Id: <20161018201213.18873-5-luca@coelho.fi> (sfid-20161018_221232_659730_1CD2B00E)
-In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
-References: <20161018201213.18873-1-luca@coelho.fi>
-Subject: [PATCH 4/7] mac80211: allow the driver not to pass the tid to ieee80211_sta_uapsd_trigger
+        Sat, 8 Oct 2016 06:13:38 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sat, 08 Oct 2016 12:13:03 +0200
+From: michael-dev <michael-dev@fami-braun.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
+        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Subject: Re: [PATCHv4] mac80211: check A-MSDU inner frame source address on AP
+ interfaces
+In-Reply-To: <1475753787.2015.13.camel@sipsolutions.net>
+References: <1475661751-26262-1-git-send-email-michael-dev@fami-braun.de>
+ <1475679558.5257.7.camel@sipsolutions.net>
+ <bb2ea10f30d2ae8a3cc048974ed148c8@fami-braun.de>
+ <1475753787.2015.13.camel@sipsolutions.net>
+Message-ID: <533ec0874b52264792ac4f9366ad71c0@fami-braun.de> (sfid-20161008_121342_329015_23FF0D71)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Am 06.10.2016 13:36, schrieb Johannes Berg:
+> Could you test my patches in your scenario to see they do what we want?
+> I'll resend as [PATCH] then, and think about applying them and perhaps
+> backporting also.
 
-iwlwifi will check internally that the tid maps to an AC
-that is trigger enabled, but can't know what tid exactly.
-Allow the driver to pass a generic tid and make mac80211
-assume that a trigger frame was received.
+I've tested them by running a new hostapd hwsim test [1] and after 
+applying [2].
+I can confirm that this tests fails without your RFC series applied and 
+passes when your RFC series is applied.
+So your RFC is fine.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h | 4 ++++
- net/mac80211/rx.c      | 5 +++--
- 2 files changed, 7 insertions(+), 2 deletions(-)
+Tested-by: Michael Braun <michael-dev@fami-braun.de>
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index e50c9e0..f3dbada 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -4087,6 +4087,10 @@ void ieee80211_sta_pspoll(struct ieee80211_sta *sta);
-  * This must be used in conjunction with ieee80211_sta_ps_transition()
-  * and possibly ieee80211_sta_pspoll(); calls to all three must be
-  * serialized.
-+ * %IEEE80211_NUM_TIDS can be passed as the tid if the tid is unknown.
-+ * In this case, mac80211 will not check that this tid maps to an AC
-+ * that is trigger enabled and assume that the caller did the proper
-+ * checks.
-  */
- void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fc08a50..837d562 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1394,13 +1394,14 @@ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
- 	u8 ac = ieee802_1d_to_ac[tid & 7];
- 
- 	/*
--	 * If this AC is not trigger-enabled do nothing.
-+	 * If this AC is not trigger-enabled do nothing unless the
-+	 * driver is calling us after it already checked.
- 	 *
- 	 * NB: This could/should check a separate bitmap of trigger-
- 	 * enabled queues, but for now we only implement uAPSD w/o
- 	 * TSPEC changes to the ACs, so they're always the same.
- 	 */
--	if (!(sta->sta.uapsd_queues & BIT(ac)))
-+	if (!(sta->sta.uapsd_queues & BIT(ac)) && tid != IEEE80211_NUM_TIDS)
- 		return;
- 
- 	/* if we are in a service period, do nothing */
--- 
-2.9.3
+Regards,
+M. Braun
+
+
+[1] 
+https://github.com/michael-dev/hostapd/commit/2caecdd9911529e39c6b8a83aac0cbe737dc8f65
+[2] https://patchwork.kernel.org/patch/9367469/
