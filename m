@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13590 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753427AbcJLH3U (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:33643 "EHLO
+        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752220AbcJJPEy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 03:29:20 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix failure to send NULL func frame for 10.4
-Date: Wed, 12 Oct 2016 12:59:02 +0530
-Message-ID: <1476257342-3241-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161012_092943_702754_0D851692)
+        Mon, 10 Oct 2016 11:04:54 -0400
+Date: Tue, 11 Oct 2016 00:03:58 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        linux-next@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+Message-ID: <20161010150358.GA514@swordfish> (sfid-20161010_170519_610396_3625E5BD)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Hello,
 
-This partially reverts 'commit 2cdce425aa33
-("ath10k: Fix broken NULL func data frame status for 10.4")'
-Unfortunately this breaks sending NULL func and the existing
-issue of obtaining proper tx status for NULL function will be
-fixed. Also update the comments for feature flag added to be
-useless and not working
+current -git kills my system. adding
 
-Fixes: 2cdce425aa33 "ath10k: Fix broken NULL func data frame status for
-10.4"
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 6 ++----
- drivers/net/wireless/ath/ath10k/mac.c  | 2 --
- 2 files changed, 2 insertions(+), 6 deletions(-)
+	if (!virt_addr_valid(&aad[2])) {
+		WARN_ON(1);
+		return -EINVAL;
+	}
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index b367e9c..42c3f1b 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -552,10 +552,8 @@ enum ath10k_fw_features {
- 	 */
- 	ATH10K_FW_FEATURE_BTCOEX_PARAM = 14,
- 
--	/* Older firmware with HTT delivers incorrect tx status for null func
--	 * frames to driver, but this fixed in 10.2 and 10.4 firmware versions.
--	 * Also this workaround results in reporting of incorrect null func
--	 * status for 10.4. This flag is used to skip the workaround.
-+	/* Unused flag and proven to be not working, enable this if you want
-+	 * to experiment sending NULL func data frames in HTT TX
- 	 */
- 	ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR = 15,
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 4565321..86a6610 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3255,8 +3255,6 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
- 	if (ar->htt.target_version_major < 3 &&
- 	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
- 	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
--		      ar->running_fw->fw_file.fw_features) &&
--	    !test_bit(ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR,
- 		      ar->running_fw->fw_file.fw_features))
- 		return ATH10K_HW_TXRX_MGMT;
- 
--- 
-1.9.1
+to ieee80211_aes_ccm_decrypt() given the following backtrace
+
+ WARNING: CPU: 5 PID: 252 at net/mac80211/aes_ccm.c:77 ieee80211_aes_ccm_decrypt+0xc8/0x197
+ CPU: 5 PID: 252 Comm: irq/29-iwlwifi Tainted: G        W       4.8.0-next-20161010-dbg-00007-g79797e9-dirty #88
+  ffffc90000413638 ffffffff811ff0e3 0000000000000000 0000000000000000
+  ffffc90000413678 ffffffff8103fe91 0000004d000001c8 1ffff920000826d3
+  ffff88040fc526d8 0000000000000008 ffffc90000413978 ffffc9000041397a
+ Call Trace:
+  [<ffffffff811ff0e3>] dump_stack+0x4f/0x65
+  [<ffffffff8103fe91>] __warn+0xc2/0xdd
+  [<ffffffff8103ff1c>] warn_slowpath_null+0x1d/0x1f
+  [<ffffffff8142aaa5>] ieee80211_aes_ccm_decrypt+0xc8/0x197
+  [<ffffffff810ed595>] ? __put_page+0x3c/0x3f
+  [<ffffffff8131fa42>] ? put_page+0x4a/0x62
+  [<ffffffff813218d3>] ? __pskb_pull_tail+0x1e8/0x279
+  [<ffffffff8141a7dc>] ? ccmp_special_blocks.isra.5+0x51/0x12d
+  [<ffffffff8141b226>] ieee80211_crypto_ccmp_decrypt+0x1ba/0x221
+  [<ffffffff81432e80>] ieee80211_rx_handlers+0x52a/0x19c2
+  [<ffffffff81070000>] ? start_dl_timer+0xa8/0xb4
+  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
+  [<ffffffff8108ebec>] ? del_timer+0x57/0x61
+  [<ffffffff814351a8>] ieee80211_prepare_and_rx_handle+0xcd6/0xd2a
+  [<ffffffff810742a5>] ? local_clock+0x10/0x12
+  [<ffffffff8107642b>] ? __lock_acquire.isra.31+0x202/0x57e
+  [<ffffffff8143207b>] ? rcu_read_unlock+0x23/0x23
+  [<ffffffff81066e77>] ? sched_clock_cpu+0x17/0xc6
+  [<ffffffff814357ab>] ieee80211_rx_napi+0x5af/0x698
+  [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
+  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
+  [<ffffffffa023aaa9>] iwl_mvm_rx_rx_mpdu+0x5ab/0x60c [iwlmvm]
+  [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
+  [<ffffffffa0235c80>] iwl_mvm_rx+0x45/0x69 [iwlmvm]
+  [<ffffffffa01a989e>] iwl_pcie_rx_handle+0x478/0x584 [iwlwifi]
+  [<ffffffffa01aaafd>] iwl_pcie_irq_handler+0x39c/0x52d [iwlwifi]
+  [<ffffffff81080824>] ? irq_finalize_oneshot+0xa7/0xa7
+  [<ffffffff81080841>] irq_thread_fn+0x1d/0x34
+  [<ffffffff81080ab5>] irq_thread+0xe6/0x1bb
+  [<ffffffff8108093a>] ? wake_threads_waitq+0x2c/0x2c
+  [<ffffffff810809cf>] ? irq_thread_dtor+0x95/0x95
+  [<ffffffff81059d79>] kthread+0xc6/0xce
+  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
+  [<ffffffff81059cb3>] ? __list_del_entry+0x22/0x22
+  [<ffffffff814669d2>] ret_from_fork+0x22/0x30
+ ---[ end trace 94da6d4698b938b2 ]---
+
+	-ss
