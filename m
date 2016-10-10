@@ -1,114 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12196 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752621AbcJGHmV (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:36244 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752538AbcJJPBY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 03:42:21 -0400
-From: "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Subject: RE: [PATCH v8] cfg80211: Provision to allow the support for different
- beacon intervals
-Date: Fri, 7 Oct 2016 07:42:13 +0000
-Message-ID: <6c2abcf3f79b4cf6996b69e1a7aa590d@aphydexm01b.ap.qualcomm.com> (sfid-20161007_094225_221618_3353D292)
-References: <1472649972-6649-1-git-send-email-pkushwah@qti.qualcomm.com>
-         <1473675843.29016.18.camel@sipsolutions.net>
-         <c6f1a958d7f941b5a7dc8564d3f1c371@aphydexm01f.ap.qualcomm.com>
-         (sfid-20160916_083438_618523_AC15A50F)
- <1474981379.5141.37.camel@sipsolutions.net>
-         <0b626d7836be4cce8ea4868538fe66d3@aphydexm01f.ap.qualcomm.com>
- <1475061661.4139.40.camel@sipsolutions.net>
-In-Reply-To: <1475061661.4139.40.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 10 Oct 2016 11:01:24 -0400
+Received: by mail-oi0-f46.google.com with SMTP id m72so129944507oik.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 08:01:06 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <8760p0jlv4.fsf@kamboji.qca.qualcomm.com>
+References: <1475699037-136212-1-git-send-email-mfaltesek@google.com> <8760p0jlv4.fsf@kamboji.qca.qualcomm.com>
+From: Marty Faltesek <mfaltesek@google.com>
+Date: Mon, 10 Oct 2016 11:01:05 -0400
+Message-ID: <CAOiWkA8yX6bnLWHTwMc21EJHh4tQHpdBH+yKL4Y9WWxufBKaKQ@mail.gmail.com> (sfid-20161010_170127_460269_35C8EC0D)
+Subject: Re: [PATCH v2] ath10k: cache calibration data when the core is stopped
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBIb3dldmVyLCBpdCBzZWVtcyBwcmV0dHkgZWFzeSB0byBzb2x2ZSBieSBwYXNzaW5nIGFub3Ro
-ZXIgYm9vbCB0aGF0IGluZGljYXRlcyAiYWxsIHRoZSBzYW1lIj8NClllcyAuIFRoYW5rcyAuIA0K
-V2UgYXJlIHBsYW5uaW5nIHRvIGdldCB0aGUgZm9sbG93aW5nIGNoYW5nZXMgaW4gMiBjb21taXRz
-IC4gTGV0IG1lIGtub3cgeW91ciBjb25zZW50IC4gDQoxLiBjZmc4MDIxMTogUHJvdmlzaW9uIHRv
-IGFsbG93IHRoZSBzdXBwb3J0IGZvciBkaWZmZXJlbnQgYmVhY29uIGludGVydmFscy4gKCBXb3Vs
-ZCBsaWtlIHRvIGdvIHdpdGggdGhpcyBpbiBhIHNlcGFyYXRlIGNvbW1pdCBhcyB0aGUgY3VycmVu
-dCBpbmZyYXN0cnVjdHVyZSBhbHNvIGRvZXMgbm90IHN1cHBvcnQgdGhlIHZhbGlkYXRpb24gb2Yg
-cmFkYXJfZGV0ZWN0IC8gbnVtX2RpZmZlcmVudF9jaGFubmVsICkgLiANCjIuIGNmZzgwMjExIDog
-Q2hlY2sgcmFkYXJfZGV0ZWN0IGFuZCBudW1fZGlmZmVyZW50X2NoYW5uZWxzIHdpdGggYmVhY29u
-IGludGVyZmFjZSBjb21iaW5hdGlvbnMuDQoNClJlZ2FyZHMsDQpQdXJ1c2hvdHRhbQ0KDQoNCi0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9o
-YW5uZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBXZWRuZXNkYXksIFNlcHRlbWJlciAyOCwg
-MjAxNiA0OjUxIFBNDQpUbzogVW5kZWthcmksIFN1bmlsIER1dHQgPHVzZHV0dEBxdGkucXVhbGNv
-bW0uY29tPjsgS3VzaHdhaGEsIFB1cnVzaG90dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29t
-Pg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpv
-dW5pQHFjYS5xdWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFy
-bmF0aEBxY2EucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2OF0gY2ZnODAyMTE6
-IFByb3Zpc2lvbiB0byBhbGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBpbnRl
-cnZhbHMNCg0KSGksDQoNCj4gSW4gUEFUQ0ggdjggLCBjZmc4MDIxMV92YWxpZGF0ZV9iZWFjb25f
-aW50IC0+IA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyBjYXJyaWVzIHRoZSBhcmd1bWVu
-dCBpZnR5cGVfbnVtICwgd2hpY2ggDQo+IGFsc28gY29uc2lkZXJzIHRoZSAibmV3IGludGVyZmFj
-ZSIgdGhhdCBpcyBnZXR0aW5nIGFkZGVkLg0KDQpBaCwgcmlnaHQsIEkgcmVtZW1iZXIgbm93LCBz
-b3JyeS4NCg0KPiBUaHVzICwgaW4gdGhlIGV4YW1wbGUgeW91IGhhdmUgcXVvdGVkIGFib3ZlICwg
-dGhlIGlmdHlwZV9udW0gc2hhbGwgDQo+IHJlcHJlc2VudCAyICggQVAgKyBBUCApICwgYW5kIHRo
-dXMgdGhlIG1pbl9nY2Qgb2J0YWluZWQgb3V0IG9mIA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0
-aW9ucyAoY2ZnODAyMTFfZ2V0X2JlYWNvbl9pbnRfbWluX2djZCkgc2hhbGwgYmUNCj4gNTAgZm9y
-IHRoZSBleGFtcGxlIDEgYW5kIDIwMCBmb3IgdGhlIGV4YW1wbGUgMiAuIFRodXMgLCBjb25zaWRl
-cmluZyANCj4gdGhlIHR3byBleGFtcGxlcyBtZW50aW9uZWQgYWJvdmUgLCB0aGUgc2Vjb25kIEFQ
-IHNob3VsZCBzdWNjZWVkIGZvciANCj4gImV4YW1wbGUgMSIgdnMgZmFpbHVyZSBmb3IgImV4YW1w
-bGUgMiIgd2l0aCBwYXRjaA0KPiBWOCAsIGlzbid0ID8NCg0KWWVhaCwgSSB0cmllZCB0byBzaW1w
-bGlmeSBhbmQgZGlkIHNvIHRvbyBtdWNoLiBJIGJlbGlldmUgeW91IGFyZSwgZm9yIHRoaXMgcHVy
-cG9zZSwgaWdub3JpbmcgZm9yIGV4YW1wbGUgcmFkYXIgZGV0ZWN0aW9uLg0KDQpTaW5jZSB5b3Un
-cmUgcGFzc2luZyAwIGZvciBudW1fZGlmZmVyZW50X2NoYW5uZWxzIGFuZCByYWRhcl9kZXRlY3Qs
-IHlvdSBtaWdodCBmaW5kIGEgY29tYmluYXRpb24gaXNuJ3QgYWN0dWFsbHkgY3VycmVudGx5IHVz
-YWJsZSwgYnV0IHRoYXQgYWxsb3dzIHRoZSBuZXcgYmVhY29uIGludGVydmFsIGNvbmZpZ3VyYXRp
-b24uDQoNClNvIEkgdGhpbmsgb3ZlcmFsbCB0aGlzIHdpbGwgb25seSB3b3JrIHJpZ2h0IGlmIGl0
-J3MgZG9uZSB3aXRoIGFsbCBuZWNlc3NhcnkgaW5mb3JtYXRpb24sIG5vPw0KDQpUcnlpbmcgdG8g
-Y29uc3RydWN0IGFub3RoZXIgZXhhbXBsZSAuLi4gbGV0J3Mgc2F5IHBlcm1pdHRlZCBjb21iaW5h
-dGlvbnMgYXJlDQoNCsKgKiBnbyA9IDMsIGNoYW5uZWxzID0gMSwgbWluX2Jjbl9nY2QgPSA1MA0K
-wqAqIGdvID0gMywgY2hhbm5lbHMgPSAyLCBtaW5fYmNuX2djZCA9IDEwMA0KDQood2hpY2ggaXNu
-J3QgYWN0dWFsbHkgYWxsIHRoYXQgZmFyLWZldGNoZWQsIHNpbmNlIGNoYW5uZWwgaG9wcGluZyB0
-YWtlcw0KdGltZSkNCg0KRm9yIHNpbXBsaWZpY2F0aW9uLCBzYXkgeW91IGFscmVhZHkgaGF2ZSB0
-d28gR09zIGFjdGl2ZSBvbiBkaWZmZXJlbnQgY2hhbm5lbHMgKHdpdGggQkkgMTAwKSwgYW5kIHdh
-bnQgdG8gYWRkIGFub3RoZXIgb25lIC0gd2l0aCBiZWFjb24gaW50ZXJ2YWwgNTAgLSB0aGlzIGlz
-bid0IHBvc3NpYmxlLCBidXQgSSBkb24ndCB0aGluayB5b3VyIGNvZGUgd291bGQgZGV0ZWN0IGl0
-Pw0KDQpPciwgcGVyaGFwcyBJJ20gcmVhZGluZyB0aGlzIHdyb25nLCBpZiB5b3VyIGNvZGUgKmRv
-ZXMqIGRldGVjdCBpdCB0aGVuIGNoYW5naW5nIHRoZSBzY2VuYXJpbyBhIGJpdCB0byBoYXZlIGp1
-c3QgYSBzaW5nbGUgY2hhbm5lbCwgeW91ciBjb2RlIHdvdWxkIHByZXZlbnQgaXQgZXZlbiB0aG91
-Z2ggaXQncyBhbGxvd2VkPw0KDQoNCj4gVGhlIGN1cnJlbnQgYmVoYXZpb3Igb2YgdGhlIGtlcm5l
-bCBpcyB0byBub3QgYWxsb3cgdGhlIGNvbmZpZ3VyYXRpb24gDQo+IG9mIGRpZmZlcmVudCBiZWFj
-b24gaW50ZXJ2YWxzIGFuZCBvdXIgZXhwZWN0YXRpb24gaXMgdGhhdCB0aGlzIG5ldyANCj4gcGF0
-Y2ggc2hvdWxkIGJlIGJhY2t3YXJkIGNvbXBhdGlibGUgd2l0aCB0aGUgZXhpc3RpbmcgYmVoYXZp
-b3IuDQoNCkNvcnJlY3QsIGFuZCBJIGFncmVlLCB3ZSBzaG91bGRuJ3QgYnJlYWsgdGhhdC4NCg0K
-PiBOb3cgLCBpZiB3ZSBnbyB3aXRoIHRoaXMgYXBwcm9hY2ggb2YgImludHJvZHVjaW5nIGEgbmV3
-IGFyZ3VtZW50IHRvIA0KPiBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyB3aGljaCBzaGFsbCBi
-ZSB0aGUgR0NEIG9mIGFsbCB0aGUgZXhpc3RpbmcgDQo+IGNvbWJpbmF0aW9ucyB0byBjaGVjayBh
-Z2FpbnN0IHRoZSByZXNwZWN0aXZlIA0KPiAiZGlmZl9iZWFjb25faW50X2djZF9taW4iIiAswqDC
-oGNvbnNpZGVyIHRoZSBjYXNlICggc2FtZSBvbmUgd2hpY2ggaXMgDQo+IG1lbnRpb25lZCBhYm92
-ZSApIHRoYXQgd2UgaGF2ZSBhIHNpbmdsZSBBUCBpbnRlcmZhY2UgKCBiZWFjb24gaW50ZXJ2YWwg
-DQo+ID0gMzAwICkgLCBhbmQgYSBuZXcgQVAgaXMgZ2V0dGluZyBhZGRlZCAoIGJlYWNvbiBpbnRl
-cnZhbCA9DQo+IDE1MCApLMKgwqB3aXRoIHRoZSBmb2xsb3dpbmcgYWxsb3dlZCBjb21iaW5hdGlv
-bnM6DQo+IA0KPiAxKSAqIGFwID0gMg0KPiDCoMKgwqDCoMKgwqDCoMKgZGlmZl9iZWFjb25faW50
-X2djZF9taW4gPSAwICggcmF0aGVyIG5vdCBzcGVjaWZpZWQgKQ0KPiAyKcKgwqAqIGFwID0gMg0K
-PiDCoMKgwqDCoMKgwqBkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiA9IDEwMA0KPiANCj4gVGhlIEdD
-RCBjYWxjdWxhdGVkIGlzIDE1MCAuIGNmZzgwMjExX2l0ZXJfY29tYmluYXRpb25zIHNoYWxsIHJl
-dHVybiANCj4gc3VjY2VzcyBmb3IgYm90aCB0aGUgc2NlbmFyaW9zICggMSBhbmQgMiApIChUaGUg
-aW50ZW50aW9uIGhlcmUgaXMgdG8gDQo+IGNvbXBhcmUgd2l0aCBvbmx5IHRoZSBub256ZXJvICIg
-ZGlmZl9iZWFjb25faW50X2djZF9taW4iICkNCj4gDQo+IFRoaXMgc3VjY2VzcyBmcm9tICJjZmc4
-MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyIgZG9lcyBub3QgcmVwcmVzZW50IGlmIA0KPiB0aGUgR0NE
-IHBhc3NlZCBpcyBjb21wYXJlZCBhZ2FpbnN0IGEgMCAvIG5vbiB6ZXJvIA0KPiAiZGlmZl9iZWFj
-b25faW50X2djZF9taW4iICwgaXNuJ3QgPw0KPiANCj4gVGh1cyAsIHdlIGFyZSB0cnlpbmcgdG8g
-c29sdmUgdGhpcyBwcm9ibGVtICwgYnkgZ2V0dGluZyB0aGUgDQo+ICJkaWZmX2JlYWNvbl9pbnRf
-Z2NkX21pbiIgZm9yIHRoZSByZXNwZWN0aXZlIGludGVyZmFjZSBjb21iaW5hdGlvbiAsIA0KPiBi
-ZWZvcmUgY29tcGFyaW5nIGl0IHdpdGggdGhlIGNhbGN1bGF0ZWQgR0NELg0KDQpPaC4gSSB0aGlu
-ayBJIGZpbmFsbHkgdW5kZXJzdGFuZCB5b3VyIGNvbmNlcm4gLSBnb29kIHBvaW50IQ0KDQpMZXQg
-bWUgc2VlIGlmIEkgdW5kZXJzdGFuZCBjb3JyZWN0bHkgLSB5b3UncmUgc2F5aW5nIHRoYXQgaWYg
-SSBmaXJzdCBjYWxjdWxhdGXCoA0KDQrCoCBnID0gR0NEKGFsbCBCSXMsIGluY2x1ZGluZyB0aGUg
-bmV3IG9uZSkNCg0KYW5kIHRoZW4gZG8NCg0KwqAgY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMo
-Li4uIGV4aXN0aW5nIHZhcmlhYmxlcyAuLi4sIGcpDQoNCnRoZW4gSSBjYW5ub3QgYWNjdXJhdGVs
-eSBkZXRlcm1pbmUgd2hldGhlciBvciBub3QgSSBjYW4gdXNlIGEgY29tYmluYXRpb24gdGhhdCBk
-b2Vzbid0IHNwZWNpZnkgYSBtaW5fYmVhY29uX2ludGVydmFsX2djZCwgeW91IGNhbid0IGtub3cg
-aWYgdGhlICJhbGwgQklzIiB3ZXJlIHRoZSBzYW1lLCBvciBub3QuDQoNClRoYXQncyBhY3R1YWxs
-eSBhIHZlcnkgZ29vZCBwb2ludC4NCg0KSG93ZXZlciwgaXQgc2VlbXMgcHJldHR5IGVhc3kgdG8g
-c29sdmUgYnkgcGFzc2luZyBhbm90aGVyIGJvb2wgdGhhdCBpbmRpY2F0ZXMgImFsbCB0aGUgc2Ft
-ZSI/DQoNCmpvaGFubmVzDQo=
+ath10k: cache calibration data when the core is stopped
+
+Caching calibration data allows it to be accessed when the
+device is not active.
+
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+
+On Mon, Oct 10, 2016 at 10:54 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Marty Faltesek <mfaltesek@google.com> writes:
+>
+>> Caching calibration data allows it to be accessed when the
+>> device is not active.
+>>
+>> ---
+>
+> Signed-off-by missing. Can you send it as a reply to this message and
+> I'll add it to v3?
+>
+>>  drivers/net/wireless/ath/ath10k/core.h  |  1 +
+>>  drivers/net/wireless/ath/ath10k/debug.c | 72 ++++++++++++++-------------------
+>>  2 files changed, 31 insertions(+), 42 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+>> index 6e5aa2d..7274ebe 100644
+>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>> @@ -452,6 +452,7 @@ struct ath10k_debug {
+>>       u32 nf_cal_period;
+>>
+>>       struct ath10k_fw_crash_data *fw_crash_data;
+>> +     void *cal_data;
+>
+> To properly document locking I'll move this under the "protected by
+> conf_mutex" comment.
+>
+>> -static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
+>> +static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
+>>  {
+>> -     struct ath10k *ar = inode->i_private;
+>> -     void *buf;
+>>       u32 hi_addr;
+>>       __le32 addr;
+>>       int ret;
+>>
+>> -     mutex_lock(&ar->conf_mutex);
+>
+> I'll add lockdep_assert_held() here.
+>
+>>  static ssize_t ath10k_debug_cal_data_read(struct file *file,
+>> -                                       char __user *user_buf,
+>> -                                       size_t count, loff_t *ppos)
+>> +                                          char __user *user_buf,
+>> +                                          size_t count, loff_t *ppos)
+>>  {
+>>       struct ath10k *ar = file->private_data;
+>> -     void *buf = file->private_data;
+>>
+>>       return simple_read_from_buffer(user_buf, count, ppos,
+>> -                                    buf, ar->hw_params.cal_data_len);
+>> -}
+>
+> I'll add locking to this function.
+>
+>> @@ -2343,7 +2327,9 @@ int ath10k_debug_create(struct ath10k *ar)
+>>       ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
+>>       if (!ar->debug.fw_crash_data)
+>>               return -ENOMEM;
+>> -
+>> +     ar->debug.cal_data = vzalloc(ar->hw_params.cal_data_len);
+>> +     if (!ar->debug.cal_data)
+>> +             return -ENOMEM;
+>>       INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
+>>       INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
+>>       INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
+>> @@ -2355,7 +2341,9 @@ int ath10k_debug_create(struct ath10k *ar)
+>>  void ath10k_debug_destroy(struct ath10k *ar)
+>>  {
+>>       vfree(ar->debug.fw_crash_data);
+>> +     vfree(ar->debug.cal_data);
+>>       ar->debug.fw_crash_data = NULL;
+>> +     ar->debug.cal_data = NULL;
+>
+> Actually I gave you a bad advice, this won't work as
+> ar->hw_params.cal_data_len is not yet initialised, we initialise it only
+> after we have probed the capabilities during the first firmware boot. I
+> changed the allocation to a fixed length buffer for now, it's only few
+> kBs virtual memory anyway so it shouldn't matter to anyone.
+>
+> I have now v3 ready and tested. I'll just need your Signed-off-by and I
+> can then submit it.
+>
+> --
+> Kalle Valo
