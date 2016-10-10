@@ -1,317 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36741 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751448AbcJEEIV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57099 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752652AbcJJQAh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 00:08:21 -0400
-Received: by mail-oi0-f65.google.com with SMTP id h186so10753341oia.3
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 21:08:21 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/8] rtlwifi: rtl8192ce: Remove address of Free Software Foundation
-Date: Tue,  4 Oct 2016 23:08:05 -0500
-Message-Id: <1475640490-5895-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20161005_060837_759892_C3973348)
-In-Reply-To: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
+        Mon, 10 Oct 2016 12:00:37 -0400
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Marty Faltesek <mfaltesek@google.com>
+Subject: [PATCH v3] ath10k: cache calibration data when the core is stopped
+Date: Mon, 10 Oct 2016 19:00:04 +0300
+Message-ID: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20161010_180039_898184_5B1AB61C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since this driver was added to the kernel, the checkpatch script was
-modified to request that the address of the FSF not be included.
+From: Marty Faltesek <mfaltesek@google.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Commit 0b8e3c4ca29f ("ath10k: move cal data len to hw_params") broke retrieving
+the calibration data from cal_data debugfs file. The length of file was always
+zero. The reason is:
+
+    static ssize_t ath10k_debug_cal_data_read(struct file *file,
+                                          char __user *user_buf,
+                                          size_t count, loff_t *ppos)
+    {
+        struct ath10k *ar = file->private_data;
+        void *buf = file->private_data;
+
+
+This is obviously bogus, private_data cannot contain both struct ath10k and the
+buffer. Fix it by caching calibration data to ar->debug.cal_data. This also
+allows it to be accessed when the device is not active (interface is down).
+
+The cal_data buffer is fixed size because during the first firmware probe we
+don't yet know what will be the lenght of the calibration data. It was simplest
+just to use a fixed length. There's a WARN_ON() in
+ath10k_debug_cal_data_fetch() if the buffer is too small.
+
+Tested with qca988x and firmware 10.2.4.70.56.
+
+Reported-by: Nikolay Martynov <mar.kolya@gmail.com>
+Fixes: 0b8e3c4ca29f ("ath10k: move cal data len to hw_params")
+Cc: stable@vger.kernel.org # 4.7+
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+[kvalo@qca.qualcomm.com: improve commit log and minor other changes]
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/def.h   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.c    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.h   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.h    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h    | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.c | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.h | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h   | 4 ----
- 18 files changed, 72 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h  |    1 +
+ drivers/net/wireless/ath/ath10k/debug.c |   79 ++++++++++++++++---------------
+ 2 files changed, 42 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/def.h
-index 690a7a1..b90aaf1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/def.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.c
-index 09898cf..2c8205e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-index 38ba707..9761d0c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/dm.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index a47be73..4483d40 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-index 98a0868..877f138 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-index 24e483b..833193b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.h
-index c576106..f6edb9c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-index 46d0d94..d1b6a8f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-index dadc02b..93f3bc0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-index dc8460c..1bb7ed3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/reg.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-index a9c406f..7cae635 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.h
-index ebd72ca..22c5e6f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index 87aa209..5c46a98 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h
-index d2367a5..9a1c89c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.c
-index 752f943..98b06d4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.h
-index 8b79161..51e4e07 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/table.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-index 781af1b..2ab4a00 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
-index 6073045..66291fc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 6e5aa2d09699..b7067cc9328d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -450,6 +450,7 @@ struct ath10k_debug {
+ 	u32 pktlog_filter;
+ 	u32 reg_addr;
+ 	u32 nf_cal_period;
++	void *cal_data;
+ 
+ 	struct ath10k_fw_crash_data *fw_crash_data;
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 832da6ed9f13..5d508efa0b31 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -30,6 +30,8 @@
+ /* ms */
+ #define ATH10K_DEBUG_HTT_STATS_INTERVAL 1000
+ 
++#define ATH10K_DEBUG_CAL_DATA_LEN 12064
++
+ #define ATH10K_FW_CRASH_DUMP_VERSION 1
+ 
+ /**
+@@ -1451,75 +1453,68 @@ static const struct file_operations fops_fw_dbglog = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
++static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
+ {
+-	struct ath10k *ar = inode->i_private;
+-	void *buf;
+ 	u32 hi_addr;
+ 	__le32 addr;
+ 	int ret;
+ 
+-	mutex_lock(&ar->conf_mutex);
+-
+-	if (ar->state != ATH10K_STATE_ON &&
+-	    ar->state != ATH10K_STATE_UTF) {
+-		ret = -ENETDOWN;
+-		goto err;
+-	}
++	lockdep_assert_held(&ar->conf_mutex);
+ 
+-	buf = vmalloc(ar->hw_params.cal_data_len);
+-	if (!buf) {
+-		ret = -ENOMEM;
+-		goto err;
+-	}
++	if (WARN_ON(ar->hw_params.cal_data_len > ATH10K_DEBUG_CAL_DATA_LEN))
++		return -EINVAL;
+ 
+ 	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
+ 
+ 	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
+-		goto err_vfree;
++		ath10k_warn(ar, "failed to read hi_board_data address: %d\n",
++		            ret);
++		return ret;
+ 	}
+ 
+-	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
++	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), ar->debug.cal_data,
+ 				   ar->hw_params.cal_data_len);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
+-		goto err_vfree;
++		return ret;
+ 	}
+ 
+-	file->private_data = buf;
++	return 0;
++}
+ 
+-	mutex_unlock(&ar->conf_mutex);
++static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
++{
++	struct ath10k *ar = inode->i_private;
+ 
+-	return 0;
++	mutex_lock(&ar->conf_mutex);
+ 
+-err_vfree:
+-	vfree(buf);
++	if (ar->state == ATH10K_STATE_ON ||
++	    ar->state == ATH10K_STATE_UTF) {
++		ath10k_debug_cal_data_fetch(ar);
++	}
+ 
+-err:
++	file->private_data = ar;
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ static ssize_t ath10k_debug_cal_data_read(struct file *file,
+-					  char __user *user_buf,
+-					  size_t count, loff_t *ppos)
++                                          char __user *user_buf,
++                                          size_t count, loff_t *ppos)
+ {
+ 	struct ath10k *ar = file->private_data;
+-	void *buf = file->private_data;
+ 
+-	return simple_read_from_buffer(user_buf, count, ppos,
+-				       buf, ar->hw_params.cal_data_len);
+-}
++	mutex_lock(&ar->conf_mutex);
+ 
+-static int ath10k_debug_cal_data_release(struct inode *inode,
+-					 struct file *file)
+-{
+-	vfree(file->private_data);
++	count = simple_read_from_buffer(user_buf, count, ppos,
++					ar->debug.cal_data,
++					ar->hw_params.cal_data_len);
+ 
+-	return 0;
++	mutex_unlock(&ar->conf_mutex);
++
++	return count;
+ }
+ 
+ static ssize_t ath10k_write_ani_enable(struct file *file,
+@@ -1580,7 +1575,6 @@ static const struct file_operations fops_ani_enable = {
+ static const struct file_operations fops_cal_data = {
+ 	.open = ath10k_debug_cal_data_open,
+ 	.read = ath10k_debug_cal_data_read,
+-	.release = ath10k_debug_cal_data_release,
+ 	.owner = THIS_MODULE,
+ 	.llseek = default_llseek,
+ };
+@@ -1932,6 +1926,8 @@ void ath10k_debug_stop(struct ath10k *ar)
+ {
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
++	ath10k_debug_cal_data_fetch(ar);
++
+ 	/* Must not use _sync to avoid deadlock, we do that in
+ 	 * ath10k_debug_destroy(). The check for htt_stats_mask is to avoid
+ 	 * warning from del_timer(). */
+@@ -2344,6 +2340,10 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	if (!ar->debug.fw_crash_data)
+ 		return -ENOMEM;
+ 
++	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
++	if (!ar->debug.cal_data)
++		return -ENOMEM;
++
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
+@@ -2357,6 +2357,9 @@ void ath10k_debug_destroy(struct ath10k *ar)
+ 	vfree(ar->debug.fw_crash_data);
+ 	ar->debug.fw_crash_data = NULL;
+ 
++	vfree(ar->debug.cal_data);
++	ar->debug.cal_data = NULL;
++
+ 	ath10k_debug_fw_stats_reset(ar);
+ 
+ 	kfree(ar->debug.tpc_stats);
 -- 
-2.6.6
+1.7.9.5
