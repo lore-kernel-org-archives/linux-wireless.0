@@ -1,50 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60752 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754838AbcJMEv1 (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:36282 "EHLO
+        mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751378AbcJJUn5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 00:51:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Steve deRosier <derosier@gmail.com>
-Cc: Alan <alan@linux.intel.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6k1: add Dell OEM SDIO I/O for the Venue 8 Pro
-References: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
-        <CALupW3D2dsTeixs3z+e9JC_D2D_Bd_AHquHKttCf17OhMqEFUg@mail.gmail.com>
-Date: Thu, 13 Oct 2016 07:50:32 +0300
-In-Reply-To: <CALupW3D2dsTeixs3z+e9JC_D2D_Bd_AHquHKttCf17OhMqEFUg@mail.gmail.com>
-        (Steve deRosier's message of "Wed, 12 Oct 2016 14:32:18 -0700")
-Message-ID: <87fuo026p3.fsf@purkki.adurom.net> (sfid-20161013_065137_312918_3AA87D1C)
+        Mon, 10 Oct 2016 16:43:57 -0400
+Received: by mail-pa0-f46.google.com with SMTP id ry6so803437pac.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 13:43:56 -0700 (PDT)
+Date: Mon, 10 Oct 2016 13:43:54 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Xinming Hu <huxm@marvell.com>, abhishekbh@google.com
+Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
+ unregister
+Message-ID: <20161010204352.GA11254@localhost> (sfid-20161010_224401_834535_D9989DCD)
+References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
+ <20161004215814.GB31652@localhost>
+ <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
+ <20161005163024.GA54237@google.com>
+ <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Steve deRosier <derosier@gmail.com> writes:
+Hi Amit,
 
-> Sorry to quibble, but the subsystem label on the commit subject line
-> should be "ath6kl:"  it's a lower-case "L", not a one.
+On Thu, Oct 06, 2016 at 01:03:02PM +0000, Amitkumar Karwar wrote:
+> > From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> > owner@vger.kernel.org] On Behalf Of Brian Norris
+> > Sent: Wednesday, October 05, 2016 10:00 PM
+> > To: Amitkumar Karwar
+> > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > rajatja@google.com; Xinming Hu
+> > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
+> > unregister
+> > 
+> > On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
+> > > > From: Brian Norris [mailto:briannorris@chromium.org]
+> > > > Sent: Wednesday, October 05, 2016 3:28 AM
+> > > > To: Amitkumar Karwar
+> > > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > > > rajatja@google.com; briannorris@google.com; Xinming Hu
+> > > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
+> > > > device unregister
+> > > >
+> > > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
+> > 
+> > > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
+> > > > mwifiex_adapter *adapter)
+> > > > >  				pci_disable_msi(pdev);
+> > > > >  	       }
+> > > > >  	}
+> > > > > +	card->adapter = NULL;
 
-Heh, I missed that :) I can fix it before I commit.
+...
 
->> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
->> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
->> @@ -1401,6 +1401,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
->>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
->>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
->>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
->> +       {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
->>         {},
->>  };
->>
->>
->
-> I see nothing wrong with this if the chip does indeed identify itself
-> this way.  So please fix the subject and you can add:
->
-> Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
+> > What about writes racing with reads? You have lots of unsynchronized
+> > cases that read this, although most of them should be halted by now
+> > (e.g., cmd processing). I was looking at suspend() in particular, which
+> > I thought you were looking at in this patch series.
+> 
+> Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
+> 
+> Writes won't have race with reads.
+> 
+> 1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
+> 	This place is at the beginning of initialization. 
+> 	mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
+> 	There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
 
-Thanks.
+Sure.
 
--- 
-Kalle Valo
+> 2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
+> 	This place the end of teardown phase.
+> 	Interrupts are disabled and all cleanup is done. We have
+> 	"card->adapter" NULL checks at entry point of
+> 	suspend/remove/resume, if they get called after this.
+
+I guess the question boils down to: can driver suspend() race with
+mwifiex_unregister_dev() here, then?
+
+And I guess the answer is "no", because unregistration only happens via
+
+  PCIe driver remove() -> mwifiex_remove_card() -> adapter->if_ops.unregister_dev()
+
+and I think the device driver core guarantees that suspend() and
+remove() won't race.
+
+In that case:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+I'll reply to the latest revision too, since it's identical.
+
+Thanks for the explanations.
+
+Regards,
+Brian
