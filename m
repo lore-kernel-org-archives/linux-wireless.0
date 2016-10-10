@@ -1,109 +1,447 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47118 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965533AbcJYJis (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32815 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752252AbcJJXcm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 05:38:48 -0400
-Message-ID: <1477388323.17122.27.camel@coelho.fi> (sfid-20161025_113905_517022_58E7A04D)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Date: Tue, 25 Oct 2016 12:38:43 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-WFX4fUz4b/Z1m4LolClv"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2016-10-25
+        Mon, 10 Oct 2016 19:32:42 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        "Stable [ 4 . 8+ ]" <stable@vger.kernel.org>,
+        Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH] rtlwifi: Fix regression caused by commit d86e64768859
+Date: Mon, 10 Oct 2016 18:32:11 -0500
+Message-Id: <20161010233211.13519-1-Larry.Finger@lwfinger.net> (sfid-20161011_013303_431916_3ADF00EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
+the configuration struct for most of the drivers was changed to be
+constant. The problem is that five of the modified drivers need to be
+able to update the firmware name based on the exact model of the card.
+As the file names were stored in one of the members of that struct,
+these drivers would fail with a kernel BUG splat when they tried to
+update the firmware name.
 
---=-WFX4fUz4b/Z1m4LolClv
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Rather than reverting the previous commit, I used a suggestion by
+Johannes Berg and made the firmware file name pointers be local to
+the routines that update the software variables.
 
-Hi Kalle,
+The configuration struct of rtl8192cu, which was not touched in the
+previous patch, is now constantfied.
 
-Here are 7 patches intended for 4.9. =C2=A0They fix some small issues, as
-described in the tag itself.  I sent them out for review on 2016-10-19,=20
-and pushed to a pending branch.  Kbuildbot didn't find any issues.
+Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
+Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable [4.8+] <stable@vger.kernel.org>
+Cc: Julia Lawall <Julia.Lawall@lip6.fr>
+---
+Kalle,
 
-Let me know if everything's fine (or not). :)
+My apologies for letting these bugs to get by my review and testing. As
+they affect kernel 4.8, please push this patch as soon as possible. To
+reiterate, this patch replaces the one entitled 'Revert "rtlwifi: rtl818x:
+constify local structures"'
 
-Luca.
+Thanks,
 
+Larry
+ drivers/net/wireless/realtek/rtlwifi/core.c         |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c |  6 +++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c |  9 +++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c |  6 +++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 18 +++++++++---------
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         |  2 --
+ 11 files changed, 45 insertions(+), 46 deletions(-)
 
-The following changes since commit 1ea2643961b0d1b8d0e4a11af5aa69b0f92d0533=
-:
-
-  ath6kl: add Dell OEM SDIO I/O for the Venue 8 Pro (2016-10-13 14:16:33 +0=
-300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git t=
-ags/iwlwifi-for-kalle-2016-10-25
-
-for you to fetch changes up to 5a143db8c4a28dab6423cb6197e9f1389da375f2:
-
-  iwlwifi: mvm: fix netdetect starting/stopping for unified images (2016-10=
--19 09:54:45 +0300)
-
-----------------------------------------------------------------
-* some fixes for suspend/resume with unified FW images;
-* a fix for a false-positive lockdep report;
-* a fix for multi-queue that caused an unnecessary 1 second latency;
-* a fix for an ACPI parsing bug that caused a misleading error message;
-
-----------------------------------------------------------------
-Haim Dreyfuss (1):
-      iwlwifi: mvm: comply with fw_restart mod param on suspend
-
-Johannes Berg (1):
-      iwlwifi: pcie: mark command queue lock with separate lockdep class
-
-Luca Coelho (4):
-      iwlwifi: mvm: use ssize_t for len in iwl_debugfs_mem_read()
-      iwlwifi: mvm: fix d3_test with unified D0/D3 images
-      iwlwifi: pcie: fix SPLC structure parsing
-      iwlwifi: mvm: fix netdetect starting/stopping for unified images
-
-Sara Sharon (1):
-      iwlwifi: mvm: wake the wait queue when the RX sync counter is zero
-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 49 +++++++++++++++++++=
-++++++++++++++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c     | 33 +++++++++++++++++++=
-++++++++------
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 79 +++++++++++++++++++=
-++++++++++++++++++++++++++++-------------------------------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  8 ++++++++
- 9 files changed, 128 insertions(+), 53 deletions(-)
---=-WFX4fUz4b/Z1m4LolClv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCAAGBQJYDygjAAoJEKFHnKIaPMX6RUkP/30cc4FJdtSmIVtD+VZN7711
-C3/cJHLlLvAuwwxLrSnVPKMOhOv9TtNinlHxGTWp/I871Xhm9W1qZVGtfK7zNOrT
-tJGUwn/MA2alxGvMull1Cdfpa6nM35wCr8uce1L4tj2PbChaLjYNRzFO+3uG5hEO
-tqOH9Ti8ZkoYlwnJmxS7Dpg6gQWRBKJ8zuVXXPqtGzZm9028zwC7lEjlM7nuVG6q
-5UGDkxebcGbMJRfHQhDFXR1NkFePwm6bfxCkHB/rpMVIK50f7x82DwSjZBe7QTa6
-+C99Oer3g3zLaGBfWSAyVcNYjPZYzZBQjd5Im2fv4V1e/+50GsmXp9goxPJoUrU+
-c5fJfVWNr6LpVyPjgoCG9XZVGJqX4InJZicKGe67lPY2VNiySsaXmZKcn/nmeHVb
-GTxsExtNEdr27trlSq8oxFFu7DZTa+TGQj0zgy2iVJl2cV1upBlxKwEddqBeQ6/x
-53/TboSdfou7hgiWrLk3rzv9JZ8UbmOQNndRLXnCKmjD+WWiadhFJ3AaxKwgN6tr
-t0TRBmlmGJFFfE1BAzDvbxFIFmdSFz/S4fOoQISoJ9Kb9yiHa+RY54GaNBtDotgW
-3RtsX4FmOpOAqEQTCx87jToui2+axtLWdJNJ1aP50QPPMMdcES8aYpiTsEzwfvfB
-osu08nUZWA/nESGvaVDj
-=7IZy
------END PGP SIGNATURE-----
-
---=-WFX4fUz4b/Z1m4LolClv--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index f95760c..8e7f23c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -111,7 +111,7 @@ static void rtl_fw_do_work(const struct firmware *firmware, void *context,
+ 			if (!err)
+ 				goto found_alt;
+ 		}
+-		pr_err("Firmware %s not available\n", rtlpriv->cfg->fw_name);
++		pr_err("Selected firmware is not available\n");
+ 		rtlpriv->max_fw_size = 0;
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index e7b11b4..f361808 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -86,6 +86,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	u8 tid;
++	char *fw_name;
+ 
+ 	rtl8188ee_bt_reg_init(hw);
+ 	rtlpriv->dm.dm_initialgain_enable = 1;
+@@ -169,10 +170,10 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 		return 1;
+ 	}
+ 
+-	rtlpriv->cfg->fw_name = "rtlwifi/rtl8188efw.bin";
++	fw_name = "rtlwifi/rtl8188efw.bin";
+ 	rtlpriv->max_fw_size = 0x8000;
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -284,7 +285,6 @@ static const struct rtl_hal_cfg rtl88ee_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl88e_pci",
+-	.fw_name = "rtlwifi/rtl8188efw.bin",
+ 	.ops = &rtl8188ee_hal_ops,
+ 	.mod_params = &rtl88ee_mod_params,
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+index 5c46a98..25cbd68 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+@@ -92,6 +92,7 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	char *fw_name;
+ 
+ 	rtl8192ce_bt_reg_init(hw);
+ 
+@@ -165,13 +166,13 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* request fw */
+ 	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
+ 	    !IS_92C_SERIAL(rtlhal->version))
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU.bin";
++		fw_name = "rtlwifi/rtl8192cfwU.bin";
+ 	else if (IS_81XXC_VENDOR_UMC_B_CUT(rtlhal->version))
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cfwU_B.bin";
++		fw_name = "rtlwifi/rtl8192cfwU_B.bin";
+ 
+ 	rtlpriv->max_fw_size = 0x4000;
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -258,7 +259,6 @@ static const struct rtl_hal_cfg rtl92ce_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl92c_pci",
+-	.fw_name = "rtlwifi/rtl8192cfw.bin",
+ 	.ops = &rtl8192ce_hal_ops,
+ 	.mod_params = &rtl92ce_mod_params,
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+index 92588e0..b84e13a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+@@ -55,6 +55,7 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	int err;
++	char *fw_name;
+ 
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+ 	rtlpriv->dm.dm_flag = 0;
+@@ -73,18 +74,18 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ 	}
+ 	if (IS_VENDOR_UMC_A_CUT(rtlpriv->rtlhal.version) &&
+ 	    !IS_92C_SERIAL(rtlpriv->rtlhal.version)) {
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_A.bin";
++		fw_name = "rtlwifi/rtl8192cufw_A.bin";
+ 	} else if (IS_81XXC_VENDOR_UMC_B_CUT(rtlpriv->rtlhal.version)) {
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_B.bin";
++		fw_name = "rtlwifi/rtl8192cufw_B.bin";
+ 	} else {
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8192cufw_TMSC.bin";
++		fw_name = "rtlwifi/rtl8192cufw_TMSC.bin";
+ 	}
+ 	/* provide name of alternative file */
+ 	rtlpriv->cfg->alt_fw_name = "rtlwifi/rtl8192cufw.bin";
+-	pr_info("Loading firmware %s\n", rtlpriv->cfg->fw_name);
++	pr_info("Loading firmware %s\n", fw_name);
+ 	rtlpriv->max_fw_size = 0x4000;
+ 	err = request_firmware_nowait(THIS_MODULE, 1,
+-				      rtlpriv->cfg->fw_name, rtlpriv->io.dev,
++				      fw_name, rtlpriv->io.dev,
+ 				      GFP_KERNEL, hw, rtl_fw_cb);
+ 	return err;
+ }
+@@ -183,7 +184,6 @@ static struct rtl_hal_usbint_cfg rtl92cu_interface_cfg = {
+ 
+ static struct rtl_hal_cfg rtl92cu_hal_cfg = {
+ 	.name = "rtl92c_usb",
+-	.fw_name = "rtlwifi/rtl8192cufw.bin",
+ 	.ops = &rtl8192cu_hal_ops,
+ 	.mod_params = &rtl92cu_mod_params,
+ 	.usb_interface_cfg = &rtl92cu_interface_cfg,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index a9c39eb..2d65e40 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -88,6 +88,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	u8 tid;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
++	char *fw_name = "rtlwifi/rtl8192defw.bin";
+ 
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+ 	rtlpriv->dm.dm_flag = 0;
+@@ -177,10 +178,10 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+ 	pr_info("Driver for Realtek RTL8192DE WLAN interface\n");
+-	pr_info("Loading firmware file %s\n", rtlpriv->cfg->fw_name);
++	pr_info("Loading firmware file %s\n", fw_name);
+ 
+ 	/* request fw */
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -262,7 +263,6 @@ static const struct rtl_hal_cfg rtl92de_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl8192de",
+-	.fw_name = "rtlwifi/rtl8192defw.bin",
+ 	.ops = &rtl8192de_hal_ops,
+ 	.mod_params = &rtl92de_mod_params,
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index ac299cb..46b605de3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -91,6 +91,7 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	int err = 0;
++	char *fw_name;
+ 
+ 	rtl92ee_bt_reg_init(hw);
+ 	rtlpci->msi_support = rtlpriv->cfg->mod_params->msi_support;
+@@ -170,11 +171,11 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	/* request fw */
+-	rtlpriv->cfg->fw_name = "rtlwifi/rtl8192eefw.bin";
++	fw_name = "rtlwifi/rtl8192eefw.bin";
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -266,7 +267,6 @@ static const struct rtl_hal_cfg rtl92ee_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl92ee_pci",
+-	.fw_name = "rtlwifi/rtl8192eefw.bin",
+ 	.ops = &rtl8192ee_hal_ops,
+ 	.mod_params = &rtl92ee_mod_params,
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+index a652d45..998cefb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+@@ -85,12 +85,13 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 	struct ieee80211_hw *hw = context;
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rt_firmware *pfirmware = NULL;
++	char *fw_name = "rtlwifi/rtl8192sefw.bin";
+ 
+ 	RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
+ 			 "Firmware callback routine entered!\n");
+ 	complete(&rtlpriv->firmware_loading_complete);
+ 	if (!firmware) {
+-		pr_err("Firmware %s not available\n", rtlpriv->cfg->fw_name);
++		pr_err("Firmware %s not available\n", fw_name);
+ 		rtlpriv->max_fw_size = 0;
+ 		return;
+ 	}
+@@ -113,6 +114,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	int err = 0;
+ 	u16 earlyrxthreshold = 7;
++	char *fw_name = "rtlwifi/rtl8192sefw.bin";
+ 
+ 	rtlpriv->dm.dm_initialgain_enable = true;
+ 	rtlpriv->dm.dm_flag = 0;
+@@ -210,9 +212,9 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->max_fw_size = RTL8190_MAX_FIRMWARE_CODE_SIZE*2 +
+ 			       sizeof(struct fw_hdr);
+ 	pr_info("Driver for Realtek RTL8192SE/RTL8191SE\n"
+-		"Loading firmware %s\n", rtlpriv->cfg->fw_name);
++		"Loading firmware %s\n", fw_name);
+ 	/* request fw */
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl92se_fw_cb);
+ 	if (err) {
+@@ -306,7 +308,6 @@ static const struct rtl_hal_cfg rtl92se_hal_cfg = {
+ 	.bar_id = 1,
+ 	.write_readback = false,
+ 	.name = "rtl92s_pci",
+-	.fw_name = "rtlwifi/rtl8192sefw.bin",
+ 	.ops = &rtl8192se_hal_ops,
+ 	.mod_params = &rtl92se_mod_params,
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index 89c828a..56ea6be 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -94,6 +94,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	int err = 0;
++	char *fw_name;
+ 
+ 	rtl8723e_bt_reg_init(hw);
+ 
+@@ -177,13 +178,13 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	if (IS_VENDOR_8723_A_CUT(rtlhal->version))
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8723fw.bin";
++		fw_name = "rtlwifi/rtl8723fw.bin";
+ 	else if (IS_81xxC_VENDOR_UMC_B_CUT(rtlhal->version))
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8723fw_B.bin";
++		fw_name = "rtlwifi/rtl8723fw_B.bin";
+ 
+ 	rtlpriv->max_fw_size = 0x6000;
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -280,7 +281,6 @@ static const struct rtl_hal_cfg rtl8723e_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl8723e_pci",
+-	.fw_name = "rtlwifi/rtl8723efw.bin",
+ 	.ops = &rtl8723e_hal_ops,
+ 	.mod_params = &rtl8723e_mod_params,
+ 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 20b53f0..847644d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -91,6 +91,7 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
++	char *fw_name = "rtlwifi/rtl8723befw.bin";
+ 
+ 	rtl8723be_bt_reg_init(hw);
+ 	rtlpriv->btcoexist.btc_ops = rtl_btc_get_ops_pointer();
+@@ -184,8 +185,8 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -280,7 +281,6 @@ static const struct rtl_hal_cfg rtl8723be_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl8723be_pci",
+-	.fw_name = "rtlwifi/rtl8723befw.bin",
+ 	.ops = &rtl8723be_hal_ops,
+ 	.mod_params = &rtl8723be_mod_params,
+ 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index 22f687b1..297938e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -93,6 +93,7 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	char *fw_name, *wowlan_fw_name;
+ 
+ 	rtl8821ae_bt_reg_init(hw);
+ 	rtlpriv->btcoexist.btc_ops = rtl_btc_get_ops_pointer();
+@@ -203,17 +204,17 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8812AE) {
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8812aefw.bin";
+-		rtlpriv->cfg->wowlan_fw_name = "rtlwifi/rtl8812aefw_wowlan.bin";
++		fw_name = "rtlwifi/rtl8812aefw.bin";
++		wowlan_fw_name = "rtlwifi/rtl8812aefw_wowlan.bin";
+ 	} else {
+-		rtlpriv->cfg->fw_name = "rtlwifi/rtl8821aefw.bin";
+-		rtlpriv->cfg->wowlan_fw_name = "rtlwifi/rtl8821aefw_wowlan.bin";
++		fw_name = "rtlwifi/rtl8821aefw.bin";
++		wowlan_fw_name = "rtlwifi/rtl8821aefw_wowlan.bin";
+ 	}
+ 
+ 	rtlpriv->max_fw_size = 0x8000;
+ 	/*load normal firmware*/
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->fw_name);
+-	err = request_firmware_nowait(THIS_MODULE, 1, rtlpriv->cfg->fw_name,
++	pr_info("Using firmware %s\n", fw_name);
++	err = request_firmware_nowait(THIS_MODULE, 1, fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+@@ -222,9 +223,9 @@ int rtl8821ae_init_sw_vars(struct ieee80211_hw *hw)
+ 		return 1;
+ 	}
+ 	/*load wowlan firmware*/
+-	pr_info("Using firmware %s\n", rtlpriv->cfg->wowlan_fw_name);
++	pr_info("Using firmware %s\n", wowlan_fw_name);
+ 	err = request_firmware_nowait(THIS_MODULE, 1,
+-				      rtlpriv->cfg->wowlan_fw_name,
++				      wowlan_fw_name,
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_wowlan_fw_cb);
+ 	if (err) {
+@@ -320,7 +321,6 @@ static const struct rtl_hal_cfg rtl8821ae_hal_cfg = {
+ 	.bar_id = 2,
+ 	.write_readback = true,
+ 	.name = "rtl8821ae_pci",
+-	.fw_name = "rtlwifi/rtl8821aefw.bin",
+ 	.ops = &rtl8821ae_hal_ops,
+ 	.mod_params = &rtl8821ae_mod_params,
+ 	.maps[SYS_ISO_CTRL] = REG_SYS_ISO_CTRL,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 595f7d5..dafe486 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2278,9 +2278,7 @@ struct rtl_hal_cfg {
+ 	u8 bar_id;
+ 	bool write_readback;
+ 	char *name;
+-	char *fw_name;
+ 	char *alt_fw_name;
+-	char *wowlan_fw_name;
+ 	struct rtl_hal_ops *ops;
+ 	struct rtl_mod_params *mod_params;
+ 	struct rtl_hal_usbint_cfg *usb_interface_cfg;
+-- 
+2.10.0
