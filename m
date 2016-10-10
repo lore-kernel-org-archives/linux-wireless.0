@@ -1,70 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:46726
-        "EHLO stuffed.shaftnet.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753827AbcJYSer (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52648 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751437AbcJJJVi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 14:34:47 -0400
-Date: Tue, 25 Oct 2016 14:13:52 -0400
-From: Solomon Peachy <pizza@shaftnet.org>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "'Arnd Bergmann'" <arnd@arndb.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] cw1200: fix bogus maybe-uninitialized warning
-Message-ID: <20161025181352.GB28536@shaftnet.org> (sfid-20161025_203511_373584_6DA6B9E4)
-References: <20161024154215.2863586-1-arnd@arndb.de>
- <063D6719AE5E284EB5DD2968C1650D6DB0209E9A@AcuExch.aculab.com>
+        Mon, 10 Oct 2016 05:21:38 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+        Ola Olsson <ola.olsson@sonymobile.com>
+Subject: Re: [PATCH] Report scan_abort as part of iw phy
+References: <1475934036-5981-1-git-send-email-ola1olsson@gmail.com>
+Date: Mon, 10 Oct 2016 12:13:29 +0300
+In-Reply-To: <1475934036-5981-1-git-send-email-ola1olsson@gmail.com> (Ola
+        Olsson's message of "Sat, 8 Oct 2016 15:40:36 +0200")
+Message-ID: <87k2dg1s92.fsf@purkki.adurom.net> (sfid-20161010_112142_666363_6F7B1880)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="b5gNqxB1S1yM7hjW"
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB0209E9A@AcuExch.aculab.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ola Olsson <ola1olsson@gmail.com> writes:
 
---b5gNqxB1S1yM7hjW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> nl80211: abort_scan has not been reported under the 'Supported commands'
+> category when calling iw phy. Add that.
+>
+> Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+> ---
+>  net/wireless/nl80211.c | 1 +
+>  1 file changed, 1 insertion(+)
 
-On Tue, Oct 25, 2016 at 01:24:55PM +0000, David Laight wrote:
-> > -	if (count > 1) {
-> > -		/* We already released one buffer, now for the rest */
-> > -		ret =3D wsm_release_tx_buffer(priv, count - 1);
-> > -		if (ret < 0)
-> > -			return ret;
-> > -		else if (ret > 0)
-> > -			cw1200_bh_wakeup(priv);
-> > -	}
-> > +	/* We already released one buffer, now for the rest */
-> > +	ret =3D wsm_release_tx_buffer(priv, count - 1);
-> > +	if (ret < 0)
-> > +		return ret;
-> > +
-> > +	if (ret > 0)
-> > +		cw1200_bh_wakeup(priv);
->=20
-> That doesn't look equivalent to me (when count =3D=3D 1).
+You should prefix the title with "cfg80211: " (or "nl80211: ", not
+really sure which one is more suitable).
 
-I concur, this patch should not be applied in its current form.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject_name
 
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---b5gNqxB1S1yM7hjW
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iEYEABECAAYFAlgPoN8ACgkQPuLgii2759AS3gCfUKNTMDFd/WctTiPJIi6IyXuY
-C30AnR9RZTG8b8EJBU+CbZHPfwFyz4WZ
-=5eri
------END PGP SIGNATURE-----
-
---b5gNqxB1S1yM7hjW--
+-- 
+Kalle Valo
