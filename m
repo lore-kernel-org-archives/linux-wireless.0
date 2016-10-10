@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41750 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934238AbcJUPQ0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 11:16:26 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9LFFmH8021082
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 08:16:25 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 265pbxn1w7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 08:16:25 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: fix corner case power save issue
-Date: Fri, 21 Oct 2016 20:45:47 +0530
-Message-ID: <1477062948-8558-1-git-send-email-akarwar@marvell.com> (sfid-20161021_171630_277511_09D8E749)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:55199 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751790AbcJJKQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 10 Oct 2016 06:16:47 -0400
+Message-ID: <1476094604.7895.9.camel@sipsolutions.net> (sfid-20161010_121650_807691_F2B14D6A)
+Subject: Re: [PATCH] mac80211: enable to inject a-msdu frames using monitor
+ interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Mon, 10 Oct 2016 12:16:44 +0200
+In-Reply-To: <1475872162-2835-1-git-send-email-michael-dev@fami-braun.de>
+References: <1475872162-2835-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We may get SLEEP event from firmware even if TXDone for last Tx packet
-is still pending. In this case, we may end up accessing PCIe memory for
-handling TXDone after power save handshake is completed. This causes
-kernel crash with external abort.
+On Fri, 2016-10-07 at 22:29 +0200, Michael Braun wrote:
+> 
+> I guess the same is needed for packets with IEEE80211_TX_CTRL_AMSDU
+> set.
 
-We will delay sending SLEEP confirm to firmware in
-this case to resolve the problem.
+I don't think that's true, since we don't get here after A-MSDU
+building in mac80211.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>  	/* preserve EOSP bit */
+>  	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+>  
+> +	/* preserve A-MSDU bit for MONITOR interfaces to allow
+> injecting
+> +	 * A-MSDU frames
+> +	 */
+> +	if (info->flags & IEEE80211_TX_CTL_INJECTED ||
+> +	    info->control.flags & IEEE80211_TX_CTRL_AMSDU)
+> +		ack_policy |= *p & IEEE80211_QOS_CTL_A_MSDU_PRESENT;
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 5347728..f582f61 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1118,7 +1118,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- void
- mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
- {
--	if (!adapter->cmd_sent &&
-+	if (!adapter->cmd_sent && !adapter->data_sent &&
- 	    !adapter->curr_cmd && !IS_CARD_RX_RCVD(adapter))
- 		mwifiex_dnld_sleep_confirm_cmd(adapter);
- 	else
--- 
-1.9.1
+However, why not just unconditionally preserve it?
+
+johannes
