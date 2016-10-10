@@ -1,46 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:43490 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755928AbcJGNMb (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:36299 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752344AbcJJXxe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 09:12:31 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        netdev@vger.kernel.org
-Subject: [PATCH v4 1/4] mac80211: remove unnecessary num_mcast_sta user
-Date: Fri,  7 Oct 2016 15:12:21 +0200
-Message-Id: <1475845944-27680-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161007_151237_328468_EE7CE69A)
+        Mon, 10 Oct 2016 19:53:34 -0400
+Received: by mail-qk0-f196.google.com with SMTP id z190so300119qkc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 16:53:33 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20161010234708.GA19969@localhost>
+References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
+ <20161004215814.GB31652@localhost> <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
+ <20161005163024.GA54237@google.com> <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
+ <CAKdAkRTKo3JVJPamM44jyG6QuHoQB89FMKj5vo3-z6T+XH1W9Q@mail.gmail.com> <20161010234708.GA19969@localhost>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Date: Mon, 10 Oct 2016 16:53:32 -0700
+Message-ID: <CAKdAkRTNNriAiTqg15OU0fmt4h5buacYCYOq0r7nzrgTwj0=Jw@mail.gmail.com> (sfid-20161011_015337_921777_444D13E8)
+Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device unregister
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Checking for num_mcast_sta in __ieee80211_request_smps_ap() is unnecessary,
-as sta list will be empty in this case anyway, so list_for_each_entry(sta,
-...) will exit immediately.
+Hi Brian,
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- net/mac80211/cfg.c | 7 -------
- 1 file changed, 7 deletions(-)
+On Mon, Oct 10, 2016 at 4:47 PM, Brian Norris <briannorris@chromium.org> wrote:
+> Hi Dmitry,
+>
+> On Mon, Oct 10, 2016 at 04:43:06PM -0700, Dmitry Torokhov wrote:
+>> On Thu, Oct 6, 2016 at 6:03 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+>> >> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> >> owner@vger.kernel.org] On Behalf Of Brian Norris
+>> >> Sent: Wednesday, October 05, 2016 10:00 PM
+>> >> To: Amitkumar Karwar
+>> >> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+>> >> rajatja@google.com; Xinming Hu
+>> >> Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
+>> >> unregister
+>> >>
+>> >> On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
+>> >> > > From: Brian Norris [mailto:briannorris@chromium.org]
+>> >> > > Sent: Wednesday, October 05, 2016 3:28 AM
+>> >> > > To: Amitkumar Karwar
+>> >> > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+>> >> > > rajatja@google.com; briannorris@google.com; Xinming Hu
+>> >> > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
+>> >> > > device unregister
+>> >> > >
+>> >> > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
+>> >>
+>> >> > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+>> >> > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+>> >> > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
+>> >> > > mwifiex_adapter *adapter)
+>> >> > > >                                 pci_disable_msi(pdev);
+>> >> > > >                }
+>> >> > > >         }
+>> >> > > > +       card->adapter = NULL;
+>> >> > >
+>> >> > > I think you have a similar problem here as in patch 2; there is no
+>> >> > > locking to protect fields in struct pcie_service_card or struct
+>> >> > > sdio_mmc_card below. That problem kind of already exists, except
+>> >> > > that you only write the value of card->adapter once at registration
+>> >> > > time, so it's not actually unsafe. But now that you're introducing a
+>> >> > > second write, you have a problem.
+>> >> > >
+>> >> > > Brian
+>> >> > >
+>> >> >
+>> >> > We have a global "add_remove_card_sem" semaphore in our code for
+>> >> > synchronizing initialization and teardown threads. Ideally "init +
+>> >> > teardown/reboot" should not have a race issue with this logic
+>> >> >
+>> >> > Later there was a loophole introduced in this after using async
+>> >> > firmware download API. During initialization, firmware downloads
+>> >> > asynchronously in a separate thread where might have released the
+>> >> > semaphore. I am working on a patch to fix this.
+>> >> >
+>> >> > So "card->adapter" doesn't need to have locking. Even if we have two
+>> >> > write operations, those two threads can't run simultaneously due to
+>> >> > above mentioned logic.
+>> >>
+>> >> What about writes racing with reads? You have lots of unsynchronized
+>> >> cases that read this, although most of them should be halted by now
+>> >> (e.g., cmd processing). I was looking at suspend() in particular, which
+>> >> I thought you were looking at in this patch series.
+>> >
+>> > Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
+>> >
+>> > Writes won't have race with reads.
+>> >
+>> > 1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
+>> >         This place is at the beginning of initialization.
+>> >         mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
+>> >         There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
+>> >
+>> > 2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
+>> >         This place the end of teardown phase.
+>> >         Interrupts are disabled and all cleanup is done. We have "card->adapter" NULL checks at entry point of suspend/remove/resume, if they get called after this.
+>>
+>> How exactly are you preventing ->suspend() from being called *while*
+>> you are running mwifiex_unregister_dev()? I.e. user slamming the lid
+>> of a laptop and throwing it in their backpack?
+>
+> As I already commented, isn't this primarily [*] called from the driver
+> remove() callback? remove() doesn't race with suspend(), does it?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 543b1d4..24133f5 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2313,13 +2313,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
- 	    smps_mode == IEEE80211_SMPS_AUTOMATIC)
- 		return 0;
- 
--	 /* If no associated stations, there's no need to do anything */
--	if (!atomic_read(&sdata->u.ap.num_mcast_sta)) {
--		sdata->smps_mode = smps_mode;
--		ieee80211_queue_work(&sdata->local->hw, &sdata->recalc_smps);
--		return 0;
--	}
--
- 	ht_dbg(sdata,
- 	       "SMPS %d requested in AP mode, sending Action frame to %d stations\n",
- 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
+Nope, there is request_firmware_nowait() path that is asynchronous
+with device registration/unregistration and power management. Maybe
+the right way is to move the driver to async probing and switch that
+request_firmware_nowait() into plain request_firmware(). I haven't
+looked that closely.
+
+The wording "we may end up accessing invalid memory in some corner
+cases" which is a synonym for "the code is racy" caught my eye, thus
+the response on the patch.
+
+Thanks.
+
 -- 
-2.1.4
+Dmitry
