@@ -1,96 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28863 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934200AbcJZVoW (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36613 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751521AbcJJUxg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:44:22 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 4/9] cfg80211: Define IEEE P802.11ai (FILS) information elements
-Date: Thu, 27 Oct 2016 00:42:01 +0300
-Message-ID: <1477518126-823-5-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234429_059558_2F0E1935)
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+        Mon, 10 Oct 2016 16:53:36 -0400
+Received: by mail-pf0-f172.google.com with SMTP id e6so1259834pfk.3
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 13:53:36 -0700 (PDT)
+Date: Mon, 10 Oct 2016 13:53:33 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        Xinming Hu <huxm@marvell.com>, abhishekbh@google.com
+Subject: Re: [PATCH v4 1/3] mwifiex: reset card->adapter during device
+ unregister
+Message-ID: <20161010205332.GB11254@localhost> (sfid-20161010_225339_529800_C0B58F4E)
+References: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Define the Element IDs and Element ID Extensions from IEEE
-P802.11ai/D11.0. In addition, add a new cfg80211_find_ext_ie() wrapper
-to make it easier to find information elements that used the Element ID
-Extension field.
+Hi Amit,
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/linux/ieee80211.h | 20 ++++++++++++++++++++
- include/net/cfg80211.h    | 21 +++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+On Thu, Oct 06, 2016 at 11:36:24PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> card->adapter gets initialized during device registration.
+> As it's not cleared, we may end up accessing invalid memory
+> in some corner cases. This patch fixes the problem.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v4: Same as v1, v2, v3
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index f1eeb73..ba9e068 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+>  				pci_disable_msi(pdev);
+>  	       }
+>  	}
+> +	card->adapter = NULL;
+>  }
+>  
+>  /* This function initializes the PCI-E host memory space, WCB rings, etc.
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index 8718950..4cad1c2 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+>  	struct sdio_mmc_card *card = adapter->card;
+>  
+>  	if (adapter->card) {
+> +		card->adapter = NULL;
+>  		sdio_claim_host(card->func);
+>  		sdio_disable_func(card->func);
+>  		sdio_release_host(card->func);
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index a80516f..d428adf 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1960,6 +1960,26 @@ enum ieee80211_eid {
- 
- 	WLAN_EID_VENDOR_SPECIFIC = 221,
- 	WLAN_EID_QOS_PARAMETER = 222,
-+	WLAN_EID_CAG_NUMBER = 237,
-+	WLAN_EID_AP_CSN = 239,
-+	WLAN_EID_FILS_INDICATION = 240,
-+	WLAN_EID_DILS = 241,
-+	WLAN_EID_FRAGMENT = 242,
-+	WLAN_EID_EXTENSION = 255
-+};
-+
-+/* Element ID Extensions for Element ID 255 */
-+enum ieee80211_eid_ext {
-+	WLAN_EID_EXT_ASSOC_DELAY_INFO = 1,
-+	WLAN_EID_EXT_FILS_REQ_PARAMS = 2,
-+	WLAN_EID_EXT_FILS_KEY_CONFIRM = 3,
-+	WLAN_EID_EXT_FILS_SESSION = 4,
-+	WLAN_EID_EXT_FILS_HLP_CONTAINER = 5,
-+	WLAN_EID_EXT_FILS_IP_ADDR_ASSIGN = 6,
-+	WLAN_EID_EXT_KEY_DELIVERY = 7,
-+	WLAN_EID_EXT_FILS_WRAPPED_DATA = 8,
-+	WLAN_EID_EXT_FILS_PUBLIC_KEY = 12,
-+	WLAN_EID_EXT_FILS_NONCE = 13,
- };
- 
- /* Action category code */
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 843ab8a..e1bc478 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -4179,6 +4179,27 @@ static inline const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
- }
- 
- /**
-+ * cfg80211_find_ext_ie - find information element with EID Extension in data
-+ *
-+ * @eid: element ID Extension
-+ * @ies: data consisting of IEs
-+ * @len: length of data
-+ *
-+ * Return: %NULL if the extended element ID could not be found or if
-+ * the element is invalid (claims to be longer than the given
-+ * data), or a pointer to the first byte of the requested
-+ * element, that is the byte containing the element ID.
-+ *
-+ * Note: There are no checks on the element length other than
-+ * having to fit into the given data.
-+ */
-+static inline const u8 *cfg80211_find_ext_ie(u8 ext_eid, const u8 *ies, int len)
-+{
-+	return cfg80211_find_ie_match(WLAN_EID_EXTENSION, ies, len,
-+				      &ext_eid, 1, 2);
-+}
-+
-+/**
-  * cfg80211_find_vendor_ie - find vendor specific information element in data
-  *
-  * @oui: vendor OUI
--- 
-1.9.1
+As discussed on v1, I had qualms about the raciness between reads/writes
+of card->adapter, but I believe we:
+(a) can't have any command activity while writing the ->adapter field
+(either we're just init'ing the device, or we've disabled interrupts and
+are tearing it down) and
+(b) can't have a race between suspend()/resume() and unregister_dev(),
+since unregister_dev() is called from device remove() (which should not
+be concurrent with suspend()).
+
+Also, I thought you had the same problem in usb.c, but in fact, you
+fixed that ages ago here:
+
+353d2a69ea26 mwifiex: fix issues in driver unload path for USB chipsets
+
+Would be nice if fixes were bettery synchronized across the three
+interface drivers you support. We seem to be discovering unnecessary
+divergence on a few points recently.
+
+At any rate:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Brian Norris <briannorris@chromium.org>
+
+Thanks.
