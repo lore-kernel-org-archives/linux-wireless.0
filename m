@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43060 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756564AbcJZG7s (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:43050 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752942AbcJJRMc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 02:59:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/7] iwlwifi: mvm: fix d3_test with unified D0/D3 images
-References: <20161019071122.18977-1-luca@coelho.fi>
-        <20161019071122.18977-4-luca@coelho.fi>
-        <87insf7htp.fsf@kamboji.qca.qualcomm.com>
-        <1477464427.27792.5.camel@coelho.fi>
-Date: Wed, 26 Oct 2016 09:59:43 +0300
-In-Reply-To: <1477464427.27792.5.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 26 Oct 2016 09:47:07 +0300")
-Message-ID: <87vawf61eo.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_090013_967010_4668A0E2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 10 Oct 2016 13:12:32 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        netdev@vger.kernel.org
+Subject: [PATCH v6 1/4] mac80211: remove unnecessary num_mcast_sta user
+Date: Mon, 10 Oct 2016 19:12:20 +0200
+Message-Id: <1476119543-24509-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161010_191249_573153_59D759FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Checking for num_mcast_sta in __ieee80211_request_smps_ap() is unnecessary,
+as sta list will be empty in this case anyway, so list_for_each_entry(sta,
+...) will exit immediately.
 
-> On Wed, 2016-10-26 at 09:19 +0300, Kalle Valo wrote:
->> Luca Coelho <luca@coelho.fi> writes:
->> 
->> > From: Luca Coelho <luciano.coelho@intel.com>
->> > 
->> > When a unified D0/D3 image is used, we don't restart the FW in the
->> > D0->D3->D0 transitions.  Therefore, the d3_test functionality should
->> > not call ieee8021_restart_hw() when the resuming either.
->> > 
->> > Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
->> 
->> The word "commit" is not needed in the Fixes line, but no need to change
->> that now.
->
-> Oh, I didn't know that.  Thanks for pointing out.  I'll keep it in mind
-> for future patches.
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+---
+ net/mac80211/cfg.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-Related to this Documentation/SubmittingPatches has a handy tip:
-
-----------------------------------------------------------------------
-The following ``git config`` settings can be used to add a pretty format for
-outputting the above style in the ``git log`` or ``git show`` commands::
-
-        [core]
-                abbrev = 12
-        [pretty]
-                fixes = Fixes: %h (\"%s\")
-----------------------------------------------------------------------
-
-And then you can do just:
-
-$ git show --format=fixes 23ae61282b88 | head -1
-Fixes: 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
-$
-
-Perfect for a lazy person like me :)
-
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 543b1d4..24133f5 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2313,13 +2313,6 @@ int __ieee80211_request_smps_ap(struct ieee80211_sub_if_data *sdata,
+ 	    smps_mode == IEEE80211_SMPS_AUTOMATIC)
+ 		return 0;
+ 
+-	 /* If no associated stations, there's no need to do anything */
+-	if (!atomic_read(&sdata->u.ap.num_mcast_sta)) {
+-		sdata->smps_mode = smps_mode;
+-		ieee80211_queue_work(&sdata->local->hw, &sdata->recalc_smps);
+-		return 0;
+-	}
+-
+ 	ht_dbg(sdata,
+ 	       "SMPS %d requested in AP mode, sending Action frame to %d stations\n",
+ 	       smps_mode, atomic_read(&sdata->u.ap.num_mcast_sta));
 -- 
-Kalle Valo
+2.1.4
