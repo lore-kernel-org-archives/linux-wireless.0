@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50192 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:48144 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S944575AbcJSPST (ORCPT
+        with ESMTP id S1752274AbcJKLun (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:18:19 -0400
+        Tue, 11 Oct 2016 07:50:43 -0400
+Message-ID: <1476186636.5210.18.camel@coelho.fi> (sfid-20161011_135048_362691_1ED95B34)
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 13:07:48 +0300
-Message-Id: <20161019100755.23874-4-luca@coelho.fi> (sfid-20161019_171824_661544_D9672D26)
-In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
-References: <20161019100755.23874-1-luca@coelho.fi>
-Subject: [PATCH 03/10] iwlwifi: mvm: support MONITOR vif in DQA mode
+To: Dan Carpenter <dan.carpenter@oracle.com>, ido@wizery.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Oct 2016 14:50:36 +0300
+In-Reply-To: <20161011105027.GA29933@mwanda>
+References: <20161011105027.GA29933@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [bug report] iwlwifi: mvm: Add mem debugfs entry
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Hi Dan.
+On Tue, 2016-10-11 at 13:50 +0300, Dan Carpenter wrote:
+> Hello Ido Yariv,
+> 
+> The patch 2b55f43f8e47: "iwlwifi: mvm: Add mem debugfs entry" from
+> Aug 23, 2016, leads to the following static checker warning:
+> 
+> 	drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561 iwl_dbgfs_mem_read()
+> 	warn: unsigned 'len' is never less than zero.
 
-In DQA mode the TXQs are allocated on demand, so make
-sure the sniffer STA tfd_queue_msk isn't set.
+Thanks for reporting! I already have a fix for this queued up in our
+internal tree.  I'll send it out soon, with my next series.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 6b962d6..9a91203 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -899,9 +899,11 @@ static int iwl_mvm_mac_ctxt_cmd_listener(struct iwl_mvm *mvm,
- 
- 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
- 
--	for (i = 0; i < IEEE80211_NUM_ACS; i++)
--		if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
--			tfd_queue_msk |= BIT(vif->hw_queue[i]);
-+	if (!iwl_mvm_is_dqa_supported(mvm)) {
-+		for (i = 0; i < IEEE80211_NUM_ACS; i++)
-+			if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
-+				tfd_queue_msk |= BIT(vif->hw_queue[i]);
-+	}
- 
- 	cmd.filter_flags = cpu_to_le32(MAC_FILTER_IN_PROMISC |
- 				       MAC_FILTER_IN_CONTROL_AND_MGMT |
--- 
-2.9.3
+--
+Cheers,
+Luca.
