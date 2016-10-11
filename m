@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33426 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbcJZGc6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 02:32:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH 09/10] iwlwifi: mvm: operate in dqa mode
-References: <20161019100755.23874-1-luca@coelho.fi>
-        <20161019100755.23874-10-luca@coelho.fi>
-Date: Wed, 26 Oct 2016 09:32:52 +0300
-In-Reply-To: <20161019100755.23874-10-luca@coelho.fi> (Luca Coelho's message
-        of "Wed, 19 Oct 2016 13:07:54 +0300")
-Message-ID: <87eg337h7v.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_083303_524546_DAD209E6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:36790 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752789AbcJKWIe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Oct 2016 18:08:34 -0400
+Message-ID: <1476223710.4118.12.camel@sipsolutions.net> (sfid-20161012_000839_015076_E6C93A90)
+Subject: Re: [PATCH] docs-rst: sphinxify 802.11 documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 12 Oct 2016 00:08:30 +0200
+In-Reply-To: <20161011153911.6a0f778c@lwn.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+         <20161011072119.7ad4e3a3@lwn.net>
+         <1476192636.4118.8.camel@sipsolutions.net>
+         <20161011153911.6a0f778c@lwn.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
 
-> From: Liad Kaufman <liad.kaufman@intel.com>
->
-> Run DQA flows by default, as long as the FW supports it.
->
-> Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> I could live with that, I guess, though I'm not thrilled with the
+> idea.
+> 
+> As an alternative, one or the other of us could just send it up in
+> the next couple of days and be done with it.  I'd say the chances of
+> regressions are pretty small...:)  If you want to do that, feel free
+> to add my ack.  If you'd rather I sent it, just say the word.
 
-What's this DQA mode? A short summary would have been nice why it's
-useful.
+Ok, fair enough. Please go ahead, I'll ask davem to pull it back in
+when I need it. You'll get it through to Linus quicker than me :)
 
--- 
-Kalle Valo
+johannes
