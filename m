@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:33525 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753254AbcJKO1h (ORCPT
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:35686 "EHLO
+        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751537AbcJKOKH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2016 10:27:37 -0400
+        Tue, 11 Oct 2016 10:10:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAEUsAPYDPCP0NBaTmy4xqFJhAS4xFQYinoNTknxFT23ef0dk4w@mail.gmail.com>
+In-Reply-To: <1476180668.17022.21.camel@tiscali.nl>
 References: <20161010071943.4717-1-chris@rorvick.com> <1476108164.5210.11.camel@coelho.fi>
- <1476180668.17022.21.camel@tiscali.nl> <CAEUsAPYDPCP0NBaTmy4xqFJhAS4xFQYinoNTknxFT23ef0dk4w@mail.gmail.com>
+ <1476180668.17022.21.camel@tiscali.nl>
 From: Chris Rorvick <chris@rorvick.com>
-Date: Tue, 11 Oct 2016 09:27:36 -0500
-Message-ID: <CAEUsAPYOnSu5x3oak380YzrJPM3_N1bz2efkZQZ-8vLeTD286Q@mail.gmail.com> (sfid-20161011_162759_097239_51312C40)
+Date: Tue, 11 Oct 2016 09:09:57 -0500
+Message-ID: <CAEUsAPYDPCP0NBaTmy4xqFJhAS4xFQYinoNTknxFT23ef0dk4w@mail.gmail.com> (sfid-20161011_161024_865872_5F359D64)
 Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
 To: Paul Bolle <pebolle@tiscali.nl>
 Cc: Luca Coelho <luca@coelho.fi>,
@@ -25,29 +25,44 @@ Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2016 at 9:09 AM, Chris Rorvick <chris@rorvick.com> wrote:
-> I didn't receive your email so I'll try to respond via Paul's.
+Hi Luca,
 
->>> If this is really bothering you, I guess I could apply this patch for
->>> now.  But as I said, this is not solving the actual problem.
->>
->> Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
->> imply one needs to act on this message, while warn does imply that
->> action is needed.
+I didn't receive your email so I'll try to respond via Paul's.
+
+On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
+>> This is not coming from the NIC itself, but from the platform's ACPI
+>> tables.  Can you tell us which platform you are using?
+
+Interesting.  I'm running a Dell XPS 13 9350.  I replaced the
+factory-provided Broadcom card with an AC 8260.  I can update the
+commit log to reflect this.
+
+>> There are other things that look a bit inconsistent in this code...
+>> I'll try to find the official ACPI table definitions for this entries
+>> to make sure it's correct.
 >
-> Agreed.  I still think making this a warning is appropriate, but it
-> seems pretty clear this is not an error.  This has nothing to do with
-> how much it bothers me.  An error tells the user something needs to be
-> fixed, but in this case the interface is working fine.  Making it a
-> warning with an improved message will result in fewer people wasting
-> their time.
+> When I looked into this error, some time ago, I searched around a bit
+> for documentation on this splx stuff. Sadly, commit bcb079a14d75
+> ("iwlwifi: pcie: retrieve and parse ACPI power limitations") provides
+> very few clues and my searches turned up nothing useful. So a pointer
+> or two would be really appreciated.
 
-I found your original email on lkml.org... should have looked there in
-the first place!  Yes, if there is a fix for the underlying issue then
-that is obviously preferred.  When I investigated this I saw several
-reports spanning at least a few distros and kernel versions with at
-least some concluding "this is normal".
+Ditto.
 
-Again, thanks!
+>> If this is really bothering you, I guess I could apply this patch for
+>> now.  But as I said, this is not solving the actual problem.
+>
+> Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
+> imply one needs to act on this message, while warn does imply that
+> action is needed.
+
+Agreed.  I still think making this a warning is appropriate, but it
+seems pretty clear this is not an error.  This has nothing to do with
+how much it bothers me.  An error tells the user something needs to be
+fixed, but in this case the interface is working fine.  Making it a
+warning with an improved message will result in fewer people wasting
+their time.
+
+Thanks!
 
 Chris
