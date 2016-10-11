@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42487 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755685AbcJZQ7V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 12:59:21 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-CC: Brian Norris <briannorris@chromium.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        "Nishant Sarmukadam" <nishants@marvell.com>
-Subject: RE: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
- shutdown_drv
-Date: Wed, 26 Oct 2016 16:59:17 +0000
-Message-ID: <206625aa34dc499a9e6769287571127f@SC-EXCH04.marvell.com> (sfid-20161026_185933_211431_95D7BECB)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
- <1477318892-22877-2-git-send-email-akarwar@marvell.com>
- <20161024191914.GB968@localhost> <20161024235746.GC15034@dtor-ws>
- <91f0f4390ac14afc9e4f3498d1b79c78@SC-EXCH04.marvell.com>
- <20161025163520.GA10979@dtor-ws>
- <24731897638e42ba8b05acd6afafef3b@SC-EXCH04.marvell.com>
- <20161026163607.GA3989@dtor-ws>
-In-Reply-To: <20161026163607.GA3989@dtor-ws>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:34677 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753260AbcJKOOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Oct 2016 10:14:34 -0400
+Message-ID: <1476192636.4118.8.camel@sipsolutions.net> (sfid-20161011_161437_673328_61861541)
+Subject: Re: [PATCH] docs-rst: sphinxify 802.11 documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 11 Oct 2016 15:30:36 +0200
+In-Reply-To: <20161011072119.7ad4e3a3@lwn.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+         <20161011072119.7ad4e3a3@lwn.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
 
-> From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
-> Sent: Wednesday, October 26, 2016 10:06 PM
-> To: Amitkumar Karwar
-> Cc: Brian Norris; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
-> Sarmukadam
-> Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing'
-> in shutdown_drv
+> > Jon, unless you have strong objections, I'd like to take this
+> > through my tree due to the header file changes.
 > 
-> Hi Amit,
-> 
-> On Wed, Oct 26, 2016 at 03:23:08PM +0000, Amitkumar Karwar wrote:
-> >
-> > This race won't occur. At this point of time(i.e while calling
-> mwifiex_shutdown_drv() in deinit), following things are completed. We
-> don't expect mwifiex_main_process() to be scheduled.
-> > 1) Connection to peer device is terminated at the beginning of
-> teardown thread. So we don't receive any Tx data from kernel.
-> > 2) Last command SHUTDOWN is exchanged with firmware. So there won't be
-> any activity/interrupt from firmware.
-> > 3) Interrupts are disabled.
-> > 4) "adapter->surprise_removed" flag is set. It will skip
-> mwifiex_main_process() calls.
-> >
-> > -----------
-> > static void mwifiex_main_work_queue(struct work_struct *work) {
-> >         struct mwifiex_adapter *adapter =
-> >                 container_of(work, struct mwifiex_adapter, main_work);
-> >
-> >         if (adapter->surprise_removed)
-> >                 return;
-> >         mwifiex_main_process(adapter); }
-> > ----------
-> > 5) We have "mwifiex_terminate_workqueue(adapter)" call to flush and
-> destroy workqueue.
-> 
-> OK, but if interrupts are disabled and you ensure that work is flushed
-> or completed before you call mwifiex_shutdown_drv() then I do not
-> understand why you need all of this at all? Why do you need to check
-> status in mwifiex_shutdown_drv() and why do you want
-> mwifiex_main_process() to call mwifiex_shutdown_drv() in certain cases?
-> Can you simply remove all this stuff?
-> 
+> Is there any chance of splitting those two things up?  In particular,
+> index.rst has become a real conflict point, and I'm getting tired of
+> explaining those to Linus...so I'd prefer to carry that part if
+> possible.
 
-I agree. This code is there for long time. I will prepare a patch for this cleanup work.
+Hmm. It may be easier then to take this through your tree entirely.
 
-Regards,
-Amitkumar
+I could split it, and ask you to add only the index.rst change.
+However, if this is a contention point, then the DocBook/Makefile will
+also be the same contention point at least as far as conversions are
+concerned, and if I don't have *that* in my tree either then the
+(documentation) build will be broken by the removal of the template.
+
+So ultimately then it'll be better for you to just take almost all of
+the conversion through your tree.
+
+The header file changes normally wouldn't be a big deal, they're in
+comments only, but in this case I know that we have a work-in-progress
+patch submission that will change things here, and I'd like that to
+already use the new format.
+
+Maybe I can just take the relevant header file change through my tree?
+
+It would cause the following warning to appear in your tree:
+
+include/net/cfg80211.h:3093: WARNING: Definition list ends without a blank line; unexpected unindent.
+include/net/cfg80211.h:3095: ERROR: Unexpected indentation.
+include/net/cfg80211.h:3099: WARNING: Block quote ends without a blank line; unexpected unindent.
+include/net/cfg80211.h:3107: WARNING: Definition list ends without a blank line; unexpected unindent.
+include/net/cfg80211.h:3109: ERROR: Unexpected indentation.
+include/net/cfg80211.h:3113: WARNING: Block quote ends without a blank line; unexpected unindent.
+include/net/cfg80211.h:3123: ERROR: Unexpected indentation.
+include/net/cfg80211.h:3124: WARNING: Definition list ends without a blank line; unexpected unindent.
+include/net/cfg80211.h:3126: ERROR: Unexpected indentation.
+include/net/cfg80211.h:3130: WARNING: Block quote ends without a blank line; unexpected unindent.
+
+for the time being - perhaps you can live with that, until my changes
+also propagate through to the tree?
+
+Alternatively, I could merge the header file change, and hold this
+patch until my changes hit the tree, but that will be a long time
+coming, presumably, since I'll have missed the merge window with both
+of the changes.
+
+johannes
