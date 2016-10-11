@@ -1,94 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50000 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932298AbcJYQLT (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:35718 "EHLO
+        mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752984AbcJKAWm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 12:11:19 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
- shutdown_drv
-Date: Tue, 25 Oct 2016 16:11:14 +0000
-Message-ID: <91f0f4390ac14afc9e4f3498d1b79c78@SC-EXCH04.marvell.com> (sfid-20161025_181123_097645_F88CF4C9)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
- <1477318892-22877-2-git-send-email-akarwar@marvell.com>
- <20161024191914.GB968@localhost> <20161024235746.GC15034@dtor-ws>
-In-Reply-To: <20161024235746.GC15034@dtor-ws>
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 10 Oct 2016 20:22:42 -0400
+Received: by mail-pa0-f50.google.com with SMTP id qn10so3918788pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 17:22:41 -0700 (PDT)
+Date: Mon, 10 Oct 2016 17:22:38 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        Xinming Hu <huxm@marvell.com>, abhishekbh@google.com,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH v4 1/3] mwifiex: reset card->adapter during device
+ unregister
+Message-ID: <20161011002238.GC19969@localhost> (sfid-20161011_022246_536599_E58167F5)
+References: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
+ <20161010205332.GB11254@localhost>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161010205332.GB11254@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
++ Dmitry
 
-> From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
-> Sent: Tuesday, October 25, 2016 5:28 AM
-> To: Brian Norris
-> Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
-> Sarmukadam
-> Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing'
-> in shutdown_drv
+Hi Amit,
+
+On Mon, Oct 10, 2016 at 01:53:32PM -0700, Brian Norris wrote:
+> On Thu, Oct 06, 2016 at 11:36:24PM +0530, Amitkumar Karwar wrote:
+> > From: Xinming Hu <huxm@marvell.com>
+> > 
+> > card->adapter gets initialized during device registration.
+> > As it's not cleared, we may end up accessing invalid memory
+> > in some corner cases. This patch fixes the problem.
+> > 
+> > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> > v4: Same as v1, v2, v3
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+> >  drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+> >  2 files changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > index f1eeb73..ba9e068 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+> >  				pci_disable_msi(pdev);
+> >  	       }
+> >  	}
+> > +	card->adapter = NULL;
+> >  }
+> >  
+> >  /* This function initializes the PCI-E host memory space, WCB rings, etc.
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > index 8718950..4cad1c2 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > @@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+> >  	struct sdio_mmc_card *card = adapter->card;
+> >  
+> >  	if (adapter->card) {
+> > +		card->adapter = NULL;
+> >  		sdio_claim_host(card->func);
+> >  		sdio_disable_func(card->func);
+> >  		sdio_release_host(card->func);
 > 
-> On Mon, Oct 24, 2016 at 12:19:15PM -0700, Brian Norris wrote:
-> > On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
-> > > This variable is guarded by spinlock at all other places. This patch
-> > > takes care of missing spinlock usage in mwifiex_shutdown_drv().
-> > >
-> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > > ---
-> > >  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
-> > >  1 file changed, 3 insertions(+)
-> > >
-> > > diff --git a/drivers/net/wireless/marvell/mwifiex/init.c
-> > > b/drivers/net/wireless/marvell/mwifiex/init.c
-> > > index 82839d9..8e5e424 100644
-> > > --- a/drivers/net/wireless/marvell/mwifiex/init.c
-> > > +++ b/drivers/net/wireless/marvell/mwifiex/init.c
-> > > @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter
-> > > *adapter)
-> > >
-> > >  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
-> > >  	/* wait for mwifiex_process to complete */
-> > > +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
-> > >  	if (adapter->mwifiex_processing) {
-> >
-> > I'm not quite sure why we have this check in the first place; if the
-> > main process is still running, then don't we have bigger problems here
-> > anyway? But this is definitely the "right" way to check this flag, so:
+> As discussed on v1, I had qualms about the raciness between reads/writes
+> of card->adapter, but I believe we:
+> (a) can't have any command activity while writing the ->adapter field
+> (either we're just init'ing the device, or we've disabled interrupts and
+> are tearing it down) and
+> (b) can't have a race between suspend()/resume() and unregister_dev(),
+> since unregister_dev() is called from device remove() (which should not
+> be concurrent with suspend()).
 > 
-> No, this is definitely not right way to check it. What exactly does this
-> spinlock protect? It seems that the intent is to make sure we do not
-> call mwifiex_shutdown_drv() while mwifiex_main_process() is executing.
-> It even says above that we are "waiting" for it (but we do not, we may
-> bail out or we may not, depends on luck).
+> Also, I thought you had the same problem in usb.c, but in fact, you
+> fixed that ages ago here:
 > 
-> To implement this properly you not only need to take a lock and check
-> the flag, but keep the lock until mwifiex_shutdown_drv() is done, or use
-> some other way to let mwifiex_main_process() know it should not access
-> the adapter while mwifiex_shutdown_drv() is running.
+> 353d2a69ea26 mwifiex: fix issues in driver unload path for USB chipsets
 > 
-> NACK.
+> Would be nice if fixes were bettery synchronized across the three
+> interface drivers you support. We seem to be discovering unnecessary
+> divergence on a few points recently.
 > 
+> At any rate:
+> 
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Brian Norris <briannorris@chromium.org>
 
-As I explained in other email, here is the sequence.
-1) We find mwifiex_processing is true in mwifiex_shitdown_drv(). "-EINPROGRESS" is returned by the function and hw_status state is changed to MWIFIEX_HW_STATUS_CLOSING.
-2) We wait until main_process is completed.
+Dmitry helped me re-realize my original qualms:
 
-                if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
-                        wait_event_interruptible(adapter->init_wait_q,
-                                                 adapter->init_wait_q_woken);
+mwifiex_unregister_dev() is called in the failure path for your async FW
+request, and so it may race with suspend(). So I retract my Reviewed-by.
+Sorry.
 
-3) We have following check at the end of main_process()
+I'm going to look into converting to asynchronous device probing, which
+might remove the need for async FW request, and would therefore resolve
+both patch 1 and 3's races without any additional complicated hacks. But
+I'm not sure if that will satisfy all mwifiex users well enough. I'll
+have to give it a little more thought. Any thoughts from your side,
+Amit?
 
-exit_main_proc:
-        if (adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING)
-                mwifiex_shutdown_drv(adapter);
-
-4) Here at the end of mwifiex_shutdown_drv(), we are setting "adapter->init_wait_q_woken" and waking up the thread in point (2)
-
-Regards,
-Amitkumar
+Brian
