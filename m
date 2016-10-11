@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49902 "EHLO sipsolutions.net"
+Received: from tex.lwn.net ([70.33.254.29]:47214 "EHLO vena.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751802AbcJZI4G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 04:56:06 -0400
-Message-ID: <1477472104.4059.21.camel@sipsolutions.net> (sfid-20161026_105820_028812_9C22AEF6)
-Subject: Re: [PATCH 2/2] mac80211: use inline kernel-doc for struct
- ieee80211_hw
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jani Nikula <jani.nikula@intel.com>, linux-wireless@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Date: Wed, 26 Oct 2016 10:55:04 +0200
-In-Reply-To: <87bmy7mrq1.fsf@intel.com>
-References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
-         <1477054644-5945-2-git-send-email-jani.nikula@intel.com>
-         <1477462177.4059.19.camel@sipsolutions.net> <87bmy7mrq1.fsf@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751537AbcJKNsk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Oct 2016 09:48:40 -0400
+Date: Tue, 11 Oct 2016 07:21:19 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: Re: [PATCH] docs-rst: sphinxify 802.11 documentation
+Message-ID: <20161011072119.7ad4e3a3@lwn.net> (sfid-20161011_154846_376457_C25A0052)
+In-Reply-To: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-26 at 11:36 +0300, Jani Nikula wrote:
-> On Wed, 26 Oct 2016, Johannes Berg <johannes@sipsolutions.net> wrote:
-> > 
-> > On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
-> > > 
-> > > It's easier to manage the kernel-doc for the fields when they
-> > > documentation is next to the field.
-> > 
-> > Ok, actually, this doesn't apply. Perhaps I'll look into scripting
-> > this
-> > kind of conversion.
-> 
-> No problem; I'll leave it up to you.
+On Tue, 11 Oct 2016 14:56:53 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-I'll probably end up doing it manually though - no chance I can extend
-the parser to output an spatch (doing the comment placement with spatch
-actually works, but getting there...)
+> This is just a very basic conversion, I've split up the original
+> multi-book template, and also split up the multi-part mac80211
+> part in the original book; neither of those were handled by the
+> automatic pandoc conversion.
+> 
+> Fix errors that showed up, resulting in a much nicer rendering,
+> at least for the interface combinations documentation.
+
+Great, this is just what I want to see - another DocBook template gone!
+
+> Jon, unless you have strong objections, I'd like to take this
+> through my tree due to the header file changes.
+
+Is there any chance of splitting those two things up?  In particular,
+index.rst has become a real conflict point, and I'm getting tired of
+explaining those to Linus...so I'd prefer to carry that part if possible.
+
+Thanks,
+
+jon
