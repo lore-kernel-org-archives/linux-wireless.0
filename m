@@ -1,122 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49424 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754949AbcJRUMW (ORCPT
+Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:44645 "EHLO
+        lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752479AbcJKKLv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 16:12:22 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Tue, 18 Oct 2016 23:12:08 +0300
-Message-Id: <20161018201213.18873-3-luca@coelho.fi> (sfid-20161018_221228_032766_FF8F18F0)
-In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
-References: <20161018201213.18873-1-luca@coelho.fi>
-Subject: [PATCH 2/7] mac80211: fix tid_agg_rx NULL dereference
+        Tue, 11 Oct 2016 06:11:51 -0400
+Message-ID: <1476180668.17022.21.camel@tiscali.nl> (sfid-20161011_121216_592338_8F91BE2A)
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Luca Coelho <luca@coelho.fi>, Chris Rorvick <chris@rorvick.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Tue, 11 Oct 2016 12:11:08 +0200
+In-Reply-To: <1476108164.5210.11.camel@coelho.fi>
+References: <20161010071943.4717-1-chris@rorvick.com>
+         <1476108164.5210.11.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Luca,
 
-On drivers setting the SUPPORTS_REORDERING_BUFFER hardware flag,
-we crash when the peer sends an AddBA request while we already
-have a session open on the seame TID; this is because on those
-drivers, the tid_agg_rx is left NULL even though the session is
-valid, and the agg_session_valid bit is set.
+On Mon, 2016-10-10 at 17:02 +0300, Luca Coelho wrote:
+> On Mon, 2016-10-10 at 02:19 -0500, Chris Rorvick wrote:
+> This is not coming from the NIC itself, but from the platform's ACPI
+> tables.  Can you tell us which platform you are using?
 
-To fix this, store the dialog tokens outside the tid_agg_rx to
-be able to compare them to the received AddBA request.
+On my machine I'm seeing the same error as Chris. So what exactly do
+you mean with "platform" here?
 
-Fixes: f89e07d4cf26 ("mac80211: agg-rx: refuse ADDBA Request with timeout update")
-Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c      | 8 ++------
- net/mac80211/debugfs_sta.c | 2 +-
- net/mac80211/sta_info.h    | 4 ++--
- 3 files changed, 5 insertions(+), 9 deletions(-)
+> >         Name (SPLX, Package (0x04)
+> >         {
+> >             Zero,
+> >             Package (0x03)
+> >             {
+> >                 0,
+> >                 1200,
+> >                 1000
+> >             },
+> >             Package (0x03)
+> >             {
+> >                 0,
+> >                 1200,
+> >                 1000
+> >             },
+> >             Package (0x03)
+> >             {
+> >                 0,
+> >                 1200,
+> >                 1000
+> >             }
+> >         })
+> 
+> This is not the structure that we are expecting.  We expect this:
+> 
+>                Name (SPLX, Package (0x02)
+>                {
+>                    Zero,
+>                    Package (0x03)
+>                    {
+>                        0x07,
+>                        <value>,
+>                        <value>
+>                    }
+>                })
+> 
+> ...as you correctly pointed out.  The data in the structure you have is
+> not for WiFi (actually I don't think 0 is a valid value, but I'll
+> double-check).
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index f6749dc..3b5fd41 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -315,11 +315,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
--		tid_agg_rx = rcu_dereference_protected(
--				sta->ampdu_mlme.tid_rx[tid],
--				lockdep_is_held(&sta->ampdu_mlme.mtx));
--
--		if (tid_agg_rx->dialog_token == dialog_token) {
-+		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
- 			ht_dbg_ratelimited(sta->sdata,
- 					   "updated AddBA Req from %pM on tid %u\n",
- 					   sta->sta.addr, tid);
-@@ -396,7 +392,6 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	}
- 
- 	/* update data */
--	tid_agg_rx->dialog_token = dialog_token;
- 	tid_agg_rx->ssn = start_seq_num;
- 	tid_agg_rx->head_seq_num = start_seq_num;
- 	tid_agg_rx->buf_size = buf_size;
-@@ -418,6 +413,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	if (status == WLAN_STATUS_SUCCESS) {
- 		__set_bit(tid, sta->ampdu_mlme.agg_session_valid);
- 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
-+		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
- 	}
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index a2fcdb4..14ec63a 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -205,7 +205,7 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
- 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
--				tid_rx ? tid_rx->dialog_token : 0);
-+				tid_rx ? sta->ampdu_mlme.tid_rx_token[i] : 0);
- 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
- 				tid_rx ? tid_rx->ssn : 0);
- 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index ed5fcb9..dd06ef0 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -184,7 +184,6 @@ struct tid_ampdu_tx {
-  * @ssn: Starting Sequence Number expected to be aggregated.
-  * @buf_size: buffer size for incoming A-MPDUs
-  * @timeout: reset timer value (in TUs).
-- * @dialog_token: dialog token for aggregation session
-  * @rcu_head: RCU head used for freeing this struct
-  * @reorder_lock: serializes access to reorder buffer, see below.
-  * @auto_seq: used for offloaded BA sessions to automatically pick head_seq_and
-@@ -213,7 +212,6 @@ struct tid_ampdu_rx {
- 	u16 ssn;
- 	u16 buf_size;
- 	u16 timeout;
--	u8 dialog_token;
- 	bool auto_seq;
- 	bool removed;
- };
-@@ -225,6 +223,7 @@ struct tid_ampdu_rx {
-  *	to tid_tx[idx], which are protected by the sta spinlock)
-  *	tid_start_tx is also protected by sta->lock.
-  * @tid_rx: aggregation info for Rx per TID -- RCU protected
-+ * @tid_rx_token: dialog tokens for valid aggregation sessions
-  * @tid_rx_timer_expired: bitmap indicating on which TIDs the
-  *	RX timer expired until the work for it runs
-  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
-@@ -243,6 +242,7 @@ struct sta_ampdu_mlme {
- 	struct mutex mtx;
- 	/* rx */
- 	struct tid_ampdu_rx __rcu *tid_rx[IEEE80211_NUM_TIDS];
-+	u8 tid_rx_token[IEEE80211_NUM_TIDS];
- 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
--- 
-2.9.3
+For what it's worth, on my machine I have twenty (!) SPLX entries, all
+reading:
+    Name (SPLX, Package (0x04)
+    {
+        Zero, 
+        Package (0x03)
+        {
+            0x80000000, 
+            0x80000000, 
+            0x80000000
+        }, 
+    
+        Package (0x03)
+        {
+           0x80000000, 
+           0x80000000, 
+           0x80000000
+        }, 
+    
+        Package (0x03)
+        {
+            0x80000000, 
+            0x80000000, 
+            0x80000000
+        }
+    })
+
+> There are other things that look a bit inconsistent in this code...
+> I'll try to find the official ACPI table definitions for this entries
+> to make sure it's correct.
+
+When I looked into this error, some time ago, I searched around a bit
+for documentation on this splx stuff. Sadly, commit bcb079a14d75
+("iwlwifi: pcie: retrieve and parse ACPI power limitations") provides
+very few clues and my searches turned up nothing useful. So a pointer
+or two would be really appreciated.
+
+> > --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> > +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> > @@ -540,7 +540,7 @@ static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
+> >  	    splx->package.count != 2 ||
+> >  	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
+> >  	    splx->package.elements[0].integer.value != 0) {
+> > -		IWL_ERR(trans, "Unsupported splx structure\n");
+> > +		IWL_WARN(trans, "Unsupported splx structure, not limiting WiFi power\n");
+> >  		return 0;
+> >  	}
+> 
+> If this is really bothering you, I guess I could apply this patch for
+> now.  But as I said, this is not solving the actual problem.
+
+Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
+imply one needs to act on this message, while warn does imply that
+action is needed.
+
+Thanks,
+
+
+Paul Bolle
