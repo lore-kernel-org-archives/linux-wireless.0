@@ -1,202 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50392 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752915AbcJZJpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 05:45:41 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: move unsplit command advertising to a separate function
-Date: Wed, 26 Oct 2016 11:44:56 +0200
-Message-Id: <1477475096-798-1-git-send-email-johannes@sipsolutions.net> (sfid-20161026_114600_463358_94185C5F)
+Received: from aserp1040.oracle.com ([141.146.126.69]:35800 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751136AbcJKKva (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Oct 2016 06:51:30 -0400
+Date: Tue, 11 Oct 2016 13:50:27 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: ido@wizery.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] iwlwifi: mvm: Add mem debugfs entry
+Message-ID: <20161011105027.GA29933@mwanda> (sfid-20161011_125139_004287_A864D8CB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello Ido Yariv,
 
-When we split the wiphy dump because it got too large, I added a
-comment and asked that all new command advertising be done only
-for userspace clients capable of receiving split data, in order
-to not break older ones (which can't use the new commands anyway)
+The patch 2b55f43f8e47: "iwlwifi: mvm: Add mem debugfs entry" from
+Aug 23, 2016, leads to the following static checker warning:
 
-This mostly worked, and we haven't added many new commands, but
-I occasionally get patches that modify the wrong place.
+	drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561 iwl_dbgfs_mem_read()
+	warn: unsigned 'len' is never less than zero.
 
-Make this easier to detect and understand by splitting out the
-old commands to a separate function that makes it more clear it
-should never be modified again.
+drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+  1521  static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
+  1522                                    size_t count, loff_t *ppos)
+  1523  {
+  1524          struct iwl_mvm *mvm = file->private_data;
+  1525          struct iwl_dbg_mem_access_cmd cmd = {};
+  1526          struct iwl_dbg_mem_access_rsp *rsp;
+  1527          struct iwl_host_cmd hcmd = {
+  1528                  .flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
+  1529                  .data = { &cmd, },
+  1530                  .len = { sizeof(cmd) },
+  1531          };
+  1532          size_t delta, len;
+                              ^^^
+Unsigned.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c | 142 +++++++++++++++++++++++++++----------------------
- 1 file changed, 79 insertions(+), 63 deletions(-)
+  1533          ssize_t ret;
+  1534  
+  1535          hcmd.id = iwl_cmd_id(*ppos >> 24 ? UMAC_RD_WR : LMAC_RD_WR,
+  1536                               DEBUG_GROUP, 0);
+  1537          cmd.op = cpu_to_le32(DEBUG_MEM_OP_READ);
+  1538  
+  1539          /* Take care of alignment of both the position and the length */
+  1540          delta = *ppos & 0x3;
+  1541          cmd.addr = cpu_to_le32(*ppos - delta);
+  1542          cmd.len = cpu_to_le32(min(ALIGN(count + delta, 4) / 4,
+  1543                                    (size_t)DEBUG_MEM_MAX_SIZE_DWORDS));
+  1544  
+  1545          mutex_lock(&mvm->mutex);
+  1546          ret = iwl_mvm_send_cmd(mvm, &hcmd);
+  1547          mutex_unlock(&mvm->mutex);
+  1548  
+  1549          if (ret < 0)
+  1550                  return ret;
+  1551  
+  1552          rsp = (void *)hcmd.resp_pkt->data;
+  1553          if (le32_to_cpu(rsp->status) != DEBUG_MEM_STATUS_SUCCESS) {
+  1554                  ret = -ENXIO;
+  1555                  goto out;
+  1556          }
+  1557  
+  1558          len = min((size_t)le32_to_cpu(rsp->len) << 2,
+  1559                    iwl_rx_packet_payload_len(hcmd.resp_pkt) - sizeof(*rsp));
+  1560          len = min(len - delta, count);
+  1561          if (len < 0) {
+                    ^^^^^^^
+Unpossible.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 46cd48993ce9..b0440de82171 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1328,6 +1328,82 @@ nl80211_send_mgmt_stypes(struct sk_buff *msg,
- 	return 0;
- }
- 
-+#define CMD(op, n)							\
-+	 do {								\
-+		if (rdev->ops->op) {					\
-+			i++;						\
-+			if (nla_put_u32(msg, i, NL80211_CMD_ ## n)) 	\
-+				goto nla_put_failure;			\
-+		}							\
-+	} while (0)
-+
-+static int nl80211_add_commands_unsplit(struct cfg80211_registered_device *rdev,
-+					struct sk_buff *msg)
-+{
-+	int i = 0;
-+
-+	/*
-+	 * do *NOT* add anything into this function, new things need to be
-+	 * advertised only to new versions of userspace that can deal with
-+	 * the split (and they can't possibly care about new features...
-+	 */
-+	CMD(add_virtual_intf, NEW_INTERFACE);
-+	CMD(change_virtual_intf, SET_INTERFACE);
-+	CMD(add_key, NEW_KEY);
-+	CMD(start_ap, START_AP);
-+	CMD(add_station, NEW_STATION);
-+	CMD(add_mpath, NEW_MPATH);
-+	CMD(update_mesh_config, SET_MESH_CONFIG);
-+	CMD(change_bss, SET_BSS);
-+	CMD(auth, AUTHENTICATE);
-+	CMD(assoc, ASSOCIATE);
-+	CMD(deauth, DEAUTHENTICATE);
-+	CMD(disassoc, DISASSOCIATE);
-+	CMD(join_ibss, JOIN_IBSS);
-+	CMD(join_mesh, JOIN_MESH);
-+	CMD(set_pmksa, SET_PMKSA);
-+	CMD(del_pmksa, DEL_PMKSA);
-+	CMD(flush_pmksa, FLUSH_PMKSA);
-+	if (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL)
-+		CMD(remain_on_channel, REMAIN_ON_CHANNEL);
-+	CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
-+	CMD(mgmt_tx, FRAME);
-+	CMD(mgmt_tx_cancel_wait, FRAME_WAIT_CANCEL);
-+	if (rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
-+		i++;
-+		if (nla_put_u32(msg, i, NL80211_CMD_SET_WIPHY_NETNS))
-+			goto nla_put_failure;
-+	}
-+	if (rdev->ops->set_monitor_channel || rdev->ops->start_ap ||
-+	    rdev->ops->join_mesh) {
-+		i++;
-+		if (nla_put_u32(msg, i, NL80211_CMD_SET_CHANNEL))
-+			goto nla_put_failure;
-+	}
-+	CMD(set_wds_peer, SET_WDS_PEER);
-+	if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
-+		CMD(tdls_mgmt, TDLS_MGMT);
-+		CMD(tdls_oper, TDLS_OPER);
-+	}
-+	if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
-+		CMD(sched_scan_start, START_SCHED_SCAN);
-+	CMD(probe_client, PROBE_CLIENT);
-+	CMD(set_noack_map, SET_NOACK_MAP);
-+	if (rdev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS) {
-+		i++;
-+		if (nla_put_u32(msg, i, NL80211_CMD_REGISTER_BEACONS))
-+			goto nla_put_failure;
-+	}
-+	CMD(start_p2p_device, START_P2P_DEVICE);
-+	CMD(set_mcast_rate, SET_MCAST_RATE);
-+#ifdef CONFIG_NL80211_TESTMODE
-+	CMD(testmode_cmd, TESTMODE);
-+#endif
-+	return i;
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
- struct nl80211_dump_wiphy_state {
- 	s64 filter_wiphy;
- 	long start;
-@@ -1555,68 +1631,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 		if (!nl_cmds)
- 			goto nla_put_failure;
- 
--		i = 0;
--#define CMD(op, n)							\
--		 do {							\
--			if (rdev->ops->op) {				\
--				i++;					\
--				if (nla_put_u32(msg, i, NL80211_CMD_ ## n)) \
--					goto nla_put_failure;		\
--			}						\
--		} while (0)
--
--		CMD(add_virtual_intf, NEW_INTERFACE);
--		CMD(change_virtual_intf, SET_INTERFACE);
--		CMD(add_key, NEW_KEY);
--		CMD(start_ap, START_AP);
--		CMD(add_station, NEW_STATION);
--		CMD(add_mpath, NEW_MPATH);
--		CMD(update_mesh_config, SET_MESH_CONFIG);
--		CMD(change_bss, SET_BSS);
--		CMD(auth, AUTHENTICATE);
--		CMD(assoc, ASSOCIATE);
--		CMD(deauth, DEAUTHENTICATE);
--		CMD(disassoc, DISASSOCIATE);
--		CMD(join_ibss, JOIN_IBSS);
--		CMD(join_mesh, JOIN_MESH);
--		CMD(set_pmksa, SET_PMKSA);
--		CMD(del_pmksa, DEL_PMKSA);
--		CMD(flush_pmksa, FLUSH_PMKSA);
--		if (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL)
--			CMD(remain_on_channel, REMAIN_ON_CHANNEL);
--		CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
--		CMD(mgmt_tx, FRAME);
--		CMD(mgmt_tx_cancel_wait, FRAME_WAIT_CANCEL);
--		if (rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
--			i++;
--			if (nla_put_u32(msg, i, NL80211_CMD_SET_WIPHY_NETNS))
--				goto nla_put_failure;
--		}
--		if (rdev->ops->set_monitor_channel || rdev->ops->start_ap ||
--		    rdev->ops->join_mesh) {
--			i++;
--			if (nla_put_u32(msg, i, NL80211_CMD_SET_CHANNEL))
--				goto nla_put_failure;
--		}
--		CMD(set_wds_peer, SET_WDS_PEER);
--		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
--			CMD(tdls_mgmt, TDLS_MGMT);
--			CMD(tdls_oper, TDLS_OPER);
--		}
--		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
--			CMD(sched_scan_start, START_SCHED_SCAN);
--		CMD(probe_client, PROBE_CLIENT);
--		CMD(set_noack_map, SET_NOACK_MAP);
--		if (rdev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS) {
--			i++;
--			if (nla_put_u32(msg, i, NL80211_CMD_REGISTER_BEACONS))
--				goto nla_put_failure;
--		}
--		CMD(start_p2p_device, START_P2P_DEVICE);
--		CMD(set_mcast_rate, SET_MCAST_RATE);
--#ifdef CONFIG_NL80211_TESTMODE
--		CMD(testmode_cmd, TESTMODE);
--#endif
-+		i = nl80211_add_commands_unsplit(rdev, msg);
-+		if (i < 0)
-+			goto nla_put_failure;
- 		if (state->split) {
- 			CMD(crit_proto_start, CRIT_PROTOCOL_START);
- 			CMD(crit_proto_stop, CRIT_PROTOCOL_STOP);
-@@ -1627,7 +1644,6 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 					NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
- 				CMD(add_tx_ts, ADD_TX_TS);
- 		}
--		/* add into the if now */
- #undef CMD
- 
- 		if (rdev->ops->connect || rdev->ops->auth) {
--- 
-2.8.1
+  1562                  ret = -EFAULT;
+  1563                  goto out;
+  1564          }
+  1565  
+  1566          ret = len - copy_to_user(user_buf, (void *)rsp->data + delta, len);
+  1567          *ppos += ret;
+  1568  
+  1569  out:
+  1570          iwl_free_resp(&hcmd);
+  1571          return ret;
+  1572  }
+
+regards,
+dan carpenter
