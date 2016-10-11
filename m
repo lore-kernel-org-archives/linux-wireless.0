@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51117 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:38799 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932239AbcJMOOK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 10:14:10 -0400
-Message-ID: <1476366354.4904.31.camel@sipsolutions.net> (sfid-20161013_161416_031304_06D9E79F)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Andy Lutomirski <luto@amacapital.net>
-Cc: Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Date: Thu, 13 Oct 2016 15:45:54 +0200
-In-Reply-To: <20161013134252.GA583@swordfish> (sfid-20161013_154350_352486_97A4AB85)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         (sfid-20161013_154350_352486_97A4AB85)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752930AbcJKJ2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 11 Oct 2016 05:28:41 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, toke@toke.dk
+Subject: [PATCH] mac80211: fix sequence number allocation regression
+Date: Tue, 11 Oct 2016 11:28:31 +0200
+Message-Id: <20161011092831.85565-1-nbd@nbd.name> (sfid-20161011_112859_873333_292D0DA2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-13 at 22:42 +0900, Sergey Senozhatsky wrote:
-> 
-> > > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commi
-> > > t/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
-> > > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commi
-> > > t/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
-> > 
-> > That truly sounds like something we'd rather avoid in the TX/RX
-> > paths though, which should perform well.
-> 
-> didn't fix.
+The recent commit that moved around TX handlers dropped the sequence
+number allocation at the end of ieee80211_tx_dequeue and calls
+ieee80211_tx_h_sequence instead (for the non-fast-xmit case).
+However, it did not change the fast-xmit sequence allocation condition
+in ieee80211_xmit_fast_finish, which skipped seqno alloc if intermediate
+tx queues are being used.
 
-It couldn't, since the new helpers weren't used in mac80211 in those
-patches yet.
+Drop the now obsolete condition.
 
-> so I finally had some time to do a better bug-reporter job.
-> 
-> I added a bunch of printk-s and several virt_addr_valid()-s
-> to ieee80211_aes_ccm_encrypt().
-> 
-> and right befoe the Oops I see the following report from
-> virt_addr_valid()
-> 
-> 
->  FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02
-> >> 39) == 130
+Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/tx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Yeah, we already know that in this function the aad variable is on the
-stack, it explicitly is.
-
-The question, though, is why precisely that fails in the crypto code.
-Can you send the Oops report itself?
-
-johannes
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index dc60784..8ff81fd 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3212,7 +3212,6 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
+ 				       struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	u8 tid = IEEE80211_NUM_TIDS;
+ 
+@@ -3224,8 +3223,7 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
+ 	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+ 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 		*ieee80211_get_qos_ctl(hdr) = tid;
+-		if (!ieee80211_get_txq(local, &sdata->vif, &sta->sta, skb))
+-			hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
++		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
+ 	} else {
+ 		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+ 		hdr->seq_ctrl = cpu_to_le16(sdata->sequence_number);
+-- 
+2.10.1
