@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36547 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754889AbcJ3KU6 (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33643 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755004AbcJLONn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 06:20:58 -0400
-Received: by mail-pf0-f195.google.com with SMTP id n85so5903929pfi.3
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2016 03:20:53 -0700 (PDT)
-Date: Sun, 30 Oct 2016 20:20:46 +1000
-From: John Heenan <john@zgus.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] rtl8xxxu: Fix for authentication failure
-Message-ID: <20161030102046.GA5784@cube> (sfid-20161030_112129_574414_CC122EF6)
-References: <cover.1477769750.git.john@zgus.com>
+        Wed, 12 Oct 2016 10:13:43 -0400
+Date: Wed, 12 Oct 2016 23:12:45 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        linux-next@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+Message-ID: <20161012141245.GA436@swordfish> (sfid-20161012_161403_656133_FAFDC477)
+References: <20161010150358.GA514@swordfish>
+ <20161010153050.GA836@swordfish>
+ <1476263106.5271.23.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1477769750.git.john@zgus.com>
+In-Reply-To: <1476263106.5271.23.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fix enables the same sequence of init behaviour as the alternative
-working driver for the wireless rtl8723bu IC at
-https://github.com/lwfinger/rtl8723bu
+Hello,
 
-For exampe rtl8xxxu_init_device is now called each time
-userspace wpa_supplicant is executed instead of just once when
-modprobe is executed.
+On (10/12/16 11:05), Johannes Berg wrote:
+> Sorry - I meant to look into this yesterday but forgot.
+> 
+> > Andy, can this be related to CONFIG_VMAP_STACK?
+> 
+> I think it is.
 
-Along with 'Fix for bogus data used to determine macpower',
-wpa_supplicant now reliably and successfully authenticates.
+yeah, the system works fine with !CONFIG_VMAP_STACK.
 
-For rtl8xxxu-devel branch of git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+> > > current -git kills my system.
+> 
+> Can you elaborate on how exactly it kills your system?
 
-Signed-off-by: John Heenan <john@zgus.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+the last time I saw it it was a NULL deref at ieee80211_aes_ccm_decrypt.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 04141e5..f25b4df 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5779,6 +5779,11 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 
- 	ret = 0;
- 
-+	ret = rtl8xxxu_init_device(hw);
-+	if (ret)
-+		goto error_out;
-+
-+
- 	init_usb_anchor(&priv->rx_anchor);
- 	init_usb_anchor(&priv->tx_anchor);
- 	init_usb_anchor(&priv->int_anchor);
-@@ -6080,10 +6085,6 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 		goto exit;
- 	}
- 
--	ret = rtl8xxxu_init_device(hw);
--	if (ret)
--		goto exit;
--
- 	hw->wiphy->max_scan_ssids = 1;
- 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
- 	hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
--- 
-2.10.1
+	-ss
