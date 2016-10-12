@@ -1,51 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56329 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753095AbcJROYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 10:24:11 -0400
-Message-ID: <1476800647.6425.38.camel@sipsolutions.net> (sfid-20161018_162417_320431_A1D637A0)
-Subject: Re: [RFC PATCH 2/2] mac80211: aes_ccm: cache AEAD request
- structures per CPU
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Jouni Malinen <j@w1.fi>, Andy Lutomirski <luto@amacapital.net>
-Date: Tue, 18 Oct 2016 16:24:07 +0200
-In-Reply-To: <CAKv+Gu8aE4AfewHeMDf2RQfJtSsrp6Fb1A_ygFsqEwpyP6hDjQ@mail.gmail.com> (sfid-20161018_161829_091999_FC9D3B10)
-References: <1476799713-16188-1-git-send-email-ard.biesheuvel@linaro.org>
-         <1476799713-16188-3-git-send-email-ard.biesheuvel@linaro.org>
-         <1476800194.6425.35.camel@sipsolutions.net>
-         <CAKv+Gu8aE4AfewHeMDf2RQfJtSsrp6Fb1A_ygFsqEwpyP6hDjQ@mail.gmail.com>
-         (sfid-20161018_161829_091999_FC9D3B10)
+Received: from paleale.coelho.fi ([176.9.41.70]:48288 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752481AbcJLGMq (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 02:12:46 -0400
+Message-ID: <1476252719.7776.6.camel@coelho.fi> (sfid-20161012_081324_332717_8A3F20D0)
+From: Luca Coelho <luca@coelho.fi>
+To: Paul Bolle <pebolle@tiscali.nl>, Chris Rorvick <chris@rorvick.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 12 Oct 2016 09:11:59 +0300
+In-Reply-To: <1476180668.17022.21.camel@tiscali.nl>
+References: <20161010071943.4717-1-chris@rorvick.com>
+         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-10-18 at 15:18 +0100, Ard Biesheuvel wrote:
-> 
-> > Hmm. Is it really worth having a per-CPU variable for each possible
-> > key? You could have a large number of those (typically three when
-> > you're a client on an AP, and 1 + 1 for each client when you're the
-> > AP).
+Hi Paul,
+On Tue, 2016-10-11 at 12:11 +0200, Paul Bolle wrote:
+> On Mon, 2016-10-10 at 17:02 +0300, Luca Coelho wrote:
+> > On Mon, 2016-10-10 at 02:19 -0500, Chris Rorvick wrote:
+> > This is not coming from the NIC itself, but from the platform's ACPI
+> > tables.  Can you tell us which platform you are using?
+> 
+> 
+> On my machine I'm seeing the same error as Chris. So what exactly do
+> you mean with "platform" here?
 
-2 + 1 for each client, actually, since you have 2 GTKs present in the
-"steady state"; not a big difference though.
+By "platform" I meant the PC you are using.  The ACPI table is created
+by the OEM, so different PCs have different tables.
 
-> > Would it be so bad to have to set the TFM every time (if that's
-> > even possible), and just have a single per-CPU cache?
 
-> That would be preferred, yes. The only snag here is that
-> crypto_alloc_aead() is not guaranteed to return the same algo every
-> time, which means the request size is not guaranteed to be the same
-> either. This is a rare corner case, of course, but it needs to be
-> dealt with regardless
+> 
+> > >         Name (SPLX, Package (0x04)
+> > >         {
+> > >             Zero,
+> > >             Package (0x03)
+> > >             {
+> > >                 0,
+> > >                 1200,
+> > >                 1000
+> > >             },
+> > >             Package (0x03)
+> > >             {
+> > >                 0,
+> > >                 1200,
+> > >                 1000
+> > >             },
+> > >             Package (0x03)
+> > >             {
+> > >                 0,
+> > >                 1200,
+> > >                 1000
+> > >             }
+> > >         })
+> > 
+> > 
+> > This is not the structure that we are expecting.  We expect this:
+> > 
+> >                Name (SPLX, Package (0x02)
+> >                {
+> >                    Zero,
+> >                    Package (0x03)
+> >                    {
+> >                        0x07,
+> >                        <value>,
+> >                        <value>
+> >                    }
+> >                })
+> > 
+> > ...as you correctly pointed out.  The data in the structure you have is
+> > not for WiFi (actually I don't think 0 is a valid value, but I'll
+> > double-check).
+> 
+> 
+> For what it's worth, on my machine I have twenty (!) SPLX entries, all
+> reading:
+>     Name (SPLX, Package (0x04)
+>     {
+>         Zero, 
+>         Package (0x03)
+>         {
+>             0x80000000, 
+>             0x80000000, 
+>             0x80000000
+>         }, 
+>     
+>         Package (0x03)
+>         {
+>            0x80000000, 
+>            0x80000000, 
+>            0x80000000
+>         }, 
+>     
+>         Package (0x03)
+>         {
+>             0x80000000, 
+>             0x80000000, 
+>             0x80000000
+>         }
+>     })
 
-Ah, good point. Well I guess you could allocate a bigger one it if it's
-too small, but then we'd have to recalculate the size all the time
-(which we already did anyway, but saving something else would be good).
-Then we'd be close to just having a per-CPU memory block cache though.
+Thanks.  So this is another case where the first value doesn't match
+what we are expecting and we should just ignore that.
 
-johannes
+
+> > There are other things that look a bit inconsistent in this code...
+> > I'll try to find the official ACPI table definitions for this entries
+> > to make sure it's correct.
+> 
+> 
+> When I looked into this error, some time ago, I searched around a bit
+> for documentation on this splx stuff. Sadly, commit bcb079a14d75
+> ("iwlwifi: pcie: retrieve and parse ACPI power limitations") provides
+> very few clues and my searches turned up nothing useful. So a pointer
+> or two would be really appreciated.
+
+Yeah, I looked into that commit too and there's not much there.  I'll
+try to find the documentation and, if I can, I'll share it with you.
+
+
+> > > --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> > > +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+> > > @@ -540,7 +540,7 @@ static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
+> > >  	    splx->package.count != 2 ||
+> > >  	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
+> > >  	    splx->package.elements[0].integer.value != 0) {
+> > > -		IWL_ERR(trans, "Unsupported splx structure\n");
+> > > +		IWL_WARN(trans, "Unsupported splx structure, not limiting WiFi power\n");
+> > >  		return 0;
+> > >  	}
+> > 
+> > 
+> > If this is really bothering you, I guess I could apply this patch for
+> > now.  But as I said, this is not solving the actual problem.
+> 
+> 
+> Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
+> imply one needs to act on this message, while warn does imply that
+> action is needed.
+
+Right, but in fact, the code considers that if the SPLX method exists,
+it must return a value iwlwifi can understand, thus the error.  That
+assumption is wrong, so we should just ignore entries that don't match
+and continue without printing anything out (as would happen if the splx
+method were not even there).
+
+In any case, I will rework this code, so I'd prefer if we skip this
+patch entirely.
+
+--
+Cheers,
+Luca.
