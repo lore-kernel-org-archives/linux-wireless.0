@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50190 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S944575AbcJSPSR (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.162]:44171 "EHLO
+        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752060AbcJLLCj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:18:17 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 13:07:47 +0300
-Message-Id: <20161019100755.23874-3-luca@coelho.fi> (sfid-20161019_171822_685486_15BDD41C)
-In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
-References: <20161019100755.23874-1-luca@coelho.fi>
-Subject: [PATCH 02/10] iwlwifi: mvm: fix reserved txq freeing
+        Wed, 12 Oct 2016 07:02:39 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 12 Oct 2016 13:02:22 +0200
+From: michael-dev <michael-dev@fami-braun.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: Re: [PATCH v2] mac80211: enable to inject a-msdu frames using monitor
+ interface
+In-Reply-To: <1476257614.5271.8.camel@sipsolutions.net>
+References: <1476118105-7641-1-git-send-email-michael-dev@fami-braun.de>
+ <1476257614.5271.8.camel@sipsolutions.net>
+Message-ID: <ead6c21d249208efb2bd882c5db721ec@fami-braun.de> (sfid-20161012_130243_032321_59FE63BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Am 12.10.2016 09:33, schrieb Johannes Berg:
+> However, re-reading *p looks strange to me. Why don't we just refactor
+> this to preserve everything but the TID and ACK policy, after all, we
+> have just previous created this all zeroed in most cases, so it won't
+> really matter.
 
-If a TXQ's marking as a reserved queue is removed,
-when removing the STA the driver might try to access
-out of bounds memory. Make sure the reserved queue
-is freed only if it is still reserved.
+Looks good to me.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+I've re-run the amsdu spoofing hwsim test as it includes an amsdu 
+injection test and as expected it still works.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index a65030f..c9dcb70 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1494,12 +1494,15 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
- 		ret = iwl_mvm_drain_sta(mvm, mvm_sta, false);
- 
- 		/* If DQA is supported - the queues can be disabled now */
--		if (iwl_mvm_is_dqa_supported(mvm)) {
-+		if (iwl_mvm_is_dqa_supported(mvm))
-+			iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);
-+
-+		/* If there is a TXQ still marked as reserved - free it */
-+		if (iwl_mvm_is_dqa_supported(mvm) &&
-+		    mvm_sta->reserved_queue != IEEE80211_INVAL_HW_QUEUE) {
- 			u8 reserved_txq = mvm_sta->reserved_queue;
- 			enum iwl_mvm_queue_status *status;
- 
--			iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);
--
- 			/*
- 			 * If no traffic has gone through the reserved TXQ - it
- 			 * is still marked as IWL_MVM_QUEUE_RESERVED, and
--- 
-2.9.3
+Regards,
+M. Braun
