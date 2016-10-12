@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48164 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932181AbcJFHho (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56009 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755378AbcJLOjj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 03:37:44 -0400
-Date: Thu, 6 Oct 2016 13:07:30 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [1/2] ath10k: clean up HTT tx buffer allocation and free
-Message-ID: <20161006073730.GA6601@atheros-ThinkPad-T61> (sfid-20161006_093747_905179_E7D5B645)
-References: <1475584772-4091-2-git-send-email-mohammed@qca.qualcomm.com>
- <dc6b3afe60574d7bb60e1913da3f1ad4@euamsexm01a.eu.qualcomm.com>
+        Wed, 12 Oct 2016 10:39:39 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "hofrat@osadl.org" <hofrat@osadl.org>,
+        "xypron.glpk@gmx.de" <xypron.glpk@gmx.de>,
+        "prameela.garnepudi@redpinesignals.com"
+        <prameela.garnepudi@redpinesignals.com>
+Subject: Re: [PATCH] rsi: update in vap_capabilities frame to device
+Date: Wed, 12 Oct 2016 14:39:33 +0000
+Message-ID: <87bmypeimz.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_163943_516185_F2C23D7A)
+References: <1474885981-6810-1-git-send-email-prameela.j04cs@gmail.com>
+        <87k2ddej46.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87k2ddej46.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Wed, 12 Oct 2016 17:29:13 +0300")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <dc6b3afe60574d7bb60e1913da3f1ad4@euamsexm01a.eu.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 06, 2016 at 09:31:41AM +0200, Kalle Valo wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> > 
-> > cleanup 'ath10k_htt_tx_alloc' by introducing the API's
-> > 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
-> > re-use them whereever needed
-> > 
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> Patch 1 doesn't apply and the conflict was not trivial
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-[shafi] oops will rebase it, not sure how i missed it :-(
+> Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
+>
+>> added vap status(add/delete) field in vap capabilities frame to device
+>> added sending vap capabilites frame(with vap status 'delete') in remove =
+interface
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> Why? How is this better now? I'm sure there is a good reason why you add
+> this but we don't know as the commit tells nothing we don't already know
+> just from looking at the patch.
+>
+> The most important part of commit log is to answer the question "Why?",
+> not "What?".
 
-> 
-> error: patch failed: drivers/net/wireless/ath/ath10k/htt_tx.c:388
-> error: drivers/net/wireless/ath/ath10k/htt_tx.c: patch does not apply
-> stg import: Diff does not apply cleanly
-> error: patch failed: drivers/net/wireless/ath/ath10k/htt_tx.c:283
-> error: drivers/net/wireless/ath/ath10k/htt_tx.c: patch does not apply
-> stg import: Diff does not apply cleanly
-> 
-> 2 patches set to Changes Requested.
-> 
-> 9361741 [1/2] ath10k: clean up HTT tx buffer allocation and free
-> 9361743 [2/2] ath10k: Remove extraneous error message in tx alloc
-> 
-> -- 
-> https://patchwork.kernel.org/patch/9361741/
-> 
-> Documentation about submitting wireless patches and checking status
-> from patchwork:
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-> 
+Oh, and USE capitalisation, punctuation and so on in the commit log. It
+will be archived to git.
+
+--=20
+Kalle Valo=
