@@ -1,64 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31843 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753925AbcJMLJA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48300 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932988AbcJLOWS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 07:09:00 -0400
-Content-Type: text/plain; charset="utf-8"
+        Wed, 12 Oct 2016 10:22:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com
+Subject: Re: [PATCH] rsi: fix memory leak in module unload
+References: <1474447162-19956-1-git-send-email-prameela.j04cs@gmail.com>
+Date: Wed, 12 Oct 2016 17:22:12 +0300
+In-Reply-To: <1474447162-19956-1-git-send-email-prameela.j04cs@gmail.com>
+        (Prameela Rani Garnepudi's message of "Wed, 21 Sep 2016 14:09:22
+        +0530")
+Message-ID: <87oa2pejfv.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_162247_150402_96C48AAD)
 MIME-Version: 1.0
-Subject: Re: [v3] ath10k: cache calibration data when the core is stopped
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Marty Faltesek" <mfaltesek@google.com>
-Message-ID: <a8e2f654ee4e490caeaa23dbb8764cbf@euamsexm01a.eu.qualcomm.com> (sfid-20161013_130904_770645_B63DCFF9)
-Date: Thu, 13 Oct 2016 13:08:52 +0200
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Marty Faltesek <mfaltesek@google.com>
-> 
-> Commit 0b8e3c4ca29f ("ath10k: move cal data len to hw_params") broke retrieving
-> the calibration data from cal_data debugfs file. The length of file was always
-> zero. The reason is:
-> 
->     static ssize_t ath10k_debug_cal_data_read(struct file *file,
->                                           char __user *user_buf,
->                                           size_t count, loff_t *ppos)
->     {
->         struct ath10k *ar = file->private_data;
->         void *buf = file->private_data;
-> 
-> 
-> This is obviously bogus, private_data cannot contain both struct ath10k and the
-> buffer. Fix it by caching calibration data to ar->debug.cal_data. This also
-> allows it to be accessed when the device is not active (interface is down).
-> 
-> The cal_data buffer is fixed size because during the first firmware probe we
-> don't yet know what will be the lenght of the calibration data. It was simplest
-> just to use a fixed length. There's a WARN_ON() in
-> ath10k_debug_cal_data_fetch() if the buffer is too small.
-> 
-> Tested with qca988x and firmware 10.2.4.70.56.
-> 
-> Reported-by: Nikolay Martynov <mar.kolya@gmail.com>
-> Fixes: 0b8e3c4ca29f ("ath10k: move cal data len to hw_params")
-> Cc: stable@vger.kernel.org # 4.7+
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
-> [kvalo@qca.qualcomm.com: improve commit log and minor other changes]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-Patch applied to ath-current branch of ath.git, thanks.
+> debugfs entry removal statement moved inside CONFIG_RSI_DEBUGSFS flag
+> added freeing of below structures
+>  * channel list for each supported band
+>  * rsi debugfs info
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-f67b107d4ced ath10k: cache calibration data when the core is stopped
+[...]
+
+> --- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> +++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+> @@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+>  void rsi_mac80211_detach(struct rsi_hw *adapter)
+>  {
+>  	struct ieee80211_hw *hw = adapter->hw;
+> +	enum nl80211_band band;
+>  
+>  	if (hw) {
+>  		ieee80211_stop_queues(hw);
+> @@ -201,7 +202,17 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
+>  		ieee80211_free_hw(hw);
+>  	}
+>  
+> +	for (band = 0; band < 2; band++) {
+> +		struct ieee80211_supported_band *sband =
+> +					&adapter->sbands[band];
+> +
+> +		kfree(sband->channels);
+> +	}
+
+Like Arend already mentioned[1] you should use NUM_NL80211_BANDS here
+instead of hardcoded value. Yes, that will also go through
+NL80211_BAND_60GHZ item but it doesn't matter as it should be empty
+anyway.
+
+[1] https://patchwork.kernel.org/patch/9341095/
 
 -- 
-https://patchwork.kernel.org/patch/9369685/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
