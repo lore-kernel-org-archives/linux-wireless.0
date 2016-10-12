@@ -1,41 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49496 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42233 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932727AbcJQJfX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:35:23 -0400
-Message-ID: <1476696918.19992.15.camel@sipsolutions.net> (sfid-20161017_113528_868750_DCD5B0F1)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+        id S932329AbcJLJPy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 05:15:54 -0400
+Message-ID: <1476257614.5271.8.camel@sipsolutions.net> (sfid-20161012_111608_452604_97038F50)
+Subject: Re: [PATCH v2] mac80211: enable to inject a-msdu frames using
+ monitor interface
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Date: Mon, 17 Oct 2016 11:35:18 +0200
-In-Reply-To: <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> (sfid-20161017_113100_410034_F49AAA79)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
-         <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
-         <1476696226.19992.13.camel@sipsolutions.net>
-         <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com>
-         (sfid-20161017_113100_410034_F49AAA79)
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Wed, 12 Oct 2016 09:33:34 +0200
+In-Reply-To: <1476118105-7641-1-git-send-email-michael-dev@fami-braun.de>
+References: <1476118105-7641-1-git-send-email-michael-dev@fami-braun.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-17 at 10:30 +0100, Ard Biesheuvel wrote:
+On Mon, 2016-10-10 at 18:48 +0200, Michael Braun wrote:
+> Problem: When injecting an A-MSDU using a PF_PACKET socket, the qos
+> flag
+> IEEE80211_QOS_CTL_A_MSDU_PRESENT is cleared.
+> 
+> How to reproduce: Inject a frame on a mac80211 hwsim monitor
+> interface and
+> have tshark sniffing on this monitor interface.
+> You'll see the packet twice: Once with correct flag and once with
+> flag
+> cleared. On hwsim0, you'll only see the packet with a cleared flag.
+> 
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> ---
+>  net/mac80211/wme.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+> index 9eb0aee..f6a708c 100644
+> --- a/net/mac80211/wme.c
+> +++ b/net/mac80211/wme.c
+> @@ -248,6 +248,11 @@ void ieee80211_set_qos_hdr(struct
+> ieee80211_sub_if_data *sdata,
+>  	/* preserve EOSP bit */
+>  	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+>  
+> +	/* preserve A-MSDU bit for MONITOR interfaces to allow
+> injecting
+> +	 * A-MSDU frames
+> +	 */
+> +	ack_policy |= *p & IEEE80211_QOS_CTL_A_MSDU_PRESENT;
 
-> Yes. But as I replied, setting the req size is not supported atm,
-> although it is reasonable to demand a way to allocate additional data
-> in the request specifically for this issue. So let's proceed with the
-> aead_request_alloc/free patch, but I would like to propose something
-> on the API side to address this particular issue
+Conceptually this seems OK, though I'd probably make some adjustments
+to the commit log.
 
-Well, if your other patch to make it OK to be on-stack would be applied
-instead, this wouldn't make much sense either :)
+However, re-reading *p looks strange to me. Why don't we just refactor
+this to preserve everything but the TID and ACK policy, after all, we
+have just previous created this all zeroed in most cases, so it won't
+really matter.
 
-In this particular patch, we could reduce the size of the struct, but I
-don't actually think it'll make a difference to go from 48 to 36 bytes,
-given alignment etc., so I think I'll just leave it as is.
+Like this:
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index f6a708c67219..3e3d3014e9ab 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -236,31 +236,35 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	u8 flags;
+ 	u8 *p;
+-	u8 ack_policy, tid;
+ 
+ 	if (!ieee80211_is_data_qos(hdr->frame_control))
+ 		return;
+ 
+ 	p = ieee80211_get_qos_ctl(hdr);
+-	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 
+-	/* preserve EOSP bit */
+-	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
++	/* set up the first byte */
+ 
+-	/* preserve A-MSDU bit for MONITOR interfaces to allow injecting
+-	 * A-MSDU frames
++	/*
++	 * preserve everything but the TID and ACK policy
++	 * (which we both write here)
+ 	 */
+-	ack_policy |= *p & IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++	flags = *p & ~(IEEE80211_QOS_CTL_TID_MASK |
++		       IEEE80211_QOS_CTL_ACK_POLICY_MASK);
+ 
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    sdata->noack_map & BIT(tid)) {
+-		ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
++		flags |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	}
+ 
+-	/* qos header is 2 bytes */
+-	*p++ = ack_policy | tid;
++	*p = flags | tid;
++
++	/* set up the second byte */
++	p++;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		/* preserve RSPI and Mesh PS Level bit */
+ 		*p &= ((IEEE80211_QOS_CTL_RSPI |
+
+
 
 johannes
