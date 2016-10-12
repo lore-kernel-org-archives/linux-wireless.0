@@ -1,181 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:36126 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754868AbcJEUYW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43808 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933110AbcJLN0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 16:24:22 -0400
-Received: by mail-qk0-f171.google.com with SMTP id o68so88336976qkf.3
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 13:24:21 -0700 (PDT)
-From: Marty Faltesek <mfaltesek@google.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Marty Faltesek <mfaltesek@google.com>
-Subject: [PATCH v2] ath10k: cache calibration data when the core is stopped
-Date: Wed,  5 Oct 2016 16:23:57 -0400
-Message-Id: <1475699037-136212-1-git-send-email-mfaltesek@google.com> (sfid-20161005_222425_712051_148F064A)
+        Wed, 12 Oct 2016 09:26:35 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v3 1/2] ath10k: clean up HTT tx buffer allocation and free
+Date: Wed, 12 Oct 2016 18:56:17 +0530
+Message-ID: <1476278778-4253-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161012_152639_381108_1482F114)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Caching calibration data allows it to be accessed when the
-device is not active.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
+cleanup 'ath10k_htt_tx_alloc' by introducing the API's
+'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
+re-use them whereever needed
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h  |  1 +
- drivers/net/wireless/ath/ath10k/debug.c | 72 ++++++++++++++-------------------
- 2 files changed, 31 insertions(+), 42 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_tx.c |   75 ++++++++++++++++++++----------
+ 1 file changed, 50 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 6e5aa2d..7274ebe 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -452,6 +452,7 @@ struct ath10k_debug {
- 	u32 nf_cal_period;
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index ae5b33f..ab2ee90 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -229,6 +229,32 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
+ 	idr_remove(&htt->pending_tx, msdu_id);
+ }
  
- 	struct ath10k_fw_crash_data *fw_crash_data;
-+	void *cal_data;
- };
- 
- enum ath10k_state {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 832da6e..668074c 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1451,75 +1451,58 @@ static const struct file_operations fops_fw_dbglog = {
- 	.llseek = default_llseek,
- };
- 
--static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
-+static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
- {
--	struct ath10k *ar = inode->i_private;
--	void *buf;
- 	u32 hi_addr;
- 	__le32 addr;
- 	int ret;
- 
--	mutex_lock(&ar->conf_mutex);
--
--	if (ar->state != ATH10K_STATE_ON &&
--	    ar->state != ATH10K_STATE_UTF) {
--		ret = -ENETDOWN;
--		goto err;
--	}
--
--	buf = vmalloc(ar->hw_params.cal_data_len);
--	if (!buf) {
--		ret = -ENOMEM;
--		goto err;
--	}
--
- 	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
- 
- 	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
++static void ath10k_htt_tx_free_cont_txbuf(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
 +
- 	if (ret) {
--		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
--		goto err_vfree;
-+		ath10k_warn(ar, "failed to read hi_board_data address: %d\n",
-+		            ret);
-+		return ret;
- 	}
- 
--	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
-+	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), ar->debug.cal_data,
- 				   ar->hw_params.cal_data_len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
--		goto err_vfree;
-+		return ret;
- 	}
- 
--	file->private_data = buf;
++	if (!htt->txbuf.vaddr)
++		return;
++
++	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
++	dma_free_coherent(ar->dev, size, htt->txbuf.vaddr, htt->txbuf.paddr);
++}
++
++static int ath10k_htt_tx_alloc_cont_txbuf(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
++
++	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
++	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size, &htt->txbuf.paddr,
++					      GFP_KERNEL);
++	if (!htt->txbuf.vaddr)
++		return -ENOMEM;
++
 +	return 0;
 +}
- 
--	mutex_unlock(&ar->conf_mutex);
-+static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
-+{
-+	struct ath10k *ar = inode->i_private;
- 
--	return 0;
-+	mutex_lock(&ar->conf_mutex);
- 
--err_vfree:
--	vfree(buf);
-+	if (ar->state == ATH10K_STATE_ON ||
-+	    ar->state == ATH10K_STATE_UTF) {
-+		ath10k_debug_cal_data_fetch(ar);
-+	}
- 
--err:
-+	file->private_data = ar;
- 	mutex_unlock(&ar->conf_mutex);
- 
--	return ret;
-+	return 0;
- }
- 
- static ssize_t ath10k_debug_cal_data_read(struct file *file,
--					  char __user *user_buf,
--					  size_t count, loff_t *ppos)
-+                                          char __user *user_buf,
-+                                          size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	void *buf = file->private_data;
- 
- 	return simple_read_from_buffer(user_buf, count, ppos,
--				       buf, ar->hw_params.cal_data_len);
--}
--
--static int ath10k_debug_cal_data_release(struct inode *inode,
--					 struct file *file)
--{
--	vfree(file->private_data);
--
--	return 0;
-+				       ar->debug.cal_data,
-+				       ar->hw_params.cal_data_len);
- }
- 
- static ssize_t ath10k_write_ani_enable(struct file *file,
-@@ -1580,7 +1563,6 @@ static const struct file_operations fops_ani_enable = {
- static const struct file_operations fops_cal_data = {
- 	.open = ath10k_debug_cal_data_open,
- 	.read = ath10k_debug_cal_data_read,
--	.release = ath10k_debug_cal_data_release,
- 	.owner = THIS_MODULE,
- 	.llseek = default_llseek,
- };
-@@ -1932,6 +1914,8 @@ void ath10k_debug_stop(struct ath10k *ar)
- {
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	ath10k_debug_cal_data_fetch(ar);
 +
- 	/* Must not use _sync to avoid deadlock, we do that in
- 	 * ath10k_debug_destroy(). The check for htt_stats_mask is to avoid
- 	 * warning from del_timer(). */
-@@ -2343,7 +2327,9 @@ int ath10k_debug_create(struct ath10k *ar)
- 	ar->debug.fw_crash_data = vzalloc(sizeof(*ar->debug.fw_crash_data));
- 	if (!ar->debug.fw_crash_data)
- 		return -ENOMEM;
--
-+	ar->debug.cal_data = vzalloc(ar->hw_params.cal_data_len);
-+	if (!ar->debug.cal_data)
-+		return -ENOMEM;
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
-@@ -2355,7 +2341,9 @@ int ath10k_debug_create(struct ath10k *ar)
- void ath10k_debug_destroy(struct ath10k *ar)
+ static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
  {
- 	vfree(ar->debug.fw_crash_data);
-+	vfree(ar->debug.cal_data);
- 	ar->debug.fw_crash_data = NULL;
-+	ar->debug.cal_data = NULL;
+ 	size_t size;
+@@ -310,10 +336,26 @@ static int ath10k_htt_tx_alloc_txq(struct ath10k_htt *htt)
+ 	return 0;
+ }
  
- 	ath10k_debug_fw_stats_reset(ar);
++static void ath10k_htt_tx_free_txdone_fifo(struct ath10k_htt *htt)
++{
++	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
++	kfifo_free(&htt->txdone_fifo);
++}
++
++static int ath10k_htt_tx_alloc_txdone_fifo(struct ath10k_htt *htt)
++{
++	int ret;
++	size_t size;
++
++	size = roundup_pow_of_two(htt->max_num_pending_tx);
++	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
++	return ret;
++}
++
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+-	int ret, size;
++	int ret;
  
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
+ 		   htt->max_num_pending_tx);
+@@ -321,13 +363,9 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 	spin_lock_init(&htt->tx_lock);
+ 	idr_init(&htt->pending_tx);
+ 
+-	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
+-	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
+-						  &htt->txbuf.paddr,
+-						  GFP_KERNEL);
+-	if (!htt->txbuf.vaddr) {
+-		ath10k_err(ar, "failed to alloc tx buffer\n");
+-		ret = -ENOMEM;
++	ret = ath10k_htt_tx_alloc_cont_txbuf(htt);
++	if (ret) {
++		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
+ 		goto free_idr_pending_tx;
+ 	}
+ 
+@@ -343,8 +381,7 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 		goto free_frag_desc;
+ 	}
+ 
+-	size = roundup_pow_of_two(htt->max_num_pending_tx);
+-	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
++	ret = ath10k_htt_tx_alloc_txdone_fifo(htt);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to alloc txdone fifo: %d\n", ret);
+ 		goto free_txq;
+@@ -359,10 +396,7 @@ free_frag_desc:
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
+ 
+ free_txbuf:
+-	size = htt->max_num_pending_tx *
+-			  sizeof(struct ath10k_htt_txbuf);
+-	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-			  htt->txbuf.paddr);
++	ath10k_htt_tx_free_cont_txbuf(htt);
+ 
+ free_idr_pending_tx:
+ 	idr_destroy(&htt->pending_tx);
+@@ -388,22 +422,13 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
+ 
+ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ {
+-	int size;
+-
+ 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
+ 	idr_destroy(&htt->pending_tx);
+ 
+-	if (htt->txbuf.vaddr) {
+-		size = htt->max_num_pending_tx *
+-				  sizeof(struct ath10k_htt_txbuf);
+-		dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+-				  htt->txbuf.paddr);
+-	}
+-
++	ath10k_htt_tx_free_cont_txbuf(htt);
+ 	ath10k_htt_tx_free_txq(htt);
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
+-	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
+-	kfifo_free(&htt->txdone_fifo);
++	ath10k_htt_tx_free_txdone_fifo(htt);
+ }
+ 
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
 -- 
-2.8.0.rc3.226.g39d4020
+1.7.9.5
