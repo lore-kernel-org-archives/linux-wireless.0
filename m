@@ -1,39 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41007 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753126AbcJLGtv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 02:49:51 -0400
-Message-ID: <1476254985.5271.1.camel@sipsolutions.net> (sfid-20161012_084955_309850_CC050A27)
-Subject: Re: [PATCH] mac80211: fix sequence number allocation regression
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        Bob Copeland <me@bobcopeland.com>
-Date: Wed, 12 Oct 2016 08:49:45 +0200
-In-Reply-To: <20161011092831.85565-1-nbd@nbd.name>
-References: <20161011092831.85565-1-nbd@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29825 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752026AbcJLFLb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 01:11:31 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "akolli@codeaurora.org" <akolli@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/2] ath10k: add per peer htt tx stats support for 10.4
+Date: Wed, 12 Oct 2016 04:59:07 +0000
+Message-ID: <87vawygo2w.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_072006_930438_92F68911)
+References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
+        <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
+In-Reply-To: <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
+        (akolli@qti.qualcomm.com's message of "Fri, 7 Oct 2016 20:28:51 +0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-10-11 at 11:28 +0200, Felix Fietkau wrote:
-> The recent commit that moved around TX handlers dropped the sequence
-> number allocation at the end of ieee80211_tx_dequeue and calls
-> ieee80211_tx_h_sequence instead (for the non-fast-xmit case).
-> However, it did not change the fast-xmit sequence allocation
-> condition
-> in ieee80211_xmit_fast_finish, which skipped seqno alloc if
-> intermediate
-> tx queues are being used.
-> 
-> Drop the now obsolete condition.
+<akolli@qti.qualcomm.com> writes:
 
-Hm. I don't know what tree you're looking at, but it looks like I *did*
-in fact resolve this correctly; the (now) erroneous condition doesn't
-exist in mac80211 nor in mac80211-next (nor net, net-next, linux).
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+>
+> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
+> event, Firmware sends one HTT event for every four PPDUs.
+> HTT payload has success pkts/bytes, failed pkts/bytes, retry
+> pkts/bytes and rate info per ppdu.
+> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
+> which are nowadays enabled by default.
+>
+> Parse peer stats and update the tx rate information per STA.
+>
+> tx rate, Peer stats are tested on QCA4019 with Firmware version
+> 10.4-3.2.1-00028.
+>
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-It does seem to exist in wireless-testing, but that's not something I
-can control.
+This and patch 2 add few new warnings:
 
-johannes
+drivers/net/wireless/ath/ath10k/htt_rx.c: In function 'ath10k_htt_fetch_pee=
+r_stats':
+drivers/net/wireless/ath/ath10k/htt_rx.c:2279:3: warning: too many argument=
+s for format [-Wformat-extra-args]
+drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17: warning: incorrect type i=
+n assignment (different base types)
+drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    expected unsigned int =
+[unsigned] [usertype] peer_id
+drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    got restricted __le16 =
+[usertype] peer_id
+drivers/net/wireless/ath/ath10k/debugfs_sta.c:84: space required before the=
+ open parenthesis '('
+
+--=20
+Kalle Valo=
