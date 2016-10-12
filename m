@@ -1,58 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:35425 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754611AbcJXRom (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:36471 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753712AbcJLStn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 13:44:42 -0400
-Received: by mail-pf0-f180.google.com with SMTP id s8so102645137pfj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 10:43:58 -0700 (PDT)
-Date: Mon, 24 Oct 2016 10:43:55 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        dmitry.torokhov@gmail.com, briannorris@google.com
-Subject: Re: [PATCH 1/5] mwifiex: remove redundant condition in main process
-Message-ID: <20161024174354.GA968@localhost> (sfid-20161024_194506_742827_5768677A)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+        Wed, 12 Oct 2016 14:49:43 -0400
+Received: by mail-lf0-f43.google.com with SMTP id b75so89220365lfg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 11:48:33 -0700 (PDT)
+Subject: Re: bcmdhd: Strange Power Save messages
+To: Gucea Doru <gucea.doru@gmail.com>
+References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
+ <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
+ <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com>
+ <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
+ <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
+ <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
+ <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com>
+ <8d01e83b-800d-bba4-b948-abbdc5188f6b@broadcom.com>
+ <CANfLQra_Vh4cnHvpzU9yxv4_6SJEc1LN8Vqm4-11thOLvGxY2Q@mail.gmail.com>
+ <a948f377-5a87-e1a3-e56f-9768ee6d87a0@broadcom.com>
+ <CANfLQrau67GtkyPeT9MqEu3SAC_xjrCuAywU6yRoHGfvAyJ30g@mail.gmail.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+        Arend van Spriel <arend@broadcom.com>,
+        Andra Paraschiv <andra.paraschiv7@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <427ba906-01ef-237e-9dad-8cf4e97eaf87@broadcom.com> (sfid-20161012_204958_938576_FF224168)
+Date: Wed, 12 Oct 2016 20:48:29 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+In-Reply-To: <CANfLQrau67GtkyPeT9MqEu3SAC_xjrCuAywU6yRoHGfvAyJ30g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 24, 2016 at 07:51:28PM +0530, Amitkumar Karwar wrote:
-> This condition while calling mwifiex_check_ps_cond() is redundant.
-> The function internally already takes care of it.
+On 12-10-16 16:26, Gucea Doru wrote:
+> On Tue, Oct 11, 2016 at 10:12 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 07-10-16 16:33, Gucea Doru wrote:
+>>> On Thu, Oct 6, 2016 at 10:25 AM, Arend Van Spriel
+>>> <arend.vanspriel@broadcom.com> wrote:
+>>>> On 6-10-2016 10:07, Gucea Doru wrote:
+>>>>> On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
+>>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>> On 4-10-2016 13:39, Gucea Doru wrote:
+>>>>>>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
+>>>>>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> On 29-09-16 13:32, Gucea Doru wrote:
+>>>>>>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
+>>>>>>>>>>> What is the decision triggering the exit from the PS mode immediately
+>>>>>>>>>>> after the ping request? I am asking this because 802.11 PS legacy
+>>>>>>>>>>> specifies that the client should wait for a beacon with TIM set in
+>>>>>>>>>>> order to wake up: in my case, there is no beacon between the ping
+>>>>>>>>>>> request message and the Null frame that announces the exit from the PS
+>>>>>>>>>>> mode.
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> Any help would be highly appreciated :)
+>>>>>>>>>
+>>>>>>>>> Actually though I already sent you are reply, but alas here it is.
+>>>>>>>>>
+>>>>>>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
+>>>>>>>>> drivers. Regardless your question is more for firmware running on the
+>>>>>>>>> device. So like the same behavior would be observed when using brcmfmac
+>>>>>>>>> with same firmware.
+>>>>>>>>>
+>>>>>>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
+>>>>>>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
+>>>>>>>>>> shall issue a PS Poll". In my capture there are cases when the STA
+>>>>>>>>>> exits the PS mode without waiting for a beacon.
+>>>>>>>>>
+>>>>>>>>> It is a bit tricky, but the standard does not explicitly say the STA
+>>>>>>>>> should be in power-save at any other time. So it is difficult to say
+>>>>>>>>> what event occurred on the STA side to exit PS mode. Also STA means
+>>>>>>>>> P2P-Client as you say. That means that you have multiple interfaces:
+>>>>>>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
+>>>>>>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
+>>>>>>>>> scheduled scan by which firmware will scan at a certain interval. That
+>>>>>>>>> is just some things I can come up with and I am sure there are more.
+>>>>>>>
+>>>>>>> I agree that there may be some events belonging to the regular STA
+>>>>>>> interface that could trigger the Null Frame (which includes the exit
+>>>>>>> from PS Mode). However, I would expect to see some management frames
+>>>>>>> in the air before/after the Null Packet (e.g.: a Probe request in case
+>>>>>>> of a scheduled scan). But in my case the trigger for the Null frame
+>>>>>>> seems to be the ping request packet, the scenario is the same every
+>>>>>>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
+>>>>>>> confirms this behavior).
+>>>>>>>
+>>>>>>> I thought that you had a power save optimization algorithm that keeps
+>>>>>>> the card on a few milliseconds just to see if we can have a fast reply
+>>>>>>> from the peer. Does this ring a bell? :)
+>>>>>>
+>>>>>> It does not. That would be implemented in firmware. As said I am working
+>>>>>> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
+>>>>>>
+>>>>>
+>>>>> Arend, could you please redirect me to a Broadcom firmware maintainer?
+>>>>
+>>>> Can you please elaborate on your platform, broadcom chipset, and what
+>>>> version of bcmdhd you are using.
+>>>>
+>>>
+>>> Platform: Nexus 5 running CM13 (Android 6.0.1)
+>>> Broadcom chipset: BCM4339 Wi-Fi Chipset
+>>> bcmdhd version:Dongle Host Driver, version 1.88.45 (r)
+>>>
+>>> Do you need more information?
+>>
+>> So can you indicate the mac addresses of the two nexus devices and which
+>> one is P2P-GO. I entered the wpa key you mentioned in your initial
+>> email, but my wireshark does not seem to be able to decrypt the packets,
+>> which makes it a bit harder to analyze.
 > 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Do you have a wpa-pwd entry "JYdrhZp3:DIRECT-35-Android_Intel" inside
+> Edit->Preferences->Protocols->IEEE 802.11->Decryption Keys? I use
+> Wireshark 2.0.4.
 
-Unless you're intentionally *not* logging the "Delay Sleep Confirm" in
-some cases, this looks good:
+I see. I only entered the password but not the SSID. The examples showed
+SSID was optional. Changed it, but still no luck using 2.2.0.
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+> P2P-GO MAC: 66:89:9a:81:0d:95
+> P2P Client MAC: 66:89:9a:81:0f:20
 
-> ---
->  drivers/net/wireless/marvell/mwifiex/main.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index 2478ccd..3b31ea2 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -355,10 +355,8 @@ process_start:
->  
->  		/* Check if we need to confirm Sleep Request
->  		   received previously */
-> -		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
-> -			if (!adapter->cmd_sent && !adapter->curr_cmd)
-> -				mwifiex_check_ps_cond(adapter);
-> -		}
-> +		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-> +			mwifiex_check_ps_cond(adapter);
->  
->  		/* * The ps_state may have been changed during processing of
->  		 * Sleep Request event.
-> -- 
-> 1.9.1
+Actually this was redundant question as it is clear which one sends the
+beacon frames. Thanks anyway :-)
+
+Regards,
+Arend
+
+> Thanks,
+> Doru
 > 
