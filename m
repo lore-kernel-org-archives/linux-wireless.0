@@ -1,109 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:34599 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932453AbcJNNJI (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.163]:63828 "EHLO
+        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755340AbcJLQiT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 09:09:08 -0400
-Received: by mail-qk0-f177.google.com with SMTP id f128so140716534qkb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 06:09:07 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: johannes@sipsolutions.net, luto@amacapital.net,
-        sergey.senozhatsky.work@gmail.com, netdev@vger.kernel.org,
-        herbert@gondor.apana.org.au, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        j@w1.fi
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH] mac80211: aes_ccm: move struct aead_req off the stack
-Date: Fri, 14 Oct 2016 14:09:00 +0100
-Message-Id: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20161014_150959_369134_31C65890)
+        Wed, 12 Oct 2016 12:38:19 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 12 Oct 2016 18:31:50 +0200
+From: michael-dev <michael-dev@fami-braun.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v2] mac80211: fix A-MSDU outer SA/DA
+In-Reply-To: <1476275121.5271.28.camel@sipsolutions.net>
+References: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de>
+ <1476275121.5271.28.camel@sipsolutions.net>
+Message-ID: <fc2162c67f54d0dbbda9f36ca1babdcc@fami-braun.de> (sfid-20161012_183823_945747_A58ED6BC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some CCM implementations (such as the generic CCM wrapper in crypto/)
-use scatterlists to map fields of struct aead_req. This means these
-data structures cannot live in the vmalloc area, which means that in
-the near future, they can no longer live on the stack either.
+Am 12.10.2016 14:25, schrieb Johannes Berg:
+> So, I actually think my first instinct that you were erroneously
+> changing the inner header *was* right.
 
-Given that these data structures have implementation specific context fields,
-it really depends on the particular driver whether this issue is likely to
-occur or not, and so it seems best to simply move the entire data structure
-into the direct mapped kernel heap.
+You're right.
 
-So use kzalloc/kfree to allocate and free the data structures. This pattern
-already exists in the IPsec ESP driver, but in the future, we may need to
-improve upon this by either moving the request into the SKB, or using a
-slab cache to allocate/free the data structures.
+> Seems like this code should be inserted towards the end of
+> ieee80211_amsdu_aggregate() instead, where it's adding the RFC 1042
+> header?
 
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
+I'm not convinced.
 
-This only addresses one half of the problem. The other problem, i.e., the
-fact that the aad[] array lives on the stack of the caller, is handled
-adequately imo by the change proposed by Johannes.
+ieee80211_amsdu_aggregate handles two skbs: the "skb" var and the "head" 
+var.
+The skb is appended to the frag list of head by setting frag_tail and 
+does not appear to have an ieee80211_hdr, as memmove is only 2 * 
+ETH_ALEN. Additionally, the rfc1042_header is written after 2 bytes 
+containing subframe_len, so it looks like an A-MSDU subframe with 
+rfc1042_header is inserted at the beginning of the inner MSDU.
 
- net/mac80211/aes_ccm.c | 24 ++++++++++----------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+Only the head skb is processed by ieee80211_amsdu_prepare_head and 
+appears to have an 802.11 header. So its da/sa address should be 
+changed.
 
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index 7663c28ba353..a0ae8cebbe4e 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -23,13 +23,10 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 			       size_t mic_len)
- {
- 	struct scatterlist sg[3];
-+	struct aead_request *aead_req;
- 
--	char aead_req_data[sizeof(struct aead_request) +
--			   crypto_aead_reqsize(tfm)]
--		__aligned(__alignof__(struct aead_request));
--	struct aead_request *aead_req = (void *) aead_req_data;
--
--	memset(aead_req, 0, sizeof(aead_req_data));
-+	aead_req = kzalloc(sizeof(struct aead_request) +
-+			   crypto_aead_reqsize(tfm), GFP_ATOMIC);
- 
- 	sg_init_table(sg, 3);
- 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-@@ -41,6 +38,7 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	aead_request_set_ad(aead_req, sg[0].length);
- 
- 	crypto_aead_encrypt(aead_req);
-+	kfree(aead_req);
- }
- 
- int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-@@ -48,15 +46,14 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 			      size_t mic_len)
- {
- 	struct scatterlist sg[3];
--	char aead_req_data[sizeof(struct aead_request) +
--			   crypto_aead_reqsize(tfm)]
--		__aligned(__alignof__(struct aead_request));
--	struct aead_request *aead_req = (void *) aead_req_data;
-+	struct aead_request *aead_req;
-+	int err;
- 
- 	if (data_len == 0)
- 		return -EINVAL;
- 
--	memset(aead_req, 0, sizeof(aead_req_data));
-+	aead_req = kzalloc(sizeof(struct aead_request) +
-+			   crypto_aead_reqsize(tfm), GFP_ATOMIC);
- 
- 	sg_init_table(sg, 3);
- 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-@@ -67,7 +64,10 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
- 	aead_request_set_crypt(aead_req, sg, sg, data_len + mic_len, b_0);
- 	aead_request_set_ad(aead_req, sg[0].length);
- 
--	return crypto_aead_decrypt(aead_req);
-+	err = crypto_aead_decrypt(aead_req);
-+	kfree(aead_req);
-+
-+	return err;
- }
- 
- struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
--- 
-2.7.4
+Regards,
+M. Braun
