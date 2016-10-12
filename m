@@ -1,176 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33888 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761975AbcJaICi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 04:02:38 -0400
-Received: by mail-pf0-f196.google.com with SMTP id y68so2243235pfb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:38 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 03/12] mwifiex: don't do unbalanced free()'ing in cleanup_if()
-Date: Mon, 31 Oct 2016 16:02:11 +0800
-Message-Id: <1477900940-10549-3-git-send-email-huxinming820@marvell.com> (sfid-20161031_090247_678093_07ED9868)
-In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+Received: from mail2.tohojo.dk ([77.235.48.147]:50251 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753056AbcJLP6B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 11:58:01 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [bug report] mac80211: Move reorder-sensitive TX handlers to
+        after TXQ dequeue
+References: <20161012061458.GM12841@mwanda>
+Date: Wed, 12 Oct 2016 17:57:56 +0200
+In-Reply-To: <20161012061458.GM12841@mwanda> (Dan Carpenter's message of "Wed,
+        12 Oct 2016 09:14:58 +0300")
+Message-ID: <87a8e91rwb.fsf@toke.dk> (sfid-20161012_175807_463077_3B06F35D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-The cleanup_if() callback is the inverse of init_if(). We allocate our
-'card' interface structure in the probe() function, but we free it in
-cleanup_if(). That gives a few problems:
-(a) we leak this memory if probe() fails before we reach init_if()
-(b) we can't safely utilize 'card' after cleanup_if() -- namely, in
-    remove() or suspend(), both of which might race with the cleanup
-    paths in our asynchronous FW initialization path
+> Hello Toke H=C3=B8iland-J=C3=B8rgensen,
+>
+> This is a semi-automatic email about new static checker warnings.
+>
+> The patch bb42f2d13ffc: "mac80211: Move reorder-sensitive TX handlers=20
+> to after TXQ dequeue" from Sep 22, 2016, leads to the following=20
+> Smatch complaint:
+>
+> net/mac80211/tx.c:3242 ieee80211_xmit_fast_finish()
+> 	 error: we previously assumed 'key' could be null (see line 3209)
+>
+> net/mac80211/tx.c
+>   3208=09
+>   3209		if (key)
+>                     ^^^
+> Check.
+>
+>   3210			info->control.hw_key =3D &key->conf;
+>   3211=09
+>   3212		ieee80211_tx_stats(skb->dev, skb->len);
+>   3213=09
+>   3214		if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+>   3215			tid =3D skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>   3216			*ieee80211_get_qos_ctl(hdr) =3D tid;
+>   3217			hdr->seq_ctrl =3D ieee80211_tx_next_seq(sta, tid);
+>   3218		} else {
+>   3219			info->flags |=3D IEEE80211_TX_CTL_ASSIGN_SEQ;
+>   3220			hdr->seq_ctrl =3D cpu_to_le16(sdata->sequence_number);
+>   3221			sdata->sequence_number +=3D 0x10;
+>   3222		}
+>   3223=09
+>   3224		if (skb_shinfo(skb)->gso_size)
+>   3225			sta->tx_stats.msdu[tid] +=3D
+>   3226				DIV_ROUND_UP(skb->len, skb_shinfo(skb)->gso_size);
+>   3227		else
+>   3228			sta->tx_stats.msdu[tid]++;
+>   3229=09
+>   3230		info->hw_queue =3D sdata->vif.hw_queue[skb_get_queue_mapping(skb)=
+];
+>   3231=09
+>   3232		/* statistics normally done by ieee80211_tx_h_stats (but that
+>   3233		 * has to consider fragmentation, so is more complex)
+>   3234		 */
+>   3235		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] +=3D skb->len;
+>   3236		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
+>   3237=09
+>   3238		if (pn_offs) {
+>                     ^^^^^^^
+> Maybe when pn_offs is non-zero that implies key is non-NULL?
 
-Solution: just use devm_kzalloc(), which will free this structure
-properly when the device is removed -- and drop the set_drvdata(...,
-NULL), since the driver core does this for us. This also removes the
-temptation to use drvdata == NULL as a hack for checking if the device
-has been "cleaned up."
+Yes, it does. fast_tx->pn_offs is set in ieee80211_check_fast_xmit()
+which only sets it if fast_tx->key is set. The other call to
+ieee80211_xmit_fast_finish() is in ieee80211_tx_dequeue() which also
+only sets pn_offs if the key is set.
 
-This is a preparatory step for adding a card-level completion structure
-to handle our FW init vs. remove/suspend races, in addition to fixing
-memory leaks.
-
-I *do* leave the set_drvdata(..., NULL) for the hacky SDIO
-mwifiex_recreate_adapter(), since the device core won't be able to clear
-that one for us.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  5 +----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 16 ++++++++++------
- drivers/net/wireless/marvell/mwifiex/usb.c  |  7 +------
- 3 files changed, 12 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 4aa5d91..e6bea02 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -189,7 +189,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
- 		 pdev->vendor, pdev->device, pdev->revision);
- 
--	card = kzalloc(sizeof(struct pcie_service_card), GFP_KERNEL);
-+	card = devm_kzalloc(&pdev->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -2820,7 +2820,6 @@ err_req_region0:
- err_set_dma_mask:
- 	pci_disable_device(pdev);
- err_enable_dev:
--	pci_set_drvdata(pdev, NULL);
- 	return ret;
- }
- 
-@@ -2854,9 +2853,7 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
- 		pci_disable_device(pdev);
- 		pci_release_region(pdev, 2);
- 		pci_release_region(pdev, 0);
--		pci_set_drvdata(pdev, NULL);
- 	}
--	kfree(card);
- }
- 
- static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 8718950..f04cf5a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -152,7 +152,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X class=%d function=%d\n",
- 		 func->vendor, func->device, func->class, func->num);
- 
--	card = kzalloc(sizeof(struct sdio_mmc_card), GFP_KERNEL);
-+	card = devm_kzalloc(&func->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -185,7 +185,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 
- 	if (ret) {
- 		dev_err(&func->dev, "failed to enable function\n");
--		goto err_free;
-+		return ret;
- 	}
- 
- 	/* device tree node parsing and platform specific configuration*/
-@@ -210,8 +210,6 @@ err_disable:
- 	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
--err_free:
--	kfree(card);
- 
- 	return ret;
- }
-@@ -2240,8 +2238,6 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
- 	kfree(card->mpa_rx.len_arr);
- 	kfree(card->mpa_tx.buf);
- 	kfree(card->mpa_rx.buf);
--	sdio_set_drvdata(card->func, NULL);
--	kfree(card);
- }
- 
- /*
-@@ -2291,6 +2287,14 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 
- 	mwifiex_sdio_remove(func);
- 
-+	/*
-+	 * Normally, we would let the driver core take care of releasing these.
-+	 * But we're not letting the driver core handle this one. See above
-+	 * TODO.
-+	 */
-+	sdio_set_drvdata(func, NULL);
-+	devm_kfree(&func->dev, card);
-+
- 	/* power cycle the adapter */
- 	sdio_claim_host(func);
- 	mmc_hw_reset(func->card->host);
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 73eb084..57ed834 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -382,7 +382,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 	struct usb_card_rec *card;
- 	u16 id_vendor, id_product, bcd_device, bcd_usb;
- 
--	card = kzalloc(sizeof(struct usb_card_rec), GFP_KERNEL);
-+	card = devm_kzalloc(&intf->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -480,7 +480,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 	if (ret) {
- 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
- 		usb_reset_device(udev);
--		kfree(card);
- 		return ret;
- 	}
- 
-@@ -630,11 +629,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 		    "%s: removing card\n", __func__);
- 	mwifiex_remove_card(adapter, &add_remove_card_sem);
- 
--	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(interface_to_usbdev(intf));
--	kfree(card);
--
--	return;
- }
- 
- static struct usb_driver mwifiex_usb_driver = {
--- 
-1.8.1.4
+-Toke
