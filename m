@@ -1,51 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52190 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43653 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934306AbcJXNfm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 09:35:42 -0400
-Message-ID: <1477316138.4085.19.camel@sipsolutions.net> (sfid-20161024_153545_602852_6B176390)
-Subject: Re: [PATCH v3] cfg80211: Check radar_detect and
- num_different_channels with beacon interface combinations.
+        id S932984AbcJLOWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 10:22:18 -0400
+Message-ID: <1476282127.5271.30.camel@sipsolutions.net> (sfid-20161012_162247_700443_FD72A99F)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
-        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Date: Mon, 24 Oct 2016 15:35:38 +0200
-In-Reply-To: <9a1df5c048894351bbec2d502772b862@aphydexm01f.ap.qualcomm.com>
-References: <1476371730-23027-1-git-send-email-pkushwah@qti.qualcomm.com>
-         <1477052876.4068.40.camel@sipsolutions.net>
-         <9a1df5c048894351bbec2d502772b862@aphydexm01f.ap.qualcomm.com>
+To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Cc: Andy Lutomirski <luto@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        linux-next@vger.kernel.org,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Date: Wed, 12 Oct 2016 16:22:07 +0200
+In-Reply-To: <20161012141245.GA436@swordfish> (sfid-20161012_161343_857870_9D4F9CC9)
+References: <20161010150358.GA514@swordfish>
+         <20161010153050.GA836@swordfish>
+         <1476263106.5271.23.camel@sipsolutions.net>
+         <20161012141245.GA436@swordfish> (sfid-20161012_161343_857870_9D4F9CC9)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-24 at 11:59 +0000, Undekari, Sunil Dutt wrote:
-> > 
-> > I've just sent out a few patches that, I think, implement the
-> > necessary validation for just the beacon intervals, without all
-> > this extra baggage. Please take a look and let me know what you
-> > think.
-> I understand that the new patches from you are in consistent with the
-> existing design of validating the radar detection / channels by
-> having this validation done in the cfg80211 drivers through
-> cfg80211_check_combinations.
 
-Ok, so we agree here, that's good :)
+> > Can you elaborate on how exactly it kills your system?
+> 
+> the last time I saw it it was a NULL deref at
+> ieee80211_aes_ccm_decrypt.
 
-> With this approach , wouldn't the existing cfg80211 drivers behave
-> the other way ? I mean , with these commits and the current cfg80211
-> drivers ( do not advertise beacon_int_min_gcd and invoke
-> cfg80211_check_combinations) , the validation for the different
-> beacon interval shall succeed , but the current kernel ( cfg80211
-> interface ) with the same driver fails the start of the AP / mesh. 
-> Is it not breaking the backward compatibility ? Is this expected ? 
+Hm. I was expecting something within the crypto code would cause the
+crash, this seems strange.
 
-Any driver that supports combinations should also invoke
-check_combinations. This doesn't appear to be true for mwifiex, but
-that's already a bug/problem in that driver, it doesn't really change
-much?
+Anyway, I'm surely out of my depth wrt. the actual cause. Something
+like the patch below probably works around it, but it's horribly
+inefficient due to the locking and doesn't cover CMAC/GMAC either.
 
 johannes
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 103187ca9474..e820f437f02e 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -27,6 +27,7 @@
+ #include <linux/leds.h>
+ #include <linux/idr.h>
+ #include <linux/rhashtable.h>
++#include <crypto/aes.h>
+ #include <net/ieee80211_radiotap.h>
+ #include <net/cfg80211.h>
+ #include <net/mac80211.h>
+@@ -1224,6 +1225,10 @@ struct ieee80211_local {
+ 
+ 	spinlock_t rx_path_lock;
+ 
++	/* temporary buffers for software crypto */
++	u8 aad[2 * AES_BLOCK_SIZE];
++	u8 b_0[AES_BLOCK_SIZE];
++
+ 	/* Station data */
+ 	/*
+ 	 * The mutex only protects the list, hash table and
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b48c1e13e281..a3f17a710b85 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -405,8 +405,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 	u8 *pos;
+ 	u8 pn[6];
+ 	u64 pn64;
+-	u8 aad[2 * AES_BLOCK_SIZE];
+-	u8 b_0[AES_BLOCK_SIZE];
++	u8 *aad = tx->local->aad;
++	u8 *b_0 = tx->local->b_0;
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -460,9 +460,11 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 		return 0;
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
++	spin_lock_bh(&tx->local->rx_path_lock);
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+ 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+ 				  skb_put(skb, mic_len), mic_len);
++	spin_unlock_bh(&tx->local->rx_path_lock);
+ 
+ 	return 0;
+ }
+@@ -534,8 +536,9 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
+ 		}
+ 
+ 		if (!(status->flag & RX_FLAG_DECRYPTED)) {
+-			u8 aad[2 * AES_BLOCK_SIZE];
+-			u8 b_0[AES_BLOCK_SIZE];
++			u8 *aad = rx->local->aad;
++			u8 *b_0 = rx->local->b_0;
++
+ 			/* hardware didn't decrypt/verify MIC */
+ 			ccmp_special_blocks(skb, pn, b_0, aad);
+ 
+@@ -639,8 +642,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	u8 *pos;
+ 	u8 pn[6];
+ 	u64 pn64;
+-	u8 aad[2 * AES_BLOCK_SIZE];
+-	u8 j_0[AES_BLOCK_SIZE];
++	u8 *aad = tx->local->aad;
++	u8 *j_0 = tx->local->b_0;
+ 
+ 	if (info->control.hw_key &&
+ 	    !(info->control.hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) &&
+@@ -695,9 +698,11 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 
+ 	pos += IEEE80211_GCMP_HDR_LEN;
++	spin_lock_bh(&tx->local->rx_path_lock);
+ 	gcmp_special_blocks(skb, pn, j_0, aad);
+ 	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
+ 				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
++	spin_unlock_bh(&tx->local->rx_path_lock);
+ 
+ 	return 0;
+ }
+@@ -764,8 +769,9 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 		}
+ 
+ 		if (!(status->flag & RX_FLAG_DECRYPTED)) {
+-			u8 aad[2 * AES_BLOCK_SIZE];
+-			u8 j_0[AES_BLOCK_SIZE];
++			u8 *aad = rx->local->aad;
++			u8 *j_0 = rx->local->b_0;
++
+ 			/* hardware didn't decrypt/verify MIC */
+ 			gcmp_special_blocks(skb, pn, j_0, aad);
+ 
