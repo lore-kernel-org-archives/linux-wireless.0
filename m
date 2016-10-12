@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60514 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754247AbcJULzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 07:55:21 -0400
-Message-ID: <1477050915.4068.36.camel@sipsolutions.net> (sfid-20161021_135525_321040_FA11DEE6)
-Subject: brcmfmac interface combinations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 21 Oct 2016 13:55:15 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37299 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751485AbcJLFei (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 01:34:38 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: Revert "ath9k_hw: implement temperature compensation support for
+ AR9003+"
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161011174649.19210-1-nbd@nbd.name>
+References: <20161011174649.19210-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
+Message-ID: <7995a06988404eb9a0a595168bbfb2ce@euamsexm01a.eu.qualcomm.com> (sfid-20161012_073455_182555_C005F281)
+Date: Wed, 12 Oct 2016 07:21:14 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Felix Fietkau <nbd@nbd.name> wrote:
+> This reverts commit 171f6402e4aa5cd3b8407f82501f7ea21fa54ccc.
+> Some users report that this commit causes a regression in performance
+> under some conditions.
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-I'm looking into the interface combinations stuff, mostly due to the
-patches from QCA to add the support for differing beacon intervals.
+I added these to the commit log:
 
-One thing that I was considering, was to change the API
-for cfg80211_check_combinations() to not require the driver to fill in
-the # of interfaces of each given type, but just have it pass the new
-one, if present, or so.
+    Fixes: 171f6402e4aa ("ath9k_hw: implement temperature compensation support for AR9003+")
+    Cc: <stable@vger.kernel.org> #4.8
 
+My understanding is that the commit is not in 4.7, hence only cc stable 4.8.
 
-However, there's a major difference between brcmfmac and mac80211 (the
-only "drivers" using this), namely this: mac80211 allows *adding* any
-kind of interface, as long as you don't actually try to operate it.
-brcmfmac, on the other hand, prevents even adding an interface if it
-doesn't fit the combinations.
+-- 
+https://patchwork.kernel.org/patch/9371479/
 
-I'm wondering if this is intentional?
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-I suspect that we can't change mac80211 at this point, and the brcmfmac
-behaviour might be unexpected to some people who are used to working
-with mac80211, but I'm not sure you'd want to change it either?
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
