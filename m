@@ -1,27 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33094 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43006 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932944AbcJUNBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 09:01:36 -0400
-Message-ID: <1477054892.4068.44.camel@sipsolutions.net> (sfid-20161021_150152_320115_49F103AC)
-Subject: Re: [PATCH 2/2] mac80211: use inline kernel-doc for struct
- ieee80211_hw
+        id S1752653AbcJLMZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:25:26 -0400
+Message-ID: <1476275121.5271.28.camel@sipsolutions.net> (sfid-20161012_142540_813358_94826DA1)
+Subject: Re: [PATCH v2] mac80211: fix A-MSDU outer SA/DA
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jani Nikula <jani.nikula@intel.com>, linux-wireless@vger.kernel.org
-Cc: linux-doc@vger.kernel.org
-Date: Fri, 21 Oct 2016 15:01:32 +0200
-In-Reply-To: <1477054644-5945-2-git-send-email-jani.nikula@intel.com>
-References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
-         <1477054644-5945-2-git-send-email-jani.nikula@intel.com>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        Felix Fietkau <nbd@openwrt.org>
+Date: Wed, 12 Oct 2016 14:25:21 +0200
+In-Reply-To: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de>
+References: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
-> It's easier to manage the kernel-doc for the fields when they
-> documentation is next to the field.
+On Wed, 2016-10-12 at 12:57 +0200, Michael Braun wrote:
+> According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer
+> SA/DA of A-MSDU frames need to be changed depending on FromDS/ToDS
+> values.
 
-Hah, I wasn't even aware this was possible. Thanks!
+actually ...
+
+>  	struct ieee80211_hdr *hdr;
+
+802.11 header
+
+> -	struct ethhdr amsdu_hdr;
+> +	struct ethhdr *amsdu_hdr;
+>  	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
+
+802.11 header length
+
+> +	data = skb_push(skb, sizeof(*amsdu_hdr));
+
+push ethernet header in
+
+> +	memmove(data, data + sizeof(*amsdu_hdr), hdr_len);
+
+move 802.11 header from back to front
+
+> +	hdr = data;
+
+hdr is at the beginning of the frame
+
+> +	amsdu_hdr = data + hdr_len;
+
+amsdu_hdr is actually the *inner* header after all.
+
+
+So, I actually think my first instinct that you were erroneously
+changing the inner header *was* right.
+
+
+Seems like this code should be inserted towards the end of
+ieee80211_amsdu_aggregate() instead, where it's adding the RFC 1042
+header?
+
+Need Felix to take a look, I guess.
 
 johannes
