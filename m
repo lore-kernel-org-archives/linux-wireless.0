@@ -1,30 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39944 "EHLO sipsolutions.net"
+Received: from tex.lwn.net ([70.33.254.29]:51991 "EHLO vena.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S942694AbcJ0OYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 10:24:14 -0400
-Message-ID: <1477564976.4534.1.camel@sipsolutions.net> (sfid-20161027_162625_543669_73F95949)
-Subject: Re: [PATCH v2 0/9] cfg80211/mac80211: Fast Initial Link Setup (IEEE
- 802.11ai)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
+        id S1753736AbcJLRU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 13:20:59 -0400
+Date: Wed, 12 Oct 2016 11:20:29 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless@vger.kernel.org
-Date: Thu, 27 Oct 2016 12:42:56 +0200
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH] docs-rst: sphinxify 802.11 documentation
+Message-ID: <20161012112029.76f94482@lwn.net> (sfid-20161012_192103_421705_48ADC13B)
+In-Reply-To: <1476223710.4118.12.camel@sipsolutions.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+        <20161011072119.7ad4e3a3@lwn.net>
+        <1476192636.4118.8.camel@sipsolutions.net>
+        <20161011153911.6a0f778c@lwn.net>
+        <1476223710.4118.12.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-27 at 00:41 +0300, Jouni Malinen wrote:
-> [...]
+On Wed, 12 Oct 2016 00:08:30 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
 
-> This series covers only the FILS authentication/association
-> functionality from IEEE 802.11ai, i.e., the other changes like
-> scanning optimizations are not included.
+> > As an alternative, one or the other of us could just send it up in
+> > the next couple of days and be done with it.  I'd say the chances of
+> > regressions are pretty small...:)  If you want to do that, feel free
+> > to add my ack.  If you'd rather I sent it, just say the word.  
 > 
+> Ok, fair enough. Please go ahead, I'll ask davem to pull it back in
+> when I need it. You'll get it through to Linus quicker than me :)
 
-Applied, thanks.
+OK, I'll let it sit in linux-next for a day or two just to observe the
+niceties, then upward it goes.
 
-johannes
+Thanks,
+
+jon
