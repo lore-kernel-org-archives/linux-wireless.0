@@ -1,53 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33505 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754223AbcJQJwq (ORCPT
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:45929 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751171AbcJLLID (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:52:46 -0400
-Received: by mail-lf0-f52.google.com with SMTP id x79so285818563lff.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:52:45 -0700 (PDT)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> <1476696918.19992.15.camel@sipsolutions.net>
-In-Reply-To: <1476696918.19992.15.camel@sipsolutions.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=us-ascii
-Message-Id: <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org> (sfid-20161017_115251_374714_23B8A96F)
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-Date: Mon, 17 Oct 2016 10:52:37 +0100
-To: Johannes Berg <johannes@sipsolutions.net>
+        Wed, 12 Oct 2016 07:08:03 -0400
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Subject: [PATCH v2] mac80211: fix A-MSDU outer SA/DA
+Date: Wed, 12 Oct 2016 12:57:50 +0200
+Message-Id: <1476269870-32007-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161012_130807_456323_7E6621F9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer SA/DA
+of A-MSDU frames need to be changed depending on FromDS/ToDS values.
 
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 
-> On 17 Oct 2016, at 10:35, Johannes Berg <johannes@sipsolutions.net> wrote:=
+--
+v2:
+ - avoid the extra write to amsdu_hdr
+ - avoid copy of asmdu_hdr into skb, use ptr instead
+---
+ net/mac80211/tx.c | 45 ++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 36 insertions(+), 9 deletions(-)
 
->=20
->> On Mon, 2016-10-17 at 10:30 +0100, Ard Biesheuvel wrote:
->>=20
->> Yes. But as I replied, setting the req size is not supported atm,
->> although it is reasonable to demand a way to allocate additional data
->> in the request specifically for this issue. So let's proceed with the
->> aead_request_alloc/free patch, but I would like to propose something
->> on the API side to address this particular issue
->=20
-> Well, if your other patch to make it OK to be on-stack would be applied
-> instead, this wouldn't make much sense either :)
->=20
-
-Yes but that one only fixes ccm not gcm
-
-> In this particular patch, we could reduce the size of the struct, but I
-> don't actually think it'll make a difference to go from 48 to 36 bytes,
-> given alignment etc., so I think I'll just leave it as is.
->=20
-
-I understand you are in a hurry, but this is unlikely to be the only such is=
-sue. I will propose an 'auxdata' feature for the crypto api that can be used=
- here, but also for any other occurrence where client data assoiciated with t=
-he request can no longer be allocated on the stack=
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 5023966..ebd2aa6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3046,11 +3046,12 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr;
+-	struct ethhdr amsdu_hdr;
++	struct ethhdr *amsdu_hdr;
+ 	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
+ 	int subframe_len = skb->len - hdr_len;
+ 	void *data;
+ 	u8 *qc;
++	const u8 *src_addr, *dst_addr, *bssid;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
+ 		return false;
+@@ -3058,19 +3059,45 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
+ 	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
+ 		return true;
+ 
+-	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(amsdu_hdr),
++	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr),
+ 					 &subframe_len))
+ 		return false;
+ 
+-	amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
+-	memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
+-	memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
++	data = skb_push(skb, sizeof(*amsdu_hdr));
++	memmove(data, data + sizeof(*amsdu_hdr), hdr_len);
++	hdr = data;
++	amsdu_hdr = data + hdr_len;
++
++	/* according to IEEE 802.11-2012 8.3.2 table 8-19, the outer SA/DA
++	 * fields needs to be changed to BSSID for A-MSDU frames depending
++	 * on FromDS/ToDS values.
++	 */
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
++		bssid = sdata->u.mgd.bssid;
++		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_AP_VLAN:
++		bssid = sdata->vif.addr;
++		break;
++	default:
++		bssid = NULL;
++	}
++
++	if (bssid && ieee80211_has_fromds(hdr->frame_control))
++		src_addr = bssid;
++	else
++		src_addr = skb->data + fast_tx->sa_offs;
++
++	if (bssid && ieee80211_has_tods(hdr->frame_control))
++		dst_addr = bssid;
++	else
++		dst_addr = skb->data + fast_tx->da_offs;
+ 
+-	data = skb_push(skb, sizeof(amsdu_hdr));
+-	memmove(data, data + sizeof(amsdu_hdr), hdr_len);
+-	memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
++	amsdu_hdr->h_proto = cpu_to_be16(subframe_len);
++	memcpy(amsdu_hdr->h_source, src_addr, ETH_ALEN);
++	memcpy(amsdu_hdr->h_dest, dst_addr, ETH_ALEN);
+ 
+-	hdr = data;
+ 	qc = ieee80211_get_qos_ctl(hdr);
+ 	*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
+ 
+-- 
+2.1.4
