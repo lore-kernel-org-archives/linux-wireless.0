@@ -1,57 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26767 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754074AbcJYWpX (ORCPT
+Received: from lb2-smtp-cloud6.xs4all.net ([194.109.24.28]:36783 "EHLO
+        lb2-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933912AbcJLSFs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 18:45:23 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 6/8] mac80211: Add FILS auth alg mapping
-Date: Wed, 26 Oct 2016 01:44:47 +0300
-Message-ID: <1477435489-8555-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004529_689878_1D7F0E2B)
-In-Reply-To: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 12 Oct 2016 14:05:48 -0400
+Message-ID: <1476295541.9670.26.camel@tiscali.nl> (sfid-20161012_200605_219684_EE378875)
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Chris Rorvick <chris@rorvick.com>, Luca Coelho <luca@coelho.fi>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 12 Oct 2016 20:05:41 +0200
+In-Reply-To: <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com>
+References: <20161010071943.4717-1-chris@rorvick.com>
+         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
+         <1476252719.7776.6.camel@coelho.fi> <1476255135.1972.5.camel@tiscali.nl>
+         <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/mlme.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+On Wed, 2016-10-12 at 12:50 -0500, Chris Rorvick wrote:
+> This may already be apparent, but Dell sells two versions of the 9350:
+> one with the Broadcom adapter and one with the AC 8260.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b6222f2..b815f2d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2618,6 +2618,9 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
- 	case WLAN_AUTH_LEAP:
- 	case WLAN_AUTH_FT:
- 	case WLAN_AUTH_SAE:
-+	case WLAN_AUTH_FILS_SK:
-+	case WLAN_AUTH_FILS_SK_PFS:
-+	case WLAN_AUTH_FILS_PK:
- 		break;
- 	case WLAN_AUTH_SHARED_KEY:
- 		if (ifmgd->auth_data->expected_transaction != 4) {
-@@ -4479,6 +4482,15 @@ int ieee80211_mgd_auth(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_AUTHTYPE_SAE:
- 		auth_alg = WLAN_AUTH_SAE;
- 		break;
-+	case NL80211_AUTHTYPE_FILS_SK:
-+		auth_alg = WLAN_AUTH_FILS_SK;
-+		break;
-+	case NL80211_AUTHTYPE_FILS_SK_PFS:
-+		auth_alg = WLAN_AUTH_FILS_SK_PFS;
-+		break;
-+	case NL80211_AUTHTYPE_FILS_PK:
-+		auth_alg = WLAN_AUTH_FILS_PK;
-+		break;
- 	default:
- 		return -EOPNOTSUPP;
- 	}
--- 
-1.9.1
+Off topic, for most readers: my version (with the AC 8260) came with
+Ubuntu preinstalled. Perhaps Chris' version came preinstalled with
+something else?
+
+Thanks,
+
+
+Paul Bolle
