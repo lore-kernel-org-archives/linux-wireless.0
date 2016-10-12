@@ -1,129 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47438 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755183AbcJ0JNz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13590 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753427AbcJLH3U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 05:13:55 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 5/5] mwifiex: wait firmware dump complete during card remove process
-Date: Thu, 27 Oct 2016 14:42:43 +0530
-Message-ID: <1477559563-18328-5-git-send-email-akarwar@marvell.com> (sfid-20161027_111536_791543_0A2B3A61)
-In-Reply-To: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
-References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+        Wed, 12 Oct 2016 03:29:20 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix failure to send NULL func frame for 10.4
+Date: Wed, 12 Oct 2016 12:59:02 +0530
+Message-ID: <1476257342-3241-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161012_092943_702754_0D851692)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Wait for firmware dump complete in card remove function.
-For sdio interface, there are two diffenrent cases,
-card reset trigger sdio_work and firmware dump trigger sdio_work.
-Do code rearrangement for distinguish between these two cases.
+This partially reverts 'commit 2cdce425aa33
+("ath10k: Fix broken NULL func data frame status for 10.4")'
+Unfortunately this breaks sending NULL func and the existing
+issue of obtaining proper tx status for NULL function will be
+fixed. Also update the comments for feature flag added to be
+useless and not working
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Fixes: 2cdce425aa33 "ath10k: Fix broken NULL func data frame status for
+10.4"
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
-v2: 1. Get rid of reset_triggered flag. Instead split the code and use
-    __mwifiex_sdio_remove() (Brian Norris/Dmitry Torokhov)
-    2. "v1 4/5 mwifiex: firmware dump code rearrangement.." is dropped. So
-    rebased accordingly.
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  6 +++++-
- drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++---
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h | 6 ++----
+ drivers/net/wireless/ath/ath10k/mac.c  | 2 --
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 9025af7..6c421ad 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,6 +37,9 @@ static struct mwifiex_if_ops pcie_ops;
- 
- static struct semaphore add_remove_card_sem;
- 
-+static void mwifiex_pcie_work(struct work_struct *work);
-+static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
-+
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -249,6 +252,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	cancel_work_sync(&pcie_work);
-+
- 	if (user_rmmod && !adapter->mfg_mode) {
- #ifdef CONFIG_PM_SLEEP
- 		if (adapter->is_suspended)
-@@ -2716,7 +2721,6 @@ static void mwifiex_pcie_work(struct work_struct *work)
- 		mwifiex_pcie_device_dump_work(save_adapter);
- }
- 
--static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
- /* This function dumps FW information */
- static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
- {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 241d2b3..5d84c563 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -46,6 +46,9 @@
-  */
- static u8 user_rmmod;
- 
-+static void mwifiex_sdio_work(struct work_struct *work);
-+static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
-+
- static struct mwifiex_if_ops sdio_ops;
- static unsigned long iface_work_flags;
- 
-@@ -275,7 +278,7 @@ static int mwifiex_sdio_resume(struct device *dev)
-  * This function removes the interface and frees up the card structure.
-  */
- static void
--mwifiex_sdio_remove(struct sdio_func *func)
-+__mwifiex_sdio_remove(struct sdio_func *func)
- {
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
-@@ -305,6 +308,13 @@ mwifiex_sdio_remove(struct sdio_func *func)
- 	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
- }
- 
-+static void
-+mwifiex_sdio_remove(struct sdio_func *func)
-+{
-+	cancel_work_sync(&sdio_work);
-+	__mwifiex_sdio_remove(func);
-+}
-+
- /*
-  * SDIO suspend.
-  *
-@@ -2290,7 +2300,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 	 * discovered and initializes them from scratch.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index b367e9c..42c3f1b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -552,10 +552,8 @@ enum ath10k_fw_features {
  	 */
+ 	ATH10K_FW_FEATURE_BTCOEX_PARAM = 14,
  
--	mwifiex_sdio_remove(func);
-+	__mwifiex_sdio_remove(func);
+-	/* Older firmware with HTT delivers incorrect tx status for null func
+-	 * frames to driver, but this fixed in 10.2 and 10.4 firmware versions.
+-	 * Also this workaround results in reporting of incorrect null func
+-	 * status for 10.4. This flag is used to skip the workaround.
++	/* Unused flag and proven to be not working, enable this if you want
++	 * to experiment sending NULL func data frames in HTT TX
+ 	 */
+ 	ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR = 15,
  
- 	/* power cycle the adapter */
- 	sdio_claim_host(func);
-@@ -2623,7 +2633,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
- 		mwifiex_sdio_card_reset_work(save_adapter);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 4565321..86a6610 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3255,8 +3255,6 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
+ 	if (ar->htt.target_version_major < 3 &&
+ 	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+-		      ar->running_fw->fw_file.fw_features) &&
+-	    !test_bit(ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR,
+ 		      ar->running_fw->fw_file.fw_features))
+ 		return ATH10K_HW_TXRX_MGMT;
  
--static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
- /* This function resets the card */
- static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- {
 -- 
 1.9.1
