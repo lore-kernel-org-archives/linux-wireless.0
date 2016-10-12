@@ -1,271 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:33971 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S943075AbcJaNlO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40453 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933087AbcJLNev (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 09:41:14 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        projekt-wlan@fem.tu-ilmenau.de
-Subject: [PATCH v7 2/2] mac80211: multicast to unicast conversion
-Date: Mon, 31 Oct 2016 14:41:00 +0100
-Message-Id: <1477921260-24556-2-git-send-email-michael-dev@fami-braun.de> (sfid-20161031_144127_739577_3E30DE3B)
-In-Reply-To: <1477921260-24556-1-git-send-email-michael-dev@fami-braun.de>
-References: <1477921260-24556-1-git-send-email-michael-dev@fami-braun.de>
+        Wed, 12 Oct 2016 09:34:51 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Vittorio Gambaletta \(VittGam\)" <linux-wireless@vittgam.net>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <ath9k-devel@venema.h4ckr.net>, <stable@vger.kernel.org>
+Subject: Re: [PATCH] ath9k: Move generic entries below specific ones in ath_pci_id_table.
+References: <ath9k-patch-20161003@vittgam.net>
+        <87k2dop15n.fsf@kamboji.qca.qualcomm.com>
+        <cd3ff141b0ba69399a377a96a9ae75fb@vittgam.net>
+Date: Wed, 12 Oct 2016 16:34:46 +0300
+In-Reply-To: <cd3ff141b0ba69399a377a96a9ae75fb@vittgam.net> (Vittorio
+        Gambaletta's message of "Tue, 04 Oct 2016 20:14:10 +0200")
+Message-ID: <87eg3lg07d.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_153515_240332_1E2CE18A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the ability for an AP (and associated VLANs) to perform
-multicast-to-unicast conversion for ARP, IPv4 and IPv6 frames
-(possibly within 802.1Q). If enabled, such frames are to be sent
-to each station separately, with the DA replaced by their own
-MAC address rather than the group address.
+"Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
 
-Note that this may break certain expectations of the receiver,
-such as the ability to drop unicast IP packets received within
-multicast L2 frames, or the ability to not send ICMP destination
-unreachable messages for packets received in L2 multicast (which
-is required, but the receiver can't tell the difference if this
-new option is enabled.)
+> Hello,
+>
+> On 04/10/2016 17:46:44 CEST, Kalle Valo wrote:
+>> "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
+>>
+>>> If generic entries are positioned above specific ones, then the
+>>> former will be matched first and used instead of the latter.
+>>>
+>>> Cc: <linux-wireless@vger.kernel.org>
+>>> Cc: <ath9k-devel@qca.qualcomm.com>
+>>> Cc: <ath9k-devel@lists.ath9k.org>
+>>> Cc: <stable@vger.kernel.org>
+>>> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+>>
+>> Why? What kind of bug you are fixing? You are not really describing the
+>> problem you are trying fix.
+>
+> The active_high LED of my Wistron DNMA-92 is still being recognized as
+> active_low on 4.7.6 mainline.
 
-This also doesn't implement the 802.11 DMS (directed multicast
-service).
+This kind of information is important, always add that to the commit log
+so that we don't need to guess. 
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> When I was preparing my former patch to fix that, I initially added the
+> PCI_DEVICE_SUB section for 0x0029/0x2096 above the PCI_VDEVICE section
+> for 0x0029; but then I moved the former below the latter after seeing
+> how 0x002A sections were sorted in the file.
+>
+> I must have somehow messed up with testing, because I tested the final
+> version of that patch before sending it, and it was apparently working;
+> but now it is not working on 4.7.6 mainline.
+>
+> With this patch, 0x0029/0x2096 has finally got active_high LED on
+> 4.7.6.
 
---
-v7:
-  - avoid recursion
-  - style and description
-v5:
-  - rename bss->unicast to bss->multicast_to_unicast
-  - access sdata->bss only after checking iftype
-v4:
-  - rename MULTICAST_TO_UNICAST to MULTICAST_TO_UNICAST
-v3: fix compile error for trace.h
-v2: add nl80211 toggle
-    rename tx_dnat to change_da
-    change int to bool unicast
----
- net/mac80211/cfg.c            |  16 ++++++
- net/mac80211/debugfs_netdev.c |   3 ++
- net/mac80211/ieee80211_i.h    |   1 +
- net/mac80211/tx.c             | 122 +++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 141 insertions(+), 1 deletion(-)
+I'm confused, are you now saying that this patch doesn't work?
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 1edb017..a861d85 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3345,6 +3345,21 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
- 	return -ENOENT;
- }
- 
-+static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
-+					      struct net_device *dev,
-+					      const bool enabled)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+
-+	/* not supported with P2P_GO for now */
-+	if (sdata->vif.type != NL80211_IFTYPE_AP)
-+		return -EOPNOTSUPP;
-+
-+	sdata->u.ap.multicast_to_unicast = enabled;
-+
-+	return 0;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3430,4 +3445,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-+	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
- };
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index ed7bff4..509c6c3 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -487,6 +487,8 @@ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
- }
- IEEE80211_IF_FILE_R(num_buffered_multicast);
- 
-+IEEE80211_IF_FILE(multicast_to_unicast, u.ap.multicast_to_unicast, HEX);
-+
- /* IBSS attributes */
- static ssize_t ieee80211_if_fmt_tsf(
- 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-@@ -642,6 +644,7 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD(dtim_count);
- 	DEBUGFS_ADD(num_buffered_multicast);
- 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
-+	DEBUGFS_ADD_MODE(multicast_to_unicast, 0600);
- }
- 
- static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 70c0963..84374ed 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -293,6 +293,7 @@ struct ieee80211_if_ap {
- 			 driver_smps_mode; /* smps mode request */
- 
- 	struct work_struct request_smps_work;
-+	bool multicast_to_unicast;
- };
- 
- struct ieee80211_if_wds {
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index c3ce86e..7271c93 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -16,6 +16,7 @@
- #include <linux/kernel.h>
- #include <linux/slab.h>
- #include <linux/skbuff.h>
-+#include <linux/if_vlan.h>
- #include <linux/etherdevice.h>
- #include <linux/bitmap.h>
- #include <linux/rcupdate.h>
-@@ -3418,6 +3419,115 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- 	rcu_read_unlock();
- }
- 
-+static int ieee80211_change_da(struct sk_buff *skb, struct sta_info *sta)
-+{
-+	struct ethhdr *eth;
-+	int err;
-+
-+	err = skb_ensure_writable(skb, ETH_HLEN);
-+	if (unlikely(err))
-+		return err;
-+
-+	eth = (void *)skb->data;
-+	ether_addr_copy(eth->h_dest, sta->sta.addr);
-+
-+	return 0;
-+}
-+
-+static inline int
-+ieee80211_multicast_to_unicast(struct sk_buff *skb, struct net_device *dev)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	const struct ethhdr *eth = (void *)skb->data;
-+	const struct vlan_ethhdr *ethvlan = (void *)skb->data;
-+	u16 ethertype;
-+
-+	if (likely(!is_multicast_ether_addr(eth->h_dest)))
-+		return 0;
-+
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_AP_VLAN:
-+		if (sdata->u.vlan.sta)
-+			return 0;
-+		if (sdata->wdev.use_4addr)
-+			return 0;
-+		/* fall through */
-+	case NL80211_IFTYPE_AP:
-+		/* check runtime toggle for this bss */
-+		if (!sdata->bss->multicast_to_unicast)
-+			return 0;
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	/* multicast to unicast conversion only for some payload */
-+	ethertype = ntohs(eth->h_proto);
-+	if (ethertype == ETH_P_8021Q && skb->len >= VLAN_ETH_HLEN)
-+		ethertype = ntohs(ethvlan->h_vlan_encapsulated_proto);
-+	switch (ethertype) {
-+	case ETH_P_ARP:
-+	case ETH_P_IP:
-+	case ETH_P_IPV6:
-+		break;
-+	default:
-+		return 0;
-+	}
-+
-+	return 1;
-+}
-+
-+static void
-+ieee80211_convert_to_unicast(struct sk_buff *skb, struct net_device *dev,
-+			     struct sk_buff_head *queue)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	const struct ethhdr *eth = (struct ethhdr *)skb->data;
-+	struct sta_info *sta, *first = NULL;
-+	struct sk_buff *cloned_skb;
-+
-+	rcu_read_lock();
-+
-+	list_for_each_entry_rcu(sta, &local->sta_list, list) {
-+		if (sdata != sta->sdata)
-+			/* AP-VLAN mismatch */
-+			continue;
-+		if (unlikely(ether_addr_equal(eth->h_source, sta->sta.addr)))
-+			/* do not send back to source */
-+			continue;
-+		if (!first) {
-+			first = sta;
-+			continue;
-+		}
-+		cloned_skb = skb_clone(skb, GFP_ATOMIC);
-+		if (!cloned_skb)
-+			goto unicast;
-+		if (unlikely(ieee80211_change_da(cloned_skb, sta))) {
-+			dev_kfree_skb(cloned_skb);
-+			goto unicast;
-+		}
-+		__skb_queue_tail(queue, cloned_skb);
-+	}
-+
-+	if (likely(first)) {
-+		if (unlikely(ieee80211_change_da(skb, first)))
-+			goto unicast;
-+		__skb_queue_tail(queue, skb);
-+	} else {
-+		/* no STA connected, drop */
-+		kfree_skb(skb);
-+		skb = NULL;
-+	}
-+
-+	goto out;
-+unicast:
-+	__skb_queue_purge(queue);
-+	__skb_queue_tail(queue, skb);
-+out:
-+	rcu_read_unlock();
-+}
-+
- /**
-  * ieee80211_subif_start_xmit - netif start_xmit function for 802.3 vifs
-  * @skb: packet to be sent
-@@ -3428,7 +3538,17 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
- netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
- 				       struct net_device *dev)
- {
--	__ieee80211_subif_start_xmit(skb, dev, 0);
-+	if (unlikely(ieee80211_multicast_to_unicast(skb, dev))) {
-+		struct sk_buff_head queue;
-+
-+		__skb_queue_head_init(&queue);
-+		ieee80211_convert_to_unicast(skb, dev, &queue);
-+		while ((skb = __skb_dequeue(&queue)))
-+			__ieee80211_subif_start_xmit(skb, dev, 0);
-+	} else {
-+		__ieee80211_subif_start_xmit(skb, dev, 0);
-+	}
-+
- 	return NETDEV_TX_OK;
- }
- 
+> So, after seeing that the rest of the file is sorted this way (generic
+> section after the specific ones), I concluded that the 0x002A sorting
+> was wrong in the first place, and so is 0x0029. Then I sent this patch
+> to fix this.
+
+I can't see how changing the order in ath_pci_id_table[] would make any
+difference in functionality, but I might be missing something.
+
+>> And your email headers look weird:
+>>
+>> To:     <kvalo@codeaurora.org>
+>> Cc:     <linux-wireless@vger.kernel.org>
+>> Cc:     <ath9k-devel@qca.qualcomm.com>
+>> Cc:     <ath9k-devel@venema.h4ckr.net>
+>> Cc:     <stable@vger.kernel.org>
+>> Date:   Mon, 3 Oct 2016 12:00:56 +0200
+>>
+>> What software are you using to send this? Only one CC header is valid
+>> according to the spec (thanks to Luca for checking) even though mailers
+>> seem to handle multiple CC headers. But for example my patchwork script
+>> fails with this and uses only the first CC header.
+>
+> Sorry about this, I used a custom mailer to send the patch since I was
+> having problems with git-send-email...
+
+Ok, that explains it.
+
 -- 
-2.1.4
+Kalle Valo
