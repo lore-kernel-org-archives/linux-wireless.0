@@ -1,61 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:54067 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932739AbcJTJSK (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:33483 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932694AbcJLVpZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 05:18:10 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Remove unused function wilc_lock_timeout
-Date: Thu, 20 Oct 2016 11:17:59 +0200
-Message-ID: <2246433.KuShhtzXUN@wuerfel> (sfid-20161020_111832_074707_16F0FF63)
-In-Reply-To: <1476953672-2198-1-git-send-email-binoy.jayan@linaro.org>
-References: <1476953672-2198-1-git-send-email-binoy.jayan@linaro.org>
+        Wed, 12 Oct 2016 17:45:25 -0400
+Received: by mail-yw0-f196.google.com with SMTP id w3so2331615ywg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 14:45:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
+References: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
+From: Steve deRosier <derosier@gmail.com>
+Date: Wed, 12 Oct 2016 14:32:18 -0700
+Message-ID: <CALupW3D2dsTeixs3z+e9JC_D2D_Bd_AHquHKttCf17OhMqEFUg@mail.gmail.com> (sfid-20161012_234529_671888_1164D570)
+Subject: Re: [PATCH] ath6k1: add Dell OEM SDIO I/O for the Venue 8 Pro
+To: Alan <alan@linux.intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, October 20, 2016 2:24:32 PM CEST Binoy Jayan wrote:
-> Semaphore are going away in the future, so remove the unused function
-> wilc_lock_timeout which calls a semaphore api but has no users.
-> 
-> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-> ---
-> 
-> They following is a patch which removes semaphores from wilc1000.
-> Its part of a bigger effort to eliminate all semaphores
-> from the linux kernel.
+Hi Alan,
 
-Good catch!
+Sorry to quibble, but the subsystem label on the commit subject line
+should be "ath6kl:"  it's a lower-case "L", not a one.
 
->  drivers/staging/wilc1000/linux_wlan.c | 11 -----------
->  1 file changed, 11 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 6370a5e..470d59f 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -218,17 +218,6 @@ static void deinit_irq(struct net_device *dev)
->         }
->  }
->  
-> -int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
-> -{
-> -       /* FIXME: replace with mutex_lock or wait_for_completion */
-> -       int error = -1;
-> -
-> -       if (vp)
-> -               error = down_timeout(vp,
-> -                                    msecs_to_jiffies(timeout));
-> -       return error;
-> -}
 
-You need to remove the prototype from wilc_wfi_netdevice.h
-as well. Once you do that, please add
+On Wed, Oct 12, 2016 at 11:08 AM, Alan <alan@linux.intel.com> wrote:
+> From: Adam Williamson <adamw@happyassassin.net>
+>
+> SDIO ID 0271:0418
+>
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> Bugzilla-ID: https://bugzilla.kernel.org/show_bug.cgi?id=67921
+>
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index eab0ab9..76eb336 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -1401,6 +1401,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
+>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
+>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
+>         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
+> +       {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
+>         {},
+>  };
+>
+>
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+I see nothing wrong with this if the chip does indeed identify itself
+this way.  So please fix the subject and you can add:
+
+Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
+
+- Steve
