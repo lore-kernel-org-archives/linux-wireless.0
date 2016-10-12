@@ -1,42 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47714 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750818AbcJXF2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 01:28:37 -0400
-Message-ID: <1477286912.4085.1.camel@sipsolutions.net> (sfid-20161024_072844_246040_3DA505B5)
-Subject: Re: Bayesian rate control
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Bj=F6rn?= Smedman <bjorn@openias.org>,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Date: Mon, 24 Oct 2016 07:28:32 +0200
-In-Reply-To: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com> (sfid-20161023_160622_798535_C6DAB0EF)
-References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
-         (sfid-20161023_160622_798535_C6DAB0EF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:33360 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754885AbcJLRvE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 13:51:04 -0400
+MIME-Version: 1.0
+In-Reply-To: <1476255135.1972.5.camel@tiscali.nl>
+References: <20161010071943.4717-1-chris@rorvick.com> <1476108164.5210.11.camel@coelho.fi>
+ <1476180668.17022.21.camel@tiscali.nl> <1476252719.7776.6.camel@coelho.fi> <1476255135.1972.5.camel@tiscali.nl>
+From: Chris Rorvick <chris@rorvick.com>
+Date: Wed, 12 Oct 2016 12:50:57 -0500
+Message-ID: <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com> (sfid-20161012_195119_803958_B79534CE)
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
+To: Paul Bolle <pebolle@tiscali.nl>, Luca Coelho <luca@coelho.fi>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Luca,
 
-> 1. Is there anybody else out there thinking along similar lines?
+FYI, It seems that Google does not like your email as I'm not
+receiving any of your messages in gmail.  Some responses below:
 
-I'm not aware, but that may not mean much :)
+On Wed, 2016-10-12 at 15:24 +0300, Luca Coelho wrote:
+> Hi Chris,
+> On Tue, 2016-10-11 at 09:09 -0500, Chris Rorvick wrote:
+> > On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle [at] tiscali> wrot=
+e:
+> > > > This is not coming from the NIC itself, but from the platform's ACP=
+I
+> > > > tables. Can you tell us which platform you are using?
+> >
+> > Interesting. I'm running a Dell XPS 13 9350. I replaced the
+> > factory-provided Broadcom card with an AC 8260. I can update the
+> > commit log to reflect this.
+>
+> Okay, so this makes sense. Those entries are probably formatted for
+> the Broadcom card, which the iwlwifi driver obviously doesn't
+> understand. The best we can do, as I already said, is to ignore values
+> we don't understand.
 
-> 2. What would be the best hardware/software stack to base this work
-> on?
-> 
-> I'm thinking the best driver for rate control experimentation would
-> be ath9k, right? If so then a TP-Link TL-WA901ND router (apparently
-> based on Qualcomm QCA956x SOC) with OpenWrt, and a TP-Link TL-WDN4800 
-> PCIe card (apparently based on Atheros AR9380 with PCI ID 168c:0030)
-> for my desktop sounds like a good combo, no? 
+This may already be apparent, but Dell sells two versions of the 9350:
+one with the Broadcom adapter and one with the AC 8260.  I just
+happened to find the former version at a deep discount at Costco so
+decided to chance it.  Turns out the Broadcom card is not so good even
+with new kernels so I upgraded.  Anyway, since Paul is seeing the same
+issue I don't think the values are intended to be Broadcom-specific.
 
-Seems reasonable, yes. You wouldn't have VHT, but HT has enough search
-space to keep you busy ;-)
+On Wed, 2016-10-12 at 17:21 +0300, Luca Coelho wrote:
+> And, the values in the SPLX structs are being changed here, to DOM1,
+> LIM1, TIM1 etc., before being returned. =C3=82 This also matches your
+> description that, at runtime, you got something different than the pure
+> dump. =C3=82 If you follow these DOM*, LIM*, TIM* symbols, you'll probabl=
+y
+> end up getting the values you observed at runtime.
 
-> But would I have to run a custom kernel on my desktop then (or can I
-> somehow get by with an Ubuntu standard kernel)?
+Probably not important, but it seems that there is some additional
+indirection.  The only values I'm seeing associated with those symbols
+are 8 and 16:
 
-You could use a backported driver. https://backports.wiki.kernel.org/
+    $ grep -e 'DOM[0-9]' -e 'LIM[0-9]' -e 'TIM[0-9]' dsdt.dsl | grep -v Sto=
+re
+    DOM1,   8,
+    LIM1,   16,
+    TIM1,   16,
+    DOM2,   8,
+    LIM2,   16,
+    TIM2,   16,
+    DOM3,   8,
+    LIM3,   16,
+    TIM3,   16,
 
-johannes
+> I'll send you a patch for testing soon.
+
+I will keep an eye on the list archive, thanks!
+
+Chris
