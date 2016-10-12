@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50051 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755308AbcJLOiT (ORCPT
+Received: from aserp1050.oracle.com ([141.146.126.70]:38704 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932280AbcJLJC1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:38:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de,
-        prameela.garnepudi@redpinesignals.com
-Subject: Re: [PATCH] rsi: update in boot parameters
-References: <1475660148-14087-1-git-send-email-prameela.j04cs@gmail.com>
-Date: Wed, 12 Oct 2016 17:37:57 +0300
-In-Reply-To: <1475660148-14087-1-git-send-email-prameela.j04cs@gmail.com>
-        (Prameela Rani Garnepudi's message of "Wed, 5 Oct 2016 15:05:48
-        +0530")
-Message-ID: <87fuo1eipm.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_163850_359825_63A27D83)
+        Wed, 12 Oct 2016 05:02:27 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u9C6H2Pn026163
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 06:17:02 GMT
+Date: Wed, 12 Oct 2016 09:14:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: toke@toke.dk
+Cc: linux-wireless@vger.kernel.org
+Subject: [bug report] mac80211: Move reorder-sensitive TX handlers to after
+ TXQ dequeue
+Message-ID: <20161012061458.GM12841@mwanda> (sfid-20161012_110238_197165_14D22F50)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
+Hello Toke Høiland-Jørgensen,
 
-> Added more clock switch fields in boot parameters configured to device
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+This is a semi-automatic email about new static checker warnings.
 
-Why? How does this help?
+The patch bb42f2d13ffc: "mac80211: Move reorder-sensitive TX handlers 
+to after TXQ dequeue" from Sep 22, 2016, leads to the following 
+Smatch complaint:
 
->  			.tapll_info_g = {
-> -				.pll_reg_1 = cpu_to_le16((TA_PLL_N_VAL_20 << 8)|
-> -					      (TA_PLL_M_VAL_20)),
-> -				.pll_reg_2 = cpu_to_le16(TA_PLL_P_VAL_20),
-> +				.pll_reg_1 = cpu_to_le16((TAPLL_N_VAL_20 << 8) |
-> +							 (TAPLL_M_VAL_20)),
-> +				.pll_reg_2 = cpu_to_le16(TAPLL_P_VAL_20),
+net/mac80211/tx.c:3242 ieee80211_xmit_fast_finish()
+	 error: we previously assumed 'key' could be null (see line 3209)
 
-Doing changes from TA_PLL_N_VAL_20 to TAPLL_N_VAL_20 makes this hard to
-review. Only one logical change per patch, please. And make style
-changes separately from functional changes.
+net/mac80211/tx.c
+  3208	
+  3209		if (key)
+                    ^^^
+Check.
 
->  			},
->  			.pll960_info_g = {
-> -				.pll_reg_1 = cpu_to_le16((PLL960_P_VAL_20 << 8)|
-> +				.pll_reg_1 = cpu_to_le16((PLL960_P_VAL_20 << 8) |
+  3210			info->control.hw_key = &key->conf;
+  3211	
+  3212		ieee80211_tx_stats(skb->dev, skb->len);
+  3213	
+  3214		if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
+  3215			tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+  3216			*ieee80211_get_qos_ctl(hdr) = tid;
+  3217			hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
+  3218		} else {
+  3219			info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+  3220			hdr->seq_ctrl = cpu_to_le16(sdata->sequence_number);
+  3221			sdata->sequence_number += 0x10;
+  3222		}
+  3223	
+  3224		if (skb_shinfo(skb)->gso_size)
+  3225			sta->tx_stats.msdu[tid] +=
+  3226				DIV_ROUND_UP(skb->len, skb_shinfo(skb)->gso_size);
+  3227		else
+  3228			sta->tx_stats.msdu[tid]++;
+  3229	
+  3230		info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
+  3231	
+  3232		/* statistics normally done by ieee80211_tx_h_stats (but that
+  3233		 * has to consider fragmentation, so is more complex)
+  3234		 */
+  3235		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
+  3236		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
+  3237	
+  3238		if (pn_offs) {
+                    ^^^^^^^
+Maybe when pn_offs is non-zero that implies key is non-NULL? 
 
-Again unnecessary style change.
+  3239			u64 pn;
+  3240			u8 *crypto_hdr = skb->data + pn_offs;
+  3241	
+  3242			switch (key->conf.cipher) {
+                                ^^^^^
+Unchecked dereference.
 
-> -#define TA_PLL_M_VAL_20                  8
-> -#define TA_PLL_N_VAL_20                  1
-> -#define TA_PLL_P_VAL_20                  4
-> +#define TAPLL_M_VAL_20			8
-> +#define TAPLL_N_VAL_20			1
-> +#define TAPLL_P_VAL_20			4
+  3243			case WLAN_CIPHER_SUITE_CCMP:
+  3244			case WLAN_CIPHER_SUITE_CCMP_256:
 
-I don't really see the point with the rename. Changing the spaces to
-tabs I understand, though.
-
-But now that you are just starting don't waste time doing code style
-changes, instead focus on fixing functionality or adding new features.
-The style changes can be done later when you are more familiar with
-everything.
-
-I stopped now, please resend without the style changes so that it's
-easier to review.
-
--- 
-Kalle Valo
+regards,
+dan carpenter
