@@ -1,36 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.221]:26666 "EHLO
-        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753243AbcJDV6F (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 17:58:05 -0400
-Subject: Re: [PATCHv3] wireless: check A-MSDU inner frame source address on AP
- interfaces
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1475075672-30549-1-git-send-email-michael-dev@fami-braun.de>
- <1475229714.17481.18.camel@sipsolutions.net>
- <f9d33317-f23f-9d5e-8e9e-1e63eff1882a@fem.tu-ilmenau.de>
- <1475569759.5324.22.camel@sipsolutions.net>
- <1475570219.5324.28.camel@sipsolutions.net>
-Cc: kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
-        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-From: "M. Braun" <michael-dev@fami-braun.de>
-Message-ID: <b574378a-3710-7660-157f-4dacaa505d23@fami-braun.de> (sfid-20161004_235810_097074_1090FAEE)
-Date: Tue, 4 Oct 2016 23:57:23 +0200
-MIME-Version: 1.0
-In-Reply-To: <1475570219.5324.28.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42960 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754783AbcJLMTS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:19:18 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: preserve more bits when building QoS header
+Date: Wed, 12 Oct 2016 14:19:08 +0200
+Message-Id: <1476274748-29036-1-git-send-email-johannes@sipsolutions.net> (sfid-20161012_141937_645512_8B29BC86)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  * pass both for IBSS mode (I think)
+From: Johannes Berg <johannes.berg@intel.com>
 
-two more aspects for IBSS
+Michael Braun reported that when trying to inject A-MSDUs over
+monitor interfaces, the frame doesn't come out right since the
+QoS header A-MSDU bit is overwritten.
 
-1. the PSK is shared by all stations, so a passive attacker on any
-   authenticated station in range will be able to derive it, right?
-2. iff at all the source mac might be used for access control so
-   a TA==SA A-AMSDU filter might still be reasonable.
+Rather than adding that bit specifically simply preserve those
+bits that we don't set here, since we typically get here with
+a zeroed-out QoS header anyway.
 
-Michael
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/wme.c | 23 ++++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
+index 9eb0aee9105b..3e3d3014e9ab 100644
+--- a/net/mac80211/wme.c
++++ b/net/mac80211/wme.c
+@@ -236,26 +236,35 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	u8 flags;
+ 	u8 *p;
+-	u8 ack_policy, tid;
+ 
+ 	if (!ieee80211_is_data_qos(hdr->frame_control))
+ 		return;
+ 
+ 	p = ieee80211_get_qos_ctl(hdr);
+-	tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+ 
+-	/* preserve EOSP bit */
+-	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
++	/* set up the first byte */
++
++	/*
++	 * preserve everything but the TID and ACK policy
++	 * (which we both write here)
++	 */
++	flags = *p & ~(IEEE80211_QOS_CTL_TID_MASK |
++		       IEEE80211_QOS_CTL_ACK_POLICY_MASK);
+ 
+ 	if (is_multicast_ether_addr(hdr->addr1) ||
+ 	    sdata->noack_map & BIT(tid)) {
+-		ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
++		flags |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
+ 		info->flags |= IEEE80211_TX_CTL_NO_ACK;
+ 	}
+ 
+-	/* qos header is 2 bytes */
+-	*p++ = ack_policy | tid;
++	*p = flags | tid;
++
++	/* set up the second byte */
++	p++;
++
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		/* preserve RSPI and Mesh PS Level bit */
+ 		*p &= ((IEEE80211_QOS_CTL_RSPI |
+-- 
+2.8.1
