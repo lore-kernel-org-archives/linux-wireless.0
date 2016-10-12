@@ -1,62 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34414 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932584AbcJZXwG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 19:52:06 -0400
-Date: Wed, 26 Oct 2016 16:52:03 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH] mwifiex: don't do unbalanced free()'ing in cleanup_if()
-Message-ID: <20161026235203.GI27930@dtor-ws> (sfid-20161027_015211_296860_2DD9F851)
-References: <1477524560-49226-1-git-send-email-briannorris@chromium.org>
- <20161026233554.GF27930@dtor-ws>
- <20161026234353.GA24417@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161026234353.GA24417@localhost>
+Received: from s3.sipsolutions.net ([5.9.151.49]:41961 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754624AbcJLIOJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 04:14:09 -0400
+Message-ID: <1476258794.5271.12.camel@sipsolutions.net> (sfid-20161012_101428_337458_CBAF08AE)
+Subject: Re: [PATCH] mac80211: fix A-MSDU outer SA/DA
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+Date: Wed, 12 Oct 2016 09:53:14 +0200
+In-Reply-To: <1476118360-29009-1-git-send-email-michael-dev@fami-braun.de>
+References: <1476118360-29009-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 04:43:54PM -0700, Brian Norris wrote:
-> On Wed, Oct 26, 2016 at 04:35:54PM -0700, Dmitry Torokhov wrote:
-> > On Wed, Oct 26, 2016 at 04:29:20PM -0700, Brian Norris wrote:
-> 
-> > > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > index 8718950004f3..f04cf5a551b3 100644
-> > > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> 
-> > > @@ -2291,6 +2287,14 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
-> > >  
-> > >  	mwifiex_sdio_remove(func);
-> > >  
-> > > +	/*
-> > > +	 * Normally, we would let the driver core take care of releasing these.
-> > > +	 * But we're not letting the driver core handle this one. See above
-> > > +	 * TODO.
-> > > +	 */
-> > > +	sdio_set_drvdata(func, NULL);
-> > > +	devm_kfree(&func->dev, card);
-> > 
-> > Ugh, this really messes the unwind order... I guess it is OK since it is
-> > the only resource allocated with devm, but I'd be happier if we could
-> > reuse existing "card" structure.
-> 
-> I'm really not interested in cleaning up the hacky reset function here
-> (see the other TODOs here). I'm sure it's broken in other ways too. In
-> its current "design" (if you can call it that) where we remove and
-> re-probe the device, I'm not sure there's a way to get it to reuse the
-> 'card'.
+On Mon, 2016-10-10 at 18:52 +0200, Michael Braun wrote:
+> According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer
+> SA/DA of A-MSDU frames need to be changed depending on FromDS/ToDS
+> values.
 
-Ah, I see now... Nevermind then.
+"Need to" is perhaps a bit strongly worded, but whatever :)
 
-Thanks.
+I was going to write a long reply and whatever - but I think that's all
+moot. As far as I can tell, you got this completely wrong, as you're
+changing the *inner* headers, not the *outer* header as you should?
 
--- 
-Dmitry
+johannes
