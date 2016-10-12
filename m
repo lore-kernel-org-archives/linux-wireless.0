@@ -1,67 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:34651 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753379AbcJNLLN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 07:11:13 -0400
-Received: by mail-io0-f177.google.com with SMTP id r30so117209479ioi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 04:11:13 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476439212.31114.37.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
- <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
- <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
- <1476434561.31114.7.camel@sipsolutions.net> <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
- <1476435303.31114.14.camel@sipsolutions.net> <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
- <1476436248.31114.21.camel@sipsolutions.net> <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com>
- <1476437149.31114.27.camel@sipsolutions.net> <CAKv+Gu_p7neD-ttCBBA6p7VSkQt8mvfhS9cdcLftdkXNtAAFnQ@mail.gmail.com>
- <1476439212.31114.37.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 12:11:12 +0100
-Message-ID: <CAKv+Gu9t2fk2+4QwsDATv11wggQPryobGUGJQHO-G09bYbecGg@mail.gmail.com> (sfid-20161014_131123_994075_5B307257)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42957 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753253AbcJLMQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 08:16:31 -0400
+Message-ID: <1476274586.5271.24.camel@sipsolutions.net> (sfid-20161012_141639_928363_E1E65D9E)
+Subject: Re: [PATCH v6 2/4] mac80211: filter multicast data packets on AP /
+ AP_VLAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        netdev@vger.kernel.org
+Date: Wed, 12 Oct 2016 14:16:26 +0200
+In-Reply-To: <1476119543-24509-2-git-send-email-michael-dev@fami-braun.de>
+References: <1476119543-24509-1-git-send-email-michael-dev@fami-braun.de>
+         <1476119543-24509-2-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 11:00, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> So why is the performance hit acceptable for ESP but not for WPA? We
->> could easily implement the same thing, i.e.,
->> kmalloc(GFP_ATOMIC)/kfree the aead_req struct rather than allocate it
->> on the stack
->
-> Yeah, maybe we should. It's likely a much bigger allocation, but I
-> don't actually know if that affects speed.
->
-> In most cases where you want high performance we never hit this anyway
-> since we'll have hardware crypto. I know for our (Intel's) devices we
-> normally never hit these code paths.
->
-> But on the other hand, you also did your changes for a reason, and the
-> only reason I can see of that is performance. So you'd be the one with
-> most "skin in the game", I guess?
->
+On Mon, 2016-10-10 at 19:12 +0200, Michael Braun wrote:
+> This patch adds filtering for multicast data packets on AP_VLAN
+> interfaces
+> 
+[...]
 
-Well, what sucks here is that the accelerated driver I implemented for
-arm64 does not actually need this, as long as we take aad[] off the
-stack. And note that the API was changed since my patch, to add aad[]
-to the scatterlist: prior to this change, it used
-aead_request_set_assoc() to set the associated data separately.
+Applied patches 1 and 2 for now, I'll look at the others again later.
+
+johannes
