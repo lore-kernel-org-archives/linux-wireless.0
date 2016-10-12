@@ -1,109 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56538 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750873AbcI3Xja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 19:39:30 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: "Franc\[e\]sco" <lolisamurai@waifu.club>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: RTL8192EU on rtl8xxxu driver breaks every few minutes
-References: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club>
-        <wrfj4m5acouw.fsf@redhat.com>
-        <80b8ae50-ca27-674f-0e7e-79b931bae199@waifu.club>
-Date: Fri, 30 Sep 2016 19:39:28 -0400
-In-Reply-To: <80b8ae50-ca27-674f-0e7e-79b931bae199@waifu.club> (Franc[e]sco's
-        message of "Wed, 21 Sep 2016 19:44:34 +0200")
-Message-ID: <wrfjr3816jpr.fsf@redhat.com> (sfid-20161001_013933_510967_FA7EA16C)
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36114 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755353AbcJLSx6 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 12 Oct 2016 14:53:58 -0400
+Subject: Re: [PATCH] rtlwifi: Fix regression caused by commit d86e64768859
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
+ <87zim9cxtt.fsf@kamboji.qca.qualcomm.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        "Stable [ 4 . 8+ ]" <stable@vger.kernel.org>,
+        Julia Lawall <Julia.Lawall@lip6.fr>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <6dad1453-e82d-49bb-4556-f8c0af4a4dfc@lwfinger.net> (sfid-20161012_205403_287698_3D3D44AC)
+Date: Wed, 12 Oct 2016 13:53:42 -0500
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+In-Reply-To: <87zim9cxtt.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-
-"Franc[e]sco" <lolisamurai@waifu.club> writes:
-> Oops, forgot to forward the previous reply to the mailing list.
+On 10/12/2016 11:54 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
 >
-> I have attached the output of iw link
+>> In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
+>> the configuration struct for most of the drivers was changed to be
+>> constant. The problem is that five of the modified drivers need to be
+>> able to update the firmware name based on the exact model of the card.
+>> As the file names were stored in one of the members of that struct,
+>> these drivers would fail with a kernel BUG splat when they tried to
+>> update the firmware name.
+>>
+>> Rather than reverting the previous commit, I used a suggestion by
+>> Johannes Berg and made the firmware file name pointers be local to
+>> the routines that update the software variables.
+>>
+>> The configuration struct of rtl8192cu, which was not touched in the
+>> previous patch, is now constantfied.
+>>
+>> Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
+>> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable [4.8+] <stable@vger.kernel.org>
+>> Cc: Julia Lawall <Julia.Lawall@lip6.fr>
 >
-> the AP is an asus dsl-n55u router in 2.4 GHz mode, using WPA2-Personal
-> with AES encryption. It's also running a second 5GHz wireless network
-> which has a different SSID.
+> I got warnings and after a quick look they look valid but not sure:
 >
-> Also, this seems to be some kind of power saving kicking in, as the
-> dongle keeps working as long as I keep doing things over ssh.
+> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c: In function 'rtl92c_init_sw_vars':
+> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c:179:6: warning: 'fw_name' may be used uninitialized in this function [-Wuninitialized]
+> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c: In function 'rtl8723e_init_sw_vars':
+> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c:187:6: warning: 'fw_name' may be used uninitialized in this function [-Wuninitialized]
+>
+> (Sending manually for the second time as I don't see my first mail
+> anywhere.)
 
-I just pushed a patch into rtl8xxxu-devel which may resolve this issue.
-There were problems with the 8192eu not handling driver reload very
-well. It is possible the network scripts you run would trigger the shut
-down and restart that caused this problem.
+Kalle,
 
-I would be interested in knowing if this patch resolves the problem for
-you.
+I did receive the first one. My compiler failed to show that warning, but I have 
+modified the patch to fix the warnings you see. In fact, the new version is a 
+bit cleaner in that "if () ... else if () ..." constructions are replaced by 
+simple if statements.
 
-Jes
+V2 will be sent shortly.
 
-PS: Please fix your mail client - adding unlisted-recipients to the Cc
-line and cutting out the person you are responding to is really
-annoying.
-
-
---=-=-=
-Content-Type: text/x-patch
-Content-Disposition: inline;
- filename=0002-rtl8xxxu-Fix-rtl8192eu-driver-reload-issue.patch
-
->From 93064d0ae3e9d97c03a3aabd71e6048e1ac82f46 Mon Sep 17 00:00:00 2001
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-Date: Fri, 30 Sep 2016 19:18:34 -0400
-Subject: [PATCH 2/2] rtl8xxxu: Fix rtl8192eu driver reload issue
-
-The 8192eu suffered from two issues when reloading the driver.
-
-The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
-23 didn't get set in rtl8192e_enable_rf().
-
-In addition it also seems prone to issues when setting REG_RF_CTRL to
-0 intead of just disabling the RF_ENABLE bit. Similar to what was
-causing issues with the 8188eu.
-
-With this patch I can successfully reload the driver and reassociate
-to an APi with an 8192eu dongle.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index df54d27..a793fed 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1461,7 +1461,9 @@ static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
- 	int count, ret = 0;
- 
- 	/* Turn off RF */
--	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
-+	val8 = rtl8xxxu_read8(priv, REG_RF_CTRL);
-+	val8 &= ~RF_ENABLE;
-+	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
- 
- 	/* Switch DPDT_SEL_P output from register 0x65[2] */
- 	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
-@@ -1593,6 +1595,10 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
- 	u32 val32;
- 	u8 val8;
- 
-+	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
-+	val32 |= (BIT(22) | BIT(23));
-+	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
-+
- 	val8 = rtl8xxxu_read8(priv, REG_GPIO_MUXCFG);
- 	val8 |= BIT(5);
- 	rtl8xxxu_write8(priv, REG_GPIO_MUXCFG, val8);
--- 
-2.7.4
-
-
---=-=-=--
+Larry
