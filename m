@@ -1,120 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38236 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754503AbcJETLE (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48444 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933740AbcJLNZE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 15:11:04 -0400
-Subject: Re: ath10k: device stops working ("failed to install key for vdev"
- error in kernel log)
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-References: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com>
- <bdd2b4f1-114b-f114-c908-fc0f57b08ce8@candelatech.com>
- <CAFBinCAv9PDYQ7J+0LtQg7vKnqp2HVpotqwjALrAUQf57YM4tg@mail.gmail.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <eac2478e-b05c-01b0-c91f-08257beacc07@candelatech.com> (sfid-20161005_211125_051181_0E850796)
-Date: Wed, 5 Oct 2016 12:11:03 -0700
-MIME-Version: 1.0
-In-Reply-To: <CAFBinCAv9PDYQ7J+0LtQg7vKnqp2HVpotqwjALrAUQf57YM4tg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Wed, 12 Oct 2016 09:25:04 -0400
+Message-ID: <1476277573.7776.30.camel@coelho.fi> (sfid-20161012_152606_631303_0D560B45)
+From: Luca Coelho <luca@coelho.fi>
+To: Paul Bolle <pebolle@tiscali.nl>, Chris Rorvick <chris@rorvick.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Wed, 12 Oct 2016 16:06:13 +0300
+In-Reply-To: <1476275787.9670.12.camel@tiscali.nl>
+References: <20161010071943.4717-1-chris@rorvick.com>
+         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
+         <CAEUsAPbEf=hr1ki267qKpenWW_UBO93KY8q6-EdqWpk15Yhcnw@mail.gmail.com>
+         <1476275099.7776.28.camel@coelho.fi> <1476275787.9670.12.camel@tiscali.nl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2016 12:06 PM, Martin Blumenstingl wrote:
-> On Wed, Oct 5, 2016 at 8:58 PM, Ben Greear <greearb@candelatech.com> wrote:
->> On 10/05/2016 11:51 AM, Martin Blumenstingl wrote:
->>>>
->>>> [54064.293597] ath10k_pci 0000:02:00.0: failed to install key for vdev
->>>> 0 peer [AP MAC addr]: -145
->>>> [54064.301234] wlan0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from
->>>> hardware (-145)
->>>> [54067.305703] ath10k_pci 0000:02:00.0: failed to install key for vdev
->>>> 0 peer [AP MAC addr]: -145
->>>> [54067.313307] wlan0: failed to set key (1, ff:ff:ff:ff:ff:ff) to
->>>> hardware (-145)
->>>
->>> it just happened again:
->>> ...
->>> [130266.948005] ath10k_pci 0000:02:00.0: failed to install key for
->>> vdev 0 peer [AP MAC address]: -145
->>> [130266.955697] wlan0: failed to remove key (2, ff:ff:ff:ff:ff:ff)
->>> from hardware (-145)
->>> [130269.964069] ath10k_pci 0000:02:00.0: failed to install key for
->>> vdev 0 peer [AP MAC address]: -145
->>> [130269.971775] wlan0: failed to set key (2, ff:ff:ff:ff:ff:ff) to
->>> hardware (-145)
->>> [172198.889700] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
->>> info request
->>> [172201.897770] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
->>> info request
->>>
->>> I tried to get more information from the firmware by looking at the
->>> fw_* debugfs files:
->>> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_reset_stats
->>> fw_crash_counter                0
->>> fw_warm_reset_counter           4
->>> fw_cold_reset_counter           0
->>> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats
->>> cat: can't open '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats':
->>> Resource temporarily unavailable
->>> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump
->>> cat: can't open
->>> '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump': No data
->>> available
->>> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
->>> 0x00000000 0
->>> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_checksums
->>> firmware-N.bin          9d340dd9
->>> athwlan                 8d25deed
->>> otp                     f3efeb4f
->>> codeswap                00000000
->>> board-N.bin             bebc7c08
->>> board                   bebc7c08
->>>
->>> This is still with firmware 10.2.4.70.54.
->>> Please let me know if you need further information.
->>
->>
->> Not sure about your firmware exactly, but the timeout might happen because
->> firmware has leaked and/or run-out of resources, fails to insert the key,
->> and then it just doesn't respond instead of sending an event.  So, driver
->> gets the timeout message and who knows what state your system is in.
->>
->> I hit this when doing capacity tests, and I modified my firmware to always
->> send an event, and driver to deal with it.  I also fixed some resource leaks
->> and tuned firmware objects to make sure I do not hit the key exhaustion
->> state.
-> That sounds bad.
-> Especially as I would not describe my current setup as "high capacity" network.
-> The worst-case I have is 5 devices:
-> - Nexus 5
-> - Sony Xperia Z3 Compact
-> - Notebook with Intel AC 7260
-> - QCA9880-2R4E in station (client) mode
-> - BCM4330 based device
->
->> What is your test scenario in this case?
-> with this specific crash it was pretty easy:
-> - AP did not have any connections while I was at work
-> - when I came back home two devices (Nexus 5 and Sony Xperia Z3
-> Compact) tried to connect to the AP
-> - device went into error state
->
-> I already had days where only one phone was turned on and I was still
-> able to reproduce it.
+On Wed, 2016-10-12 at 14:36 +0200, Paul Bolle wrote:
+> On Wed, 2016-10-12 at 15:24 +0300, Luca Coelho wrote:
+> > Okay... Actually this is a structure in the BIOS and the actual method
+> > we call is SPLC.  The SPLC method may return one item from this table,
+> > or something entirely different, possible one of the three values
+> > depending on a configuration option or so.
+> > 
+> > Can you to find and send me the actual SPLC method that we call, from
+> > your BIOS?
+> 
+> 
+> It seems Chris and I basically have identical setups, so I'll answer.
 
-Firmware sometimes sends dbglog messages when it detects errors.  You can hack your driver with patches
-I have posted to enable printing this out, and then maybe QCA firmware guys could debug this issue
-for you.
-
-Or, if you can reproduce this with my firmware and kernel (which enables the dbglog print
-by default), email dmesg or similar output to me and maybe I will have a clue as to what
-is going on.
-
-Thanks,
-Ben
+Thanks! Yeah, I implied any of you two. ;)
 
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> There are 20 SPLC methods in the BIOS. The first reads
+>     Method (SPLC, 0, Serialized)
+>     {
+>         DerefOf (SPLX [One]) [Zero] = DOM1 /* \DOM1 */
+>         DerefOf (SPLX [One]) [One] = LIM1 /* \LIM1 */
+>         DerefOf (SPLX [One]) [0x02] = TIM1 /* \TIM1 */
+>         DerefOf (SPLX [0x02]) [Zero] = DOM2 /* \DOM2 */
+>         DerefOf (SPLX [0x02]) [One] = LIM2 /* \LIM2 */
+>         DerefOf (SPLX [0x02]) [0x02] = TIM2 /* \TIM2 */
+>         DerefOf (SPLX [0x03]) [Zero] = DOM3 /* \DOM3 */
+>         DerefOf (SPLX [0x03]) [One] = LIM3 /* \LIM3 */
+>         DerefOf (SPLX [0x03]) [0x02] = TIM3 /* \TIM3 */
+>         Return (SPLX) /* \_SB_.PCI0.RP01.PXSX.SPLX */
+>     }
+> 
+> The only difference is in the last comment. Ie, RP01 is increased until
+> it reaches RP20. (The machine has 20 PCI devices according to lspci. I
+> have no clue how to match that RPxx number to the 20 devices showing up
+> in lspci, sorry.)
+
+No problem, these BIOSes are usually quite cryptic. :) But what you're
+saying makes sense.  They have added the SPLC method to all PCI root-
+ports (which is what RP stands for here).
+
+And, the values in the SPLX structs are being changed here, to DOM1,
+LIM1, TIM1 etc., before being returned.  This also matches your
+description that, at runtime, you got something different than the pure
+dump.  If you follow these DOM*, LIM*, TIM* symbols, you'll probably
+end up getting the values you observed at runtime.
+
+Basically this tells me that indeed 3 "structs" are being returned (as
+your dumps already showed).  And, according to the specs that I found
+(which unfortunately are confidential, so I can't share) this is
+correct and the driver code is broken.
+
+I'll send you a patch for testing soon.
+
+Thanks for all the help!
+
+--
+Cheers,
+Luca.
