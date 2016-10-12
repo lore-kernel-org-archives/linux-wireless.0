@@ -1,88 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37456 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753002AbcJES6L (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59533 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932266AbcJLNSm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 14:58:11 -0400
-Subject: Re: ath10k: device stops working ("failed to install key for vdev"
- error in kernel log)
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <bdd2b4f1-114b-f114-c908-fc0f57b08ce8@candelatech.com> (sfid-20161005_205815_558571_B3C54CBB)
-Date: Wed, 5 Oct 2016 11:58:10 -0700
+        Wed, 12 Oct 2016 09:18:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        arnd@arndb.de, chunkeey@googlemail.com, nbd@nbd.name
+Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+        <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+Date: Wed, 12 Oct 2016 16:18:35 +0300
+In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+        (Martin Blumenstingl's message of "Mon, 3 Oct 2016 00:29:06 +0200")
+Message-ID: <87insxg0yc.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_151847_335415_7855DCB7)
 MIME-Version: 1.0
-In-Reply-To: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/05/2016 11:51 AM, Martin Blumenstingl wrote:
->> [54064.293597] ath10k_pci 0000:02:00.0: failed to install key for vdev
->> 0 peer [AP MAC addr]: -145
->> [54064.301234] wlan0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from
->> hardware (-145)
->> [54067.305703] ath10k_pci 0000:02:00.0: failed to install key for vdev
->> 0 peer [AP MAC addr]: -145
->> [54067.313307] wlan0: failed to set key (1, ff:ff:ff:ff:ff:ff) to
->> hardware (-145)
-> it just happened again:
-> ...
-> [130266.948005] ath10k_pci 0000:02:00.0: failed to install key for
-> vdev 0 peer [AP MAC address]: -145
-> [130266.955697] wlan0: failed to remove key (2, ff:ff:ff:ff:ff:ff)
-> from hardware (-145)
-> [130269.964069] ath10k_pci 0000:02:00.0: failed to install key for
-> vdev 0 peer [AP MAC address]: -145
-> [130269.971775] wlan0: failed to set key (2, ff:ff:ff:ff:ff:ff) to
-> hardware (-145)
-> [172198.889700] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
-> info request
-> [172201.897770] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
-> info request
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+
+> There are two types of swapping the EEPROM data in the ath9k driver.
+> Before this series one type of swapping could not be used without the
+> other.
 >
-> I tried to get more information from the firmware by looking at the
-> fw_* debugfs files:
-> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_reset_stats
-> fw_crash_counter                0
-> fw_warm_reset_counter           4
-> fw_cold_reset_counter           0
-> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats
-> cat: can't open '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats':
-> Resource temporarily unavailable
-> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump
-> cat: can't open
-> '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump': No data
-> available
-> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
-> 0x00000000 0
-> # cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_checksums
-> firmware-N.bin          9d340dd9
-> athwlan                 8d25deed
-> otp                     f3efeb4f
-> codeswap                00000000
-> board-N.bin             bebc7c08
-> board                   bebc7c08
+> The first type of swapping looks at the "magic bytes" at the start of
+> the EEPROM data and performs swab16 on the EEPROM contents if needed.
+> The second type of swapping is EEPROM format specific and swaps
+> specific fields within the EEPROM itself (swab16, swab32 - depends on
+> the EEPROM format).
 >
-> This is still with firmware 10.2.4.70.54.
-> Please let me know if you need further information.
+> With this series the second part now looks at the EEPMISC register
+> inside the EEPROM, which uses a bit to indicate if the EEPROM data
+> is Big Endian (this is also done by the FreeBSD kernel).
+> This has a nice advantage: currently there are some out-of-tree hacks
+> (in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
+> Big Endian system (= no swab16 is performed) but the EEPROM itself
+> indicates that it's data is Little Endian. Until now the out-of-tree
+> code simply did a swab16 before passing the data to ath9k, so ath9k
+> first did the swab16 - this also enabled the format specific swapping.
+> These out-of-tree hacks are still working with the new logic, but it
+> is recommended to remove them. This implementation is based on a
+> discussion with Arnd Bergmann who raised concerns about the
+> robustness and portability of the swapping logic in the original OF
+> support patch review, see [0].
+>
+> After a second round of patches (= v1 of this series) neither Arnd
+> Bergmann nor I were really happy with the complexity of the EEPROM
+> swapping logic. Based on a discussion (see [1] and [2]) we decided
+> that ath9k should use a defined format (specifying the endianness
+> of the data - I went with __le16 and __le32) when accessing the
+> EEPROM fields. A benefit of this is that we enable the EEPMISC based
+> swapping logic by default, just like the FreeBSD driver, see [3]. On
+> the devices which I have tested (see below) ath9k now works without
+> having to specify the "endian_check" field in ath9k_platform_data (or
+> a similar logic which could provide this via devicetree) as ath9k now
+> detects the endianness automatically. Only EEPROMs which are mangled
+> by some out-of-tree code still need the endian_check flag (or one can
+> simply remove that mangling from the out-of-tree code).
+>
+> Testing:
+> - tested by myself on AR9287 with Big Endian EEPROM
+> - tested by myself on AR9227 with Little Endian EEPROM
+> - tested by myself on AR9381 (using the ar9003_eeprom implementation,
+>   which did not suffer from this whole problem)
+> - how do we proceed with testing? maybe we could keep this in a
+>   feature-branch and add these patches to LEDE once we have an ACK to
+>   get more people to test this
+>
+> This series depends on my other series (v7):
+> "add devicetree support to ath9k" - see [4]
 
-Not sure about your firmware exactly, but the timeout might happen because
-firmware has leaked and/or run-out of resources, fails to insert the key,
-and then it just doesn't respond instead of sending an event.  So, driver
-gets the timeout message and who knows what state your system is in.
-
-I hit this when doing capacity tests, and I modified my firmware to always
-send an event, and driver to deal with it.  I also fixed some resource leaks
-and tuned firmware objects to make sure I do not hit the key exhaustion state.
-
-What is your test scenario in this case?
-
-Thanks,
-Ben
-
+I think this looks pretty good. If there's a bug somewhere it should be
+quite easy to fix so I'm not that worried and would be willing to take
+these as soon as I have applied the dependency series. IIRC your
+devicetree patches will have at least one more review round so that will
+take some time still. In the meantime it would be great if LEDE folks
+could take a look at these and comment (or test).
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
