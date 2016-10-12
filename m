@@ -1,76 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50164 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S943533AbcJSOza (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:43504 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755004AbcJLOMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:55:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 10:27:22 +0300
-Message-Id: <20161019072726.22018-4-luca@coelho.fi> (sfid-20161019_165553_398562_7C393F0A)
-In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
-References: <20161019072726.22018-1-luca@coelho.fi>
-Subject: [PATCH 3/7] iwlwifi: mvm: fix d3_test with unified D0/D3 images
+        Wed, 12 Oct 2016 10:12:46 -0400
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        David Hutchison <dhutchison@bluemesh.net>
+References: <CA+i30h8YsG7mce5FMwGw2fRNAn3USYV6K==QMjMQVeSGB0dj=w@mail.gmail.com>
+ <8760oxfzg4.fsf@kamboji.qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <040abb8b-d57b-63f9-43ec-da7e12b87bc6@dd-wrt.com> (sfid-20161012_161250_410997_782B40F7)
+Date: Wed, 12 Oct 2016 16:12:39 +0200
+MIME-Version: 1.0
+In-Reply-To: <8760oxfzg4.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: QCA9887 Firmware Memory Usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Am 12.10.2016 um 15:51 schrieb Valo, Kalle:
+> David Hutchison <dhutchison@bluemesh.net> writes:
+>
+>> I am using a Mikrotik hAP AC Lite which has a QCA9887 radio. It
+>> appears to be working; however ath10k ( or the qca9887 firmware ) is
+>> utilizing 15 - 20mb of memory. I applied the kfree(caldata) patch, to
+>> insure there is no memory leak.
+>>
+>> It doesn't appear to be leaking, and it will run Ok with the high
+>> memory footprint. However the Mikrotik hAP AC Lite is only a 64mb
+>> platform; so when I initialize the 2nd radio with ath9k I get OOMs.
+>>
+>> It just doesn't seem right that when ath10k + qca9887 is in AP mode
+>> that it's utilizing as much memory as it is. I don't think the issue
+>> is with ath10k, I think it's the qca9887 firmware (
+>> firmware-5.bin_10.2.4-1.0-00013 ).
+>>
+>> Is there a newer build available that may potentially fix these memory
+>> issues? The latest one available on
+>> https://github.com/kvalo/ath10k-firmware/blob/master/QCA9887/hw1.0/firmware-5.bin_10.2.4-1.0-00013
+>> is 2 months old. Perhaps there is a newer build to test that may have
+>> the fix?
+>>
+>> Any thoughts as to what it could be? I can provide more information if needed.
+> 64MB of RAM nowadays is not much and ath10k is not really tested in such
+> setups AFAIK. I guess you could try if reducing TARGET_10X_NUM_MSDU_DESC
+> helps with the memory consumption, but no idea if that would even work
+> without further modifications to ath10k.
+>
+> Also if you have fq-codel&co enabled that might increase memory
+> consumption. Adding linux-wireless as people there might have better
+the high memory consumption is a very common old problem. and no, 64 mb 
+might not by much. but consider that qca9880 cards for instance are only 
+used on embedded devices.
+there is not even a windows driver available for it. its mainly used in 
+routers and 64 mb ram is not uncommon here.
+the problem with qca9887 sounds similar here. and the best. it only 
+occures on ath10k. with the closed source qca driver it will work on 
+embedded platforms. since
+it was mentioned that this problem is caused by the firmware itself. so 
+there wont be a solution until qca is finally getting in touch with this 
+problem
+> ideas.
+>
 
-When a unified D0/D3 image is used, we don't restart the FW in the
-D0->D3->D0 transitions.  Therefore, the d3_test functionality should
-not call ieee8021_restart_hw() when the resuming either.
 
-Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 4fdc3da..0e17cb2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -2271,7 +2271,8 @@ static void iwl_mvm_d3_test_disconn_work_iter(void *_data, u8 *mac,
- static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
- {
- 	struct iwl_mvm *mvm = inode->i_private;
--	int remaining_time = 10;
-+	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
-+					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
- 
- 	mvm->d3_test_active = false;
- 
-@@ -2282,17 +2283,21 @@ static int iwl_mvm_d3_test_release(struct inode *inode, struct file *file)
- 	mvm->trans->system_pm_mode = IWL_PLAT_PM_MODE_DISABLED;
- 
- 	iwl_abort_notification_waits(&mvm->notif_wait);
--	ieee80211_restart_hw(mvm->hw);
-+	if (!unified_image) {
-+		int remaining_time = 10;
- 
--	/* wait for restart and disconnect all interfaces */
--	while (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
--	       remaining_time > 0) {
--		remaining_time--;
--		msleep(1000);
--	}
-+		ieee80211_restart_hw(mvm->hw);
-+
-+		/* wait for restart and disconnect all interfaces */
-+		while (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
-+		       remaining_time > 0) {
-+			remaining_time--;
-+			msleep(1000);
-+		}
- 
--	if (remaining_time == 0)
--		IWL_ERR(mvm, "Timed out waiting for HW restart to finish!\n");
-+		if (remaining_time == 0)
-+			IWL_ERR(mvm, "Timed out waiting for HW restart!\n");
-+	}
- 
- 	ieee80211_iterate_active_interfaces_atomic(
- 		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
 -- 
-2.9.3
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
