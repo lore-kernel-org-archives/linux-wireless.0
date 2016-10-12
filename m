@@ -1,53 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.aperture-lab.de ([138.201.29.205]:51301 "EHLO
-        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752517AbcJPW4S (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47081 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755805AbcJLRWE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Oct 2016 18:56:18 -0400
-From: =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
-To: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Jouni Malinen <j@w1.fi>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Jonathan Corbet <corbet@lwn.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-        =?UTF-8?q?Linus=20L=C3=BCssing?= <linus.luessing@c0d3.blue>
-Subject: [PATCH] mac80211_hwsim: suggest nl80211 instead of wext driver in documentation
-Date: Mon, 17 Oct 2016 00:39:33 +0200
-Message-Id: <20161016223933.9484-1-linus.luessing@c0d3.blue> (sfid-20161017_005646_240449_9965BD5B)
+        Wed, 12 Oct 2016 13:22:04 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: rtlwifi: Fix regression caused by commit d86e64768859
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
+References: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        "Stable [ 4 . 8+ ]" <stable@vger.kernel.org>,
+        Julia Lawall <Julia.Lawall@lip6.fr>
+Message-Id: <20161012164507.087B761875@smtp.codeaurora.org> (sfid-20161012_192209_023804_23DFC52B)
+Date: Wed, 12 Oct 2016 16:45:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For mac80211_hwsim interfaces, suggest to use wpa_supplicant with the more
-modern, netlink based driver instead of wext.
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
+> the configuration struct for most of the drivers was changed to be
+> constant. The problem is that five of the modified drivers need to be
+> able to update the firmware name based on the exact model of the card.
+> As the file names were stored in one of the members of that struct,
+> these drivers would fail with a kernel BUG splat when they tried to
+> update the firmware name.
+> 
+> Rather than reverting the previous commit, I used a suggestion by
+> Johannes Berg and made the firmware file name pointers be local to
+> the routines that update the software variables.
+> 
+> The configuration struct of rtl8192cu, which was not touched in the
+> previous patch, is now constantfied.
+> 
+> Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
+> Cc: Stable <stable@vger.kernel.org> # 4.8
+> Cc: Julia Lawall <Julia.Lawall@lip6.fr>
+> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
----
+I got warnings and after a quick look they look valid but not sure:
 
-Actually, I wasn't even able to make a connection with the configuration
-files and information provided in
-Documentation/networking/mac80211_hwsim/{README,hostapd.conf/wpa_supplicant.conf}
+drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c: In function ‘rtl92c_init_sw_vars’:
+drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c:179:6: warning: ‘fw_name’ may be used uninitialized in this function [-Wuninitialized]
+drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c: In function ‘rtl8723e_init_sw_vars’:
+drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c:187:6: warning: ‘fw_name’ may be used uninitialized in this function [-Wuninitialized]
 
-Changing -Dwext to -Dnl80211 helped and made the WPA-PSK connection with
-mac80211_hwsim interfaces work for me.
----
- Documentation/networking/mac80211_hwsim/README | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/Documentation/networking/mac80211_hwsim/README b/Documentation/networking/mac80211_hwsim/README
-index 24ac91d..3566a72 100644
---- a/Documentation/networking/mac80211_hwsim/README
-+++ b/Documentation/networking/mac80211_hwsim/README
-@@ -60,7 +60,7 @@ modprobe mac80211_hwsim
- hostapd hostapd.conf
- 
- # Run wpa_supplicant (station) for wlan1
--wpa_supplicant -Dwext -iwlan1 -c wpa_supplicant.conf
-+wpa_supplicant -Dnl80211 -iwlan1 -c wpa_supplicant.conf
- 
- 
- More test cases are available in hostap.git:
 -- 
-2.1.4
+https://patchwork.kernel.org/patch/9370013/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
