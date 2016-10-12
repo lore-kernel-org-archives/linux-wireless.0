@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:34618 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752434AbcJFU3J (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37243 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753322AbcJLHi7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 16:29:09 -0400
-Received: by mail-oi0-f41.google.com with SMTP id n132so35225983oih.1
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 13:29:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87r37ukjr5.fsf@kamboji.qca.qualcomm.com>
-References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
- <87fuodswlu.fsf@kamboji.qca.qualcomm.com> <CAOiWkA_fuhzPeF7qPP0hLN3KTZUOi6_te5Zc3+vxKQ9GRj0VBw@mail.gmail.com>
- <87r37ukjr5.fsf@kamboji.qca.qualcomm.com>
-From: Marty Faltesek <mfaltesek@google.com>
-Date: Thu, 6 Oct 2016 16:29:08 -0400
-Message-ID: <CAOiWkA92pCLz3jbbhcs0ba_mbwfUscrdGVN_D2W03PANBp_DmQ@mail.gmail.com> (sfid-20161006_222913_713681_4993A31E)
-Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Wed, 12 Oct 2016 03:38:59 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v2,1/2] ath10k: clean up HTT tx buffer allocation and free
+Date: Wed, 12 Oct 2016 07:35:43 +0000
+Message-ID: <87zimaf29d.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_094120_634366_845B0D36)
+References: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com>
+        <c617b703956d4a038349494b87f65d0a@euamsexm01a.eu.qualcomm.com>
+        <20161012070918.GA2993@atheros-ThinkPad-T61>
+In-Reply-To: <20161012070918.GA2993@atheros-ThinkPad-T61> (Mohammed Shafi
+        Shajakhan's message of "Wed, 12 Oct 2016 12:39:18 +0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-OK the v2 patch is not based on 9340953. If you  queue this in 4.10 as
-planned then just let me know and
-I'll rev v3 based on top of 9340953.
+Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
 
-On Thu, Oct 6, 2016 at 3:40 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Marty Faltesek <mfaltesek@google.com> writes:
+> Hi Kalle,
 >
->> On Mon, Oct 3, 2016 at 3:46 AM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->>> Marty Faltesek <mfaltesek@google.com> writes:
->>>
->>>> Caching calibration data allows it to be accessed when the
->>>> device is not active.
->>>>
->>>> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
->>>
->>> No comma in the title, please.
->>>
->>> What tree did you use as the baseline? This doesn't seem to apply to
->>> ath.git:
->>
->> We use backports 20160122 which has not been updated since earlier this year.
->> I can forward port it to your tree, and make sure
->> it builds but won't be able to test it. Will that be OK?
+> On Tue, Oct 11, 2016 at 01:36:22PM +0200, Kalle Valo wrote:
+>> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+>> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>> >=20
+>> > cleanup 'ath10k_htt_tx_alloc' by introducing the API's
+>> > 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
+>> > re-use them whereever needed
+>> >=20
+>> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>>=20
+>> Applies but fails to build:
 >
-> Sure, I can test it.
->
->>> Also please note that this patch (which I'm queuing to 4.9) touches the
->>> same area:
->>>
->>> ath10k: fix debug cal data file
->>>
->>> https://patchwork.kernel.org/patch/9340953/
->>
->> I've modified this too, and this won't be necessary, so can you drop
->> it? If not, let me know and I'll pull it in and make sure I'm based
->> off it too.
->
-> Actually I was first planning to push 9340953 to 4.9 and take your patch
-> to 4.10. But your patch is a cleaner approach to this and maybe I should
-> push that to 4.9 instead? Need to think a bit more.
->
-> --
-> Kalle Valo
+> [shafi] sorry for the trouble again, I just figured out I had a private p=
+atch by
+> mistake  and it worked for me, I will make sure that v3 is properly rebas=
+ed
+> without any errors.
+
+Thanks. And no worries, I now have a script which does commit and build
+tests semi-automatically and sends an email if it fails. Yay! This was a
+good real life test for the script :)
+
+--=20
+Kalle Valo=
