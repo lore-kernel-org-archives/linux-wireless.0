@@ -1,93 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33555 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750964AbcJEEIX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 00:08:23 -0400
-Received: by mail-oi0-f68.google.com with SMTP id o93so3194771oik.0
-        for <linux-wireless@vger.kernel.org>; Tue, 04 Oct 2016 21:08:23 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 6/8] rtlwifi: rtl8188ee: Remove address of Free Software Foundation
-Date: Tue,  4 Oct 2016 23:08:08 -0500
-Message-Id: <1475640490-5895-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20161005_060834_187911_1A8A4EA2)
-In-Reply-To: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1475640490-5895-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50659 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755413AbcJMMwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Oct 2016 08:52:17 -0400
+Message-ID: <1476363127.4904.25.camel@sipsolutions.net> (sfid-20161013_145240_825718_568956FC)
+Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "Pedersen, Thomas" <twp@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 13 Oct 2016 14:52:07 +0200
+In-Reply-To: <7cc8610d-453d-1611-6c60-581ca7b68346@candelatech.com>
+References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>
+         <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>
+         <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>
+         <1473662637.4201.2.camel@sipsolutions.net>
+         <1473789454.27738.7.camel@qca.qualcomm.com>
+         <1473789740.5622.3.camel@sipsolutions.net>
+         <1474050629.31554.19.camel@qca.qualcomm.com>
+         <1474275637.4469.15.camel@sipsolutions.net>
+         <57E01026.9030604@candelatech.com>
+         <1475573532.5324.47.camel@sipsolutions.net>
+         <7cc8610d-453d-1611-6c60-581ca7b68346@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since this driver was added to the kernel, the checkpatch script was
-modified to request that the address of the FSF not be included.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h  | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h  | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h  | 4 ----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c | 4 ----
- 4 files changed, 16 deletions(-)
+> If the firmware/NIC is putting it on air at a particular encoding,
+> then I think the stack should report it exactly as it is on air if
+> possible.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
-index 071ccee..0fd2bac 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
-index 21bd4a5..b884c30 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-index 1850fde..d38dbca 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.h
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-index f05c2c6..6ea7fd7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-@@ -11,10 +11,6 @@
-  * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-  * more details.
-  *
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-- *
-  * The full GNU General Public License is included in this distribution in the
-  * file called LICENSE.
-  *
--- 
-2.6.6
+It already does. We're only debating what bitrate to report :P
+
+Anyway, I don't have the latest patch anymore - somebody please resend
+it.
+
+johannes
