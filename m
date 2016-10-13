@@ -1,112 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36230 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750862AbcJKTMP (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35844 "EHLO
+        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbcJMNrx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2016 15:12:15 -0400
-Received: by mail-wm0-f45.google.com with SMTP id o81so3785383wma.1
-        for <linux-wireless@vger.kernel.org>; Tue, 11 Oct 2016 12:12:15 -0700 (PDT)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Gucea Doru <gucea.doru@gmail.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
- <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com>
- <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
- <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
- <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
- <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com>
- <8d01e83b-800d-bba4-b948-abbdc5188f6b@broadcom.com>
- <CANfLQra_Vh4cnHvpzU9yxv4_6SJEc1LN8Vqm4-11thOLvGxY2Q@mail.gmail.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a948f377-5a87-e1a3-e56f-9768ee6d87a0@broadcom.com> (sfid-20161011_211219_559291_7C958545)
-Date: Tue, 11 Oct 2016 21:12:15 +0200
+        Thu, 13 Oct 2016 09:47:53 -0400
+Date: Thu, 13 Oct 2016 22:42:52 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+Message-ID: <20161013134252.GA583@swordfish> (sfid-20161013_154821_071374_CA85E09B)
+References: <20161010150358.GA514@swordfish>
+ <20161010153050.GA836@swordfish>
+ <1476263106.5271.23.camel@sipsolutions.net>
+ <20161012141245.GA436@swordfish>
+ <1476282127.5271.30.camel@sipsolutions.net>
+ <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+ <1476338524.4904.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <CANfLQra_Vh4cnHvpzU9yxv4_6SJEc1LN8Vqm4-11thOLvGxY2Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476338524.4904.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-10-16 16:33, Gucea Doru wrote:
-> On Thu, Oct 6, 2016 at 10:25 AM, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 6-10-2016 10:07, Gucea Doru wrote:
->>> On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>> On 4-10-2016 13:39, Gucea Doru wrote:
->>>>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
->>>>>> <arend.vanspriel@broadcom.com> wrote:
->>>>>>>
->>>>>>>
->>>>>>> On 29-09-16 13:32, Gucea Doru wrote:
->>>>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->>>>>>>>> What is the decision triggering the exit from the PS mode immediately
->>>>>>>>> after the ping request? I am asking this because 802.11 PS legacy
->>>>>>>>> specifies that the client should wait for a beacon with TIM set in
->>>>>>>>> order to wake up: in my case, there is no beacon between the ping
->>>>>>>>> request message and the Null frame that announces the exit from the PS
->>>>>>>>> mode.
->>>>>>>>
->>>>>>>>
->>>>>>>> Any help would be highly appreciated :)
->>>>>>>
->>>>>>> Actually though I already sent you are reply, but alas here it is.
->>>>>>>
->>>>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
->>>>>>> drivers. Regardless your question is more for firmware running on the
->>>>>>> device. So like the same behavior would be observed when using brcmfmac
->>>>>>> with same firmware.
->>>>>>>
->>>>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
->>>>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
->>>>>>>> shall issue a PS Poll". In my capture there are cases when the STA
->>>>>>>> exits the PS mode without waiting for a beacon.
->>>>>>>
->>>>>>> It is a bit tricky, but the standard does not explicitly say the STA
->>>>>>> should be in power-save at any other time. So it is difficult to say
->>>>>>> what event occurred on the STA side to exit PS mode. Also STA means
->>>>>>> P2P-Client as you say. That means that you have multiple interfaces:
->>>>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
->>>>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
->>>>>>> scheduled scan by which firmware will scan at a certain interval. That
->>>>>>> is just some things I can come up with and I am sure there are more.
->>>>>
->>>>> I agree that there may be some events belonging to the regular STA
->>>>> interface that could trigger the Null Frame (which includes the exit
->>>>> from PS Mode). However, I would expect to see some management frames
->>>>> in the air before/after the Null Packet (e.g.: a Probe request in case
->>>>> of a scheduled scan). But in my case the trigger for the Null frame
->>>>> seems to be the ping request packet, the scenario is the same every
->>>>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
->>>>> confirms this behavior).
->>>>>
->>>>> I thought that you had a power save optimization algorithm that keeps
->>>>> the card on a few milliseconds just to see if we can have a fast reply
->>>>> from the peer. Does this ring a bell? :)
->>>>
->>>> It does not. That would be implemented in firmware. As said I am working
->>>> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
->>>>
->>>
->>> Arend, could you please redirect me to a Broadcom firmware maintainer?
->>
->> Can you please elaborate on your platform, broadcom chipset, and what
->> version of bcmdhd you are using.
->>
+On (10/13/16 08:02), Johannes Berg wrote:
+> On Wed, 2016-10-12 at 22:39 -0700, Andy Lutomirski wrote:
 > 
-> Platform: Nexus 5 running CM13 (Android 6.0.1)
-> Broadcom chipset: BCM4339 Wi-Fi Chipset
-> bcmdhd version:Dongle Host Driver, version 1.88.45 (r)
+> > In a pinch, I have these patches sitting around:
+> > 
+> > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
+> > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
 > 
-> Do you need more information?
+> That truly sounds like something we'd rather avoid in the TX/RX paths
+> though, which should perform well.
 
-So can you indicate the mac addresses of the two nexus devices and which
-one is P2P-GO. I entered the wpa key you mentioned in your initial
-email, but my wireshark does not seem to be able to decrypt the packets,
-which makes it a bit harder to analyze.
+didn't fix.
 
-Regards,
-Arend
+so I finally had some time to do a better bug-reporter job.
+
+I added a bunch of printk-s and several virt_addr_valid()-s
+to ieee80211_aes_ccm_encrypt().
+
+and right befoe the Oops I see the following report from
+virt_addr_valid()
+
+
+ FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02 >> 39) == 130
+
+
+which is basically failed '!phys_addr_valid(x)' in __virt_addr_valid()
+
+		/* carry flag will be set if starting x was >= PAGE_OFFSET */
+		if ((x > y) || !phys_addr_valid(x))
+			return false;
+
+backtrace
+
+ ------------[ cut here ]------------
+ WARNING: CPU: 7 PID: 246 at arch/x86/mm/physaddr.c:68 __virt_addr_valid+0xab/0xed
+  ffffc900002cb6f0 ffffffff8122168c 0000000000000000 0000000000000000
+  ffffc900002cb730 ffffffff810428d8 0000004400000198 ffff88041bd21022
+  ffffc900002cba02 1ffff920000596ed ffff88041932d1e0 ffffc900002cba00
+ Call Trace:
+  [<ffffffff8122168c>] dump_stack+0x4f/0x65
+  [<ffffffff810428d8>] __warn+0xc2/0xdd
+  [<ffffffff81042963>] warn_slowpath_null+0x1d/0x1f
+  [<ffffffff8103c226>] __virt_addr_valid+0xab/0xed
+  [<ffffffff8146d31a>] ieee80211_aes_ccm_decrypt+0x8f/0x2da
+  [<ffffffff812372de>] ? debug_smp_processor_id+0x17/0x19
+  [<ffffffff810fb7e1>] ? __put_page+0x3c/0x3f
+  [<ffffffff8145b879>] ? ccmp_special_blocks.isra.1+0x51/0x12d
+  [<ffffffff8145c445>] ieee80211_crypto_ccmp_decrypt+0x204/0x298
+  [<ffffffff81476dd1>] ieee80211_rx_handlers+0x7df/0x1c1d
+  [<ffffffff814791c1>] ieee80211_prepare_and_rx_handle+0xdc2/0xe79
+  [<ffffffff814793cc>] ? ieee80211_rx_napi+0x154/0x7a5
+  [<ffffffff814796ec>] ieee80211_rx_napi+0x474/0x7a5
+  [<ffffffffa01fce3b>] iwl_mvm_rx_rx_mpdu+0x6e6/0x751 [iwlmvm]
+  [<ffffffffa01f6c49>] iwl_mvm_rx+0x7e/0x98 [iwlmvm]
+  [<ffffffffa01c0bca>] iwl_pcie_rx_handle+0x523/0x698 [iwlwifi]
+  [<ffffffffa01c2015>] iwl_pcie_irq_handler+0x45d/0x64d [iwlwifi]
+  [<ffffffff81089411>] ? irq_finalize_oneshot+0xd4/0xd4
+  [<ffffffff8108942e>] irq_thread_fn+0x1d/0x34
+  [<ffffffff810896a2>] irq_thread+0xe6/0x1bb
+  [<ffffffff81089527>] ? wake_threads_waitq+0x2c/0x2c
+  [<ffffffff810895bc>] ? irq_thread_dtor+0x95/0x95
+  [<ffffffff8105d7a3>] kthread+0xfc/0x104
+  [<ffffffff8107d3ad>] ? put_lock_stats.isra.9+0xe/0x20
+  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
+  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
+  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
+  [<ffffffff814b2952>] ret_from_fork+0x22/0x30
+
+	-ss
