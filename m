@@ -1,77 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52396 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941563AbcJZNYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 09:24:14 -0400
-Message-ID: <1477487137.4059.43.camel@sipsolutions.net> (sfid-20161026_152427_620248_34887B6E)
-Subject: Re: [PATCH][RFC] nl80211/mac80211: Rounded RSSI reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Zaborowski, Andrew" <andrew.zaborowski@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Oct 2016 15:05:37 +0200
-In-Reply-To: <F1E72F916E15444E976109681700BEE23F6AF7D9@IRSMSX102.ger.corp.intel.com>
-References: <1477010947-6207-1-git-send-email-andrew.zaborowski@intel.com>
-         (sfid-20161021_024924_244249_6C67A54C),<1477038639.4068.28.camel@sipsolutions.net>
-         <F1E72F916E15444E976109681700BEE23F6AF7D9@IRSMSX102.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:48666 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753302AbcJMKWO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Oct 2016 06:22:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org, chris@rorvick.com,
+        pebolle@tiscali.nl
+Cc: linuxwifi@intel.com, emmanuel.grumbach@intel.com,
+        johannes@sipsolutions.net, kvalo@codeaurora.org,
+        oren.givon@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Thu, 13 Oct 2016 13:21:55 +0300
+Message-Id: <20161013102155.14547-1-luca@coelho.fi> (sfid-20161013_122248_837994_CB90AF66)
+In-Reply-To: <1476349269.3880.18.camel@coelho.fi>
+References: <1476349269.3880.18.camel@coelho.fi>
+Subject: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-21 at 19:03 +0000, Zaborowski, Andrew wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> > The problem is that you really want this to be offloaded to the
-> > device, *especially* if you care about low power usage, because you
-> > absolutely don't want to be processing each beacon (which is
-> > typically what we derive the data from today) in the host CPU - you
-> > want those to be filtered by the device so you don't wake up the
-> > host CPU every ~102ms.
-> 
-> Right, that would be a separate optimisation but it probably won't
-> arrive until there's an API that the drivers can implement, so I
-> think this is a prerequisite.
+The SPLC data parsing is too restrictive and was not trying find the
+correct element for WiFi.  This causes problems with some BIOSes where
+the SPLC method exists, but doesn't have a WiFi entry on the first
+element of the list.  The domain type values are also incorrect
+according to the specification.
 
-Huh? No, beacon filtering is implemented by a lot of drivers today.
+Fix this by complying with the actual specification.
 
-> The userspace switches count too and are the main motivation for this
-> patch.  Eventually, as you say, things will depend on specific
-> drivers and you will want to optimise whatever you can assuming the
-> hardware you're constrained to.
+Additionally, replace all occurrences of SPLX to SPLC, since SPLX is
+only a structure internal to the ACPI tables, and may not even exist.
 
-Yes and no. I think we can probably define a reasonable subset that
-you'd expect more devices to implement. I don't really see the
-requirement to do the "banding" that you did here offloaded - doing it
-in mac80211 won't help much, and won't work in cases where you have
-beacon filtering already anyway.
+Fixes: bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power limitations")
+Reported-by: Chris Rorvick <chris@rorvick.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
-Drivers like iwlwifi would be able to implement the banding in
-software, since they get a notification on every change above a
-configurable threshold, but other drivers like one I looked at actually
-do have a low and high threshold today, and program them to be the same
-value with our current CQM API definitions.
+Paul, Chris,
 
-> It seems like any mechanism you choose can be implemented on top of
-> hardware that supports a low and a high threshold by setting the next
-> values while handling the event related to the previous threshold
-> crossing event.  If the thresholds are specified by a middle value
-> and a hysteresis or distance, that would work equally well.
-> The API I added in the patch also allows offloading to such hardware.
+Could you please give this a spin? I have tested it with some handmade
+ACPI tables in QEMU and it seems to work fine now.
 
-Well, ok, technically the API can be implemented on top of drivers with
-low/high thresholds, by doing the configuration according to the
-current range you're in.
+Thanks!
 
-I would argue though that it makes more sense to expose a simpler
-capability (e.g. two instead of the current single threshold) and do
-the reprogramming from higher layers. That ends up being more flexible,
-since you can then, for example, also have ranges that aren't all
-identical - which makes some sense because above a certain level you
-don't really care at all.
 
-> In short a nl80211 change would be needed regardless of the mechanism
-> chosen.
+drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 79 ++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 31 deletions(-)
 
-Agree. I'm just not convinced that the banding mechanism you propose is
-the most reasonable choice for new API.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 001be40..da4810f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -541,48 +541,64 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
+ 
+ #ifdef CONFIG_ACPI
+-#define SPL_METHOD		"SPLC"
+-#define SPL_DOMAINTYPE_MODULE	BIT(0)
+-#define SPL_DOMAINTYPE_WIFI	BIT(1)
+-#define SPL_DOMAINTYPE_WIGIG	BIT(2)
+-#define SPL_DOMAINTYPE_RFEM	BIT(3)
++#define ACPI_SPLC_METHOD	"SPLC"
++#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
+ 
+-static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
++static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
+ {
+-	union acpi_object *limits, *domain_type, *power_limit;
+-
+-	if (splx->type != ACPI_TYPE_PACKAGE ||
+-	    splx->package.count != 2 ||
+-	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
+-	    splx->package.elements[0].integer.value != 0) {
+-		IWL_ERR(trans, "Unsupported splx structure\n");
++	union acpi_object *data_pkg, *dflt_pwr_limit;
++	int i;
++
++	/* We need at least two elemets, one for the revision and one
++	 * for the data itself.  Also check that the revision is
++	 * supported (currently only revision 0).
++	*/
++	if (splc->type != ACPI_TYPE_PACKAGE ||
++	    splc->package.count < 2 ||
++	    splc->package.elements[0].type != ACPI_TYPE_INTEGER ||
++	    splc->package.elements[0].integer.value != 0) {
++		IWL_DEBUG_INFO(trans,
++			       "Unsupported structure returned by the SPLC method.  Ignoring.\n");
+ 		return 0;
+ 	}
+ 
+-	limits = &splx->package.elements[1];
+-	if (limits->type != ACPI_TYPE_PACKAGE ||
+-	    limits->package.count < 2 ||
+-	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
+-	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
+-		IWL_ERR(trans, "Invalid limits element\n");
+-		return 0;
++	/* loop through all the packages to find the one for WiFi */
++	for (i = 1; i < splc->package.count; i++) {
++		union acpi_object *domain;
++
++		data_pkg = &splc->package.elements[i];
++
++		/* Skip anything that is not a package with the right
++		 * amount of elements (i.e. at least 2 integers).
++		 */
++		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
++		    data_pkg->package.count < 2 ||
++		    data_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
++		    data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
++			continue;
++
++		domain = &data_pkg->package.elements[0];
++		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
++			break;
++
++		data_pkg = NULL;
+ 	}
+ 
+-	domain_type = &limits->package.elements[0];
+-	power_limit = &limits->package.elements[1];
+-	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
+-		IWL_DEBUG_INFO(trans, "WiFi power is not limited\n");
++	if (!data_pkg) {
++		IWL_DEBUG_INFO(trans,
++			       "No element for the WiFi domain returned by the SPLC method.\n");
+ 		return 0;
+ 	}
+ 
+-	return power_limit->integer.value;
++	dflt_pwr_limit = &data_pkg->package.elements[1];
++	return dflt_pwr_limit->integer.value;
+ }
+ 
+ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ {
+ 	acpi_handle pxsx_handle;
+ 	acpi_handle handle;
+-	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
++	struct acpi_buffer splc = {ACPI_ALLOCATE_BUFFER, NULL};
+ 	acpi_status status;
+ 
+ 	pxsx_handle = ACPI_HANDLE(&pdev->dev);
+@@ -593,23 +609,24 @@ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ 	}
+ 
+ 	/* Get the method's handle */
+-	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
++	status = acpi_get_handle(pxsx_handle, (acpi_string)ACPI_SPLC_METHOD,
++				 &handle);
+ 	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_INFO(trans, "SPL method not found\n");
++		IWL_DEBUG_INFO(trans, "SPLC method not found\n");
+ 		return;
+ 	}
+ 
+ 	/* Call SPLC with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
++	status = acpi_evaluate_object(handle, NULL, NULL, &splc);
+ 	if (ACPI_FAILURE(status)) {
+ 		IWL_ERR(trans, "SPLC invocation failed (0x%x)\n", status);
+ 		return;
+ 	}
+ 
+-	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
++	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, splc.pointer);
+ 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
+ 		       trans->dflt_pwr_limit);
+-	kfree(splx.pointer);
++	kfree(splc.pointer);
+ }
+ 
+ #else /* CONFIG_ACPI */
+-- 
+2.9.3
