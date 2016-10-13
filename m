@@ -1,147 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34960 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbcJBW31 (ORCPT
+Received: from mail-vk0-f46.google.com ([209.85.213.46]:35815 "EHLO
+        mail-vk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755215AbcJMFqy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:29:27 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, arnd@arndb.de
-Cc: chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 6/7] ath9k: Make the EEPROM swapping check use the eepmisc register
-Date: Mon,  3 Oct 2016 00:29:12 +0200
-Message-Id: <20161002222913.12223-7-martin.blumenstingl@googlemail.com> (sfid-20161003_002940_421182_B6AB79BB)
-In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
- <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+        Thu, 13 Oct 2016 01:46:54 -0400
+Received: by mail-vk0-f46.google.com with SMTP id q126so13912219vkd.2
+        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 22:46:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1476282127.5271.30.camel@sipsolutions.net>
+References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
+ <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish> <1476282127.5271.30.camel@sipsolutions.net>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Wed, 12 Oct 2016 22:39:49 -0700
+Message-ID: <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com> (sfid-20161013_074658_415008_ECF80295)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two ways of swapping the EEPROM data in the ath9k driver:
-1) swab16 based on the first two EEPROM "magic" bytes (same for all
-   EEPROM formats)
-2) field and EEPROM format specific swab16/swab32 (different for
-   eeprom_def, eeprom_4k and eeprom_9287)
+On Wed, Oct 12, 2016 at 7:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> > Can you elaborate on how exactly it kills your system?
+>>
+>> the last time I saw it it was a NULL deref at
+>> ieee80211_aes_ccm_decrypt.
+>
+> Hm. I was expecting something within the crypto code would cause the
+> crash, this seems strange.
+>
+> Anyway, I'm surely out of my depth wrt. the actual cause. Something
+> like the patch below probably works around it, but it's horribly
+> inefficient due to the locking and doesn't cover CMAC/GMAC either.
 
-The result of the first check was used to also enable the second swap.
-This behavior seems incorrect, since the data may only be byte-swapped
-(afterwards the data could be in the correct endianness).
-Thus we introduce a separate check based on the "eepmisc" register
-(which is part of the EEPROM data). When bit 0 is set, then the EEPROM
-format specific values are in "big endian". This is also done by the
-FreeBSD kernel, see [0] for example.
+In a pinch, I have these patches sitting around:
 
-This allows us to parse EEPROMs with the "correct" magic bytes but
-swapped EEPROM format specific values. These EEPROMs (mostly found in
-lantiq and broadcom based big endian MIPS based devices) only worked
-due to platform specific "hacks" which swapped the EEPROM so the
-magic was inverted, which also enabled the format specific swapping.
-With this patch the old behavior is still supported, but neither
-recommended nor needed anymore.
+https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
+https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
 
-[0]
-https://github.com/freebsd/freebsd/blob/50719b56d9ce8d7d4beb53b16e9edb2e9a4a7a18/sys/dev/ath/ath_hal/ah_eeprom_9287.c#L351
-
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/eeprom.c | 57 ++++++++++++++++++++++++---------
- 1 file changed, 41 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a449588..0e46797 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -155,11 +155,19 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- 	return ret;
- }
- 
-+#ifdef __BIG_ENDIAN
-+#define EXPECTED_EEPMISC_ENDIAN AR5416_EEPMISC_BIG_ENDIAN
-+#else
-+#define EXPECTED_EEPMISC_ENDIAN 0
-+#endif
-+
- int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
- {
- 	u16 magic;
- 	u16 *eepdata;
-+	u8 eepmisc;
- 	int i;
-+	bool needs_byteswap = false;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
-@@ -167,36 +175,53 @@ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
- 		return -EIO;
- 	}
- 
--	*swap_needed = false;
- 	if (swab16(magic) == AR5416_EEPROM_MAGIC) {
-+		needs_byteswap = true;
-+		ath_dbg(common, EEPROM,
-+			"EEPROM needs byte-swapping to correct endianness.\n");
-+	} else if (magic != AR5416_EEPROM_MAGIC) {
-+		if (ath9k_hw_use_flash(ah)) {
-+			ath_dbg(common, EEPROM,
-+				"Ignoring invalid EEPROM magic (0x%04x).\n",
-+				magic);
-+		} else {
-+			ath_err(common,
-+				"Invalid EEPROM magic (0x%04x).\n", magic);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	if (needs_byteswap) {
- 		if (ah->ah_flags & AH_NO_EEP_SWAP) {
- 			ath_info(common,
- 				 "Ignoring endianness difference in EEPROM magic bytes.\n");
- 		} else {
--			*swap_needed = true;
--		}
--	} else if (magic != AR5416_EEPROM_MAGIC) {
--		if (ath9k_hw_use_flash(ah))
--			return 0;
-+			eepdata = (u16 *)(&ah->eeprom);
- 
--		ath_err(common,
--			"Invalid EEPROM Magic (0x%04x).\n", magic);
--		return -EINVAL;
-+			for (i = 0; i < size; i++)
-+				eepdata[i] = swab16(eepdata[i]);
-+		}
- 	}
- 
--	eepdata = (u16 *)(&ah->eeprom);
--
--	if (*swap_needed) {
--		ath_dbg(common, EEPROM,
--			"EEPROM Endianness is not native.. Changing.\n");
-+	*swap_needed = false;
- 
--		for (i = 0; i < size; i++)
--			eepdata[i] = swab16(eepdata[i]);
-+	eepmisc = ah->eep_ops->get_eepmisc(ah);
-+	if ((eepmisc & AR5416_EEPMISC_BIG_ENDIAN) != EXPECTED_EEPMISC_ENDIAN) {
-+		if (ah->ah_flags & AH_NO_EEP_SWAP) {
-+			ath_info(common,
-+				 "Ignoring endianness difference in eepmisc register.\n");
-+		} else {
-+			*swap_needed = true;
-+			ath_dbg(common, EEPROM,
-+				"EEPROM needs swapping according to the eepmisc register.\n");
-+		}
- 	}
- 
- 	return 0;
- }
- 
-+#undef EXPECTED_EEPMISC_VAL
-+
- bool ath9k_hw_nvram_validate_checksum(struct ath_hw *ah, int size)
- {
- 	u32 i, sum = 0;
--- 
-2.10.0
+I don't like them, though.  I think it's rather silly that we can't
+just pass virtual addresses to the crypto code.
