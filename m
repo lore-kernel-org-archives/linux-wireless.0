@@ -1,78 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37883 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754120AbcJLIBk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 04:01:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        "Stable \[ 4 . 8+ \]" <stable@vger.kernel.org>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        Thorsten Leemhuis <regressions@leemhuis.info>
-Subject: Re: [PATCH] rtlwifi: Fix regression caused by commit d86e64768859
-References: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
-Date: Wed, 12 Oct 2016 10:53:01 +0300
-In-Reply-To: <20161010233211.13519-1-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Mon, 10 Oct 2016 18:32:11 -0500")
-Message-ID: <87r37mf1gi.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_100142_392375_28D88F6C)
+Received: from nbd.name ([46.4.11.11]:34158 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751882AbcJMHeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Oct 2016 03:34:17 -0400
+Subject: Re: [PATCHv4] mac80211: fix A-MSDU outer SA/DA
+To: Michael Braun <michael-dev@fami-braun.de>,
+        johannes@sipsolutions.net
+References: <1476337315-26845-1-git-send-email-michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <fc2ae46b-f049-41de-3eec-465e83b5ecef@nbd.name> (sfid-20161013_093420_874498_AE81CEAD)
+Date: Thu, 13 Oct 2016 09:19:30 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1476337315-26845-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
-> the configuration struct for most of the drivers was changed to be
-> constant. The problem is that five of the modified drivers need to be
-> able to update the firmware name based on the exact model of the card.
-> As the file names were stored in one of the members of that struct,
-> these drivers would fail with a kernel BUG splat when they tried to
-> update the firmware name.
->
-> Rather than reverting the previous commit, I used a suggestion by
-> Johannes Berg and made the firmware file name pointers be local to
-> the routines that update the software variables.
->
-> The configuration struct of rtl8192cu, which was not touched in the
-> previous patch, is now constantfied.
->
-> Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
-> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable [4.8+] <stable@vger.kernel.org>
-
-This should be:
-
-Cc: Stable <stable@vger.kernel.org> # 4.8
-
-And the plus sign isn't needed as I'll push this to 4.9.
-
-> Cc: Julia Lawall <Julia.Lawall@lip6.fr>
+On 2016-10-13 07:41, Michael Braun wrote:
+> According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer SA/DA
+> of A-MSDU frames need to be changed depending on FromDS/ToDS values.
+> 
+> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> 
+> --
+> v4:
+>  - h_80211_src/dst has been memmove'd and thus needs to be fixed
+> v3:
+>  - write to outer 802.11 header instead of inner amsdu subframe header
+> v2:
+>  - avoid the extra write to amsdu_hdr
+>  - avoid copy of asmdu_hdr into skb, use ptr instead
 > ---
-> Kalle,
->
-> My apologies for letting these bugs to get by my review and testing.
+>  net/mac80211/tx.c | 46 ++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 36 insertions(+), 10 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 5023966..5f80b94 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -3058,19 +3059,44 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
+>  	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
+>  		return true;
+>  
+> -	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(amsdu_hdr),
+> +	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(*amsdu_hdr),
+>  					 &subframe_len))
+>  		return false;
+>  
+> -	amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
+> -	memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
+> -	memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
+> +	data = skb_push(skb, sizeof(*amsdu_hdr));
+> +	memmove(data, data + sizeof(*amsdu_hdr), hdr_len);
+> +	hdr = data;
+> +	amsdu_hdr = data + hdr_len;
+> +	/* h_80211_src/dst is addr* field within hdr */
+> +	h_80211_src = data + fast_tx->sa_offs;
+> +	h_80211_dst = data + fast_tx->da_offs;
+> +
+> +	amsdu_hdr->h_proto = cpu_to_be16(subframe_len);
+> +	memcpy(amsdu_hdr->h_source, h_80211_src, ETH_ALEN);
+> +	memcpy(amsdu_hdr->h_dest, h_80211_dst, ETH_ALEN);
+> +
+> +	/* according to IEEE 802.11-2012 8.3.2 table 8-19, the outer SA/DA
+> +	 * fields needs to be changed to BSSID for A-MSDU frames depending
+> +	 * on FromDS/ToDS values.
+> +	 */
+> +	switch (sdata->vif.type) {
+> +	case NL80211_IFTYPE_STATION:
+> +		bssid = sdata->u.mgd.bssid;
+> +		break;
+> +	case NL80211_IFTYPE_AP:
+> +	case NL80211_IFTYPE_AP_VLAN:
+> +		bssid = sdata->vif.addr;
+> +		break;
+> +	default:
+> +		bssid = NULL;
+> +	}
+>  
+> -	data = skb_push(skb, sizeof(amsdu_hdr));
+> -	memmove(data, data + sizeof(amsdu_hdr), hdr_len);
+> -	memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
+> +	if (bssid && ieee80211_has_fromds(hdr->frame_control))
+> +		memcpy(h_80211_src, bssid, ETH_ALEN);
+> +
+> +	if (bssid && ieee80211_has_tods(hdr->frame_control))
+> +		memcpy(h_80211_dst, bssid, ETH_ALEN);
+I think this is probably wrong for 4-addr, since there both FromDS and
+ToDS are set. Maybe you should use !ieee80211_has_tods instead of
+ieee80211_has_fromds and vice versa.
 
-No worries, this is business as usual :) Excellent that you noticed this
-so early.
-
-And this again shows that simple cleanup patches are not without cost,
-there is a clear risk. Has anyone done any statistics how much cleanup
-patches cause regressions? My guess is that in a 5% ballpark of the
-cleanup patches have some sort of issues. Of course in this case the
-cleanup patch revealed a design flaw in the driver, so in this case it
-was very useful.
-
-> As they affect kernel 4.8, please push this patch as soon as possible.
-> To reiterate, this patch replaces the one entitled 'Revert "rtlwifi:
-> rtl818x: constify local structures"'
-
-Ok, understood. Many thanks for making this super clear for me, makes my
-life a lot easier. I'm hoping that this will make it to 4.9-rc2.
-
-CCing Thorsten to get this regression to his radar.
-
--- 
-Kalle Valo
+- Felix
