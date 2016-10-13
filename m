@@ -1,225 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57099 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752652AbcJJQAh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54422 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932744AbcJMO0K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 12:00:37 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Marty Faltesek <mfaltesek@google.com>
-Subject: [PATCH v3] ath10k: cache calibration data when the core is stopped
-Date: Mon, 10 Oct 2016 19:00:04 +0300
-Message-ID: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com> (sfid-20161010_180039_898184_5B1AB61C)
+        Thu, 13 Oct 2016 10:26:10 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com
+Subject: Re: [PATCH 1/3] rsi: Fix memory leak in module unload
+References: <1476357946-15460-1-git-send-email-prameela.j04cs@gmail.com>
+        <87inswcs1j.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 13 Oct 2016 17:26:04 +0300
+In-Reply-To: <87inswcs1j.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Thu, 13 Oct 2016 16:11:36 +0300")
+Message-ID: <87bmyo1g1v.fsf@purkki.adurom.net> (sfid-20161013_162628_456575_F240A3DF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Marty Faltesek <mfaltesek@google.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Commit 0b8e3c4ca29f ("ath10k: move cal data len to hw_params") broke retrieving
-the calibration data from cal_data debugfs file. The length of file was always
-zero. The reason is:
+> Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
+>
+>> Observed crash when module is unloaded if CONFIG_RSI_DEBUGSFS is not set.
+>> 	Fix: Debugfs entry removal moved inside CONFIG_RSI_DEBUGSFS flag in
+>>              function rsi_mac80211_detach()
+>> Memory leak found and fixed for below structures in function rsi_mac80211_detach()
+>> 	* channel list for each supported band
+>> 	* rsi debugfs info
+>>
+>> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+>
+> BTW, I don't see patch 2 in patchwork nor in linux-wireless, but I do
+> see it on my inbox. Either it's slow or there was a problem with the
+> delivery.
 
-    static ssize_t ath10k_debug_cal_data_read(struct file *file,
-                                          char __user *user_buf,
-                                          size_t count, loff_t *ppos)
-    {
-        struct ath10k *ar = file->private_data;
-        void *buf = file->private_data;
+It was just slow, I see it now:
 
+https://patchwork.kernel.org/patch/9374987/
 
-This is obviously bogus, private_data cannot contain both struct ath10k and the
-buffer. Fix it by caching calibration data to ar->debug.cal_data. This also
-allows it to be accessed when the device is not active (interface is down).
-
-The cal_data buffer is fixed size because during the first firmware probe we
-don't yet know what will be the lenght of the calibration data. It was simplest
-just to use a fixed length. There's a WARN_ON() in
-ath10k_debug_cal_data_fetch() if the buffer is too small.
-
-Tested with qca988x and firmware 10.2.4.70.56.
-
-Reported-by: Nikolay Martynov <mar.kolya@gmail.com>
-Fixes: 0b8e3c4ca29f ("ath10k: move cal data len to hw_params")
-Cc: stable@vger.kernel.org # 4.7+
-Signed-off-by: Marty Faltesek <mfaltesek@google.com>
-[kvalo@qca.qualcomm.com: improve commit log and minor other changes]
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |    1 +
- drivers/net/wireless/ath/ath10k/debug.c |   79 ++++++++++++++++---------------
- 2 files changed, 42 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 6e5aa2d09699..b7067cc9328d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -450,6 +450,7 @@ struct ath10k_debug {
- 	u32 pktlog_filter;
- 	u32 reg_addr;
- 	u32 nf_cal_period;
-+	void *cal_data;
- 
- 	struct ath10k_fw_crash_data *fw_crash_data;
- };
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 832da6ed9f13..5d508efa0b31 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -30,6 +30,8 @@
- /* ms */
- #define ATH10K_DEBUG_HTT_STATS_INTERVAL 1000
- 
-+#define ATH10K_DEBUG_CAL_DATA_LEN 12064
-+
- #define ATH10K_FW_CRASH_DUMP_VERSION 1
- 
- /**
-@@ -1451,75 +1453,68 @@ static const struct file_operations fops_fw_dbglog = {
- 	.llseek = default_llseek,
- };
- 
--static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
-+static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
- {
--	struct ath10k *ar = inode->i_private;
--	void *buf;
- 	u32 hi_addr;
- 	__le32 addr;
- 	int ret;
- 
--	mutex_lock(&ar->conf_mutex);
--
--	if (ar->state != ATH10K_STATE_ON &&
--	    ar->state != ATH10K_STATE_UTF) {
--		ret = -ENETDOWN;
--		goto err;
--	}
-+	lockdep_assert_held(&ar->conf_mutex);
- 
--	buf = vmalloc(ar->hw_params.cal_data_len);
--	if (!buf) {
--		ret = -ENOMEM;
--		goto err;
--	}
-+	if (WARN_ON(ar->hw_params.cal_data_len > ATH10K_DEBUG_CAL_DATA_LEN))
-+		return -EINVAL;
- 
- 	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
- 
- 	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
- 	if (ret) {
--		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
--		goto err_vfree;
-+		ath10k_warn(ar, "failed to read hi_board_data address: %d\n",
-+		            ret);
-+		return ret;
- 	}
- 
--	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
-+	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), ar->debug.cal_data,
- 				   ar->hw_params.cal_data_len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
--		goto err_vfree;
-+		return ret;
- 	}
- 
--	file->private_data = buf;
-+	return 0;
-+}
- 
--	mutex_unlock(&ar->conf_mutex);
-+static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
-+{
-+	struct ath10k *ar = inode->i_private;
- 
--	return 0;
-+	mutex_lock(&ar->conf_mutex);
- 
--err_vfree:
--	vfree(buf);
-+	if (ar->state == ATH10K_STATE_ON ||
-+	    ar->state == ATH10K_STATE_UTF) {
-+		ath10k_debug_cal_data_fetch(ar);
-+	}
- 
--err:
-+	file->private_data = ar;
- 	mutex_unlock(&ar->conf_mutex);
- 
--	return ret;
-+	return 0;
- }
- 
- static ssize_t ath10k_debug_cal_data_read(struct file *file,
--					  char __user *user_buf,
--					  size_t count, loff_t *ppos)
-+                                          char __user *user_buf,
-+                                          size_t count, loff_t *ppos)
- {
- 	struct ath10k *ar = file->private_data;
--	void *buf = file->private_data;
- 
--	return simple_read_from_buffer(user_buf, count, ppos,
--				       buf, ar->hw_params.cal_data_len);
--}
-+	mutex_lock(&ar->conf_mutex);
- 
--static int ath10k_debug_cal_data_release(struct inode *inode,
--					 struct file *file)
--{
--	vfree(file->private_data);
-+	count = simple_read_from_buffer(user_buf, count, ppos,
-+					ar->debug.cal_data,
-+					ar->hw_params.cal_data_len);
- 
--	return 0;
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return count;
- }
- 
- static ssize_t ath10k_write_ani_enable(struct file *file,
-@@ -1580,7 +1575,6 @@ static const struct file_operations fops_ani_enable = {
- static const struct file_operations fops_cal_data = {
- 	.open = ath10k_debug_cal_data_open,
- 	.read = ath10k_debug_cal_data_read,
--	.release = ath10k_debug_cal_data_release,
- 	.owner = THIS_MODULE,
- 	.llseek = default_llseek,
- };
-@@ -1932,6 +1926,8 @@ void ath10k_debug_stop(struct ath10k *ar)
- {
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-+	ath10k_debug_cal_data_fetch(ar);
-+
- 	/* Must not use _sync to avoid deadlock, we do that in
- 	 * ath10k_debug_destroy(). The check for htt_stats_mask is to avoid
- 	 * warning from del_timer(). */
-@@ -2344,6 +2340,10 @@ int ath10k_debug_create(struct ath10k *ar)
- 	if (!ar->debug.fw_crash_data)
- 		return -ENOMEM;
- 
-+	ar->debug.cal_data = vzalloc(ATH10K_DEBUG_CAL_DATA_LEN);
-+	if (!ar->debug.cal_data)
-+		return -ENOMEM;
-+
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
- 	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
-@@ -2357,6 +2357,9 @@ void ath10k_debug_destroy(struct ath10k *ar)
- 	vfree(ar->debug.fw_crash_data);
- 	ar->debug.fw_crash_data = NULL;
- 
-+	vfree(ar->debug.cal_data);
-+	ar->debug.cal_data = NULL;
-+
- 	ath10k_debug_fw_stats_reset(ar);
- 
- 	kfree(ar->debug.tpc_stats);
 -- 
-1.7.9.5
+Kalle Valo
