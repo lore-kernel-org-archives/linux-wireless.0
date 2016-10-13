@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35492 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936537AbcJ0Pcu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19891 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754338AbcJMLXL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 11:32:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2016-10-25-2
-References: <1477469629.27792.8.camel@coelho.fi>
-Date: Thu, 27 Oct 2016 18:32:46 +0300
-In-Reply-To: <1477469629.27792.8.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 26 Oct 2016 11:13:49 +0300")
-Message-ID: <8760od4xk1.fsf@kamboji.qca.qualcomm.com> (sfid-20161027_173256_276782_5AC8975A)
+        Thu, 13 Oct 2016 07:23:11 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: ath6k1: add Dell OEM SDIO I/O for the Venue 8 Pro
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
+References: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
+To: Alan Cox <alan@linux.intel.com>
+CC: <linux-wireless@vger.kernel.org>
+Message-ID: <3241f0db941049e3b2299d5d674bafb2@euamsexm01a.eu.qualcomm.com> (sfid-20161013_132314_761475_2CBC01C6)
+Date: Thu, 13 Oct 2016 13:20:01 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Alan Cox <alan@linux.intel.com> wrote:
+> From: Adam Williamson <adamw@happyassassin.net>
+> 
+> SDIO ID 0271:0418
+> 
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> Bugzilla-ID: https://bugzilla.kernel.org/show_bug.cgi?id=67921
+> Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index eab0ab9..76eb336 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -1401,6 +1401,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
+>  	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
+>  	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
+>  	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
+> +	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
+>  	{},
+>  };
+>  
 
-> Hi Kalle,
->
-> Here's an updated pull-request, replacing 2016-10-25, with one commit
-> message reworded, as you requested.
->
-> I sent v2 of that patch to the linux-wireless mailing list.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit 15b95a15950238eff4d7f24be1716086eea67835:
->
->   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2016-09-28 16:37:33 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-10-25-2
+Patch applied to ath-current branch of ath.git, thanks.
 
-Pulled, thanks.
+1ea2643961b0 ath6kl: add Dell OEM SDIO I/O for the Venue 8 Pro
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9373725/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
