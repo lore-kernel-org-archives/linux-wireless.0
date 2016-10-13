@@ -1,39 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36364 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbcJCOnB (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32912 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754519AbcJMLnD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 10:43:01 -0400
-Received: by mail-wm0-f67.google.com with SMTP id b184so15057620wma.3
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 07:43:01 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: Final 4.8 w-t build is wt-2016-10-03
-Date: Mon, 03 Oct 2016 16:42:58 +0200
-Message-ID: <1651822.AbJigUgJvV@debian64> (sfid-20161003_164305_329446_3966DA03)
-In-Reply-To: <20161003134507.GA9911@localhost>
-References: <20161003134507.GA9911@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 13 Oct 2016 07:43:03 -0400
+Received: by mail-pf0-f193.google.com with SMTP id i85so1517381pfa.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 04:42:58 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 3/3] rsi: Updated boot parameters
+Date: Thu, 13 Oct 2016 16:57:05 +0530
+Message-Id: <1476358025-15576-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161013_134418_379528_2C3AF747)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+* Switch clock info is divided in to different clock information fields for
+  readability and synchronization with firmware code.
+* Other parameters are added for future use and to make the frame size in sync
+  with latest firmware. Otherwise firmware will discard the frame considering
+  corrupted frame.
 
-On Monday, October 3, 2016 9:45:07 AM CEST Bob Copeland wrote:
-> Per the subject, Linus released 4.8 yesterday so, unless I broke something
-> in recent conflict resolutions, wireless-testing is on pause until the
-> merge window closes in two weeks.  Have a happy (Canadian) thanksgiving!
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 62 ++++++++++++++++++++++++++----
+ drivers/net/wireless/rsi/rsi_boot_params.h | 45 +++++++++++++++++++++-
+ 2 files changed, 97 insertions(+), 10 deletions(-)
 
-Thanks for the timely update. 
-I have a request: can you please pull Linus' kernel tags?
-Currently the last tag from Linus' is v4.4-rc4 [0] and
-everything between v4.4-rc5 and v4.8 is missing?!
-
-Regards,
-Christian
-
-[0] <https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git/refs/tags>
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 30b9d44..10796c2 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -18,6 +18,7 @@
+ #include "rsi_mgmt.h"
+ #include "rsi_common.h"
+ 
++/* Bootup Parameters for 20MHz */
+ static struct bootup_params boot_params_20 = {
+ 	.magic_number = cpu_to_le16(0x5aa5),
+ 	.crystal_good_time = 0x0,
+@@ -28,6 +29,7 @@ static struct bootup_params boot_params_20 = {
+ 	.rtls_timestamp_en = 0x0,
+ 	.host_spi_intr_cfg = 0x0,
+ 	.device_clk_info = {{
++		/* WLAN params */
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+ 				.pll_reg_1 = cpu_to_le16((TA_PLL_N_VAL_20 << 8)|
+@@ -45,12 +47,18 @@ static struct bootup_params boot_params_20 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = cpu_to_le16(BIT(3)),
++			.switch_umac_clk = 0x0,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x1,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x121),
+ 			.umac_clock_reg_config = 0x0,
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	},
++	/* Bluetooth params */
+ 	{
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+@@ -69,12 +77,18 @@ static struct bootup_params boot_params_20 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = 0x0,
++			.switch_umac_clk = 0x0,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x0,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = 0x0,
+ 			.umac_clock_reg_config = 0x0,
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	},
++	/* Zigbee params */
+ 	{
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+@@ -93,12 +107,18 @@ static struct bootup_params boot_params_20 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = 0x0,
++			.switch_umac_clk = 0x0,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x0,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = 0x0,
+ 			.umac_clock_reg_config = 0x0,
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	} },
++	/* ULP Params */
+ 	.buckboost_wakeup_cnt = 0x0,
+ 	.pmu_wakeup_wait = 0x0,
+ 	.shutdown_wait_time = 0x0,
+@@ -106,9 +126,13 @@ static struct bootup_params boot_params_20 = {
+ 	.wdt_prog_value = 0x0,
+ 	.wdt_soc_rst_delay = 0x0,
+ 	.dcdc_operation_mode = 0x0,
+-	.soc_reset_wait_cnt = 0x0
++	.soc_reset_wait_cnt = 0x0,
++	.waiting_time_at_fresh_sleep = 0x0,
++	.max_threshold_to_avoid_sleep = 0x0,
++	.beacon_resedue_alg_en = 0,
+ };
+ 
++/* Bootup parameters for 40MHz */
+ static struct bootup_params boot_params_40 = {
+ 	.magic_number = cpu_to_le16(0x5aa5),
+ 	.crystal_good_time = 0x0,
+@@ -119,6 +143,7 @@ static struct bootup_params boot_params_40 = {
+ 	.rtls_timestamp_en = 0x0,
+ 	.host_spi_intr_cfg = 0x0,
+ 	.device_clk_info = {{
++		/* WLAN params */
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+ 				.pll_reg_1 = cpu_to_le16((TA_PLL_N_VAL_40 << 8)|
+@@ -136,12 +161,18 @@ static struct bootup_params boot_params_40 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = cpu_to_le16(0x09),
++			.switch_umac_clk = 0x1,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x1,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x1121),
+ 			.umac_clock_reg_config = cpu_to_le16(0x48),
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	},
++	/* Bluetooth Params */
+ 	{
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+@@ -160,12 +191,18 @@ static struct bootup_params boot_params_40 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = 0x0,
++			.switch_umac_clk = 0x0,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x0,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = 0x0,
+ 			.umac_clock_reg_config = 0x0,
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	},
++	/* Zigbee Params */
+ 	{
+ 		.pll_config_g = {
+ 			.tapll_info_g = {
+@@ -184,12 +221,18 @@ static struct bootup_params boot_params_40 = {
+ 			}
+ 		},
+ 		.switch_clk_g = {
+-			.switch_clk_info = 0x0,
++			.switch_umac_clk = 0x0,
++			.switch_qspi_clk = 0x0,
++			.switch_slp_clk_2_32 = 0x0,
++			.switch_bbp_lmac_clk_reg = 0x0,
++			.switch_mem_ctrl_cfg = 0x0,
++			.reserved = 0x0,
+ 			.bbp_lmac_clk_reg_val = 0x0,
+ 			.umac_clock_reg_config = 0x0,
+ 			.qspi_uart_clock_reg_config = 0x0
+ 		}
+ 	} },
++	/* ULP Params */
+ 	.buckboost_wakeup_cnt = 0x0,
+ 	.pmu_wakeup_wait = 0x0,
+ 	.shutdown_wait_time = 0x0,
+@@ -197,7 +240,10 @@ static struct bootup_params boot_params_40 = {
+ 	.wdt_prog_value = 0x0,
+ 	.wdt_soc_rst_delay = 0x0,
+ 	.dcdc_operation_mode = 0x0,
+-	.soc_reset_wait_cnt = 0x0
++	.soc_reset_wait_cnt = 0x0,
++	.waiting_time_at_fresh_sleep = 0x0,
++	.max_threshold_to_avoid_sleep = 0x0,
++	.beacon_resedue_alg_en = 0,
+ };
+ 
+ static u16 mcs[] = {13, 26, 39, 52, 78, 104, 117, 130};
+diff --git a/drivers/net/wireless/rsi/rsi_boot_params.h b/drivers/net/wireless/rsi/rsi_boot_params.h
+index 5e2721f..c1be104 100644
+--- a/drivers/net/wireless/rsi/rsi_boot_params.h
++++ b/drivers/net/wireless/rsi/rsi_boot_params.h
+@@ -81,7 +81,13 @@ struct pll_config {
+ 
+ /* structure to store configs related to UMAC clk programming */
+ struct switch_clk {
+-	__le16 switch_clk_info;
++	__le16 switch_umac_clk : 1; /* If set rest is valid */
++	__le16 switch_qspi_clk : 1; /* If set qspi clk will be changed */
++	__le16 switch_slp_clk_2_32 : 1;
++	__le16 switch_bbp_lmac_clk_reg : 1;
++	__le16 switch_mem_ctrl_cfg : 1;
++	__le16 reserved : 11;
++
+ 	/* If switch_bbp_lmac_clk_reg is set then this value will be programmed
+ 	 * into reg
+ 	 */
+@@ -99,11 +105,43 @@ struct device_clk_info {
+ 
+ struct bootup_params {
+ 	__le16 magic_number;
++#define LOADED_TOKEN  0x5AA5   /* Bootup params are installed by host
++				* or OTP/FLASH (Bootloader)
++				*/
++#define ROM_TOKEN     0x55AA   /* Bootup params are taken from ROM
++				* itself in MCU mode.
++				*/
+ 	__le16 crystal_good_time;
+ 	__le32 valid;
++#define CRYSTAL_GOOD_TIME                BIT(0)
++#define BOOTUP_MODE_INFO                 BIT(1)
++#define DIGITAL_LOOP_BACK_PARAMS         BIT(2)
++#define RTLS_TIMESTAMP_EN                BIT(3)
++#define HOST_SPI_INTR_CFG                BIT(4)
++#define WIFI_TAPLL_CONFIGS               BIT(5)
++#define WIFI_PLL960_CONFIGS              BIT(6)
++#define WIFI_AFEPLL_CONFIGS              BIT(7)
++#define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
++#define BT_TAPLL_CONFIGS                 BIT(9)
++#define BT_PLL960_CONFIGS                BIT(10)
++#define BT_AFEPLL_CONFIGS                BIT(11)
++#define BT_SWITCH_CLK_CONFIGS            BIT(12)
++#define ZB_TAPLL_CONFIGS                 BIT(13)
++#define ZB_PLL960_CONFIGS                BIT(14)
++#define ZB_AFEPLL_CONFIGS                BIT(15)
++#define ZB_SWITCH_CLK_CONFIGS            BIT(16)
++#define BUCKBOOST_WAIT_INFO              BIT(17)
++#define PMU_WAKEUP_SHUTDOWN_W            BIT(18)
++#define WDT_PROG_VALUES                  BIT(19)
++#define WDT_RESET_DELAY_VALUE            BIT(20)
++#define DCDC_OPERATION_MODE_VALID        BIT(21)
++#define PMU_SLP_CLKOUT_SEL               BIT(22)
++#define SOC_RESET_WAIT_CNT               BIT(23)
+ 	__le32 reserved_for_valids;
+ 	__le16 bootup_mode_info;
+-	/* configuration used for digital loop back */
++#define BT_COEXIST                       BIT(0)
++#define BOOTUP_MODE                     (BIT(2) | BIT(1))
++#define CUR_DEV_MODE                    (bootup_params.bootup_mode_info >> 1)
+ 	__le16 digital_loop_back_params;
+ 	__le16 rtls_timestamp_en;
+ 	__le16 host_spi_intr_cfg;
+@@ -122,5 +160,8 @@ struct bootup_params {
+ 	/* dcdc modes configs */
+ 	__le32 dcdc_operation_mode;
+ 	__le32 soc_reset_wait_cnt;
++	__le32 waiting_time_at_fresh_sleep;
++	__le32 max_threshold_to_avoid_sleep;
++	u8 beacon_resedue_alg_en;
+ } __packed;
+ #endif
+-- 
+2.4.11
