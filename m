@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:36695 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751497AbcJ3Xns (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:33183 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932675AbcJMQlt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 19:43:48 -0400
-To: James Cloos <cloos@jhcloos.com>, linux-wireless@vger.kernel.org
-References: <m3oa21ftno.fsf@carbon.jhcloos.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <f8094de7-1357-a9d0-fee3-b28e06dd3bc7@dd-wrt.com> (sfid-20161031_004427_205565_91DE096B)
-Date: Mon, 31 Oct 2016 00:43:46 +0100
-MIME-Version: 1.0
-In-Reply-To: <m3oa21ftno.fsf@carbon.jhcloos.org>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
-Subject: Re: Backwards 11ac
+        Thu, 13 Oct 2016 12:41:49 -0400
+Received: by mail-lf0-f43.google.com with SMTP id x79so148663235lff.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 09:40:53 -0700 (PDT)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 0/5] ath6kl: non WMI data service support
+Date: Thu, 13 Oct 2016 18:39:24 +0200
+Message-Id: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161013_184155_071475_1BEF514F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k cannot show tx rates right now in a easy way. since tx rate 
-handling is done by the cards own firmware and not by the mac80211 
-wireless stack
+This patch series is intended to prepare the ath6kl driver
+for newer chipsets that doesn't use the current WMI data
+endpoints for data traffic.
 
-Sebastian
+The chipset I have been working with (and used for testing)
+is QCA6584. It is SDIO based (at least the variant I have
+been using) with 802.11p WAVE DSRC capabilities.
 
-Am 30.10.2016 um 21:50 schrieb James Cloos:
-> I recently received my turris omnia and put it into operation yesterday.
->
-> (It is only doing wireless; I have a different box for my main router.)
->
-> All of the machines on the wlan show backwards transfer speeds; they
-> upload reasonable fast but downloads are in the kbit/s range.
->
-> That applies to the both the 11ac-capable machines and the 11n-on-2.4
-> machines.
->
-> Luci's status/overview page shows 'Bitrate: 6 Mbit/s' for the ath10k and
-> 'Bitrate: 61.5 Mbit/s' for the ath9k.
->
-> (The two wireless cards in it are:
->
-> 01:00.0 Network controller: Qualcomm Atheros AR9287 Wireless Network Adapter (PCI-Express) (rev 01)
-> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac Wireless Network Adapter
-> )
->
-> Googling has not helped me figure out how to get propper bandwidth.
-> All of the search results were about wan links, not about wlan links.
->
-> What should I look at to diagnose this?
->
-> -JimC
+This chipset is different from the AR600X family in that
+it does not use the WMI data services (service id's 0x101
+to 0x104 ) for data traffic.
+Instead it uses the HTT data service for data and wmi unified
+for control messages.
+It is also different when it comes to mailbox addresses
+and HTC header format as well, but these differences are not
+part of this patch series.
 
+Erik Stromdahl (5):
+  ath6kl: HTC mbox tx complete cb support
+  ath6kl: Updated TARG_VTOP macro with default value
+  ath6kl: Added disable credit flow ctrl for mbox
+  ath6kl: Updated credit setup
+  ath6kl: service connect rewrite
+
+ drivers/net/wireless/ath/ath6kl/core.h     |   3 +
+ drivers/net/wireless/ath/ath6kl/htc-ops.h  |   2 +-
+ drivers/net/wireless/ath/ath6kl/htc.h      |   4 +-
+ drivers/net/wireless/ath/ath6kl/htc_mbox.c |  75 +++++-------
+ drivers/net/wireless/ath/ath6kl/htc_pipe.c |  16 +--
+ drivers/net/wireless/ath/ath6kl/init.c     | 187 +++++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/target.h   |   4 +-
+ 7 files changed, 156 insertions(+), 135 deletions(-)
 
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+2.1.4
