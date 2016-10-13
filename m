@@ -1,126 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36033 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933190AbcJMQlu (ORCPT
+Received: from lb2-smtp-cloud3.xs4all.net ([194.109.24.26]:35968 "EHLO
+        lb2-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755308AbcJMMgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 12:41:50 -0400
-Received: by mail-lf0-f67.google.com with SMTP id b75so13383957lfg.3
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 09:41:22 -0700 (PDT)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 4/5] ath6kl: Updated credit setup
-Date: Thu, 13 Oct 2016 18:39:28 +0200
-Message-Id: <1476376769-4708-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20161013_184203_645801_9181240A)
-In-Reply-To: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
+        Thu, 13 Oct 2016 08:36:41 -0400
+Message-ID: <1476362194.1999.11.camel@tiscali.nl> (sfid-20161013_143716_974195_2638250A)
+Subject: Re: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
+From: Paul Bolle <pebolle@tiscali.nl>
+To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+        chris@rorvick.com
+Cc: linuxwifi@intel.com, emmanuel.grumbach@intel.com,
+        johannes@sipsolutions.net, kvalo@codeaurora.org,
+        oren.givon@intel.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Thu, 13 Oct 2016 14:36:34 +0200
+In-Reply-To: <1476358222.3880.21.camel@coelho.fi>
+References: <1476349269.3880.18.camel@coelho.fi>
+         <20161013102155.14547-1-luca@coelho.fi>
+         <1476358075.1999.5.camel@tiscali.nl> <1476358222.3880.21.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies the credit setup and removes a dependency
-from htc_mbox.c.
+On Thu, 2016-10-13 at 14:30 +0300, Luca Coelho wrote:
+> I forgot to say... could you load the iwlwifi module with debug=0x01
+> (module parameter), so we can see the messages the driver is printing
+> when it doesn't find a proper structure?
 
-The service priority (the order in which the endpoint credits are
-added in target->cred_dist_list) is now determined by the sequence
-in which the host connects to services.
+That makes a lot of noise! Here's the first 100 lines or so, that
+apparently are generated directly after modprobing iwlwifi.
 
-The HTC control endpoint will have highest prio (just as before) since
-it is the first endpoint that is connected (done in htc_wait_target).
-The remaining service prio's will be prioritized in the order in
-which they are connected.
+After these 100 lines there's a ten second gap (I guess it took me ten
+seconds to actually use the wifi). I assume you don't care about that
+part of the debug messages.
 
-The rationale behind this patch is to remove the service
-dependecies (the prio list in ath6kl_htc_mbox_credit_setup) from
-htc_mbox.c.
+Have fun!
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/htc_mbox.c | 50 ++++++------------------------
- 1 file changed, 9 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc_mbox.c b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-index 2c4477d..eed3939 100644
---- a/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc_mbox.c
-@@ -29,9 +29,6 @@ static void ath6kl_htc_mbox_cleanup(struct htc_target *target);
- static void ath6kl_htc_mbox_stop(struct htc_target *target);
- static int ath6kl_htc_mbox_add_rxbuf_multiple(struct htc_target *target,
- 					      struct list_head *pkt_queue);
--static void ath6kl_htc_set_credit_dist(struct htc_target *target,
--				       struct ath6kl_htc_credit_info *cred_info,
--				       u16 svc_pri_order[], int len);
- 
- /* threshold to re-enable Tx bundling for an AC*/
- #define TX_RESUME_BUNDLE_THRESHOLD	1500
-@@ -146,18 +143,9 @@ static void ath6kl_credit_init(struct ath6kl_htc_credit_info *cred_info,
- static int ath6kl_htc_mbox_credit_setup(struct htc_target *htc_target,
- 			       struct ath6kl_htc_credit_info *cred_info)
- {
--	u16 servicepriority[5];
--
- 	memset(cred_info, 0, sizeof(struct ath6kl_htc_credit_info));
- 
--	servicepriority[0] = WMI_CONTROL_SVC;  /* highest */
--	servicepriority[1] = WMI_DATA_VO_SVC;
--	servicepriority[2] = WMI_DATA_VI_SVC;
--	servicepriority[3] = WMI_DATA_BE_SVC;
--	servicepriority[4] = WMI_DATA_BK_SVC; /* lowest */
--
--	/* set priority list */
--	ath6kl_htc_set_credit_dist(htc_target, cred_info, servicepriority, 5);
-+	htc_target->credit_info = cred_info;
- 
- 	return 0;
- }
-@@ -1094,34 +1082,6 @@ static int htc_setup_tx_complete(struct htc_target *target)
- 	return status;
- }
- 
--static void ath6kl_htc_set_credit_dist(struct htc_target *target,
--				struct ath6kl_htc_credit_info *credit_info,
--				u16 srvc_pri_order[], int list_len)
--{
--	struct htc_endpoint *endpoint;
--	int i, ep;
--
--	target->credit_info = credit_info;
--
--	list_add_tail(&target->endpoint[ENDPOINT_0].cred_dist.list,
--		      &target->cred_dist_list);
--
--	for (i = 0; i < list_len; i++) {
--		for (ep = ENDPOINT_1; ep < ENDPOINT_MAX; ep++) {
--			endpoint = &target->endpoint[ep];
--			if (endpoint->svc_id == srvc_pri_order[i]) {
--				list_add_tail(&endpoint->cred_dist.list,
--					      &target->cred_dist_list);
--				break;
--			}
--		}
--		if (ep >= ENDPOINT_MAX) {
--			WARN_ON(1);
--			return;
--		}
--	}
--}
--
- static int ath6kl_htc_mbox_tx(struct htc_target *target,
- 			      struct htc_packet *packet)
- {
-@@ -2575,6 +2535,14 @@ static int ath6kl_htc_mbox_conn_service(struct htc_target *target,
- 			   endpoint->svc_id, assigned_ep);
- 	}
- 
-+	/* Add the credit distribution list of the current endpoint
-+	 * to target->cred_dist_list.
-+	 * The order in which this function is called will determine
-+	 * the priority of the services.
-+	 */
-+	list_add_tail(&endpoint->cred_dist.list,
-+		      &target->cred_dist_list);
-+
- fail_tx:
- 	if (tx_pkt)
- 		htc_reclaim_txctrl_buf(target, tx_pkt);
--- 
-2.1.4
+Paul Bolle
+
+<7>[  767.691342] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
+<7>[  767.691362] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
+<7>[  767.692127] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-24.ucode'
+<7>[  767.692322] iwlwifi 0000:3a:00.0: U splc_get_pwr_limit No element for the WiFi domain returned by the SPLC method.
+<7>[  767.692324] iwlwifi 0000:3a:00.0: U set_dflt_pwr_limit Default power limit set to 0
+<4>[  767.692672] iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-24.ucode failed with error -2
+<7>[  767.692674] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-23.ucode'
+<4>[  767.692683] iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-23.ucode failed with error -2
+<7>[  767.692684] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-22.ucode'
+<7>[  767.693267] iwlwifi 0000:3a:00.0: U iwl_req_fw_callback Loaded firmware file 'iwlwifi-8000C-22.ucode' (2120860 bytes).
+<7>[  767.693271] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 0
+<7>[  767.693272] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 1
+<7>[  767.693274] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 2
+<7>[  767.693276] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware unknown TLV: 48
+<7>[  767.693278] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware GSCAN is supported but capabilities TLV is unavailable
+<6>[  767.693829] iwlwifi 0000:3a:00.0: loaded firmware version 22.361476.0 op_mode iwlmvm
+<6>[  767.747133] iwlwifi 0000:3a:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+<7>[  767.747141] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
+<7>[  767.747168] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
+<7>[  767.749221] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_init Init card's basic functions
+<6>[  767.749257] iwlwifi 0000:3a:00.0: L1 Enabled - LTR Disabled
+<7>[  767.749855] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
+<7>[  767.749870] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
+<7>[  767.749878] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_init Init card's basic functions
+<6>[  767.749896] iwlwifi 0000:3a:00.0: L1 Enabled - LTR Disabled
+<7>[  767.749906] iwlwifi 0000:3a:00.0: U iwl_mvm_nic_config Radio type=0x0-0x2-0x1
+<7>[  767.750608] iwlwifi 0000:3a:00.0: U iwl_pcie_nic_init Enabling shadow registers in device
+<7>[  767.750624] iwlwifi 0000:3a:00.0: U iwl_pcie_rsa_race_bug_wa can't access the RSA semaphore it is write protected
+<7>[  767.810446] iwlwifi 0000:3a:00.0: I iwl_mvm_rx_mfuart_notif MFUART: installed ver: 0x12000415, external ver: 0x12000415, status: 0x00010080, duration: 0x00000006
+<7>[  767.810861] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command BT_CONFIG
+<7>[  767.810862] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command BT_CONFIG
+<7>[  767.810984] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command BT_CONFIG
+<7>[  767.811023] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811025] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811098] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811102] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811103] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811212] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811222] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811223] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811318] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811326] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811327] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811451] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811459] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811460] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811555] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811564] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811565] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811672] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811681] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811682] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811742] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811746] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811747] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811837] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811842] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811843] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811944] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.811952] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.811953] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812011] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812016] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.812017] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812073] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812077] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.812077] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812142] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812146] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.812147] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812201] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812204] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.812205] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812276] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812281] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
+<7>[  767.812281] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812344] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
+<7>[  767.812366] iwlwifi 0000:3a:00.0: U iwl_nvm_check_version device EEPROM VER=0xe56, CALIB=0xff
+<7>[  767.812368] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
+<7>[  767.812369] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
+<7>[  767.812422] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
+<7>[  767.812425] iwlwifi 0000:3a:00.0: U iwl_send_phy_cfg_cmd Sending Phy CFG command: 0x330018
+<7>[  767.812426] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command PHY_CONFIGURATION_CMD
+<7>[  767.812427] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command PHY_CONFIGURATION_CMD
+<7>[  767.812480] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command PHY_CONFIGURATION_CMD
+<7>[  767.871057] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 1 , Size: 3684
+<7>[  767.871065] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 2 , Size: 4
+<7>[  767.871071] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871108] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871263] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871441] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871607] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871782] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871814] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
+<7>[  767.871955] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872084] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872216] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872346] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872478] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872622] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872764] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
+<7>[  767.872871] iwlwifi 0000:3a:00.0: U _iwl_trans_pcie_stop_device DEVICE_ENABLED bit was set and is now cleared
+<7>[  767.872961] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_stop Stop card, put in low power state
+<7>[  767.872980] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_stop_master stop master
+<7>[  767.877089] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
+<7>[  767.877119] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
+<6>[  767.905185] iwlwifi 0000:3a:00.0 wlp58s0: renamed from wlan0
