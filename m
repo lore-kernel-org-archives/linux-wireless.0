@@ -1,46 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50184 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:48642 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S942575AbcJSPSL (ORCPT
+        with ESMTP id S1752859AbcJMJCk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:18:11 -0400
+        Thu, 13 Oct 2016 05:02:40 -0400
+Message-ID: <1476349269.3880.18.camel@coelho.fi> (sfid-20161013_110311_725948_85CBF370)
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 13:07:54 +0300
-Message-Id: <20161019100755.23874-10-luca@coelho.fi> (sfid-20161019_171817_636749_4DCA582E)
-In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
-References: <20161019100755.23874-1-luca@coelho.fi>
-Subject: [PATCH 09/10] iwlwifi: mvm: operate in dqa mode
+To: Chris Rorvick <chris@rorvick.com>, Paul Bolle <pebolle@tiscali.nl>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Oren Givon <oren.givon@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Thu, 13 Oct 2016 12:01:09 +0300
+In-Reply-To: <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com>
+References: <20161010071943.4717-1-chris@rorvick.com>
+         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
+         <1476252719.7776.6.camel@coelho.fi> <1476255135.1972.5.camel@tiscali.nl>
+         <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Wed, 2016-10-12 at 12:50 -0500, Chris Rorvick wrote:
+> Hi Luca,
+> 
+> FYI, It seems that Google does not like your email as I'm not
+> receiving any of your messages in gmail.  Some responses below:
 
-Run DQA flows by default, as long as the FW supports it.
+That's odd.  It works for me.  Replied privately to try to sort this
+out.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 726ba48..cde8c6c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1111,9 +1111,8 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
- 
- static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
- {
--	/* Make sure DQA isn't allowed in driver until feature is complete */
--	return false && fw_has_capa(&mvm->fw->ucode_capa,
--				    IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
-+	return fw_has_capa(&mvm->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
- }
- 
- static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
--- 
-2.9.3
+> On Wed, 2016-10-12 at 15:24 +0300, Luca Coelho wrote:
+> > Hi Chris,
+> > On Tue, 2016-10-11 at 09:09 -0500, Chris Rorvick wrote:
+> > > On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle [at] tiscali> wrote:
+> > > > > This is not coming from the NIC itself, but from the platform's ACPI
+> > > > > tables. Can you tell us which platform you are using?
+> > > 
+> > > 
+> > > Interesting. I'm running a Dell XPS 13 9350. I replaced the
+> > > factory-provided Broadcom card with an AC 8260. I can update the
+> > > commit log to reflect this.
+> > 
+> > 
+> > Okay, so this makes sense. Those entries are probably formatted for
+> > the Broadcom card, which the iwlwifi driver obviously doesn't
+> > understand. The best we can do, as I already said, is to ignore values
+> > we don't understand.
+> 
+> 
+> This may already be apparent, but Dell sells two versions of the 9350:
+> one with the Broadcom adapter and one with the AC 8260.  I just
+> happened to find the former version at a deep discount at Costco so
+> decided to chance it.  Turns out the Broadcom card is not so good even
+> with new kernels so I upgraded.  Anyway, since Paul is seeing the same
+> issue I don't think the values are intended to be Broadcom-specific.
+
+Right, this is not for Broadcom.  I found out that this is something
+Intel specifies as part of the entire platform's ACPI recommendations.
+
+
+> On Wed, 2016-10-12 at 17:21 +0300, Luca Coelho wrote:
+> > And, the values in the SPLX structs are being changed here, to DOM1,
+> > LIM1, TIM1 etc., before being returned. Â This also matches your
+> > description that, at runtime, you got something different than the pure
+> > dump. Â If you follow these DOM*, LIM*, TIM* symbols, you'll probably
+> > end up getting the values you observed at runtime.
+> 
+> 
+> Probably not important, but it seems that there is some additional
+> indirection.  The only values I'm seeing associated with those symbols
+> are 8 and 16:
+> 
+>     $ grep -e 'DOM[0-9]' -e 'LIM[0-9]' -e 'TIM[0-9]' dsdt.dsl | grep -v Store
+>     DOM1,   8,
+>     LIM1,   16,
+>     TIM1,   16,
+>     DOM2,   8,
+>     LIM2,   16,
+>     TIM2,   16,
+>     DOM3,   8,
+>     LIM3,   16,
+>     TIM3,   16,
+
+Yeah, there are often many levels of indirection.  These settings can
+be also tied to the configuration that is reachable by the user in the
+BIOS setup, so you never know.
+
+The easiest way is probably to run the ASL with acpiexec and execute
+the method...
+
+> > I'll send you a patch for testing soon.
+> 
+> 
+> I will keep an eye on the list archive, thanks!
+
+I'll ping you from my Intel address and provide you with a link to the
+patch, to make it easier for you. ;)
+
+--
+Cheers,
+Luca.
