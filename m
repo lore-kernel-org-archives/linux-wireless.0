@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27896 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932673AbcJZVrb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7537 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932426AbcJMOJe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:47:31 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 9/9] mac80211: Claim Fast Initial Link Setup (FILS) STA support
-Date: Thu, 27 Oct 2016 00:42:06 +0300
-Message-ID: <1477518126-823-10-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234750_892520_6E0F716F)
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+        Thu, 13 Oct 2016 10:09:34 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+        <mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
+Date: Thu, 13 Oct 2016 14:06:09 +0000
+Message-ID: <877f9ccpim.fsf@kamboji.qca.qualcomm.com> (sfid-20161013_160938_706561_77E2EBAD)
+References: <1475596199-4563-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1475596199-4563-1-git-send-email-mohammed@qca.qualcomm.com>
+        (Mohammed Shafi Shajakhan's message of "Tue, 4 Oct 2016 21:19:59        +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the previous commits, initial FILS authentication/association
-support is now functional in mac80211-based drivers for station role
-(and FILS AP case is covered by user space in hostapd withotu requiring
-mac80211 changes).
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/main.c | 1 +
- 1 file changed, 1 insertion(+)
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> 'ath10k_htt_rx_h_unchain' needs to be called only if the return
+> value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this
+> change makes it more explicit and avoids doing a skb_peek, fetching
+> rx descriptor pointer, checking rx msdu decap format for the case of
+> ret =3D 0 (unchained msdus). Found this change during code walk through,
+> not sure if this addresses any issue.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0d9163c..1822c77 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -549,6 +549,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_MAC_ON_CREATE |
- 			   NL80211_FEATURE_USERSPACE_MPM |
- 			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS_STA);
- 
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
--- 
-1.9.1
+Applied to ath-next, thanks.
+
+(The SMTP server failed, needed to send this manually)
+
+--=20
+Kalle Valo=
