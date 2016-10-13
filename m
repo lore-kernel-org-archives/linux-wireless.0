@@ -1,55 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50583 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50970 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755070AbcJMMmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 08:42:43 -0400
-Message-ID: <1476362558.4904.23.camel@sipsolutions.net> (sfid-20161013_144310_413331_B9210563)
-Subject: Re: [PATCH v2] cfg80211: Check radar_detect and
- num_different_channels with beacon interface combinations.
+        id S1752150AbcJMNpc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:45:32 -0400
+Message-ID: <1476361828.4904.18.camel@sipsolutions.net> (sfid-20161013_154605_367770_ECE671B2)
+Subject: Re: [PATCH v10] cfg80211: Provision to allow the support for
+ different beacon intervals
 From: Johannes Berg <johannes@sipsolutions.net>
 To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
 Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
         usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Thu, 13 Oct 2016 14:42:38 +0200
-In-Reply-To: <1476277034-6972-1-git-send-email-pkushwah@qti.qualcomm.com>
-References: <1476277034-6972-1-git-send-email-pkushwah@qti.qualcomm.com>
+Date: Thu, 13 Oct 2016 14:30:28 +0200
+In-Reply-To: <1476277011-6937-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20161012_145820_073666_BE102411)
+References: <1476277011-6937-1-git-send-email-pkushwah@qti.qualcomm.com>
+         (sfid-20161012_145820_073666_BE102411)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-12 at 18:27 +0530, Purushottam Kushwaha wrote:
-> This commit enhances the current beacon interval validation to also
-> consider the "radar_detect" and "num_different_channels".
-> 
-> Rename "cfg80211_validate_beacon_int" to
-> "cfg80211_validate_beacon_combination"
-> as the validation considers other parameters.
+On Wed, 2016-10-12 at 18:26 +0530, Purushottam Kushwaha wrote:
+> This commit provides a mechanism for the host drivers to advertise
+> the
+> support for different beacon intervals among the respective interface
+> combinations in a group, through beacon_int_min_gcd (u32).
+> This beacon_int_min_gcd will be compared against GCD of all beaconing
+> interfaces of matching combinations.
 
-Looking at this more closely, I think it's correct, but incomplete.
+Applied. I made some more changes, in particular:
 
-Consider a case like the following:
+> @@ -3120,7 +3130,7 @@ struct ieee80211_iface_limit {
+>   *  };
+>   *
+>   *
+> - * 2. Allow #{AP, P2P-GO} <= 8, channels = 1, 8 total:
+> + * 2. Allow #{AP, P2P-GO} <= 8, BI min gcd = 10, channels = 1, 8
+> total:
+>   *
+>   *  struct ieee80211_iface_limit limits2[] = {
+>   *	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) |
+> @@ -3131,6 +3141,7 @@ struct ieee80211_iface_limit {
+>   *	.n_limits = ARRAY_SIZE(limits2),
+>   *	.max_interfaces = 8,
+>   *	.num_different_channels = 1,
+> + *	.beacon_int_min_gcd = 10,
+>   *  };
+>   *
 
-interface combinations:
-(1) AP=3, beacon_int_gcd=50
-(2) AP=2, station=1, beacon_int_gcd=0
+I removed this, because it would conflict with the other documentation
+changes in this area going through the doc tree. I didn't think this
+was important enough in the example to break the merge later.
 
-AP interfaces A and B are both active, with beacon intervals of 100 and
-150 respectively. So far, this is not a problem, falling into the
-interface combination (1).
+>  	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+>  		if (!wdev->beacon_interval)
+>  			continue;
+>  		if (wdev->beacon_interval != beacon_int) {
+> -			res = -EINVAL;
+> +			params.diff_bi = true;
+> +			/* Get the GCD */
+> +			bi_prev = wdev->beacon_interval;
+> +			while (bi_prev != 0) {
+> +				tmp_bi = bi_prev;
+> +				bi_prev = params.beacon_gcd %
+> bi_prev;
+> +				params.beacon_gcd = tmp_bi;
+> +			}
 
-Now, somebody wants to add a station interface, and brings it up.
-Because the validation thereof doesn't take the beacon intervals into
-account at all, this would be accepted as falling into the interface
-combination (2), but is actually incorrect due to the differing beacon
-intervals.
+I changed that a bit, moving the variables in.
 
-As a consequence, I think we need to factor out the beacon interval
-information building from cfg80211_validate_beacon_int() as it is right
-now (with your other two patches applied), and also apply it when we
-call cfg80211_iter_combinations() so that the case above gets verified.
+>  			break;
 
-This patch is probably a step in the right direction, but given the
-situation above I don't think it's complete.
+and, more importantly, I removed this break - we need to look at all
+interfaces now, not break after the first one with different BI.
+
+>  		}
+>  	}
+>  
+> -	return res;
+> +	res = cfg80211_check_combinations(&rdev->wiphy, &params);
+> +	return (res < 0) ? res : 0;
+
+removed the res variable too
 
 johannes
