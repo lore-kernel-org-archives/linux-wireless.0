@@ -1,135 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb3-smtp-cloud6.xs4all.net ([194.109.24.31]:44645 "EHLO
-        lb3-smtp-cloud6.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752479AbcJKKLv (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33533 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753456AbcJMMWY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2016 06:11:51 -0400
-Message-ID: <1476180668.17022.21.camel@tiscali.nl> (sfid-20161011_121216_592338_8F91BE2A)
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Luca Coelho <luca@coelho.fi>, Chris Rorvick <chris@rorvick.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Tue, 11 Oct 2016 12:11:08 +0200
-In-Reply-To: <1476108164.5210.11.camel@coelho.fi>
-References: <20161010071943.4717-1-chris@rorvick.com>
-         <1476108164.5210.11.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Thu, 13 Oct 2016 08:22:24 -0400
+Received: by mail-pf0-f193.google.com with SMTP id i85so1585103pfa.0
+        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 05:21:18 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 1/3] rsi: Fix memory leak in module unload
+Date: Thu, 13 Oct 2016 16:55:46 +0530
+Message-Id: <1476357946-15460-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161013_142227_626584_042D229A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luca,
+Observed crash when module is unloaded if CONFIG_RSI_DEBUGSFS is not set.
+	Fix: Debugfs entry removal moved inside CONFIG_RSI_DEBUGSFS flag in
+             function rsi_mac80211_detach()
+Memory leak found and fixed for below structures in function rsi_mac80211_detach()
+	* channel list for each supported band
+	* rsi debugfs info
 
-On Mon, 2016-10-10 at 17:02 +0300, Luca Coelho wrote:
-> On Mon, 2016-10-10 at 02:19 -0500, Chris Rorvick wrote:
-> This is not coming from the NIC itself, but from the platform's ACPI
-> tables.  Can you tell us which platform you are using?
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-On my machine I'm seeing the same error as Chris. So what exactly do
-you mean with "platform" here?
-
-> >         Name (SPLX, Package (0x04)
-> >         {
-> >             Zero,
-> >             Package (0x03)
-> >             {
-> >                 0,
-> >                 1200,
-> >                 1000
-> >             },
-> >             Package (0x03)
-> >             {
-> >                 0,
-> >                 1200,
-> >                 1000
-> >             },
-> >             Package (0x03)
-> >             {
-> >                 0,
-> >                 1200,
-> >                 1000
-> >             }
-> >         })
-> 
-> This is not the structure that we are expecting.  We expect this:
-> 
->                Name (SPLX, Package (0x02)
->                {
->                    Zero,
->                    Package (0x03)
->                    {
->                        0x07,
->                        <value>,
->                        <value>
->                    }
->                })
-> 
-> ...as you correctly pointed out.  The data in the structure you have is
-> not for WiFi (actually I don't think 0 is a valid value, but I'll
-> double-check).
-
-For what it's worth, on my machine I have twenty (!) SPLX entries, all
-reading:
-    Name (SPLX, Package (0x04)
-    {
-        Zero, 
-        Package (0x03)
-        {
-            0x80000000, 
-            0x80000000, 
-            0x80000000
-        }, 
-    
-        Package (0x03)
-        {
-           0x80000000, 
-           0x80000000, 
-           0x80000000
-        }, 
-    
-        Package (0x03)
-        {
-            0x80000000, 
-            0x80000000, 
-            0x80000000
-        }
-    })
-
-> There are other things that look a bit inconsistent in this code...
-> I'll try to find the official ACPI table definitions for this entries
-> to make sure it's correct.
-
-When I looked into this error, some time ago, I searched around a bit
-for documentation on this splx stuff. Sadly, commit bcb079a14d75
-("iwlwifi: pcie: retrieve and parse ACPI power limitations") provides
-very few clues and my searches turned up nothing useful. So a pointer
-or two would be really appreciated.
-
-> > --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> > @@ -540,7 +540,7 @@ static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
-> >  	    splx->package.count != 2 ||
-> >  	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
-> >  	    splx->package.elements[0].integer.value != 0) {
-> > -		IWL_ERR(trans, "Unsupported splx structure\n");
-> > +		IWL_WARN(trans, "Unsupported splx structure, not limiting WiFi power\n");
-> >  		return 0;
-> >  	}
-> 
-> If this is really bothering you, I guess I could apply this patch for
-> now.  But as I said, this is not solving the actual problem.
-
-Bikeshedding: I think IWL_INFO() is more appropriate, as info doesn't
-imply one needs to act on this message, while warn does imply that
-action is needed.
-
-Thanks,
-
-
-Paul Bolle
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dbb2389..58779c0 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ {
+ 	struct ieee80211_hw *hw = adapter->hw;
++	enum nl80211_band band;
+ 
+ 	if (hw) {
+ 		ieee80211_stop_queues(hw);
+@@ -201,7 +202,17 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ 		ieee80211_free_hw(hw);
+ 	}
+ 
++	for (band = 0; band < NUM_NL80211_BANDS; band++) {
++		struct ieee80211_supported_band *sband =
++					&adapter->sbands[band];
++
++		kfree(sband->channels);
++	}
++
++#ifdef CONFIG_RSI_DEBUGFS
+ 	rsi_remove_dbgfs(adapter);
++	kfree(adapter->dfsentry);
++#endif
+ }
+ EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
+ 
+-- 
+2.4.11
