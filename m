@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49599 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933755AbcJQJyE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:54:04 -0400
-Message-ID: <1476698041.19992.19.camel@sipsolutions.net> (sfid-20161017_115423_423242_8D2E2ECC)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Date: Mon, 17 Oct 2016 11:54:01 +0200
-In-Reply-To: <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org> (sfid-20161017_115245_275022_941CE721)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
-         <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
-         <1476696226.19992.13.camel@sipsolutions.net>
-         <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com>
-         <1476696918.19992.15.camel@sipsolutions.net>
-         <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org>
-         (sfid-20161017_115245_275022_941CE721)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:35828 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755634AbcJMMpn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 13 Oct 2016 08:45:43 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com
+Subject: Re: [PATCH 3/3] rsi: Updated boot parameters
+References: <1476358025-15576-1-git-send-email-prameela.j04cs@gmail.com>
+Date: Thu, 13 Oct 2016 15:45:37 +0300
+In-Reply-To: <1476358025-15576-1-git-send-email-prameela.j04cs@gmail.com>
+        (Prameela Rani Garnepudi's message of "Thu, 13 Oct 2016 16:57:05
+        +0530")
+Message-ID: <87vawwct8u.fsf@kamboji.qca.qualcomm.com> (sfid-20161013_144551_659348_61AC5E81)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-> > Well, if your other patch to make it OK to be on-stack would be
-> > applied instead, this wouldn't make much sense either :)
-> > 
-> 
-> Yes but that one only fixes ccm not gcm
+> * Switch clock info is divided in to different clock information fields for
+>   readability and synchronization with firmware code.
+> * Other parameters are added for future use and to make the frame size in sync
+>   with latest firmware. Otherwise firmware will discard the frame considering
+>   corrupted frame.
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Yes, but we can do the same for GCM, no?
+Thanks, this is much easier to review now that the style changes are gone.
 
-> > In this particular patch, we could reduce the size of the struct,
-> > but I
-> > don't actually think it'll make a difference to go from 48 to 36
-> > bytes,
-> > given alignment etc., so I think I'll just leave it as is.
-> > 
-> 
-> I understand you are in a hurry, but this is unlikely to be the only
-> such issue. I will propose an 'auxdata' feature for the crypto api
-> that can be used here, but also for any other occurrence where client
-> data assoiciated with the request can no longer be allocated on the
-> stack
+>  /* structure to store configs related to UMAC clk programming */
+>  struct switch_clk {
+> -	__le16 switch_clk_info;
+> +	__le16 switch_umac_clk : 1; /* If set rest is valid */
+> +	__le16 switch_qspi_clk : 1; /* If set qspi clk will be changed */
+> +	__le16 switch_slp_clk_2_32 : 1;
+> +	__le16 switch_bbp_lmac_clk_reg : 1;
+> +	__le16 switch_mem_ctrl_cfg : 1;
+> +	__le16 reserved : 11;
 
-No objections. I'll merge this anyway today I think, reverting is easy
-later.
+This immediately caugh my eye. Are you sure this works on big endian
+machines? I have never seen __le16 mixed with bitfields so I'm skeptical
+that this will even work, but I don't have time to really check. Anyone
+else know?
 
-johannes
+Anyway, the original code used the preferred format:
+
+-			.switch_clk_info = cpu_to_le16(BIT(3)),
+
+That is use BIT() or GENMASK()/FIELD_PREP() to create the bitmask in cpu
+native format and then convert it with cpu_to_le*() family of functions.
+
+-- 
+Kalle Valo
