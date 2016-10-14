@@ -1,65 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50158 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S943303AbcJSOz0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:55:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 10:27:20 +0300
-Message-Id: <20161019072726.22018-2-luca@coelho.fi> (sfid-20161019_165541_346612_EF91CB1C)
-In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
-References: <20161019072726.22018-1-luca@coelho.fi>
-Subject: [PATCH 1/7] iwlwifi: pcie: mark command queue lock with separate lockdep class
+Received: from s3.sipsolutions.net ([5.9.151.49]:58003 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752282AbcJNJZ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 05:25:58 -0400
+Message-ID: <1476437149.31114.27.camel@sipsolutions.net> (sfid-20161014_112621_142637_977E5CBD)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Fri, 14 Oct 2016 11:25:49 +0200
+In-Reply-To: <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com> (sfid-20161014_112151_166035_C00E6A9E)
+References: <20161010150358.GA514@swordfish>
+         <20161010153050.GA836@swordfish>
+         <1476263106.5271.23.camel@sipsolutions.net>
+         <20161012141245.GA436@swordfish>
+         <1476282127.5271.30.camel@sipsolutions.net>
+         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
+         <1476366354.4904.31.camel@sipsolutions.net>
+         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+         <1476429916.4382.12.camel@sipsolutions.net>
+         <1476433699.31114.6.camel@sipsolutions.net>
+         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
+         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
+         <1476434561.31114.7.camel@sipsolutions.net>
+         <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
+         <1476435303.31114.14.camel@sipsolutions.net>
+         <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
+         <1476436248.31114.21.camel@sipsolutions.net>
+         <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com>
+         (sfid-20161014_112151_166035_C00E6A9E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2016-10-14 at 10:21 +0100, Ard Biesheuvel wrote:
 
-Emmanuel reports that when CMD_WANT_ASYNC_CALLBACK is used by mvm,
-the callback will be called with the command queue lock held, and
-mvm will try to stop all (other) TX queues, which acquires their
-locks - this caused a false lockdep recursive locking report.
+> It is annotated with a TODO, though :-)
+> 
+> 38320c70d282b (Herbert Xu               2008-01-28 19:35:05
+> -0800  41)
+>  * TODO: Use spare space in skb for this where possible.
 
-Suppress this report by marking the command queue lock with a new,
-separate, lock class so lockdep can tell the difference between
-the two types of queues.
+I saw that, but I don't think generally there will be spare space for
+it - the stuff there is likely far too big. Anyway ... same problem
+that we have.
 
-Fixes: 156f92f2b471 ("iwlwifi: block the queues when we send ADD_STA for uAPSD")
-Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+I'm not inclined to allocate ~500 bytes temporarily for every frame
+either though.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index e9a278b..5f840f1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -592,6 +592,7 @@ error:
- static int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
- 			      int slots_num, u32 txq_id)
- {
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int ret;
- 
- 	txq->need_update = false;
-@@ -606,6 +607,13 @@ static int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
- 		return ret;
- 
- 	spin_lock_init(&txq->lock);
-+
-+	if (txq_id == trans_pcie->cmd_queue) {
-+		static struct lock_class_key iwl_pcie_cmd_queue_lock_class;
-+
-+		lockdep_set_class(&txq->lock, &iwl_pcie_cmd_queue_lock_class);
-+	}
-+
- 	__skb_queue_head_init(&txq->overflow_q);
- 
- 	/*
--- 
-2.9.3
+Maybe we could try to manage it in mac80211, we'd "only" need 5 AEAD
+structs (which are today on the stack) in parallel for each key (4 TX,
+1 RX), but in a typical case of having 3 keys that's already 7.5K worth
+of memory that we almost never use. Again, with more complexity, we
+could know that the TX will not be used if the driver does the TX, but
+the single RX one we'd need unconditionally... decisions decisions...
+
+johannes
