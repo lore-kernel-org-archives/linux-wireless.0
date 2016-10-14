@@ -1,60 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:35451 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757562AbcJQHjF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 03:39:05 -0400
-Received: by mail-io0-f177.google.com with SMTP id i202so178743242ioi.2
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 00:37:46 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476689310.19992.1.camel@sipsolutions.net>
-References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org> <1476689310.19992.1.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 17 Oct 2016 08:37:45 +0100
-Message-ID: <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com> (sfid-20161017_093933_967191_9CEBAF6A)
-Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57912 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753338AbcJNJK7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 05:10:59 -0400
+Message-ID: <1476436248.31114.21.camel@sipsolutions.net> (sfid-20161014_111138_333756_0E067CDB)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 Cc: Andy Lutomirski <luto@amacapital.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
         Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
         Herbert Xu <herbert@gondor.apana.org.au>,
         "David S. Miller" <davem@davemloft.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Date: Fri, 14 Oct 2016 11:10:48 +0200
+In-Reply-To: <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com> (sfid-20161014_110501_838823_6646CA89)
+References: <20161010150358.GA514@swordfish>
+         <20161010153050.GA836@swordfish>
+         <1476263106.5271.23.camel@sipsolutions.net>
+         <20161012141245.GA436@swordfish>
+         <1476282127.5271.30.camel@sipsolutions.net>
+         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
+         <1476366354.4904.31.camel@sipsolutions.net>
+         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+         <1476429916.4382.12.camel@sipsolutions.net>
+         <1476433699.31114.6.camel@sipsolutions.net>
+         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
+         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
+         <1476434561.31114.7.camel@sipsolutions.net>
+         <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
+         <1476435303.31114.14.camel@sipsolutions.net>
+         <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
+         (sfid-20161014_110501_838823_6646CA89)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 October 2016 at 08:28, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sat, 2016-10-15 at 18:16 +0100, Ard Biesheuvel wrote:
->> The CCM code goes out of its way to perform the CTR encryption of the
->> MAC using the subordinate CTR driver. To this end, it tweaks the
->> input and output scatterlists so the aead_req 'odata' and/or
->> 'auth_tag' fields [which may live on the stack] are prepended to the
->> CTR payload. This involves calling sg_set_buf() on addresses which
->> are not direct mapped, which is not supported.
->
->> Since the calculation of the MAC keystream involves a single call
->> into the cipher, to which we have a handle already given that the
->> CBC-MAC calculation uses it as well, just calculate the MAC keystream
->> directly, and record it in the aead_req private context so we can
->> apply it to the MAC in cypto_ccm_auth_mac(). This greatly simplifies
->> the scatterlist manipulation, and no longer requires scatterlists to
->> refer to buffers that may live on the stack.
->
-> No objection from me, Herbert?
->
-> I'm getting a bit nervous though - I'd rather have any fix first so
-> people get things working again - so maybe I'll apply your other patch
-> and mine first, and then we can replace yours by this later.
->
+On Fri, 2016-10-14 at 10:05 +0100, Ard Biesheuvel wrote:
+> 
+> Indeed. And the decrypt path does the same for auth_tag[].
 
-Could we get a statement first whether it is supported to allocate
-aead_req (and other crypto req structures) on the stack? If not, then
-we have our work cut out for us. But if it is, I'd rather we didn't
-apply the kzalloc/kfree patch, since it is just a workaround for the
-broken generic CCM driver, for which a fix is already available.
+Hadn't gotten that far, due to the BUG_ON() in CONFIG_DEBUG_SG in the
+encrypt path :)
 
-Also, regarding your __percpu patch: those are located in the vmalloc
-area as well, at least on arm64, and likely other architectures too.
+> But that still means there are two separate problems here, one which
+> affects the WPA code, and one that only affects the generic CCM
+> chaining mode (but not the accelerated arm64 implementation)
+
+Yes. The generic CCM chaining still doesn't typically have a request on
+the stack though. In fact, ESP (net/ipv4/esp4.c) for example will do
+temporary allocations with kmalloc for every frame, it seems.
+
+> Unsurprisingly, I would strongly prefer those to be fixed properly
+> rather than backing out my patch, but I'm happy to help out whichever
+> solution we reach consensus on.
+
+Yeah, obviously, it would be good to use the accelerated versions after
+all.
+
+> I will check whether this removes the issue when not using
+> crypto/ccm.ko
+
+Ok. I think we can probably live with having those 48 bytes in per-CPU
+buffers, but I suppose we don't really want to have ~500.
+
+johannes
