@@ -1,180 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:33699 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752894AbcJUCGN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 22:06:13 -0400
-Received: by mail-pf0-f178.google.com with SMTP id 128so47315306pfz.0
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2016 19:06:13 -0700 (PDT)
-Date: Thu, 20 Oct 2016 19:06:10 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh@kernel.org>, rajatxjain@gmail.com
-Subject: Re: [PATCH v4] mwifiex: parse device tree node for PCIe
-Message-ID: <20161021020609.GA18359@localhost> (sfid-20161021_040617_666920_D8313D97)
-References: <20161005194827.GA14626@localhost>
- <1477009812-95032-1-git-send-email-rajatja@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477009812-95032-1-git-send-email-rajatja@google.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57203 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754216AbcJNHcI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:32:08 -0400
+Message-ID: <1476430325.4382.18.camel@sipsolutions.net> (sfid-20161014_093211_630824_2D290E17)
+Subject: Re: [PATCH] cfg80211: Add support to update connection parameters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Fri, 14 Oct 2016 09:32:05 +0200
+In-Reply-To: <1476373178-31105-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1476373178-31105-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2016 at 05:30:12PM -0700, Rajat Jain wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> This patch derives device tree node from pcie bus layer framework.
-> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> marvell-8xxx.txt) to accomodate PCIe changes.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> ---
-> Since I need this patch and haven't seen updates, I thought I'll take a stab.
-> 
-> v2: Included vendor and product IDs in compatible strings for PCIe
-> chipsets(Rob Herring)
-> v3: Patch is created using -M option so that it will only include diff of
-> original and renamed files(Rob Herring)
-> Resend v3: Resending the patch because I missed to include device tree mailing
-> while sending v3.
-> v4: Fix error handling, also move-on even if no device tree node is present.
-> 
->  .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++--
->  drivers/net/wireless/marvell/mwifiex/pcie.c        | 39 +++++++++++++++++++---
->  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
->  3 files changed, 42 insertions(+), 8 deletions(-)
->  rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
+In addition to Arend's comments...
 
-Patch looks better to me (esp. the error handling):
+>   *     (invoked with the wireless_dev mutex held)
+> + * @update_connect_params: Update the connect parameters while connected to a
+> + *     BSS. The updated parameters can be used by driver/firmware for
+> + *     subsequent BSS selection (roaming) decisions and to form the
+> + *     Authentication/(Re)Association Request frames. This call does not
+> + *     request an immediate disassociation or reassociation with the current
+> + *     BSS, i.e., this impacts only subsequence (re)associations.
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+The other related calls are all invoked with the wireless_dev mutex
+held, I think it'd be better for consistency to replicate that here.
 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> similarity index 91%
-> rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> index c421aba..dfe5f8e 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> @@ -1,8 +1,8 @@
-> -Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-> +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
->  ------
->  
-> -This node provides properties for controlling the marvell sdio wireless device.
-> -The node is expected to be specified as a child node to the SDIO controller that
-> +This node provides properties for controlling the marvell sdio/pcie wireless device.
-> +The node is expected to be specified as a child node to the SDIO/PCIE controller that
->  connects the device to the system.
->  
->  Required properties:
-> @@ -10,6 +10,8 @@ Required properties:
->    - compatible : should be one of the following:
->  	* "marvell,sd8897"
->  	* "marvell,sd8997"
-> +	* "pci11ab,2b42"
-> +	* "pci1b4b,2b42"
->  
->  Optional properties:
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 3c3c4f1..b3e6f06 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -37,6 +37,22 @@ static struct mwifiex_if_ops pcie_ops;
->  
->  static struct semaphore add_remove_card_sem;
->  
-> +static const struct of_device_id mwifiex_pcie_of_match_table[] = {
-> +	{ .compatible = "pci11ab,2b42" },
-> +	{ .compatible = "pci1b4b,2b42" },
-> +	{ }
-> +};
-> +
-> +static int mwifiex_pcie_probe_of(struct device *dev)
+> +static int nl80211_update_connect_params(struct sk_buff *skb,
+> +					 struct genl_info *info)
 > +{
-> +	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-> +		pr_err("pcie device node not available");
-> +		return -1;
-
-Not a big fan of these '-1' error codes, instead or proper error codes.
-But that's preexisting. (Or at least, this matches the sdio.c version.)
-
-> +	}
+> +	struct cfg80211_connect_params connect;
+> +	struct cfg80211_connect_params_valid cpv;
+> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+> +	struct net_device *dev = info->user_ptr[1];
+> +	struct wireless_dev *wdev = dev->ieee80211_ptr;
 > +
-> +	return 0;
-> +}
-> +
->  static int
->  mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
->  		       size_t size, int flags)
-> @@ -178,6 +194,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
->  					const struct pci_device_id *ent)
->  {
->  	struct pcie_service_card *card;
-> +	int ret;
->  
->  	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
->  		 pdev->vendor, pdev->device, pdev->revision);
-> @@ -199,13 +216,27 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
->  		card->pcie.can_ext_scan = data->can_ext_scan;
->  	}
->  
-> -	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
-> -			     MWIFIEX_PCIE)) {
-> -		pr_err("%s failed\n", __func__);
-> -		return -1;
-> +	/* device tree node parsing and platform specific configuration*/
-> +	if (pdev->dev.of_node) {
-> +		ret = mwifiex_pcie_probe_of(&pdev->dev);
-> +		if (ret) {
-> +			dev_err(&pdev->dev,
-> +				"required compatible string missing\n");
-> +			goto err_free;
-> +		}
->  	}
->  
-> +	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
-> +			       MWIFIEX_PCIE);
-> +	if (ret) {
-> +		pr_err("%s failed\n", __func__);
-> +		goto err_free;
-> +	}
->  	return 0;
-> +
-> +err_free:
-> +	kfree(card);
+> +	memset(&connect, 0, sizeof(connect));
+> +	memset(&cpv, 0, sizeof(cpv));
 
-Is it just me, or does this fix a memory leak too? Not a big deal IMO,
-but maybe worth noting.
+I tend to prefer (0) C99 initalizers since it makes the code shorter,
+but it doesn't really matter much.
 
-Brian
+> +	if (!wdev->current_bss)
+> +		return -ENOLINK;
 
-> +	return ret;
->  }
->  
->  /*
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> index 2a162c3..c8dccf5 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-> @@ -2218,7 +2218,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
->  		 * The cal-data can be read from device tree and/or
->  		 * a configuration file and downloaded to firmware.
->  		 */
-> -		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
-> +		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
-> +		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
->  		    adapter->dev->of_node) {
->  			adapter->dt_node = adapter->dev->of_node;
->  			if (of_property_read_u32(adapter->dt_node,
-> -- 
-> 2.8.0.rc3.226.g39d4020
-> 
+Also, regarding the locking, there's no guarantee that this won't
+become NULL immediately after the check, if you don't have any locking.
+
+Now, the driver (or more likely firmware!), would still have to protect
+against races, say where the firmware disconnected while userspace
+called this ... but at least software wise it'd be consistent.
+
+johannes
