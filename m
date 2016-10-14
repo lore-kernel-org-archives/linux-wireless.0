@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hupie.dyndns.org ([80.101.237.101]:56357 "EHLO hupie.dyndns.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59080 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752099AbcJZPPt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 11:15:49 -0400
-Subject: Re: [ath9k-devel] [NOT FOR MERGE] ath9k: work around key cache
- corruption
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Antonio Quartulli <a@unstable.cc>
-References: <20161018083552.28592-1-a@unstable.cc>
- <87lgxbxl2d.fsf@purkki.adurom.net>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-        Antonio Quartulli <antonio@open-mesh.com>
-From: Ferry Huberts <mailings@hupie.com>
-Message-ID: <8dbef9e2-129e-ee65-0906-4ed9020fa712@hupie.com> (sfid-20161026_171553_631983_3E74703E)
-Date: Wed, 26 Oct 2016 16:43:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <87lgxbxl2d.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        id S1756349AbcJNNqm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 09:46:42 -0400
+Message-ID: <1476452792.31114.46.camel@sipsolutions.net> (sfid-20161014_154715_777808_598700C1)
+Subject: Re: [PATCH] mac80211: aes_ccm: move struct aead_req off the stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Fri, 14 Oct 2016 15:46:32 +0200
+In-Reply-To: <CAKv+Gu81RYq1aZUQ2Aru3Vev4LGgb1zFwWz8gepE0tQEhQi9Uw@mail.gmail.com> (sfid-20161014_151923_585451_B0D65F1F)
+References: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org>
+         <1476450635.31114.42.camel@sipsolutions.net>
+         <CAKv+Gu_eS-C84rH_MLYy--ivC0a99wwJvNDLhETfrBkYXW-XpA@mail.gmail.com>
+         <1476450941.31114.45.camel@sipsolutions.net>
+         <CAKv+Gu81RYq1aZUQ2Aru3Vev4LGgb1zFwWz8gepE0tQEhQi9Uw@mail.gmail.com>
+         (sfid-20161014_151923_585451_B0D65F1F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-do a grep in the kernel: dual license bsd/gpl
 
-On 26/10/16 16:05, Kalle Valo wrote:
-> Antonio Quartulli <a@unstable.cc> writes:
->
->> From: Antonio Quartulli <antonio@open-mesh.com>
->>
->> This patch was crafted long time ago to work around a key cache
->> corruption problem on ath9k chipsets.
->>
->> The workaround consists in periodically triggering a worker that
->> uploads all the keys to the HW cache. The worker is triggered also
->> when the vif detects 21 undecryptable packets.
->>
->>
->> This patch is based on top compat-wireless-2015-10-26.
->>
->>
->> I was asked to release this code to the public and, since it is
->> GPL, I am now doing it.
->
-> GPL? AFAICS ath9k is under ISC. I'm not sure what you mean with the
-> sentence above, but it's possible to interpret it so that this patch is
-> not under ISC license, which is problematic.
->
+> 
+> Is the aad[] actually reused? I would assume it only affects the mac
+> on encryption, and the verification on decryption but I don't think
+> we actually need it back from the crypto routines.
 
--- 
-Ferry Huberts
+I don't think it's reused.
+
+> Exactly what you said above :-) My patch only touches CCM but as you
+> said,
+> 
+> """
+> 'Also there's B_0/J_0 for CCM/GCM, and the 'zero' thing that GMAC
+> has.
+> """
+
+Ah, but we can/should do the same for the others, no?
+
+johannes
