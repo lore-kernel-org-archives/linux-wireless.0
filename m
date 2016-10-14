@@ -1,78 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42435 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753565AbcJDNZz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 09:25:55 -0400
-Message-ID: <1475587551.5324.57.camel@sipsolutions.net> (sfid-20161004_152558_169669_C0633797)
-Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Xu, Peng" <pxu@qca.qualcomm.com>
-Date: Tue, 04 Oct 2016 15:25:51 +0200
-In-Reply-To: <20161003211523.GA6585@jouni.qca.qualcomm.com>
-References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
-         <1471330367.16783.23.camel@sipsolutions.net>
-         <20160816123441.GA3678@jouni.qca.qualcomm.com>
-         <1472198948.390.20.camel@sipsolutions.net>
-         <1473674982.29016.10.camel@sipsolutions.net>
-         <20161003211523.GA6585@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50174 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752385AbcJNKTX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 06:19:23 -0400
+Subject: [PATCH v2 1/2] ath10k: refactor ath10k_peer_assoc_h_phymode()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Fri, 14 Oct 2016 13:18:59 +0300
+Message-ID: <20161014101859.5300.47040.stgit@potku.adurom.net> (sfid-20161014_121926_194539_2FA52735)
+In-Reply-To: <20161014101710.5300.21550.stgit@potku.adurom.net>
+References: <20161014101710.5300.21550.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When adding VHT160 support to ath10k_peer_assoc_h_phymode() the VHT mode
+selection code becomes too complex. Simplify it by refactoring the vht part to
+a separate function.
 
-> The main goal of this was to see if we can reduce actual driver
-> implementation size and maybe even more so to prepare for 802.11ax
-> changes (i.e., see what we are doing currently for configuring HT/VHT
-> in a way that could be done better).
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |   22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-Fair enough.
-
-> Looking at the current in-tree drivers, it looks like following
-> approaches have been used:
-> 
-> ath6kl:
-> Use cfg80211_get_chandef_type(&info->chandef) != NL80211_CHAN_NO_HT
-> to determine whether HT is enabled. No VHT support. HT-required case
-> not covered. No parsing of HT/VHT IEs used.
-
-Hmm. Wouldn't the supported rates IE still advertise the cookie for HT
-only, to make sure HT-required was done?
-
-[snip other drivers]
-
-> So I guess there could be some code sharing and cleanup done with the
-> existing in-tree drivers. Especially the mwifiex example looks like
-> something that triggered us to look at this. I'm not sure we'd
-> propose adding any new driver with the driver code itself doing
-> HT/VHT IE parsing and since ath6kl did not do this either, I don't
-> see us changing existing in-tree drivers to use this either.
-
-Maybe Marvell folks would like to change something there.
-
-> I'm not sure there would really be enough justification to add this
-> specific patch due to the assumed user space update. Adding some of
-> the HT/VHT element parsing in cfg80211 might benefit on or two of the
-> in-tree drivers if their maintainers are interested in that.
-
-Right, I agree. If we want to unify/combine anything, the best place to
-do that would just be cfg80211 at this point. Adding both the API and
-the parsing seems fairly pointless now, and evidently drivers can live
-with the status quo.
-
->  That said, without additional interest, I'm starting to lean towards
-> using this as an example of what type of parameters we need to add
-> for HE from the beginning and not merge this patch.
-
-Ok. I agree that for HE we should consider this more carefully. I
-haven't looked at HE AP side yet, so I don't really know what might be
-needed there, but when we get to it we can discuss it.
-
-I'll drop this patch then, and if Broadcom or you (ath6kl) want to add
-more parsing to the respective drivers we can consider code sharing
-with mwifiex that seems to have a more (but not fully) complete version
-in there - probably would have to be rewritten for cfg80211, but still.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 691b7b58c584..cbd0f4c3dad4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2498,6 +2498,21 @@ static bool ath10k_mac_sta_has_ofdm_only(struct ieee80211_sta *sta)
+ 	       ATH10K_MAC_FIRST_OFDM_RATE_IDX;
+ }
+ 
++static enum wmi_phy_mode ath10k_mac_get_phymode_vht(struct ath10k *ar,
++						    struct ieee80211_sta *sta)
++{
++	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
++		return MODE_11AC_VHT80;
++
++	if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
++		return MODE_11AC_VHT40;
++
++	if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
++		return MODE_11AC_VHT20;
++
++	return MODE_UNKNOWN;
++}
++
+ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 					struct ieee80211_vif *vif,
+ 					struct ieee80211_sta *sta,
+@@ -2544,12 +2559,7 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
+ 		 */
+ 		if (sta->vht_cap.vht_supported &&
+ 		    !ath10k_peer_assoc_h_vht_masked(vht_mcs_mask)) {
+-			if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
+-				phymode = MODE_11AC_VHT80;
+-			else if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
+-				phymode = MODE_11AC_VHT40;
+-			else if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
+-				phymode = MODE_11AC_VHT20;
++			phymode = ath10k_mac_get_phymode_vht(ar, sta);
+ 		} else if (sta->ht_cap.ht_supported &&
+ 			   !ath10k_peer_assoc_h_ht_masked(ht_mcs_mask)) {
+ 			if (sta->bandwidth >= IEEE80211_STA_RX_BW_40)
