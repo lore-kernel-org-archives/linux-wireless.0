@@ -1,87 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s2.neomailbox.net ([5.148.176.60]:2950 "EHLO s2.neomailbox.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934306AbcJXNfz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 09:35:55 -0400
-Date: Mon, 24 Oct 2016 21:35:10 +0800
-From: Antonio Quartulli <a@unstable.cc>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if requested
-Message-ID: <20161024133510.GD8925@prodigo.lan> (sfid-20161024_153558_840649_259CC484)
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com>
- <1447464560-28104-2-git-send-email-antonio@meshcoding.com>
- <1448016547.3141.4.camel@sipsolutions.net>
- <564F1790.7030309@open-mesh.com>
- <20161024121129.GA8925@prodigo.lan>
- <1477316004.4085.17.camel@sipsolutions.net>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35178 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756930AbcJNHrD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:47:03 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: print name of connect status event
+Date: Fri, 14 Oct 2016 09:45:59 +0200
+Message-Id: <20161014074559.22962-1-zajec5@gmail.com> (sfid-20161014_094741_518895_C61AAC2A)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="eAbsdosE1cNLO4uF"
-In-Reply-To: <1477316004.4085.17.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Rafał Miłecki <rafal@milecki.pl>
 
---eAbsdosE1cNLO4uF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This simplifies debugging. Format %s (%u) comes from similar debugging
+message in brcmf_fweh_event_worker.
 
-On Mon, Oct 24, 2016 at 03:33:24PM +0200, Johannes Berg wrote:
->=20
-> > > I think it would be reasonable only if the target channel is the
-> > > one we are using and we have done CSA. But when scanning non-
-> > > operative channels I don't think this could work.
->=20
-> > this has been sleeping for a while.. :)
-> > Would it make sense to rebase it and resubmit it for inclusion?
-> >=20
-> > Given the previous discussion we could change the logic as:
-> > * always passively scan DFS channels that are not usable
-> > * always actively scan DFS channels that are usable (i.e. CAC was
-> > performed).
->=20
-> Doesn't that contradict what you said above?
->=20
-> If we scan, don't we possibly lose our CAC result anyway, since we went
-> off-channel? In FCC at least? In ETSI I think we're allowed to do that
-> for a bit?
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c     | 4 ++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h     | 2 ++
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-argh. ok, I think I had forgotten about this detail.
-
->=20
-> Anyway, why not just always scan passively, to simplify?
->=20
-
-Probably better..ok let's do it this way.
-
-Thanks !
-
-
---=20
-Antonio Quartulli
-
---eAbsdosE1cNLO4uF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYDg4LAAoJEJ6F1zG2JyOsOf4QAKhVDk67tINEQjgwiWRYSoE4
-iU341ybeGoAXRZgu5dKJhoRHIK+BiU6e+X52GcZ/SiUxuWkqcXm1D0q0xOs9egMj
-4YcI95ENpLM+1qrrG97jyJ6CFBGk1eHuvfijwEmahwURfoiHmklQG+UOPJAIlccD
-NQaB/kaQrpZcIo3EZkvM5327NXyNTIPAQZ/i4YjEKJ/6YLRYSYpUbOv6/yZ32nPo
-KmncM3vV10hgcwMtwyPFT/HqvWp/7mWMya/eqCaYCtzSVEMKAkAq+eoy7l7lFV1H
-toPHlVYWwDngYie+Q35Dfy77HLj1Dnu/9P7rTpqZPK1yfcTOVDnbzx8b35BXMhoi
-bAfZjJE7jrf+n2mdwuwttDLQ/URlt87/Rl9Y9AWFq6Atlhxi+6sptCohxqowfOtM
-7kBiJx5bGGcX8zKhJVIujWF+emkXd29mM6Abw2CZ8HE07FMaFfdtF8VoLjLqfqSn
-WWRbKZr6qgTfWw4a/hS+m0DR0CSjfay2IrHY9jQrMF7svylBveErx7Dq88DVv19i
-d6HFJahL6yoBbyXFKeYyRy/e/uqY4t0XtPplgqVldn8yCq8NrkDb3Hyt+EsHkzmh
-SPzhwVKocPyCT+1kI9Tnu18umVFJ1jzPtCxugfAjIV2rNlhAFF/yWvZi3vlB+Uo7
-esKgf23qI+j8sqtqzRHe
-=lW/A
------END PGP SIGNATURE-----
-
---eAbsdosE1cNLO4uF--
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b777e1b..1e7c6f0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5506,7 +5506,8 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+ 	u32 reason = e->reason;
+ 	struct station_info sinfo;
+ 
+-	brcmf_dbg(CONN, "event %d, reason %d\n", event, reason);
++	brcmf_dbg(CONN, "event %s (%u), reason %d\n",
++		  brcmf_fweh_event_name(event), event, reason);
+ 	if (event == BRCMF_E_LINK && reason == BRCMF_E_REASON_LINK_BSSCFG_DIS &&
+ 	    ndev != cfg_to_ndev(cfg)) {
+ 		brcmf_dbg(CONN, "AP mode link down\n");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 79c081f..c79306b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -69,7 +69,7 @@ static struct brcmf_fweh_event_name fweh_event_names[] = {
+  *
+  * @code: code to lookup.
+  */
+-static const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code)
++const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code)
+ {
+ 	int i;
+ 	for (i = 0; i < ARRAY_SIZE(fweh_event_names); i++) {
+@@ -79,7 +79,7 @@ static const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code)
+ 	return "unknown";
+ }
+ #else
+-static const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code)
++const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code)
+ {
+ 	return "nodebug";
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+index 26ff5a9..5fba4b4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+@@ -287,6 +287,8 @@ struct brcmf_fweh_info {
+ 					 void *data);
+ };
+ 
++const char *brcmf_fweh_event_name(enum brcmf_fweh_event_code code);
++
+ void brcmf_fweh_attach(struct brcmf_pub *drvr);
+ void brcmf_fweh_detach(struct brcmf_pub *drvr);
+ int brcmf_fweh_register(struct brcmf_pub *drvr, enum brcmf_fweh_event_code code,
+-- 
+2.9.3
