@@ -1,91 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40453 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933087AbcJLNev (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:34:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Vittorio Gambaletta \(VittGam\)" <linux-wireless@vittgam.net>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <ath9k-devel@venema.h4ckr.net>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Move generic entries below specific ones in ath_pci_id_table.
-References: <ath9k-patch-20161003@vittgam.net>
-        <87k2dop15n.fsf@kamboji.qca.qualcomm.com>
-        <cd3ff141b0ba69399a377a96a9ae75fb@vittgam.net>
-Date: Wed, 12 Oct 2016 16:34:46 +0300
-In-Reply-To: <cd3ff141b0ba69399a377a96a9ae75fb@vittgam.net> (Vittorio
-        Gambaletta's message of "Tue, 04 Oct 2016 20:14:10 +0200")
-Message-ID: <87eg3lg07d.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_153515_240332_1E2CE18A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:57186 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755824AbcJNH1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:27:07 -0400
+Message-ID: <1476430023.4382.13.camel@sipsolutions.net> (sfid-20161014_092710_663067_FD5C1AB6)
+Subject: Re: [PATCH] cfg80211: Add support to update connection parameters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Fri, 14 Oct 2016 09:27:03 +0200
+In-Reply-To: <61aa0cc9-6485-b206-56ce-cd682d91dd96@broadcom.com> (sfid-20161013_205825_310572_BFC39EA5)
+References: <1476373178-31105-1-git-send-email-jouni@qca.qualcomm.com>
+         <61aa0cc9-6485-b206-56ce-cd682d91dd96@broadcom.com>
+         (sfid-20161013_205825_310572_BFC39EA5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
 
-> Hello,
->
-> On 04/10/2016 17:46:44 CEST, Kalle Valo wrote:
->> "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
->>
->>> If generic entries are positioned above specific ones, then the
->>> former will be matched first and used instead of the latter.
->>>
->>> Cc: <linux-wireless@vger.kernel.org>
->>> Cc: <ath9k-devel@qca.qualcomm.com>
->>> Cc: <ath9k-devel@lists.ath9k.org>
->>> Cc: <stable@vger.kernel.org>
->>> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
->>
->> Why? What kind of bug you are fixing? You are not really describing the
->> problem you are trying fix.
->
-> The active_high LED of my Wistron DNMA-92 is still being recognized as
-> active_low on 4.7.6 mainline.
+> >  /**
+> > + * struct cfg80211_connect_params_valid - Connection parame ters
+> > to be updated
+> 
+> What's in a name? Could we just use '_updated' instead of '_valid'
+> here and below.
 
-This kind of information is important, always add that to the commit log
-so that we don't need to guess. 
+In mac80211 we typically just have a single "u32 changed" argument,
+with bits defined in an enum - wouldn't that be sufficient here as
+well?
 
-> When I was preparing my former patch to fix that, I initially added the
-> PCI_DEVICE_SUB section for 0x0029/0x2096 above the PCI_VDEVICE section
-> for 0x0029; but then I moved the former below the latter after seeing
-> how 0x002A sections were sorted in the file.
->
-> I must have somehow messed up with testing, because I tested the final
-> version of that patch before sending it, and it was apparently working;
-> but now it is not working on 4.7.6 mainline.
->
-> With this patch, 0x0029/0x2096 has finally got active_high LED on
-> 4.7.6.
-
-I'm confused, are you now saying that this patch doesn't work?
-
-> So, after seeing that the rest of the file is sorted this way (generic
-> section after the specific ones), I concluded that the 0x002A sorting
-> was wrong in the first place, and so is 0x0029. Then I sent this patch
-> to fix this.
-
-I can't see how changing the order in ath_pci_id_table[] would make any
-difference in functionality, but I might be missing something.
-
->> And your email headers look weird:
->>
->> To:     <kvalo@codeaurora.org>
->> Cc:     <linux-wireless@vger.kernel.org>
->> Cc:     <ath9k-devel@qca.qualcomm.com>
->> Cc:     <ath9k-devel@venema.h4ckr.net>
->> Cc:     <stable@vger.kernel.org>
->> Date:   Mon, 3 Oct 2016 12:00:56 +0200
->>
->> What software are you using to send this? Only one CC header is valid
->> according to the spec (thanks to Luca for checking) even though mailers
->> seem to handle multiple CC headers. But for example my patchwork script
->> fails with this and uses only the first CC header.
->
-> Sorry about this, I used a custom mailer to send the patch since I was
-> having problems with git-send-email...
-
-Ok, that explains it.
-
--- 
-Kalle Valo
+johannes
