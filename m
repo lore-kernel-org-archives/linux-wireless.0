@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59838 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754795AbcJUKY3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 06:24:29 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.87)
-        (envelope-from <johannes@sipsolutions.net>)
-        id 1bxWzz-0001k1-M3
-        for linux-wireless@vger.kernel.org; Fri, 21 Oct 2016 12:24:27 +0200
-Message-ID: <1477045466.4068.29.camel@sipsolutions.net> (sfid-20161021_122432_479853_22095C10)
-Subject: Re: [PATCH] cfg80211: don't export cfg80211_iter_combinations()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Date: Fri, 21 Oct 2016 12:24:26 +0200
-In-Reply-To: <1477045188-13733-1-git-send-email-johannes@sipsolutions.net> (sfid-20161021_121956_012094_24E20B00)
-References: <1477045188-13733-1-git-send-email-johannes@sipsolutions.net>
-         (sfid-20161021_121956_012094_24E20B00)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59785 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751195AbcJNK0j (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 06:26:39 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] ath10k: add VHT160 support
+Date: Fri, 14 Oct 2016 10:26:34 +0000
+Message-ID: <87r37j9qg6.fsf@kamboji.qca.qualcomm.com> (sfid-20161014_122642_769263_FAE2909C)
+References: <20161014101710.5300.21550.stgit@potku.adurom.net>
+        <20161014101912.5300.66145.stgit@potku.adurom.net>
+In-Reply-To: <20161014101912.5300.66145.stgit@potku.adurom.net> (Kalle Valo's
+        message of "Fri, 14 Oct 2016 13:19:12 +0300")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-21 at 12:19 +0200, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Nothing uses it outside of cfg80211, and since only
-> cfg80211_check_combinations() uses it in the same file
-> it can even be static - do that.
-> 
-Err, obviously my git grep foo failed me ... :)
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-johannes
+> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+>
+> This patch adds full VHT160 support for QCA9984 chipsets Tested on Netgea=
+r
+> R7800. 80+80 is possible, but disabled so far since it seems to contain
+> glitches like missing vht station flags (this may be firmware or mac80211
+> related).
+>
+> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+> Patchwork-Id: 9335111
+
+Oops, the patchwork id is a leftover from my patchwork script. I'll
+remove it before I apply the patch.
+
+--=20
+Kalle Valo=
