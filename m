@@ -1,149 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb2-smtp-cloud3.xs4all.net ([194.109.24.26]:35968 "EHLO
-        lb2-smtp-cloud3.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755308AbcJMMgl (ORCPT
+Received: from mail-it0-f51.google.com ([209.85.214.51]:38679 "EHLO
+        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752708AbcJNJVv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 08:36:41 -0400
-Message-ID: <1476362194.1999.11.camel@tiscali.nl> (sfid-20161013_143716_974195_2638250A)
-Subject: Re: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        chris@rorvick.com
-Cc: linuxwifi@intel.com, emmanuel.grumbach@intel.com,
-        johannes@sipsolutions.net, kvalo@codeaurora.org,
-        oren.givon@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 13 Oct 2016 14:36:34 +0200
-In-Reply-To: <1476358222.3880.21.camel@coelho.fi>
-References: <1476349269.3880.18.camel@coelho.fi>
-         <20161013102155.14547-1-luca@coelho.fi>
-         <1476358075.1999.5.camel@tiscali.nl> <1476358222.3880.21.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 14 Oct 2016 05:21:51 -0400
+Received: by mail-it0-f51.google.com with SMTP id o19so6071613ito.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 02:21:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1476436248.31114.21.camel@sipsolutions.net>
+References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
+ <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
+ <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+ <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
+ <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+ <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
+ <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
+ <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
+ <1476434561.31114.7.camel@sipsolutions.net> <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
+ <1476435303.31114.14.camel@sipsolutions.net> <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
+ <1476436248.31114.21.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 14 Oct 2016 10:21:49 +0100
+Message-ID: <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com> (sfid-20161014_112217_498274_DE399B0A)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-13 at 14:30 +0300, Luca Coelho wrote:
-> I forgot to say... could you load the iwlwifi module with debug=0x01
-> (module parameter), so we can see the messages the driver is printing
-> when it doesn't find a proper structure?
+On 14 October 2016 at 10:10, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2016-10-14 at 10:05 +0100, Ard Biesheuvel wrote:
+>>
+>> Indeed. And the decrypt path does the same for auth_tag[].
+>
+> Hadn't gotten that far, due to the BUG_ON() in CONFIG_DEBUG_SG in the
+> encrypt path :)
+>
+>> But that still means there are two separate problems here, one which
+>> affects the WPA code, and one that only affects the generic CCM
+>> chaining mode (but not the accelerated arm64 implementation)
+>
+> Yes. The generic CCM chaining still doesn't typically have a request on
+> the stack though. In fact, ESP (net/ipv4/esp4.c) for example will do
+> temporary allocations with kmalloc for every frame, it seems.
+>
 
-That makes a lot of noise! Here's the first 100 lines or so, that
-apparently are generated directly after modprobing iwlwifi.
+It is annotated with a TODO, though :-)
 
-After these 100 lines there's a ten second gap (I guess it took me ten
-seconds to actually use the wifi). I assume you don't care about that
-part of the debug messages.
+38320c70d282b (Herbert Xu               2008-01-28 19:35:05 -0800  41)
+ * TODO: Use spare space in skb for this where possible.
 
-Have fun!
+>> Unsurprisingly, I would strongly prefer those to be fixed properly
+>> rather than backing out my patch, but I'm happy to help out whichever
+>> solution we reach consensus on.
+>
+> Yeah, obviously, it would be good to use the accelerated versions after
+> all.
+>
+>> I will check whether this removes the issue when not using
+>> crypto/ccm.ko
+>
+> Ok. I think we can probably live with having those 48 bytes in per-CPU
+> buffers, but I suppose we don't really want to have ~500.
+>
 
-
-Paul Bolle
-
-<7>[  767.691342] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-<7>[  767.691362] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
-<7>[  767.692127] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-24.ucode'
-<7>[  767.692322] iwlwifi 0000:3a:00.0: U splc_get_pwr_limit No element for the WiFi domain returned by the SPLC method.
-<7>[  767.692324] iwlwifi 0000:3a:00.0: U set_dflt_pwr_limit Default power limit set to 0
-<4>[  767.692672] iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-24.ucode failed with error -2
-<7>[  767.692674] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-23.ucode'
-<4>[  767.692683] iwlwifi 0000:3a:00.0: Direct firmware load for iwlwifi-8000C-23.ucode failed with error -2
-<7>[  767.692684] iwlwifi 0000:3a:00.0: U iwl_request_firmware attempting to load firmware 'iwlwifi-8000C-22.ucode'
-<7>[  767.693267] iwlwifi 0000:3a:00.0: U iwl_req_fw_callback Loaded firmware file 'iwlwifi-8000C-22.ucode' (2120860 bytes).
-<7>[  767.693271] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 0
-<7>[  767.693272] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 1
-<7>[  767.693274] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware Found debug memory segment: 2
-<7>[  767.693276] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware unknown TLV: 48
-<7>[  767.693278] iwlwifi 0000:3a:00.0: U iwl_parse_tlv_firmware GSCAN is supported but capabilities TLV is unavailable
-<6>[  767.693829] iwlwifi 0000:3a:00.0: loaded firmware version 22.361476.0 op_mode iwlmvm
-<6>[  767.747133] iwlwifi 0000:3a:00.0: Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
-<7>[  767.747141] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-<7>[  767.747168] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
-<7>[  767.749221] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_init Init card's basic functions
-<6>[  767.749257] iwlwifi 0000:3a:00.0: L1 Enabled - LTR Disabled
-<7>[  767.749855] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-<7>[  767.749870] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
-<7>[  767.749878] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_init Init card's basic functions
-<6>[  767.749896] iwlwifi 0000:3a:00.0: L1 Enabled - LTR Disabled
-<7>[  767.749906] iwlwifi 0000:3a:00.0: U iwl_mvm_nic_config Radio type=0x0-0x2-0x1
-<7>[  767.750608] iwlwifi 0000:3a:00.0: U iwl_pcie_nic_init Enabling shadow registers in device
-<7>[  767.750624] iwlwifi 0000:3a:00.0: U iwl_pcie_rsa_race_bug_wa can't access the RSA semaphore it is write protected
-<7>[  767.810446] iwlwifi 0000:3a:00.0: I iwl_mvm_rx_mfuart_notif MFUART: installed ver: 0x12000415, external ver: 0x12000415, status: 0x00010080, duration: 0x00000006
-<7>[  767.810861] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command BT_CONFIG
-<7>[  767.810862] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command BT_CONFIG
-<7>[  767.810984] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command BT_CONFIG
-<7>[  767.811023] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811025] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811098] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811102] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811103] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811212] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811222] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811223] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811318] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811326] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811327] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811451] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811459] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811460] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811555] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811564] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811565] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811672] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811681] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811682] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811742] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811746] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811747] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811837] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811842] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811843] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811944] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.811952] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.811953] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812011] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812016] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.812017] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812073] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812077] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.812077] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812142] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812146] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.812147] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812201] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812204] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.812205] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812276] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812281] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command NVM_ACCESS_CMD
-<7>[  767.812281] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812344] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command NVM_ACCESS_CMD
-<7>[  767.812366] iwlwifi 0000:3a:00.0: U iwl_nvm_check_version device EEPROM VER=0xe56, CALIB=0xff
-<7>[  767.812368] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command TX_ANT_CONFIGURATION_CMD
-<7>[  767.812369] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-<7>[  767.812422] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command TX_ANT_CONFIGURATION_CMD
-<7>[  767.812425] iwlwifi 0000:3a:00.0: U iwl_send_phy_cfg_cmd Sending Phy CFG command: 0x330018
-<7>[  767.812426] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Attempting to send sync command PHY_CONFIGURATION_CMD
-<7>[  767.812427] iwlwifi 0000:3a:00.0: U iwl_pcie_send_hcmd_sync Setting HCMD_ACTIVE for command PHY_CONFIGURATION_CMD
-<7>[  767.812480] iwlwifi 0000:3a:00.0: I iwl_pcie_hcmd_complete Clearing HCMD_ACTIVE for command PHY_CONFIGURATION_CMD
-<7>[  767.871057] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 1 , Size: 3684
-<7>[  767.871065] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 2 , Size: 4
-<7>[  767.871071] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871108] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871263] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871441] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871607] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871782] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871814] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 5 , Size: 2056
-<7>[  767.871955] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872084] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872216] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872346] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872478] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872622] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872764] iwlwifi 0000:3a:00.0: I iwl_phy_db_set_section iwl_phy_db_set_section(282): [PHYDB]SET: Type 4 , Size: 1552
-<7>[  767.872871] iwlwifi 0000:3a:00.0: U _iwl_trans_pcie_stop_device DEVICE_ENABLED bit was set and is now cleared
-<7>[  767.872961] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_stop Stop card, put in low power state
-<7>[  767.872980] iwlwifi 0000:3a:00.0: U iwl_pcie_apm_stop_master stop master
-<7>[  767.877089] iwlwifi 0000:3a:00.0: U iwl_pcie_prepare_card_hw iwl_trans_prepare_card_hw enter
-<7>[  767.877119] iwlwifi 0000:3a:00.0: U iwl_pcie_set_hw_ready hardware ready
-<6>[  767.905185] iwlwifi 0000:3a:00.0 wlp58s0: renamed from wlan0
+Agreed.
