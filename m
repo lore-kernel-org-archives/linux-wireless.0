@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rs224.mailgun.us ([209.61.151.224]:47286 "EHLO rs224.mailgun.us"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59067 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934089AbcJWOGS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 23 Oct 2016 10:06:18 -0400
-Received: by mail-qk0-f179.google.com with SMTP id o68so206487734qkf.3
-        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2016 06:57:24 -0700 (PDT)
-MIME-Version: 1.0
-From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn@openias.org>
-Date: Sun, 23 Oct 2016 15:57:23 +0200
-Message-ID: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com> (sfid-20161023_160622_798535_C6DAB0EF)
-Subject: Bayesian rate control
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+        id S1754535AbcJNNoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 09:44:09 -0400
+Message-ID: <1476450941.31114.45.camel@sipsolutions.net> (sfid-20161014_154413_600829_D3CA100A)
+Subject: Re: [PATCH] mac80211: aes_ccm: move struct aead_req off the stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Fri, 14 Oct 2016 15:15:41 +0200
+In-Reply-To: <CAKv+Gu_eS-C84rH_MLYy--ivC0a99wwJvNDLhETfrBkYXW-XpA@mail.gmail.com> (sfid-20161014_151311_047575_C7571920)
+References: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org>
+         <1476450635.31114.42.camel@sipsolutions.net>
+         <CAKv+Gu_eS-C84rH_MLYy--ivC0a99wwJvNDLhETfrBkYXW-XpA@mail.gmail.com>
+         (sfid-20161014_151311_047575_C7571920)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, 2016-10-14 at 14:13 +0100, Ard Biesheuvel wrote:
+> 
+> > But if we allocate things anyway, is it worth expending per-CPU
+> > buffers on these?
+> 
+> Ehmm, maybe not. I could spin a v2 that allocates a bigger buffer,
+> and copies aad[] into it as well
 
-I've been thinking about rate control a bit lately. I've written up
-some of my thoughts in a blog post
-(http://www.openias.org/bayesian-wifi-rate-control), but very briefly
-put I'd like to build a rate control algorithm based on Bayesian
-statistical inference, possibly by modeling the rate control problem
-as a "multi-armed bandit" problem and/or using Thompson sampling.
+Copies in/out, I guess. Also there's B_0/J_0 for CCM/GCM, and the
+'zero' thing that GMAC has.
 
-A couple of questions for the list:
+> That does not help the other algos though
 
-1. Is there anybody else out there thinking along similar lines?
+What do you mean?
 
-I'd very much like to find collaborators interested in working on
-this. It could serve as a pretty nice masters thesis problem, for
-example.
-
-2. What would be the best hardware/software stack to base this work on?
-
-I'm thinking the best driver for rate control experimentation would be
-ath9k, right? If so then a TP-Link TL-WA901ND router (apparently based
-on Qualcomm QCA956x SOC) with OpenWrt, and a TP-Link TL-WDN4800 PCIe
-card (apparently based on Atheros AR9380 with PCI ID 168c:0030) for my
-desktop sounds like a good combo, no? But would I have to run a custom
-kernel on my desktop then (or can I somehow get by with an Ubuntu
-standard kernel)?
-
-Any other thoughts or pointers are also more than welcome.
-
-Many thanks,
-
-Bj=C3=B6rn Smedman
+johannes
