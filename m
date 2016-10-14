@@ -1,88 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49710 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752800AbcJ3XC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 19:02:57 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: John Heenan <john@zgus.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine macpower
-References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
-        <wrfjpomidp1v.fsf@redhat.com>
-        <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
-Date: Sun, 30 Oct 2016 19:02:56 -0400
-In-Reply-To: <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
-        (John Heenan's message of "Sun, 30 Oct 2016 23:56:59 +1000")
-Message-ID: <wrfjzillsan3.fsf@redhat.com> (sfid-20161031_000318_380691_81488139)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21206 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755693AbcJNHeU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:34:20 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
+Date: Fri, 14 Oct 2016 07:34:15 +0000
+Message-ID: <87k2dbbczu.fsf@kamboji.qca.qualcomm.com> (sfid-20161014_093423_903337_B2E2C34C)
+References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
+In-Reply-To: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com> (Erik
+        Stromdahl's message of "Thu, 13 Oct 2016 18:39:24 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John Heenan <john@zgus.com> writes:
-> Thanks for your reply.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+
+> This patch series is intended to prepare the ath6kl driver
+> for newer chipsets that doesn't use the current WMI data
+> endpoints for data traffic.
 >
-> The code was tested on a Cube i9 which has an internal rtl8723bu.
+> The chipset I have been working with (and used for testing)
+> is QCA6584. It is SDIO based (at least the variant I have
+> been using) with 802.11p WAVE DSRC capabilities.
 >
-> No other devices were tested.
->
-> I am happy to accept in an ideal context hard coding macpower is
-> undesirable, the comment is undesirable and it is wrong to assume the
-> issue is not unique to the rtl8723bu.
->
-> Your reply is idealistic. What can I do now?  I should of course have
-> factored out other untested devices in my patches. The apparent
-> concern you have with process over outcome is a useful lesson.
->
-> We are not in an ideal situation. The comment is of course relevant
-> and useful to starting a process to fixing a real bug I do not have
-> sufficient information to refine any further for and others do. In the
-> circumstances nothing really more can be expected.
+> This chipset is different from the AR600X family in that
+> it does not use the WMI data services (service id's 0x101
+> to 0x104 ) for data traffic.
+> Instead it uses the HTT data service for data and wmi unified
+> for control messages.
+> It is also different when it comes to mailbox addresses
+> and HTC header format as well, but these differences are not
+> part of this patch series.
 
-Well you should start by reporting the issue and either providing a
-patch that only affects 8723bu, or work on a generic solution. I
-appreciate patches, but I do not appreciate patches that will make
-something work for one person and break for everyone else - I spent a
-lot of time making sure the driver works across the different devices.
+Do you have more patches implemented, like something already working or
+have just started?
 
-The comment violates all Linux standards - first rule when modifying
-code is to respect the style of the code you are dealing with.
-
-Code is 80 characters wide, and comments are /* */ never the ugly C++
-crap.
-
-> My patch cover letter, [PATCH 0/2] provides evidence of a mess with
-> regard to determining macpower for the rtl8723bu and what is
-> subsequently required. This is important.
->
-> The kernel driver code is very poorly documented and there is not a
-> single source reference to device documentation. For example macpower
-> is noting more than a setting that is true or false according to
-> whether a read of a particular register return 0xef or not. Such value
-> was never obtained so a full init sequence was never performed.
-
-The kernel driver is documented with the information I have - there is
-NO device documentation because Realtek refuses to provide any. I have
-written the driver based on what I have retried by reading the vendor
-drivers. If you can provide better documentation, I certainly would love
-to get it.
-
-> It would be helpful if you could provide a link to device references.
-> As it is, how am I supposed to revise the patch without relevant
-> information?
-
-Look at the USB device table, it shows you which devices are supported.
-
-> My patch code works with the Cube i9, as is, despite a lack of
-> adequate information. Before it did not. That is a powerful statement
-
-The driver works with a lot of different devices in itself that is a
-powerful statement!
-
-Yes I want to see it work with as many devices as possible, but just
-moving things around without balancing it and not explaining why is not
-a fix. If we move more of the init sequence to _start() you also have to
-move matching pieces to _stop().
-
-Jes
+--=20
+Kalle Valo=
