@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57538 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935750AbcJRTJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 15:09:58 -0400
-Message-ID: <1476817796.6425.42.camel@sipsolutions.net> (sfid-20161018_211001_655861_9F438EC5)
-Subject: Re: Intel 7260 not working on 4.4.24 / armv7
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Oliver Zemann <oliver.zemann@gmail.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 18 Oct 2016 21:09:56 +0200
-In-Reply-To: <1476817578.6425.40.camel@sipsolutions.net> (sfid-20161018_210624_954027_21817017)
-References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
-         <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
-         <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
-         <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
-         <fa098763-cdf6-03f8-6d75-0fa9dfb270e4@gmail.com>
-         (sfid-20161018_182323_634850_59C65E60) <1476817578.6425.40.camel@sipsolutions.net>
-         (sfid-20161018_210624_954027_21817017)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36819 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750717AbcJNIkE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 04:40:04 -0400
+Date: Fri, 14 Oct 2016 17:39:57 +0900
+From: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Andy Lutomirski <luto@amacapital.net>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+Message-ID: <20161014083957.GA421@swordfish> (sfid-20161014_104022_848068_6461F78E)
+References: <20161010150358.GA514@swordfish>
+ <20161010153050.GA836@swordfish>
+ <1476263106.5271.23.camel@sipsolutions.net>
+ <20161012141245.GA436@swordfish>
+ <1476282127.5271.30.camel@sipsolutions.net>
+ <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+ <1476338524.4904.1.camel@sipsolutions.net>
+ <20161013134252.GA583@swordfish>
+ <1476366354.4904.31.camel@sipsolutions.net>
+ <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-10-18 at 21:06 +0200, Johannes Berg wrote:
-> 
-> The NICs *WiFi* function should be a PCIe device, but the USB
-> connect/disconnect cycles suggest that there's something wrong with
-> the
-> electrical connection, which presumably causes the PCIe part of the
-> device to never appear on the bus.
+On (10/13/16 14:49), Andy Lutomirski wrote:
+[..]
+> > >  FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02
+> > > >> 39) == 130
+> >
+> > Yeah, we already know that in this function the aad variable is on the
+> > stack, it explicitly is.
+> >
+> > The question, though, is why precisely that fails in the crypto code.
+> > Can you send the Oops report itself?
+> >
 > 
+> It's failing before that.  With CONFIG_VMAP_STACK=y, the stack may not
+> be physically contiguous and can't be used for DMA, so putting it in a
+> scatterlist is bogus in general, and the crypto code mostly wants a
+> scatterlist.
+> 
+> There are a couple (faster!) APIs for crypto that don't use
+> scatterlists, but I don't think AEAD works with them.
 
-Also, FWIW, I had our later NIC (8260) running on an ARMv7 (a
-Hummingboard Pro i2ex or so), in both little (default) and big endian
-modes. I haven't tried the 7260 but conceivably could.
+given that we have a known issue shouldn't VMAP_STACK be
+disabled for now, or would you rather prefer to mark MAC80211
+as incompatible: "depends on CFG80211 && !VMAP_STACK"?
 
-johannes
+	-ss
