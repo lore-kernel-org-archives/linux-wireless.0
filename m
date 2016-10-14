@@ -1,89 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s2.neomailbox.net ([5.148.176.60]:40204 "EHLO s2.neomailbox.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964856AbcJVNnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Oct 2016 09:43:04 -0400
-Date: Sat, 22 Oct 2016 21:42:22 +0800
-From: Antonio Quartulli <a@unstable.cc>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [NOT FOR MERGE] ath9k: work around key cache corruption
-Message-ID: <20161022134222.GQ12558@prodigo.lan> (sfid-20161022_154307_816691_A0A58C81)
-References: <20161018083552.28592-1-a@unstable.cc>
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:34687 "EHLO
+        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbcJNPij (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 11:38:39 -0400
+Received: by mail-lf0-f42.google.com with SMTP id b81so197911156lfe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 08:38:38 -0700 (PDT)
+Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        Steve deRosier <derosier@gmail.com>
+References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
+ <CALupW3CrY5sZYBcx5Bd3E_M_Kx2sx8_N9h_uexvg_DSO0c-tJA@mail.gmail.com>
+ <87y41rbleo.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <656f8674-64b9-0440-f8ae-28177c300b1c@gmail.com> (sfid-20161014_173843_680576_C95C49AA)
+Date: Fri, 14 Oct 2016 17:38:35 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="6eUvXotnMb6+obQB"
-In-Reply-To: <20161018083552.28592-1-a@unstable.cc>
+In-Reply-To: <87y41rbleo.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---6eUvXotnMb6+obQB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-Hello,
+On 10/14/2016 06:32 AM, Valo, Kalle wrote:
+> Steve deRosier <derosier@gmail.com> writes:
+> 
+>> Hi Eric,
+>>
+>> On Thu, Oct 13, 2016 at 9:39 AM, Erik Stromdahl
+>> <erik.stromdahl@gmail.com> wrote:
+>>> This patch series is intended to prepare the ath6kl driver
+>>> for newer chipsets that doesn't use the current WMI data
+>>> endpoints for data traffic.
+>>>
+>>> The chipset I have been working with (and used for testing)
+>>> is QCA6584. It is SDIO based (at least the variant I have
+>>> been using) with 802.11p WAVE DSRC capabilities.
+>>>
+>>> This chipset is different from the AR600X family in that
+>>> it does not use the WMI data services (service id's 0x101
+>>> to 0x104 ) for data traffic.
+>>> Instead it uses the HTT data service for data and wmi unified
+>>> for control messages.
+>>> It is also different when it comes to mailbox addresses
+>>> and HTC header format as well, but these differences are not
+>>> part of this patch series.
+>>>
+>>
+>> I've only taken a quick look and I'll make specific comments to
+>> specific patches later, but I've got to ask the question, should these
+>> changes go into ath6kl or be a new driver?
+>>
+>> Just because the number starts with 6000 doesn't mean it's a ath6kl
+>> chip. The 10k series chips all start with 9000 for example, but they
+>> rate their own driver.
+>>
+>> You state that all of the underpinnings of the communication with the
+>> chip are totally different:
+>> * Doesn't use WMI
+>> * Different mailboxing
+>> * Different HTC layer
+>>
+>> If all of the commands and all of the communication layers to the chip
+>> are totally different, then perhaps it isn't an ath6kl chip. So if
+>> it's largely similar, then OK, but seems to me with the changes you're
+>> saying above, it's mostly different.
+>>
+>> I'm saying all that without any knowledge of this chip. My experience
+>> is limited to various versions of the 6003 and 6004 chips.
+> 
+> Exactly what I was thinking. When I saw terms like "HTT" and "unified
+> WMI" my first thought was that is this actually an ath10k based design?
+> The product numbers really don't give any indication what driver
+> supports, the division goes something like this:
+> 
+> * ath9k: "non-mobile" 11n chips
+> * ath6k: mobile 11n chips
+> * ath10k: mobile and "non-mobile" 11ac chips
+> 
+> For example QCA6174 is an 11ac mobile chip supported by ath10k. ath10k
+> only supports PCI bus at the moment, but I'm hoping someone would add
+> USB and SDIO support. Patches are very welcome.
+> 
+> I'm starting to suspect that QCA6584 is actually based on the same
+> design as QCA6174. If that's the case when we should also think if
+> instead we should add SDIO support to ath10k, maybe by taking relevant
+> parts from ath6kl?
+> 
+> I'll investigate more what this QCA6584 is, I haven't heard about it
+> before.
+> 
 
-I am trying to understand what's required by this patch to be merged upstre=
-am.
-Sven Eckelmann commented in another email by saying:
+The reason I have patched to ath6kl driver was that it is the
+only driver with sdio/mbox support.
 
-"The patch itself has (at least) one big problem. It is using some mac80211
-internals in ath_key_config_iter to make sure that the uploaded keys were
-actually programmed in the hardware. Without this check the keys could end =
-up
-in the lower slots and thus break all connections."
+I was actually thinking of writing a new driver from scratch, but I
+thought that it was less work to modify the existing ath6kl driver.
 
+I just haven't considered the option to add sdio/mbox support to ath10k.
+This is definitely something I will have a look at.
 
-Does anybody else have any other additional comment?
-(Please keep me in CC as I am not registered to the ath9k ML).
+I should mention that I have been using the qcacld2.0 driver as
+"documentation" of the chipset.
 
-Cheers,
+The qcacld driver identifies the chipset as AR6320
 
-On Tue, Oct 18, 2016 at 04:35:52PM +0800, Antonio Quartulli wrote:
-> From: Antonio Quartulli <antonio@open-mesh.com>
->=20
-> This patch was crafted long time ago to work around a key cache
-> corruption problem on ath9k chipsets.
->=20
-> The workaround consists in periodically triggering a worker that
-> uploads all the keys to the HW cache. The worker is triggered also
-> when the vif detects 21 undecryptable packets.
->=20
->=20
-> This patch is based on top compat-wireless-2015-10-26.
->=20
->=20
-> I was asked to release this code to the public and, since it is
-> GPL, I am now doing it.
->=20
->=20
-> Signed-off-by: Antonio Quartulli <antonio@open-mesh.com>
+>From the qcacld2.0 driver bmi_msg.h:
 
---=20
-Antonio Quartulli
+#define TARGET_TYPE_AR6320    8
 
---6eUvXotnMb6+obQB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAEBCAAGBQJYC2y7AAoJEJ6F1zG2JyOsqnMP/1LhblEFsMiSuVKTeYHJmeor
-CJhSnwXmW4Y8RPtV2QvqixWpfkqfq8IUJkVWpXvcK8jNyNPk13uO9fhzbg4On3y/
-7pc6eslBXZ/l5u6bPH94lqck48H1OhFy0pleo+5Ej0RC1nsE513430FiQHdUETCQ
-ChbsEjnKgswrKcqfXRfLDvAdjAwl3BU0QmwsJVcfe76AwvBZ0s7qjDe0hYUivHut
-BzwBNFVRfy99CKWPbFopv/tQtPwLcb1+X+rm9Uib/hbzc3StpxNf8RG4FsZCLzWo
-pxYB88c3q8feos8A5ASRlMVh48wbYSbKAaZkR6i7/y/S4QzIlXcEOS9eKMFeTvGi
-wXwBzHLru1dN6UYYi8hPpw6c893d1oeCzhkrLczVwRwr/N6HfbWCs8oBGEfJi9go
-wfV5aEKsov7on6s2kSzcKvWP8Ih0z+9RllH+14iuL3Kre11JyLRYuT+2duKsapFs
-h0iA9UvURt6F+jRJzGAYSZbI0DHi8pJzMqvZ1e9bmAi9TtbX6QrWR06QWk6/Es3V
-hx+O2gnRTqOBg4JU26gjhn7D/e8KJqwv5B/00sxkWbx5LoXNNk/YrK0Wtv7iKP9U
-v6bG+JTgPWkxkThy+16fVoyN/2IK4hwtEiRlSNZhJ9ztmUpmGML7J4HdevPELOPj
-FYgG26McGUwU7Mdq6+KM
-=YKgx
------END PGP SIGNATURE-----
-
---6eUvXotnMb6+obQB--
+Perhaps this can shed some light on what kind of chip this is?
