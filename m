@@ -1,77 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:32813 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751830AbcJJHTf (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:52264 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751997AbcJNUIj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 03:19:35 -0400
-From: Chris Rorvick <chris@rorvick.com>
-To: Intel Linux Wireless <linuxwifi@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>
+        Fri, 14 Oct 2016 16:08:39 -0400
+Date: Fri, 14 Oct 2016 16:08:37 -0400 (EDT)
+Message-Id: <20161014.160837.116145889846400558.davem@davemloft.net> (sfid-20161014_220850_899839_D2E264FF)
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Chris Rorvick <chris@rorvick.com>
-Subject: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-Date: Mon, 10 Oct 2016 02:19:43 -0500
-Message-Id: <20161010071943.4717-1-chris@rorvick.com> (sfid-20161010_091958_869263_8EC9393B)
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2016-10-14
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87oa2nbdpp.fsf@kamboji.qca.qualcomm.com>
+References: <87oa2nbdpp.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power
-limitations") looks for a specific structure in the ACPI tables for
-setting the default power limit.  The data returned for at least some
-dual band chipsets is not recognized, though.  For example, the AC 8260
-reports the following:
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Fri, 14 Oct 2016 10:18:42 +0300
 
-        Name (SPLX, Package (0x04)
-        {
-            Zero,
-            Package (0x03)
-            {
-                0,
-                1200,
-                1000
-            },
-            Package (0x03)
-            {
-                0,
-                1200,
-                1000
-            },
-            Package (0x03)
-            {
-                0,
-                1200,
-                1000
-            }
-        })
+> first wireless-drivers pull request for 4.9 and this time we have
+> unusually many fixes even before -rc1 is released. Most important here
+> are the wlcore and rtlwifi commits which fix critical regressions,
+> otherwise smaller impact fixes and one new sdio id for ath6kl.
+> 
+> Please let me know if there are any problems.
 
-The current logic expects exactly two elements in the outer package,
-causing the above to be ignored and the power limit unset.
-
-Despite the interface being fully functional after initialization, the
-above condition is reported as an error.  Knock the message down to a
-warning and provide better context for understanding its consequence.
-
-Signed-off-by: Chris Rorvick <chris@rorvick.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 78cf9a7..19b531f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -540,7 +540,7 @@ static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
- 	    splx->package.count != 2 ||
- 	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
- 	    splx->package.elements[0].integer.value != 0) {
--		IWL_ERR(trans, "Unsupported splx structure\n");
-+		IWL_WARN(trans, "Unsupported splx structure, not limiting WiFi power\n");
- 		return 0;
- 	}
- 
--- 
-2.10.1
+Pulled, thanks Kalle.
