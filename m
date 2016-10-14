@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:55827 "EHLO mga03.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:43263 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943502AbcJSPAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:00:49 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        Guenter Roeck <linux@roeck-us.net>
-Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-watchdog@vger.kernel.org,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: [char-misc-next 1/5] mei: bus: add  module_mei_cl_driver helper macro
-Date: Wed, 19 Oct 2016 16:33:27 +0300
-Message-Id: <1476884011-20645-2-git-send-email-tomas.winkler@intel.com> (sfid-20161019_174325_965266_D9D8AC16)
-In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
-References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+        id S1751148AbcJNJno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 05:43:44 -0400
+From: Jiri Slaby <jslaby@suse.cz>
+To: chunkeey@googlemail.com
+Cc: linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] p54: memset(0) whole array
+Date: Fri, 14 Oct 2016 11:23:09 +0200
+Message-Id: <20161014092309.24113-1-jslaby@suse.cz> (sfid-20161014_114410_955937_84983FCF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add module_mei_cl_driver helper macro for eliminating the boilerplate
-code from mei_cl drivers registration. The macro is intended for
-drivers which in their init/exit sections does only register/unregister
-of a mei_cl driver.
+gcc 7 complains:
+drivers/net/wireless/intersil/p54/fwio.c: In function 'p54_scan':
+drivers/net/wireless/intersil/p54/fwio.c:491:4: warning: 'memset' used with length equal to number of elements without multiplication by element size [-Wmemset-elt-size]
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Fix that by passing the correct size to memset.
+
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 ---
- include/linux/mei_cl_bus.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/net/wireless/intersil/p54/fwio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
-index e746919530f5..e6fbd98ea90e 100644
---- a/include/linux/mei_cl_bus.h
-+++ b/include/linux/mei_cl_bus.h
-@@ -74,6 +74,19 @@ int __mei_cldev_driver_register(struct mei_cl_driver *cldrv,
+diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+index 257a9eadd595..4ac6764f4897 100644
+--- a/drivers/net/wireless/intersil/p54/fwio.c
++++ b/drivers/net/wireless/intersil/p54/fwio.c
+@@ -488,7 +488,7 @@ int p54_scan(struct p54_common *priv, u16 mode, u16 dwell)
  
- void mei_cldev_driver_unregister(struct mei_cl_driver *cldrv);
- 
-+/**
-+ * module_mei_cl_driver - Helper macro for registering mei cl driver
-+ *
-+ * @__mei_cldrv mei_cl_driver structure
-+ *
-+ *  Helper macro for mei cl drivers which do not do anything special in module
-+ *  init/exit, for eliminating a boilerplate code.
-+ */
-+#define module_mei_cl_driver(__mei_cldrv) \
-+	module_driver(__mei_cldrv, \
-+		      mei_cldev_driver_register,\
-+		      mei_cldev_driver_unregister)
-+
- ssize_t mei_cldev_send(struct mei_cl_device *cldev, u8 *buf, size_t length);
- ssize_t  mei_cldev_recv(struct mei_cl_device *cldev, u8 *buf, size_t length);
- 
+ 			entry += sizeof(__le16);
+ 			chan->pa_points_per_curve = 8;
+-			memset(chan->curve_data, 0, sizeof(*chan->curve_data));
++			memset(chan->curve_data, 0, sizeof(chan->curve_data));
+ 			memcpy(chan->curve_data, entry,
+ 			       sizeof(struct p54_pa_curve_data_sample) *
+ 			       min((u8)8, curve_data->points_per_channel));
 -- 
-2.7.4
+2.10.1
