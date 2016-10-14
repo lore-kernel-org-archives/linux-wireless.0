@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.osadl.at ([92.243.35.153]:37096 "EHLO mail.osadl.at"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57178 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753157AbcJ3LLC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 07:11:02 -0400
-Date: Sun, 30 Oct 2016 11:03:12 +0000
-From: Nicholas Mc Guire <der.herr@hofr.at>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: RFC if==else in halbtc8723b1ant.c
-Message-ID: <20161030110312.GA26326@osadl.at> (sfid-20161030_121109_724191_F8AADCDF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+        id S1753004AbcJNHZb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:25:31 -0400
+Message-ID: <1476429916.4382.12.camel@sipsolutions.net> (sfid-20161014_092541_208009_922C51BD)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 14 Oct 2016 09:25:16 +0200
+In-Reply-To: <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com> (sfid-20161013_235018_225755_5BCF27D2)
+References: <20161010150358.GA514@swordfish>
+         <20161010153050.GA836@swordfish>
+         <1476263106.5271.23.camel@sipsolutions.net>
+         <20161012141245.GA436@swordfish>
+         <1476282127.5271.30.camel@sipsolutions.net>
+         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
+         <1476366354.4904.31.camel@sipsolutions.net>
+         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+         (sfid-20161013_235018_225755_5BCF27D2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2016-10-13 at 14:49 -0700, Andy Lutomirski wrote:
+> 
+> It's failing before that.  With CONFIG_VMAP_STACK=y, the stack may
+> not be physically contiguous and can't be used for DMA, so putting it
+> in a scatterlist is bogus in general, and the crypto code mostly
+> wants a scatterlist.
 
-Hi !
+I see, so all this stuff is getting inlined, and we crash in
+sg_set_buf() because it does sg_set_page() and that obviously needs to
+do virt_to_page(), which is invalid on this address now.
+With CONFIG_DEBUG_SG we'd have hit the BUG_ON there instead.
 
- in your commit f5b586909581 ("rtlwifi: btcoexist: Modify driver to support 
- BT coexistence in rtl8723be") you introduced a if/else where both branches 
- are the same but the comment in the else branch suggests that this might be
- unintended.
+It does indeed look like AEAD doesn't have any non-SG API.
 
- from code review only I can�t say what the intent is.
+So ultimately, the bug already goes back to Ard's commit 7ec7c4a9a686
+("mac80211: port CCMP to cryptoapi's CCM driver") since that already
+potentially used stack space for DMA.
 
-/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:halbtc8723b1ant_action_wifi_connected_bt_acl_busy()
+Since we don't have any space in the SKB or anywhere else at this point
+(other than the stack that we can't use), I see two ways out of this:
 
-1838                 if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
-1839                     (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-1840                         halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-1841                                                 true, 14);
-1842                         coex_dm->auto_tdma_adjust = false;
-1843                 } else { /*for low BT RSSI*/
-1844                         halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
-1845                                                 true, 14);
-1846                         coex_dm->auto_tdma_adjust = false;
-1847                 }
+   1. revert that patch (doing so would need some major adjustments now,
+      since it's pretty old and a number of new things were added in the
+      meantime)
+   2. allocate a per-CPU buffer for all the things that we put on the
+      stack and use in SG lists, those are:
+       * CCM/GCM: AAD (32B), B_0/J_0 (16B)
+       * GMAC: AAD (20B), zero (16B)
+       * (not sure why CMAC isn't using this API, but it would be like
+      GMAC)
 
-  basically the same construct is also in 
- halbtc8723b1ant_run_coexist_mechanism()
+Thoughts?
 
-2213                         if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
-2214                             (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
-2215                                 halbtc8723b1ant_limited_tx(btcoexist,
-2216                                                            NORMAL_EXEC,
-2217                                                            1, 1, 1, 1);
-2218                         } else {
-2219                                 halbtc8723b1ant_limited_tx(btcoexist,
-2220                                                            NORMAL_EXEC,
-2221                                                            1, 1, 1, 1);
-2222                         }
-
- where the if condition is the same so the else may also only apply to the
- low BT RSSI - and the if and else are again the same - if this is intended
- or not is not clear. If this is intended it should have appropriate comments.
-
-thx!
-hofrat
+johannes
