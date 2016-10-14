@@ -1,49 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:38554 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752786AbcJ0JNS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 05:13:18 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 1/5] mwifiex: remove redundant condition in main process
-Date: Thu, 27 Oct 2016 14:42:39 +0530
-Message-ID: <1477559563-18328-1-git-send-email-akarwar@marvell.com> (sfid-20161027_111348_075670_8238A08D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:57535 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750764AbcJNImw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 14 Oct 2016 04:42:52 -0400
+Message-ID: <1476434561.31114.7.camel@sipsolutions.net> (sfid-20161014_104320_228304_7F3E3AB5)
+Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Fri, 14 Oct 2016 10:42:41 +0200
+In-Reply-To: <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com> (sfid-20161014_104110_693126_BE54E499)
+References: <20161010150358.GA514@swordfish>
+         <20161010153050.GA836@swordfish>
+         <1476263106.5271.23.camel@sipsolutions.net>
+         <20161012141245.GA436@swordfish>
+         <1476282127.5271.30.camel@sipsolutions.net>
+         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
+         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
+         <1476366354.4904.31.camel@sipsolutions.net>
+         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
+         <1476429916.4382.12.camel@sipsolutions.net>
+         <1476433699.31114.6.camel@sipsolutions.net>
+         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
+         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
+         (sfid-20161014_104110_693126_BE54E499)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This condition while calling mwifiex_check_ps_cond() is redundant.
-The function internally already takes care of it.
+On Fri, 2016-10-14 at 09:41 +0100, Ard Biesheuvel wrote:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: Same as v1
----
- drivers/net/wireless/marvell/mwifiex/main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+> > I assume the stack buffer itself is not the problem here, but aad,
+> > which is allocated on the stack one frame up.
+> > Do we really need to revert the whole patch to fix that?
+> 
+> Ah never mind, this is about 'odata'. Apologies, should have read
+> first
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 2478ccd..3b31ea2 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -355,10 +355,8 @@ process_start:
- 
- 		/* Check if we need to confirm Sleep Request
- 		   received previously */
--		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
--			if (!adapter->cmd_sent && !adapter->curr_cmd)
--				mwifiex_check_ps_cond(adapter);
--		}
-+		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-+			mwifiex_check_ps_cond(adapter);
- 
- 		/* * The ps_state may have been changed during processing of
- 		 * Sleep Request event.
--- 
-1.9.1
+Right, odata also goes into an sg list and further on.
+
+I think we should wait for Herbert to chime in before we do any further
+work though, perhaps he has any better ideas.
+
+johannes
