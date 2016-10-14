@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45737 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753064AbcJZPhE (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:52364 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754700AbcJNN7o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 11:37:04 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+        Fri, 14 Oct 2016 09:59:44 -0400
+Date: Fri, 14 Oct 2016 16:52:07 +0300
+From: Jouni Malinen <j@w1.fi>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/8] mac80211: Allow AUTH_DATA to be used for FILS
-Date: Wed, 26 Oct 2016 15:36:02 +0000
-Message-ID: <20161026153559.GA13254@jouni.qca.qualcomm.com> (sfid-20161026_173708_197871_4717BF66)
-References: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
- <1477435357-8495-3-git-send-email-jouni@qca.qualcomm.com>
- <1477459800.4059.1.camel@sipsolutions.net>
-In-Reply-To: <1477459800.4059.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org,
+        hostap <hostap@lists.infradead.org>,
+        Ilan Peer <ilan.peer@intel.com>, yangzy@marvell.com,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        lihz <lihz@marvell.com>
+Subject: Re: [PATCH] cfg80211: add key management offload feature
+Message-ID: <20161014135207.GB8928@w1.fi> (sfid-20161014_155948_116568_5C415A86)
+References: <1474973796-1873-1-git-send-email-akarwar@marvell.com>
+ <1474979775.5141.27.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1474979775.5141.27.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBPY3QgMjYsIDIwMTYgYXQgMDc6MzA6MDBBTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
-cm90ZToNCj4gDQo+ID4gwqAJaWYgKHJlcS0+YXV0aF9kYXRhX2xlbiA+PSA0KSB7DQo+ID4gLQkJ
-X19sZTE2ICpwb3MgPSAoX19sZTE2ICopIHJlcS0+YXV0aF9kYXRhOw0KPiA+IC0JCWF1dGhfZGF0
-YS0+c2FlX3RyYW5zID0gbGUxNl90b19jcHUocG9zWzBdKTsNCj4gPiAtCQlhdXRoX2RhdGEtPnNh
-ZV9zdGF0dXMgPSBsZTE2X3RvX2NwdShwb3NbMV0pOw0KPiA+ICsJCWlmIChyZXEtPmF1dGhfdHlw
-ZSA9PSBOTDgwMjExX0FVVEhUWVBFX1NBRSkgew0KPiA+ICsJCQlfX2xlMTYgKnBvcyA9IChfX2xl
-MTYgKikgcmVxLT5hdXRoX2RhdGE7DQo+ID4gKwkJCWF1dGhfZGF0YS0+c2FlX3RyYW5zID0gbGUx
-Nl90b19jcHUocG9zWzBdKTsNCj4gPiArCQkJYXV0aF9kYXRhLT5zYWVfc3RhdHVzID0gbGUxNl90
-b19jcHUocG9zWzFdKTsNCj4gPiArCQl9DQo+ID4gwqAJCW1lbWNweShhdXRoX2RhdGEtPmRhdGEs
-IHJlcS0+YXV0aF9kYXRhICsgNCwNCj4gPiDCoAkJwqDCoMKgwqDCoMKgwqByZXEtPmF1dGhfZGF0
-YV9sZW4gLSA0KTsNCj4gPiDCoAkJYXV0aF9kYXRhLT5kYXRhX2xlbiArPSByZXEtPmF1dGhfZGF0
-YV9sZW4gLSA0Ow0KPiANCj4gSG1tLiBEbyB3ZSByZWFsbHkgd2FudCB0byBzdGlsbCBza2lwIHRo
-ZSBmaXJzdCBmb3VyIGJ5dGVzIG9mIHRoZSBkYXRhDQo+IHVzZXJzcGFjZSBwYXNzZWQ/IFRoYXQg
-c2VlbXMgYSBiaXQgc3RyYW5nZSB0byBtZS4gVGhlIGRvY3MgaW4gbmw4MDIxMS5oDQo+IGRvIHNh
-eSBpdCB0aGF0IHdheSBub3csIGJ1dCBzaG91bGQgd2UgcmVhbGx5IGluY2x1ZGUgYSBkdW1teQ0K
-PiBBdXRoZW50aWNhdGlvbiB0cmFuc2FjdGlvbiBzZXF1ZW5jZSBudW1iZXIgZmllbGQ/DQoNClRo
-aXMgaXMgYWRtaXR0ZWRseSBhIGJpdCBzdHJhbmdlIGRlc2lnbiB3aXRoIHRoYXQgc3BlY2lhbCBj
-YXNlIG5lZWRlZA0KZm9yIFNBRS4gSWYgd2Ugd2VyZSB0byBkZXNpZ24gdGhlIFNBRSBjYXNlIG5v
-dyBpbiBjb21iaW5hdGlvbiB3aXRoIEZJTFMsDQpJIGd1ZXNzIHRoaXMgd291bGQgYmUgcXVpdGUg
-ZGlmZmVyZW50IChlLmcuLCBzZXBhcmF0ZSBhdHRyaWJ1dGVzIGZvcg0KQXV0aGVudGljYXRpb24g
-dHJhbnNhY3Rpb24gc2VxdWVuY2UgbnVtYmVyIGFuZCBTdGF0dXMgY29kZSkuIFVubGlrZSB0aGUN
-Cm1lc2ggdXNlIGNhc2Ugd2l0aCBTQUUsIEZJTFMgaXMgb25seSBiZXR3ZWVuIGFuIEFQIGFuZCBh
-IHN0YXRpb24gYW5kIGFzDQpzdWNoLCB0aGVyZSB3b3VsZCBub3QgcmVhbGx5IGJlIGEgY2FzZSB3
-aGVyZSB0aGUgc3RhdGlvbiB3b3VsZCBzZW5kIGFuDQpBdXRoZW50aWNhdGlvbiBmcmFtZSB3aXRo
-IG5vbi16ZXJvIFN0YXR1cyBjb2RlLg0KDQpBIGZ1dHVyZSBhbWVuZG1lbnQgbWlnaHQgZGVmaW5l
-IGEgbmV3IGF1dGhlbnRpY2F0aW9uIGFsZ29yaXRobSB0aGF0IGVuZHMNCnVwIHVzaW5nIG1vcmUg
-dGhhbiBhIHNpbmdsZSBBdXRoZW50aWNhdGlvbiBmcmFtZSBleGNoYW5nZS4gSW4gc3VjaCBhDQpj
-YXNlLCB3ZSB3b3VsZCBhY3R1YWxseSBoYXZlIG5lZWQgZm9yIEF1dGhlbnRpY2F0aW9uIHRyYW5z
-YWN0aW9uDQpzZXF1ZW5jZSBudW1iZXIgZXZlbiB0aG91Z2ggRklMUyBkb2Vzbid0IG5lZWQgaXQu
-DQoNCkkgdGhpbmsgSSdkIHJhdGhlciBtYWludGFpbiBhIGNvbnNpc3RlbnQgYXR0cmlidXRlIGRl
-c2lnbiBmb3IgYWxsDQphdXRoZW50aWNhdGlvbiBhbGdvcml0aG1zIGFuZCBsZWF2ZSB0aGlzIGFz
-LWlzIG5vdy4gQW5vdGhlciBvcHRpb24gd291bGQNCmJlIHRvIG5vdCBhcHBseSB0aGUgcmVuYW1l
-IFNBRSBhdHRyaWJ1dGVzIHBhdGNoIGFuZCBkZWZpbmUgc29tZXRoaW5nIG5ldw0KYXMgYSBtb3Jl
-IGdlbmVyaWMgc29sdXRpb24sIGJ1dCBJJ20gbm90IHN1cmUgdGhlcmUgaXMgc3VmZmljaWVudA0K
-anVzdGlmaWNhdGlvbiBmb3IgdGhlIGFkZGVkIGNvbXBsZXhpdHkgc2luY2Ugd2UgY2Fubm90IHJl
-YWxseSBnZXQgcmlkIG9mDQp0aGUgY3VycmVudCBTQUUgZGVzaWduIGFueSB0aW1lIHNvb24uDQoN
-Ci0tIA0KSm91bmkgTWFsaW5lbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgUEdQIGlkIEVGQzg5NUZB
+On Tue, Sep 27, 2016 at 02:36:15PM +0200, Johannes Berg wrote:
+> > + * @NL80211_ATTR_AUTHORIZED: flag attribute, if set indicates that the
+> > + *      connection is authorized.
+> > @@ -2267,6 +2270,8 @@ enum nl80211_attrs {
+> > +	NL80211_ATTR_AUTHORIZED,
+> 
+> This already exists, no?
+> 
+> NL80211_STA_FLAG_AUTHORIZED should be more or less equivalent, if you
+> do it per station (or just for the AP in case of managed connection)
+
+It does indeed have a very similar meaning to the proposed
+NL80211_ATTR_AUTHORIZED. However, NL80211_STA_FLAG_AUTHORIZED is
+something that gets nested in NL80211_ATTR_STA or used with the mask/set
+struct in NL80211_ATTR_STA_FLAGS2. I'm not sure either of those would
+really be very clean ways to use with a connection/roam event..
+
+> > @@ -3687,6 +3692,9 @@ enum nl80211_key_attributes {
+> > +	NL80211_KEY_REPLAY_CTR,
+> > +	NL80211_KEY_KCK,
+> > +	NL80211_KEY_KEK,
+> 
+> I don't think we should conflate the (P)MK and *TK concepts in nl80211,
+> they're both keys, but they're completely separate in terms of expected
+> usage.
+> 
+> 
+> Ilan and I looked at this, considering 4-way-HS offload after 1X
+> authentication, and think that the more natural API would be to add all
+> the necessary data to the PMKSA cache entry. Thus, a PMKSA cache entry
+> for a device that does 4-way-handshake offloading would include the PMK
+> (or perhaps MSK?), and for FT it would also including the PMK-R0,
+> PMKR0Name (and possibly the MDID, or can it be derived?)
+
+PMKSA caching cases, FT protocol, and 4-way handshake following EAP
+might be doable in this manner and that might indeed be the cleanest
+approach there. However, there will also be need to cover possibility
+for offloading FILS at some point in the future.. For FILS with shared
+key, the configuration will actually include ERP keys that are not bound
+to any specific Authenticator/AP/BSSID and do not really have a PMKSA
+cache entry.. At latest at that point, I'd think we'll end up needing
+something else and that something else could be defined already now to
+cover all these cases instead of trying to force the current cases to go
+through NL80211_CMD_SET_PMKSA.
+
+
+> However, I'm wondering what exactly the offloads here do. Jouni, could
+> you also chime in with the QCA (vendor command) design?
+
+The QCA vendor command/event allows multiple different authentication
+cases to be offloaded to the driver (well, firmware) and depending on
+the driver/firmware version, there could be a bit different behavior
+based on whether the particular exchange was offloaded. In other words,
+there is automatic fallback to wpa_supplicant completing the exchange if
+the driver does not report that it was completed.
+
+> In particular, with key management offloaded, it's not clear to me what
+> exactly the roles of the device and host are here. I'm considering that
+> the device would handle the 4-way and 2-way handshakes, but then you
+> wouldn't need the KEK/KCK/ReplayCounter in the host, so there wouldn't
+> be much point in giving them to it.
+> But if the device doesn't do that, what exactly *does* it do?
+
+One of the key uses is to allow the Wi-Fi firmware to complete roaming
+(say, 4-way handshake based on existing PMKSA) when the host processor
+is not awake (i.e., wpa_supplicant is not running at all). However, this
+does not mean that we would necessarily offload all EAPOL-Key
+processing. GTK rekeying and the initial 4-way handshake for the first
+connection to an ESS might be performed by wpa_supplicant especially in
+cases where the host is awake anyway. That's why those PTK-related
+values need to be kept in sync between the driver/firmware and host
+(wpa_supplicant).
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
