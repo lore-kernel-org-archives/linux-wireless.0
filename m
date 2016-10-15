@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rs224.mailgun.us ([209.61.151.224]:56973 "EHLO rs224.mailgun.us"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750806AbcJ2Uu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Oct 2016 16:50:57 -0400
-Received: by mail-qt0-f175.google.com with SMTP id n6so19809432qtd.1
-        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2016 13:50:56 -0700 (PDT)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33606 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbcJOGEz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 15 Oct 2016 02:04:55 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Jiri Slaby <jslaby@suse.cz>, linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH] p54: memset(0) whole array
+Date: Sat, 15 Oct 2016 08:04:51 +0200
+Message-ID: <6511335.zy53ITykIM@debian64> (sfid-20161015_080546_609689_69F06D37)
+In-Reply-To: <20161014092309.24113-1-jslaby@suse.cz>
+References: <20161014092309.24113-1-jslaby@suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <1477461362.4059.17.camel@sipsolutions.net>
-References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
- <1477286912.4085.1.camel@sipsolutions.net> <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com>
- <1477379678.4390.2.camel@sipsolutions.net> <CAJ-Vmon0RTAXJMuwANCO23cPsFyFZ17sAHoReuGBG1u1Q9kK6w@mail.gmail.com>
- <1477461362.4059.17.camel@sipsolutions.net>
-From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn@openias.org>
-Date: Sat, 29 Oct 2016 22:50:55 +0200
-Message-ID: <CAGp19xeDOdF+YuZ34sQrFY+NO4kvzAzuFr0+3Ae62v-a-0eUtg@mail.gmail.com> (sfid-20161029_225102_971045_D810C80B)
-Subject: Re: Bayesian rate control
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Adrian Chadd <adrian@freebsd.org>,
-        =?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@inet.tu-berlin.de>,
-        Dave Taht <dave.taht@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thomas, Dave, Adrian, Johannes,
-
-Thanks for comments and encouragement. I bought the TP-Link TL-WA901ND
-access point and TP-Link TL-WDN4800 PCIe card. Had no problem getting
-them talking to each other with ath9k, and the rate table contains 52
-entries, so plenty to start out with.
-
-I've written a follow-up post about it if anybody's interested:
-http://www.openias.org/bayesian-wifi-materials-and-methods
-
-Cheers,
-
-Bj=C3=B6rn
-
-On Wed, Oct 26, 2016 at 7:56 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> The intel 7260 and later parts also allow user controllable rate
->> control and provide transmit completion feedback, but I don't know
->> whether it's enough for your needs.
->
-> Perhaps. However, existing rate control is *very* tightly coupled to
-> the driver, and it'd be fairly pointless to disentangle just for the
-> sake of playing with a rate control algorithm.
->
-> Also, the device doesn't support per-frame control nor any kind of
-> sampling-with-table-fallback, only the rate table that you give to the
-> device and update.
->
-> Btw, mac80211_hwsim with wmediumd doing some medium simulation might
-> also be something to look at for just extending to VHT.
->
-> And come to think of it, there's this new driver Felix et al have been
-> working on, mt7601u, which also should support proper rate control
-> APIs.
->
-> johannes
+On Friday, October 14, 2016 11:23:09 AM CEST Jiri Slaby wrote:
+> gcc 7 complains:
+> drivers/net/wireless/intersil/p54/fwio.c: In function 'p54_scan':
+> drivers/net/wireless/intersil/p54/fwio.c:491:4: warning: 'memset' used with length equal to number of elements without multiplication by element size [-Wmemset-elt-size]
+> 
+> Fix that by passing the correct size to memset.
+> 
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Christian Lamparter <chunkeey@googlemail.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+>  drivers/net/wireless/intersil/p54/fwio.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
+> index 257a9eadd595..4ac6764f4897 100644
+> --- a/drivers/net/wireless/intersil/p54/fwio.c
+> +++ b/drivers/net/wireless/intersil/p54/fwio.c
+> @@ -488,7 +488,7 @@ int p54_scan(struct p54_common *priv, u16 mode, u16 dwell)
+>  
+>  			entry += sizeof(__le16);
+>  			chan->pa_points_per_curve = 8;
+> -			memset(chan->curve_data, 0, sizeof(*chan->curve_data));
+> +			memset(chan->curve_data, 0, sizeof(chan->curve_data));
+>  			memcpy(chan->curve_data, entry,
+>  			       sizeof(struct p54_pa_curve_data_sample) *
+>  			       min((u8)8, curve_data->points_per_channel));
+> 
