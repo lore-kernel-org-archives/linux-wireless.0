@@ -1,267 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:35813 "EHLO
-        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933043AbcJTMk3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8358 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750957AbcJOF2F (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 08:40:29 -0400
-Received: by mail-lf0-f46.google.com with SMTP id l131so77586286lfl.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2016 05:40:29 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: allow vendor commands to be sent to nan
- interface
-To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
-References: <20161019044747.15921-1-luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com> (sfid-20161020_144034_959043_34B05C02)
-Date: Thu, 20 Oct 2016 14:40:20 +0200
+        Sat, 15 Oct 2016 01:28:05 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: Steve deRosier <derosier@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
+Date: Sat, 15 Oct 2016 05:24:42 +0000
+Message-ID: <87funy9obq.fsf@kamboji.qca.qualcomm.com> (sfid-20161015_072811_187517_4B89701D)
+References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
+        <CALupW3CrY5sZYBcx5Bd3E_M_Kx2sx8_N9h_uexvg_DSO0c-tJA@mail.gmail.com>
+        <87y41rbleo.fsf@kamboji.qca.qualcomm.com>
+        <656f8674-64b9-0440-f8ae-28177c300b1c@gmail.com>
+In-Reply-To: <656f8674-64b9-0440-f8ae-28177c300b1c@gmail.com> (Erik
+        Stromdahl's message of "Fri, 14 Oct 2016 17:38:35 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20161019044747.15921-1-luca@coelho.fi>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-10-2016 6:47, Luca Coelho wrote:
-> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> 
-> Allow vendor commands that require WIPHY_VENDOR_CMD_NEED_RUNNING flag, to
-> be sent to NAN interface.
-> 
-> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->  net/wireless/nl80211.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index e48b9c3..fcf5b4f 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -11258,7 +11258,8 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
->  				if (wdev->netdev &&
->  				    !netif_running(wdev->netdev))
->  					return -ENETDOWN;
-> -				if (!wdev->netdev && !wdev->p2p_started)
-> +				if (!wdev->netdev && !wdev->p2p_started &&
-> +				    !wdev->nan_started)
->  					return -ENETDOWN;
+(Adding ath10k list to CC)
 
-Seeing this patch flying by, my itch became unbearable so I cooked up
-the patch below. Please consider this an RFC and let me know your thoughts.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-Regards,
-Arend
----
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2bbbcc3..0010e5a 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3781,8 +3781,8 @@ static inline struct wiphy *wiphy_new(const struct
-cfg80211_ops *ops,
-  * @beacon_interval: beacon interval used on this device for transmitting
-  *	beacons, 0 when not valid
-  * @address: The address for this device, valid only if @netdev is %NULL
-- * @p2p_started: true if this is a P2P Device that has been started
-- * @nan_started: true if this is a NAN interface that has been started
-+ * @is_running: true if this is a non-netdev device that has been
-started, eg.
-+ *	like the P2P Device.
-  * @cac_started: true if DFS channel availability check has been started
-  * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
-  * @cac_time_ms: CAC time in ms
-@@ -3814,7 +3814,7 @@ struct wireless_dev {
+>> Exactly what I was thinking. When I saw terms like "HTT" and "unified
+>> WMI" my first thought was that is this actually an ath10k based design?
+>> The product numbers really don't give any indication what driver
+>> supports, the division goes something like this:
+>>=20
+>> * ath9k: "non-mobile" 11n chips
+>> * ath6k: mobile 11n chips
+>> * ath10k: mobile and "non-mobile" 11ac chips
+>>=20
+>> For example QCA6174 is an 11ac mobile chip supported by ath10k. ath10k
+>> only supports PCI bus at the moment, but I'm hoping someone would add
+>> USB and SDIO support. Patches are very welcome.
+>>=20
+>> I'm starting to suspect that QCA6584 is actually based on the same
+>> design as QCA6174. If that's the case when we should also think if
+>> instead we should add SDIO support to ath10k, maybe by taking relevant
+>> parts from ath6kl?
+>>=20
+>> I'll investigate more what this QCA6584 is, I haven't heard about it
+>> before.
+>>=20
+>
+> The reason I have patched to ath6kl driver was that it is the
+> only driver with sdio/mbox support.
+>
+> I was actually thinking of writing a new driver from scratch, but I
+> thought that it was less work to modify the existing ath6kl driver.
 
- 	struct mutex mtx;
+Ok.
 
--	bool use_4addr, p2p_started, nan_started;
-+	bool use_4addr, is_running;
+> I just haven't considered the option to add sdio/mbox support to ath10k.
+> This is definitely something I will have a look at.
+>
+> I should mention that I have been using the qcacld2.0 driver as
+> "documentation" of the chipset.
+>
+> The qcacld driver identifies the chipset as AR6320
+>
+> From the qcacld2.0 driver bmi_msg.h:
+>
+> #define TARGET_TYPE_AR6320    8
+>
+> Perhaps this can shed some light on what kind of chip this is?
 
- 	u8 address[ETH_ALEN] __aligned(sizeof(u16));
+I'm pretty sure that this is QCA6174 based design which is already
+supported by ath10k. So my suggestion is to first look at adding SDIO
+support to ath10k and see if that's feasible. We already have PCI code
+split from the core code (ath10k_core.ko and ath10k_pci.ko) just because
+I was expecting that we would add SDIO and USB support later. That has
+just never happened due to lack of time, hopefully you can fix that now
+;)
 
-@@ -3871,6 +3871,13 @@ static inline u8 *wdev_address(struct
-wireless_dev *wdev)
- 	return wdev->address;
- }
+I haven't studied SDIO support at all yet but hopefully WMI, core.c and
+mac.c won't need that much modifications. HTT and HTC most likely need
+bigger changes. And then you would need to add sdio.c, similarly like we
+have pci.c now. Keep in mind that later we might want to add USB support
+also so if there's something which both SDIO and USB need to that would
+need to be easily sharable. Actually after adding SDIO I hope USB would
+be easier to add.
 
-+static inline bool wdev_is_running(struct wireless_dev *wdev)
-+{
-+	if (wdev->netdev)
-+		return netif_running(wdev->netdev);
-+	return wdev->is_running;
-+}
-+
- /**
-  * wdev_priv - return wiphy priv from wireless_dev
-  *
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index f433f15..088ba44 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -210,11 +210,11 @@ void cfg80211_stop_p2p_device(struct
-cfg80211_registered_device *rdev,
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_P2P_DEVICE))
- 		return;
-
--	if (!wdev->p2p_started)
-+	if (!wdev_is_running(wdev))
- 		return;
-
- 	rdev_stop_p2p_device(rdev, wdev);
--	wdev->p2p_started = false;
-+	wdev->is_running = false;
-
- 	rdev->opencount--;
-
-@@ -233,11 +233,11 @@ void cfg80211_stop_nan(struct
-cfg80211_registered_device *rdev,
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_NAN))
- 		return;
-
--	if (!wdev->nan_started)
-+	if (!wdev_is_running(wdev))
- 		return;
-
- 	rdev_stop_nan(rdev, wdev);
--	wdev->nan_started = false;
-+	wdev->is_running = false;
-
- 	rdev->opencount--;
- }
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index fcf5b4f..e37801e 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10528,7 +10528,7 @@ static int nl80211_start_p2p_device(struct
-sk_buff *skb, struct genl_info *info)
- 	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
- 		return -EOPNOTSUPP;
-
--	if (wdev->p2p_started)
-+	if (wdev_is_running(wdev))
- 		return 0;
-
- 	if (rfkill_blocked(rdev->rfkill))
-@@ -10538,7 +10538,7 @@ static int nl80211_start_p2p_device(struct
-sk_buff *skb, struct genl_info *info)
- 	if (err)
- 		return err;
-
--	wdev->p2p_started = true;
-+	wdev->is_running = true;
- 	rdev->opencount++;
-
- 	return 0;
-@@ -10570,7 +10570,7 @@ static int nl80211_start_nan(struct sk_buff
-*skb, struct genl_info *info)
- 	if (wdev->iftype != NL80211_IFTYPE_NAN)
- 		return -EOPNOTSUPP;
-
--	if (wdev->nan_started)
-+	if (!wdev_is_running(wdev))
- 		return -EEXIST;
-
- 	if (rfkill_blocked(rdev->rfkill))
-@@ -10593,7 +10593,7 @@ static int nl80211_start_nan(struct sk_buff
-*skb, struct genl_info *info)
- 	if (err)
- 		return err;
-
--	wdev->nan_started = true;
-+	wdev->is_running = true;
- 	rdev->opencount++;
-
- 	return 0;
-@@ -10678,7 +10678,7 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
- 	if (wdev->iftype != NL80211_IFTYPE_NAN)
- 		return -EOPNOTSUPP;
-
--	if (!wdev->nan_started)
-+	if (!wdev_is_running(wdev))
- 		return -ENOTCONN;
-
- 	if (!info->attrs[NL80211_ATTR_NAN_FUNC])
-@@ -10915,7 +10915,7 @@ static int nl80211_nan_del_func(struct sk_buff *skb,
- 	if (wdev->iftype != NL80211_IFTYPE_NAN)
- 		return -EOPNOTSUPP;
-
--	if (!wdev->nan_started)
-+	if (!wdev_is_running(wdev))
- 		return -ENOTCONN;
-
- 	if (!info->attrs[NL80211_ATTR_COOKIE])
-@@ -10943,7 +10943,7 @@ static int nl80211_nan_change_config(struct
-sk_buff *skb,
- 	if (wdev->iftype != NL80211_IFTYPE_NAN)
- 		return -EOPNOTSUPP;
-
--	if (!wdev->nan_started)
-+	if (!wdev_is_running(wdev))
- 		return -ENOTCONN;
-
- 	if (info->attrs[NL80211_ATTR_NAN_MASTER_PREF]) {
-@@ -11255,11 +11255,7 @@ static int nl80211_vendor_cmd(struct sk_buff
-*skb, struct genl_info *info)
- 				return -EINVAL;
-
- 			if (vcmd->flags & WIPHY_VENDOR_CMD_NEED_RUNNING) {
--				if (wdev->netdev &&
--				    !netif_running(wdev->netdev))
--					return -ENETDOWN;
--				if (!wdev->netdev && !wdev->p2p_started &&
--				    !wdev->nan_started)
-+				if (!wdev_is_running(wdev))
- 					return -ENETDOWN;
- 			}
-
-@@ -11422,10 +11418,7 @@ static int nl80211_vendor_cmd_dump(struct
-sk_buff *skb,
- 			return -EINVAL;
-
- 		if (vcmd->flags & WIPHY_VENDOR_CMD_NEED_RUNNING) {
--			if (wdev->netdev &&
--			    !netif_running(wdev->netdev))
--				return -ENETDOWN;
--			if (!wdev->netdev && !wdev->p2p_started)
-+			if (!wdev_is_running(wdev))
- 				return -ENETDOWN;
- 		}
- 	}
-@@ -11796,29 +11789,14 @@ static int nl80211_pre_doit(const struct
-genl_ops *ops, struct sk_buff *skb,
- 			info->user_ptr[1] = wdev;
- 		}
-
--		if (dev) {
--			if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
--			    !netif_running(dev)) {
--				if (rtnl)
--					rtnl_unlock();
--				return -ENETDOWN;
--			}
--
--			dev_hold(dev);
--		} else if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP) {
--			if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
--			    !wdev->p2p_started) {
--				if (rtnl)
--					rtnl_unlock();
--				return -ENETDOWN;
--			}
--			if (wdev->iftype == NL80211_IFTYPE_NAN &&
--			    !wdev->nan_started) {
--				if (rtnl)
--					rtnl_unlock();
--				return -ENETDOWN;
--			}
-+		if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
-+		    !wdev_is_running(wdev)) {
-+			if (rtnl)
-+				rtnl_unlock();
-+			return -ENETDOWN;
- 		}
-+		if (dev)
-+			dev_hold(dev);
-
- 		info->user_ptr[0] = rdev;
- 	}
+--=20
+Kalle Valo=
