@@ -1,74 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:34906 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756436AbcJTJgi (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35675 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756855AbcJPU7s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 05:36:38 -0400
-Received: by mail-pf0-f176.google.com with SMTP id s8so33352657pfj.2
-        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2016 02:36:37 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v2] staging: wilc1000: Remove unused function wilc_lock_timeout
-Date: Thu, 20 Oct 2016 15:06:30 +0530
-Message-Id: <1476956190-7507-1-git-send-email-binoy.jayan@linaro.org> (sfid-20161020_113714_740470_EB628D81)
+        Sun, 16 Oct 2016 16:59:48 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        robh+dt@kernel.org
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v8 3/3] ath9k: parse the device configuration from an OF node
+Date: Sun, 16 Oct 2016 22:59:07 +0200
+Message-Id: <20161016205907.19927-4-martin.blumenstingl@googlemail.com> (sfid-20161016_225958_553500_F4A97007)
+In-Reply-To: <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
+References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
+ <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Semaphore are going away in the future, so remove the unused function
-wilc_lock_timeout which calls a semaphore api but has no users.
+This allows setting the MAC address and specifying that the firmware
+will be requested from userspace (because there might not be a hardware
+EEPROM connected to the chip) for ath9k based PCI devices using
+the device tree.
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+There is some out-of-tree code to "convert devicetree to
+ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
+obsolete with this patch.
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
+ drivers/net/wireless/ath/ath9k/init.c | 42 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
 
-They following is a patch [v2] which removes semaphores from wilc1000.
-Its part of a bigger effort to eliminate all semaphores
-from the linux kernel.
-
-Arnd, Thank you for reviewing. Removed the prototype as well.
-
- drivers/staging/wilc1000/linux_wlan.c         | 11 -----------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 -
- 2 files changed, 12 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 6370a5e..470d59f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -218,17 +218,6 @@ static void deinit_irq(struct net_device *dev)
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index cfa3fe8..b7c8ff9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -555,6 +557,42 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
  }
  
--int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
--{
--	/* FIXME: replace with mutex_lock or wait_for_completion */
--	int error = -1;
--
--	if (vp)
--		error = down_timeout(vp,
--				     msecs_to_jiffies(timeout));
--	return error;
--}
--
- void wilc_mac_indicate(struct wilc *wilc, int flag)
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
++	const char *mac;
++	char eeprom_name[100];
++	int ret;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (of_property_read_bool(np, "qca,no-eeprom")) {
++		/* ath9k-eeprom-<bus>-<id>.bin */
++		scnprintf(eeprom_name, sizeof(eeprom_name),
++			  "ath9k-eeprom-%s-%s.bin",
++			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
++
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++	ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
  {
- 	int status;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index ec6b167..d431673 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -225,7 +225,6 @@ struct WILC_WFI_mon_priv {
+@@ -611,6 +649,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
  
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
--int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
- void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
- 		     const struct wilc_hif_func *ops);
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.10.0
