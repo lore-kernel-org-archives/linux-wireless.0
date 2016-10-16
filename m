@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:32797 "EHLO
-        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944471AbcJSPIN (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:35792 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754399AbcJPU7o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:08:13 -0400
-Received: by mail-io0-f182.google.com with SMTP id q192so34801733iod.0
-        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2016 08:08:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476862995.5927.3.camel@sipsolutions.net>
-References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
- <1476689310.19992.1.camel@sipsolutions.net> <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
- <CALCETrUWW2A1XK7BzcajTcBzg58SDUCTE35Hj1vmbywTLCe2vQ@mail.gmail.com>
- <CAKv+Gu-25OvTSbyE06Ln8N+HsqNyV1T6oOudK2tyAAOmmXXqgA@mail.gmail.com>
- <20161019033157.GA1457@gondor.apana.org.au> <1476862995.5927.3.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 19 Oct 2016 16:08:11 +0100
-Message-ID: <CAKv+Gu9CppR+AN5_RdDJ6ZBRr1EDDLB+nABPddyaj5TKb5=j_Q@mail.gmail.com> (sfid-20161019_170846_484171_CE1DDA28)
-Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-        Andy Lutomirski <luto@amacapital.net>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+        Sun, 16 Oct 2016 16:59:44 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        robh+dt@kernel.org
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v8 0/3] add devicetree support to ath9k
+Date: Sun, 16 Oct 2016 22:59:04 +0200
+Message-Id: <20161016205907.19927-1-martin.blumenstingl@googlemail.com> (sfid-20161016_225956_878314_4051A316)
+In-Reply-To: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
+References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 October 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2016-10-19 at 11:31 +0800, Herbert Xu wrote:
->> On Mon, Oct 17, 2016 at 06:21:14PM +0100, Ard Biesheuvel wrote:
->> >
->> >
->> > Annoyingly, all this complication with scatterlists etc is for
->> > doing
->> > asynchronous crypto via DMA capable crypto accelerators, and the
->> > networking code (ipsec as well as mac80211, afaik) only allow
->> > synchronous in the first place, given that they execute in softirq
->> > context.
->>
->> I'm still thinking about the issue (in particular, whether we
->> should continue to rely on the request context being SG-capable
->> or allow it to be on the stack for AEAD).
->
-> :)
->
->> But IPsec definitely supports async crypto.  In fact it was the
->> very first user of async crypto.
->
-> Yeah.
->
+This series adds support for configuring ath9k based devices via
+devicetree. This was tested on PCI(e) based devices. This should work
+for AHB based devices as well (adding more AHB specific properties may
+still be needed) as soon as the ath79 platform is ready to populate the
+ath9k wmac via devicetree.
 
-Ah yes, my bad.
+Changes since v7:
+- renamed node in the example (use wifi@... instead of ath9k@...), thanks
+  Rob Herring for the hint
+- added the QCA PCI vendor ID and a list of PCI IDs with the corresponding
+  chipsets. This documents all known PCI IDs, but some device IDs are used
+  by multiple chipsets the list of chipset(s) per device ID may be
+  incomplete. Also some chipsets seem to use multiple PCI device IDs, such
+  as AR9485 as documented here: https://wiki.debian.org/ath9k
 
->> mac80211 on the other hand is currently sync-only.
->
-> We could probably make mac80211 do that too, but can we guarantee in-
-> order processing? Anyway, it's pretty low priority, maybe never
-> happening, since hardly anyone really uses "software" crypto, the wifi
-> devices mostly have it built in anyway.
->
 
-Indeed. The code is now correct in terms of API requirements, so let's
-just wait for someone to complain about any performance regressions.
+Changes since v6:
+- updated documentation to reflect that "reg" is a mandatory attribute
+- dropped "qca,clk-25mhz" as it is only useful for AHB devices. OF
+  support for AHB devices needs more work, so we can still introduce it
+  later
+- removed qca,disable-2ghz and qca,disable-5ghz as these will be
+  introduced as generic bindings in a separate series
+
+
+Changes since v5:
+- updated the example in the documentation (keeping it at a bare
+  minimum: removed the PCI bridge, use a better real-world example with
+  less-confusing device/fn numbers, added the actual size of the config
+  space to the reg property)
+
+
+Martin Blumenstingl (3):
+  Documentation: dt: net: add ath9k wireless device binding
+  ath9k: add a helper to get the string representation of ath_bus_type
+  ath9k: parse the device configuration from an OF node
+
+ .../devicetree/bindings/net/wireless/qca,ath9k.txt | 48 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath.h                     |  6 +++
+ drivers/net/wireless/ath/ath9k/init.c              | 42 +++++++++++++++++++
+ drivers/net/wireless/ath/main.c                    |  7 ++++
+ 4 files changed, 103 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+
+-- 
+2.10.0
