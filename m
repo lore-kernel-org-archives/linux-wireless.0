@@ -1,127 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36299 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752344AbcJJXxe (ORCPT
+Received: from mail-lf0-f51.google.com ([209.85.215.51]:34388 "EHLO
+        mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756406AbcJPVVB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 19:53:34 -0400
-Received: by mail-qk0-f196.google.com with SMTP id z190so300119qkc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 16:53:33 -0700 (PDT)
+        Sun, 16 Oct 2016 17:21:01 -0400
 MIME-Version: 1.0
-In-Reply-To: <20161010234708.GA19969@localhost>
-References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
- <20161004215814.GB31652@localhost> <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
- <20161005163024.GA54237@google.com> <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
- <CAKdAkRTKo3JVJPamM44jyG6QuHoQB89FMKj5vo3-z6T+XH1W9Q@mail.gmail.com> <20161010234708.GA19969@localhost>
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Date: Mon, 10 Oct 2016 16:53:32 -0700
-Message-ID: <CAKdAkRTNNriAiTqg15OU0fmt4h5buacYCYOq0r7nzrgTwj0=Jw@mail.gmail.com> (sfid-20161011_015337_921777_444D13E8)
-Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device unregister
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Xinming Hu <huxm@marvell.com>
+In-Reply-To: <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
+References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
+ <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
+ <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com>
+ <23f49efe-ddef-ea16-00de-7477e4872d82@nbd.name> <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sun, 16 Oct 2016 23:20:38 +0200
+Message-ID: <CAFBinCDs-qC4KWy4ZiW5DNLfixCdYYc=x3FCScHA0jh590pz_A@mail.gmail.com> (sfid-20161016_232123_351715_F962829C)
+Subject: Re: [RFC 0/3] of: add common bindings to (de)activate IEEE 802.11 bands
+To: Rob Herring <robh+dt@kernel.org>, Felix Fietkau <nbd@nbd.name>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+        Frank Rowand <frowand.list@gmail.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
-
-On Mon, Oct 10, 2016 at 4:47 PM, Brian Norris <briannorris@chromium.org> wrote:
-> Hi Dmitry,
+On Wed, Oct 5, 2016 at 10:31 PM, Rob Herring <robh+dt@kernel.org> wrote:
+> On Wed, Oct 5, 2016 at 1:36 PM, Felix Fietkau <nbd@nbd.name> wrote:
+>> On 2016-10-05 20:25, Martin Blumenstingl wrote:
+>>> On Mon, Oct 3, 2016 at 5:22 PM, Rob Herring <robh+dt@kernel.org> wrote:
+>>>> On Sun, Oct 2, 2016 at 5:50 PM, Martin Blumenstingl
+>>>> <martin.blumenstingl@googlemail.com> wrote:
+>>>>> There are at least two drivers (ath9k and mt76) out there, where
+>>>>> devicetree authors need to override the enabled bands.
+>>>>>
+>>>>> For ath9k there is only one use-case: disabling a band which has been
+>>>>> incorrectly enabled by the vendor in the EEPROM (enabling a band is not
+>>>>> possible because the calibration data would be missing in the EEPROM).
+>>>>> The mt76 driver (currently pending for review) however allows enabling
+>>>>> and disabling the 2.4GHz and 5GHz band, see [0].
+>>>>>
+>>>>> Based on the discussion of (earlier versions of) my ath9k devicetree
+>>>>> patch it was suggested [1] that we use enable- and disable- properties.
+>>>>> The current patch implements:
+>>>>> - bands can be enabled or disabled with the corresponding property
+>>>>> - if both (disable and enable) properties are given and a driver asks
+>>>>>   whether the band is enabled then the logic will return false (= not
+>>>>>   enabled, preferring the disabled flag)
+>>>>> - if both (disable and enable) properties are given and a driver asks
+>>>>>   whether the band is disabled then the logic will return true (again,
+>>>>>   preferring the disabled flag over the enabled flag)
+>>>>>
+>>>>> We can still change the logic to do what the mt76 driver does (I am
+>>>>> fine with both solutions):
+>>>>> - property not available: driver decides which bands to enable
+>>>>> - property set to 0: disable the band
+>>>>> - property set to 1: enable the band
+>>>>
+>>>> I prefer this way. Really, I'd prefer just a boolean disable property.
+>>>> I'm not sure why you need the enable. We usually have these tri-state
+>>>> properties when you want not present to mean use the bootloader or
+>>>> default setting. Try to make not present the most common case.
+>>> Felix: could you please give a few details why mt76 can not only
+>>> disable but also enable a specific band?
+>>> There is no specific comment in the sources [0] why this is needed.
+>>> All other drivers that I am aware of (ath9k, rt2x00) only allow
+>>> disabling a specific band, they never enable it (this has to be done
+>>> explicitly by the EEPROM).
+>> None of the devices use it at the moment, I probably added it when I
+>> played with a device that had broken EEPROM data. I guess I decided to
+>> do it this way because on many devices the band capability field simply
+>> cannot be trusted.
+>> I guess I would be okay with just having a disable property and adding
+>> an enable property later only if we end up actually needing it.
 >
-> On Mon, Oct 10, 2016 at 04:43:06PM -0700, Dmitry Torokhov wrote:
->> On Thu, Oct 6, 2016 at 6:03 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
->> >> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> >> owner@vger.kernel.org] On Behalf Of Brian Norris
->> >> Sent: Wednesday, October 05, 2016 10:00 PM
->> >> To: Amitkumar Karwar
->> >> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
->> >> rajatja@google.com; Xinming Hu
->> >> Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
->> >> unregister
->> >>
->> >> On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
->> >> > > From: Brian Norris [mailto:briannorris@chromium.org]
->> >> > > Sent: Wednesday, October 05, 2016 3:28 AM
->> >> > > To: Amitkumar Karwar
->> >> > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
->> >> > > rajatja@google.com; briannorris@google.com; Xinming Hu
->> >> > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
->> >> > > device unregister
->> >> > >
->> >> > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
->> >>
->> >> > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->> >> > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> >> > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
->> >> > > mwifiex_adapter *adapter)
->> >> > > >                                 pci_disable_msi(pdev);
->> >> > > >                }
->> >> > > >         }
->> >> > > > +       card->adapter = NULL;
->> >> > >
->> >> > > I think you have a similar problem here as in patch 2; there is no
->> >> > > locking to protect fields in struct pcie_service_card or struct
->> >> > > sdio_mmc_card below. That problem kind of already exists, except
->> >> > > that you only write the value of card->adapter once at registration
->> >> > > time, so it's not actually unsafe. But now that you're introducing a
->> >> > > second write, you have a problem.
->> >> > >
->> >> > > Brian
->> >> > >
->> >> >
->> >> > We have a global "add_remove_card_sem" semaphore in our code for
->> >> > synchronizing initialization and teardown threads. Ideally "init +
->> >> > teardown/reboot" should not have a race issue with this logic
->> >> >
->> >> > Later there was a loophole introduced in this after using async
->> >> > firmware download API. During initialization, firmware downloads
->> >> > asynchronously in a separate thread where might have released the
->> >> > semaphore. I am working on a patch to fix this.
->> >> >
->> >> > So "card->adapter" doesn't need to have locking. Even if we have two
->> >> > write operations, those two threads can't run simultaneously due to
->> >> > above mentioned logic.
->> >>
->> >> What about writes racing with reads? You have lots of unsynchronized
->> >> cases that read this, although most of them should be halted by now
->> >> (e.g., cmd processing). I was looking at suspend() in particular, which
->> >> I thought you were looking at in this patch series.
->> >
->> > Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
->> >
->> > Writes won't have race with reads.
->> >
->> > 1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
->> >         This place is at the beginning of initialization.
->> >         mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
->> >         There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
->> >
->> > 2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
->> >         This place the end of teardown phase.
->> >         Interrupts are disabled and all cleanup is done. We have "card->adapter" NULL checks at entry point of suspend/remove/resume, if they get called after this.
->>
->> How exactly are you preventing ->suspend() from being called *while*
->> you are running mwifiex_unregister_dev()? I.e. user slamming the lid
->> of a laptop and throwing it in their backpack?
->
-> As I already commented, isn't this primarily [*] called from the driver
-> remove() callback? remove() doesn't race with suspend(), does it?
+> If EEPROM is commonly wrong or missing, then seems like you want to
+> plan ahead and support both enable and disable.
+if we want to plan ahead we could use two properties "ieee80211-2ghz"
+and "ieee80211-5ghz", each of them allows the values: 0 = disabled, 1
+= enabled, absent = auto-detect (for example based on the card's
+EEPROM), any other value is invalid
 
-Nope, there is request_firmware_nowait() path that is asynchronous
-with device registration/unregistration and power management. Maybe
-the right way is to move the driver to async probing and switch that
-request_firmware_nowait() into plain request_firmware(). I haven't
-looked that closely.
+How should our API look in this case?
+Would we still have bool ..._enabled() and bool ..._disabled() - what
+if the property is absent (would we add another boolean
+ieee80211_is_[2,5]ghz_configured(np) to handle that)?
+We could also introduce int ieee80211_get_[2,5]ghz_enabled(struct
+device_node *np, bool *enabled) and leave it up to the caller?
 
-The wording "we may end up accessing invalid memory in some corner
-cases" which is a synonym for "the code is racy" caught my eye, thus
-the response on the patch.
 
-Thanks.
-
--- 
-Dmitry
+Regards,
+Martin
