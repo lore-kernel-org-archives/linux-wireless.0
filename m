@@ -1,64 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57942 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752371AbcI3XfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 19:35:20 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 2/2] rtl8xxxu: Fix rtl8192eu driver reload issue
-Date: Fri, 30 Sep 2016 19:35:18 -0400
-Message-Id: <1475278518-18527-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161001_013549_191221_884F78A0)
-In-Reply-To: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35646 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755640AbcJPU7p (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 16 Oct 2016 16:59:45 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        robh+dt@kernel.org
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v8 1/3] Documentation: dt: net: add ath9k wireless device binding
+Date: Sun, 16 Oct 2016 22:59:05 +0200
+Message-Id: <20161016205907.19927-2-martin.blumenstingl@googlemail.com> (sfid-20161016_225957_480323_FC8C1E52)
+In-Reply-To: <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
+References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
+ <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Add documentation how devicetree can be used to configure ath9k based
+devices.
 
-The 8192eu suffered from two issues when reloading the driver.
-
-The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
-23 didn't get set in rtl8192e_enable_rf().
-
-In addition it also seems prone to issues when setting REG_RF_CTRL to
-0 intead of just disabling the RF_ENABLE bit. Similar to what was
-causing issues with the 8188eu.
-
-With this patch I can successfully reload the driver and reassociate
-to an APi with an 8192eu dongle.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/net/wireless/qca,ath9k.txt | 48 ++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index df54d27..a793fed 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1461,7 +1461,9 @@ static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
- 	int count, ret = 0;
- 
- 	/* Turn off RF */
--	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
-+	val8 = rtl8xxxu_read8(priv, REG_RF_CTRL);
-+	val8 &= ~RF_ENABLE;
-+	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
- 
- 	/* Switch DPDT_SEL_P output from register 0x65[2] */
- 	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
-@@ -1593,6 +1595,10 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
- 	u32 val32;
- 	u8 val8;
- 
-+	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
-+	val32 |= (BIT(22) | BIT(23));
-+	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
+diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+new file mode 100644
+index 0000000..b7396c8
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+@@ -0,0 +1,48 @@
++* Qualcomm Atheros ath9k wireless devices
 +
- 	val8 = rtl8xxxu_read8(priv, REG_GPIO_MUXCFG);
- 	val8 |= BIT(5);
- 	rtl8xxxu_write8(priv, REG_GPIO_MUXCFG, val8);
++This node provides properties for configuring the ath9k wireless device. The
++node is expected to be specified as a child node of the PCI controller to
++which the wireless chip is connected.
++
++Required properties:
++- compatible: For PCI and PCIe devices this should be an identifier following
++		the format as defined in "PCI Bus Binding to Open Firmware"
++		Revision 2.1. One of the possible formats is "pciVVVV,DDDD"
++		where VVVV is the PCI vendor ID and DDDD is PCI device ID.
++		Typically QCA's PCI vendor ID 168c is used while the PCI device
++		ID depends on the chipset - see the following (possibly
++		incomplete) list:
++			- 0023 for AR5416
++			- 0024 for AR5418
++			- 0027 for AR9160
++			- 0029 for AR9220 and AR9223
++			- 002a for AR9280 and AR9283
++			- 002b for AR9285
++			- 002c for AR2427
++			- 002d for AR9227
++			- 002e for AR9287
++			- 0030 for AR9380, AR9381 and AR9382
++			- 0032 for AR9485
++			- 0033 for AR9580 and AR9590
++			- 0034 for AR9462
++			- 0036 for AR9565
++			- 0037 for AR9485
++- reg: Address and length of the register set for the device.
++
++Optional properties:
++- qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
++			ath9k wireless chip (in this case the calibration /
++			EEPROM data will be loaded from userspace using the
++			kernel firmware loader).
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++
++
++In this example, the node is defined as child node of the PCI controller:
++&pci0 {
++	wifi@168c,002d {
++		compatible = "pci168c,002d";
++		reg = <0x7000 0 0 0 0x1000>;
++		qca,no-eeprom;
++	};
++};
 -- 
-2.7.4
+2.10.0
