@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14987 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751393AbcJLFAd (ORCPT
+Received: from mail-it0-f54.google.com ([209.85.214.54]:33456 "EHLO
+        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757685AbcJQHuL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 01:00:33 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>,
-        "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/2] ath10k: add per peer htt tx stats support for 10.4
-Date: Wed, 12 Oct 2016 04:59:49 +0000
-Message-ID: <87r37mgo1n.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_070044_935847_AB912AD6)
-References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
-        <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
-        <CAEFj985tCc_4Q_zfwRtoT0fjfZv0u_c5E8SRSQVz=V4tiHh+GA@mail.gmail.com>
-In-Reply-To: <CAEFj985tCc_4Q_zfwRtoT0fjfZv0u_c5E8SRSQVz=V4tiHh+GA@mail.gmail.com>       (Yeoh
- Chun-Yeow's message of "Sat, 8 Oct 2016 22:16:37 +0800")
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 17 Oct 2016 03:50:11 -0400
+Received: by mail-it0-f54.google.com with SMTP id k64so11210395itb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 00:50:10 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1476690478.19992.4.camel@sipsolutions.net>
+References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
+ <1476689310.19992.1.camel@sipsolutions.net> <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
+ <1476690478.19992.4.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 17 Oct 2016 08:50:09 +0100
+Message-ID: <CAKv+Gu9EPAF+Oihz0tXCqWURGom-wgSPCMp0dEHHnxqw-pYYJw@mail.gmail.com> (sfid-20161017_095036_555119_616B1F0A)
+Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
-
-> On Fri, Oct 7, 2016 at 10:58 PM,  <akolli@qti.qualcomm.com> wrote:
->> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+On 17 October 2016 at 08:47, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2016-10-17 at 08:37 +0100, Ard Biesheuvel wrote:
 >>
->> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
->> event, Firmware sends one HTT event for every four PPDUs.
->> HTT payload has success pkts/bytes, failed pkts/bytes, retry
->> pkts/bytes and rate info per ppdu.
->> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
->> which are nowadays enabled by default.
->>
->> Parse peer stats and update the tx rate information per STA.
->>
->> tx rate, Peer stats are tested on QCA4019 with Firmware version
->> 10.4-3.2.1-00028.
->>
+>> Could we get a statement first whether it is supported to allocate
+>> aead_req (and other crypto req structures) on the stack?
 >
-> Is QCA988X supported? I have tried to test with
-> firmware-5.bin_10.2.4.70.56 but not working.
+> Well, we haven't heard from Herbert :)
+>
+>> If not, then
+>> we have our work cut out for us. But if it is, I'd rather we didn't
+>> apply the kzalloc/kfree patch, since it is just a workaround for the
+>> broken generic CCM driver, for which a fix is already available.
+>
+> Yeah but I can't apply it. I just fixed up your kzalloc patch to also
+> handle GCM and GMAC, and to have error checking. Will send it in a
+> minute.
+>
 
-My understanding is that 10.2 branch does not have this feature,
-unfortunately.
+I just realised that patch should probably use
+aead_request_alloc/aead_request_free [and drop the memset]. That also
+fixes the latent bug where the alignment of the req ctx is not take
+into account.
 
---=20
-Kalle Valo=
+>> Also, regarding your __percpu patch: those are located in the vmalloc
+>> area as well, at least on arm64, and likely other architectures too.
+>
+> Crap. Any other bright ideas?
+>
+
+kmem_cache_create() and kmem_cache_alloc()
