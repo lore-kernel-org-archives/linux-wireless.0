@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:35528 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753115AbcJLMl0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:41:26 -0400
-Received: by mail-it0-f68.google.com with SMTP id l13so3882687itl.2
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 05:40:40 -0700 (PDT)
-Date: Wed, 12 Oct 2016 08:37:10 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        Toke =?iso-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Subject: Re: [PATCH] mac80211: fix sequence number allocation regression
-Message-ID: <20161012123710.GE18919@localhost> (sfid-20161012_144133_987326_52474E00)
-References: <20161011092831.85565-1-nbd@nbd.name>
- <1476254985.5271.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476254985.5271.1.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49102 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933019AbcJQHsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 03:48:06 -0400
+Message-ID: <1476690478.19992.4.camel@sipsolutions.net> (sfid-20161017_094832_764117_59E1D493)
+Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Mon, 17 Oct 2016 09:47:58 +0200
+In-Reply-To: <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com> (sfid-20161017_093746_906697_1D2C1C61)
+References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
+         <1476689310.19992.1.camel@sipsolutions.net>
+         <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
+         (sfid-20161017_093746_906697_1D2C1C61)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 08:49:45AM +0200, Johannes Berg wrote:
-> On Tue, 2016-10-11 at 11:28 +0200, Felix Fietkau wrote:
-> > The recent commit that moved around TX handlers dropped the sequence
-> > number allocation at the end of ieee80211_tx_dequeue and calls
-> > ieee80211_tx_h_sequence instead (for the non-fast-xmit case).
-> > However, it did not change the fast-xmit sequence allocation
-> > condition
-> > in ieee80211_xmit_fast_finish, which skipped seqno alloc if
-> > intermediate
-> > tx queues are being used.
-> > 
-> > Drop the now obsolete condition.
-> 
-> Hm. I don't know what tree you're looking at, but it looks like I *did*
-> in fact resolve this correctly; the (now) erroneous condition doesn't
-> exist in mac80211 nor in mac80211-next (nor net, net-next, linux).
-> 
-> It does seem to exist in wireless-testing, but that's not something I
-> can control.
+On Mon, 2016-10-17 at 08:37 +0100, Ard Biesheuvel wrote:
+> 
+> Could we get a statement first whether it is supported to allocate
+> aead_req (and other crypto req structures) on the stack? 
 
-Sorry about that, I should've rechecked this after Johannes did the merge.
-I applied this patch (to wireless-testing) and pushed tag wt-2016-10-12.
-Let me know of any further issues.
+Well, we haven't heard from Herbert :)
 
-As a check I also diffed against mac80211-next/master and found additional
-merge damage in the diff which I fixed up.  Once the merge window closes
-in a few days, I'll resync to the masters of all the trees.
+> If not, then
+> we have our work cut out for us. But if it is, I'd rather we didn't
+> apply the kzalloc/kfree patch, since it is just a workaround for the
+> broken generic CCM driver, for which a fix is already available.
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+Yeah but I can't apply it. I just fixed up your kzalloc patch to also
+handle GCM and GMAC, and to have error checking. Will send it in a
+minute.
+
+> Also, regarding your __percpu patch: those are located in the vmalloc
+> area as well, at least on arm64, and likely other architectures too.
+
+Crap. Any other bright ideas?
+
+johannes
