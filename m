@@ -1,32 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from skprod2.natinst.com ([130.164.80.23]:58739 "EHLO ni.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751502AbcJCSBM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 14:01:12 -0400
-From: James Minor <james.minor@ni.com>
-To: linux-wireless@vger.kernel.org, ath6kl@lists.infradead.org
-Cc: kvalo@qca.qualcomm.com, julia.cartwright@ni.com,
-        steve.derosier@lairdtech.com, James Minor <james.minor@ni.com>
-Subject: [PATCH 0/3] Allow ath6kl to be restarted
-Date: Mon, 3 Oct 2016 13:00:01 -0500
-Message-Id: <1475517604-17710-1-git-send-email-james.minor@ni.com> (sfid-20161003_200116_240215_40CEA498)
-In-Reply-To: <1475510510-16906-1-git-send-email-james.minor@ni.com>
-References: <1475510510-16906-1-git-send-email-james.minor@ni.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49166 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758557AbcJQIEr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 04:04:47 -0400
+Message-ID: <1476691484.19992.7.camel@sipsolutions.net> (sfid-20161017_100503_686885_8EDC539C)
+Subject: Re: [PATCH v3] mac80211: move extra crypto data off the stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        netdev@vger.kernel.org, herbert@gondor.apana.org.au
+Date: Mon, 17 Oct 2016 10:04:44 +0200
+In-Reply-To: <1476691342-22347-1-git-send-email-johannes@sipsolutions.net> (sfid-20161017_100255_937752_F7F637BD)
+References: <1476691342-22347-1-git-send-email-johannes@sipsolutions.net>
+         (sfid-20161017_100255_937752_F7F637BD)
+Content-Type: text/plain
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To work around a boot issue with the AR6234, I discovered a few
-instances where error cleanup code is not working as expected.
-A full solution for the boot issue is being worked up, but in the
-mean time these fixes make error cleanup work properly.
+[snip]
 
-James Minor (3):
-  ath6kl: fix busreqs so they can be reused when sg is cleaned up
-  ath6kl: after cleanup properly reflect that sg is disabled
-  ath6kl: configure SDIO when power is reapplied
+Sorry, this went out by mistake.
 
- drivers/net/wireless/ath/ath6kl/sdio.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
--- 
-1.9.1
+johannes
