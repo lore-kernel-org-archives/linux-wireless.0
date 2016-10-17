@@ -1,60 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.goneo.de ([85.220.129.30]:59026 "EHLO smtp1.goneo.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49159 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934384AbcJUQL0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 12:11:26 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
-Subject: Re: sequence diagrams in rst documentation
-From: Markus Heiser <markus.heiser@darmarit.de>
-In-Reply-To: <1477055055.4068.46.camel@sipsolutions.net>
-Date: Fri, 21 Oct 2016 18:11:10 +0200
-Cc: Jani Nikula <jani.nikula@linux.intel.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Message-Id: <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de> (sfid-20161021_181131_391751_8E2F794F)
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net> <20161011072119.7ad4e3a3@lwn.net> <1476193466.4118.10.camel@sipsolutions.net> <1476194038.4118.11.camel@sipsolutions.net> <1476791021.6425.25.camel@sipsolutions.net> <20161018175236.75c8c4e2@lwn.net> <1476863488.5927.10.camel@sipsolutions.net> <1477053099.4068.42.camel@sipsolutions.net> <87k2d1q2qx.fsf@intel.com> <1477055055.4068.46.camel@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+        id S1758505AbcJQIEE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 04:04:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        netdev@vger.kernel.org, herbert@gondor.apana.org.au,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3] mac80211: move struct aead_req off the stack
+Date: Mon, 17 Oct 2016 10:03:51 +0200
+Message-Id: <1476691431-27693-1-git-send-email-johannes@sipsolutions.net> (sfid-20161017_100504_931661_B72FE364)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Am 21.10.2016 um 15:04 schrieb Johannes Berg <johannes@sipsolutions.net>:
+Some crypto implementations (such as the generic CCM wrapper in crypto/)
+use scatterlists to map fields of private data in their struct aead_req.
+This means these data structures cannot live in the vmalloc area, which
+means that they cannot live on the stack (with CONFIG_VMAP_STACK.)
 
->> I had the same conclusion for math:: directives pulling in latex
->> dependency [1]. Hopefully Markus can help here.
-> 
-> Yeah, good one.
-> 
-> Maybe it's actually simple? Depending on where sphinx will look for
-> plugins first, we could just ship the plugins with a no-op
-> implementation (pass through the text as pre-formatted text), and if it
-> finds the plugin first in a system-wide path that version would win for
-> the better rendering?
+This currently occurs only with the generic software implementation, but
+the private data and usage is implementation specific, so move the whole
+data structures off the stack into heap by allocating every time we need
+to use them.
 
-Yes and No. It depends on the tools (toolchains) we want to use.
-As far as I can see from a abstract POV it should by simple for
-math:: / since we already use/need LaTeX for PDF, for other tools
-I have to look.
+This pattern already exists in the IPsec ESP driver, but in the future,
+we may want/need to improve upon this, e.g. by using a slab cache.
 
-I general I think, we should not include Java into our toolchains
-even if it is optional. Thats, why I won't vote for http://plantuml.com/
+(Based on Ard's patch, but that was missing error handling and GCM/GMAC)
 
-aafigure: has dependencies [1] to reportlab (which is IMO inapposite) and
-PIL, which is outdated / and aafigure itself seems outdated [2].
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v3: remove superfluous aead_request_set_tfm() calls
+---
+ net/mac80211/aes_ccm.c  | 36 +++++++++++++++++++-----------------
+ net/mac80211/aes_ccm.h  |  6 +++---
+ net/mac80211/aes_gcm.c  | 33 +++++++++++++++++----------------
+ net/mac80211/aes_gcm.h  |  4 ++--
+ net/mac80211/aes_gmac.c | 11 +++++------
+ net/mac80211/wpa.c      | 12 ++++--------
+ 6 files changed, 50 insertions(+), 52 deletions(-)
 
-seqdiag: requires blockdiag and this requires Pillow ... until here 
-its seems not bad, but there is also some "optional" dependencies to 
-ImageMagick and reportlab (both smells).
-
-IMO a tool which generates SVG would be the best, I have to check
-if I find some or if some of the above could used in this way.
-
-For this I need time ;-) ... ATM I work in a custom project but
-I hope I will find next week time to dig more deeper.
-
--- Markus -- 
-  
-[1] https://pythonhosted.org/sphinxcontrib-aafig/#requirements
-[2] http://bazaar.launchpad.net/~aafigure-team/aafigure/trunk/files
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 7663c28ba353..8e898a6e8de8 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -18,29 +18,29 @@
+ #include "key.h"
+ #include "aes_ccm.h"
+ 
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len)
++int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len)
+ {
+ 	struct scatterlist sg[3];
++	struct aead_request *aead_req;
+ 
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *) aead_req_data;
+-
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_set_buf(&sg[1], data, data_len);
+ 	sg_set_buf(&sg[2], mic, mic_len);
+ 
+-	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_crypt(aead_req, sg, sg, data_len, b_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
++
++	return 0;
+ }
+ 
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+@@ -48,26 +48,28 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      size_t mic_len)
+ {
+ 	struct scatterlist sg[3];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *) aead_req_data;
++	struct aead_request *aead_req;
++	int err;
+ 
+ 	if (data_len == 0)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_set_buf(&sg[1], data, data_len);
+ 	sg_set_buf(&sg[2], mic, mic_len);
+ 
+-	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_crypt(aead_req, sg, sg, data_len + mic_len, b_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+-	return crypto_aead_decrypt(aead_req);
++	err = crypto_aead_decrypt(aead_req);
++	aead_request_free(aead_req);
++
++	return err;
+ }
+ 
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
+index 6a73d1e4d186..03e21b0995e3 100644
+--- a/net/mac80211/aes_ccm.h
++++ b/net/mac80211/aes_ccm.h
+@@ -15,9 +15,9 @@
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+ 						    size_t key_len,
+ 						    size_t mic_len);
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len);
++int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len);
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic,
+ 			      size_t mic_len);
+diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
+index 3afe361fd27c..831054c6c756 100644
+--- a/net/mac80211/aes_gcm.c
++++ b/net/mac80211/aes_gcm.c
+@@ -15,55 +15,56 @@
+ #include "key.h"
+ #include "aes_gcm.h"
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic)
++int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[3];
++	struct aead_request *aead_req;
+ 
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
+-
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_set_buf(&sg[1], data, data_len);
+ 	sg_set_buf(&sg[2], mic, IEEE80211_GCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_crypt(aead_req, sg, sg, data_len, j_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
++	return 0;
+ }
+ 
+ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[3];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
++	struct aead_request *aead_req;
++	int err;
+ 
+ 	if (data_len == 0)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+ 	sg_set_buf(&sg[1], data, data_len);
+ 	sg_set_buf(&sg[2], mic, IEEE80211_GCMP_MIC_LEN);
+ 
+-	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_crypt(aead_req, sg, sg,
+ 			       data_len + IEEE80211_GCMP_MIC_LEN, j_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+-	return crypto_aead_decrypt(aead_req);
++	err = crypto_aead_decrypt(aead_req);
++	aead_request_free(aead_req);
++
++	return err;
+ }
+ 
+ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_gcm.h b/net/mac80211/aes_gcm.h
+index 1347fda6b76a..b36503cd7716 100644
+--- a/net/mac80211/aes_gcm.h
++++ b/net/mac80211/aes_gcm.h
+@@ -11,8 +11,8 @@
+ 
+ #include <linux/crypto.h>
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic);
++int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic);
+ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic);
+ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_gmac.c b/net/mac80211/aes_gmac.c
+index 3ddd927aaf30..6951af9715c0 100644
+--- a/net/mac80211/aes_gmac.c
++++ b/net/mac80211/aes_gmac.c
+@@ -25,16 +25,15 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 		       const u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[4];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
+ 	u8 zero[GMAC_MIC_LEN], iv[AES_BLOCK_SIZE];
++	struct aead_request *aead_req;
+ 
+ 	if (data_len < GMAC_MIC_LEN)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	memset(zero, 0, GMAC_MIC_LEN);
+ 	sg_init_table(sg, 4);
+@@ -47,11 +46,11 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 	memset(iv + GMAC_NONCE_LEN, 0, sizeof(iv) - GMAC_NONCE_LEN);
+ 	iv[AES_BLOCK_SIZE - 1] = 0x01;
+ 
+-	aead_request_set_tfm(aead_req, tfm);
+ 	aead_request_set_crypt(aead_req, sg, sg, 0, iv);
+ 	aead_request_set_ad(aead_req, AAD_LEN + data_len);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b48c1e13e281..2e366438f8ef 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -461,10 +461,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+-	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+-				  skb_put(skb, mic_len), mic_len);
+-
+-	return 0;
++	return ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
++					 skb_put(skb, mic_len), mic_len);
+ }
+ 
+ 
+@@ -696,10 +694,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 
+ 	pos += IEEE80211_GCMP_HDR_LEN;
+ 	gcmp_special_blocks(skb, pn, j_0, aad);
+-	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
+-				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+-
+-	return 0;
++	return ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
++					 skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+ }
+ 
+ ieee80211_tx_result
+-- 
+2.8.1
