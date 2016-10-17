@@ -1,81 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:50663 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753574AbcJOL22 (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:35654 "EHLO
+        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932648AbcJQKDA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Oct 2016 07:28:28 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCHv5 2/2] mac80211: fix A-MSDU outer SA/DA
-Date: Sat, 15 Oct 2016 13:28:19 +0200
-Message-Id: <1476530899-24241-2-git-send-email-michael-dev@fami-braun.de> (sfid-20161015_132832_793403_14FB6470)
-In-Reply-To: <1476530899-24241-1-git-send-email-michael-dev@fami-braun.de>
-References: <1476530899-24241-1-git-send-email-michael-dev@fami-braun.de>
+        Mon, 17 Oct 2016 06:03:00 -0400
+Received: by mail-lf0-f48.google.com with SMTP id l131so235825751lfl.2
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 03:03:00 -0700 (PDT)
+References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> <1476696918.19992.15.camel@sipsolutions.net> <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org> <1476698041.19992.19.camel@sipsolutions.net>
+In-Reply-To: <1476698041.19992.19.camel@sipsolutions.net>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=us-ascii
+Message-Id: <41D0AC2F-E86E-4A98-AD8B-1239D7E6123A@linaro.org> (sfid-20161017_120305_807815_90BC1099)
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+Date: Mon, 17 Oct 2016 11:02:53 +0100
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to IEEE 802.11-2012 section 8.3.2 table 8-19, the outer SA/DA
-of A-MSDU frames need to be changed depending on FromDS/ToDS values.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
 
---
-v5:
- - single out amsdu_hdr to ptr conversion before
-v4:
- - h_80211_src/dst has been memmove'd and thus needs to be fixed
-v3:
- - write to outer 802.11 header instead of inner amsdu subframe header
-v2:
- - avoid the extra write to amsdu_hdr
- - avoid copy of asmdu_hdr into skb, use ptr instead
----
- net/mac80211/tx.c | 23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+> On 17 Oct 2016, at 10:54, Johannes Berg <johannes@sipsolutions.net> wrote:=
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 56a883b..7fcd4b6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3051,6 +3051,7 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
- 	int subframe_len = skb->len - hdr_len;
- 	void *data;
- 	u8 *qc, *h_80211_src, *h_80211_dst;
-+	const u8 *bssid;
- 
- 	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
- 		return false;
-@@ -3074,6 +3075,28 @@ static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
- 	ether_addr_copy(amsdu_hdr->h_source, h_80211_src);
- 	ether_addr_copy(amsdu_hdr->h_dest, h_80211_dst);
- 
-+	/* according to IEEE 802.11-2012 8.3.2 table 8-19, the outer SA/DA
-+	 * fields needs to be changed to BSSID for A-MSDU frames depending
-+	 * on FromDS/ToDS values.
-+	 */
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
-+		bssid = sdata->u.mgd.bssid;
-+		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_AP_VLAN:
-+		bssid = sdata->vif.addr;
-+		break;
-+	default:
-+		bssid = NULL;
-+	}
-+
-+	if (bssid && ieee80211_has_fromds(hdr->frame_control))
-+		memcpy(h_80211_src, bssid, ETH_ALEN);
-+
-+	if (bssid && ieee80211_has_tods(hdr->frame_control))
-+		memcpy(h_80211_dst, bssid, ETH_ALEN);
-+
- 	qc = ieee80211_get_qos_ctl(hdr);
- 	*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
- 
--- 
-2.1.4
+>=20
+>=20
+>>> Well, if your other patch to make it OK to be on-stack would be
+>>> applied instead, this wouldn't make much sense either :)
+>>>=20
+>>=20
+>> Yes but that one only fixes ccm not gcm
+>=20
+> Yes, but we can do the same for GCM, no?
+>=20
+
+No, not really. ccm happens to use aes with the same key for the mac and the=
+ encryption. gcm uses an another algo entirely for the mac
+
+>>> In this particular patch, we could reduce the size of the struct,
+>>> but I
+>>> don't actually think it'll make a difference to go from 48 to 36
+>>> bytes,
+>>> given alignment etc., so I think I'll just leave it as is.
+>>>=20
+>>=20
+>> I understand you are in a hurry, but this is unlikely to be the only
+>> such issue. I will propose an 'auxdata' feature for the crypto api
+>> that can be used here, but also for any other occurrence where client
+>> data assoiciated with the request can no longer be allocated on the
+>> stack
+>=20
+> No objections. I'll merge this anyway today I think, reverting is easy
+> later.
+>=20
+
+ok fair enough=
