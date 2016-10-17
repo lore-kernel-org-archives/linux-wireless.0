@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:33730 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755993AbcJLSgV (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:38091 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757997AbcJQJa7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 14:36:21 -0400
+        Mon, 17 Oct 2016 05:30:59 -0400
+Received: by mail-it0-f44.google.com with SMTP id 66so2764699itl.1
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:30:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1476295541.9670.26.camel@tiscali.nl>
-References: <20161010071943.4717-1-chris@rorvick.com> <1476108164.5210.11.camel@coelho.fi>
- <1476180668.17022.21.camel@tiscali.nl> <1476252719.7776.6.camel@coelho.fi>
- <1476255135.1972.5.camel@tiscali.nl> <CAEUsAPYYJ3Gmh0T16veCn3wnzdD8bTxE+_U-AUYQpMo3TUd4Mg@mail.gmail.com>
- <1476295541.9670.26.camel@tiscali.nl>
-From: Chris Rorvick <chris@rorvick.com>
-Date: Wed, 12 Oct 2016 13:36:19 -0500
-Message-ID: <CAEUsAPbuHQuM4qEuuOKButjPniQAaL11E8zJVV6No1WWTdUBKQ@mail.gmail.com> (sfid-20161012_203717_465955_BFD38B3C)
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Luca Coelho <luca@coelho.fi>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+In-Reply-To: <1476696226.19992.13.camel@sipsolutions.net>
+References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
+ <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 17 Oct 2016 10:30:58 +0100
+Message-ID: <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> (sfid-20161017_113104_952836_B68D8AF7)
+Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 1:05 PM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> On Wed, 2016-10-12 at 12:50 -0500, Chris Rorvick wrote:
->> This may already be apparent, but Dell sells two versions of the 9350:
->> one with the Broadcom adapter and one with the AC 8260.
+On 17 October 2016 at 10:23, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> Off topic, for most readers: my version (with the AC 8260) came with
-> Ubuntu preinstalled. Perhaps Chris' version came preinstalled with
-> something else?
+>> Apologies for going back and forth on this, but it appears there may
+>> be another way to deal with this.
+>>
+>> First of all, we only need this handling for the authenticated data,
+>
+> Are you sure b_0/j_0 aren't needed? We pass those
+> to aead_request_set_crypt(), and I wasn't sure what that really did
+> internally, perhaps like the internal data.
+>
 
-Exactly.  Mine came with Windows 10 and the Broadcom adapter, while
-the "Developer Edition" comes preloaded with Ubuntu and has the AC
-8260.  The Broadcom adapter has been supported since 4.4 but still
-seems to have issues.  For example, I had it working at home but I was
-not able to connect to a friend's AT&T U-Verse wireless gateway;
-something was failing with -EBUSY.  I ordered the AC 8260 and it works
-fine after the upgrade.
+They are the IV[], which is a fixed length parameter of the algorithm.
+In contrast, the AAD[] could be of arbitrary length (from the POV of
+the crypto API) so it uses scatterlists.
 
-Chris
+> Testing with that on the stack does seem to work, in fact.
+>
+> Surely we need zero for GMAC though, since we also put that into the sg
+> list. Thus for GMAC we definitely need 20+16 bytes, and since I round
+> up to a cacheline (at least on SMP) it doesn't really matter that we
+> could get 36 instead of the 48 I have now.
+>
+>> and only for CCM and GCM, not CMAC (which does not use scatterlists
+>> at all, it simply calls the AES cipher directly)
+>
+> I didn't modify CMAC, I think, only GMAC, which also uses scatterlists.
+>
+
+Ah ok, I misread the patch.
+
+>> So that leaves a fixed 20 bytes for GCM and fixed 32 bytes for CCM,
+>
+> and 36 for GMAC :)
+
+Yes. But as I replied, setting the req size is not supported atm,
+although it is reasonable to demand a way to allocate additional data
+in the request specifically for this issue. So let's proceed with the
+aead_request_alloc/free patch, but I would like to propose something
+on the API side to address this particular issue
