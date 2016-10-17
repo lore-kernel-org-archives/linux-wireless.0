@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43049 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752027AbcJDPCn (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.130]:49231 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754096AbcJQWQO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 11:02:43 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 17 Oct 2016 18:16:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Subject: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
+Date: Tue, 18 Oct 2016 00:13:40 +0200
+Message-Id: <20161017221355.1861551-7-arnd@arndb.de> (sfid-20161018_001637_835989_76E8BD0B)
+In-Reply-To: <20161017220342.1627073-1-arnd@arndb.de>
+References: <20161017220342.1627073-1-arnd@arndb.de>
 MIME-Version: 1.0
-Subject: Re: [1/2] ath: export alpha2 helper
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1470140454-3899-2-git-send-email-bartosz.markowski@tieto.com>
-References: <1470140454-3899-2-git-send-email-bartosz.markowski@tieto.com>
-To: Bartosz Markowski <bartosz.markowski@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Michal Kazior" <michal.kazior@tieto.com>,
-        Bartosz Markowski <bartosz.markowski@tieto.com>
-Message-ID: <7569987251e5403ebe0c30061dd7db5c@euamsexm01a.eu.qualcomm.com> (sfid-20161004_170247_998319_C8E694AA)
-Date: Tue, 4 Oct 2016 17:02:36 +0200
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bartosz Markowski <bartosz.markowski@tieto.com> wrote:
-> From: Michal Kazior <michal.kazior@tieto.com>
-> 
-> This will be helpful for drivers that can acquire
-> alpha2 regulatory codes.
-> 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+A bugfix added a sanity check around the assignment and use of the
+'is_11d' variable, which looks correct to me, but as the function is
+rather complex already, this confuses the compiler to the point where
+it can no longer figure out if the variable is always initialized
+correctly:
 
-2 patches applied to ath-next branch of ath.git, thanks.
+brcm80211/brcmfmac/cfg80211.c: In function ‘brcmf_cfg80211_start_ap’:
+brcm80211/brcmfmac/cfg80211.c:4586:10: error: ‘is_11d’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-d291d8e0592a ath: export alpha2 helper
-209b2a68de76 ath10k: add platform regulatory domain support
+This adds an initialization for the newly introduced case in which
+the variable should not really be used, in order to make the warning
+go away.
 
+Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
+Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b777e1b..78d9966 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4516,7 +4516,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 	/* store current 11d setting */
+ 	if (brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_REGULATORY,
+ 				  &ifp->vif->is_11d)) {
+-		supports_11d = false;
++		is_11d = supports_11d = false;
+ 	} else {
+ 		country_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
+ 					      settings->beacon.tail_len,
 -- 
-https://patchwork.kernel.org/patch/9256535/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.0
