@@ -1,92 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:34388 "EHLO
-        mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756406AbcJPVVB (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33207 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754561AbcJQNUj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Oct 2016 17:21:01 -0400
+        Mon, 17 Oct 2016 09:20:39 -0400
+Received: by mail-io0-f178.google.com with SMTP id q192so187763530iod.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 06:20:39 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
-References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
- <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
- <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com>
- <23f49efe-ddef-ea16-00de-7477e4872d82@nbd.name> <CAL_JsqJfxEZCtdNi-wRgrtdmkPsGw0-ZMGhdbcoQ=seyij5LiQ@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Sun, 16 Oct 2016 23:20:38 +0200
-Message-ID: <CAFBinCDs-qC4KWy4ZiW5DNLfixCdYYc=x3FCScHA0jh590pz_A@mail.gmail.com> (sfid-20161016_232123_351715_F962829C)
-Subject: Re: [RFC 0/3] of: add common bindings to (de)activate IEEE 802.11 bands
-To: Rob Herring <robh+dt@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1476710169.315.1.camel@sipsolutions.net>
+References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
+ <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
+ <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com>
+ <1476696918.19992.15.camel@sipsolutions.net> <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org>
+ <1476698041.19992.19.camel@sipsolutions.net> <41D0AC2F-E86E-4A98-AD8B-1239D7E6123A@linaro.org>
+ <CAKv+Gu9OT6r3gbrLi_wzBcPXoA6K9z=-4ybrgQy4X=FvjOOuhA@mail.gmail.com> <1476710169.315.1.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 17 Oct 2016 14:20:38 +0100
+Message-ID: <CAKv+Gu_jdiQn+o5PAZmPfMsQYt8PsOkDE6YNU11VH9WM_QPcvg@mail.gmail.com> (sfid-20161017_152046_609291_A360F226)
+Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 5, 2016 at 10:31 PM, Rob Herring <robh+dt@kernel.org> wrote:
-> On Wed, Oct 5, 2016 at 1:36 PM, Felix Fietkau <nbd@nbd.name> wrote:
->> On 2016-10-05 20:25, Martin Blumenstingl wrote:
->>> On Mon, Oct 3, 2016 at 5:22 PM, Rob Herring <robh+dt@kernel.org> wrote:
->>>> On Sun, Oct 2, 2016 at 5:50 PM, Martin Blumenstingl
->>>> <martin.blumenstingl@googlemail.com> wrote:
->>>>> There are at least two drivers (ath9k and mt76) out there, where
->>>>> devicetree authors need to override the enabled bands.
->>>>>
->>>>> For ath9k there is only one use-case: disabling a band which has been
->>>>> incorrectly enabled by the vendor in the EEPROM (enabling a band is not
->>>>> possible because the calibration data would be missing in the EEPROM).
->>>>> The mt76 driver (currently pending for review) however allows enabling
->>>>> and disabling the 2.4GHz and 5GHz band, see [0].
->>>>>
->>>>> Based on the discussion of (earlier versions of) my ath9k devicetree
->>>>> patch it was suggested [1] that we use enable- and disable- properties.
->>>>> The current patch implements:
->>>>> - bands can be enabled or disabled with the corresponding property
->>>>> - if both (disable and enable) properties are given and a driver asks
->>>>>   whether the band is enabled then the logic will return false (= not
->>>>>   enabled, preferring the disabled flag)
->>>>> - if both (disable and enable) properties are given and a driver asks
->>>>>   whether the band is disabled then the logic will return true (again,
->>>>>   preferring the disabled flag over the enabled flag)
->>>>>
->>>>> We can still change the logic to do what the mt76 driver does (I am
->>>>> fine with both solutions):
->>>>> - property not available: driver decides which bands to enable
->>>>> - property set to 0: disable the band
->>>>> - property set to 1: enable the band
->>>>
->>>> I prefer this way. Really, I'd prefer just a boolean disable property.
->>>> I'm not sure why you need the enable. We usually have these tri-state
->>>> properties when you want not present to mean use the bootloader or
->>>> default setting. Try to make not present the most common case.
->>> Felix: could you please give a few details why mt76 can not only
->>> disable but also enable a specific band?
->>> There is no specific comment in the sources [0] why this is needed.
->>> All other drivers that I am aware of (ath9k, rt2x00) only allow
->>> disabling a specific band, they never enable it (this has to be done
->>> explicitly by the EEPROM).
->> None of the devices use it at the moment, I probably added it when I
->> played with a device that had broken EEPROM data. I guess I decided to
->> do it this way because on many devices the band capability field simply
->> cannot be trusted.
->> I guess I would be okay with just having a disable property and adding
->> an enable property later only if we end up actually needing it.
+On 17 October 2016 at 14:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Mon, 2016-10-17 at 14:06 +0100, Ard Biesheuvel wrote:
+>>
+>> Actually, while I think it will be worthwhile going forward to
+>> implement such an 'auxiliary data' feature in a generic way, I still
+>> think we should address the issue at hand without too much
+>> complication.
+>>
+>> If we pedal back to the version of 'mac80211: move struct aead_req
+>> off the stack' that uses kzalloc() instead of aead_request_alloc(),
+>> we can simply add some space for aad[] and/or zero[], and get rid of
+>> the kmem cache entirely.
+>>
+>> If you're past this point already, i won't bother but otherwise I can
+>> rework 'mac80211: move struct aead_req off the stack' so that the
+>> other patch is no longer required (and IIRC, this is actually
+>> something you proposed yourself a couple of iterations ago?)
 >
-> If EEPROM is commonly wrong or missing, then seems like you want to
-> plan ahead and support both enable and disable.
-if we want to plan ahead we could use two properties "ieee80211-2ghz"
-and "ieee80211-5ghz", each of them allows the values: 0 = disabled, 1
-= enabled, absent = auto-detect (for example based on the card's
-EEPROM), any other value is invalid
+> Yes, I did consider that.
+>
+> It makes some sense, and I guess the extra memcpy() would be cheaper
+> than the extra alloc?
+>
+> I'd happily use that instead of the combination of my two patches. The
+> aead_request_alloc() is just a simple inline anyway, so no real problem
+> not using it.
+>
 
-How should our API look in this case?
-Would we still have bool ..._enabled() and bool ..._disabled() - what
-if the property is absent (would we add another boolean
-ieee80211_is_[2,5]ghz_configured(np) to handle that)?
-We could also introduce int ieee80211_get_[2,5]ghz_enabled(struct
-device_node *np, bool *enabled) and leave it up to the caller?
+Indeed. And it keeps the clutter inside the aes_xxx.c files, which
+could easily be updated in the future to use some auxdata feature if
+it ever materializes.
 
+I think it would help this code, but also the ESP code you pointed
+out, to have some kind of 'ordered synchronous' CRYPTO_xxx flag, where
+the crypto API could manage the kmem cache and percpu pointers to
+allocations. This goes well beyond what we can do as a fix, though, so
+we need an intermediate solution in any case.
 
-Regards,
-Martin
+Shall I propose the patch?
