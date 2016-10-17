@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:32829 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752234AbcJJQs3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49190 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757768AbcJQH6t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 12:48:29 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [PATCH v2] mac80211: enable to inject a-msdu frames using monitor interface
-Date: Mon, 10 Oct 2016 18:48:25 +0200
-Message-Id: <1476118105-7641-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161010_184833_583724_39D6EFF3)
+        Mon, 17 Oct 2016 03:58:49 -0400
+Message-ID: <1476691113.3880.37.camel@coelho.fi> (sfid-20161017_095908_260636_B2C6C98C)
+From: Luca Coelho <luca@coelho.fi>
+To: David Binderman <dcb314@hotmail.com>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
+        "linuxwifi@intel.com" <linuxwifi@intel.com>,
+        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 17 Oct 2016 10:58:33 +0300
+In-Reply-To: <VI1PR08MB1022786893DC435E1A71F3069CD00@VI1PR08MB1022.eurprd08.prod.outlook.com>
+References: <VI1PR08MB1022786893DC435E1A71F3069CD00@VI1PR08MB1022.eurprd08.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re:
+ linux-4.9-rc1/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561: poor
+ error checking ?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Problem: When injecting an A-MSDU using a PF_PACKET socket, the qos flag
-IEEE80211_QOS_CTL_A_MSDU_PRESENT is cleared.
+Hi David,
+On Mon, 2016-10-17 at 07:40 +0000, David Binderman wrote:
+> Hello there,
+> 
+> linux-4.9-rc1/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561]: (style) Checking if unsigned variable 'len' is less than zero.
+> 
+> Source code is
+> 
+>     len = min((size_t)le32_to_cpu(rsp->len) << 2,
+>           iwl_rx_packet_payload_len(hcmd.resp_pkt) - sizeof(*rsp));
+>     len = min(len - delta, count);
+>     if (len < 0) {
+>         ret = -EFAULT;
+>         goto out;
+>     }
+> 
+> Suggest improve error checking.
 
-How to reproduce: Inject a frame on a mac80211 hwsim monitor interface and
-have tshark sniffing on this monitor interface.
-You'll see the packet twice: Once with correct flag and once with flag
-cleared. On hwsim0, you'll only see the packet with a cleared flag.
+Thanks for reporting! A fix for this is already queued in our internal
+tree and will be sent upstream soon.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- net/mac80211/wme.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/net/mac80211/wme.c b/net/mac80211/wme.c
-index 9eb0aee..f6a708c 100644
---- a/net/mac80211/wme.c
-+++ b/net/mac80211/wme.c
-@@ -248,6 +248,11 @@ void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
- 	/* preserve EOSP bit */
- 	ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
- 
-+	/* preserve A-MSDU bit for MONITOR interfaces to allow injecting
-+	 * A-MSDU frames
-+	 */
-+	ack_policy |= *p & IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+
- 	if (is_multicast_ether_addr(hdr->addr1) ||
- 	    sdata->noack_map & BIT(tid)) {
- 		ack_policy |= IEEE80211_QOS_CTL_ACK_POLICY_NOACK;
--- 
-2.1.4
+--
+Cheers,
+Luca.
