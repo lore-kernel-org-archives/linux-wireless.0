@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:35053 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750846AbcJNLLB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 07:11:01 -0400
-Received: by mail-qk0-f172.google.com with SMTP id z190so141762158qkc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 04:11:00 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANfLQrbz1x6q+S2OmWah583=pTJ_6vK1BgnwLPSTk_VnFQ6TsA@mail.gmail.com>
-References: <CANfLQrbz1x6q+S2OmWah583=pTJ_6vK1BgnwLPSTk_VnFQ6TsA@mail.gmail.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Fri, 14 Oct 2016 14:10:59 +0300
-Message-ID: <CANfLQrYqi-kaSBNsWgetrfL5ZEqYAEQEqJZCoP+r2WW1+DviMw@mail.gmail.com> (sfid-20161014_131123_441685_F459F6BB)
-Subject: Re: Qualcomm: Power Save Algorithm in STA+STA mode
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        c_sadash@qti.qualcomm.com, c_saidir@qti.qualcomm.com,
-        kapgupta@qti.qualcomm.com, sgoud@qti.qualcomm.com,
-        c_gowri@qti.qualcomm.com
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:50405 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753616AbcJQNQQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 09:16:16 -0400
+Message-ID: <1476710169.315.1.camel@sipsolutions.net> (sfid-20161017_151819_465740_094A3436)
+Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+Date: Mon, 17 Oct 2016 15:16:09 +0200
+In-Reply-To: <CAKv+Gu9OT6r3gbrLi_wzBcPXoA6K9z=-4ybrgQy4X=FvjOOuhA@mail.gmail.com> (sfid-20161017_150649_562459_576A0780)
+References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
+         <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
+         <1476696226.19992.13.camel@sipsolutions.net>
+         <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com>
+         <1476696918.19992.15.camel@sipsolutions.net>
+         <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org>
+         <1476698041.19992.19.camel@sipsolutions.net>
+         <41D0AC2F-E86E-4A98-AD8B-1239D7E6123A@linaro.org>
+         <CAKv+Gu9OT6r3gbrLi_wzBcPXoA6K9z=-4ybrgQy4X=FvjOOuhA@mail.gmail.com>
+         (sfid-20161017_150649_562459_576A0780)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 20, 2016 at 8:27 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
-> Hello, everyone
->
-> I'm a master student and I currently work on designing an algorithm
-> for reducing the power consumption when a mobile device is associated
-> to multiple Access Points that operate on the same channel.
->
-> I tried to design my algorithm around the prima driver [1] but I
-> noticed that the power save feature is fully implemented in the
-> firmware (Beacon Mode Power Save). Unfortunately, the firmware is
-> closed-source and I can't do any modifications.
->
-> Is there any Qualcomm representative reading this mailing list that
-> could help me get a possible solution for the above problem?
->
->
-> [1] https://source.codeaurora.org/quic/la
->
-> Thank you,
-> Doru
+On Mon, 2016-10-17 at 14:06 +0100, Ard Biesheuvel wrote:
+> 
+> Actually, while I think it will be worthwhile going forward to
+> implement such an 'auxiliary data' feature in a generic way, I still
+> think we should address the issue at hand without too much
+> complication.
+> 
+> If we pedal back to the version of 'mac80211: move struct aead_req
+> off the stack' that uses kzalloc() instead of aead_request_alloc(),
+> we can simply add some space for aad[] and/or zero[], and get rid of
+> the kmem cache entirely.
+> 
+> If you're past this point already, i won't bother but otherwise I can
+> rework 'mac80211: move struct aead_req off the stack' so that the
+> other patch is no longer required (and IIRC, this is actually
+> something you proposed yourself a couple of iterations ago?)
 
-Is there any Qualcomm-Atheros developer who could help me/redirect to
-the right person?
+Yes, I did consider that.
 
-Thanks,
-Doru
+It makes some sense, and I guess the extra memcpy() would be cheaper
+than the extra alloc?
+
+I'd happily use that instead of the combination of my two patches. The
+aead_request_alloc() is just a simple inline anyway, so no real problem
+not using it.
+
+johannes
