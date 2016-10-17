@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41290 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752307AbcI3XfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 19:35:20 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 0/2] rtl8xxxu: Fix driver reload issues with 8723bu and 8192eu
-Date: Fri, 30 Sep 2016 19:35:16 -0400
-Message-Id: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161001_013529_397344_001F500E)
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:32844 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757005AbcJQJtH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 05:49:07 -0400
+Received: by mail-lf0-f54.google.com with SMTP id x79so285664560lff.0
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:49:06 -0700 (PDT)
+References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> <1476696918.19992.15.camel@sipsolutions.net>
+In-Reply-To: <1476696918.19992.15.camel@sipsolutions.net>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+        charset=us-ascii
+Message-Id: <38BC2B4F-4050-4060-9FF0-54212DE3E1CF@linaro.org> (sfid-20161017_114910_933665_5FBC7063)
+Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
+Date: Mon, 17 Oct 2016 10:49:01 +0100
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-Hi,
-
-These two patches fix issues where rtl8723bu and rtl8192eu dongles
-would stop receving data if one reloaded the driver module, requiring
-it to be physically removed and reinserted.
-
-Both issues are applicable to 4.9. The first patch for 8723bu is
-applicable to stable 4.7 and 4.8. The second patch will only be
-applicable to stable 4.8, once patches currently in flight are merged
-by the network maintainers.
-
-Cheers,
-Jes
 
 
-Jes Sorensen (2):
-  rtl8xxxu: Fix rtl8723bu driver reload issue
-  rtl8xxxu: Fix rtl8192eu driver reload issue
-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 4 ++++
- 2 files changed, 11 insertions(+), 1 deletion(-)
-
--- 
-2.7.4
+> On 17 Oct 2016, at 10:35, Johannes Berg <johannes@sipsolutions.net> wrote:
+> 
+>> On Mon, 2016-10-17 at 10:30 +0100, Ard Biesheuvel wrote:
+>> 
+>> Yes. But as I replied, setting the req size is not supported atm,
+>> although it is reasonable to demand a way to allocate additional data
+>> in the request specifically for this issue. So let's proceed with the
+>> aead_request_alloc/free patch, but I would like to propose something
+>> on the API side to address this particular issue
+> 
+> Well, if your other patch to make it OK to be on-stack would be applied
+> instead, this wouldn't make much sense either :)
+> 
+> In this particular patch, we could reduce the size of the struct, but I
+> don't actually think it'll make a difference to go from 48 to 36 bytes,
+> given alignment etc., so I think I'll just leave it as is.
+> 
+> johannes
