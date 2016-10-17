@@ -1,164 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4631 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941774AbcJFIkE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 04:40:04 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2 1/2] ath10k: clean up HTT tx buffer allocation and free
-Date: Thu, 6 Oct 2016 14:09:47 +0530
-Message-ID: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161006_114920_826758_3B57023A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:49148 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758254AbcJQIBG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 17 Oct 2016 04:01:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        netdev@vger.kernel.org, herbert@gondor.apana.org.au,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v2] mac80211: move struct aead_req off the stack
+Date: Mon, 17 Oct 2016 10:01:01 +0200
+Message-Id: <1476691261-21816-1-git-send-email-johannes@sipsolutions.net> (sfid-20161017_100127_884873_E09325FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-cleanup 'ath10k_htt_tx_alloc' by introducing the API's
-'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
-re-use them whereever needed
+Some crypto implementations (such as the generic CCM wrapper in crypto/)
+use scatterlists to map fields of private data in their struct aead_req.
+This means these data structures cannot live in the vmalloc area, which
+means that they cannot live on the stack (with CONFIG_VMAP_STACK.)
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+This currently occurs only with the generic software implementation, but
+the private data and usage is implementation specific, so move the whole
+data structures off the stack into heap by allocating every time we need
+to use them.
+
+This pattern already exists in the IPsec ESP driver, but in the future,
+we may want/need to improve upon this, e.g. by using a slab cache.
+
+(Based on Ard's patch, but that was missing error handling and GCM/GMAC)
+
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-[v2 rebased over top of tree]
+ net/mac80211/aes_ccm.c  | 34 +++++++++++++++++++---------------
+ net/mac80211/aes_ccm.h  |  6 +++---
+ net/mac80211/aes_gcm.c  | 31 +++++++++++++++++--------------
+ net/mac80211/aes_gcm.h  |  4 ++--
+ net/mac80211/aes_gmac.c | 10 +++++-----
+ net/mac80211/wpa.c      | 12 ++++--------
+ 6 files changed, 50 insertions(+), 47 deletions(-)
 
- drivers/net/wireless/ath/ath10k/htt_tx.c | 76 ++++++++++++++++++++++----------
- 1 file changed, 52 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index ae5b33f..786fbd7 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -229,6 +229,33 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
- 	idr_remove(&htt->pending_tx, msdu_id);
- }
+diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
+index 7663c28ba353..5c9fe00be6cc 100644
+--- a/net/mac80211/aes_ccm.c
++++ b/net/mac80211/aes_ccm.c
+@@ -18,18 +18,16 @@
+ #include "key.h"
+ #include "aes_ccm.h"
  
-+static void ath10k_htt_tx_free_cont_txbuf(struct ath10k_htt *htt)
-+{
-+	size_t size;
-+
-+	if (!htt->txbuf.vaddr)
-+		return;
-+
-+	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
-+	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
-+			  htt->txbuf.paddr);
-+}
-+
-+static int ath10k_htt_tx_alloc_cont_txbuf(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	size_t size;
-+
-+	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
-+	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
-+					      &htt->txbuf.paddr,
-+					      GFP_KERNEL);
-+	if (!htt->txbuf.vaddr)
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len)
++int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len)
+ {
+ 	struct scatterlist sg[3];
++	struct aead_request *aead_req;
+ 
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *) aead_req_data;
+-
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
 +		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -41,6 +39,9 @@ void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
 +
 +	return 0;
-+}
-+
- static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
+ }
+ 
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+@@ -48,15 +49,15 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      size_t mic_len)
  {
- 	size_t size;
-@@ -310,10 +337,26 @@ static int ath10k_htt_tx_alloc_txq(struct ath10k_htt *htt)
+ 	struct scatterlist sg[3];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *) aead_req_data;
++	struct aead_request *aead_req;
++	int err;
+ 
+ 	if (data_len == 0)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -67,7 +68,10 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 	aead_request_set_crypt(aead_req, sg, sg, data_len + mic_len, b_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+-	return crypto_aead_decrypt(aead_req);
++	err = crypto_aead_decrypt(aead_req);
++	aead_request_free(aead_req);
++
++	return err;
+ }
+ 
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
+index 6a73d1e4d186..03e21b0995e3 100644
+--- a/net/mac80211/aes_ccm.h
++++ b/net/mac80211/aes_ccm.h
+@@ -15,9 +15,9 @@
+ struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
+ 						    size_t key_len,
+ 						    size_t mic_len);
+-void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic,
+-			       size_t mic_len);
++int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic,
++			      size_t mic_len);
+ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic,
+ 			      size_t mic_len);
+diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
+index 3afe361fd27c..aa8eb2718bc1 100644
+--- a/net/mac80211/aes_gcm.c
++++ b/net/mac80211/aes_gcm.c
+@@ -15,17 +15,15 @@
+ #include "key.h"
+ #include "aes_gcm.h"
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic)
++int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[3];
++	struct aead_request *aead_req;
+ 
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
+-
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -37,21 +35,23 @@ void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
++	return 0;
+ }
+ 
+ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[3];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
++	struct aead_request *aead_req;
++	int err;
+ 
+ 	if (data_len == 0)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	sg_init_table(sg, 3);
+ 	sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
+@@ -63,7 +63,10 @@ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 			       data_len + IEEE80211_GCMP_MIC_LEN, j_0);
+ 	aead_request_set_ad(aead_req, sg[0].length);
+ 
+-	return crypto_aead_decrypt(aead_req);
++	err = crypto_aead_decrypt(aead_req);
++	aead_request_free(aead_req);
++
++	return err;
+ }
+ 
+ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_gcm.h b/net/mac80211/aes_gcm.h
+index 1347fda6b76a..b36503cd7716 100644
+--- a/net/mac80211/aes_gcm.h
++++ b/net/mac80211/aes_gcm.h
+@@ -11,8 +11,8 @@
+ 
+ #include <linux/crypto.h>
+ 
+-void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+-			       u8 *data, size_t data_len, u8 *mic);
++int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
++			      u8 *data, size_t data_len, u8 *mic);
+ int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
+ 			      u8 *data, size_t data_len, u8 *mic);
+ struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
+diff --git a/net/mac80211/aes_gmac.c b/net/mac80211/aes_gmac.c
+index 3ddd927aaf30..15cfcebf0884 100644
+--- a/net/mac80211/aes_gmac.c
++++ b/net/mac80211/aes_gmac.c
+@@ -25,16 +25,15 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 		       const u8 *data, size_t data_len, u8 *mic)
+ {
+ 	struct scatterlist sg[4];
+-	char aead_req_data[sizeof(struct aead_request) +
+-			   crypto_aead_reqsize(tfm)]
+-		__aligned(__alignof__(struct aead_request));
+-	struct aead_request *aead_req = (void *)aead_req_data;
+ 	u8 zero[GMAC_MIC_LEN], iv[AES_BLOCK_SIZE];
++	struct aead_request *aead_req;
+ 
+ 	if (data_len < GMAC_MIC_LEN)
+ 		return -EINVAL;
+ 
+-	memset(aead_req, 0, sizeof(aead_req_data));
++	aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
++	if (!aead_req)
++		return -ENOMEM;
+ 
+ 	memset(zero, 0, GMAC_MIC_LEN);
+ 	sg_init_table(sg, 4);
+@@ -52,6 +51,7 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
+ 	aead_request_set_ad(aead_req, AAD_LEN + data_len);
+ 
+ 	crypto_aead_encrypt(aead_req);
++	aead_request_free(aead_req);
+ 
  	return 0;
  }
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index b48c1e13e281..2e366438f8ef 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -461,10 +461,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
  
-+static void ath10k_htt_tx_free_txdone_fifo(struct ath10k_htt *htt)
-+{
-+	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
-+	kfifo_free(&htt->txdone_fifo);
-+}
-+
-+static int ath10k_htt_tx_alloc_txdone_fifo(struct ath10k_htt *htt)
-+{
-+	int ret;
-+	size_t size;
-+
-+	size = roundup_pow_of_two(htt->max_num_pending_tx);
-+	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
-+	return ret;
-+}
-+
- int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
--	int ret, size;
-+	int ret;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
- 		   htt->max_num_pending_tx);
-@@ -321,13 +364,9 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- 	spin_lock_init(&htt->tx_lock);
- 	idr_init(&htt->pending_tx);
- 
--	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
--	htt->txbuf.vaddr = dma_alloc_coherent(ar->dev, size,
--						  &htt->txbuf.paddr,
--						  GFP_KERNEL);
--	if (!htt->txbuf.vaddr) {
--		ath10k_err(ar, "failed to alloc tx buffer\n");
--		ret = -ENOMEM;
-+	ret = ath10k_htt_tx_alloc_cont_txbuf(htt);
-+	if (ret) {
-+		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
- 		goto free_idr_pending_tx;
- 	}
- 
-@@ -343,8 +382,7 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- 		goto free_frag_desc;
- 	}
- 
--	size = roundup_pow_of_two(htt->max_num_pending_tx);
--	ret = kfifo_alloc(&htt->txdone_fifo, size, GFP_KERNEL);
-+	ret = ath10k_htt_tx_alloc_txdone_fifo(htt);
- 	if (ret) {
- 		ath10k_err(ar, "failed to alloc txdone fifo: %d\n", ret);
- 		goto free_txq;
-@@ -359,10 +397,7 @@ free_frag_desc:
- 	ath10k_htt_tx_free_cont_frag_desc(htt);
- 
- free_txbuf:
--	size = htt->max_num_pending_tx *
--			  sizeof(struct ath10k_htt_txbuf);
--	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
--			  htt->txbuf.paddr);
-+	ath10k_htt_tx_free_cont_txbuf(htt);
- 
- free_idr_pending_tx:
- 	idr_destroy(&htt->pending_tx);
-@@ -388,22 +423,15 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
- 
- void ath10k_htt_tx_free(struct ath10k_htt *htt)
- {
--	int size;
-+	tasklet_kill(&htt->txrx_compl_task);
- 
- 	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
- 	idr_destroy(&htt->pending_tx);
- 
--	if (htt->txbuf.vaddr) {
--		size = htt->max_num_pending_tx *
--				  sizeof(struct ath10k_htt_txbuf);
--		dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
--				  htt->txbuf.paddr);
--	}
+ 	pos += IEEE80211_CCMP_HDR_LEN;
+ 	ccmp_special_blocks(skb, pn, b_0, aad);
+-	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
+-				  skb_put(skb, mic_len), mic_len);
 -
-+	ath10k_htt_tx_free_cont_txbuf(htt);
- 	ath10k_htt_tx_free_txq(htt);
- 	ath10k_htt_tx_free_cont_frag_desc(htt);
--	WARN_ON(!kfifo_is_empty(&htt->txdone_fifo));
--	kfifo_free(&htt->txdone_fifo);
-+	ath10k_htt_tx_free_txdone_fifo(htt);
+-	return 0;
++	return ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
++					 skb_put(skb, mic_len), mic_len);
  }
  
- void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+ 
+@@ -696,10 +694,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 
+ 	pos += IEEE80211_GCMP_HDR_LEN;
+ 	gcmp_special_blocks(skb, pn, j_0, aad);
+-	ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
+-				  skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+-
+-	return 0;
++	return ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
++					 skb_put(skb, IEEE80211_GCMP_MIC_LEN));
+ }
+ 
+ ieee80211_tx_result
 -- 
-1.9.1
+2.8.1
