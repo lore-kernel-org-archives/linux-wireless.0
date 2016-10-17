@@ -1,115 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:55092 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752987AbcJCLO3 (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:35451 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757562AbcJQHjF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 07:14:29 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        akarwar@marvell.com, nishants@marvell.com
-Subject: [PATCHv3 3/3] mwifiex: check A-MSDU inner frame source address on AP interfaces
-Date: Mon,  3 Oct 2016 13:14:17 +0200
-Message-Id: <1475493257-21841-3-git-send-email-michael-dev@fami-braun.de> (sfid-20161003_131431_744719_1ED01892)
-In-Reply-To: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de>
-References: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de>
+        Mon, 17 Oct 2016 03:39:05 -0400
+Received: by mail-io0-f177.google.com with SMTP id i202so178743242ioi.2
+        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 00:37:46 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1476689310.19992.1.camel@sipsolutions.net>
+References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org> <1476689310.19992.1.camel@sipsolutions.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 17 Oct 2016 08:37:45 +0100
+Message-ID: <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com> (sfid-20161017_093933_967191_9CEBAF6A)
+Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using WPA security, the station and thus the required key is
-identified by its mac address when packets are received. So a
-station usually cannot spoof its source mac address.
+On 17 October 2016 at 08:28, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2016-10-15 at 18:16 +0100, Ard Biesheuvel wrote:
+>> The CCM code goes out of its way to perform the CTR encryption of the
+>> MAC using the subordinate CTR driver. To this end, it tweaks the
+>> input and output scatterlists so the aead_req 'odata' and/or
+>> 'auth_tag' fields [which may live on the stack] are prepended to the
+>> CTR payload. This involves calling sg_set_buf() on addresses which
+>> are not direct mapped, which is not supported.
+>
+>> Since the calculation of the MAC keystream involves a single call
+>> into the cipher, to which we have a handle already given that the
+>> CBC-MAC calculation uses it as well, just calculate the MAC keystream
+>> directly, and record it in the aead_req private context so we can
+>> apply it to the MAC in cypto_ccm_auth_mac(). This greatly simplifies
+>> the scatterlist manipulation, and no longer requires scatterlists to
+>> refer to buffers that may live on the stack.
+>
+> No objection from me, Herbert?
+>
+> I'm getting a bit nervous though - I'd rather have any fix first so
+> people get things working again - so maybe I'll apply your other patch
+> and mine first, and then we can replace yours by this later.
+>
 
-But when a station sends an A-MSDU frame, port control and crypto
-is done using the outer mac address, while the packets delivered
-and forwarded use the inner mac address.
-This might affect ARP/IP filtering on the AccessPoint.
+Could we get a statement first whether it is supported to allocate
+aead_req (and other crypto req structures) on the stack? If not, then
+we have our work cut out for us. But if it is, I'd rather we didn't
+apply the kzalloc/kfree patch, since it is just a workaround for the
+broken generic CCM driver, for which a fix is already available.
 
-IEEE 802.11-2012 mandates that the outer source mac address should
-match the inner source address (section 8.3.2.2). For the destination
-mac address, matching is not required, as a wifi client may send all
-its traffic to the AP in order to have it forwarded.
-
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
-
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Cc: projekt-wlan@fem.tu-ilmenau.de
-Cc: akarwar@marvell.com
-Cc: nishants@marvell.com
----
- drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 49d0efe..f4469d7 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -30,7 +30,8 @@
-  * layer.
-  */
- static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
--					  struct sk_buff *skb)
-+					  struct sk_buff *skb,
-+					  const u8 *ta)
- {
- 	struct rxpd *local_rx_pd = (struct rxpd *)(skb->data);
- 	int ret;
-@@ -45,7 +46,7 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
- 		skb_trim(skb, le16_to_cpu(local_rx_pd->rx_pkt_length));
- 
- 		ieee80211_amsdu_to_8023s(skb, &list, priv->curr_addr,
--					 priv->wdev.iftype, 0, NULL);
-+					 priv->wdev.iftype, 0, ta);
- 
- 		while (!skb_queue_empty(&list)) {
- 			struct rx_packet_hdr *rx_hdr;
-@@ -76,9 +77,10 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
- /* This function will process the rx packet and forward it to kernel/upper
-  * layer.
-  */
--static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload)
-+static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv, void *payload,
-+				    const u8 *ta)
- {
--	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload);
-+	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload, ta);
- 
- 	if (!ret)
- 		return 0;
-@@ -119,7 +121,7 @@ mwifiex_11n_dispatch_pkt_until_start_win(struct mwifiex_private *priv,
- 		}
- 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
- 		if (rx_tmp_ptr)
--			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-+			mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr, tbl->ta);
- 	}
- 
- 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-@@ -161,7 +163,7 @@ mwifiex_11n_scan_and_dispatch(struct mwifiex_private *priv,
- 		rx_tmp_ptr = tbl->rx_reorder_ptr[i];
- 		tbl->rx_reorder_ptr[i] = NULL;
- 		spin_unlock_irqrestore(&priv->rx_pkt_lock, flags);
--		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr);
-+		mwifiex_11n_dispatch_pkt(priv, rx_tmp_ptr, tbl->ta);
- 	}
- 
- 	spin_lock_irqsave(&priv->rx_pkt_lock, flags);
-@@ -568,12 +570,12 @@ int mwifiex_11n_rx_reorder_pkt(struct mwifiex_private *priv,
- 	tbl = mwifiex_11n_get_rx_reorder_tbl(priv, tid, ta);
- 	if (!tbl) {
- 		if (pkt_type != PKT_TYPE_BAR)
--			mwifiex_11n_dispatch_pkt(priv, payload);
-+			mwifiex_11n_dispatch_pkt(priv, payload, ta);
- 		return ret;
- 	}
- 
- 	if ((pkt_type == PKT_TYPE_AMSDU) && !tbl->amsdu) {
--		mwifiex_11n_dispatch_pkt(priv, payload);
-+		mwifiex_11n_dispatch_pkt(priv, payload, ta);
- 		return ret;
- 	}
- 
--- 
-2.1.4
+Also, regarding your __percpu patch: those are located in the vmalloc
+area as well, at least on arm64, and likely other architectures too.
