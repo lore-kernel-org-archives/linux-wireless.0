@@ -1,112 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:34064 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933168AbcJQJO3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:14:29 -0400
-Received: by mail-io0-f171.google.com with SMTP id r30so181407471ioi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:14:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 17 Oct 2016 10:14:28 +0100
-Message-ID: <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> (sfid-20161017_111437_837528_62272D7F)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:54469 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758623AbcJRHBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 03:01:04 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-10-18
+Date: Tue, 18 Oct 2016 09:00:57 +0200
+Message-Id: <1476774058-9279-1-git-send-email-johannes@sipsolutions.net> (sfid-20161018_090132_899373_8424B95A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 October 2016 at 09:33, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> As the stack can (on x86-64) now be virtually mapped rather than
-> using "normal" kernel memory, Sergey noticed mac80211 isn't using
-> the SG APIs correctly by putting on-stack buffers into SG tables.
-> This leads to kernel crashes.
->
-> Fix this by allocating the extra fields dynamically on the fly as
-> needed, using a kmem cache.
->
-> I used per-CPU memory in a previous iteration of this patch, but
-> Ard Biesheuvel pointed out that was also vmalloc'ed on some
-> architectures.
->
-> Reported-by: Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Hi Dave,
 
-Apologies for going back and forth on this, but it appears there may
-be another way to deal with this.
+As I mention in the tag message, the most urgent fix here is for
+the VMAP_STACK vs. software crypto usage. I ended up applying Ard's
+fix that dynamically allocates everything in one go, perhaps we'll
+find a better solution in the future, but in the meantime this will
+get things working again (rather than crashing or getting BUG_ON),
+and normally it's a rarely used code path since hardware crypto is
+used for almost all devices.
 
-First of all, we only need this handling for the authenticated data,
-and only for CCM and GCM, not CMAC (which does not use scatterlists at
-all, it simply calls the AES cipher directly)
+Please pull, or let me know if there's any problem.
 
-So that leaves a fixed 20 bytes for GCM and fixed 32 bytes for CCM,
-which we could allocate along with the AEAD request, e..g.,
+Thanks,
+johannes
 
-"""
-diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-index 8e898a6e8de8..c0c33e6ad94e 100644
---- a/net/mac80211/aes_ccm.c
-+++ b/net/mac80211/aes_ccm.c
-@@ -24,13 +24,17 @@ int ieee80211_aes_ccm_encrypt(struct crypto_aead
-*tfm, u8 *b_0, u8 *aad,
- {
-        struct scatterlist sg[3];
-        struct aead_request *aead_req;
-+       u8 *__aad;
 
-        aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-        if (!aead_req)
-                return -ENOMEM;
 
-+       __aad = (u8 *)aead_req + crypto_aead_reqsize(tfm);
-+       memcpy(__aad, aad, 2 * AES_BLOCK_SIZE);
-+
-        sg_init_table(sg, 3);
--       sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-+       sg_set_buf(&sg[0], &__aad[2], be16_to_cpup((__be16 *)__aad));
-        sg_set_buf(&sg[1], data, data_len);
-        sg_set_buf(&sg[2], mic, mic_len);
+The following changes since commit 6b25e21fa6f26d0f0d45f161d169029411c84286:
 
-@@ -49,6 +53,7 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead
-*tfm, u8 *b_0, u8 *aad,
- {
-        struct scatterlist sg[3];
-        struct aead_request *aead_req;
-+       u8 *__aad;
-        int err;
+  Merge tag 'drm-for-v4.9' of git://people.freedesktop.org/~airlied/linux (2016-10-11 18:12:22 -0700)
 
-        if (data_len == 0)
-@@ -58,8 +63,11 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead
-*tfm, u8 *b_0, u8 *aad,
-        if (!aead_req)
-                return -ENOMEM;
+are available in the git repository at:
 
-+       __aad = (u8 *)aead_req + crypto_aead_reqsize(tfm);
-+       memcpy(__aad, aad, 2 * AES_BLOCK_SIZE);
-+
-        sg_init_table(sg, 3);
--       sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
-+       sg_set_buf(&sg[0], &__aad[2], be16_to_cpup((__be16 *)__aad));
-        sg_set_buf(&sg[1], data, data_len);
-        sg_set_buf(&sg[2], mic, mic_len);
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-10-18
 
-@@ -90,6 +98,8 @@ struct crypto_aead
-*ieee80211_aes_key_setup_encrypt(const u8 key[],
-        if (err)
-                goto free_aead;
+for you to fetch changes up to f4a067f9ffca603b45f7e82ddd2ba50e5904cea3:
 
-+       crypto_aead_set_reqsize(tfm,
-+                               crypto_aead_reqsize(tfm) + 2 * AES_BLOCK_SIZE));
-        return tfm;
+  mac80211: move struct aead_req off the stack (2016-10-17 16:14:04 +0200)
 
- free_aead:
-"""
+----------------------------------------------------------------
+This is relatively small, mostly to get the SG/crypto
+from stack removal fix that crashes things when VMAP
+stack is used in conjunction with software crypto.
+
+Aside from that, we have:
+ * a fix for AP_VLAN usage with the nl80211 frame command
+ * two fixes (and two preparation patches) for A-MSDU, one
+   to discard group-addressed (multicast) and unexpected
+   4-address A-MSDUs, the other to validate A-MSDU inner
+   MAC addresses properly to prevent controlled port bypass
+
+----------------------------------------------------------------
+Ard Biesheuvel (1):
+      mac80211: move struct aead_req off the stack
+
+Johannes Berg (4):
+      mac80211: discard multicast and 4-addr A-MSDUs
+      cfg80211: let ieee80211_amsdu_to_8023s() take only header-less SKB
+      cfg80211: add ability to check DA/SA in A-MSDU decapsulation
+      mac80211: validate DA/SA during A-MSDU decapsulation
+
+Michael Braun (1):
+      mac80211: fix CMD_FRAME for AP_VLAN
+
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  2 +-
+ include/net/cfg80211.h                             | 32 ++++++++++----
+ net/mac80211/aes_ccm.c                             | 46 ++++++++++++-------
+ net/mac80211/aes_ccm.h                             |  8 ++--
+ net/mac80211/aes_gcm.c                             | 43 +++++++++++-------
+ net/mac80211/aes_gcm.h                             |  6 ++-
+ net/mac80211/aes_gmac.c                            | 26 +++++------
+ net/mac80211/aes_gmac.h                            |  4 ++
+ net/mac80211/offchannel.c                          |  2 +-
+ net/mac80211/rx.c                                  | 51 +++++++++++++++++-----
+ net/mac80211/wpa.c                                 | 22 ++++------
+ net/wireless/util.c                                | 34 +++++++--------
+ 12 files changed, 175 insertions(+), 101 deletions(-)
