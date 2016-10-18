@@ -1,78 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:38679 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbcJNJVv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4252 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752739AbcJRJ3y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 05:21:51 -0400
-Received: by mail-it0-f51.google.com with SMTP id o19so6071613ito.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 02:21:50 -0700 (PDT)
+        Tue, 18 Oct 2016 05:29:54 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>
+Subject: [PATCHv2 0/2] ath10k: add support for tx bitrate
+Date: Tue, 18 Oct 2016 14:59:40 +0530
+Message-ID: <1476782982-10683-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161018_112957_940404_2754DA33)
 MIME-Version: 1.0
-In-Reply-To: <1476436248.31114.21.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
- <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
- <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
- <1476434561.31114.7.camel@sipsolutions.net> <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
- <1476435303.31114.14.camel@sipsolutions.net> <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com>
- <1476436248.31114.21.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 10:21:49 +0100
-Message-ID: <CAKv+Gu-Y6wuMGuRgrHRGCvAM9qZjvufs=7VWL8hAUKFSF=tZWg@mail.gmail.com> (sfid-20161014_112217_498274_DE399B0A)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 10:10, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-10-14 at 10:05 +0100, Ard Biesheuvel wrote:
->>
->> Indeed. And the decrypt path does the same for auth_tag[].
->
-> Hadn't gotten that far, due to the BUG_ON() in CONFIG_DEBUG_SG in the
-> encrypt path :)
->
->> But that still means there are two separate problems here, one which
->> affects the WPA code, and one that only affects the generic CCM
->> chaining mode (but not the accelerated arm64 implementation)
->
-> Yes. The generic CCM chaining still doesn't typically have a request on
-> the stack though. In fact, ESP (net/ipv4/esp4.c) for example will do
-> temporary allocations with kmalloc for every frame, it seems.
->
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
-It is annotated with a TODO, though :-)
+This patch series adds support for tx bitrate using 
+.sta_statistics callback.
 
-38320c70d282b (Herbert Xu               2008-01-28 19:35:05 -0800  41)
- * TODO: Use spare space in skb for this where possible.
+tx bitrate tested on QCA4019 using iw.
 
->> Unsurprisingly, I would strongly prefer those to be fixed properly
->> rather than backing out my patch, but I'm happy to help out whichever
->> solution we reach consensus on.
->
-> Yeah, obviously, it would be good to use the accelerated versions after
-> all.
->
->> I will check whether this removes the issue when not using
->> crypto/ccm.ko
->
-> Ok. I think we can probably live with having those 48 bytes in per-CPU
-> buffers, but I suppose we don't really want to have ~500.
->
+Anilkumar Kolli (2):
+  ath10k: add per peer htt tx stats support for 10.4
+  ath10k: add support for per sta tx bitrate
 
-Agreed.
+ drivers/net/wireless/ath/ath10k/core.h        |   17 ++++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++
+ drivers/net/wireless/ath/ath10k/htt.c         |    2 +
+ drivers/net/wireless/ath/ath10k/htt.h         |   25 +++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c      |  125 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h         |   10 +-
+ 6 files changed, 191 insertions(+), 1 deletion(-)
+
+-- 
+1.7.9.5
