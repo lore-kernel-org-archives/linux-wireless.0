@@ -1,53 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40343 "EHLO sipsolutions.net"
+Received: from tex.lwn.net ([70.33.254.29]:52327 "EHLO vena.lwn.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754100AbcJDITc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 04:19:32 -0400
-Message-ID: <1475569169.5324.13.camel@sipsolutions.net> (sfid-20161004_101952_789017_28846916)
-Subject: Re: [PATCH] mac80211: fix CMD_FRAME for AP_VLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "M. Braun" <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Tue, 04 Oct 2016 10:19:29 +0200
-In-Reply-To: <fb4aeb32-8a13-92e6-a84e-12a6228dc7a1@fami-braun.de>
-References: <1474786035-15410-1-git-send-email-michael-dev@fami-braun.de>
-         <fb4aeb32-8a13-92e6-a84e-12a6228dc7a1@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S934060AbcJRXwh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 19:52:37 -0400
+Date: Tue, 18 Oct 2016 17:52:36 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Subject: Re: sequence diagrams in rst documentation
+Message-ID: <20161018175236.75c8c4e2@lwn.net> (sfid-20161019_015242_164957_8BEE708D)
+In-Reply-To: <1476791021.6425.25.camel@sipsolutions.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+        <20161011072119.7ad4e3a3@lwn.net>
+        <1476193466.4118.10.camel@sipsolutions.net>
+        <1476194038.4118.11.camel@sipsolutions.net>
+        <1476791021.6425.25.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-03 at 13:31 +0200, M. Braun wrote:
-> Am 03.10.2016 um 13:03 schrieb M. Braun:
-> > 
-> > because the in ieee80211_mgmt_tx the
+On Tue, 18 Oct 2016 13:43:41 +0200
+Johannes Berg <johannes@sipsolutions.net> wrote:
+
+> > Example here:
+> > https://johannes.sipsolutions.net/files/80211/mac80211.html#connection-flow  
 > 
-> ups, that was the patch itself.
+> Coming back to this - sadly, it appears that this software (blockdiag,
+> seqdiag) is completely unmaintained, with open pull requests dating
+> back to 2012 and the last commit dating back to 2015-08-22.
 > 
-> I think I carried it over from ieee80211_add_key, that does
+> I'd want/need feature improvements in it too, but if I can't feed those
+> back to upstream (since it appears dead), there's little point.
 > 
-> > 
-> > 
-> >        if (mac_addr) {
-> >                if (ieee80211_vif_is_mesh(&sdata->vif))
-> >                        sta = sta_info_get(sdata, mac_addr);
-> >                else
-> >                        sta = sta_info_get_bss(sdata, mac_addr);
-> > 
-> 
+> Perhaps we can ship plugins for this as part of the kernel sources?
+> Shouldn't be too difficult to reimplement something like this, after
+> all.
 
-Ok, so that's there, but I still don't see the point - sta->sdata->bss
-will be NULL for any mesh STA.
+OK, I've read through all of this.  My thoughts, for whatever it's worth.
 
-Thomas, do you remember anything about why you did this back in commit
-ff973af74aa6932ca4758266bccec68e8135ddf7
-Author: Thomas Pedersen <thomas@cozybit.com>
-Date:   Tue May 3 16:57:12 2011 -0700
+We already carry a few sphinx plugins in the kernel; there is room for
+more if we *really* need them.  But...
 
-    nl80211: allow installing keys for a meshif
+ - Part of the idea behind switching over to sphinx was to be able to get
+   away from maintaining our own formatting system.  Adding plugins to the
+   kernel is a step away from that goal.  So I'd like to be sure that
+   there's nothing that's part of standard sphinx that will do the job
+   first.
 
-?
+That said, I think that requiring people to install plugins from contrib
+sites or third-party repos may be even worse.  We don't want to put people
+through misery just to format the docs.
 
-(yeah, long shot, it's 5.5 years ago ...)
+In summary, I think we can consider taking on a module if it's what we
+need to do the docs right.  And if somebody agrees to maintain it! :)
 
-johannes
+I've heard others say they would like better diagramming support.  Do you
+think that, maybe, something like aafigure would do the trick?
+
+	https://pythonhosted.org/sphinxcontrib-aafig/
+
+I've not actually played with it at all, but I like the idea that we'd
+have readable diagrams in the source docs as well...
+
+jon
