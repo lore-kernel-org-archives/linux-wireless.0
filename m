@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55168 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751986AbcJJKNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 06:13:10 -0400
-Message-ID: <1476094386.7895.7.camel@sipsolutions.net> (sfid-20161010_121313_307956_4E32F40C)
-Subject: Re: [RFC] mac80211: fix A-MSDU outer SA/DA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Mon, 10 Oct 2016 12:13:06 +0200
-In-Reply-To: <1475874542-9014-1-git-send-email-michael-dev@fami-braun.de>
-References: <1475874542-9014-1-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9887 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758260AbcJRJ0x (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 05:26:53 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>
+Subject: [PATCHv2 0/2] ath10k: add support for tx bitrate
+Date: Tue, 18 Oct 2016 14:56:13 +0530
+Message-ID: <1476782775-10635-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161018_112711_892378_4C12F60F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Anilkumar Kolli <akolli@codeaurora.org>
 
->  
-> +	/* according to IEEE 802.11-2012 8.3.2 table 8-19, the outer
-> SA/DA
-> +	 * fields needs to be changed to BSSID for A-MSDU frames
-> depending
-> +	 * on FromDS/ToDS values.
-> +	 */
-> +	hdr = data;
-> +	if (bssid && (hdr->frame_control &
-> cpu_to_le16(IEEE80211_FCTL_FROMDS)))
-> +		memcpy(amsdu_hdr.h_source, bssid, ETH_ALEN);
-> +	if (bssid && (hdr->frame_control &
-> cpu_to_le16(IEEE80211_FCTL_TODS)))
-> +		memcpy(amsdu_hdr.h_dest, bssid, ETH_ALEN);
-> 
+This patch series adds support for tx bitrate using 
+.sta_statistics callback.
 
-You should probably use ieee80211_has_tods() and ieee80211_has_fromds()
+tx bitrate tested on QCA4019 using iw.
 
-johannes
+Anilkumar Kolli (2):
+  ath10k: add per peer htt tx stats support for 10.4
+  ath10k: add support for per sta tx bitrate
+
+ drivers/net/wireless/ath/ath10k/core.h        |   17 ++++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++
+ drivers/net/wireless/ath/ath10k/htt.c         |    2 +
+ drivers/net/wireless/ath/ath10k/htt.h         |   25 +++++
+ drivers/net/wireless/ath/ath10k/htt_rx.c      |  125 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h         |   10 +-
+ 6 files changed, 191 insertions(+), 1 deletion(-)
+
+-- 
+1.7.9.5
