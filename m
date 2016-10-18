@@ -1,119 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:36364 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933250AbcJLO07 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:26:59 -0400
-Received: by mail-qk0-f181.google.com with SMTP id o68so79948867qkf.3
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 07:26:58 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <a948f377-5a87-e1a3-e56f-9768ee6d87a0@broadcom.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
- <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
- <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
- <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com> <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com>
- <8d01e83b-800d-bba4-b948-abbdc5188f6b@broadcom.com> <CANfLQra_Vh4cnHvpzU9yxv4_6SJEc1LN8Vqm4-11thOLvGxY2Q@mail.gmail.com>
- <a948f377-5a87-e1a3-e56f-9768ee6d87a0@broadcom.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Wed, 12 Oct 2016 17:26:57 +0300
-Message-ID: <CANfLQrau67GtkyPeT9MqEu3SAC_xjrCuAywU6yRoHGfvAyJ30g@mail.gmail.com> (sfid-20161012_162702_426135_0169963C)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtp2.goneo.de ([85.220.129.33]:51852 "EHLO smtp2.goneo.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761702AbcJRN7s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 09:59:48 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 6.6 \(1510\))
+Subject: Re: sequence diagrams in rst documentation
+From: Markus Heiser <markus.heiser@darmarit.de>
+In-Reply-To: <1476791021.6425.25.camel@sipsolutions.net>
+Date: Tue, 18 Oct 2016 15:51:39 +0200
+Cc: Jonathan Corbet <corbet@lwn.net>, linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Message-Id: <B9AC83F3-AA14-414B-B538-81436620E432@darmarit.de> (sfid-20161018_155952_156988_98798AF0)
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net> <20161011072119.7ad4e3a3@lwn.net> <1476193466.4118.10.camel@sipsolutions.net> <1476194038.4118.11.camel@sipsolutions.net> <1476791021.6425.25.camel@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2016 at 10:12 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 07-10-16 16:33, Gucea Doru wrote:
->> On Thu, Oct 6, 2016 at 10:25 AM, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 6-10-2016 10:07, Gucea Doru wrote:
->>>> On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
->>>> <arend.vanspriel@broadcom.com> wrote:
->>>>> On 4-10-2016 13:39, Gucea Doru wrote:
->>>>>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
->>>>>>> <arend.vanspriel@broadcom.com> wrote:
->>>>>>>>
->>>>>>>>
->>>>>>>> On 29-09-16 13:32, Gucea Doru wrote:
->>>>>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->>>>>>>>>> What is the decision triggering the exit from the PS mode immediately
->>>>>>>>>> after the ping request? I am asking this because 802.11 PS legacy
->>>>>>>>>> specifies that the client should wait for a beacon with TIM set in
->>>>>>>>>> order to wake up: in my case, there is no beacon between the ping
->>>>>>>>>> request message and the Null frame that announces the exit from the PS
->>>>>>>>>> mode.
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> Any help would be highly appreciated :)
->>>>>>>>
->>>>>>>> Actually though I already sent you are reply, but alas here it is.
->>>>>>>>
->>>>>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
->>>>>>>> drivers. Regardless your question is more for firmware running on the
->>>>>>>> device. So like the same behavior would be observed when using brcmfmac
->>>>>>>> with same firmware.
->>>>>>>>
->>>>>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
->>>>>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
->>>>>>>>> shall issue a PS Poll". In my capture there are cases when the STA
->>>>>>>>> exits the PS mode without waiting for a beacon.
->>>>>>>>
->>>>>>>> It is a bit tricky, but the standard does not explicitly say the STA
->>>>>>>> should be in power-save at any other time. So it is difficult to say
->>>>>>>> what event occurred on the STA side to exit PS mode. Also STA means
->>>>>>>> P2P-Client as you say. That means that you have multiple interfaces:
->>>>>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
->>>>>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
->>>>>>>> scheduled scan by which firmware will scan at a certain interval. That
->>>>>>>> is just some things I can come up with and I am sure there are more.
->>>>>>
->>>>>> I agree that there may be some events belonging to the regular STA
->>>>>> interface that could trigger the Null Frame (which includes the exit
->>>>>> from PS Mode). However, I would expect to see some management frames
->>>>>> in the air before/after the Null Packet (e.g.: a Probe request in case
->>>>>> of a scheduled scan). But in my case the trigger for the Null frame
->>>>>> seems to be the ping request packet, the scenario is the same every
->>>>>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
->>>>>> confirms this behavior).
->>>>>>
->>>>>> I thought that you had a power save optimization algorithm that keeps
->>>>>> the card on a few milliseconds just to see if we can have a fast reply
->>>>>> from the peer. Does this ring a bell? :)
->>>>>
->>>>> It does not. That would be implemented in firmware. As said I am working
->>>>> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
->>>>>
->>>>
->>>> Arend, could you please redirect me to a Broadcom firmware maintainer?
->>>
->>> Can you please elaborate on your platform, broadcom chipset, and what
->>> version of bcmdhd you are using.
->>>
->>
->> Platform: Nexus 5 running CM13 (Android 6.0.1)
->> Broadcom chipset: BCM4339 Wi-Fi Chipset
->> bcmdhd version:Dongle Host Driver, version 1.88.45 (r)
->>
->> Do you need more information?
->
-> So can you indicate the mac addresses of the two nexus devices and which
-> one is P2P-GO. I entered the wpa key you mentioned in your initial
-> email, but my wireshark does not seem to be able to decrypt the packets,
-> which makes it a bit harder to analyze.
 
-Do you have a wpa-pwd entry "JYdrhZp3:DIRECT-35-Android_Intel" inside
-Edit->Preferences->Protocols->IEEE 802.11->Decryption Keys? I use
-Wireshark 2.0.4.
+Am 18.10.2016 um 13:43 schrieb Johannes Berg <johannes@sipsolutions.net>:
 
-P2P-GO MAC: 66:89:9a:81:0d:95
-P2P Client MAC: 66:89:9a:81:0f:20
+> On Tue, 2016-10-11 at 15:53 +0200, Johannes Berg wrote:
+>>> 
+>>> 
+>>> Related question: I have some sequence diagrams, and just found the
+>>> seqdiag sphinx plugin. How should we manage adding extensions? Or
+>>> would you prefer not to add any at all?
+>> 
+>> Example here:
+>> https://johannes.sipsolutions.net/files/80211/mac80211.html#connection-flow
+> 
+> Coming back to this - sadly, it appears that this software (blockdiag,
+> seqdiag) is completely unmaintained, with open pull requests dating
+> back to 2012 and the last commit dating back to 2015-08-22.
+> 
+> I'd want/need feature improvements in it too, but if I can't feed those
+> back to upstream (since it appears dead), there's little point.
+> 
+> Perhaps we can ship plugins for this as part of the kernel sources?
+> Shouldn't be too difficult to reimplement something like this, after
+> all.
 
-Thanks,
-Doru
+Here are my thoughts ...
+
+Every extension which is not a part of the sphinx distro brings new
+external dependencies and the development of such extensions is IMO
+far of kernel development's scope.
+
+ATM, there are not many use cases for diagram generators, so why not
+be KISS and creating diagrams with the favorite tool only adding the
+resulting (e.g.) PNG to the Kernel's source?
+
+Before we add new dependencies / complexity, we should get rid
+of the DocBook build.
+
+-- Markus --
+
+
+> johannes
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-doc" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
