@@ -1,61 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58664 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751327AbcJ0GCM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 02:02:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Antonio Quartulli <a@unstable.cc>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-        sw@simonwunderlich.de, Antonio Quartulli <antonio@open-mesh.com>
-Subject: Re: [NOT FOR MERGE] ath9k: work around key cache corruption
-References: <20161018083552.28592-1-a@unstable.cc>
-        <87lgxbxl2d.fsf@purkki.adurom.net>
-        <20161026141016.GB26376@prodigo.lan>
-Date: Thu, 27 Oct 2016 09:02:03 +0300
-In-Reply-To: <20161026141016.GB26376@prodigo.lan> (Antonio Quartulli's message
-        of "Wed, 26 Oct 2016 22:10:16 +0800")
-Message-ID: <87bmy65nz8.fsf@kamboji.qca.qualcomm.com> (sfid-20161027_080217_992215_1C5CA69C)
+Received: from mga09.intel.com ([134.134.136.24]:5914 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932186AbcJROxC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 10:53:02 -0400
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Markus Heiser <markus.heiser@darmarit.de>
+Cc: Jonathan Corbet <corbet@lwn.net>, linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Subject: Re: sequence diagrams in rst documentation
+In-Reply-To: <1476799968.6425.33.camel@sipsolutions.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net> <20161011072119.7ad4e3a3@lwn.net> <1476193466.4118.10.camel@sipsolutions.net> <1476194038.4118.11.camel@sipsolutions.net> <1476791021.6425.25.camel@sipsolutions.net> <B9AC83F3-AA14-414B-B538-81436620E432@darmarit.de> <1476799968.6425.33.camel@sipsolutions.net>
+Date: Tue, 18 Oct 2016 17:52:57 +0300
+Message-ID: <87eg3dvhdi.fsf@intel.com> (sfid-20161018_165309_969847_80D7B0FE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Antonio Quartulli <a@unstable.cc> writes:
-
-> On Wed, Oct 26, 2016 at 05:05:14PM +0300, Kalle Valo wrote:
->> Antonio Quartulli <a@unstable.cc> writes:
+On Tue, 18 Oct 2016, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2016-10-18 at 15:51 +0200, Markus Heiser wrote:
+>> Here are my thoughts ...
 >> 
->> > From: Antonio Quartulli <antonio@open-mesh.com>
->> >
->> > This patch was crafted long time ago to work around a key cache
->> > corruption problem on ath9k chipsets.
->> >
->> > The workaround consists in periodically triggering a worker that
->> > uploads all the keys to the HW cache. The worker is triggered also
->> > when the vif detects 21 undecryptable packets.
->> >
->> >
->> > This patch is based on top compat-wireless-2015-10-26.
->> >
->> >
->> > I was asked to release this code to the public and, since it is
->> > GPL, I am now doing it.
->> 
->> GPL? AFAICS ath9k is under ISC. I'm not sure what you mean with the
->> sentence above, but it's possible to interpret it so that this patch is
->> not under ISC license, which is problematic.
+>> Every extension which is not a part of the sphinx distro brings new
+>> external dependencies 
 >
-> Honestly, my sentence was just a way to say "it makes sense to release this
-> patch to the public".
-
-I was suspecting it was like that, I just wasn't sure.
-
-> If it needs to be ISC in order to be merged, then it can be released under ISC.
+> I agree.
 >
-> I don't want to enter a legal case :)
+>> and the development of such extensions is IMO
+>> far of kernel development's scope.
+>
+> Arguably, having good documentation *is* in the scope of kernel
+> development.
+>
+> Also, it could be argued that shipping a module in the kernel sources
+> would be more reliable than having to require it being externally
+> installed, like the GCC plugins perhaps.
 
-Me neither. But I can't apply patches with unclear license.
+This could probably be argued either way...
+
+My view has been all along that we should prefer to use existing
+extensions written and maintained by others. Perhaps we (the kind of
+royal "we" of which I'm personally really not part of) could take on
+maintainership of some extensions in the interest of improving kernel
+documentation, but I think the goal should be that the extensions are
+maintained outside of the kernel tree, that the extensions are generally
+usable, and have a chance of attracting attention and contributions from
+outside of the kernel community. (Note that this doesn't preclude us
+from shipping the extensions in the kernel tree, as long as it's updated
+from the upstream, not forked.)
+
+(This is one part of me being unhappy about making it easy to run
+arbitrary scripts to produce documentation; those will never be generic,
+and we'll never be able to offload their maintenance outside of the
+kernel. We should not think that we have some really special needs in
+the kernel.)
+
+>> ATM, there are not many use cases for diagram generators, so why not
+>> be KISS and creating diagrams with the favorite tool only adding the
+>> resulting (e.g.) PNG to the Kernel's source?
+>
+> *Only* adding the PNG would be awful, I'd have to keep track of the
+> corresponding source elsewhere, and perhaps couldn't even GPL it
+> because then I couldn't distribute the PNG without corresponding
+> source...
+>
+> Adding the source text would really be the only practical choice, but
+> doing so makes it easy to mismatch things, and also very easy to use
+> proprietary services for it that may go away at any time, etc.
+
+Agreed. And there are other problems with attaching binaries (although
+I'd say we should fix them too) [1].
+
+BR,
+Jani.
+
+
+[1] http://lkml.kernel.org/r/02a78907-933d-3f61-572e-28154b16b9e5@redhat.com
+
 
 -- 
-Kalle Valo
+Jani Nikula, Intel Open Source Technology Center
