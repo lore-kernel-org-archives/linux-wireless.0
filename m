@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46001 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752011AbcJCHaw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8793 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758739AbcJRJcH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 03:30:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix rtl8192eu driver reload issue
-References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
-        <1475278518-18527-3-git-send-email-Jes.Sorensen@redhat.com>
-Date: Mon, 03 Oct 2016 10:30:47 +0300
-In-Reply-To: <1475278518-18527-3-git-send-email-Jes.Sorensen@redhat.com> (Jes
-        Sorensen's message of "Fri, 30 Sep 2016 19:35:18 -0400")
-Message-ID: <87k2dpsxco.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_093101_535610_56CE6A16)
+        Tue, 18 Oct 2016 05:32:07 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCHv2 2/2] ath10k: add support for per sta tx bitrate
+Date: Tue, 18 Oct 2016 15:01:25 +0530
+Message-ID: <1476783085-10724-3-git-send-email-akolli@qti.qualcomm.com> (sfid-20161018_113213_500107_612BF183)
+In-Reply-To: <1476783085-10724-1-git-send-email-akolli@qti.qualcomm.com>
+References: <1476783085-10724-1-git-send-email-akolli@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> The 8192eu suffered from two issues when reloading the driver.
->
-> The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
-> 23 didn't get set in rtl8192e_enable_rf().
->
-> In addition it also seems prone to issues when setting REG_RF_CTRL to
-> 0 intead of just disabling the RF_ENABLE bit. Similar to what was
-> causing issues with the 8188eu.
->
-> With this patch I can successfully reload the driver and reassociate
-> to an APi with an 8192eu dongle.
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Per STA tx bitrate info is filled from peer stats.
+Export per sta txrate info to cfg80211/nl80211
 
-I'll add:
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+---
+v2:
+ * addressed kalle's comments
 
-Cc: stable@vger.kernel.org # 4.8+
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 9955fea0802a..fce6f8137d33 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -77,6 +77,19 @@ void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 	sinfo->rx_duration = arsta->rx_duration;
+ 	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
++
++	if (!arsta->txrate.legacy && !arsta->txrate.nss)
++		return;
++
++	if (arsta->txrate.legacy) {
++		sinfo->txrate.legacy = arsta->txrate.legacy;
++	} else {
++		sinfo->txrate.mcs = arsta->txrate.mcs;
++		sinfo->txrate.nss = arsta->txrate.nss;
++		sinfo->txrate.bw = arsta->txrate.bw;
++	}
++	sinfo->txrate.flags = arsta->txrate.flags;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_TX_BITRATE;
+ }
+ 
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
 -- 
-Kalle Valo
+1.7.9.5
