@@ -1,105 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server1.vittgam.net ([213.239.197.142]:39575 "EHLO
-        mail.vittgam.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932685AbcJLOQ7 (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34430 "EHLO
+        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754454AbcJROIm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:16:59 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Date: Wed, 12 Oct 2016 16:13:38 +0200
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <ath9k-devel@venema.h4ckr.net>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Move generic entries below specific ones in
- =?UTF-8?Q?ath=5Fpci=5Fid=5Ftable=2E?=
-In-Reply-To: <87eg3lg07d.fsf@kamboji.qca.qualcomm.com>
-References: <ath9k-patch-20161003@vittgam.net>
- <87k2dop15n.fsf@kamboji.qca.qualcomm.com>
- <cd3ff141b0ba69399a377a96a9ae75fb@vittgam.net>
- <87eg3lg07d.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <6ae887d799b201d78b4474ab9bbf6917@vittgam.net> (sfid-20161012_161703_735339_E43818ED)
+        Tue, 18 Oct 2016 10:08:42 -0400
+Received: by mail-lf0-f47.google.com with SMTP id b81so345408040lfe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2016 07:08:41 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+        netdev@vger.kernel.org
+Cc: herbert@gondor.apana.org.au, j@w1.fi, luto@amacapital.net,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [RFC PATCH 0/2] mac80211: aes_ccm: cache AEAD request allocations per CPU
+Date: Tue, 18 Oct 2016 15:08:31 +0100
+Message-Id: <1476799713-16188-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20161018_160849_111465_D7878BEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+This RFC implements per CPU caching of AEAD request structures, which allows
+us to get rid of the per-packet kzalloc/kzfree calls we were forced to
+introduce to deal with SG API violations, both in the mac80211 and in the
+core crypto API code.
 
-On 12/10/2016 15:34:46 CEST, Kalle Valo wrote:
-> "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
->
->> Hello,
->>
->> On 04/10/2016 17:46:44 CEST, Kalle Valo wrote:
->>> "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
->>>
->>>> If generic entries are positioned above specific ones, then the
->>>> former will be matched first and used instead of the latter.
->>>>
->>>> Cc: <linux-wireless@vger.kernel.org>
->>>> Cc: <ath9k-devel@qca.qualcomm.com>
->>>> Cc: <ath9k-devel@lists.ath9k.org>
->>>> Cc: <stable@vger.kernel.org>
->>>> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
->>>
->>> Why? What kind of bug you are fixing? You are not really describing the
->>> problem you are trying fix.
->>
->> The active_high LED of my Wistron DNMA-92 is still being recognized as
->> active_low on 4.7.6 mainline.
->
-> This kind of information is important, always add that to the commit log
-> so that we don't need to guess.
+Since mac80211 only executes the AEAD transforms in softirq context, only one
+AEAD request can be in flight at the same time on any given CPU, and so, instead
+of free the request, we can stash its address in a per CPU variable, and reuse
+it for the next packet.
 
-Okay, sorry about missing that before.
+This RFC only addressess CCMP, but GCM and GMAC could be fixed in the same way
+(and CMAC did not suffer from the API violation issue in the first place)
 
->> When I was preparing my former patch to fix that, I initially added the
->> PCI_DEVICE_SUB section for 0x0029/0x2096 above the PCI_VDEVICE section
->> for 0x0029; but then I moved the former below the latter after seeing
->> how 0x002A sections were sorted in the file.
->>
->> I must have somehow messed up with testing, because I tested the final
->> version of that patch before sending it, and it was apparently working;
->> but now it is not working on 4.7.6 mainline.
->>
->> With this patch, 0x0029/0x2096 has finally got active_high LED on
->> 4.7.6.
->
-> I'm confused, are you now saying that this patch doesn't work?
+Ard Biesheuvel (2):
+  mac80211: aes_ccm: prepare key struct for storing context data
+  mac80211: aes_ccm: cache AEAD request structures per CPU
 
-No: the previous patch (which is already merged and added the LED driver_data
-for my card) doesn't work. This one does work.
+ net/mac80211/aes_ccm.c | 80 +++++++++++++-------
+ net/mac80211/aes_ccm.h | 16 ++--
+ net/mac80211/key.c     | 16 ++--
+ net/mac80211/key.h     |  3 +-
+ net/mac80211/wpa.c     |  4 +-
+ 5 files changed, 71 insertions(+), 48 deletions(-)
 
->> So, after seeing that the rest of the file is sorted this way (generic
->> section after the specific ones), I concluded that the 0x002A sorting
->> was wrong in the first place, and so is 0x0029. Then I sent this patch
->> to fix this.
->
-> I can't see how changing the order in ath_pci_id_table[] would make any
-> difference in functionality, but I might be missing something.
-
-It does: I've looked through the relevant code, and found that PCI device
-matching from that table is done sequentially in pci_match_id() from
-drivers/pci/pci-driver.c.
-
-So if a generic PCI_VDEVICE entry (that has both subvendor and subdevice IDs
-set to PCI_ANY_ID) is put before a more specific one (PCI_DEVICE_SUB), then
-the generic PCI_VDEVICE entry will match first and will be used.
-
->>> And your email headers look weird:
->>>
->>> To:     <kvalo@codeaurora.org>
->>> Cc:     <linux-wireless@vger.kernel.org>
->>> Cc:     <ath9k-devel@qca.qualcomm.com>
->>> Cc:     <ath9k-devel@venema.h4ckr.net>
->>> Cc:     <stable@vger.kernel.org>
->>> Date:   Mon, 3 Oct 2016 12:00:56 +0200
->>>
->>> What software are you using to send this? Only one CC header is valid
->>> according to the spec (thanks to Luca for checking) even though mailers
->>> seem to handle multiple CC headers. But for example my patchwork script
->>> fails with this and uses only the first CC header.
->>
->> Sorry about this, I used a custom mailer to send the patch since I was
->> having problems with git-send-email...
->
-> Ok, that explains it.
+-- 
+2.7.4
