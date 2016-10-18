@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36035 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754493AbcJVTP5 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49412 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751635AbcJRUMV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Oct 2016 15:15:57 -0400
-Received: by mail-wm0-f48.google.com with SMTP id b80so39018807wme.1
-        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2016 12:15:57 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, Yauhen Kharuzhy <jekhor@gmail.com>
-Subject: Re: crypto: aesni - add ccm(aes) algorithm implementation
-Date: Sat, 22 Oct 2016 21:15:54 +0200
-Message-ID: <4298972.T1UOBYP9Tx@debian64> (sfid-20161022_211600_609367_51AA87DC)
-In-Reply-To: <3e0552f3-b7f5-2ff3-1f63-9001bceb96f0@candelatech.com>
-References: <1476895046-16549-1-git-send-email-greearb@candelatech.com> <3e0552f3-b7f5-2ff3-1f63-9001bceb96f0@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 18 Oct 2016 16:12:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 18 Oct 2016 23:12:06 +0300
+Message-Id: <20161018201213.18873-1-luca@coelho.fi> (sfid-20161018_221225_241454_F0F4E881)
+Subject: [PATCH 0/7] patches for mac80211/cfg80211 2016-10-18
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, October 19, 2016 9:39:49 AM CEST Ben Greear wrote:
-> On 10/19/2016 09:37 AM, greearb@candelatech.com wrote:
-> > From: Yauhen Kharuzhy <jekhor@gmail.com>
-> >
-> > Add ccm(aes) implementation from linux-wireless mailing list (see
-> > http://permalink.gmane.org/gmane.linux.kernel.wireless.general/126679).
-> >
-> > This eliminates FPU context store/restore overhead existing in more
-> > general ccm_base(ctr(aes-aesni),aes-aesni) case in MAC calculation.
-> >
-> > Convert this patch to new AEAD API.
-> >
-> > Signed-off-by: Yauhen Kharuzhy <jekhor@gmail.com>
-> > Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> I've been using this patch or something similar for a while and it
-> significantly helps me with sw-crypt performance.  One version or another
-> has been around the internet for some time, and I am not the originator
-> of this code, but would still be happy to see it upstream if someone
-> can review and bless it.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-No. I don't think this will ever fly by the crypto folks in this
-form due to the CRYPTO_ALGO_ASYNC fallback parts which are necessary
-to get it to work with mac80211. 
+Hi Johannes,
 
-It would be a great if mac80211 would do to the encryption and
-decryption asynchronously. As this would work for other ciphers
-and also allows crypto offload to dedicated crypto hardware.
+Here are a few patches for mac80211/cfg80211 from our internal tree.
+You're probably familiar with most of them, I'm just adding a cover
+letter to make it easier for you to reply "Applied all" (hopefully).:)
 
-Regards,
-Christian
+Cheers,
+Luca.
+
+
+Emmanuel Grumbach (2):
+  mac80211: allow the driver not to pass the tid to
+    ieee80211_sta_uapsd_trigger
+  mac80211: uapsd_queues is in QoS IE order
+
+Ilan Peer (1):
+  cfg80211: Call rdev_disconnect() when connection is in progress
+
+Johannes Berg (3):
+  wireless: radiotap: fix timestamp sampling position values
+  mac80211: fix tid_agg_rx NULL dereference
+  mac80211: improve RX aggregation data in debugfs
+
+Sara Sharon (1):
+  mac80211: add a HW flag for supporting HW TX fragmentation
+
+ drivers/net/wireless/ath/ath10k/mac.c |  1 +
+ drivers/net/wireless/ti/wlcore/main.c |  1 +
+ include/net/cfg80211.h                | 10 ++++++----
+ include/net/ieee80211_radiotap.h      |  4 ++--
+ include/net/mac80211.h                | 17 ++++++++++++++---
+ net/mac80211/agg-rx.c                 |  8 ++------
+ net/mac80211/debugfs.c                |  1 +
+ net/mac80211/debugfs_sta.c            |  9 +++++++--
+ net/mac80211/ieee80211_i.h            |  2 ++
+ net/mac80211/main.c                   |  4 ++++
+ net/mac80211/mlme.c                   |  2 +-
+ net/mac80211/rx.c                     |  6 ++++--
+ net/mac80211/sta_info.c               | 13 ++++++++-----
+ net/mac80211/sta_info.h               |  4 ++--
+ net/mac80211/tx.c                     |  4 ++--
+ net/mac80211/util.c                   |  7 +++++++
+ net/mac80211/wpa.c                    |  2 +-
+ net/wireless/sme.c                    |  2 +-
+ 18 files changed, 66 insertions(+), 31 deletions(-)
+
+-- 
+2.9.3
