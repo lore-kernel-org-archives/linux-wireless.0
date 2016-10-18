@@ -1,53 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50428 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754730AbcJQNZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 09:25:10 -0400
-Message-ID: <1476710706.315.2.camel@sipsolutions.net> (sfid-20161017_152519_709871_5C2FC1AB)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Date: Mon, 17 Oct 2016 15:25:06 +0200
-In-Reply-To: <CAKv+Gu_jdiQn+o5PAZmPfMsQYt8PsOkDE6YNU11VH9WM_QPcvg@mail.gmail.com> (sfid-20161017_152040_808548_79392877)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
-         <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com>
-         <1476696226.19992.13.camel@sipsolutions.net>
-         <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com>
-         <1476696918.19992.15.camel@sipsolutions.net>
-         <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org>
-         <1476698041.19992.19.camel@sipsolutions.net>
-         <41D0AC2F-E86E-4A98-AD8B-1239D7E6123A@linaro.org>
-         <CAKv+Gu9OT6r3gbrLi_wzBcPXoA6K9z=-4ybrgQy4X=FvjOOuhA@mail.gmail.com>
-         <1476710169.315.1.camel@sipsolutions.net>
-         <CAKv+Gu_jdiQn+o5PAZmPfMsQYt8PsOkDE6YNU11VH9WM_QPcvg@mail.gmail.com>
-         (sfid-20161017_152040_808548_79392877)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37515 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754177AbcJRToW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 15:44:22 -0400
+Received: by mail-wm0-f48.google.com with SMTP id c78so12531052wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 18 Oct 2016 12:44:22 -0700 (PDT)
+Received: from localhost.localdomain (127.7.150.83.ftth.as8758.net. [83.150.7.127])
+        by smtp.gmail.com with ESMTPSA id za1sm60719759wjb.8.2016.10.18.12.44.16
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 18 Oct 2016 12:44:17 -0700 (PDT)
+Subject: Re: Intel 7260 not working on 4.4.24 / armv7
+To: linux-wireless@vger.kernel.org
+References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
+ <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
+ <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
+ <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
+ <fa098763-cdf6-03f8-6d75-0fa9dfb270e4@gmail.com>
+ <1476817578.6425.40.camel@sipsolutions.net>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <1dce4f5d-b905-9f26-17f3-d8b1ae0d1b13@gmail.com> (sfid-20161018_214426_857029_72ADE60C)
+Date: Tue, 18 Oct 2016 21:44:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <1476817578.6425.40.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Is there some way to disable the bluetooth functionality?
 
-> Indeed. And it keeps the clutter inside the aes_xxx.c files, which
-> could easily be updated in the future to use some auxdata feature if
-> it ever materializes.
-> 
-> I think it would help this code, but also the ESP code you pointed
-> out, to have some kind of 'ordered synchronous' CRYPTO_xxx flag,
-> where the crypto API could manage the kmem cache and percpu pointers
-> to allocations.
 
-Yeah, could be useful to have that more generally.
-
->  This goes well beyond what we can do as a fix, though, so we need an
-> intermediate solution in any case.
-> 
-> Shall I propose the patch?
-
-I assume you mean a mac80211 patch - sure, I'll take that instead of
-the two I have now.
-
-johannes
+Am 18.10.2016 um 21:06 schrieb Johannes Berg:
+> On Tue, 2016-10-18 at 18:22 +0200, Oliver Zemann wrote:
+>> Because of the problems with the ath10 card, i bought an intel 7260
+>> (mpcie) wifi card. Unfortunately it is also not working.
+>> I get tons of those messages:
+>>
+>> [  175.777030] usb 1-1: new full-speed USB device number 2 using
+>> orion-ehci
+>> [  175.933953] usb 1-1: New USB device found, idVendor=8087,
+>> idProduct=07dc
+>> [  175.940681] usb 1-1: New USB device strings: Mfr=0, Product=0,
+>> SerialNumber=0
+>> [  175.966954] Bluetooth: hci0: read Intel version:
+>> 3707100180012d0d00
+>> [  175.973313] Bluetooth: hci0: Intel Bluetooth firmware file:
+>> intel/ibt-hw-37.7.10-fw-1.80.1.2d.d.bseq
+>> [  176.183954] Bluetooth: hci0: Intel Bluetooth firmware patch
+>> completed
+>> and activated
+>> [  176.749831] usb 1-1: USB disconnect, device number 2
+> This is odd. However, it's entirely related to the NICs *Bluetooth*
+> function, which lives on USB.
+>
+>> What's confusing me is that this device is connected through pcie,
+>> not usb. When i use lspci i get:
+>> [root@alarm log]# lspci
+>> 00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev
+>> 04)
+>> 00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev
+>> 04)
+>> 02:00.0 Network controller: Qualcomm Atheros QCA986x/988x 802.11ac
+>> Wireless Network Adapter (rev ff)
+>>
+>> So the other card is seen as pci device, but the intel is not. I am
+>> really lost now.
+> The NICs *WiFi* function should be a PCIe device, but the USB
+> connect/disconnect cycles suggest that there's something wrong with the
+> electrical connection, which presumably causes the PCIe part of the
+> device to never appear on the bus.
+>
+> johannes
