@@ -1,76 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35921 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750877AbcJDNes (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 09:34:48 -0400
-Date: Tue, 4 Oct 2016 08:34:46 -0500
-From: Rob Herring <robh@kernel.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        rajatja@google.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH RESEND v3] mwifiex: parse device tree node for PCIe
-Message-ID: <20161004133446.GD3065@rob-hp-laptop> (sfid-20161004_153450_387294_7889D14C)
-References: <1475167183-18376-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1475167183-18376-1-git-send-email-akarwar@marvell.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57538 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935750AbcJRTJ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 15:09:58 -0400
+Message-ID: <1476817796.6425.42.camel@sipsolutions.net> (sfid-20161018_211001_655861_9F438EC5)
+Subject: Re: Intel 7260 not working on 4.4.24 / armv7
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Oliver Zemann <oliver.zemann@gmail.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 18 Oct 2016 21:09:56 +0200
+In-Reply-To: <1476817578.6425.40.camel@sipsolutions.net> (sfid-20161018_210624_954027_21817017)
+References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
+         <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
+         <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
+         <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
+         <fa098763-cdf6-03f8-6d75-0fa9dfb270e4@gmail.com>
+         (sfid-20161018_182323_634850_59C65E60) <1476817578.6425.40.camel@sipsolutions.net>
+         (sfid-20161018_210624_954027_21817017)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 10:09:43PM +0530, Amitkumar Karwar wrote:
-> From: Xinming Hu <huxm@marvell.com>
+On Tue, 2016-10-18 at 21:06 +0200, Johannes Berg wrote:
+> 
+> The NICs *WiFi* function should be a PCIe device, but the USB
+> connect/disconnect cycles suggest that there's something wrong with
+> the
+> electrical connection, which presumably causes the PCIe part of the
+> device to never appear on the bus.
 > 
-> This patch derives device tree node from pcie bus layer framework.
-> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> marvell-8xxx.txt) to accomodate PCIe changes.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v2: Included vendor and product IDs in compatible strings for PCIe
-> chipsets(Rob Herring)
-> v3: Patch is created using -M option so that it will only include diff of
-> original and renamed files(Rob Herring)
-> Resend v3: Resending the patch because I missed to include device tree mailing
-> while sending v3.
-> ---
->  .../{marvell-sd8xxx.txt => marvell-8xxx.txt}         |  8 +++++---
->  drivers/net/wireless/marvell/mwifiex/pcie.c          | 20 ++++++++++++++++++++
->  drivers/net/wireless/marvell/mwifiex/sta_cmd.c       |  3 ++-
->  3 files changed, 27 insertions(+), 4 deletions(-)
->  rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> similarity index 91%
-> rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> index c421aba..dfe5f8e 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> @@ -1,8 +1,8 @@
-> -Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-> +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
->  ------
->  
-> -This node provides properties for controlling the marvell sdio wireless device.
-> -The node is expected to be specified as a child node to the SDIO controller that
-> +This node provides properties for controlling the marvell sdio/pcie wireless device.
 
-Capitalize SDIO/PCIe
+Also, FWIW, I had our later NIC (8260) running on an ARMv7 (a
+Hummingboard Pro i2ex or so), in both little (default) and big endian
+modes. I haven't tried the 7260 but conceivably could.
 
-> +The node is expected to be specified as a child node to the SDIO/PCIE controller that
->  connects the device to the system.
->  
->  Required properties:
-> @@ -10,6 +10,8 @@ Required properties:
->    - compatible : should be one of the following:
->  	* "marvell,sd8897"
->  	* "marvell,sd8997"
-> +	* "pci11ab,2b42"
-> +	* "pci1b4b,2b42"
-
-The string is pciVVVV,DDDD. Looks like you have vendor and device 
-swapped.
-
-Rob
+johannes
