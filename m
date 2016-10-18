@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:34163 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933198AbcJUM57 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40882 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750761AbcJRFi7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 08:57:59 -0400
-Received: by mail-yw0-f182.google.com with SMTP id w3so92566836ywg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 05:57:59 -0700 (PDT)
+        Tue, 18 Oct 2016 01:38:59 -0400
 MIME-Version: 1.0
-From: Nicklas Persson <nicklas.m.persson@gmail.com>
-Date: Fri, 21 Oct 2016 14:57:57 +0200
-Message-ID: <CAJHOaSPSPXh3XD7Rv_7G0g8yUWgu2ior9Qbk_00vNDQNU3UB-g@mail.gmail.com> (sfid-20161021_145813_193936_2DAE752E)
-Subject: wl12xx stuck in fw
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 18 Oct 2016 11:08:58 +0530
+From: akolli@codeaurora.org
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath10k: add per peer htt tx stats support for 10.4
+In-Reply-To: <87vawygo2w.fsf@kamboji.qca.qualcomm.com>
+References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
+ <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
+ <87vawygo2w.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <dde8d02e9ebf2eb9f37bb36c528548c2@codeaurora.org> (sfid-20161018_073926_395527_0C55FD37)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I have been debugging my WLAN driver interface for a while. I have
-a Beaglebone equivalent board with the TI wl1271 wireless module. I am
-very new to linux drivers and wireless configuration so these couple
-of days I have spent have been really interesting and I have much more
-knowledge now.
 
-My problem is that when I run "ifconfig wlan0 up" I get the following
-message over and over again:
+On 2016-10-12 10:29, Valo, Kalle wrote:
+> <akolli@qti.qualcomm.com> writes:
+> 
+>> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+>> 
+>> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
+>> event, Firmware sends one HTT event for every four PPDUs.
+>> HTT payload has success pkts/bytes, failed pkts/bytes, retry
+>> pkts/bytes and rate info per ppdu.
+>> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
+>> which are nowadays enabled by default.
+>> 
+>> Parse peer stats and update the tx rate information per STA.
+>> 
+>> tx rate, Peer stats are tested on QCA4019 with Firmware version
+>> 10.4-3.2.1-00028.
+>> 
+>> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> 
+> This and patch 2 add few new warnings:
+> 
+> drivers/net/wireless/ath/ath10k/htt_rx.c: In function
+> 'ath10k_htt_fetch_peer_stats':
+> drivers/net/wireless/ath/ath10k/htt_rx.c:2279:3: warning: too many
+> arguments for format [-Wformat-extra-args]
+> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17: warning: incorrect
+> type in assignment (different base types)
+> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    expected unsigned
+> int [unsigned] [usertype] peer_id
+> drivers/net/wireless/ath/ath10k/htt_rx.c:2285:17:    got restricted
+> __le16 [usertype] peer_id
+> drivers/net/wireless/ath/ath10k/debugfs_sta.c:84: space required
+> before the open parenthesis '('
 
-"wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recover"
-
-I successfully done a calibration, that does not help. I also tried
-with the default .nvs file that is provided.
-
-I have tried with different firmware binaries with no luck. Actually,
-I have browsed the source code for wl12xx and wlcore and it seems like
-I need to use the 5-series of firmware binaries so I have been using
-those for the most time.
-
-I have rebuilt the kernel with a lot of added printk()'s all over the
-place but I do not understand at all what is happening. My guess is
-that there is something with the watchdog and that the driver thinks
-that the firmware/wlan module is not responding.
-
-I am really desperate for some guidance or some pointers. What can I try next?
+I will fix and send V2.
 
 Thanks,
-Regards Nicklas.
+Anil.
