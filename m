@@ -1,146 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33520 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751582AbcJBW3Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:29:25 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, arnd@arndb.de
-Cc: chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 4/7] ath9k: replace eeprom_param EEP_MINOR_REV with get_eeprom_rev
-Date: Mon,  3 Oct 2016 00:29:10 +0200
-Message-Id: <20161002222913.12223-5-martin.blumenstingl@googlemail.com> (sfid-20161003_002935_089016_05ADD4AD)
-In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
- <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:54817 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932620AbcJRI3G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:29:06 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        b43-dev@lists.infradead.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wireless: deprecate WDS and disable by default
+Date: Tue, 18 Oct 2016 10:28:57 +0200
+Message-Id: <1476779337-3520-1-git-send-email-johannes@sipsolutions.net> (sfid-20161018_102912_182287_E2A37904)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-get_eeprom(ah, EEP_MINOR_REV) and get_eeprom_rev(ah) are both doing the
-same thing: returning the EEPROM revision (12 lowest bits). Make the
-code consistent by using get_eeprom_rev(ah) everywhere.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+The old WDS 4-addr frame support is very limited, e.g.
+ * no encryption is possible on such links
+ * it cannot support rate/HT/VHT negotiation
+ * management APIs are very restricted
+
+These make the WDS legacy mode useless in practice.
+
+All of these are resolved by the 4-addr AP/client support,
+so there's also no reason to improve WDS in the future.
+
+Therefore, add a Kconfig option to disable legacy WDS.
+This gives people an "emergency valve" while they migrate
+to the better-supported 4-addr AP/client option; we plan
+to remove it (and the associated cfg80211/mac80211 code,
+which is the ultimate goal) in the future.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar5008_phy.c  | 2 +-
- drivers/net/wireless/ath/ath9k/ar9002_hw.c   | 6 ++----
- drivers/net/wireless/ath/ath9k/eeprom.h      | 1 -
- drivers/net/wireless/ath/ath9k/eeprom_4k.c   | 5 -----
- drivers/net/wireless/ath/ath9k/eeprom_9287.c | 6 +-----
- drivers/net/wireless/ath/ath9k/eeprom_def.c  | 2 --
- 6 files changed, 4 insertions(+), 18 deletions(-)
+ drivers/net/wireless/Kconfig                   | 13 +++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c          |  6 ++++++
+ drivers/net/wireless/broadcom/b43/main.c       |  2 ++
+ drivers/net/wireless/broadcom/b43legacy/main.c |  2 ++
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c |  6 ++++--
+ net/wireless/core.c                            | 10 ++++++++++
+ 6 files changed, 37 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index 8eea8d2..7922550 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -524,7 +524,7 @@ static bool ar5008_hw_set_rf_regs(struct ath_hw *ah,
- 		return true;
+diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+index 8c8edaf1bba6..fa9c4fa9477e 100644
+--- a/drivers/net/wireless/Kconfig
++++ b/drivers/net/wireless/Kconfig
+@@ -17,6 +17,19 @@ menuconfig WLAN
  
- 	/* Setup rf parameters */
--	eepMinorRev = ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV);
-+	eepMinorRev = ah->eep_ops->get_eeprom_rev(ah);
+ if WLAN
  
- 	for (i = 0; i < ah->iniBank6.ia_rows; i++)
- 		ah->analogBank6Data[i] = INI_RA(&ah->iniBank6, i, modesIndex);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index d480d2f..ae68f67 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -108,8 +108,7 @@ static void ar9280_20_hw_init_rxgain_ini(struct ath_hw *ah)
- {
- 	u32 rxgain_type;
++config WIRELESS_WDS
++	bool "mac80211-based legacy WDS support"
++	help
++	  This option enables the deprecated WDS support, the newer
++	  mac80211-based 4-addr AP/client support supersedes it with
++	  a much better feature set (HT, VHT, ...)
++
++	  We plan to remove this option and code, so if you find
++	  that you have to enable it, please let us know on the
++	  linux-wireless@vger.kernel.org mailing list, so we can
++	  help you migrate to 4-addr AP/client (or, if it's really
++	  necessary, give up on our plan of removing it).
++
+ source "drivers/net/wireless/admtek/Kconfig"
+ source "drivers/net/wireless/ath/Kconfig"
+ source "drivers/net/wireless/atmel/Kconfig"
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index cfa3fe82ade3..368d9b313823 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -734,9 +734,11 @@ static const struct ieee80211_iface_limit if_limits[] = {
+ 				 BIT(NL80211_IFTYPE_P2P_GO) },
+ };
  
--	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >=
--	    AR5416_EEP_MINOR_VER_17) {
-+	if (ah->eep_ops->get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_17) {
- 		rxgain_type = ah->eep_ops->get_eeprom(ah, EEP_RXGAIN_TYPE);
++#ifdef CONFIG_WIRELESS_WDS
+ static const struct ieee80211_iface_limit wds_limits[] = {
+ 	{ .max = 2048,	.types = BIT(NL80211_IFTYPE_WDS) },
+ };
++#endif
  
- 		if (rxgain_type == AR5416_EEP_RXGAIN_13DB_BACKOFF)
-@@ -129,8 +128,7 @@ static void ar9280_20_hw_init_rxgain_ini(struct ath_hw *ah)
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
  
- static void ar9280_20_hw_init_txgain_ini(struct ath_hw *ah, u32 txgain_type)
- {
--	if (ah->eep_ops->get_eeprom(ah, EEP_MINOR_REV) >=
--	    AR5416_EEP_MINOR_VER_19) {
-+	if (ah->eep_ops->get_eeprom_rev(ah) >= AR5416_EEP_MINOR_VER_19) {
- 		if (txgain_type == AR5416_EEP_TXGAIN_HIGH_POWER)
- 			INIT_INI_ARRAY(&ah->iniModesTxGain,
- 				       ar9280Modes_high_power_tx_gain_9280_2);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 408cfa7..8ef8090 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -230,7 +230,6 @@ enum eeprom_param {
- 	EEP_DB_5,
- 	EEP_OB_2,
- 	EEP_DB_2,
--	EEP_MINOR_REV,
- 	EEP_TX_MASK,
- 	EEP_RX_MASK,
- 	EEP_FSTCLK_5G,
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 7cd9c64..d466871 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -254,9 +254,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 	struct ar5416_eeprom_4k *eep = &ah->eeprom.map4k;
- 	struct modal_eep_4k_header *pModal = &eep->modalHeader;
- 	struct base_eep_header_4k *pBase = &eep->baseEepHeader;
--	u16 ver_minor;
--
--	ver_minor = pBase->version & AR5416_EEP_VER_MINOR_MASK;
+@@ -774,6 +776,7 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 					BIT(NL80211_CHAN_WIDTH_40),
+ #endif
+ 	},
++#ifdef CONFIG_WIRELESS_WDS
+ 	{
+ 		.limits = wds_limits,
+ 		.n_limits = ARRAY_SIZE(wds_limits),
+@@ -781,6 +784,7 @@ static const struct ieee80211_iface_combination if_comb[] = {
+ 		.num_different_channels = 1,
+ 		.beacon_int_infra_match = true,
+ 	},
++#endif
+ };
  
- 	switch (param) {
- 	case EEP_NFTHRESH_2:
-@@ -279,8 +276,6 @@ static u32 ath9k_hw_4k_get_eeprom(struct ath_hw *ah,
- 		return pModal->ob_0;
- 	case EEP_DB_2:
- 		return pModal->db1_1;
--	case EEP_MINOR_REV:
--		return ver_minor;
- 	case EEP_TX_MASK:
- 		return pBase->txMask;
- 	case EEP_RX_MASK:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index e1ba9bc..7f85bd1 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -250,9 +250,7 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 	struct ar9287_eeprom *eep = &ah->eeprom.map9287;
- 	struct modal_eep_ar9287_header *pModal = &eep->modalHeader;
- 	struct base_eep_ar9287_header *pBase = &eep->baseEepHeader;
--	u16 ver_minor;
--
--	ver_minor = pBase->version & AR9287_EEP_VER_MINOR_MASK;
-+	u16 ver_minor = ath9k_hw_ar9287_get_eeprom_rev(ah);
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+@@ -851,7 +855,9 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
+ 			BIT(NL80211_IFTYPE_STATION) |
+ 			BIT(NL80211_IFTYPE_ADHOC) |
+ 			BIT(NL80211_IFTYPE_MESH_POINT) |
++#ifdef CONFIG_WIRELESS_WDS
+ 			BIT(NL80211_IFTYPE_WDS) |
++#endif
+ 			BIT(NL80211_IFTYPE_OCB);
  
- 	switch (param) {
- 	case EEP_NFTHRESH_2:
-@@ -271,8 +269,6 @@ static u32 ath9k_hw_ar9287_get_eeprom(struct ath_hw *ah,
- 		return pBase->opCapFlags;
- 	case EEP_RF_SILENT:
- 		return pBase->rfSilent;
--	case EEP_MINOR_REV:
--		return ver_minor;
- 	case EEP_TX_MASK:
- 		return pBase->txMask;
- 	case EEP_RX_MASK:
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 087bdb7..e9af4a5 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -380,8 +380,6 @@ static u32 ath9k_hw_def_get_eeprom(struct ath_hw *ah,
- 		return pModal[1].ob;
- 	case EEP_DB_2:
- 		return pModal[1].db;
--	case EEP_MINOR_REV:
--		return AR5416_VER_MASK;
- 	case EEP_TX_MASK:
- 		return pBase->txMask;
- 	case EEP_RX_MASK:
+ 		if (ath9k_is_chanctx_enabled())
+diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+index 6e5d9095b195..52f3541ecbcf 100644
+--- a/drivers/net/wireless/broadcom/b43/main.c
++++ b/drivers/net/wireless/broadcom/b43/main.c
+@@ -5591,7 +5591,9 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_MESH_POINT) |
+ 		BIT(NL80211_IFTYPE_STATION) |
++#ifdef CONFIG_WIRELESS_WDS
+ 		BIT(NL80211_IFTYPE_WDS) |
++#endif
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
+index 83770d2ea057..e97ab2b91663 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/main.c
++++ b/drivers/net/wireless/broadcom/b43legacy/main.c
+@@ -3838,7 +3838,9 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
+ 	hw->wiphy->interface_modes =
+ 		BIT(NL80211_IFTYPE_AP) |
+ 		BIT(NL80211_IFTYPE_STATION) |
++#ifdef CONFIG_WIRELESS_WDS
+ 		BIT(NL80211_IFTYPE_WDS) |
++#endif
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	hw->queues = 1; /* FIXME: hardware has more queues */
+ 	hw->max_rates = 2;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 4e0c5653054b..236f790e097a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -1362,11 +1362,13 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00dev->bcn->limit > 0)
+ 		rt2x00dev->hw->wiphy->interface_modes |=
+ 		    BIT(NL80211_IFTYPE_ADHOC) |
+-		    BIT(NL80211_IFTYPE_AP) |
+ #ifdef CONFIG_MAC80211_MESH
+ 		    BIT(NL80211_IFTYPE_MESH_POINT) |
+ #endif
+-		    BIT(NL80211_IFTYPE_WDS);
++#ifdef CONFIG_WIRELESS_WDS
++		    BIT(NL80211_IFTYPE_WDS) |
++#endif
++		    BIT(NL80211_IFTYPE_AP);
+ 
+ 	rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 8201e6d7449e..f433f15f9222 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -571,6 +571,11 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 				return -EINVAL;
+ 		}
+ 
++#ifndef CONFIG_WIRELESS_WDS
++		if (WARN_ON(all_iftypes & BIT(NL80211_IFTYPE_WDS)))
++			return -EINVAL;
++#endif
++
+ 		/* You can't even choose that many! */
+ 		if (WARN_ON(cnt < c->max_interfaces))
+ 			return -EINVAL;
+@@ -609,6 +614,11 @@ int wiphy_register(struct wiphy *wiphy)
+ 		     !rdev->ops->add_nan_func || !rdev->ops->del_nan_func)))
+ 		return -EINVAL;
+ 
++#ifndef CONFIG_WIRELESS_WDS
++	if (WARN_ON(wiphy->interface_modes & BIT(NL80211_IFTYPE_WDS)))
++		return -EINVAL;
++#endif
++
+ 	/*
+ 	 * if a wiphy has unsupported modes for regulatory channel enforcement,
+ 	 * opt-out of enforcement checking
 -- 
-2.10.0
+2.8.1
