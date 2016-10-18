@@ -1,39 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59785 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751195AbcJNK0j (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49424 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754949AbcJRUMW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 06:26:39 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 2/2] ath10k: add VHT160 support
-Date: Fri, 14 Oct 2016 10:26:34 +0000
-Message-ID: <87r37j9qg6.fsf@kamboji.qca.qualcomm.com> (sfid-20161014_122642_769263_FAE2909C)
-References: <20161014101710.5300.21550.stgit@potku.adurom.net>
-        <20161014101912.5300.66145.stgit@potku.adurom.net>
-In-Reply-To: <20161014101912.5300.66145.stgit@potku.adurom.net> (Kalle Valo's
-        message of "Fri, 14 Oct 2016 13:19:12 +0300")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Tue, 18 Oct 2016 16:12:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 18 Oct 2016 23:12:08 +0300
+Message-Id: <20161018201213.18873-3-luca@coelho.fi> (sfid-20161018_221228_032766_FF8F18F0)
+In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
+References: <20161018201213.18873-1-luca@coelho.fi>
+Subject: [PATCH 2/7] mac80211: fix tid_agg_rx NULL dereference
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
->
-> This patch adds full VHT160 support for QCA9984 chipsets Tested on Netgea=
-r
-> R7800. 80+80 is possible, but disabled so far since it seems to contain
-> glitches like missing vht station flags (this may be firmware or mac80211
-> related).
->
-> Signed-off-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-> Patchwork-Id: 9335111
+On drivers setting the SUPPORTS_REORDERING_BUFFER hardware flag,
+we crash when the peer sends an AddBA request while we already
+have a session open on the seame TID; this is because on those
+drivers, the tid_agg_rx is left NULL even though the session is
+valid, and the agg_session_valid bit is set.
 
-Oops, the patchwork id is a leftover from my patchwork script. I'll
-remove it before I apply the patch.
+To fix this, store the dialog tokens outside the tid_agg_rx to
+be able to compare them to the received AddBA request.
 
---=20
-Kalle Valo=
+Fixes: f89e07d4cf26 ("mac80211: agg-rx: refuse ADDBA Request with timeout update")
+Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-rx.c      | 8 ++------
+ net/mac80211/debugfs_sta.c | 2 +-
+ net/mac80211/sta_info.h    | 4 ++--
+ 3 files changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index f6749dc..3b5fd41 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -315,11 +315,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
+-		tid_agg_rx = rcu_dereference_protected(
+-				sta->ampdu_mlme.tid_rx[tid],
+-				lockdep_is_held(&sta->ampdu_mlme.mtx));
+-
+-		if (tid_agg_rx->dialog_token == dialog_token) {
++		if (sta->ampdu_mlme.tid_rx_token[tid] == dialog_token) {
+ 			ht_dbg_ratelimited(sta->sdata,
+ 					   "updated AddBA Req from %pM on tid %u\n",
+ 					   sta->sta.addr, tid);
+@@ -396,7 +392,6 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	}
+ 
+ 	/* update data */
+-	tid_agg_rx->dialog_token = dialog_token;
+ 	tid_agg_rx->ssn = start_seq_num;
+ 	tid_agg_rx->head_seq_num = start_seq_num;
+ 	tid_agg_rx->buf_size = buf_size;
+@@ -418,6 +413,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	if (status == WLAN_STATUS_SUCCESS) {
+ 		__set_bit(tid, sta->ampdu_mlme.agg_session_valid);
+ 		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
++		sta->ampdu_mlme.tid_rx_token[tid] = dialog_token;
+ 	}
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index a2fcdb4..14ec63a 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -205,7 +205,7 @@ static ssize_t sta_agg_status_read(struct file *file, char __user *userbuf,
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "%02d", i);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t\t%x", !!tid_rx);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.2x",
+-				tid_rx ? tid_rx->dialog_token : 0);
++				tid_rx ? sta->ampdu_mlme.tid_rx_token[i] : 0);
+ 		p += scnprintf(p, sizeof(buf) + buf - p, "\t%#.3x",
+ 				tid_rx ? tid_rx->ssn : 0);
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index ed5fcb9..dd06ef0 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -184,7 +184,6 @@ struct tid_ampdu_tx {
+  * @ssn: Starting Sequence Number expected to be aggregated.
+  * @buf_size: buffer size for incoming A-MPDUs
+  * @timeout: reset timer value (in TUs).
+- * @dialog_token: dialog token for aggregation session
+  * @rcu_head: RCU head used for freeing this struct
+  * @reorder_lock: serializes access to reorder buffer, see below.
+  * @auto_seq: used for offloaded BA sessions to automatically pick head_seq_and
+@@ -213,7 +212,6 @@ struct tid_ampdu_rx {
+ 	u16 ssn;
+ 	u16 buf_size;
+ 	u16 timeout;
+-	u8 dialog_token;
+ 	bool auto_seq;
+ 	bool removed;
+ };
+@@ -225,6 +223,7 @@ struct tid_ampdu_rx {
+  *	to tid_tx[idx], which are protected by the sta spinlock)
+  *	tid_start_tx is also protected by sta->lock.
+  * @tid_rx: aggregation info for Rx per TID -- RCU protected
++ * @tid_rx_token: dialog tokens for valid aggregation sessions
+  * @tid_rx_timer_expired: bitmap indicating on which TIDs the
+  *	RX timer expired until the work for it runs
+  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
+@@ -243,6 +242,7 @@ struct sta_ampdu_mlme {
+ 	struct mutex mtx;
+ 	/* rx */
+ 	struct tid_ampdu_rx __rcu *tid_rx[IEEE80211_NUM_TIDS];
++	u8 tid_rx_token[IEEE80211_NUM_TIDS];
+ 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+-- 
+2.9.3
