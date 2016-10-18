@@ -1,59 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57616 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750822AbcJNIzK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:55:10 -0400
-Message-ID: <1476435303.31114.14.camel@sipsolutions.net> (sfid-20161014_105515_027520_CA9B87D7)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Date: Fri, 14 Oct 2016 10:55:03 +0200
-In-Reply-To: <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com> (sfid-20161014_104721_667479_4407E3F4)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         <1476366354.4904.31.camel@sipsolutions.net>
-         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
-         <1476429916.4382.12.camel@sipsolutions.net>
-         <1476433699.31114.6.camel@sipsolutions.net>
-         <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
-         <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
-         <1476434561.31114.7.camel@sipsolutions.net>
-         <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
-         (sfid-20161014_104721_667479_4407E3F4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:49418 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753615AbcJRUMV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 18 Oct 2016 16:12:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 18 Oct 2016 23:12:07 +0300
+Message-Id: <20161018201213.18873-2-luca@coelho.fi> (sfid-20161018_221226_146969_58C2DEFD)
+In-Reply-To: <20161018201213.18873-1-luca@coelho.fi>
+References: <20161018201213.18873-1-luca@coelho.fi>
+Subject: [PATCH 1/7] wireless: radiotap: fix timestamp sampling position values
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-14 at 09:47 +0100, Ard Biesheuvel wrote:
-> 
-> Do you have a reference for the sg_set_buf() call on odata?
-> crypto/ccm.c does not seem to have it (afaict), 
+From: Johannes Berg <johannes.berg@intel.com>
 
-It's indirect - crypto_ccm_encrypt() calls crypto_ccm_init_crypt()
-which does it.
+The values don't match the radiotap spec, corrected that.
 
-> and the same problem
-> does not exist in the accelerated arm64 implementation. In the mean
-> time, I will try and see if we can move aad[] off the stack in the
-> WPA code.
+Reported-by: Oz Shalev <oz.shalev@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/ieee80211_radiotap.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I had that with per-CPU buffers, just sent the patch upthread.
-
-johannes
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index ba07b9d..d0e7e3f 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -333,9 +333,9 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_NS			0x0003
+ #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_MASK			0x00F0
+ #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_BEGIN_MDPU		0x0000
+-#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_MPDU		0x0010
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ		0x0010
+ #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_PPDU		0x0020
+-#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ		0x0030
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_MPDU		0x0030
+ #define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_UNKNOWN		0x00F0
+ 
+ #define IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT			0x00
+-- 
+2.9.3
