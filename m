@@ -1,276 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:34933 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751230AbcJEEzc (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50144 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S943505AbcJSOzH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 00:55:32 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [PATCH 2/3] mac80211: filter multicast data packets on AP / AP_VLAN
-Date: Wed,  5 Oct 2016 06:55:23 +0200
-Message-Id: <1475643324-2845-2-git-send-email-michael-dev@fami-braun.de> (sfid-20161005_065535_491742_ABF92EFB)
-In-Reply-To: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
-References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
+        Wed, 19 Oct 2016 10:55:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 10:27:26 +0300
+Message-Id: <20161019072726.22018-8-luca@coelho.fi> (sfid-20161019_165528_753830_CE61D250)
+In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
+References: <20161019072726.22018-1-luca@coelho.fi>
+Subject: [PATCH 7/7] iwlwifi: mvm: fix netdetect starting/stopping for unified images
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds filtering for multicast data packets on AP_VLAN interfaces that
-have no authorized station connected and changes filtering on AP interfaces to
-not count stations assigned to AP_VLAN interfaces.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This saves airtime and avoids waking up other stations currently authorized in
-this BSS. When using WPA, the packets dropped could not be decrypted by any
-station.
+With unified images, we need to make sure the net-detect scan is
+stopped after resuming, since we don't restart the FW.  Also, we need
+to make sure we check if there are enough scan slots available to run
+it, as we do with other scans.
 
-The behaviour when there are no AP_VLAN interfaces is left unchanged.
-When there are AP_VLAN interfaces, this patch
-1. adds filtering multicast data packets sent on AP_VLAN interfaces that
-   have no authorized station connected.
-   No filtering happens on 4addr AP_VLAN interfaces.
-2. makes filtering of multicast data packets sent on AP interfaces depend on
-   the number of authorized stations in this bss not assigned to an AP_VLAN
-   interface.
-
-Therefore, two new num_mcast_sta like counters are added: one for the number of
-authorized stations connected to an AP_VLAN interface and one for the number of
-authorized stations connected to the bss and not assigned to any AP_VLAN. The
-already existing num_mcast_sta counter is left unchanged as it is used by SMPS.
-
-The new counters are exposed in debugfs.
-
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
-
---
-v3:
- - reuse existing num_mcast_sta
-v2:
- - use separate function to inc/dec mcast_sta counters
- - do not filter in 4addr mode
- - change description
- - change filtering on AP interface (do not count AP_VLAN sta)
- - use new counters regardless of 4addr or not
- - simplify cfg.c:change_station
- - remove no-op change in __cleanup_single_sta
+Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/mac80211/cfg.c            | 20 ++++++--------------
- net/mac80211/debugfs_netdev.c | 11 +++++++++++
- net/mac80211/ieee80211_i.h    | 42 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/rx.c             |  5 +++--
- net/mac80211/sta_info.c       | 10 ++--------
- net/mac80211/tx.c             |  5 ++---
- 6 files changed, 66 insertions(+), 27 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c   | 19 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 33 ++++++++++++++++++++++-----
+ 2 files changed, 46 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 24133f5..1edb017 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1357,9 +1357,6 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 		goto out_err;
- 
- 	if (params->vlan && params->vlan != sta->sdata->dev) {
--		bool prev_4addr = false;
--		bool new_4addr = false;
--
- 		vlansdata = IEEE80211_DEV_TO_SUB_IF(params->vlan);
- 
- 		if (params->vlan->ieee80211_ptr->use_4addr) {
-@@ -1369,26 +1366,21 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 			}
- 
- 			rcu_assign_pointer(vlansdata->u.vlan.sta, sta);
--			new_4addr = true;
- 			__ieee80211_check_fast_rx_iface(vlansdata);
- 		}
- 
- 		if (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
--		    sta->sdata->u.vlan.sta) {
-+		    sta->sdata->u.vlan.sta)
- 			RCU_INIT_POINTER(sta->sdata->u.vlan.sta, NULL);
--			prev_4addr = true;
--		}
-+
-+		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			ieee80211_vif_dec_num_mcast(sta->sdata);
- 
- 		sta->sdata = vlansdata;
- 		ieee80211_check_fast_xmit(sta);
- 
--		if (sta->sta_state == IEEE80211_STA_AUTHORIZED &&
--		    prev_4addr != new_4addr) {
--			if (new_4addr)
--				atomic_dec(&sta->sdata->bss->num_mcast_sta);
--			else
--				atomic_inc(&sta->sdata->bss->num_mcast_sta);
--		}
-+		if (test_sta_flag(sta, WLAN_STA_AUTHORIZED))
-+			ieee80211_vif_inc_num_mcast(sta->sdata);
- 
- 		ieee80211_send_layer2_update(sta);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 03a8fc5..b88e204 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1087,6 +1087,15 @@ iwl_mvm_netdetect_config(struct iwl_mvm *mvm,
+ 		ret = iwl_mvm_switch_to_d3(mvm);
+ 		if (ret)
+ 			return ret;
++	} else {
++		/* In theory, we wouldn't have to stop a running sched
++		 * scan in order to start another one (for
++		 * net-detect).  But in practice this doesn't seem to
++		 * work properly, so stop any running sched_scan now.
++		 */
++		ret = iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_SCHED, true);
++		if (ret)
++			return ret;
  	}
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index a5ba739..7fe468e 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -477,6 +477,7 @@ IEEE80211_IF_FILE_RW(tdls_wider_bw);
- IEEE80211_IF_FILE(num_mcast_sta, u.ap.num_mcast_sta, ATOMIC);
- IEEE80211_IF_FILE(num_sta_ps, u.ap.ps.num_sta_ps, ATOMIC);
- IEEE80211_IF_FILE(dtim_count, u.ap.ps.dtim_count, DEC);
-+IEEE80211_IF_FILE(num_mcast_sta_vlan, u.vlan.num_mcast_sta, ATOMIC);
  
- static ssize_t ieee80211_if_fmt_num_buffered_multicast(
- 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-@@ -643,6 +644,13 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
- }
+ 	/* rfkill release can be either for wowlan or netdetect */
+@@ -2091,6 +2100,16 @@ static int __iwl_mvm_resume(struct iwl_mvm *mvm, bool test)
+ 	iwl_mvm_update_changed_regdom(mvm);
  
-+static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
-+{
-+	// add num_mcast_sta_vlan using name num_mcast_sta
-+	debugfs_create_file("num_mcast_sta", 0400, sdata->vif.debugfs_dir, \
-+			    sdata, &num_mcast_sta_vlan_ops);
-+}
+ 	if (mvm->net_detect) {
++		/* If this is a non-unified image, we restart the FW,
++		 * so no need to stop the netdetect scan.  If that
++		 * fails, continue and try to get the wake-up reasons,
++		 * but trigger a HW restart by keeping a failure code
++		 * in ret.
++		 */
++		if (unified_image)
++			ret = iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_NETDETECT,
++						false);
 +
- static void add_ibss_files(struct ieee80211_sub_if_data *sdata)
+ 		iwl_mvm_query_netdetect_reasons(mvm, vif);
+ 		/* has unlocked the mutex, so skip that */
+ 		goto out;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index f279fdd..fa97432 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1199,6 +1199,9 @@ static int iwl_mvm_num_scans(struct iwl_mvm *mvm)
+ 
+ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
  {
- 	DEBUGFS_ADD_MODE(tsf, 0600);
-@@ -746,6 +754,9 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	case NL80211_IFTYPE_AP:
- 		add_ap_files(sdata);
++	bool unified_image = fw_has_capa(&mvm->fw->ucode_capa,
++					 IWL_UCODE_TLV_CAPA_CNSLDTD_D3_D0_IMG);
++
+ 	/* This looks a bit arbitrary, but the idea is that if we run
+ 	 * out of possible simultaneous scans and the userspace is
+ 	 * trying to run a scan type that is already running, we
+@@ -1225,12 +1228,30 @@ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
+ 			return -EBUSY;
+ 		return iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR, true);
+ 	case IWL_MVM_SCAN_NETDETECT:
+-		/* No need to stop anything for net-detect since the
+-		 * firmware is restarted anyway.  This way, any sched
+-		 * scans that were running will be restarted when we
+-		 * resume.
+-		*/
+-		return 0;
++		/* For non-unified images, there's no need to stop
++		 * anything for net-detect since the firmware is
++		 * restarted anyway.  This way, any sched scans that
++		 * were running will be restarted when we resume.
++		 */
++		if (!unified_image)
++			return 0;
++
++		/* If this is a unified image and we ran out of scans,
++		 * we need to stop something.  Prefer stopping regular
++		 * scans, because the results are useless at this
++		 * point, and we should be able to keep running
++		 * another scheduled scan while suspended.
++		 */
++		if (mvm->scan_status & IWL_MVM_SCAN_REGULAR_MASK)
++			return iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_REGULAR,
++						 true);
++		if (mvm->scan_status & IWL_MVM_SCAN_SCHED_MASK)
++			return iwl_mvm_scan_stop(mvm, IWL_MVM_SCAN_SCHED,
++						 true);
++
++		/* fall through, something is wrong if no scan was
++		 * running but we ran out of scans.
++		 */
+ 	default:
+ 		WARN_ON(1);
  		break;
-+	case NL80211_IFTYPE_AP_VLAN:
-+		add_vlan_files(sdata);
-+		break;
- 	case NL80211_IFTYPE_WDS:
- 		add_wds_files(sdata);
- 		break;
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f56d342..933688e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -305,6 +305,7 @@ struct ieee80211_if_vlan {
- 
- 	/* used for all tx if the VLAN is configured to 4-addr mode */
- 	struct sta_info __rcu *sta;
-+	atomic_t num_mcast_sta; /* number of stations receiving multicast */
- };
- 
- struct mesh_stats {
-@@ -1496,6 +1497,47 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
- 	return false;
- }
- 
-+static inline void
-+ieee80211_vif_inc_num_mcast(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		return;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		atomic_inc(&sdata->u.ap.num_mcast_sta);
-+	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		atomic_inc(&sdata->u.vlan.num_mcast_sta);
-+}
-+
-+static inline void
-+ieee80211_vif_dec_num_mcast(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type != NL80211_IFTYPE_AP &&
-+	    sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+		return;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		atomic_dec(&sdata->u.ap.num_mcast_sta);
-+	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+		atomic_dec(&sdata->u.vlan.num_mcast_sta);
-+}
-+
-+/* This function returns the number of multicast stations connected to this
-+ * interface. It returns -1 if that number is not tracked, that is for netdevs
-+ * not in AP or AP_VLAN mode or when using 4addr. */
-+static inline int
-+ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
-+{
-+	if (sdata->vif.type == NL80211_IFTYPE_AP)
-+		return atomic_read(&sdata->u.ap.num_mcast_sta);
-+	else if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-+		 !sdata->u.vlan.sta)
-+		return atomic_read(&sdata->u.vlan.num_mcast_sta);
-+	else
-+		return -1;
-+}
-+
- u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
- 				     struct ieee80211_rx_status *status,
- 				     unsigned int mpdu_len,
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index fbf99b8..9c5d222 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2161,7 +2161,8 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
- 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
- 	    (sdata->vif.type != NL80211_IFTYPE_AP_VLAN || !sdata->u.vlan.sta)) {
--		if (is_multicast_ether_addr(ehdr->h_dest)) {
-+		if (is_multicast_ether_addr(ehdr->h_dest) &&
-+		    ieee80211_vif_get_num_mcast_if(sdata) != 0) {
- 			/*
- 			 * send multicast frames both to higher layers in
- 			 * local net stack and back to the wireless medium
-@@ -2170,7 +2171,7 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
- 			if (!xmit_skb)
- 				net_info_ratelimited("%s: failed to clone multicast frame\n",
- 						    dev->name);
--		} else {
-+		} else if (!is_multicast_ether_addr(ehdr->h_dest)) {
- 			dsta = sta_info_get(sdata, skb->data);
- 			if (dsta) {
- 				/*
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 76b737d..216ef65 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1882,10 +1882,7 @@ int sta_info_move_state(struct sta_info *sta,
- 			if (!sta->sta.support_p2p_ps)
- 				ieee80211_recalc_p2p_go_ps_allowed(sta->sdata);
- 		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
--			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
--			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
--			     !sta->sdata->u.vlan.sta))
--				atomic_dec(&sta->sdata->bss->num_mcast_sta);
-+			ieee80211_vif_dec_num_mcast(sta->sdata);
- 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 			ieee80211_clear_fast_xmit(sta);
- 			ieee80211_clear_fast_rx(sta);
-@@ -1893,10 +1890,7 @@ int sta_info_move_state(struct sta_info *sta,
- 		break;
- 	case IEEE80211_STA_AUTHORIZED:
- 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
--			if (sta->sdata->vif.type == NL80211_IFTYPE_AP ||
--			    (sta->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
--			     !sta->sdata->u.vlan.sta))
--				atomic_inc(&sta->sdata->bss->num_mcast_sta);
-+			ieee80211_vif_inc_num_mcast(sta->sdata);
- 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
- 			ieee80211_check_fast_xmit(sta);
- 			ieee80211_check_fast_rx(sta);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 5023966..aed375f 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -331,9 +331,8 @@ ieee80211_tx_h_check_assoc(struct ieee80211_tx_data *tx)
- 			I802_DEBUG_INC(tx->local->tx_handlers_drop_not_assoc);
- 			return TX_DROP;
- 		}
--	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
--			    ieee80211_is_data(hdr->frame_control) &&
--			    !atomic_read(&tx->sdata->u.ap.num_mcast_sta))) {
-+	} else if (unlikely(ieee80211_vif_get_num_mcast_if(tx->sdata) == 0 &&
-+			    ieee80211_is_data(hdr->frame_control))) {
- 		/*
- 		 * No associated STAs - no need to send multicast
- 		 * frames.
 -- 
-2.1.4
+2.9.3
