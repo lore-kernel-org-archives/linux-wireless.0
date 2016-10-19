@@ -1,106 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:36282 "EHLO
-        mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751378AbcJJUn5 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57504 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941212AbcJSP7N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 16:43:57 -0400
-Received: by mail-pa0-f46.google.com with SMTP id ry6so803437pac.3
-        for <linux-wireless@vger.kernel.org>; Mon, 10 Oct 2016 13:43:56 -0700 (PDT)
-Date: Mon, 10 Oct 2016 13:43:54 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Xinming Hu <huxm@marvell.com>, abhishekbh@google.com
-Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
- unregister
-Message-ID: <20161010204352.GA11254@localhost> (sfid-20161010_224401_834535_D9989DCD)
-References: <1475600905-2997-1-git-send-email-akarwar@marvell.com>
- <20161004215814.GB31652@localhost>
- <8ec683dc72a746909157fca4dcbd10e8@SC-EXCH04.marvell.com>
- <20161005163024.GA54237@google.com>
- <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
+        Wed, 19 Oct 2016 11:59:13 -0400
+Message-ID: <5807984D.4050307@candelatech.com> (sfid-20161019_180449_714807_2C667D2A)
+Date: Wed, 19 Oct 2016 08:59:09 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <127198026f5149c783bb0f5855dc87b9@SC-EXCH04.marvell.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+CC: Herbert Xu <herbert@gondor.apana.org.au>,
+        Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
+References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org> <1476689310.19992.1.camel@sipsolutions.net> <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com> <CALCETrUWW2A1XK7BzcajTcBzg58SDUCTE35Hj1vmbywTLCe2vQ@mail.gmail.com> <CAKv+Gu-25OvTSbyE06Ln8N+HsqNyV1T6oOudK2tyAAOmmXXqgA@mail.gmail.com> <20161019033157.GA1457@gondor.apana.org.au> <1476862995.5927.3.camel@sipsolutions.net> <CAKv+Gu9CppR+AN5_RdDJ6ZBRr1EDDLB+nABPddyaj5TKb5=j_Q@mail.gmail.com>
+In-Reply-To: <CAKv+Gu9CppR+AN5_RdDJ6ZBRr1EDDLB+nABPddyaj5TKb5=j_Q@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amit,
 
-On Thu, Oct 06, 2016 at 01:03:02PM +0000, Amitkumar Karwar wrote:
-> > From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> > owner@vger.kernel.org] On Behalf Of Brian Norris
-> > Sent: Wednesday, October 05, 2016 10:00 PM
-> > To: Amitkumar Karwar
-> > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> > rajatja@google.com; Xinming Hu
-> > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during device
-> > unregister
-> > 
-> > On Wed, Oct 05, 2016 at 02:04:53PM +0000, Amitkumar Karwar wrote:
-> > > > From: Brian Norris [mailto:briannorris@chromium.org]
-> > > > Sent: Wednesday, October 05, 2016 3:28 AM
-> > > > To: Amitkumar Karwar
-> > > > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> > > > rajatja@google.com; briannorris@google.com; Xinming Hu
-> > > > Subject: Re: [PATCH v2 1/2] mwifiex: reset card->adapter during
-> > > > device unregister
-> > > >
-> > > > On Tue, Oct 04, 2016 at 10:38:24PM +0530, Amitkumar Karwar wrote:
-> > 
-> > > > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
-> > > > mwifiex_adapter *adapter)
-> > > > >  				pci_disable_msi(pdev);
-> > > > >  	       }
-> > > > >  	}
-> > > > > +	card->adapter = NULL;
 
-...
+On 10/19/2016 08:08 AM, Ard Biesheuvel wrote:
+> On 19 October 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Wed, 2016-10-19 at 11:31 +0800, Herbert Xu wrote:
 
-> > What about writes racing with reads? You have lots of unsynchronized
-> > cases that read this, although most of them should be halted by now
-> > (e.g., cmd processing). I was looking at suspend() in particular, which
-> > I thought you were looking at in this patch series.
-> 
-> Please note that "card->adapter" is used only in pcie.c/sdio.c/usb.c files
-> 
-> Writes won't have race with reads.
-> 
-> 1) write 1  --- "card->adapter = adapter;" in mwifiex_register_dev()
-> 	This place is at the beginning of initialization. 
-> 	mwifiex_pcie_probe() -> mwifiex_add_card() -> adapter->if_ops.register_dev()
-> 	There is no chance that "card->adapter" is read anywhere at this point. FW is not yet downloaded
+>> We could probably make mac80211 do that too, but can we guarantee in-
+>> order processing? Anyway, it's pretty low priority, maybe never
+>> happening, since hardly anyone really uses "software" crypto, the wifi
+>> devices mostly have it built in anyway.
+>>
+>
+> Indeed. The code is now correct in terms of API requirements, so let's
+> just wait for someone to complain about any performance regressions.
 
-Sure.
+Do you actually expect performance regressions?  I'll be complaining if
+so, but will test first :)
 
-> 2) write 2 ---- "card->adapter = NULL;" in mwifiex_unregister_dev()
-> 	This place the end of teardown phase.
-> 	Interrupts are disabled and all cleanup is done. We have
-> 	"card->adapter" NULL checks at entry point of
-> 	suspend/remove/resume, if they get called after this.
+Thanks,
+Ben
 
-I guess the question boils down to: can driver suspend() race with
-mwifiex_unregister_dev() here, then?
-
-And I guess the answer is "no", because unregistration only happens via
-
-  PCIe driver remove() -> mwifiex_remove_card() -> adapter->if_ops.unregister_dev()
-
-and I think the device driver core guarantees that suspend() and
-remove() won't race.
-
-In that case:
-
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-I'll reply to the latest revision too, since it's identical.
-
-Thanks for the explanations.
-
-Regards,
-Brian
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
