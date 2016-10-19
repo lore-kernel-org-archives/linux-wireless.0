@@ -1,281 +1,322 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32912 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754519AbcJMLnD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50212 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S941512AbcJSPS2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 07:43:03 -0400
-Received: by mail-pf0-f193.google.com with SMTP id i85so1517381pfa.0
-        for <linux-wireless@vger.kernel.org>; Thu, 13 Oct 2016 04:42:58 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+        Wed, 19 Oct 2016 11:18:28 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 3/3] rsi: Updated boot parameters
-Date: Thu, 13 Oct 2016 16:57:05 +0530
-Message-Id: <1476358025-15576-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161013_134418_379528_2C3AF747)
+Cc: kvalo@codeaurora.org, Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:50 +0300
+Message-Id: <20161019100755.23874-6-luca@coelho.fi> (sfid-20161019_171833_540529_0C142B7E)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 05/10] iwlwifi: mvm: use firmware station PM notification for AP_LINK_PS
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Switch clock info is divided in to different clock information fields for
-  readability and synchronization with firmware code.
-* Other parameters are added for future use and to make the frame size in sync
-  with latest firmware. Otherwise firmware will discard the frame considering
-  corrupted frame.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+When using RSS on 9000 series devices, we can't rely on processing the
+received frames for station powersave handling, since they could be
+processed on different CPUs and out of order.
+
+In order to still manage the powersave of stations, the firmware sends
+a notification on sleep->wake, wake->sleep and - for U-APSD - frames
+received with PM while already sleeping (with the TID.)
+
+With this, the driver can set AP_LINK_PS, which is required for real
+parallel RX. In addition, this requires checking for PS-Poll frames
+and calling ieee80211_sta_pspoll() appropriately.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mgmt.c    | 62 ++++++++++++++++++++++++++----
- drivers/net/wireless/rsi/rsi_boot_params.h | 45 +++++++++++++++++++++-
- 2 files changed, 97 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 26 ++++++++
+ .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    |  9 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 70 ++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  3 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 13 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h       |  1 +
+ 9 files changed, 119 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 30b9d44..10796c2 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -18,6 +18,7 @@
- #include "rsi_mgmt.h"
- #include "rsi_common.h"
- 
-+/* Bootup Parameters for 20MHz */
- static struct bootup_params boot_params_20 = {
- 	.magic_number = cpu_to_le16(0x5aa5),
- 	.crystal_good_time = 0x0,
-@@ -28,6 +29,7 @@ static struct bootup_params boot_params_20 = {
- 	.rtls_timestamp_en = 0x0,
- 	.host_spi_intr_cfg = 0x0,
- 	.device_clk_info = {{
-+		/* WLAN params */
- 		.pll_config_g = {
- 			.tapll_info_g = {
- 				.pll_reg_1 = cpu_to_le16((TA_PLL_N_VAL_20 << 8)|
-@@ -45,12 +47,18 @@ static struct bootup_params boot_params_20 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = cpu_to_le16(BIT(3)),
-+			.switch_umac_clk = 0x0,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x1,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x121),
- 			.umac_clock_reg_config = 0x0,
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	},
-+	/* Bluetooth params */
- 	{
- 		.pll_config_g = {
- 			.tapll_info_g = {
-@@ -69,12 +77,18 @@ static struct bootup_params boot_params_20 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = 0x0,
-+			.switch_umac_clk = 0x0,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x0,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = 0x0,
- 			.umac_clock_reg_config = 0x0,
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	},
-+	/* Zigbee params */
- 	{
- 		.pll_config_g = {
- 			.tapll_info_g = {
-@@ -93,12 +107,18 @@ static struct bootup_params boot_params_20 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = 0x0,
-+			.switch_umac_clk = 0x0,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x0,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = 0x0,
- 			.umac_clock_reg_config = 0x0,
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	} },
-+	/* ULP Params */
- 	.buckboost_wakeup_cnt = 0x0,
- 	.pmu_wakeup_wait = 0x0,
- 	.shutdown_wait_time = 0x0,
-@@ -106,9 +126,13 @@ static struct bootup_params boot_params_20 = {
- 	.wdt_prog_value = 0x0,
- 	.wdt_soc_rst_delay = 0x0,
- 	.dcdc_operation_mode = 0x0,
--	.soc_reset_wait_cnt = 0x0
-+	.soc_reset_wait_cnt = 0x0,
-+	.waiting_time_at_fresh_sleep = 0x0,
-+	.max_threshold_to_avoid_sleep = 0x0,
-+	.beacon_resedue_alg_en = 0,
- };
- 
-+/* Bootup parameters for 40MHz */
- static struct bootup_params boot_params_40 = {
- 	.magic_number = cpu_to_le16(0x5aa5),
- 	.crystal_good_time = 0x0,
-@@ -119,6 +143,7 @@ static struct bootup_params boot_params_40 = {
- 	.rtls_timestamp_en = 0x0,
- 	.host_spi_intr_cfg = 0x0,
- 	.device_clk_info = {{
-+		/* WLAN params */
- 		.pll_config_g = {
- 			.tapll_info_g = {
- 				.pll_reg_1 = cpu_to_le16((TA_PLL_N_VAL_40 << 8)|
-@@ -136,12 +161,18 @@ static struct bootup_params boot_params_40 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = cpu_to_le16(0x09),
-+			.switch_umac_clk = 0x1,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x1,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = cpu_to_le16(0x1121),
- 			.umac_clock_reg_config = cpu_to_le16(0x48),
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	},
-+	/* Bluetooth Params */
- 	{
- 		.pll_config_g = {
- 			.tapll_info_g = {
-@@ -160,12 +191,18 @@ static struct bootup_params boot_params_40 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = 0x0,
-+			.switch_umac_clk = 0x0,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x0,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = 0x0,
- 			.umac_clock_reg_config = 0x0,
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	},
-+	/* Zigbee Params */
- 	{
- 		.pll_config_g = {
- 			.tapll_info_g = {
-@@ -184,12 +221,18 @@ static struct bootup_params boot_params_40 = {
- 			}
- 		},
- 		.switch_clk_g = {
--			.switch_clk_info = 0x0,
-+			.switch_umac_clk = 0x0,
-+			.switch_qspi_clk = 0x0,
-+			.switch_slp_clk_2_32 = 0x0,
-+			.switch_bbp_lmac_clk_reg = 0x0,
-+			.switch_mem_ctrl_cfg = 0x0,
-+			.reserved = 0x0,
- 			.bbp_lmac_clk_reg_val = 0x0,
- 			.umac_clock_reg_config = 0x0,
- 			.qspi_uart_clock_reg_config = 0x0
- 		}
- 	} },
-+	/* ULP Params */
- 	.buckboost_wakeup_cnt = 0x0,
- 	.pmu_wakeup_wait = 0x0,
- 	.shutdown_wait_time = 0x0,
-@@ -197,7 +240,10 @@ static struct bootup_params boot_params_40 = {
- 	.wdt_prog_value = 0x0,
- 	.wdt_soc_rst_delay = 0x0,
- 	.dcdc_operation_mode = 0x0,
--	.soc_reset_wait_cnt = 0x0
-+	.soc_reset_wait_cnt = 0x0,
-+	.waiting_time_at_fresh_sleep = 0x0,
-+	.max_threshold_to_avoid_sleep = 0x0,
-+	.beacon_resedue_alg_en = 0,
- };
- 
- static u16 mcs[] = {13, 26, 39, 52, 78, 104, 117, 130};
-diff --git a/drivers/net/wireless/rsi/rsi_boot_params.h b/drivers/net/wireless/rsi/rsi_boot_params.h
-index 5e2721f..c1be104 100644
---- a/drivers/net/wireless/rsi/rsi_boot_params.h
-+++ b/drivers/net/wireless/rsi/rsi_boot_params.h
-@@ -81,7 +81,13 @@ struct pll_config {
- 
- /* structure to store configs related to UMAC clk programming */
- struct switch_clk {
--	__le16 switch_clk_info;
-+	__le16 switch_umac_clk : 1; /* If set rest is valid */
-+	__le16 switch_qspi_clk : 1; /* If set qspi clk will be changed */
-+	__le16 switch_slp_clk_2_32 : 1;
-+	__le16 switch_bbp_lmac_clk_reg : 1;
-+	__le16 switch_mem_ctrl_cfg : 1;
-+	__le16 reserved : 11;
-+
- 	/* If switch_bbp_lmac_clk_reg is set then this value will be programmed
- 	 * into reg
- 	 */
-@@ -99,11 +105,43 @@ struct device_clk_info {
- 
- struct bootup_params {
- 	__le16 magic_number;
-+#define LOADED_TOKEN  0x5AA5   /* Bootup params are installed by host
-+				* or OTP/FLASH (Bootloader)
-+				*/
-+#define ROM_TOKEN     0x55AA   /* Bootup params are taken from ROM
-+				* itself in MCU mode.
-+				*/
- 	__le16 crystal_good_time;
- 	__le32 valid;
-+#define CRYSTAL_GOOD_TIME                BIT(0)
-+#define BOOTUP_MODE_INFO                 BIT(1)
-+#define DIGITAL_LOOP_BACK_PARAMS         BIT(2)
-+#define RTLS_TIMESTAMP_EN                BIT(3)
-+#define HOST_SPI_INTR_CFG                BIT(4)
-+#define WIFI_TAPLL_CONFIGS               BIT(5)
-+#define WIFI_PLL960_CONFIGS              BIT(6)
-+#define WIFI_AFEPLL_CONFIGS              BIT(7)
-+#define WIFI_SWITCH_CLK_CONFIGS          BIT(8)
-+#define BT_TAPLL_CONFIGS                 BIT(9)
-+#define BT_PLL960_CONFIGS                BIT(10)
-+#define BT_AFEPLL_CONFIGS                BIT(11)
-+#define BT_SWITCH_CLK_CONFIGS            BIT(12)
-+#define ZB_TAPLL_CONFIGS                 BIT(13)
-+#define ZB_PLL960_CONFIGS                BIT(14)
-+#define ZB_AFEPLL_CONFIGS                BIT(15)
-+#define ZB_SWITCH_CLK_CONFIGS            BIT(16)
-+#define BUCKBOOST_WAIT_INFO              BIT(17)
-+#define PMU_WAKEUP_SHUTDOWN_W            BIT(18)
-+#define WDT_PROG_VALUES                  BIT(19)
-+#define WDT_RESET_DELAY_VALUE            BIT(20)
-+#define DCDC_OPERATION_MODE_VALID        BIT(21)
-+#define PMU_SLP_CLKOUT_SEL               BIT(22)
-+#define SOC_RESET_WAIT_CNT               BIT(23)
- 	__le32 reserved_for_valids;
- 	__le16 bootup_mode_info;
--	/* configuration used for digital loop back */
-+#define BT_COEXIST                       BIT(0)
-+#define BOOTUP_MODE                     (BIT(2) | BIT(1))
-+#define CUR_DEV_MODE                    (bootup_params.bootup_mode_info >> 1)
- 	__le16 digital_loop_back_params;
- 	__le16 rtls_timestamp_en;
- 	__le16 host_spi_intr_cfg;
-@@ -122,5 +160,8 @@ struct bootup_params {
- 	/* dcdc modes configs */
- 	__le32 dcdc_operation_mode;
- 	__le32 soc_reset_wait_cnt;
-+	__le32 waiting_time_at_fresh_sleep;
-+	__le32 max_threshold_to_avoid_sleep;
-+	u8 beacon_resedue_alg_en;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index ceec5ca..1ad0ec1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -293,6 +293,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  *	is supported.
+  * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
+  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
++ * @IWL_UCODE_TLV_CAPA_STA_PM_NOTIF: firmware will send STA PM notification
+  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
+  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
+  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
+@@ -342,6 +343,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
+ 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
+ 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
++	IWL_UCODE_TLV_CAPA_STA_PM_NOTIF			= (__force iwl_ucode_tlv_capa_t)38,
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index acc5cd5..b530fa4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -474,4 +474,30 @@ struct iwl_mvm_internal_rxq_notif {
+ 	u8 data[];
  } __packed;
- #endif
+ 
++/**
++ * enum iwl_mvm_pm_event - type of station PM event
++ * @IWL_MVM_PM_EVENT_AWAKE: station woke up
++ * @IWL_MVM_PM_EVENT_ASLEEP: station went to sleep
++ * @IWL_MVM_PM_EVENT_UAPSD: station sent uAPSD trigger
++ * @IWL_MVM_PM_EVENT_PS_POLL: station sent PS-Poll
++ */
++enum iwl_mvm_pm_event {
++	IWL_MVM_PM_EVENT_AWAKE,
++	IWL_MVM_PM_EVENT_ASLEEP,
++	IWL_MVM_PM_EVENT_UAPSD,
++	IWL_MVM_PM_EVENT_PS_POLL,
++}; /* PEER_PM_NTFY_API_E_VER_1 */
++
++/**
++ * struct iwl_mvm_pm_state_notification - station PM state notification
++ * @sta_id: station ID of the station changing state
++ * @type: the new powersave state, see IWL_MVM_PM_EVENT_ above
++ */
++struct iwl_mvm_pm_state_notification {
++	u8 sta_id;
++	u8 type;
++	/* private: */
++	u16 reserved;
++} __packed; /* PEER_PM_NTFY_API_S_VER_1 */
++
+ #endif /* __fw_api_rx_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+index 6c8e3ca..3b5150e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+@@ -179,7 +179,7 @@ enum iwl_sta_key_flag {
+  * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
+  * @STA_MODIFY_QUEUE_REMOVAL: this command removes a queue
+  * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
+- * @STA_MODIFY_TX_RATE: unused
++ * @STA_MODIFY_UAPSD_ACS: this command modifies %uapsd_trigger_acs
+  * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
+  * @STA_MODIFY_REMOVE_BA_TID: this command modifies %remove_immediate_ba_tid
+  * @STA_MODIFY_SLEEPING_STA_TX_COUNT: this command modifies %sleep_tx_count
+@@ -189,7 +189,7 @@ enum iwl_sta_key_flag {
+ enum iwl_sta_modify_flag {
+ 	STA_MODIFY_QUEUE_REMOVAL		= BIT(0),
+ 	STA_MODIFY_TID_DISABLE_TX		= BIT(1),
+-	STA_MODIFY_TX_RATE			= BIT(2),
++	STA_MODIFY_UAPSD_ACS			= BIT(2),
+ 	STA_MODIFY_ADD_BA_TID			= BIT(3),
+ 	STA_MODIFY_REMOVE_BA_TID		= BIT(4),
+ 	STA_MODIFY_SLEEPING_STA_TX_COUNT	= BIT(5),
+@@ -353,6 +353,8 @@ struct iwl_mvm_add_sta_cmd_v7 {
+  * @beamform_flags: beam forming controls
+  * @tfd_queue_msk: tfd queues used by this station
+  * @rx_ba_window: aggregation window size
++ * @scd_queue_bank: queue bank in used. Each bank contains 32 queues. 0 means
++ *	that the queues used by this station are in the first 32.
+  *
+  * The device contains an internal table of per-station information, with info
+  * on security keys, aggregation parameters, and Tx rates for initial Tx
+@@ -382,7 +384,8 @@ struct iwl_mvm_add_sta_cmd {
+ 	__le16 beamform_flags;
+ 	__le32 tfd_queue_msk;
+ 	__le16 rx_ba_window;
+-	__le16 reserved;
++	u8 scd_queue_bank;
++	u8 uapsd_trigger_acs;
+ } __packed; /* ADD_STA_CMD_API_S_VER_8 */
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 9763369..ae12bad 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -332,6 +332,7 @@ enum iwl_data_path_subcmd_ids {
+ 	DQA_ENABLE_CMD = 0x0,
+ 	UPDATE_MU_GROUPS_CMD = 0x1,
+ 	TRIGGER_RX_QUEUES_NOTIF_CMD = 0x2,
++	STA_PM_NOTIF = 0xFD,
+ 	MU_GROUP_MGMT_NOTIF = 0xFE,
+ 	RX_QUEUES_NOTIFICATION = 0xFF,
+ };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 318efd8..9eeb2c3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -445,6 +445,8 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
+ 	if (iwl_mvm_has_new_rx_api(mvm))
+ 		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
++	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_STA_PM_NOTIF))
++		ieee80211_hw_set(hw, AP_LINK_PS);
+ 
+ 	if (mvm->trans->num_rx_queues > 1)
+ 		ieee80211_hw_set(hw, USES_RSS);
+@@ -2318,10 +2320,9 @@ iwl_mvm_mac_release_buffered_frames(struct ieee80211_hw *hw,
+ 					  tids, more_data, true);
+ }
+ 
+-static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
+-				   struct ieee80211_vif *vif,
+-				   enum sta_notify_cmd cmd,
+-				   struct ieee80211_sta *sta)
++static void __iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
++				     enum sta_notify_cmd cmd,
++				     struct ieee80211_sta *sta)
+ {
+ 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+@@ -2374,6 +2375,67 @@ static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&mvmsta->lock);
+ }
+ 
++static void iwl_mvm_mac_sta_notify(struct ieee80211_hw *hw,
++				   struct ieee80211_vif *vif,
++				   enum sta_notify_cmd cmd,
++				   struct ieee80211_sta *sta)
++{
++	__iwl_mvm_mac_sta_notify(hw, cmd, sta);
++}
++
++void iwl_mvm_sta_pm_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_mvm_pm_state_notification *notif = (void *)pkt->data;
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_sta *mvmsta;
++	bool sleeping = (notif->type != IWL_MVM_PM_EVENT_AWAKE);
++
++	if (WARN_ON(notif->sta_id >= ARRAY_SIZE(mvm->fw_id_to_mac_id)))
++		return;
++
++	rcu_read_lock();
++	sta = mvm->fw_id_to_mac_id[notif->sta_id];
++	if (WARN_ON(IS_ERR_OR_NULL(sta))) {
++		rcu_read_unlock();
++		return;
++	}
++
++	mvmsta = iwl_mvm_sta_from_mac80211(sta);
++
++	if (!mvmsta->vif ||
++	    mvmsta->vif->type != NL80211_IFTYPE_AP) {
++		rcu_read_unlock();
++		return;
++	}
++
++	if (mvmsta->sleeping != sleeping) {
++		mvmsta->sleeping = sleeping;
++		__iwl_mvm_mac_sta_notify(mvm->hw,
++			sleeping ? STA_NOTIFY_SLEEP : STA_NOTIFY_AWAKE,
++			sta);
++		ieee80211_sta_ps_transition(sta, sleeping);
++	}
++
++	if (sleeping) {
++		switch (notif->type) {
++		case IWL_MVM_PM_EVENT_AWAKE:
++		case IWL_MVM_PM_EVENT_ASLEEP:
++			break;
++		case IWL_MVM_PM_EVENT_UAPSD:
++			ieee80211_sta_uapsd_trigger(sta, IEEE80211_NUM_TIDS);
++			break;
++		case IWL_MVM_PM_EVENT_PS_POLL:
++			ieee80211_sta_pspoll(sta);
++			break;
++		default:
++			break;
++		}
++	}
++
++	rcu_read_unlock();
++}
++
+ static void iwl_mvm_sta_pre_rcu_remove(struct ieee80211_hw *hw,
+ 				       struct ieee80211_vif *vif,
+ 				       struct ieee80211_sta *sta)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index d17cbf6..726ba48 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1418,6 +1418,7 @@ void iwl_mvm_rx_stored_beacon_notif(struct iwl_mvm *mvm,
+ 				    struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_mu_mimo_grp_notif(struct iwl_mvm *mvm,
+ 			       struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_sta_pm_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_window_status_notif(struct iwl_mvm *mvm,
+ 				 struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 05fe6dd..e86986f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -306,6 +306,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 		       iwl_mvm_rx_stored_beacon_notif, RX_HANDLER_SYNC),
+ 	RX_HANDLER_GRP(DATA_PATH_GROUP, MU_GROUP_MGMT_NOTIF,
+ 		       iwl_mvm_mu_mimo_grp_notif, RX_HANDLER_SYNC),
++	RX_HANDLER_GRP(DATA_PATH_GROUP, STA_PM_NOTIF,
++		       iwl_mvm_sta_pm_notif, RX_HANDLER_SYNC),
+ };
+ #undef RX_HANDLER
+ #undef RX_HANDLER_GRP
+@@ -452,6 +454,7 @@ static const struct iwl_hcmd_names iwl_mvm_phy_names[] = {
+ static const struct iwl_hcmd_names iwl_mvm_data_path_names[] = {
+ 	HCMD_NAME(UPDATE_MU_GROUPS_CMD),
+ 	HCMD_NAME(TRIGGER_RX_QUEUES_NOTIF_CMD),
++	HCMD_NAME(STA_PM_NOTIF),
+ 	HCMD_NAME(MU_GROUP_MGMT_NOTIF),
+ 	HCMD_NAME(RX_QUEUES_NOTIFICATION),
+ };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 5ec1b96..82ee786 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -203,6 +203,19 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	add_sta_cmd.station_flags |=
+ 		cpu_to_le32(mpdu_dens << STA_FLG_AGG_MPDU_DENS_SHIFT);
+ 
++	if (sta->wme) {
++		add_sta_cmd.modify_mask |= STA_MODIFY_UAPSD_ACS;
++
++		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BK)
++			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BK);
++		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_BE)
++			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_BE);
++		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VI)
++			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VI);
++		if (sta->uapsd_queues & IEEE80211_WMM_IE_STA_QOSINFO_AC_VO)
++			add_sta_cmd.uapsd_trigger_acs |= BIT(AC_VO);
++	}
++
+ 	status = ADD_STA_SUCCESS;
+ 	ret = iwl_mvm_send_cmd_pdu_status(mvm, ADD_STA,
+ 					  iwl_mvm_add_sta_cmd_size(mvm),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index e068d53..b45c7b9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -436,6 +436,7 @@ struct iwl_mvm_sta {
+ 
+ 	bool disable_tx;
+ 	bool tlc_amsdu;
++	bool sleeping;
+ 	u8 agg_tids;
+ 	u8 sleep_tx_count;
+ 	u8 avg_energy;
 -- 
-2.4.11
+2.9.3
