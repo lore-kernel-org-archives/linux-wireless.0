@@ -1,65 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34618 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756493AbcJPU7r (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Oct 2016 16:59:47 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        robh+dt@kernel.org
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v8 2/3] ath9k: add a helper to get the string representation of ath_bus_type
-Date: Sun, 16 Oct 2016 22:59:06 +0200
-Message-Id: <20161016205907.19927-3-martin.blumenstingl@googlemail.com> (sfid-20161016_225958_019293_4566E685)
-In-Reply-To: <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
-References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
- <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:35756 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S945628AbcJSPoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:44:15 -0400
+Message-ID: <1476863488.5927.10.camel@sipsolutions.net> (sfid-20161019_174435_424464_55A9CFED)
+Subject: Re: sequence diagrams in rst documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Date: Wed, 19 Oct 2016 09:51:28 +0200
+In-Reply-To: <20161018175236.75c8c4e2@lwn.net>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+         <20161011072119.7ad4e3a3@lwn.net>
+         <1476193466.4118.10.camel@sipsolutions.net>
+         <1476194038.4118.11.camel@sipsolutions.net>
+         <1476791021.6425.25.camel@sipsolutions.net>
+         <20161018175236.75c8c4e2@lwn.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This can be used when the ath_bus_type has to be presented in a log
-message or firmware filename.
+On Tue, 2016-10-18 at 17:52 -0600, Jonathan Corbet wrote:
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath.h  | 6 ++++++
- drivers/net/wireless/ath/main.c | 7 +++++++
- 2 files changed, 13 insertions(+)
+> In summary, I think we can consider taking on a module if it's what
+> we need to do the docs right.  And if somebody agrees to maintain it!
+> :)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index da7a7c8..f3f2784 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -327,4 +327,10 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
- }
- #endif
- 
-+extern const char *ath_bus_type_strings[];
-+static inline const char *ath_bus_type_to_string(enum ath_bus_type bustype)
-+{
-+	return ath_bus_type_strings[bustype];
-+}
-+
- #endif /* ATH_H */
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 338d723..89f4b05 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -90,3 +90,10 @@ void ath_printk(const char *level, const struct ath_common* common,
- 	va_end(args);
- }
- EXPORT_SYMBOL(ath_printk);
-+
-+const char *ath_bus_type_strings[] = {
-+	[ATH_PCI] = "pci",
-+	[ATH_AHB] = "ahb",
-+	[ATH_USB] = "usb",
-+};
-+EXPORT_SYMBOL(ath_bus_type_strings);
--- 
-2.10.0
+:)
+
+I think for the ones that we carry, they're probably specific?
+
+> I've heard others say they would like better diagramming support.  Do
+> you think that, maybe, something like aafigure would do the trick?
+> 
+> 	https://pythonhosted.org/sphinxcontrib-aafig/
+> 
+> I've not actually played with it at all, but I like the idea that
+> we'd have readable diagrams in the source docs as well...
+
+Well, maybe. I agree having it readable in the source docs as well is
+nice, but for sequence diagrams in particular, I don't think
+
+    +-------+         +-----------+
+    | Hello +-------->+ aafigure! |
+    +-------+         +-----------+
+
+really beats
+
+   Hello -> aafigure!
+
+by much. You could do some alignment even with the latter version, and
+the above isn't even really a sequence diagram anyway :)
+
+Some of the sequence diagrams may also be automatically generated from
+runtime behaviour observation (e.g. tracing, we've actually done that),
+and outputting the types of ascii boxes is much more difficult there.
+
+For other types of diagrams this may be nice though.
+
+Anyway, I guess we'll cross that bridge when we get to it. I'd like to
+have these types of documentation, perhaps with a script to auto-
+generate from tracing - such as script and visual display can even
+serve as a debugging aid :)
+
+johannes
