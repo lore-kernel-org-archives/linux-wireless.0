@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52284 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S942895AbcJZNMI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 09:12:08 -0400
-Message-ID: <1477487505.4059.49.camel@sipsolutions.net> (sfid-20161026_151230_149504_21512E0B)
-Subject: Re: [PATCH][RFC] nl80211/mac80211: Rounded RSSI reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 26 Oct 2016 15:11:45 +0200
-In-Reply-To: <580A2438.7030106@gmail.com> (sfid-20161021_163810_476016_D9B31C64)
-References: <1477010947-6207-1-git-send-email-andrew.zaborowski@intel.com>
-         <1477038639.4068.28.camel@sipsolutions.net> <580A2438.7030106@gmail.com>
-         (sfid-20161021_163810_476016_D9B31C64)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:50196 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S944575AbcJSPSW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:18:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:49 +0300
+Message-Id: <20161019100755.23874-5-luca@coelho.fi> (sfid-20161019_171826_578377_E0FFD8AF)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 04/10] iwlwifi: mvm: fix dqa deferred frames marking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-10-21 at 09:20 -0500, Denis Kenzior wrote:
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-> > It's actually not clear to me that this is really how it should be.
-> > There's a point to be made that taking a more holistic "link
-> > quality" would be a better choice. That's related, but maybe can be
-> > a separate discussion.
+When a STA has deferred traffic to TX, an appropriate bit
+is turned on in %deferred_tx_frames to indicate deferred
+traffic. This marking is never turned off, resulting in
+iterating over TIDs with no deferred traffic.
 
-> Can you elaborate on this 'link quality' idea?
+Although this didn't cause any failures/errors/bugs, there
+is still no point of iterating over these TIDs when not
+needed.
 
-Well, I didn't really want to - getting 3 system folks into a room will
-result in 4 different ways of doing it - but you can take into account
-not just the RSSI, but also the bitrate you can reasonably use on the
-channel/with the AP, the noise you can perhaps detect (if you can), the
-amount of packet loss or retransmissions you experience, etc.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I think that some systems (Android, maybe Windows) already do something
-more complex than pure RSSI indicators, but I don't really know for
-sure.
-
-> > Yes, this would be ideal.
-> > 
-> > [...]
-
-see my other email
-
-> This sounds really brittle.  Furthermore, we also need a facility to 
-> know when signal strength is getting low to trigger roaming
-> logic.  This would mean sharing CQM facility between roaming & signal
-> strength notifications.  As you wrote above, things become quite
-> impractical.
-
-This would likely go through the supplicant anyway, so it could manage
-proper range overlaps etc. for this.
-
-It does seem brittle if we just have a single value, but if we add
-low/high thresholds (with hysteresis) then I think we can do this, and
-gain more flexibility in the process. But let's discuss more details
-over in the other email I just sent :)
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index c9dcb70..5ec1b96 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1015,6 +1015,7 @@ static void iwl_mvm_tx_deferred_stream(struct iwl_mvm *mvm,
+ 	local_bh_disable();
+ 	spin_lock(&mvmsta->lock);
+ 	skb_queue_splice_init(&tid_data->deferred_tx_frames, &deferred_tx);
++	mvmsta->deferred_traffic_tid_map &= ~BIT(tid);
+ 	spin_unlock(&mvmsta->lock);
+ 
+ 	while ((skb = __skb_dequeue(&deferred_tx)))
+-- 
+2.9.3
