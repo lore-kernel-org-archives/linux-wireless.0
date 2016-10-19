@@ -1,28 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0241.hostedemail.com ([216.40.44.241]:52401 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750946AbcJAVIp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50146 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S943511AbcJSOzJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Oct 2016 17:08:45 -0400
-Message-ID: <1475356122.1996.6.camel@perches.com> (sfid-20161001_230912_279887_574D49F3)
-Subject: Re: [PATCH] realtek: rtl8xxxu: Use const init arrays
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sat, 01 Oct 2016 14:08:42 -0700
-In-Reply-To: <wrfjponj4xpq.fsf@redhat.com>
-References: <459bf15427d92cd052fb2fe080438fd97a8a6cd8.1475343483.git.joe@perches.com>
-         <wrfj37kf6gvd.fsf@redhat.com> <1475352058.1996.1.camel@perches.com>
-         <wrfjponj4xpq.fsf@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Wed, 19 Oct 2016 10:55:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 10:27:23 +0300
+Message-Id: <20161019072726.22018-5-luca@coelho.fi> (sfid-20161019_165529_321628_B93997DF)
+In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
+References: <20161019072726.22018-1-luca@coelho.fi>
+Subject: [PATCH 4/7] iwlwifi: mvm: comply with fw_restart mod param on suspend
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-10-01 at 16:32 -0400, Jes Sorensen wrote:
-> Your output shows it moving to the text segment - if it's in a different
-> segment, eg. rodata, you should use output demonstrating that to justify
-> the change.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-For size, rodata _is_ text
+If the suspend flow fails, we restart the hardware to go back to
+the D0 image (with non-unified images), but we don't comply with
+the fw_restart module parameter.  If something goes wrong when
+starting the D3 image, we may want to debug it, so we should
+comply with the fw_restart flag to avoid clearing everything up
+and losing the firmware state when the error occurred.
+
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 0e17cb2..03a8fc5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -1254,7 +1254,10 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
+  out:
+ 	if (ret < 0) {
+ 		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
+-		ieee80211_restart_hw(mvm->hw);
++		if (mvm->restart_fw > 0) {
++			mvm->restart_fw--;
++			ieee80211_restart_hw(mvm->hw);
++		}
+ 		iwl_mvm_free_nd(mvm);
+ 	}
+  out_noreset:
+-- 
+2.9.3
