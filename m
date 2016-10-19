@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41276 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:55827 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752607AbcJLHMz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 03:12:55 -0400
-Message-ID: <1476256370.5271.2.camel@sipsolutions.net> (sfid-20161012_091258_793242_641F9EDC)
-Subject: Re: [PATCHv2 1/3] mac80211: fix CMD_FRAME for AP_VLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Wed, 12 Oct 2016 09:12:50 +0200
-In-Reply-To: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161003_131427_265805_ADB81E75)
-References: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20161003_131427_265805_ADB81E75)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S943502AbcJSPAt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:00:49 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        Guenter Roeck <linux@roeck-us.net>
+Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-watchdog@vger.kernel.org,
+        Tomas Winkler <tomas.winkler@intel.com>
+Subject: [char-misc-next 1/5] mei: bus: add  module_mei_cl_driver helper macro
+Date: Wed, 19 Oct 2016 16:33:27 +0300
+Message-Id: <1476884011-20645-2-git-send-email-tomas.winkler@intel.com> (sfid-20161019_174325_965266_D9D8AC16)
+In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-03 at 13:14 +0200, Michael Braun wrote:
-> When using IEEE 802.11r FT OVER-DS roaming with AP_VLAN, hostapd
-> needs to
-> send out a frame using CMD_FRAME for a station assigned to an AP_VLAN
-> interface.
-> 
-> Right now, the userspace needs to give the exact AP_VLAN interface
-> index
-> for CMD_FRAME; hostapd does not do this. Additionally, userspace
-> cannot
-> use GET_STATION to query the AP_VLAN ifidx, as while GET_STATION
-> finds
-> stations assigned to AP_VLAN even if the AP iface is queried, it does
-> not
-> return AP_VLAN ifidx (it returns the queried one).
-> 
-> This breaks IEEE 802.11r over_ds with vlans, as the reply frame does
-> not
-> get out. This patch fixes this by using get_sta_bss for CMD_FRAME.
-> 
-Applied, thanks.
+Add module_mei_cl_driver helper macro for eliminating the boilerplate
+code from mei_cl drivers registration. The macro is intended for
+drivers which in their init/exit sections does only register/unregister
+of a mei_cl driver.
 
-johannes
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ include/linux/mei_cl_bus.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
+index e746919530f5..e6fbd98ea90e 100644
+--- a/include/linux/mei_cl_bus.h
++++ b/include/linux/mei_cl_bus.h
+@@ -74,6 +74,19 @@ int __mei_cldev_driver_register(struct mei_cl_driver *cldrv,
+ 
+ void mei_cldev_driver_unregister(struct mei_cl_driver *cldrv);
+ 
++/**
++ * module_mei_cl_driver - Helper macro for registering mei cl driver
++ *
++ * @__mei_cldrv mei_cl_driver structure
++ *
++ *  Helper macro for mei cl drivers which do not do anything special in module
++ *  init/exit, for eliminating a boilerplate code.
++ */
++#define module_mei_cl_driver(__mei_cldrv) \
++	module_driver(__mei_cldrv, \
++		      mei_cldev_driver_register,\
++		      mei_cldev_driver_unregister)
++
+ ssize_t mei_cldev_send(struct mei_cl_device *cldev, u8 *buf, size_t length);
+ ssize_t  mei_cldev_recv(struct mei_cl_device *cldev, u8 *buf, size_t length);
+ 
+-- 
+2.7.4
