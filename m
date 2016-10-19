@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55211 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751549AbcJGLZq (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50206 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S944474AbcJSPS0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 07:25:46 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] rtl8xxxu: Fix rtl8723bu driver reload issue
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
-References: <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Message-Id: <20161007112446.2056361AC6@smtp.codeaurora.org> (sfid-20161007_132551_538398_389C1F23)
-Date: Fri,  7 Oct 2016 11:24:46 +0000 (UTC)
+        Wed, 19 Oct 2016 11:18:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:52 +0300
+Message-Id: <20161019100755.23874-8-luca@coelho.fi> (sfid-20161019_171830_890575_37D69A64)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 07/10] iwlwifi: mvm: tell the firmware about the AID of the peer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> The generic disable_rf() function clears bits 22 and 23 in
-> REG_RX_WAIT_CCA, however we did not re-enable them again in
-> rtl8723b_enable_rf()
-> 
-> This resolves the problem for me with 8723bu devices not working again
-> after reloading the driver.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Cc: stable@vger.kernel.org # 4.7+
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-2 patches applied to wireless-drivers.git, thanks.
+When a peer associates, the firmware will soon want to know
+its AID to be able to compute the TIM IE by itself.
+In DQA, the firmware has all the information it needs to
+update the TIM internally. The only missing part is the
+AID.
 
-ab05e5ec81c7 rtl8xxxu: Fix rtl8723bu driver reload issue
-29d5e6fbd65b rtl8xxxu: Fix rtl8192eu driver reload issue
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 82ee786..636c8b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -202,6 +202,7 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		cpu_to_le32(agg_size << STA_FLG_MAX_AGG_SIZE_SHIFT);
+ 	add_sta_cmd.station_flags |=
+ 		cpu_to_le32(mpdu_dens << STA_FLG_AGG_MPDU_DENS_SHIFT);
++	add_sta_cmd.assoc_id = cpu_to_le16(sta->aid);
+ 
+ 	if (sta->wme) {
+ 		add_sta_cmd.modify_mask |= STA_MODIFY_UAPSD_ACS;
 -- 
-https://patchwork.kernel.org/patch/9359015/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.3
