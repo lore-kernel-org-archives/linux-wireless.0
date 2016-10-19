@@ -1,551 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27896 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932471AbcJZVra (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:36705 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S942256AbcJSOZn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:47:30 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 8/9] mac80211: FILS AEAD protection for station mode association frames
-Date: Thu, 27 Oct 2016 00:42:05 +0300
-Message-ID: <1477518126-823-9-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234734_944720_7CB85D94)
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+        Wed, 19 Oct 2016 10:25:43 -0400
+Received: by mail-lf0-f50.google.com with SMTP id b75so26110068lfg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 19 Oct 2016 07:25:42 -0700 (PDT)
+Subject: Re: BCM43602 firmware reports multiple BRCMF_E_DEAUTH
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+References: <CACna6rzS4nDZ+H5kU71WwTTNLp5uZStpQHv4LLmWBDSdf5jpyw@mail.gmail.com>
+ <f97678dc-2869-1b6a-33a3-f829cc30918a@gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <befa10f7-265e-3f4e-dd0c-ebcd0b32f3e2@gmail.com> (sfid-20161019_162634_710539_8DDAE999)
+Date: Wed, 19 Oct 2016 14:34:06 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <f97678dc-2869-1b6a-33a3-f829cc30918a@gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------C9AB860780B4E7B23D553841"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for encrypting (Re)Association Request frame and
-decryption (Re)Association Response frame when using FILS in station
-mode.
+This is a multi-part message in MIME format.
+--------------C9AB860780B4E7B23D553841
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/Makefile      |   1 +
- net/mac80211/aes_cmac.c    |   8 +-
- net/mac80211/aes_cmac.h    |   4 +
- net/mac80211/fils_aead.c   | 347 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/fils_aead.h   |  19 +++
- net/mac80211/ieee80211_i.h |   4 +
- net/mac80211/mlme.c        |  27 ++++
- 7 files changed, 406 insertions(+), 4 deletions(-)
- create mode 100644 net/mac80211/fils_aead.c
- create mode 100644 net/mac80211/fils_aead.h
+On 10/04/2016 08:15 PM, Rafał Miłecki wrote:
+> # My smartphone remains in the same place (1 m from the AP) but there is some
+> # connection/A-MPDU problem.
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509120] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: wl0.0 scb:0035ee78 tid:0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509250] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: wl0.0 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509304] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 110486
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509346] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509411] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: txall 4 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509477] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 4 0 0 0 0 ifs_boff 0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509527] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509576] brcmfmac: CONSOLE: 026970.308 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509665] brcmfmac: CONSOLE: 026970.308 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
+> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509726] brcmfmac: CONSOLE: 026970.308 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
+> Tue Oct  4 17:22:41 2016 kern.debug kernel: [  266.456860] brcmfmac: CONSOLE: 026990.068 wl0.0: wlc_send_bar: seq 0x7c tid 0
+> Tue Oct  4 17:22:43 2016 kern.debug kernel: [  268.178234] brcmfmac: CONSOLE: 026991.783 pktid is NULL
+>
+> # After recovering from A-MPDU thing firmware sends BRCMF_E_DEAUTH and
+> # BRCMF_E_DISASSOC_IND events.
+> # My smartphone never receives deauth/disassoc and it believes it's still
+> # connected to the AP.
+> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275305] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 4
+> Tue Oct  4 17:23:24 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275354] brcmfmac: brcmf_notify_connect_status_ap event 12, reason 8
+> Tue Oct  4 17:23:24 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275865] brcmfmac: brcmf_cfg80211_del_key key index (0)
+> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.276177] brcmfmac: brcmf_cfg80211_del_key key index (0)
+> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.276188] brcmfmac: brcmf_cfg80211_del_key Ignore clearing of (never configured) key
+>
+> # My smartphone starts sending packets. It seems brcmfmac refuses them due to
+> # STA not being connected and for each packet it reports BRCMF_E_DEAUTH to the
+> # driver.
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.000406] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.001227] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.001894] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.002594] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.003741] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004096] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004490] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004936] brcmfmac: brcmf_notify_connect_status_ap event 5, reason 7
+> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
 
-diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
-index f9137a8..0b202b3 100644
---- a/net/mac80211/Makefile
-+++ b/net/mac80211/Makefile
-@@ -19,6 +19,7 @@ mac80211-y := \
- 	aes_gcm.o \
- 	aes_cmac.o \
- 	aes_gmac.o \
-+	fils_aead.o \
- 	cfg.o \
- 	ethtool.o \
- 	rx.o \
-diff --git a/net/mac80211/aes_cmac.c b/net/mac80211/aes_cmac.c
-index bdf0790..d0bd5ff 100644
---- a/net/mac80211/aes_cmac.c
-+++ b/net/mac80211/aes_cmac.c
-@@ -23,7 +23,7 @@
- #define AAD_LEN 20
- 
- 
--static void gf_mulx(u8 *pad)
-+void gf_mulx(u8 *pad)
- {
- 	int i, carry;
- 
-@@ -35,9 +35,9 @@ static void gf_mulx(u8 *pad)
- 		pad[AES_BLOCK_SIZE - 1] ^= 0x87;
- }
- 
--static void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
--			    const u8 *addr[], const size_t *len, u8 *mac,
--			    size_t mac_len)
-+void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
-+		     const u8 *addr[], const size_t *len, u8 *mac,
-+		     size_t mac_len)
- {
- 	u8 cbc[AES_BLOCK_SIZE], pad[AES_BLOCK_SIZE];
- 	const u8 *pos, *end;
-diff --git a/net/mac80211/aes_cmac.h b/net/mac80211/aes_cmac.h
-index 3702041..c827e1d 100644
---- a/net/mac80211/aes_cmac.h
-+++ b/net/mac80211/aes_cmac.h
-@@ -11,6 +11,10 @@
- 
- #include <linux/crypto.h>
- 
-+void gf_mulx(u8 *pad);
-+void aes_cmac_vector(struct crypto_cipher *tfm, size_t num_elem,
-+		     const u8 *addr[], const size_t *len, u8 *mac,
-+		     size_t mac_len);
- struct crypto_cipher *ieee80211_aes_cmac_key_setup(const u8 key[],
- 						   size_t key_len);
- void ieee80211_aes_cmac(struct crypto_cipher *tfm, const u8 *aad,
-diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
-new file mode 100644
-index 0000000..afc7efc
---- /dev/null
-+++ b/net/mac80211/fils_aead.c
-@@ -0,0 +1,347 @@
-+/*
-+ * FILS AEAD for (Re)Association Request/Response frames
-+ * Copyright 2016, Qualcomm Atheros, Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <crypto/aes.h>
-+#include <crypto/algapi.h>
-+#include <crypto/skcipher.h>
-+
-+#include "ieee80211_i.h"
-+#include "aes_cmac.h"
-+#include "fils_aead.h"
-+
-+static int aes_s2v(struct crypto_cipher *tfm,
-+		   size_t num_elem, const u8 *addr[], size_t len[], u8 *v)
-+{
-+	u8 d[AES_BLOCK_SIZE], tmp[AES_BLOCK_SIZE];
-+	size_t i;
-+	const u8 *data[2];
-+	size_t data_len[2], data_elems;
-+
-+	/* D = AES-CMAC(K, <zero>) */
-+	memset(tmp, 0, AES_BLOCK_SIZE);
-+	data[0] = tmp;
-+	data_len[0] = AES_BLOCK_SIZE;
-+	aes_cmac_vector(tfm, 1, data, data_len, d, AES_BLOCK_SIZE);
-+
-+	for (i = 0; i < num_elem - 1; i++) {
-+		/* D = dbl(D) xor AES_CMAC(K, Si) */
-+		gf_mulx(d); /* dbl */
-+		aes_cmac_vector(tfm, 1, &addr[i], &len[i], tmp,
-+				AES_BLOCK_SIZE);
-+		crypto_xor(d, tmp, AES_BLOCK_SIZE);
-+	}
-+
-+	if (len[i] >= AES_BLOCK_SIZE) {
-+		/* len(Sn) >= 128 */
-+		size_t j;
-+		const u8 *pos;
-+
-+		/* T = Sn xorend D */
-+
-+		/* Use a temporary buffer to perform xorend on Sn (addr[i]) to
-+		 * avoid modifying the const input argument.
-+		 */
-+		data[0] = addr[i];
-+		data_len[0] = len[i] - AES_BLOCK_SIZE;
-+		pos = addr[i] + data_len[0];
-+		for (j = 0; j < AES_BLOCK_SIZE; j++)
-+			tmp[j] = pos[j] ^ d[j];
-+		data[1] = tmp;
-+		data_len[1] = AES_BLOCK_SIZE;
-+		data_elems = 2;
-+	} else {
-+		/* len(Sn) < 128 */
-+		/* T = dbl(D) xor pad(Sn) */
-+		gf_mulx(d); /* dbl */
-+		memset(tmp, 0, AES_BLOCK_SIZE);
-+		memcpy(tmp, addr[i], len[i]);
-+		tmp[len[i]] = 0x80;
-+		crypto_xor(d, tmp, AES_BLOCK_SIZE);
-+		data[0] = d;
-+		data_len[0] = sizeof(d);
-+		data_elems = 1;
-+	}
-+	/* V = AES-CMAC(K, T) */
-+	aes_cmac_vector(tfm, data_elems, data, data_len, v, AES_BLOCK_SIZE);
-+
-+	return 0;
-+}
-+
-+/* Note: addr[] and len[] needs to have one extra slot at the end. */
-+static int aes_siv_encrypt(const u8 *key, size_t key_len,
-+			   const u8 *plain, size_t plain_len,
-+			   size_t num_elem, const u8 *addr[],
-+			   size_t len[], u8 *out)
-+{
-+	u8 v[AES_BLOCK_SIZE];
-+	struct crypto_cipher *tfm;
-+	struct crypto_skcipher *tfm2;
-+	struct skcipher_request *req;
-+	int res;
-+	struct scatterlist src[1], dst[1];
-+	u8 *tmp;
-+
-+	key_len /= 2; /* S2V key || CTR key */
-+
-+	addr[num_elem] = plain;
-+	len[num_elem] = plain_len;
-+	num_elem++;
-+
-+	/* S2V */
-+
-+	tfm = crypto_alloc_cipher("aes", 0, 0);
-+	if (IS_ERR(tfm))
-+		return PTR_ERR(tfm);
-+	/* K1 for S2V */
-+	res = crypto_cipher_setkey(tfm, key, key_len);
-+	if (!res)
-+		res = aes_s2v(tfm, num_elem, addr, len, v);
-+	crypto_free_cipher(tfm);
-+	if (res)
-+		return res;
-+
-+	/* Use a temporary buffer of the plaintext to handle need for
-+	 * overwriting this during AES-CTR.
-+	 */
-+	tmp = kmalloc(plain_len, GFP_KERNEL);
-+	if (!tmp) {
-+		res = -ENOMEM;
-+		goto fail;
-+	}
-+	memcpy(tmp, plain, plain_len);
-+
-+	/* IV for CTR before encrypted data */
-+	memcpy(out, v, AES_BLOCK_SIZE);
-+
-+	/* Synthetic IV to be used as the initial counter in CTR:
-+	 * Q = V bitand (1^64 || 0^1 || 1^31 || 0^1 || 1^31)
-+	 */
-+	v[8] &= 0x7f;
-+	v[12] &= 0x7f;
-+
-+	/* CTR */
-+
-+	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
-+	if (IS_ERR(tfm2)) {
-+		kfree(tmp);
-+		return PTR_ERR(tfm2);
-+	}
-+	/* K2 for CTR */
-+	res = crypto_skcipher_setkey(tfm2, key + key_len, key_len);
-+	if (res)
-+		goto fail;
-+
-+	req = skcipher_request_alloc(tfm2, GFP_KERNEL);
-+	if (!req) {
-+		res = -ENOMEM;
-+		goto fail;
-+	}
-+
-+	sg_set_buf(&src[0], tmp, plain_len);
-+	sg_set_buf(&dst[0], out + AES_BLOCK_SIZE, plain_len);
-+	skcipher_request_set_crypt(req, src, dst, plain_len, v);
-+	res = crypto_skcipher_encrypt(req);
-+	skcipher_request_free(req);
-+fail:
-+	kfree(tmp);
-+	crypto_free_skcipher(tfm2);
-+	return res;
-+}
-+
-+/* Note: addr[] and len[] needs to have one extra slot at the end. */
-+static int aes_siv_decrypt(const u8 *key, size_t key_len,
-+			   const u8 *iv_crypt, size_t iv_c_len,
-+			   size_t num_elem, const u8 *addr[], size_t len[],
-+			   u8 *out)
-+{
-+	struct crypto_cipher *tfm;
-+	struct crypto_skcipher *tfm2;
-+	struct skcipher_request *req;
-+	struct scatterlist src[1], dst[1];
-+	size_t crypt_len;
-+	int res;
-+	u8 frame_iv[AES_BLOCK_SIZE], iv[AES_BLOCK_SIZE];
-+	u8 check[AES_BLOCK_SIZE];
-+
-+	crypt_len = iv_c_len - AES_BLOCK_SIZE;
-+	key_len /= 2; /* S2V key || CTR key */
-+	addr[num_elem] = out;
-+	len[num_elem] = crypt_len;
-+	num_elem++;
-+
-+	memcpy(iv, iv_crypt, AES_BLOCK_SIZE);
-+	memcpy(frame_iv, iv_crypt, AES_BLOCK_SIZE);
-+
-+	/* Synthetic IV to be used as the initial counter in CTR:
-+	 * Q = V bitand (1^64 || 0^1 || 1^31 || 0^1 || 1^31)
-+	 */
-+	iv[8] &= 0x7f;
-+	iv[12] &= 0x7f;
-+
-+	/* CTR */
-+
-+	tfm2 = crypto_alloc_skcipher("ctr(aes)", 0, 0);
-+	if (IS_ERR(tfm2))
-+		return PTR_ERR(tfm2);
-+	/* K2 for CTR */
-+	res = crypto_skcipher_setkey(tfm2, key + key_len, key_len);
-+	if (res) {
-+		crypto_free_skcipher(tfm2);
-+		return res;
-+	}
-+
-+	req = skcipher_request_alloc(tfm2, GFP_KERNEL);
-+	if (!req) {
-+		crypto_free_skcipher(tfm2);
-+		return -ENOMEM;
-+	}
-+
-+	sg_set_buf(&src[0], iv_crypt + AES_BLOCK_SIZE, crypt_len);
-+	sg_set_buf(&dst[0], out, crypt_len);
-+	skcipher_request_set_crypt(req, src, dst, crypt_len, iv);
-+	res = crypto_skcipher_decrypt(req);
-+	skcipher_request_free(req);
-+	crypto_free_skcipher(tfm2);
-+	if (res)
-+		return res;
-+
-+	/* S2V */
-+
-+	tfm = crypto_alloc_cipher("aes", 0, 0);
-+	if (IS_ERR(tfm))
-+		return PTR_ERR(tfm);
-+	/* K1 for S2V */
-+	res = crypto_cipher_setkey(tfm, key, key_len);
-+	if (!res)
-+		res = aes_s2v(tfm, num_elem, addr, len, check);
-+	crypto_free_cipher(tfm);
-+	if (res)
-+		return res;
-+	if (memcmp(check, frame_iv, AES_BLOCK_SIZE) != 0)
-+		return -EINVAL;
-+	return 0;
-+}
-+
-+int fils_encrypt_assoc_req(struct sk_buff *skb,
-+			   struct ieee80211_mgd_assoc_data *assoc_data)
-+{
-+	struct ieee80211_mgmt *mgmt;
-+	u8 *capab, *ies, *encr;
-+	const u8 *addr[5 + 1], *session;
-+	size_t len[5 + 1];
-+	size_t crypt_len;
-+
-+	mgmt = (struct ieee80211_mgmt *)skb->data;
-+	if (ieee80211_is_reassoc_req(mgmt->frame_control)) {
-+		capab = (u8 *)&mgmt->u.reassoc_req.capab_info;
-+		ies = mgmt->u.reassoc_req.variable;
-+	} else {
-+		capab = (u8 *)&mgmt->u.assoc_req.capab_info;
-+		ies = mgmt->u.assoc_req.variable;
-+	}
-+
-+	session = cfg80211_find_ext_ie(WLAN_EID_EXT_FILS_SESSION,
-+				       ies, skb->data + skb->len - ies);
-+	if (!session)
-+		return -EINVAL;
-+	/* encrypt after FILS Session element */
-+	encr = (u8 *)session + 2 + 1 + 8;
-+
-+	/* AES-SIV AAD vectors */
-+
-+	/* The STA's MAC address */
-+	addr[0] = mgmt->sa;
-+	len[0] = ETH_ALEN;
-+	/* The AP's BSSID */
-+	addr[1] = mgmt->da;
-+	len[1] = ETH_ALEN;
-+	/* The STA's nonce */
-+	addr[2] = assoc_data->fils_nonces;
-+	len[2] = FILS_NONCE_LEN;
-+	/* The AP's nonce */
-+	addr[3] = &assoc_data->fils_nonces[FILS_NONCE_LEN];
-+	len[3] = FILS_NONCE_LEN;
-+	/* The (Re)Association Request frame from the Capability Information
-+	 * field to the FILS Session element (both inclusive).
-+	 */
-+	addr[4] = capab;
-+	len[4] = encr - capab;
-+
-+	crypt_len = skb->data + skb->len - encr;
-+	skb_put(skb, AES_BLOCK_SIZE);
-+	return aes_siv_encrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
-+			       encr, crypt_len, 1, addr, len, encr);
-+}
-+
-+int fils_decrypt_assoc_resp(struct ieee80211_sub_if_data *sdata,
-+			    u8 *frame, size_t *frame_len,
-+			    struct ieee80211_mgd_assoc_data *assoc_data)
-+{
-+	struct ieee80211_mgmt *mgmt;
-+	u8 *capab, *ies, *encr;
-+	const u8 *addr[5 + 1], *session;
-+	size_t len[5 + 1];
-+	int res;
-+	size_t crypt_len;
-+
-+	if (*frame_len < 24 + 6)
-+		return -EINVAL;
-+
-+	mgmt = (struct ieee80211_mgmt *)frame;
-+	capab = (u8 *)&mgmt->u.assoc_resp.capab_info;
-+	ies = mgmt->u.assoc_resp.variable;
-+	session = cfg80211_find_ext_ie(WLAN_EID_EXT_FILS_SESSION,
-+				       ies, frame + *frame_len - ies);
-+	if (!session) {
-+		mlme_dbg(sdata,
-+			 "No FILS Session element in (Re)Association Response frame from %pM",
-+			 mgmt->sa);
-+		return -EINVAL;
-+	}
-+	/* decrypt after FILS Session element */
-+	encr = (u8 *)session + 2 + 1 + 8;
-+
-+	/* AES-SIV AAD vectors */
-+
-+	/* The AP's BSSID */
-+	addr[0] = mgmt->sa;
-+	len[0] = ETH_ALEN;
-+	/* The STA's MAC address */
-+	addr[1] = mgmt->da;
-+	len[1] = ETH_ALEN;
-+	/* The AP's nonce */
-+	addr[2] = &assoc_data->fils_nonces[FILS_NONCE_LEN];
-+	len[2] = FILS_NONCE_LEN;
-+	/* The STA's nonce */
-+	addr[3] = assoc_data->fils_nonces;
-+	len[3] = FILS_NONCE_LEN;
-+	/* The (Re)Association Response frame from the Capability Information
-+	 * field to the FILS Session element (both inclusive).
-+	 */
-+	addr[4] = capab;
-+	len[4] = encr - capab;
-+
-+	crypt_len = frame + *frame_len - encr;
-+	if (crypt_len < AES_BLOCK_SIZE) {
-+		mlme_dbg(sdata,
-+			 "Not enough room for AES-SIV data after FILS Session element in (Re)Association Response frame from %pM",
-+			 mgmt->sa);
-+		return -EINVAL;
-+	}
-+	res = aes_siv_decrypt(assoc_data->fils_kek, assoc_data->fils_kek_len,
-+			      encr, crypt_len, 5, addr, len, encr);
-+	if (res != 0) {
-+		mlme_dbg(sdata,
-+			 "AES-SIV decryption of (Re)Association Response frame from %pM failed",
-+			 mgmt->sa);
-+		return res;
-+	}
-+	*frame_len -= AES_BLOCK_SIZE;
-+	return 0;
-+}
-diff --git a/net/mac80211/fils_aead.h b/net/mac80211/fils_aead.h
-new file mode 100644
-index 0000000..fbc6523
---- /dev/null
-+++ b/net/mac80211/fils_aead.h
-@@ -0,0 +1,19 @@
-+/*
-+ * FILS AEAD for (Re)Association Request/Response frames
-+ * Copyright 2016, Qualcomm Atheros, Inc.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef FILS_AEAD_H
-+#define FILS_AEAD_H
-+
-+int fils_encrypt_assoc_req(struct sk_buff *skb,
-+			   struct ieee80211_mgd_assoc_data *assoc_data);
-+int fils_decrypt_assoc_resp(struct ieee80211_sub_if_data *sdata,
-+			    u8 *frame, size_t *frame_len,
-+			    struct ieee80211_mgd_assoc_data *assoc_data);
-+
-+#endif /* FILS_AEAD_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index b4e2b6c..d37a577 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -401,6 +401,10 @@ struct ieee80211_mgd_assoc_data {
- 
- 	struct ieee80211_vht_cap ap_vht_cap;
- 
-+	u8 fils_nonces[2 * FILS_NONCE_LEN];
-+	u8 fils_kek[FILS_MAX_KEK_LEN];
-+	size_t fils_kek_len;
-+
- 	size_t ie_len;
- 	u8 ie[];
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b815f2d..f99f9c5 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -30,6 +30,7 @@
- #include "driver-ops.h"
- #include "rate.h"
- #include "led.h"
-+#include "fils_aead.h"
- 
- #define IEEE80211_AUTH_TIMEOUT		(HZ / 5)
- #define IEEE80211_AUTH_TIMEOUT_LONG	(HZ / 2)
-@@ -652,6 +653,7 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 			2 + sizeof(struct ieee80211_ht_cap) + /* HT */
- 			2 + sizeof(struct ieee80211_vht_cap) + /* VHT */
- 			assoc_data->ie_len + /* extra IEs */
-+			(assoc_data->fils_kek_len ? 16 /* AES-SIV */ : 0) +
- 			9, /* WMM */
- 			GFP_KERNEL);
- 	if (!skb)
-@@ -875,6 +877,12 @@ static void ieee80211_send_assoc(struct ieee80211_sub_if_data *sdata)
- 		memcpy(pos, assoc_data->ie + offset, noffset - offset);
- 	}
- 
-+	if (assoc_data->fils_kek_len &&
-+	    fils_encrypt_assoc_req(skb, assoc_data) < 0) {
-+		dev_kfree_skb(skb);
-+		return;
-+	}
-+
- 	drv_mgd_prepare_tx(local, sdata);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
-@@ -3146,6 +3154,10 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
- 		   reassoc ? "Rea" : "A", mgmt->sa,
- 		   capab_info, status_code, (u16)(aid & ~(BIT(15) | BIT(14))));
- 
-+	if (assoc_data->fils_kek_len &&
-+	    fils_decrypt_assoc_resp(sdata, (u8 *)mgmt, &len, assoc_data) < 0)
-+		return;
-+
- 	pos = mgmt->u.assoc_resp.variable;
- 	ieee802_11_parse_elems(pos, len - (pos - (u8 *) mgmt), false, &elems);
- 
-@@ -4706,6 +4718,21 @@ int ieee80211_mgd_assoc(struct ieee80211_sub_if_data *sdata,
- 		assoc_data->ie_len = req->ie_len;
- 	}
- 
-+	if (req->fils_kek) {
-+		if (req->fils_kek_len > FILS_MAX_KEK_LEN) {
-+			err = -EINVAL;
-+			goto err_free;
-+		}
-+		memcpy(assoc_data->fils_kek, req->fils_kek,
-+		       req->fils_kek_len);
-+		assoc_data->fils_kek_len = req->fils_kek_len;
-+	}
-+
-+	if (req->fils_nonces) {
-+		memcpy(assoc_data->fils_nonces, req->fils_nonces,
-+		       2 * FILS_NONCE_LEN);
-+	}
-+
- 	assoc_data->bss = req->bss;
- 
- 	if (ifmgd->req_smps == IEEE80211_SMPS_AUTOMATIC) {
--- 
-1.9.1
+I just got 400+ messages like this:
+wlan1: STA 84:38:38:e4:b5:ea IEEE 802.11: disassociated
+this time I was lucky enough to have monitor mode running on some independent
+notebook and I got it recorded.
+
+I'm attaching pcapng (Wireshark dump) file. You can see a lot of
+Deauthentication frames flying both ways with a reason code 0x0006 (Class 2
+frame received from nonauthenticated STA).
+
+I think this reason code seems to match my suspicions: STA didn't realize it was
+disconnected and it kept sending packets. Firmware reacted sending Deauth frames
+
+--------------C9AB860780B4E7B23D553841
+Content-Type: application/x-bzip;
+ name="deauth.tar.bz2"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="deauth.tar.bz2"
+
+QlpoOTFBWSZTWWe6KZkATS7/////////////////////////////////////////////4BNf
+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
+oyyfJNeYM/mAAg2sz/4u5IpwoSDPdFMy
+--------------C9AB860780B4E7B23D553841--
