@@ -1,38 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43008 "EHLO
-        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755564AbcJLS6i (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50184 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S942575AbcJSPSL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 14:58:38 -0400
-Received: from localhost.localdomain (proxy [81.2.110.250])
-        by lxorguk.ukuu.org.uk (8.15.2/8.14.1) with ESMTP id u9CIvbkt023444
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 19:57:43 +0100
-Subject: [PATCH] ath6k1: add Dell OEM SDIO I/O for the Venue 8 Pro
-From: Alan <alan@linux.intel.com>
+        Wed, 19 Oct 2016 11:18:11 -0400
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Date: Wed, 12 Oct 2016 19:08:40 +0100
-Message-ID: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain> (sfid-20161012_205841_577924_568593B0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:54 +0300
+Message-Id: <20161019100755.23874-10-luca@coelho.fi> (sfid-20161019_171817_636749_4DCA582E)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 09/10] iwlwifi: mvm: operate in dqa mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Adam Williamson <adamw@happyassassin.net>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-SDIO ID 0271:0418
+Run DQA flows by default, as long as the FW supports it.
 
-Signed-off-by: Alan Cox <alan@linux.intel.com>
-Bugzilla-ID: https://bugzilla.kernel.org/show_bug.cgi?id=67921
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index eab0ab9..76eb336 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1401,6 +1401,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
- 	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
-+	{SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
- 	{},
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 726ba48..cde8c6c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1111,9 +1111,8 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
  
+ static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
+ {
+-	/* Make sure DQA isn't allowed in driver until feature is complete */
+-	return false && fw_has_capa(&mvm->fw->ucode_capa,
+-				    IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
++	return fw_has_capa(&mvm->fw->ucode_capa,
++			   IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
+ }
+ 
+ static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
+-- 
+2.9.3
