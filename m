@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28727 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752298AbcJGO7K (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50150 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S943067AbcJSOzT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 10:59:10 -0400
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>
-Subject: [PATCH 0/2] ath10k: add support for tx bitrate
-Date: Fri, 7 Oct 2016 20:28:50 +0530
-Message-ID: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161007_165913_975142_34A092AA)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 19 Oct 2016 10:55:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 10:27:19 +0300
+Message-Id: <20161019072726.22018-1-luca@coelho.fi> (sfid-20161019_165530_382362_99145C59)
+Subject: [PATCH 0/7] iwlwifi: updates intended for v4.9 2016-10-19
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-This patch series adds support for tx bitrate using 
-.sta_statistics callback.
+Hi,
 
-tx bitrate tested on QCA4019 using iw.
+Here are a few fixes that I'm planning to send for v4.9.  Nothing
+major, here's what they are about:
 
-Anilkumar Kolli (2):
-  ath10k: add per peer htt tx stats support for 10.4
-  ath10k: add support for per sta tx bitrate
+* some fixes for suspend/resume with unified FW images;
+* a fix for a false-positive lockdep report;
+* a fix for multi-queue that caused an unnecessary 1 second latency;
+* a fix for an ACPI parsing bug that caused a misleading error
+  message;
 
- drivers/net/wireless/ath/ath10k/core.h        |   17 ++++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++
- drivers/net/wireless/ath/ath10k/htt.c         |    2 +
- drivers/net/wireless/ath/ath10k/htt.h         |   25 +++++
- drivers/net/wireless/ath/ath10k/htt_rx.c      |  125 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h         |   10 +-
- 6 files changed, 191 insertions(+), 1 deletion(-)
+I'll leave this in my pending branch for a while to get kbuild bot
+reports and then I'll send a pull-request.
+
+Please review.
+
+Cheers,
+Luca.
+
+
+Haim Dreyfuss (1):
+  iwlwifi: mvm: comply with fw_restart mod param on suspend
+
+Johannes Berg (1):
+  iwlwifi: pcie: mark command queue lock with separate lockdep class
+
+Luca Coelho (4):
+  iwlwifi: mvm: use ssize_t for len in iwl_debugfs_mem_read()
+  iwlwifi: mvm: fix d3_test with unified D0/D3 images
+  iwlwifi: pcie: fix SPLC structure parsing
+  iwlwifi: mvm: fix netdetect starting/stopping for unified images
+
+Sara Sharon (1):
+  iwlwifi: mvm: wake the wait queue when the RX sync counter is zero
+
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 49 ++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c     |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c     | 33 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c     | 79 ++++++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c      |  8 +++
+ 9 files changed, 128 insertions(+), 53 deletions(-)
 
 -- 
-1.7.9.5
+2.9.3
