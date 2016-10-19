@@ -1,319 +1,560 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:32965 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932594AbcJQILI (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:59650 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751105AbcJSQhj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 04:11:08 -0400
-Received: by mail-io0-f177.google.com with SMTP id q192so180495823iod.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 01:10:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476691431-27693-1-git-send-email-johannes@sipsolutions.net>
-References: <1476691431-27693-1-git-send-email-johannes@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 17 Oct 2016 09:10:36 +0100
-Message-ID: <CAKv+Gu-8TFDQphrwpGWyrrdxKAWwhrUxOxfecPkthvPO4AG0pA@mail.gmail.com> (sfid-20161017_101824_268261_BDA07A9B)
-Subject: Re: [PATCH v3] mac80211: move struct aead_req off the stack
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Johannes Berg <johannes.berg@intel.com>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 19 Oct 2016 12:37:39 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Yauhen Kharuzhy <jekhor@gmail.com>,
+        Ben Greear <greearb@candelatech.com>
+Subject: crypto: aesni - add ccm(aes) algorithm implementation
+Date: Wed, 19 Oct 2016 09:37:26 -0700
+Message-Id: <1476895046-16549-1-git-send-email-greearb@candelatech.com> (sfid-20161019_183742_982746_7BE914CD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 October 2016 at 09:03, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Some crypto implementations (such as the generic CCM wrapper in crypto/)
-> use scatterlists to map fields of private data in their struct aead_req.
-> This means these data structures cannot live in the vmalloc area, which
-> means that they cannot live on the stack (with CONFIG_VMAP_STACK.)
->
-> This currently occurs only with the generic software implementation, but
-> the private data and usage is implementation specific, so move the whole
-> data structures off the stack into heap by allocating every time we need
-> to use them.
->
-> This pattern already exists in the IPsec ESP driver, but in the future,
-> we may want/need to improve upon this, e.g. by using a slab cache.
->
-> (Based on Ard's patch, but that was missing error handling and GCM/GMAC)
->
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-> v3: remove superfluous aead_request_set_tfm() calls
+From: Yauhen Kharuzhy <jekhor@gmail.com>
 
-Reviewed-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Add ccm(aes) implementation from linux-wireless mailing list (see
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/126679).
 
-> ---
->  net/mac80211/aes_ccm.c  | 36 +++++++++++++++++++-----------------
->  net/mac80211/aes_ccm.h  |  6 +++---
->  net/mac80211/aes_gcm.c  | 33 +++++++++++++++++----------------
->  net/mac80211/aes_gcm.h  |  4 ++--
->  net/mac80211/aes_gmac.c | 11 +++++------
->  net/mac80211/wpa.c      | 12 ++++--------
->  6 files changed, 50 insertions(+), 52 deletions(-)
->
-> diff --git a/net/mac80211/aes_ccm.c b/net/mac80211/aes_ccm.c
-> index 7663c28ba353..8e898a6e8de8 100644
-> --- a/net/mac80211/aes_ccm.c
-> +++ b/net/mac80211/aes_ccm.c
-> @@ -18,29 +18,29 @@
->  #include "key.h"
->  #include "aes_ccm.h"
->
-> -void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-> -                              u8 *data, size_t data_len, u8 *mic,
-> -                              size_t mic_len)
-> +int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-> +                             u8 *data, size_t data_len, u8 *mic,
-> +                             size_t mic_len)
->  {
->         struct scatterlist sg[3];
-> +       struct aead_request *aead_req;
->
-> -       char aead_req_data[sizeof(struct aead_request) +
-> -                          crypto_aead_reqsize(tfm)]
-> -               __aligned(__alignof__(struct aead_request));
-> -       struct aead_request *aead_req = (void *) aead_req_data;
-> -
-> -       memset(aead_req, 0, sizeof(aead_req_data));
-> +       aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-> +       if (!aead_req)
-> +               return -ENOMEM;
->
->         sg_init_table(sg, 3);
->         sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, mic_len);
->
-> -       aead_request_set_tfm(aead_req, tfm);
->         aead_request_set_crypt(aead_req, sg, sg, data_len, b_0);
->         aead_request_set_ad(aead_req, sg[0].length);
->
->         crypto_aead_encrypt(aead_req);
-> +       aead_request_free(aead_req);
-> +
-> +       return 0;
->  }
->
->  int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-> @@ -48,26 +48,28 @@ int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
->                               size_t mic_len)
->  {
->         struct scatterlist sg[3];
-> -       char aead_req_data[sizeof(struct aead_request) +
-> -                          crypto_aead_reqsize(tfm)]
-> -               __aligned(__alignof__(struct aead_request));
-> -       struct aead_request *aead_req = (void *) aead_req_data;
-> +       struct aead_request *aead_req;
-> +       int err;
->
->         if (data_len == 0)
->                 return -EINVAL;
->
-> -       memset(aead_req, 0, sizeof(aead_req_data));
-> +       aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-> +       if (!aead_req)
-> +               return -ENOMEM;
->
->         sg_init_table(sg, 3);
->         sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, mic_len);
->
-> -       aead_request_set_tfm(aead_req, tfm);
->         aead_request_set_crypt(aead_req, sg, sg, data_len + mic_len, b_0);
->         aead_request_set_ad(aead_req, sg[0].length);
->
-> -       return crypto_aead_decrypt(aead_req);
-> +       err = crypto_aead_decrypt(aead_req);
-> +       aead_request_free(aead_req);
-> +
-> +       return err;
->  }
->
->  struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
-> diff --git a/net/mac80211/aes_ccm.h b/net/mac80211/aes_ccm.h
-> index 6a73d1e4d186..03e21b0995e3 100644
-> --- a/net/mac80211/aes_ccm.h
-> +++ b/net/mac80211/aes_ccm.h
-> @@ -15,9 +15,9 @@
->  struct crypto_aead *ieee80211_aes_key_setup_encrypt(const u8 key[],
->                                                     size_t key_len,
->                                                     size_t mic_len);
-> -void ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-> -                              u8 *data, size_t data_len, u8 *mic,
-> -                              size_t mic_len);
-> +int ieee80211_aes_ccm_encrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
-> +                             u8 *data, size_t data_len, u8 *mic,
-> +                             size_t mic_len);
->  int ieee80211_aes_ccm_decrypt(struct crypto_aead *tfm, u8 *b_0, u8 *aad,
->                               u8 *data, size_t data_len, u8 *mic,
->                               size_t mic_len);
-> diff --git a/net/mac80211/aes_gcm.c b/net/mac80211/aes_gcm.c
-> index 3afe361fd27c..831054c6c756 100644
-> --- a/net/mac80211/aes_gcm.c
-> +++ b/net/mac80211/aes_gcm.c
-> @@ -15,55 +15,56 @@
->  #include "key.h"
->  #include "aes_gcm.h"
->
-> -void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-> -                              u8 *data, size_t data_len, u8 *mic)
-> +int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-> +                             u8 *data, size_t data_len, u8 *mic)
->  {
->         struct scatterlist sg[3];
-> +       struct aead_request *aead_req;
->
-> -       char aead_req_data[sizeof(struct aead_request) +
-> -                          crypto_aead_reqsize(tfm)]
-> -               __aligned(__alignof__(struct aead_request));
-> -       struct aead_request *aead_req = (void *)aead_req_data;
-> -
-> -       memset(aead_req, 0, sizeof(aead_req_data));
-> +       aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-> +       if (!aead_req)
-> +               return -ENOMEM;
->
->         sg_init_table(sg, 3);
->         sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, IEEE80211_GCMP_MIC_LEN);
->
-> -       aead_request_set_tfm(aead_req, tfm);
->         aead_request_set_crypt(aead_req, sg, sg, data_len, j_0);
->         aead_request_set_ad(aead_req, sg[0].length);
->
->         crypto_aead_encrypt(aead_req);
-> +       aead_request_free(aead_req);
-> +       return 0;
->  }
->
->  int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
->                               u8 *data, size_t data_len, u8 *mic)
->  {
->         struct scatterlist sg[3];
-> -       char aead_req_data[sizeof(struct aead_request) +
-> -                          crypto_aead_reqsize(tfm)]
-> -               __aligned(__alignof__(struct aead_request));
-> -       struct aead_request *aead_req = (void *)aead_req_data;
-> +       struct aead_request *aead_req;
-> +       int err;
->
->         if (data_len == 0)
->                 return -EINVAL;
->
-> -       memset(aead_req, 0, sizeof(aead_req_data));
-> +       aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-> +       if (!aead_req)
-> +               return -ENOMEM;
->
->         sg_init_table(sg, 3);
->         sg_set_buf(&sg[0], &aad[2], be16_to_cpup((__be16 *)aad));
->         sg_set_buf(&sg[1], data, data_len);
->         sg_set_buf(&sg[2], mic, IEEE80211_GCMP_MIC_LEN);
->
-> -       aead_request_set_tfm(aead_req, tfm);
->         aead_request_set_crypt(aead_req, sg, sg,
->                                data_len + IEEE80211_GCMP_MIC_LEN, j_0);
->         aead_request_set_ad(aead_req, sg[0].length);
->
-> -       return crypto_aead_decrypt(aead_req);
-> +       err = crypto_aead_decrypt(aead_req);
-> +       aead_request_free(aead_req);
-> +
-> +       return err;
->  }
->
->  struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
-> diff --git a/net/mac80211/aes_gcm.h b/net/mac80211/aes_gcm.h
-> index 1347fda6b76a..b36503cd7716 100644
-> --- a/net/mac80211/aes_gcm.h
-> +++ b/net/mac80211/aes_gcm.h
-> @@ -11,8 +11,8 @@
->
->  #include <linux/crypto.h>
->
-> -void ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-> -                              u8 *data, size_t data_len, u8 *mic);
-> +int ieee80211_aes_gcm_encrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
-> +                             u8 *data, size_t data_len, u8 *mic);
->  int ieee80211_aes_gcm_decrypt(struct crypto_aead *tfm, u8 *j_0, u8 *aad,
->                               u8 *data, size_t data_len, u8 *mic);
->  struct crypto_aead *ieee80211_aes_gcm_key_setup_encrypt(const u8 key[],
-> diff --git a/net/mac80211/aes_gmac.c b/net/mac80211/aes_gmac.c
-> index 3ddd927aaf30..6951af9715c0 100644
-> --- a/net/mac80211/aes_gmac.c
-> +++ b/net/mac80211/aes_gmac.c
-> @@ -25,16 +25,15 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
->                        const u8 *data, size_t data_len, u8 *mic)
->  {
->         struct scatterlist sg[4];
-> -       char aead_req_data[sizeof(struct aead_request) +
-> -                          crypto_aead_reqsize(tfm)]
-> -               __aligned(__alignof__(struct aead_request));
-> -       struct aead_request *aead_req = (void *)aead_req_data;
->         u8 zero[GMAC_MIC_LEN], iv[AES_BLOCK_SIZE];
-> +       struct aead_request *aead_req;
->
->         if (data_len < GMAC_MIC_LEN)
->                 return -EINVAL;
->
-> -       memset(aead_req, 0, sizeof(aead_req_data));
-> +       aead_req = aead_request_alloc(tfm, GFP_ATOMIC);
-> +       if (!aead_req)
-> +               return -ENOMEM;
->
->         memset(zero, 0, GMAC_MIC_LEN);
->         sg_init_table(sg, 4);
-> @@ -47,11 +46,11 @@ int ieee80211_aes_gmac(struct crypto_aead *tfm, const u8 *aad, u8 *nonce,
->         memset(iv + GMAC_NONCE_LEN, 0, sizeof(iv) - GMAC_NONCE_LEN);
->         iv[AES_BLOCK_SIZE - 1] = 0x01;
->
-> -       aead_request_set_tfm(aead_req, tfm);
->         aead_request_set_crypt(aead_req, sg, sg, 0, iv);
->         aead_request_set_ad(aead_req, AAD_LEN + data_len);
->
->         crypto_aead_encrypt(aead_req);
-> +       aead_request_free(aead_req);
->
->         return 0;
->  }
-> diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-> index b48c1e13e281..2e366438f8ef 100644
-> --- a/net/mac80211/wpa.c
-> +++ b/net/mac80211/wpa.c
-> @@ -461,10 +461,8 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
->
->         pos += IEEE80211_CCMP_HDR_LEN;
->         ccmp_special_blocks(skb, pn, b_0, aad);
-> -       ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
-> -                                 skb_put(skb, mic_len), mic_len);
-> -
-> -       return 0;
-> +       return ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
-> +                                        skb_put(skb, mic_len), mic_len);
->  }
->
->
-> @@ -696,10 +694,8 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
->
->         pos += IEEE80211_GCMP_HDR_LEN;
->         gcmp_special_blocks(skb, pn, j_0, aad);
-> -       ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
-> -                                 skb_put(skb, IEEE80211_GCMP_MIC_LEN));
-> -
-> -       return 0;
-> +       return ieee80211_aes_gcm_encrypt(key->u.gcmp.tfm, j_0, aad, pos, len,
-> +                                        skb_put(skb, IEEE80211_GCMP_MIC_LEN));
->  }
->
->  ieee80211_tx_result
-> --
-> 2.8.1
->
+This eliminates FPU context store/restore overhead existing in more
+general ccm_base(ctr(aes-aesni),aes-aesni) case in MAC calculation.
+
+Convert this patch to new AEAD API.
+
+Signed-off-by: Yauhen Kharuzhy <jekhor@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+
+diff --git a/arch/x86/crypto/aesni-intel_glue.c b/arch/x86/crypto/aesni-intel_glue.c
+index 5b7fa14..087a952 100644
+--- a/arch/x86/crypto/aesni-intel_glue.c
++++ b/arch/x86/crypto/aesni-intel_glue.c
+@@ -36,6 +36,7 @@
+ #include <asm/crypto/aes.h>
+ #include <crypto/ablk_helper.h>
+ #include <crypto/scatterwalk.h>
++#include <crypto/aead.h>
+ #include <crypto/internal/aead.h>
+ #include <linux/workqueue.h>
+ #include <linux/spinlock.h>
+@@ -529,6 +530,456 @@ static int ctr_crypt(struct blkcipher_desc *desc,
+ 
+ 	return err;
+ }
++
++static int __ccm_setkey(struct crypto_aead *tfm, const u8 *in_key,
++		      unsigned int key_len)
++{
++	struct crypto_aes_ctx *ctx = crypto_aead_ctx(tfm);
++
++	return aes_set_key_common(crypto_aead_tfm(tfm), ctx, in_key, key_len);
++}
++
++static int __ccm_setauthsize(struct crypto_aead *tfm, unsigned int authsize)
++{
++	if ((authsize & 1) || authsize < 4)
++		return -EINVAL;
++	return 0;
++}
++
++static int set_msg_len(u8 *block, unsigned int msglen, int csize)
++{
++	__be32 data;
++
++	memset(block, 0, csize);
++	block += csize;
++
++	if (csize >= 4)
++		csize = 4;
++	else if (msglen > (1 << (8 * csize)))
++		return -EOVERFLOW;
++
++	data = cpu_to_be32(msglen);
++	memcpy(block - csize, (u8 *)&data + 4 - csize, csize);
++
++	return 0;
++}
++
++static int ccm_init_mac(struct aead_request *req, u8 maciv[], u32 msglen)
++{
++	struct crypto_aead *aead = crypto_aead_reqtfm(req);
++	__be32 *n = (__be32 *)&maciv[AES_BLOCK_SIZE - 8];
++	u32 l = req->iv[0] + 1;
++
++	/* verify that CCM dimension 'L' is set correctly in the IV */
++	if (l < 2 || l > 8)
++		return -EINVAL;
++
++	/* verify that msglen can in fact be represented in L bytes */
++	if (l < 4 && msglen >> (8 * l))
++		return -EOVERFLOW;
++
++	/*
++	 * Even if the CCM spec allows L values of up to 8, the Linux cryptoapi
++	 * uses a u32 type to represent msglen so the top 4 bytes are always 0.
++	 */
++	n[0] = 0;
++	n[1] = cpu_to_be32(msglen);
++
++	memcpy(maciv, req->iv, AES_BLOCK_SIZE - l);
++
++	/*
++	 * Meaning of byte 0 according to CCM spec (RFC 3610/NIST 800-38C)
++	 * - bits 0..2	: max # of bytes required to represent msglen, minus 1
++	 *                (already set by caller)
++	 * - bits 3..5	: size of auth tag (1 => 4 bytes, 2 => 6 bytes, etc)
++	 * - bit 6	: indicates presence of authenticate-only data
++	 */
++	maciv[0] |= (crypto_aead_authsize(aead) - 2) << 2;
++	if (req->assoclen)
++		maciv[0] |= 0x40;
++
++	memset(&req->iv[AES_BLOCK_SIZE - l], 0, l);
++	return set_msg_len(maciv + AES_BLOCK_SIZE - l, msglen, l);
++}
++
++static int compute_mac(struct crypto_aes_ctx *ctx, u8 mac[], u8 *data, int n,
++		       unsigned int ilen, u8 *idata)
++{
++	unsigned int bs = AES_BLOCK_SIZE;
++	u8 *odata = mac;
++	int datalen, getlen;
++
++	datalen = n;
++
++	/* first time in here, block may be partially filled. */
++	getlen = bs - ilen;
++	if (datalen >= getlen) {
++		memcpy(idata + ilen, data, getlen);
++		crypto_xor(odata, idata, bs);
++
++		aesni_enc(ctx, odata, odata);
++		datalen -= getlen;
++		data += getlen;
++		ilen = 0;
++	}
++
++	/* now encrypt rest of data */
++	while (datalen >= bs) {
++		crypto_xor(odata, data, bs);
++
++		aesni_enc(ctx, odata, odata);
++
++		datalen -= bs;
++		data += bs;
++	}
++
++	/* check and see if there's leftover data that wasn't
++	 * enough to fill a block.
++	 */
++	if (datalen) {
++		memcpy(idata + ilen, data, datalen);
++		ilen += datalen;
++	}
++	return ilen;
++}
++
++static unsigned int get_data_to_compute(struct crypto_aes_ctx *ctx, u8 mac[],
++					u8 *idata, struct scatterlist *sg,
++					unsigned int len, unsigned int ilen)
++{
++	struct scatter_walk walk;
++	u8 *data_src;
++	int n;
++
++	scatterwalk_start(&walk, sg);
++
++	while (len) {
++		n = scatterwalk_clamp(&walk, len);
++		if (!n) {
++			scatterwalk_start(&walk, sg_next(walk.sg));
++			n = scatterwalk_clamp(&walk, len);
++		}
++		data_src = scatterwalk_map(&walk);
++
++		ilen = compute_mac(ctx, mac, data_src, n, ilen, idata);
++		len -= n;
++
++		scatterwalk_unmap(data_src);
++		scatterwalk_advance(&walk, n);
++		scatterwalk_done(&walk, 0, len);
++	}
++
++	/* any leftover needs padding and then encrypted */
++	if (ilen) {
++		int padlen;
++		u8 *odata = mac;
++
++		padlen = AES_BLOCK_SIZE - ilen;
++		memset(idata + ilen, 0, padlen);
++		crypto_xor(odata, idata, AES_BLOCK_SIZE);
++
++		aesni_enc(ctx, odata, odata);
++		ilen = 0;
++	}
++	return ilen;
++}
++
++static void ccm_calculate_auth_mac(struct aead_request *req,
++				   struct crypto_aes_ctx *ctx, u8 mac[],
++				   struct scatterlist *src,
++				   unsigned int cryptlen)
++{
++	unsigned int ilen;
++	u8 idata[AES_BLOCK_SIZE];
++	u32 len = req->assoclen;
++
++	aesni_enc(ctx, mac, mac);
++
++	if (len) {
++		struct __packed {
++			__be16 l;
++			__be32 h;
++		} *ltag = (void *)idata;
++
++		/* prepend the AAD with a length tag */
++		if (len < 0xff00) {
++			ltag->l = cpu_to_be16(len);
++			ilen = 2;
++		} else  {
++			ltag->l = cpu_to_be16(0xfffe);
++			ltag->h = cpu_to_be32(len);
++			ilen = 6;
++		}
++
++		ilen = get_data_to_compute(ctx, mac, idata,
++					   req->src, req->assoclen,
++					   ilen);
++	} else {
++		ilen = 0;
++	}
++
++	/* compute plaintext into mac */
++	if (cryptlen) {
++		ilen = get_data_to_compute(ctx, mac, idata,
++					   src, cryptlen, ilen);
++	}
++}
++
++static int __ccm_encrypt(struct aead_request *req)
++{
++	struct crypto_aead *aead = crypto_aead_reqtfm(req);
++	struct crypto_aes_ctx *ctx = aes_ctx(crypto_aead_ctx(aead));
++	struct blkcipher_desc desc = { .info = req->iv };
++	struct blkcipher_walk walk;
++	struct scatterlist src[3], dst[3], *pdst, *sg;
++	u8 __aligned(8) mac[AES_BLOCK_SIZE];
++	u32 len = req->cryptlen;
++	int err;
++
++	err = ccm_init_mac(req, mac, len);
++	if (err)
++		return err;
++
++	sg_init_table(src, 3);
++	sg_set_buf(src, mac, sizeof(mac));
++	sg = scatterwalk_ffwd(src + 1, req->src, req->assoclen);
++	if (sg != src + 1)
++		sg_chain(src, 2, sg);
++
++	pdst = src;
++	if (req->src != req->dst) {
++		sg_init_table(dst, 3);
++		sg_set_buf(dst, mac, sizeof(mac));
++		sg = scatterwalk_ffwd(dst + 1, req->dst, req->assoclen);
++		if (sg != dst + 1)
++			sg_chain(dst, 2, sg);
++		pdst = dst;
++	}
++
++	ccm_calculate_auth_mac(req, ctx, mac, sg_next(src), len);
++
++	len += sizeof(mac);
++	blkcipher_walk_init(&walk, pdst, src, len);
++	err = blkcipher_aead_walk_virt_block(&desc, &walk, aead,
++					     AES_BLOCK_SIZE);
++
++	while ((len = walk.nbytes) >= AES_BLOCK_SIZE) {
++		aesni_ctr_enc(ctx, walk.dst.virt.addr, walk.src.virt.addr,
++			      len & AES_BLOCK_MASK, walk.iv);
++		len &= AES_BLOCK_SIZE - 1;
++		err = blkcipher_walk_done(&desc, &walk, len);
++	}
++	if (walk.nbytes) {
++		ctr_crypt_final(ctx, &walk);
++		err = blkcipher_walk_done(&desc, &walk, 0);
++	}
++
++	if (err)
++		return err;
++
++	/* copy authtag to end of dst */
++	scatterwalk_map_and_copy(mac, sg_next(pdst), req->cryptlen,
++				 crypto_aead_authsize(aead), 1);
++	return 0;
++}
++
++static int __ccm_decrypt(struct aead_request *req)
++{
++	struct crypto_aead *aead = crypto_aead_reqtfm(req);
++	struct crypto_aes_ctx *ctx = aes_ctx(crypto_aead_ctx(aead));
++	unsigned int authsize = crypto_aead_authsize(aead);
++	struct blkcipher_desc desc = { .info = req->iv };
++	struct blkcipher_walk walk;
++	struct scatterlist src[3], dst[3], *pdst, *sg;
++	u8 __aligned(8) authtag[AES_BLOCK_SIZE], mac[AES_BLOCK_SIZE];
++	u32 len;
++	int err;
++
++	if (req->cryptlen < authsize)
++		return -EINVAL;
++
++	err = ccm_init_mac(req, mac, req->cryptlen - authsize);
++	if (err)
++		return err;
++
++	sg_init_table(src, 3);
++	sg_set_buf(src, authtag, sizeof(authtag));
++	sg = scatterwalk_ffwd(src + 1, req->src, req->assoclen);
++	if (sg != src + 1)
++		sg_chain(src, 2, sg);
++
++	pdst = src;
++	if (req->src != req->dst) {
++		sg_init_table(dst, 3);
++		sg_set_buf(dst, authtag, sizeof(authtag));
++		sg = scatterwalk_ffwd(dst + 1, req->dst, req->assoclen);
++		if (sg != dst + 1)
++			sg_chain(dst, 2, sg);
++
++		pdst = dst;
++	}
++
++	scatterwalk_map_and_copy(authtag, sg_next(src),
++				 req->cryptlen - authsize, authsize, 0);
++
++	blkcipher_walk_init(&walk, pdst, src,
++			    req->cryptlen - authsize + sizeof(mac));
++	err = blkcipher_aead_walk_virt_block(&desc, &walk, aead,
++					     AES_BLOCK_SIZE);
++
++	while ((len = walk.nbytes) >= AES_BLOCK_SIZE) {
++		aesni_ctr_enc(ctx, walk.dst.virt.addr, walk.src.virt.addr,
++			      len & AES_BLOCK_MASK, walk.iv);
++		len &= AES_BLOCK_SIZE - 1;
++		err = blkcipher_walk_done(&desc, &walk, len);
++	}
++	if (walk.nbytes) {
++		ctr_crypt_final(ctx, &walk);
++		err = blkcipher_walk_done(&desc, &walk, 0);
++	}
++
++	ccm_calculate_auth_mac(req, ctx, mac, sg_next(pdst),
++			       req->cryptlen - authsize);
++	if (err)
++		return err;
++
++	/* compare calculated auth tag with the stored one */
++	if (crypto_memneq(mac, authtag, authsize))
++		return -EBADMSG;
++	return 0;
++}
++
++struct ccm_async_ctx {
++	struct crypto_aes_ctx ctx;
++	struct crypto_aead *fallback;
++};
++
++static inline struct
++ccm_async_ctx *get_ccm_ctx(struct crypto_aead *aead)
++{
++	return (struct ccm_async_ctx *)
++		PTR_ALIGN((u8 *)
++		crypto_aead_ctx(aead), AESNI_ALIGN);
++}
++
++static int ccm_init(struct crypto_aead *tfm)
++{
++	struct crypto_aead *crypto_tfm;
++	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
++		PTR_ALIGN((u8 *)crypto_aead_ctx(tfm), AESNI_ALIGN);
++
++	crypto_tfm = crypto_alloc_aead("ccm(aes)", 0,
++		CRYPTO_ALG_ASYNC | CRYPTO_ALG_NEED_FALLBACK);
++	if (IS_ERR(crypto_tfm))
++		return PTR_ERR(crypto_tfm);
++
++	ctx->fallback = crypto_tfm;
++	return 0;
++}
++
++static void ccm_exit(struct crypto_aead *tfm)
++{
++	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
++		PTR_ALIGN((u8 *)crypto_aead_ctx(tfm), AESNI_ALIGN);
++
++	if (!IS_ERR_OR_NULL(ctx->fallback))
++		crypto_free_aead(ctx->fallback);
++}
++
++static int ccm_setkey(struct crypto_aead *aead, const u8 *in_key,
++		      unsigned int key_len)
++{
++	struct crypto_tfm *tfm = crypto_aead_tfm(aead);
++	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
++		PTR_ALIGN((u8 *)crypto_aead_ctx(aead), AESNI_ALIGN);
++	int err;
++
++	err = __ccm_setkey(aead, in_key, key_len);
++	if (err)
++		return err;
++
++	/*
++	 * Set the fallback transform to use the same request flags as
++	 * the hardware transform.
++	 */
++	ctx->fallback->base.crt_flags &= ~CRYPTO_TFM_REQ_MASK;
++	ctx->fallback->base.crt_flags |=
++			tfm->crt_flags & CRYPTO_TFM_REQ_MASK;
++	return crypto_aead_setkey(ctx->fallback, in_key, key_len);
++}
++
++static int ccm_setauthsize(struct crypto_aead *aead, unsigned int authsize)
++{
++	struct ccm_async_ctx *ctx = (struct ccm_async_ctx *)
++		PTR_ALIGN((u8 *)crypto_aead_ctx(aead), AESNI_ALIGN);
++	int err;
++
++	err = __ccm_setauthsize(aead, authsize);
++	if (err)
++		return err;
++
++	return crypto_aead_setauthsize(ctx->fallback, authsize);
++}
++
++static int ccm_encrypt(struct aead_request *req)
++{
++	int ret;
++
++	if (!irq_fpu_usable()) {
++		struct crypto_aead *aead = crypto_aead_reqtfm(req);
++		struct ccm_async_ctx *ctx = get_ccm_ctx(aead);
++		struct crypto_aead *fallback = ctx->fallback;
++
++		char aead_req_data[sizeof(struct aead_request) +
++				   crypto_aead_reqsize(fallback)]
++		__aligned(__alignof__(struct aead_request));
++		struct aead_request *aead_req = (void *) aead_req_data;
++
++		memset(aead_req, 0, sizeof(aead_req_data));
++		aead_request_set_tfm(aead_req, fallback);
++		aead_request_set_ad(aead_req, req->assoclen);
++		aead_request_set_crypt(aead_req, req->src, req->dst,
++				       req->cryptlen, req->iv);
++		aead_request_set_callback(aead_req, req->base.flags,
++					  req->base.complete, req->base.data);
++		ret = crypto_aead_encrypt(aead_req);
++	} else {
++		kernel_fpu_begin();
++		ret = __ccm_encrypt(req);
++		kernel_fpu_end();
++	}
++	return ret;
++}
++
++static int ccm_decrypt(struct aead_request *req)
++{
++	int ret;
++
++	if (!irq_fpu_usable()) {
++		struct crypto_aead *aead = crypto_aead_reqtfm(req);
++		struct ccm_async_ctx *ctx = get_ccm_ctx(aead);
++		struct crypto_aead *fallback = ctx->fallback;
++
++		char aead_req_data[sizeof(struct aead_request) +
++				   crypto_aead_reqsize(fallback)]
++		__aligned(__alignof__(struct aead_request));
++		struct aead_request *aead_req = (void *) aead_req_data;
++
++		memset(aead_req, 0, sizeof(aead_req_data));
++		aead_request_set_tfm(aead_req, fallback);
++		aead_request_set_ad(aead_req, req->assoclen);
++		aead_request_set_crypt(aead_req, req->src, req->dst,
++				       req->cryptlen, req->iv);
++		aead_request_set_callback(aead_req, req->base.flags,
++					  req->base.complete, req->base.data);
++		ret = crypto_aead_decrypt(aead_req);
++	} else {
++		kernel_fpu_begin();
++		ret = __ccm_decrypt(req);
++		kernel_fpu_end();
++	}
++	return ret;
++}
+ #endif
+ 
+ static int ablk_ecb_init(struct crypto_tfm *tfm)
+@@ -1437,7 +1888,45 @@ static struct aead_alg aesni_aead_algs[] = { {
+ 		.cra_ctxsize		= sizeof(struct cryptd_aead *),
+ 		.cra_module		= THIS_MODULE,
+ 	},
+-} };
++}, {
++	.ivsize		= AES_BLOCK_SIZE,
++	.maxauthsize	= AES_BLOCK_SIZE,
++	.setkey		= __ccm_setkey,
++	.setauthsize	= __ccm_setauthsize,
++	.encrypt	= __ccm_encrypt,
++	.decrypt	= __ccm_decrypt,
++	.base = {
++		.cra_name		= "__ccm-aes-aesni",
++		.cra_driver_name	= "__driver-ccm-aes-aesni",
++		.cra_priority		= 0,
++		.cra_flags		= CRYPTO_ALG_INTERNAL,
++		.cra_blocksize		= 1,
++		.cra_ctxsize		= sizeof(struct crypto_aes_ctx) +
++						AESNI_ALIGN - 1,
++		.cra_alignmask		= 0,
++		.cra_module		= THIS_MODULE,
++	},
++}, {
++	.base = {
++		.cra_name		= "ccm(aes)",
++		.cra_driver_name	= "ccm-aes-aesni",
++		.cra_priority		= 700,
++		.cra_flags		= CRYPTO_ALG_NEED_FALLBACK,
++		.cra_blocksize		= 1,
++		.cra_ctxsize		= AESNI_ALIGN - 1 +
++						sizeof(struct ccm_async_ctx),
++		.cra_alignmask		= 0,
++		.cra_module		= THIS_MODULE,
++	},
++	.init		= ccm_init,
++	.exit		= ccm_exit,
++	.ivsize		= AES_BLOCK_SIZE,
++	.maxauthsize	= AES_BLOCK_SIZE,
++	.setkey		= ccm_setkey,
++	.setauthsize	= ccm_setauthsize,
++	.encrypt	= ccm_encrypt,
++	.decrypt	= ccm_decrypt,
++}};
+ #else
+ static struct aead_alg aesni_aead_algs[0];
+ #endif
+diff --git a/crypto/testmgr.c b/crypto/testmgr.c
+index c727fb0..2a765ca 100644
+--- a/crypto/testmgr.c
++++ b/crypto/testmgr.c
+@@ -1991,6 +1991,10 @@ static const struct alg_test_desc alg_test_descs[] = {
+ 		.alg = "__driver-cbc-twofish-avx",
+ 		.test = alg_test_null,
+ 	}, {
++		.alg = "__driver-ccm-aes-aesni",
++		.test = alg_test_null,
++		.fips_allowed = 1,
++	}, {
+ 		.alg = "__driver-ecb-aes-aesni",
+ 		.test = alg_test_null,
+ 		.fips_allowed = 1,
