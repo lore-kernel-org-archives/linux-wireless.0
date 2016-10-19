@@ -1,179 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34851 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947400AbcJaWPp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 18:15:45 -0400
-Received: by mail-wm0-f66.google.com with SMTP id 68so13546724wmz.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 15:15:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <wrfj1sywrz2f.fsf@redhat.com>
-References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com>
-From: John Heenan <john@zgus.com>
-Date: Tue, 1 Nov 2016 08:15:43 +1000
-Message-ID: <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com> (sfid-20161031_231551_748403_6DB683C1)
-Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:55827 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S943740AbcJSPAx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:00:53 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        Guenter Roeck <linux@roeck-us.net>
+Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-watchdog@vger.kernel.org,
+        Tomas Winkler <tomas.winkler@intel.com>
+Subject: [char-misc-next 3/5] nfc: mei: use module_mei_cl_driver macro
+Date: Wed, 19 Oct 2016 16:33:29 +0300
+Message-Id: <1476884011-20645-4-git-send-email-tomas.winkler@intel.com> (sfid-20161019_174201_929276_68EEC5CF)
+In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 November 2016 at 07:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> John Heenan <john@zgus.com> writes:
->> The rtl8723bu wireless IC shows evidence of a more agressive approach to
->> power saving, powering down its RF side when there is no wireless
->> interfacing but leaving USB interfacing intact. This makes the wireless
->> IC more suitable for use in devices which need to keep their power use
->> as low as practical, such as tablets and Surface Pro type devices.
->>
->> In effect this means that a full initialisation must be performed
->> whenever a wireless interface is brought up. It also means that
->> interpretations of power status from general wireless registers should
->> not be relied on to influence an init sequence.
->>
->> The patch works by forcing a fuller initialisation and forcing it to
->> occur more often in code paths (such as occurs during a low level
->> authentication that initiates wireless interfacing).
->>
->> The initialisation sequence is now more consistent with code based
->> directly on vendor code. For example while the vendor derived code
->> interprets a register as indcating a particular powered state, it does
->> not use this information to influence its init sequence.
->>
->> The rtl8723bu device has a unique USB VID and PID. This is taken
->> advantage of for the patch to ensure only rtl8723bu devices are affected
->> by this patch.
->>
->> With this patch wpa_supplicant reliably and consistently connects with
->> an AP. Before a workaround such as executing rmmod and modprobe before
->> each call to wpa_supplicant worked with some distributions.
->>
->> Signed-off-by: John Heenan <john@zgus.com>
->> ---
->>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 24 ++++++++++++++++++----
->>  1 file changed, 20 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> index 04141e5..f36e674 100644
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> @@ -79,6 +79,8 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
->>  #define RTL8XXXU_TX_URB_LOW_WATER    25
->>  #define RTL8XXXU_TX_URB_HIGH_WATER   32
->>
->> +#define USB_PRODUCT_ID_RTL8723BU 0xb720
->> +
->
-> Absolutely not! You have no guarantee that this is the only id used for
-> 8723bu devices, and adding a #define for each is not going to happen.
+Replace boilerplate driver registration with module_mei_cl_driver
+macro in pn544 and microread devices.
 
-Thanks for you reply.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/nfc/microread/mei.c | 23 +----------------------
+ drivers/nfc/pn544/mei.c     | 23 +----------------------
+ 2 files changed, 2 insertions(+), 44 deletions(-)
 
-I have no problem with that. However the patch does get the point
-across in a minimalist and efficient way of what the issues are.
-
-Currently there is no property available to determine the information required.
-
->
->>  static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
->>                                 struct rtl8xxxu_rx_urb *rx_urb);
->>
->> @@ -3892,6 +3894,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->>       u8 val8;
->>       u16 val16;
->>       u32 val32;
->> +  struct usb_device_descriptor *udesc = &priv->udev->descriptor;
->
-> Indentaiton
-
-OK. Missed that one.
-
->
->>       /* Check if MAC is already powered on */
->>       val8 = rtl8xxxu_read8(priv, REG_CR);
->> @@ -3900,7 +3903,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->>        * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
->>        * initialized. First MAC returns 0xea, second MAC returns 0x00
->>        */
->> -     if (val8 == 0xea)
->> +     if (val8 == 0xea
->> +                     || (udesc->idVendor == USB_VENDOR_ID_REALTEK
->> +                     &&  udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
->>               macpower = false;
->>       else
->>               macpower = true;
->
-> Please respect proper kernel coding style!
-
-I don't know what you mean. Your code has real tabs. My code has real
-tabs. The kernel style goes on about tabs being 8 spaces. So do you
-want: real tabs or real spaces?
-
-You said no lines over 80 columns long. This is what i have done.
-
->
->> @@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
->>       struct rtl8xxxu_tx_urb *tx_urb;
->>       unsigned long flags;
->>       int ret, i;
->> +     struct usb_device_descriptor *udesc = &priv->udev->descriptor;
->>
->>       ret = 0;
->>
->> +     if(udesc->idVendor == USB_VENDOR_ID_REALTEK
->> +                     && udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
->> +             ret = rtl8xxxu_init_device(hw);
->> +             if (ret)
->> +                     goto error_out;
->> +     }
->> +
->
-> As mentioned previously, if this is to be changed here, it has to be
-> matched in the _stop section too.
-
-I looked at this and could not find a matching function. I will have a
-look again.
-
->  It also has to be investigated exactly
-> why this matters for 8723bu. It is possible this matters for other
-> devices, but we need to find out exactly what causes this not moving a
-> major block of init code around like this.
-
-I have no problem with this.
-
-Given what you said yesterday we are not going to get definitive
-answers. It is going to have to be trial and error while tracing
-through what vendor code does.
-
-Apparently as far as Realtek are concerned, we are nobodies and they
-want nothing to do with us.
-
->
->>       init_usb_anchor(&priv->rx_anchor);
->>       init_usb_anchor(&priv->tx_anchor);
->>       init_usb_anchor(&priv->int_anchor);
->> @@ -6080,9 +6093,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
->>               goto exit;
->>       }
->>
->> -     ret = rtl8xxxu_init_device(hw);
->> -     if (ret)
->> +     if(!(id->idVendor == USB_VENDOR_ID_REALTEK
->> +                     && id->idProduct == USB_PRODUCT_ID_RTL8723BU)) {
->> +             ret = rtl8xxxu_init_device(hw);
->> +             if (ret)
->>               goto exit;
->> +     }
->
-> Again, this coding style abuse will never go into this driver,
-
-As above, what abuse? I am not being facetious. Just puzzled.
-
-> Jes
-
-Again have a nice day!
-
-John
+diff --git a/drivers/nfc/microread/mei.c b/drivers/nfc/microread/mei.c
+index 3092501f26c4..eb5eddf1794e 100644
+--- a/drivers/nfc/microread/mei.c
++++ b/drivers/nfc/microread/mei.c
+@@ -82,28 +82,7 @@ static struct mei_cl_driver microread_driver = {
+ 	.remove = microread_mei_remove,
+ };
+ 
+-static int microread_mei_init(void)
+-{
+-	int r;
+-
+-	pr_debug(DRIVER_DESC ": %s\n", __func__);
+-
+-	r = mei_cldev_driver_register(&microread_driver);
+-	if (r) {
+-		pr_err(MICROREAD_DRIVER_NAME ": driver registration failed\n");
+-		return r;
+-	}
+-
+-	return 0;
+-}
+-
+-static void microread_mei_exit(void)
+-{
+-	mei_cldev_driver_unregister(&microread_driver);
+-}
+-
+-module_init(microread_mei_init);
+-module_exit(microread_mei_exit);
++module_mei_cl_driver(microread_driver);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION(DRIVER_DESC);
+diff --git a/drivers/nfc/pn544/mei.c b/drivers/nfc/pn544/mei.c
+index 46d0eb24eef9..ad57a8ec00d6 100644
+--- a/drivers/nfc/pn544/mei.c
++++ b/drivers/nfc/pn544/mei.c
+@@ -82,28 +82,7 @@ static struct mei_cl_driver pn544_driver = {
+ 	.remove = pn544_mei_remove,
+ };
+ 
+-static int pn544_mei_init(void)
+-{
+-	int r;
+-
+-	pr_debug(DRIVER_DESC ": %s\n", __func__);
+-
+-	r = mei_cldev_driver_register(&pn544_driver);
+-	if (r) {
+-		pr_err(PN544_DRIVER_NAME ": driver registration failed\n");
+-		return r;
+-	}
+-
+-	return 0;
+-}
+-
+-static void pn544_mei_exit(void)
+-{
+-	mei_cldev_driver_unregister(&pn544_driver);
+-}
+-
+-module_init(pn544_mei_init);
+-module_exit(pn544_mei_exit);
++module_mei_cl_driver(pn544_driver);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION(DRIVER_DESC);
+-- 
+2.7.4
