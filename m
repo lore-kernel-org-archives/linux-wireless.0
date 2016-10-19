@@ -1,66 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:51927 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965191AbcJXPmf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50218 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S944296AbcJSPSc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 11:42:35 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] cw1200: fix bogus maybe-uninitialized warning
-Date: Mon, 24 Oct 2016 17:41:49 +0200
-Message-Id: <20161024154215.2863586-1-arnd@arndb.de> (sfid-20161024_174259_250537_8E637B35)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 19 Oct 2016 11:18:32 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Sharon Dvir <sharon.dvir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:51 +0300
+Message-Id: <20161019100755.23874-7-luca@coelho.fi> (sfid-20161019_171835_976852_F589B642)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 06/10] iwlwifi: pcie: give a meaningful name to interrupt request
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On x86, the cw1200 driver produces a rather silly warning about the
-possible use of the 'ret' variable without an initialization
-presumably after being confused by the architecture specific definition
-of WARN_ON:
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-drivers/net/wireless/st/cw1200/wsm.c: In function ‘wsm_handle_rx’:
-drivers/net/wireless/st/cw1200/wsm.c:1457:9: error: ‘ret’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+Instead of passing DRV_NAME pass a string that
+represents the reason for the interrupt.
 
-As the driver just checks the same variable twice here, we can simplify
-it by removing the second condition, which makes it more readable and
-avoids the warning.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/st/cw1200/wsm.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 29 ++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
-index 680d60eabc75..094e6637ade2 100644
---- a/drivers/net/wireless/st/cw1200/wsm.c
-+++ b/drivers/net/wireless/st/cw1200/wsm.c
-@@ -385,14 +385,13 @@ static int wsm_multi_tx_confirm(struct cw1200_common *priv,
- 	if (WARN_ON(count <= 0))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index ae95533..b10e363 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1598,6 +1598,29 @@ static void iwl_pcie_irq_set_affinity(struct iwl_trans *trans)
+ 	}
+ }
  
--	if (count > 1) {
--		/* We already released one buffer, now for the rest */
--		ret = wsm_release_tx_buffer(priv, count - 1);
--		if (ret < 0)
--			return ret;
--		else if (ret > 0)
--			cw1200_bh_wakeup(priv);
--	}
-+	/* We already released one buffer, now for the rest */
-+	ret = wsm_release_tx_buffer(priv, count - 1);
-+	if (ret < 0)
-+		return ret;
++static const char *queue_name(struct device *dev,
++			      struct iwl_trans_pcie *trans_p, int i)
++{
++	if (trans_p->shared_vec_mask) {
++		int vec = trans_p->shared_vec_mask &
++			  IWL_SHARED_IRQ_FIRST_RSS ? 1 : 0;
 +
-+	if (ret > 0)
-+		cw1200_bh_wakeup(priv);
++		if (i == 0)
++			return DRV_NAME ": shared IRQ";
++
++		return devm_kasprintf(dev, GFP_KERNEL,
++				      DRV_NAME ": queue %d", i + vec);
++	}
++	if (i == 0)
++		return DRV_NAME ": default queue";
++
++	if (i == trans_p->alloc_vecs - 1)
++		return DRV_NAME ": exception";
++
++	return devm_kasprintf(dev, GFP_KERNEL,
++			      DRV_NAME  ": queue %d", i);
++}
++
+ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
+ 				      struct iwl_trans_pcie *trans_pcie)
+ {
+@@ -1606,6 +1629,10 @@ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
+ 	for (i = 0; i < trans_pcie->alloc_vecs; i++) {
+ 		int ret;
+ 		struct msix_entry *msix_entry;
++		const char *qname = queue_name(&pdev->dev, trans_pcie, i);
++
++		if (!qname)
++			return -ENOMEM;
  
- 	cw1200_debug_txed_multi(priv, count);
- 	for (i = 0; i < count; ++i) {
+ 		msix_entry = &trans_pcie->msix_entries[i];
+ 		ret = devm_request_threaded_irq(&pdev->dev,
+@@ -1615,7 +1642,7 @@ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
+ 						iwl_pcie_irq_msix_handler :
+ 						iwl_pcie_irq_rx_msix_handler,
+ 						IRQF_SHARED,
+-						DRV_NAME,
++						qname,
+ 						msix_entry);
+ 		if (ret) {
+ 			IWL_ERR(trans_pcie->trans,
 -- 
-2.9.0
+2.9.3
