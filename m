@@ -1,30 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52764 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35755 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936517AbcJXOQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 10:16:06 -0400
-Message-ID: <1477318562.4085.28.camel@sipsolutions.net> (sfid-20161024_161619_492331_FC0F4724)
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if
- requested
+        id S945496AbcJSPoM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:44:12 -0400
+Message-ID: <1476862995.5927.3.camel@sipsolutions.net> (sfid-20161019_174446_803123_C3B2628E)
+Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
-Date: Mon, 24 Oct 2016 16:16:02 +0200
-In-Reply-To: <3178350.ZYYEYN7rIx@prime>
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com>
-         <20161024121129.GA8925@prodigo.lan>
-         <1477316004.4085.17.camel@sipsolutions.net> <3178350.ZYYEYN7rIx@prime>
+To: Herbert Xu <herbert@gondor.apana.org.au>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Andy Lutomirski <luto@amacapital.net>,
+        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jouni Malinen <j@w1.fi>
+Date: Wed, 19 Oct 2016 09:43:15 +0200
+In-Reply-To: <20161019033157.GA1457@gondor.apana.org.au>
+References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
+         <1476689310.19992.1.camel@sipsolutions.net>
+         <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
+         <CALCETrUWW2A1XK7BzcajTcBzg58SDUCTE35Hj1vmbywTLCe2vQ@mail.gmail.com>
+         <CAKv+Gu-25OvTSbyE06Ln8N+HsqNyV1T6oOudK2tyAAOmmXXqgA@mail.gmail.com>
+         <20161019033157.GA1457@gondor.apana.org.au>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-24 at 15:42 +0200, Simon Wunderlich wrote:
+On Wed, 2016-10-19 at 11:31 +0800, Herbert Xu wrote:
+> On Mon, Oct 17, 2016 at 06:21:14PM +0100, Ard Biesheuvel wrote:
+> > 
+> > 
+> > Annoyingly, all this complication with scatterlists etc is for
+> > doing
+> > asynchronous crypto via DMA capable crypto accelerators, and the
+> > networking code (ipsec as well as mac80211, afaik) only allow
+> > synchronous in the first place, given that they execute in softirq
+> > context.
+> 
+> I'm still thinking about the issue (in particular, whether we
+> should continue to rely on the request context being SG-capable
+> or allow it to be on the stack for AEAD).
 
-> Otherwise, it would be pretty much impossible to perform CSAs to
-> another DFS channel.
+:)
 
-I was told that to do that you'd need another NIC that's pre-CAC'ing
-another channel.
+> But IPsec definitely supports async crypto.  In fact it was the
+> very first user of async crypto.
+
+Yeah.
+
+> mac80211 on the other hand is currently sync-only.
+
+We could probably make mac80211 do that too, but can we guarantee in-
+order processing? Anyway, it's pretty low priority, maybe never
+happening, since hardly anyone really uses "software" crypto, the wifi
+devices mostly have it built in anyway.
+
+(One problem is that the skb->cb is already completely full, so we
+can't stash away the AAD there)
 
 johannes
