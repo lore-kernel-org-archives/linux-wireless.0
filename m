@@ -1,140 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52840 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754005AbcJTNLg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50142 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S943177AbcJSOzE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 20 Oct 2016 09:11:36 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        Xinming Hu <huxm@marvell.com>,
-        "abhishekbh@google.com" <abhishekbh@google.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: RE: [PATCH v4 1/3] mwifiex: reset card->adapter during device
- unregister
-Date: Thu, 20 Oct 2016 13:11:31 +0000
-Message-ID: <b1231f275ecc4e45a9c98dadb1d585f1@SC-EXCH04.marvell.com> (sfid-20161020_151140_917882_DFBD096A)
-References: <1475777186-20486-1-git-send-email-akarwar@marvell.com>
- <20161010205332.GB11254@localhost> <20161011002238.GC19969@localhost>
-In-Reply-To: <20161011002238.GC19969@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Wed, 19 Oct 2016 10:55:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 10:27:25 +0300
+Message-Id: <20161019072726.22018-7-luca@coelho.fi> (sfid-20161019_165618_581818_1A7B4D76)
+In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
+References: <20161019072726.22018-1-luca@coelho.fi>
+Subject: [PATCH 6/7] iwlwifi: pcie: fix SPLC structure parsing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian/Dmitry,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Tuesday, October 11, 2016 5:53 AM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> rajatja@google.com; Xinming Hu; abhishekbh@google.com; Dmitry Torokhov
-> Subject: Re: [PATCH v4 1/3] mwifiex: reset card->adapter during device
-> unregister
-> 
-> + Dmitry
-> 
-> Hi Amit,
-> 
-> On Mon, Oct 10, 2016 at 01:53:32PM -0700, Brian Norris wrote:
-> > On Thu, Oct 06, 2016 at 11:36:24PM +0530, Amitkumar Karwar wrote:
-> > > From: Xinming Hu <huxm@marvell.com>
-> > >
-> > > card->adapter gets initialized during device registration.
-> > > As it's not cleared, we may end up accessing invalid memory in some
-> > > corner cases. This patch fixes the problem.
-> > >
-> > > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > > ---
-> > > v4: Same as v1, v2, v3
-> > > ---
-> > >  drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
-> > > drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
-> > >  2 files changed, 2 insertions(+)
-> > >
-> > > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > index f1eeb73..ba9e068 100644
-> > > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> > > @@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct
-> mwifiex_adapter *adapter)
-> > >  				pci_disable_msi(pdev);
-> > >  	       }
-> > >  	}
-> > > +	card->adapter = NULL;
-> > >  }
-> > >
-> > >  /* This function initializes the PCI-E host memory space, WCB
-> rings, etc.
-> > > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > index 8718950..4cad1c2 100644
-> > > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> > > @@ -2066,6 +2066,7 @@ mwifiex_unregister_dev(struct mwifiex_adapter
-> *adapter)
-> > >  	struct sdio_mmc_card *card = adapter->card;
-> > >
-> > >  	if (adapter->card) {
-> > > +		card->adapter = NULL;
-> > >  		sdio_claim_host(card->func);
-> > >  		sdio_disable_func(card->func);
-> > >  		sdio_release_host(card->func);
-> >
-> > As discussed on v1, I had qualms about the raciness between
-> > reads/writes of card->adapter, but I believe we:
-> > (a) can't have any command activity while writing the ->adapter field
-> > (either we're just init'ing the device, or we've disabled interrupts
-> > and are tearing it down) and
-> > (b) can't have a race between suspend()/resume() and unregister_dev(),
-> > since unregister_dev() is called from device remove() (which should
-> > not be concurrent with suspend()).
-> >
-> > Also, I thought you had the same problem in usb.c, but in fact, you
-> > fixed that ages ago here:
-> >
-> > 353d2a69ea26 mwifiex: fix issues in driver unload path for USB
-> > chipsets
-> >
-> > Would be nice if fixes were bettery synchronized across the three
-> > interface drivers you support. We seem to be discovering unnecessary
-> > divergence on a few points recently.
-> >
-> > At any rate:
-> >
-> > Reviewed-by: Brian Norris <briannorris@chromium.org>
-> > Tested-by: Brian Norris <briannorris@chromium.org>
-> 
-> Dmitry helped me re-realize my original qualms:
-> 
-> mwifiex_unregister_dev() is called in the failure path for your async FW
-> request, and so it may race with suspend(). So I retract my Reviewed-by.
-> Sorry.
+The SPLC data parsing is too restrictive and was not trying find the
+correct element for WiFi.  This causes problems with some BIOSes where
+the SPLC method exists, but doesn't have a WiFi entry on the first
+element of the list.  The domain type values are also incorrect
+according to the specification.
 
-Thanks for your comments.
+Fix this by complying with the actual specification.
 
-Actually description for this patch was ambiguous and incorrect. Sorry for that. This patch doesn't fix any race. In fact, we don't have a race between init and remove threads due to semaphore usage as per design. This patch just adds missing "card->adapter=NULL" so that when teardown/remove thread starts after init failure, it won't try freeing already freed things.
+Additionally, replace all occurrences of SPLX to SPLC, since SPLX is
+only a structure internal to the ACPI tables, and may not even exist.
 
-I have updated patch description in v5 series.
+Fixes: bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power limitations")
+Reported-by: Chris Rorvick <chris@rorvick.com>
+Tested-by: Paul Bolle <pebolle@tiscali.nl>
+Tested-by: Chris Rorvick <chris@rorvick.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 79 ++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 31 deletions(-)
 
-You are right. We may have a race between init failure and suspend thread. I have prepared 4th patch in my v5 series to address this.
-
-> 
-> I'm going to look into converting to asynchronous device probing, which
-> might remove the need for async FW request, and would therefore resolve
-> both patch 1 and 3's races without any additional complicated hacks. But
-> I'm not sure if that will satisfy all mwifiex users well enough. I'll
-> have to give it a little more thought. Any thoughts from your side,
-> Amit?
-> 
-
-This is not needed. 4th patch in V5 series would take care of this race.
-I will be posting v5 series shortly.
-
-Regards,
-Amitkumar
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 001be40..2f8134b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -541,48 +541,64 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
+ 
+ #ifdef CONFIG_ACPI
+-#define SPL_METHOD		"SPLC"
+-#define SPL_DOMAINTYPE_MODULE	BIT(0)
+-#define SPL_DOMAINTYPE_WIFI	BIT(1)
+-#define SPL_DOMAINTYPE_WIGIG	BIT(2)
+-#define SPL_DOMAINTYPE_RFEM	BIT(3)
++#define ACPI_SPLC_METHOD	"SPLC"
++#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
+ 
+-static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
++static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
+ {
+-	union acpi_object *limits, *domain_type, *power_limit;
+-
+-	if (splx->type != ACPI_TYPE_PACKAGE ||
+-	    splx->package.count != 2 ||
+-	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
+-	    splx->package.elements[0].integer.value != 0) {
+-		IWL_ERR(trans, "Unsupported splx structure\n");
++	union acpi_object *data_pkg, *dflt_pwr_limit;
++	int i;
++
++	/* We need at least two elements, one for the revision and one
++	 * for the data itself.  Also check that the revision is
++	 * supported (currently only revision 0).
++	*/
++	if (splc->type != ACPI_TYPE_PACKAGE ||
++	    splc->package.count < 2 ||
++	    splc->package.elements[0].type != ACPI_TYPE_INTEGER ||
++	    splc->package.elements[0].integer.value != 0) {
++		IWL_DEBUG_INFO(trans,
++			       "Unsupported structure returned by the SPLC method.  Ignoring.\n");
+ 		return 0;
+ 	}
+ 
+-	limits = &splx->package.elements[1];
+-	if (limits->type != ACPI_TYPE_PACKAGE ||
+-	    limits->package.count < 2 ||
+-	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
+-	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
+-		IWL_ERR(trans, "Invalid limits element\n");
+-		return 0;
++	/* loop through all the packages to find the one for WiFi */
++	for (i = 1; i < splc->package.count; i++) {
++		union acpi_object *domain;
++
++		data_pkg = &splc->package.elements[i];
++
++		/* Skip anything that is not a package with the right
++		 * amount of elements (i.e. at least 2 integers).
++		 */
++		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
++		    data_pkg->package.count < 2 ||
++		    data_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
++		    data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
++			continue;
++
++		domain = &data_pkg->package.elements[0];
++		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
++			break;
++
++		data_pkg = NULL;
+ 	}
+ 
+-	domain_type = &limits->package.elements[0];
+-	power_limit = &limits->package.elements[1];
+-	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
+-		IWL_DEBUG_INFO(trans, "WiFi power is not limited\n");
++	if (!data_pkg) {
++		IWL_DEBUG_INFO(trans,
++			       "No element for the WiFi domain returned by the SPLC method.\n");
+ 		return 0;
+ 	}
+ 
+-	return power_limit->integer.value;
++	dflt_pwr_limit = &data_pkg->package.elements[1];
++	return dflt_pwr_limit->integer.value;
+ }
+ 
+ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ {
+ 	acpi_handle pxsx_handle;
+ 	acpi_handle handle;
+-	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
++	struct acpi_buffer splc = {ACPI_ALLOCATE_BUFFER, NULL};
+ 	acpi_status status;
+ 
+ 	pxsx_handle = ACPI_HANDLE(&pdev->dev);
+@@ -593,23 +609,24 @@ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
+ 	}
+ 
+ 	/* Get the method's handle */
+-	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
++	status = acpi_get_handle(pxsx_handle, (acpi_string)ACPI_SPLC_METHOD,
++				 &handle);
+ 	if (ACPI_FAILURE(status)) {
+-		IWL_DEBUG_INFO(trans, "SPL method not found\n");
++		IWL_DEBUG_INFO(trans, "SPLC method not found\n");
+ 		return;
+ 	}
+ 
+ 	/* Call SPLC with no arguments */
+-	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
++	status = acpi_evaluate_object(handle, NULL, NULL, &splc);
+ 	if (ACPI_FAILURE(status)) {
+ 		IWL_ERR(trans, "SPLC invocation failed (0x%x)\n", status);
+ 		return;
+ 	}
+ 
+-	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
++	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, splc.pointer);
+ 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
+ 		       trans->dflt_pwr_limit);
+-	kfree(splx.pointer);
++	kfree(splc.pointer);
+ }
+ 
+ #else /* CONFIG_ACPI */
+-- 
+2.9.3
