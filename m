@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39229 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754654AbcJYWp3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 18:45:29 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 8/8] mac80211: Claim Fast Initial Link Setup (FILS) support
-Date: Wed, 26 Oct 2016 01:44:49 +0300
-Message-ID: <1477435489-8555-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004534_502575_254BBC62)
-In-Reply-To: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:55827 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S943765AbcJSPA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:00:58 -0400
+From: Tomas Winkler <tomas.winkler@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Wim Van Sebroeck <wim@iguana.be>,
+        Guenter Roeck <linux@roeck-us.net>
+Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-watchdog@vger.kernel.org,
+        Tomas Winkler <tomas.winkler@intel.com>
+Subject: [char-misc-next 2/5] watchdog: mei_wdt: use module_mei_cl_driver macro
+Date: Wed, 19 Oct 2016 16:33:28 +0300
+Message-Id: <1476884011-20645-3-git-send-email-tomas.winkler@intel.com> (sfid-20161019_174150_683185_81DD8F39)
+In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the previous commits, initial FILS support is now functional in
-mac80211-based drivers for both AP and stations roles.
+Replace boilerplate driver registration with module_mei_cl_driver macro.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- net/mac80211/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/watchdog/mei_wdt.c | 20 +-------------------
+ 1 file changed, 1 insertion(+), 19 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0d9163c..3e9ca80 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -549,6 +549,7 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
- 			   NL80211_FEATURE_MAC_ON_CREATE |
- 			   NL80211_FEATURE_USERSPACE_MPM |
- 			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_FILS);
+diff --git a/drivers/watchdog/mei_wdt.c b/drivers/watchdog/mei_wdt.c
+index 630bd189f167..116be477c8fd 100644
+--- a/drivers/watchdog/mei_wdt.c
++++ b/drivers/watchdog/mei_wdt.c
+@@ -699,25 +699,7 @@ static struct mei_cl_driver mei_wdt_driver = {
+ 	.remove = mei_wdt_remove,
+ };
  
- 	if (!ops->hw_scan)
- 		wiphy->features |= NL80211_FEATURE_LOW_PRIORITY_SCAN |
+-static int __init mei_wdt_init(void)
+-{
+-	int ret;
+-
+-	ret = mei_cldev_driver_register(&mei_wdt_driver);
+-	if (ret) {
+-		pr_err(KBUILD_MODNAME ": module registration failed\n");
+-		return ret;
+-	}
+-	return 0;
+-}
+-
+-static void __exit mei_wdt_exit(void)
+-{
+-	mei_cldev_driver_unregister(&mei_wdt_driver);
+-}
+-
+-module_init(mei_wdt_init);
+-module_exit(mei_wdt_exit);
++module_mei_cl_driver(mei_wdt_driver);
+ 
+ MODULE_AUTHOR("Intel Corporation");
+ MODULE_LICENSE("GPL");
 -- 
-1.9.1
+2.7.4
