@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48708 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:50192 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754361AbcJMLzO (ORCPT
+        with ESMTP id S944575AbcJSPST (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 07:55:14 -0400
-Message-ID: <1476358222.3880.21.camel@coelho.fi> (sfid-20161013_135519_972069_302A3AD5)
+        Wed, 19 Oct 2016 11:18:19 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: Paul Bolle <pebolle@tiscali.nl>, linux-wireless@vger.kernel.org,
-        chris@rorvick.com
-Cc: linuxwifi@intel.com, emmanuel.grumbach@intel.com,
-        johannes@sipsolutions.net, kvalo@codeaurora.org,
-        oren.givon@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 13 Oct 2016 14:30:22 +0300
-In-Reply-To: <1476358075.1999.5.camel@tiscali.nl>
-References: <1476349269.3880.18.camel@coelho.fi>
-         <20161013102155.14547-1-luca@coelho.fi>
-         <1476358075.1999.5.camel@tiscali.nl>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 19 Oct 2016 13:07:48 +0300
+Message-Id: <20161019100755.23874-4-luca@coelho.fi> (sfid-20161019_171824_661544_D9672D26)
+In-Reply-To: <20161019100755.23874-1-luca@coelho.fi>
+References: <20161019100755.23874-1-luca@coelho.fi>
+Subject: [PATCH 03/10] iwlwifi: mvm: support MONITOR vif in DQA mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-13 at 13:27 +0200, Paul Bolle wrote:
-> Luca,
-> 
-> On Thu, 2016-10-13 at 13:21 +0300, Luca Coelho wrote:
-> > Could you please give this a spin? I have tested it with some handmade
-> > ACPI tables in QEMU and it seems to work fine now.
-> 
-> 
-> Tested-by: Paul Bolle <pebolle@tiscali.nl>
-> 
-> Not that this test was worth a lot: it builds cleanly (on top of
-> 4.8.1), the error at boot is gone, obviously, and wifi still works (as
-> you're reading a message that was sent out over wifi). And I haven't
-> even tested this on another machine than my XPS 13 (9350).
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Thanks for testing!
+In DQA mode the TXQs are allocated on demand, so make
+sure the sniffer STA tfd_queue_msk isn't set.
 
-I forgot to say... could you load the iwlwifi module with debug=0x01
-(module parameter), so we can see the messages the driver is printing
-when it doesn't find a proper structure?
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
---
-Luca.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 6b962d6..9a91203 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -899,9 +899,11 @@ static int iwl_mvm_mac_ctxt_cmd_listener(struct iwl_mvm *mvm,
+ 
+ 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
+ 
+-	for (i = 0; i < IEEE80211_NUM_ACS; i++)
+-		if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
+-			tfd_queue_msk |= BIT(vif->hw_queue[i]);
++	if (!iwl_mvm_is_dqa_supported(mvm)) {
++		for (i = 0; i < IEEE80211_NUM_ACS; i++)
++			if (vif->hw_queue[i] != IEEE80211_INVAL_HW_QUEUE)
++				tfd_queue_msk |= BIT(vif->hw_queue[i]);
++	}
+ 
+ 	cmd.filter_flags = cpu_to_le32(MAC_FILTER_IN_PROMISC |
+ 				       MAC_FILTER_IN_CONTROL_AND_MGMT |
+-- 
+2.9.3
