@@ -1,103 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36879 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754824AbcJGOeC (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34906 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756436AbcJTJgi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 10:34:02 -0400
-Received: by mail-wm0-f50.google.com with SMTP id b201so42934390wmb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 07 Oct 2016 07:34:01 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8d01e83b-800d-bba4-b948-abbdc5188f6b@broadcom.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
- <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
- <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com>
- <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com> <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com>
- <8d01e83b-800d-bba4-b948-abbdc5188f6b@broadcom.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Fri, 7 Oct 2016 16:33:59 +0200
-Message-ID: <CANfLQra_Vh4cnHvpzU9yxv4_6SJEc1LN8Vqm4-11thOLvGxY2Q@mail.gmail.com> (sfid-20161007_163406_390790_6A6FC39B)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Thu, 20 Oct 2016 05:36:38 -0400
+Received: by mail-pf0-f176.google.com with SMTP id s8so33352657pfj.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2016 02:36:37 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v2] staging: wilc1000: Remove unused function wilc_lock_timeout
+Date: Thu, 20 Oct 2016 15:06:30 +0530
+Message-Id: <1476956190-7507-1-git-send-email-binoy.jayan@linaro.org> (sfid-20161020_113714_740470_EB628D81)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 6, 2016 at 10:25 AM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 6-10-2016 10:07, Gucea Doru wrote:
->> On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 4-10-2016 13:39, Gucea Doru wrote:
->>>> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
->>>>> <arend.vanspriel@broadcom.com> wrote:
->>>>>>
->>>>>>
->>>>>> On 29-09-16 13:32, Gucea Doru wrote:
->>>>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->>>>>>>> What is the decision triggering the exit from the PS mode immediately
->>>>>>>> after the ping request? I am asking this because 802.11 PS legacy
->>>>>>>> specifies that the client should wait for a beacon with TIM set in
->>>>>>>> order to wake up: in my case, there is no beacon between the ping
->>>>>>>> request message and the Null frame that announces the exit from the PS
->>>>>>>> mode.
->>>>>>>
->>>>>>>
->>>>>>> Any help would be highly appreciated :)
->>>>>>
->>>>>> Actually though I already sent you are reply, but alas here it is.
->>>>>>
->>>>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
->>>>>> drivers. Regardless your question is more for firmware running on the
->>>>>> device. So like the same behavior would be observed when using brcmfmac
->>>>>> with same firmware.
->>>>>>
->>>>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
->>>>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
->>>>>>> shall issue a PS Poll". In my capture there are cases when the STA
->>>>>>> exits the PS mode without waiting for a beacon.
->>>>>>
->>>>>> It is a bit tricky, but the standard does not explicitly say the STA
->>>>>> should be in power-save at any other time. So it is difficult to say
->>>>>> what event occurred on the STA side to exit PS mode. Also STA means
->>>>>> P2P-Client as you say. That means that you have multiple interfaces:
->>>>>> regular STA and P2P-Client. So is the STA connected to some other AP or
->>>>>> just not connected. wpa_supplicant will do intermittent scan or initiate
->>>>>> scheduled scan by which firmware will scan at a certain interval. That
->>>>>> is just some things I can come up with and I am sure there are more.
->>>>
->>>> I agree that there may be some events belonging to the regular STA
->>>> interface that could trigger the Null Frame (which includes the exit
->>>> from PS Mode). However, I would expect to see some management frames
->>>> in the air before/after the Null Packet (e.g.: a Probe request in case
->>>> of a scheduled scan). But in my case the trigger for the Null frame
->>>> seems to be the ping request packet, the scenario is the same every
->>>> time: ping request -> Block ACK -> Null Frame (Wireshark trace
->>>> confirms this behavior).
->>>>
->>>> I thought that you had a power save optimization algorithm that keeps
->>>> the card on a few milliseconds just to see if we can have a fast reply
->>>> from the peer. Does this ring a bell? :)
->>>
->>> It does not. That would be implemented in firmware. As said I am working
->>> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
->>>
->>
->> Arend, could you please redirect me to a Broadcom firmware maintainer?
->
-> Can you please elaborate on your platform, broadcom chipset, and what
-> version of bcmdhd you are using.
->
+Semaphore are going away in the future, so remove the unused function
+wilc_lock_timeout which calls a semaphore api but has no users.
 
-Platform: Nexus 5 running CM13 (Android 6.0.1)
-Broadcom chipset: BCM4339 Wi-Fi Chipset
-bcmdhd version:Dongle Host Driver, version 1.88.45 (r)
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
 
-Do you need more information?
+They following is a patch [v2] which removes semaphores from wilc1000.
+Its part of a bigger effort to eliminate all semaphores
+from the linux kernel.
 
-Thank you,
-Doru
+Arnd, Thank you for reviewing. Removed the prototype as well.
+
+ drivers/staging/wilc1000/linux_wlan.c         | 11 -----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 -
+ 2 files changed, 12 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 6370a5e..470d59f 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -218,17 +218,6 @@ static void deinit_irq(struct net_device *dev)
+ 	}
+ }
+ 
+-int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+-{
+-	/* FIXME: replace with mutex_lock or wait_for_completion */
+-	int error = -1;
+-
+-	if (vp)
+-		error = down_timeout(vp,
+-				     msecs_to_jiffies(timeout));
+-	return error;
+-}
+-
+ void wilc_mac_indicate(struct wilc *wilc, int flag)
+ {
+ 	int status;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index ec6b167..d431673 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -225,7 +225,6 @@ struct WILC_WFI_mon_priv {
+ 
+ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void wilc_mac_indicate(struct wilc *wilc, int flag);
+-int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
+ void wilc_netdev_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
+ 		     const struct wilc_hif_func *ops);
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
