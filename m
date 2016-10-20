@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2845 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754964AbcJLN7R (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53910 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935962AbcJTN0x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:59:17 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>,
-        "akolli@codeaurora.org" <akolli@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 1/2] ath10k: add per peer htt tx stats support for 10.4
-Date: Wed, 12 Oct 2016 13:59:09 +0000
-Message-ID: <87wphdekic.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_155925_369403_56F17701)
-References: <1475852332-18217-1-git-send-email-akolli@qti.qualcomm.com>
-        <1475852332-18217-2-git-send-email-akolli@qti.qualcomm.com>
-        <CAEFj985tCc_4Q_zfwRtoT0fjfZv0u_c5E8SRSQVz=V4tiHh+GA@mail.gmail.com>
-        <87r37mgo1n.fsf@kamboji.qca.qualcomm.com>
-        <CAEFj9859-wSpMGJrr+Fzr8QZASBs2r-W3XByH+PD_5h8zMS-rQ@mail.gmail.com>
-In-Reply-To: <CAEFj9859-wSpMGJrr+Fzr8QZASBs2r-W3XByH+PD_5h8zMS-rQ@mail.gmail.com>       (Yeoh
- Chun-Yeow's message of "Wed, 12 Oct 2016 21:36:21 +0800")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 20 Oct 2016 09:26:53 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <briannorris@google.com>, <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v5 3/4] mwifiex: check hw_status in suspend and resume handlers
+Date: Thu, 20 Oct 2016 18:56:18 +0530
+Message-ID: <1476969979-28554-3-git-send-email-akarwar@marvell.com> (sfid-20161020_152656_864206_24E2E375)
+In-Reply-To: <1476969979-28554-1-git-send-email-akarwar@marvell.com>
+References: <1476969979-28554-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yeoh Chun-Yeow <yeohchunyeow@gmail.com> writes:
+We have observed a kernel crash when system immediately suspends
+after booting. There is a race between suspend and driver initialization
+paths. This patch adds hw_status checks in suspend/resume to fix this issue
+and other corner cases.
 
->> My understanding is that 10.2 branch does not have this feature,
->> unfortunately.
->>
->
-> Alright, noted.
->
-> Is QCA988X going to have firmware 10.4 support?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: Return failure in suspend/resume handler in this scenario.
+v3: Handle "hw_status" not READY cases carefully. Return 0 if
+init or shutdown is in progress. Return -EBUSY if firmware download
+failed or command timeout ocurred(non-recoverable). (Brian Norris)
+v4: In resume, we need not return failure.
+v5: Same as v4
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
 
-I wish it would have but I don't know the current status.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index dd4006e..94f75be 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -104,13 +104,22 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		pr_err("Card or adapter structure is not valid\n");
++	if (!card || !card->adapter ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_RESET ||
++	    card->adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY) {
++		pr_err("Card or adapter structure is not valid or hw_status shows failure\n");
+ 		return 0;
+ 	}
+ 
+ 	adapter = card->adapter;
+ 
++	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_INIT_DONE ||
++	    adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) {
++		pr_err("We are in the middle of initialzaion or closing\n");
++		return -EBUSY;
++	}
++
+ 	/* Enable the Host Sleep */
+ 	if (!mwifiex_enable_hs(adapter)) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -143,8 +152,10 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		pr_err("Card or adapter structure is not valid\n");
++
++	if (!card || !card->adapter ||
++	    card->adapter->hw_status != MWIFIEX_HW_STATUS_READY) {
++		pr_err("Card or adapter structure is not valid or hw_status is not ready\n");
+ 		return 0;
+ 	}
+ 
+-- 
+1.9.1
