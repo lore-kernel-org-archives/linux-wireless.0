@@ -1,91 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:47998 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751647AbcJET4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 15:56:36 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
-        queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> <87k2dm6git.fsf@toke.dk>
-        <878tu2okv7.fsf@kamboji.qca.qualcomm.com> <87d1jeenwa.fsf@toke.dk>
-        <874m4qof58.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 05 Oct 2016 21:56:30 +0200
-In-Reply-To: <874m4qof58.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 05 Oct 2016 20:54:27 +0300")
-Message-ID: <87shsad0y9.fsf@toke.dk> (sfid-20161005_215645_139471_DC251D8C)
+Received: from mout.kundenserver.de ([212.227.17.10]:54067 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932739AbcJTJSK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Oct 2016 05:18:10 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: wilc1000: Remove unused function wilc_lock_timeout
+Date: Thu, 20 Oct 2016 11:17:59 +0200
+Message-ID: <2246433.KuShhtzXUN@wuerfel> (sfid-20161020_111832_074707_16F0FF63)
+In-Reply-To: <1476953672-2198-1-git-send-email-binoy.jayan@linaro.org>
+References: <1476953672-2198-1-git-send-email-binoy.jayan@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On Thursday, October 20, 2016 2:24:32 PM CEST Binoy Jayan wrote:
+> Semaphore are going away in the future, so remove the unused function
+> wilc_lock_timeout which calls a semaphore api but has no users.
+> 
+> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+> ---
+> 
+> They following is a patch which removes semaphores from wilc1000.
+> Its part of a bigger effort to eliminate all semaphores
+> from the linux kernel.
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>>
->>>> Kalle Valo <kvalo@codeaurora.org> writes:
->>>>
->>>>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>>>>
->>>>> I understand your point, but I don't want to rush this to 4.9 and then
->>>>> start getting lots of bug reports and eventually forced to revert it.=
- If
->>>>> we just found a new serious regression the chances are that there are
->>>>> more lurking somewhere and this patch is just not ready yet.
->>>>
->>>> So, the changes to mac80211 that fixes the known regressions of this
->>>> patch have gone in.
->>>
->>> I guess you mean this commit:
->>>
->>> bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ =
-dequeue
->>>
->>> (Just making sure that I have the same commit in my tree when I apply
->>> this)
->>
->> Yup, that's the one :)
->>
->>>> Any chance of seeing this merged during the current merge window? :)
->>>
->>> I sent last new feature ("-next") patches for 4.9 last week, sorry. So
->>> this has to wait for 4.10.
->>
->> Ah, right, I think I got my merge windows confused. You already said you
->> wouldn't take it for 4.9. So I guess what I'm asking is for you to put
->> it into the appropriate -next tree so it can get some wider exposure
->> ahead of the *next* merge window...
->
-> Yeah, we have plenty of time for 4.10 :) So my plan is to apply this
-> after I open wireless-drivers-next in 2-3 weeks or so. That would mean
-> that the patch would hit Linus' tree when 4.10-rc1 is released
-> (estimated to happen on 2017-01-01). The timing is actually perfect as
-> now we get maximal testing time on -next.
+Good catch!
 
-So the -next trees are those that are open outside the merge window.
-Right, got it; thanks :)
+>  drivers/staging/wilc1000/linux_wlan.c | 11 -----------
+>  1 file changed, 11 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index 6370a5e..470d59f 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -218,17 +218,6 @@ static void deinit_irq(struct net_device *dev)
+>         }
+>  }
+>  
+> -int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+> -{
+> -       /* FIXME: replace with mutex_lock or wait_for_completion */
+> -       int error = -1;
+> -
+> -       if (vp)
+> -               error = down_timeout(vp,
+> -                                    msecs_to_jiffies(timeout));
+> -       return error;
+> -}
 
->>> And I assume I need to take v5:
->>>
->>> https://patchwork.kernel.org/patch/9311037/
->>
->> Yes. Haven't noticed anything that changed since that might conflict
->> with it, but let me know if I missed something and you want a refreshed
->> version.
->
-> Thanks, I'll let you know if there are any problems.
+You need to remove the prototype from wilc_wfi_netdevice.h
+as well. Once you do that, please add
 
-Cool.
-
--Toke
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
