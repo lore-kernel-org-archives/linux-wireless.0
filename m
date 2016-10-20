@@ -1,73 +1,267 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35088 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbcJ0RoZ (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:35813 "EHLO
+        mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933043AbcJTMk3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 13:44:25 -0400
-Received: by mail-pf0-f194.google.com with SMTP id s8so3196856pfj.2
-        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2016 10:44:25 -0700 (PDT)
-Date: Thu, 27 Oct 2016 10:44:22 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        briannorris@google.com
-Subject: Re: [PATCH v2 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
- shutdown_drv
-Message-ID: <20161027174422.GA509@dtor-ws> (sfid-20161027_194429_872289_95ADC7C6)
-References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
- <1477559563-18328-2-git-send-email-akarwar@marvell.com>
+        Thu, 20 Oct 2016 08:40:29 -0400
+Received: by mail-lf0-f46.google.com with SMTP id l131so77586286lfl.2
+        for <linux-wireless@vger.kernel.org>; Thu, 20 Oct 2016 05:40:29 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: allow vendor commands to be sent to nan
+ interface
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20161019044747.15921-1-luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com> (sfid-20161020_144034_959043_34B05C02)
+Date: Thu, 20 Oct 2016 14:40:20 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477559563-18328-2-git-send-email-akarwar@marvell.com>
+In-Reply-To: <20161019044747.15921-1-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amit,
-
-On Thu, Oct 27, 2016 at 02:42:40PM +0530, Amitkumar Karwar wrote:
-> This variable is guarded by spinlock at all other places. This patch
-> takes care of missing spinlock usage in mwifiex_shutdown_drv().
-
-Since in the previous discussion you stated that we inhibit interrupts
-and flush the workqueue so that mwifiex_shutdown_drv() can't run
-simultaneously with the main processing routine, why do we need this?
-
-Instead please remove call to mwifiex_shutdown_drv() in the main routine
-and "if (adapter->mwifiex_processing)" check here.
-
-Thanks.
-
+On 19-10-2016 6:47, Luca Coelho wrote:
+> From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 > 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Allow vendor commands that require WIPHY_VENDOR_CMD_NEED_RUNNING flag, to
+> be sent to NAN interface.
+> 
+> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 > ---
-> v2: Same as v1
-> ---
->  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
->  1 file changed, 3 insertions(+)
+>  net/wireless/nl80211.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-> index 82839d9..8e5e424 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/init.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
-> @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
->  
->  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
->  	/* wait for mwifiex_process to complete */
-> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
->  	if (adapter->mwifiex_processing) {
-> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
->  		mwifiex_dbg(adapter, WARN,
->  			    "main process is still running\n");
->  		return ret;
->  	}
-> +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
->  
->  	/* cancel current command */
->  	if (adapter->curr_cmd) {
-> -- 
-> 1.9.1
-> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index e48b9c3..fcf5b4f 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -11258,7 +11258,8 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
+>  				if (wdev->netdev &&
+>  				    !netif_running(wdev->netdev))
+>  					return -ENETDOWN;
+> -				if (!wdev->netdev && !wdev->p2p_started)
+> +				if (!wdev->netdev && !wdev->p2p_started &&
+> +				    !wdev->nan_started)
+>  					return -ENETDOWN;
 
--- 
-Dmitry
+Seeing this patch flying by, my itch became unbearable so I cooked up
+the patch below. Please consider this an RFC and let me know your thoughts.
+
+Regards,
+Arend
+---
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2bbbcc3..0010e5a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3781,8 +3781,8 @@ static inline struct wiphy *wiphy_new(const struct
+cfg80211_ops *ops,
+  * @beacon_interval: beacon interval used on this device for transmitting
+  *	beacons, 0 when not valid
+  * @address: The address for this device, valid only if @netdev is %NULL
+- * @p2p_started: true if this is a P2P Device that has been started
+- * @nan_started: true if this is a NAN interface that has been started
++ * @is_running: true if this is a non-netdev device that has been
+started, eg.
++ *	like the P2P Device.
+  * @cac_started: true if DFS channel availability check has been started
+  * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
+  * @cac_time_ms: CAC time in ms
+@@ -3814,7 +3814,7 @@ struct wireless_dev {
+
+ 	struct mutex mtx;
+
+-	bool use_4addr, p2p_started, nan_started;
++	bool use_4addr, is_running;
+
+ 	u8 address[ETH_ALEN] __aligned(sizeof(u16));
+
+@@ -3871,6 +3871,13 @@ static inline u8 *wdev_address(struct
+wireless_dev *wdev)
+ 	return wdev->address;
+ }
+
++static inline bool wdev_is_running(struct wireless_dev *wdev)
++{
++	if (wdev->netdev)
++		return netif_running(wdev->netdev);
++	return wdev->is_running;
++}
++
+ /**
+  * wdev_priv - return wiphy priv from wireless_dev
+  *
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index f433f15..088ba44 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -210,11 +210,11 @@ void cfg80211_stop_p2p_device(struct
+cfg80211_registered_device *rdev,
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_P2P_DEVICE))
+ 		return;
+
+-	if (!wdev->p2p_started)
++	if (!wdev_is_running(wdev))
+ 		return;
+
+ 	rdev_stop_p2p_device(rdev, wdev);
+-	wdev->p2p_started = false;
++	wdev->is_running = false;
+
+ 	rdev->opencount--;
+
+@@ -233,11 +233,11 @@ void cfg80211_stop_nan(struct
+cfg80211_registered_device *rdev,
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_NAN))
+ 		return;
+
+-	if (!wdev->nan_started)
++	if (!wdev_is_running(wdev))
+ 		return;
+
+ 	rdev_stop_nan(rdev, wdev);
+-	wdev->nan_started = false;
++	wdev->is_running = false;
+
+ 	rdev->opencount--;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fcf5b4f..e37801e 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10528,7 +10528,7 @@ static int nl80211_start_p2p_device(struct
+sk_buff *skb, struct genl_info *info)
+ 	if (wdev->iftype != NL80211_IFTYPE_P2P_DEVICE)
+ 		return -EOPNOTSUPP;
+
+-	if (wdev->p2p_started)
++	if (wdev_is_running(wdev))
+ 		return 0;
+
+ 	if (rfkill_blocked(rdev->rfkill))
+@@ -10538,7 +10538,7 @@ static int nl80211_start_p2p_device(struct
+sk_buff *skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+
+-	wdev->p2p_started = true;
++	wdev->is_running = true;
+ 	rdev->opencount++;
+
+ 	return 0;
+@@ -10570,7 +10570,7 @@ static int nl80211_start_nan(struct sk_buff
+*skb, struct genl_info *info)
+ 	if (wdev->iftype != NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+
+-	if (wdev->nan_started)
++	if (!wdev_is_running(wdev))
+ 		return -EEXIST;
+
+ 	if (rfkill_blocked(rdev->rfkill))
+@@ -10593,7 +10593,7 @@ static int nl80211_start_nan(struct sk_buff
+*skb, struct genl_info *info)
+ 	if (err)
+ 		return err;
+
+-	wdev->nan_started = true;
++	wdev->is_running = true;
+ 	rdev->opencount++;
+
+ 	return 0;
+@@ -10678,7 +10678,7 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
+ 	if (wdev->iftype != NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+
+-	if (!wdev->nan_started)
++	if (!wdev_is_running(wdev))
+ 		return -ENOTCONN;
+
+ 	if (!info->attrs[NL80211_ATTR_NAN_FUNC])
+@@ -10915,7 +10915,7 @@ static int nl80211_nan_del_func(struct sk_buff *skb,
+ 	if (wdev->iftype != NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+
+-	if (!wdev->nan_started)
++	if (!wdev_is_running(wdev))
+ 		return -ENOTCONN;
+
+ 	if (!info->attrs[NL80211_ATTR_COOKIE])
+@@ -10943,7 +10943,7 @@ static int nl80211_nan_change_config(struct
+sk_buff *skb,
+ 	if (wdev->iftype != NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+
+-	if (!wdev->nan_started)
++	if (!wdev_is_running(wdev))
+ 		return -ENOTCONN;
+
+ 	if (info->attrs[NL80211_ATTR_NAN_MASTER_PREF]) {
+@@ -11255,11 +11255,7 @@ static int nl80211_vendor_cmd(struct sk_buff
+*skb, struct genl_info *info)
+ 				return -EINVAL;
+
+ 			if (vcmd->flags & WIPHY_VENDOR_CMD_NEED_RUNNING) {
+-				if (wdev->netdev &&
+-				    !netif_running(wdev->netdev))
+-					return -ENETDOWN;
+-				if (!wdev->netdev && !wdev->p2p_started &&
+-				    !wdev->nan_started)
++				if (!wdev_is_running(wdev))
+ 					return -ENETDOWN;
+ 			}
+
+@@ -11422,10 +11418,7 @@ static int nl80211_vendor_cmd_dump(struct
+sk_buff *skb,
+ 			return -EINVAL;
+
+ 		if (vcmd->flags & WIPHY_VENDOR_CMD_NEED_RUNNING) {
+-			if (wdev->netdev &&
+-			    !netif_running(wdev->netdev))
+-				return -ENETDOWN;
+-			if (!wdev->netdev && !wdev->p2p_started)
++			if (!wdev_is_running(wdev))
+ 				return -ENETDOWN;
+ 		}
+ 	}
+@@ -11796,29 +11789,14 @@ static int nl80211_pre_doit(const struct
+genl_ops *ops, struct sk_buff *skb,
+ 			info->user_ptr[1] = wdev;
+ 		}
+
+-		if (dev) {
+-			if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
+-			    !netif_running(dev)) {
+-				if (rtnl)
+-					rtnl_unlock();
+-				return -ENETDOWN;
+-			}
+-
+-			dev_hold(dev);
+-		} else if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP) {
+-			if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
+-			    !wdev->p2p_started) {
+-				if (rtnl)
+-					rtnl_unlock();
+-				return -ENETDOWN;
+-			}
+-			if (wdev->iftype == NL80211_IFTYPE_NAN &&
+-			    !wdev->nan_started) {
+-				if (rtnl)
+-					rtnl_unlock();
+-				return -ENETDOWN;
+-			}
++		if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP &&
++		    !wdev_is_running(wdev)) {
++			if (rtnl)
++				rtnl_unlock();
++			return -ENETDOWN;
+ 		}
++		if (dev)
++			dev_hold(dev);
+
+ 		info->user_ptr[0] = rdev;
+ 	}
