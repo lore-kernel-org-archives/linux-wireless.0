@@ -1,73 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48404 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752653AbcJLMZH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:25:07 -0400
-Message-ID: <1476275099.7776.28.camel@coelho.fi> (sfid-20161012_142539_736282_44254E55)
-From: Luca Coelho <luca@coelho.fi>
-To: Chris Rorvick <chris@rorvick.com>, Paul Bolle <pebolle@tiscali.nl>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 12 Oct 2016 15:24:59 +0300
-In-Reply-To: <CAEUsAPbEf=hr1ki267qKpenWW_UBO93KY8q6-EdqWpk15Yhcnw@mail.gmail.com>
-References: <20161010071943.4717-1-chris@rorvick.com>
-         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
-         <CAEUsAPbEf=hr1ki267qKpenWW_UBO93KY8q6-EdqWpk15Yhcnw@mail.gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44672 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934152AbcJTMmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Oct 2016 08:42:43 -0400
+Message-ID: <1476967356.4929.20.camel@sipsolutions.net> (sfid-20161020_144245_695206_468939B3)
+Subject: Re: [PATCH] cfg80211: allow vendor commands to be sent to nan
+ interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 20 Oct 2016 14:42:36 +0200
+In-Reply-To: <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com> (sfid-20161020_144028_808179_AEBFE0A8)
+References: <20161019044747.15921-1-luca@coelho.fi>
+         <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com>
+         (sfid-20161020_144028_808179_AEBFE0A8)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-10-11 at 23:32 -0500, Chris Rorvick wrote:
-> On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> > For what it's worth, on my machine I have twenty (!) SPLX entries, all
-> > reading:
-> >     Name (SPLX, Package (0x04)
-> >     {
-> >         Zero,
-> >         Package (0x03)
-> >         {
-> >             0x80000000,
-> >             0x80000000,
-> >             0x80000000
-> >         },
-> > 
-> >         Package (0x03)
-> >         {
-> >            0x80000000,
-> >            0x80000000,
-> >            0x80000000
-> >         },
-> > 
-> >         Package (0x03)
-> >         {
-> >             0x80000000,
-> >             0x80000000,
-> >             0x80000000
-> >         }
-> >     })
-> 
-> 
-> I actually see exactly the same on my Dell XPS 13 (9350) when I  use
-> acpidump, etc.  I typed the entry I included in the commit log by hand
-> based on what the driver gets back from the SPLC method (I added a
-> function to dump the returned object.)
 
-Okay... Actually this is a structure in the BIOS and the actual method
-we call is SPLC.  The SPLC method may return one item from this table,
-or something entirely different, possible one of the three values
-depending on a configuration option or so.
+> Seeing this patch flying by, my itch became unbearable so I cooked up
+> the patch below. Please consider this an RFC and let me know your
+> thoughts.
 
-Can you to find and send me the actual SPLC method that we call, from
-your BIOS?
+Hah, I had this itch before, but didn't do anything about it yet :)
 
---
-Cheers,
-Luca.
+I like it though, care to submit it properly?
+
+johannes
