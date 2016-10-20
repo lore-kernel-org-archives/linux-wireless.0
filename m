@@ -1,85 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:35891 "EHLO
-        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752306AbcJJPbr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 11:31:47 -0400
-Date: Tue, 11 Oct 2016 00:30:50 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        linux-next@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161010153050.GA836@swordfish> (sfid-20161010_173209_648204_DB08C1D9)
-References: <20161010150358.GA514@swordfish>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161010150358.GA514@swordfish>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44757 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752104AbcJTMxt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Oct 2016 08:53:49 -0400
+Message-ID: <1476968023.4929.30.camel@sipsolutions.net> (sfid-20161020_145353_587015_3C41D129)
+Subject: Re: [PATCH] cfg80211: add key management offload feature
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org,
+        hostap <hostap@lists.infradead.org>,
+        Ilan Peer <ilan.peer@intel.com>, yangzy@marvell.com,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        lihz <lihz@marvell.com>
+Date: Thu, 20 Oct 2016 14:53:43 +0200
+In-Reply-To: <20161014135207.GB8928@w1.fi>
+References: <1474973796-1873-1-git-send-email-akarwar@marvell.com>
+         <1474979775.5141.27.camel@sipsolutions.net> <20161014135207.GB8928@w1.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc Andy
+On Fri, 2016-10-14 at 16:52 +0300, Jouni Malinen wrote:
+> On Tue, Sep 27, 2016 at 02:36:15PM +0200, Johannes Berg wrote:
+> > 
+> > > 
+> > > + * @NL80211_ATTR_AUTHORIZED: flag attribute, if set indicates
+> > > that the
+> > > + *      connection is authorized.
+> > > @@ -2267,6 +2270,8 @@ enum nl80211_attrs {
+> > > +	NL80211_ATTR_AUTHORIZED,
+> > 
+> > This already exists, no?
+> > 
+> > NL80211_STA_FLAG_AUTHORIZED should be more or less equivalent, if
+> > you do it per station (or just for the AP in case of managed
+> > connection)
+> 
+> It does indeed have a very similar meaning to the proposed
+> NL80211_ATTR_AUTHORIZED. However, NL80211_STA_FLAG_AUTHORIZED is
+> something that gets nested in NL80211_ATTR_STA or used with the
+> mask/set struct in NL80211_ATTR_STA_FLAGS2. I'm not sure either of
+> those would really be very clean ways to use with a connection/roam
+> event..
 
-Andy, can this be related to CONFIG_VMAP_STACK?
+Oh, right, this is used in the event, not for control...
 
-On (10/11/16 00:03), Sergey Senozhatsky wrote:
-> Hello,
-> 
-> current -git kills my system. adding
-> 
-> 	if (!virt_addr_valid(&aad[2])) {
-> 		WARN_ON(1);
-> 		return -EINVAL;
-> 	}
-> 
-> to ieee80211_aes_ccm_decrypt() given the following backtrace
-> 
->  WARNING: CPU: 5 PID: 252 at net/mac80211/aes_ccm.c:77 ieee80211_aes_ccm_decrypt+0xc8/0x197
->  CPU: 5 PID: 252 Comm: irq/29-iwlwifi Tainted: G        W       4.8.0-next-20161010-dbg-00007-g79797e9-dirty #88
->   ffffc90000413638 ffffffff811ff0e3 0000000000000000 0000000000000000
->   ffffc90000413678 ffffffff8103fe91 0000004d000001c8 1ffff920000826d3
->   ffff88040fc526d8 0000000000000008 ffffc90000413978 ffffc9000041397a
->  Call Trace:
->   [<ffffffff811ff0e3>] dump_stack+0x4f/0x65
->   [<ffffffff8103fe91>] __warn+0xc2/0xdd
->   [<ffffffff8103ff1c>] warn_slowpath_null+0x1d/0x1f
->   [<ffffffff8142aaa5>] ieee80211_aes_ccm_decrypt+0xc8/0x197
->   [<ffffffff810ed595>] ? __put_page+0x3c/0x3f
->   [<ffffffff8131fa42>] ? put_page+0x4a/0x62
->   [<ffffffff813218d3>] ? __pskb_pull_tail+0x1e8/0x279
->   [<ffffffff8141a7dc>] ? ccmp_special_blocks.isra.5+0x51/0x12d
->   [<ffffffff8141b226>] ieee80211_crypto_ccmp_decrypt+0x1ba/0x221
->   [<ffffffff81432e80>] ieee80211_rx_handlers+0x52a/0x19c2
->   [<ffffffff81070000>] ? start_dl_timer+0xa8/0xb4
->   [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
->   [<ffffffff8108ebec>] ? del_timer+0x57/0x61
->   [<ffffffff814351a8>] ieee80211_prepare_and_rx_handle+0xcd6/0xd2a
->   [<ffffffff810742a5>] ? local_clock+0x10/0x12
->   [<ffffffff8107642b>] ? __lock_acquire.isra.31+0x202/0x57e
->   [<ffffffff8143207b>] ? rcu_read_unlock+0x23/0x23
->   [<ffffffff81066e77>] ? sched_clock_cpu+0x17/0xc6
->   [<ffffffff814357ab>] ieee80211_rx_napi+0x5af/0x698
->   [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
->   [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
->   [<ffffffffa023aaa9>] iwl_mvm_rx_rx_mpdu+0x5ab/0x60c [iwlmvm]
->   [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
->   [<ffffffffa0235c80>] iwl_mvm_rx+0x45/0x69 [iwlmvm]
->   [<ffffffffa01a989e>] iwl_pcie_rx_handle+0x478/0x584 [iwlwifi]
->   [<ffffffffa01aaafd>] iwl_pcie_irq_handler+0x39c/0x52d [iwlwifi]
->   [<ffffffff81080824>] ? irq_finalize_oneshot+0xa7/0xa7
->   [<ffffffff81080841>] irq_thread_fn+0x1d/0x34
->   [<ffffffff81080ab5>] irq_thread+0xe6/0x1bb
->   [<ffffffff8108093a>] ? wake_threads_waitq+0x2c/0x2c
->   [<ffffffff810809cf>] ? irq_thread_dtor+0x95/0x95
->   [<ffffffff81059d79>] kthread+0xc6/0xce
->   [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
->   [<ffffffff81059cb3>] ? __list_del_entry+0x22/0x22
->   [<ffffffff814669d2>] ret_from_fork+0x22/0x30
->  ---[ end trace 94da6d4698b938b2 ]---
+I guess that makes sense then, although it should be a flag attribute
+instead of a u8?
 
-	-ss
+We could still put a nested NL80211_ATTR_STA, but I agree that seems
+awkward.
+
+> PMKSA caching cases, FT protocol, and 4-way handshake following EAP
+> might be doable in this manner and that might indeed be the cleanest
+> approach there. 
+
+Ok
+
+> However, there will also be need to cover possibility
+> for offloading FILS at some point in the future.. 
+
+Yeah, I hadn't considered FILS.
+
+> For FILS with shared key, the configuration will actually include ERP
+> keys that are not bound to any specific Authenticator/AP/BSSID and do
+> not really have a PMKSA cache entry.. At latest at that point, I'd
+> think we'll end up needing something else and that something else
+> could be defined already now to cover all these cases instead of
+> trying to force the current cases to go through
+> NL80211_CMD_SET_PMKSA.
+
+Could be done, I guess. But don't we then have to be careful to
+actually bind the non-FILS keys to the right Authenticator/AP/BSSID,
+and then we have to invent a way to bind it? Does that make sense?
+
+> > In particular, with key management offloaded, it's not clear to me
+> > what exactly the roles of the device and host are here. I'm
+> > considering that the device would handle the 4-way and 2-way
+> > handshakes, but then you wouldn't need the KEK/KCK/ReplayCounter in
+> > the host, so there wouldn't be much point in giving them to it.
+> > But if the device doesn't do that, what exactly *does* it do?
+> 
+> One of the key uses is to allow the Wi-Fi firmware to complete
+> roaming (say, 4-way handshake based on existing PMKSA) when the host
+> processor is not awake (i.e., wpa_supplicant is not running at all). 
+
+Ah. So this might not be used when the processor *is* awake? That's a
+key point I was missing, perhaps, since we're building something where
+it's simply always done by the device.
+
+Why would you want to do it in the processor when you have the ability
+to do it in the firmware?
+
+> However, this does not mean that we would necessarily offload all
+> EAPOL-Key processing. GTK rekeying and the initial 4-way handshake
+> for the first connection to an ESS might be performed by
+> wpa_supplicant especially in cases where the host is awake anyway.
+> That's why those PTK-related values need to be kept in sync between
+> the driver/firmware and host (wpa_supplicant).
+
+Interesting, ok. Whatever the reason, I guess we have to support it
+being done that way.
+
+I guess we'll have to hash out the exact details.
+
+I think we can publish a proposal soon that uses the PMKSA cache, but
+lacks all the event data since we never see EAPOL-key messages on the
+host in that model.
+
+This model here with the temporal key etc. stuff is clearly unworkable.
+
+I'm not sure I've made up my mind on introducing a new mechanism that
+covers FILS vs. PMKSA (and then later an only-FILS-style mechanism) -
+that's the issue with binding to a BSSID above.
+
+johannes
