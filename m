@@ -1,107 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35675 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756855AbcJPU7s (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:50286 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753076AbcJTD73 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Oct 2016 16:59:48 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        robh+dt@kernel.org
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v8 3/3] ath9k: parse the device configuration from an OF node
-Date: Sun, 16 Oct 2016 22:59:07 +0200
-Message-Id: <20161016205907.19927-4-martin.blumenstingl@googlemail.com> (sfid-20161016_225958_553500_F4A97007)
-In-Reply-To: <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
-References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
- <20161016205907.19927-1-martin.blumenstingl@googlemail.com>
+        Wed, 19 Oct 2016 23:59:29 -0400
+Message-ID: <1476935955.7845.3.camel@coelho.fi> (sfid-20161020_055935_898194_1126A51B)
+From: Luca Coelho <luca@coelho.fi>
+To: Billes Tibor <tbilles@gmx.com>, linuxwifi@intel.com
+Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Date: Thu, 20 Oct 2016 06:59:15 +0300
+In-Reply-To: <41dbbe14-3098-551d-6c34-0a3654bafca9@gmx.com>
+References: <41dbbe14-3098-551d-6c34-0a3654bafca9@gmx.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Intel Wireless 7260 Microcode SW error detected
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows setting the MAC address and specifying that the firmware
-will be requested from userspace (because there might not be a hardware
-EEPROM connected to the chip) for ath9k based PCI devices using
-the device tree.
+Hi Tibor,
 
-There is some out-of-tree code to "convert devicetree to
-ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
-obsolete with this patch.
+On Sun, 2016-10-16 at 20:08 +0200, Billes Tibor wrote:
+> I have Lenovo laptop with an Intel Wireless 7260 wifi module and the 
+> latest stable kernel 4.8.1. I was playing a movie from an sshfs mounted 
+> file system, when the movie just froze and my network stopped working. 
+> Dmesg said 'Microcode SW error detected'. Below is my full `dmesg -r` 
+> output. I probably will not be able to reproduce this behaviour, because 
+> it did not happen in the past, and it seems to work fine after reboot.
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 42 +++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+Can you file a bug in bugzilla so we can track this? It seems to be a
+firmware problem that we'll have to investigate.  We have instructions
+on how to report here:
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index cfa3fe8..b7c8ff9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -20,6 +20,8 @@
- #include <linux/slab.h>
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_net.h>
- #include <linux/relay.h>
- #include <net/ieee80211_radiotap.h>
- 
-@@ -555,6 +557,42 @@ static int ath9k_init_platform(struct ath_softc *sc)
- 	return 0;
- }
- 
-+static int ath9k_of_init(struct ath_softc *sc)
-+{
-+	struct device_node *np = sc->dev->of_node;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
-+	const char *mac;
-+	char eeprom_name[100];
-+	int ret;
-+
-+	if (!of_device_is_available(np))
-+		return 0;
-+
-+	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
-+
-+	if (of_property_read_bool(np, "qca,no-eeprom")) {
-+		/* ath9k-eeprom-<bus>-<id>.bin */
-+		scnprintf(eeprom_name, sizeof(eeprom_name),
-+			  "ath9k-eeprom-%s-%s.bin",
-+			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
-+
-+		ret = ath9k_eeprom_request(sc, eeprom_name);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	mac = of_get_mac_address(np);
-+	if (mac)
-+		ether_addr_copy(common->macaddr, mac);
-+
-+	ah->ah_flags &= ~AH_USE_EEPROM;
-+	ah->ah_flags |= AH_NO_EEP_SWAP;
-+
-+	return 0;
-+}
-+
- static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 			    const struct ath_bus_ops *bus_ops)
- {
-@@ -611,6 +649,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	ret = ath9k_of_init(sc);
-+	if (ret)
-+		return ret;
-+
- 	if (ath9k_led_active_high != -1)
- 		ah->config.led_active_high = ath9k_led_active_high == 1;
- 
--- 
-2.10.0
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
+
+
+> Is there anything more that I can do to help you debug this?
+
+It would be nice if you could enable firmware debugging so that, if
+this happens again, we'll have the appropriate FW logs to investigate
+it further.  There are instructions on how to enable it in the
+"Firmware Debugging" section of that wiki page.
+
+Please make sure you read and understand the privacy aspects of
+submitting firmware debugging data, as explained here:
+
+https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging#privacy_aspects
+
+
+> <3>[37750.190201] iwlwifi 0000:08:00.0: Microcode SW error detected.  
+> Restarting 0x2000000.
+> <3>[37750.190206] iwlwifi 0000:08:00.0: CSR values:
+> <3>[37750.190207] iwlwifi 0000:08:00.0: (2nd byte of CSR_INT_COALESCING 
+> is CSR_INT_PERIODIC_REG)
+> <3>[37750.190212] iwlwifi 0000:08:00.0: CSR_HW_IF_CONFIG_REG: 0X40489204
+> <3>[37750.190226] iwlwifi 0000:08:00.0: CSR_INT_COALESCING: 0X80000040
+> <3>[37750.190239] iwlwifi 0000:08:00.0: CSR_INT: 0X00000000
+> <3>[37750.190253] iwlwifi 0000:08:00.0: CSR_INT_MASK: 0X00000000
+> <3>[37750.190267] iwlwifi 0000:08:00.0: CSR_FH_INT_STATUS: 0X00000000
+> <3>[37750.190281] iwlwifi 0000:08:00.0: CSR_GPIO_IN: 0X00000000
+> <3>[37750.190294] iwlwifi 0000:08:00.0: CSR_RESET: 0X00000000
+> <3>[37750.190308] iwlwifi 0000:08:00.0: CSR_GP_CNTRL: 0X080403c5
+> <3>[37750.190322] iwlwifi 0000:08:00.0: CSR_HW_REV: 0X00000144
+> <3>[37750.190336] iwlwifi 0000:08:00.0: CSR_EEPROM_REG: 0X00000000
+> <3>[37750.190350] iwlwifi 0000:08:00.0: CSR_EEPROM_GP: 0X80000000
+> <3>[37750.190363] iwlwifi 0000:08:00.0: CSR_OTP_GP_REG: 0X803a0000
+> <3>[37750.190377] iwlwifi 0000:08:00.0: CSR_GIO_REG: 0X001f0042
+> <3>[37750.190391] iwlwifi 0000:08:00.0: CSR_GP_UCODE_REG: 0X00000000
+> <3>[37750.190405] iwlwifi 0000:08:00.0: CSR_GP_DRIVER_REG: 0X00000000
+> <3>[37750.190419] iwlwifi 0000:08:00.0: CSR_UCODE_DRV_GP1: 0X00000000
+> <3>[37750.190432] iwlwifi 0000:08:00.0: CSR_UCODE_DRV_GP2: 0X00000000
+> <3>[37750.190446] iwlwifi 0000:08:00.0: CSR_LED_REG: 0X00000060
+> <3>[37750.190460] iwlwifi 0000:08:00.0: CSR_DRAM_INT_TBL_REG: 0X881530a3
+> <3>[37750.190474] iwlwifi 0000:08:00.0: CSR_GIO_CHICKEN_BITS: 0X27800200
+> <3>[37750.190488] iwlwifi 0000:08:00.0: CSR_ANA_PLL_CFG: 0Xd55555d5
+> <3>[37750.190501] iwlwifi 0000:08:00.0: CSR_MONITOR_STATUS_REG: 0X3d0801bd
+> <3>[37750.190515] iwlwifi 0000:08:00.0: CSR_HW_REV_WA_REG: 0X0001001a
+> <3>[37750.190529] iwlwifi 0000:08:00.0: CSR_DBG_HPET_MEM_REG: 0Xffff0010
+> <3>[37750.190530] iwlwifi 0000:08:00.0: FH register values:
+> <3>[37750.190552] iwlwifi 0000:08:00.0: FH_RSCSR_CHNL0_STTS_WPTR_REG: 
+> 0X15005f00
+> <3>[37750.190566] iwlwifi 0000:08:00.0: FH_RSCSR_CHNL0_RBDCB_BASE_REG: 
+> 0X015005e0
+> <3>[37750.190580] iwlwifi 0000:08:00.0: FH_RSCSR_CHNL0_WPTR: 0X000000e8
+> <3>[37750.190593] iwlwifi 0000:08:00.0: FH_MEM_RCSR_CHNL0_CONFIG_REG: 
+> 0X80801114
+> <3>[37750.190607] iwlwifi 0000:08:00.0: FH_MEM_RSSR_SHARED_CTRL_REG: 
+> 0X000000fc
+> <3>[37750.190621] iwlwifi 0000:08:00.0: FH_MEM_RSSR_RX_STATUS_REG: 
+> 0X07030000
+> <3>[37750.190635] iwlwifi 0000:08:00.0: 
+> FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+> <3>[37750.190648] iwlwifi 0000:08:00.0: FH_TSSR_TX_STATUS_REG: 0X07ff0001
+> <3>[37750.190662] iwlwifi 0000:08:00.0: FH_TSSR_TX_ERROR_REG: 0X00000000
+> <3>[37750.190790] iwlwifi 0000:08:00.0: Start IWL Error Log Dump:
+> <3>[37750.190791] iwlwifi 0000:08:00.0: Status: 0x00000000, count: 6
+> <3>[37750.190793] iwlwifi 0000:08:00.0: Loaded firmware version: 16.242414.0
+
+I recommend that you update your firmware to the latest version
+(iwlwifi-7260-17.ucode) published in linux-firmware.git:
+
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git
+
+While I'm not sure the issue you saw is solved by that, we do have lots
+of other fixes in it that are worth the effort.
+
+
+<3>[37750.190794] iwlwifi 0000:08:00.0: 0x0000307C | ADVANCED_SYSASSERT
+
+I hadn't seen this for a while.  This is something related to the TX
+queues and could have many different causes...
+
+Thanks for reporting!
+
+--
+Cheers,
+Luca.
