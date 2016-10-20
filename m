@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51465 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753192AbcJDPqv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 4 Oct 2016 11:46:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Vittorio Gambaletta \(VittGam\)" <linux-wireless@vittgam.net>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <ath9k-devel@venema.h4ckr.net>, <stable@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: Move generic entries below specific ones in ath_pci_id_table.
-References: <ath9k-patch-20161003@vittgam.net>
-Date: Tue, 04 Oct 2016 18:46:44 +0300
-In-Reply-To: <ath9k-patch-20161003@vittgam.net> (Vittorio Gambaletta's message
-        of "Mon, 3 Oct 2016 12:00:56 +0200")
-Message-ID: <87k2dop15n.fsf@kamboji.qca.qualcomm.com> (sfid-20161004_174656_852736_5E591DDA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:44715 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934102AbcJTMpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 20 Oct 2016 08:45:41 -0400
+Message-ID: <1476967536.4929.23.camel@sipsolutions.net> (sfid-20161020_144605_075441_52F4D8C9)
+Subject: Re: [PATCH] cfg80211: allow vendor commands to be sent to nan
+ interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 20 Oct 2016 14:45:36 +0200
+In-Reply-To: <2fb83452-e4c2-f08c-c21b-b51c17401a3b@broadcom.com> (sfid-20161020_144425_188780_0ED36181)
+References: <20161019044747.15921-1-luca@coelho.fi>
+         <e7d135c6-e114-ffa5-a52f-3ee85c18641e@broadcom.com>
+         <1476967356.4929.20.camel@sipsolutions.net>
+         <2fb83452-e4c2-f08c-c21b-b51c17401a3b@broadcom.com>
+         (sfid-20161020_144425_188780_0ED36181)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
+On Thu, 2016-10-20 at 14:44 +0200, Arend Van Spriel wrote:
+> 
+> Sure. On top of this patch or will you deal with those conflicts?
+> 
 
-> If generic entries are positioned above specific ones, then the
-> former will be matched first and used instead of the latter.
->
-> Cc: <linux-wireless@vger.kernel.org>
-> Cc: <ath9k-devel@qca.qualcomm.com>
-> Cc: <ath9k-devel@lists.ath9k.org>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+I already applied this, so on top please (i.e. just resend what you
+just had, with a commit message?)
 
-Why? What kind of bug you are fixing? You are not really describing the
-problem you are trying fix.
-
-And your email headers look weird:
-
-To:     <kvalo@codeaurora.org>
-Cc:     <linux-wireless@vger.kernel.org>
-Cc:     <ath9k-devel@qca.qualcomm.com>
-Cc:     <ath9k-devel@venema.h4ckr.net>
-Cc:     <stable@vger.kernel.org>
-Date:   Mon, 3 Oct 2016 12:00:56 +0200
-
-What software are you using to send this? Only one CC header is valid
-according to the spec (thanks to Luca for checking) even though mailers
-seem to handle multiple CC headers. But for example my patchwork script
-fails with this and uses only the first CC header.
-
--- 
-Kalle Valo
+johannes
