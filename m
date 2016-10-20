@@ -1,46 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54422 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932744AbcJMO0K (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53906 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935962AbcJTN0r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 10:26:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de,
-        prameela.garnepudi@redpinesignals.com
-Subject: Re: [PATCH 1/3] rsi: Fix memory leak in module unload
-References: <1476357946-15460-1-git-send-email-prameela.j04cs@gmail.com>
-        <87inswcs1j.fsf@kamboji.qca.qualcomm.com>
-Date: Thu, 13 Oct 2016 17:26:04 +0300
-In-Reply-To: <87inswcs1j.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Thu, 13 Oct 2016 16:11:36 +0300")
-Message-ID: <87bmyo1g1v.fsf@purkki.adurom.net> (sfid-20161013_162628_456575_F240A3DF)
+        Thu, 20 Oct 2016 09:26:47 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <briannorris@google.com>, <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v5 2/4] mwifiex: remove redundant pdev check in suspend/resume handlers
+Date: Thu, 20 Oct 2016 18:56:17 +0530
+Message-ID: <1476969979-28554-2-git-send-email-akarwar@marvell.com> (sfid-20161020_152650_495526_3B0F95A5)
+In-Reply-To: <1476969979-28554-1-git-send-email-akarwar@marvell.com>
+References: <1476969979-28554-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+to_pci_dev() would just do struct offset arithmetic on struct
+device to get 'pdev' pointer. We never get NULL pdev pointer
 
-> Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
->
->> Observed crash when module is unloaded if CONFIG_RSI_DEBUGSFS is not set.
->> 	Fix: Debugfs entry removal moved inside CONFIG_RSI_DEBUGSFS flag in
->>              function rsi_mac80211_detach()
->> Memory leak found and fixed for below structures in function rsi_mac80211_detach()
->> 	* channel list for each supported band
->> 	* rsi debugfs info
->>
->> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
->
-> BTW, I don't see patch 2 in patchwork nor in linux-wireless, but I do
-> see it on my inbox. Either it's slow or there was a problem with the
-> delivery.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+New patch introduced in v3 as per inputs from Brian Norris.
+v5: Same as v3, v4
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-It was just slow, I see it now:
-
-https://patchwork.kernel.org/patch/9374987/
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 302ffd1..dd4006e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -103,14 +103,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
+@@ -147,14 +142,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
 -- 
-Kalle Valo
+1.9.1
