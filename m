@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55376 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754623AbcJZLLf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 07:11:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: Re: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
-References: <20161017220342.1627073-1-arnd@arndb.de>
-        <20161017221355.1861551-7-arnd@arndb.de>
-        <87zilr61ux.fsf@kamboji.qca.qualcomm.com> <3406231.8mt2808XDi@wuerfel>
-Date: Wed, 26 Oct 2016 14:11:23 +0300
-In-Reply-To: <3406231.8mt2808XDi@wuerfel> (Arnd Bergmann's message of "Wed, 26
-        Oct 2016 11:57:23 +0200")
-Message-ID: <87funj5pr8.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_131153_960641_42750D36)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:60788 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755451AbcJUMZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 08:25:19 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>,
+        jouni@qca.qualcomm.com, usdutt@qti.qualcomm.com,
+        amarnath@qca.qualcomm.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] cfg80211: mesh: track (and thus validate) beacon interval
+Date: Fri, 21 Oct 2016 14:25:11 +0200
+Message-Id: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net> (sfid-20161021_142535_723754_7D056CDA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On Wednesday, October 26, 2016 9:49:58 AM CEST Kalle Valo wrote:
->> Arnd Bergmann <arnd@arndb.de> writes:
->>=20
->> > A bugfix added a sanity check around the assignment and use of the
->> > 'is_11d' variable, which looks correct to me, but as the function is
->> > rather complex already, this confuses the compiler to the point where
->> > it can no longer figure out if the variable is always initialized
->> > correctly:
->> >
->> > brcm80211/brcmfmac/cfg80211.c: In function =E2=80=98brcmf_cfg80211_sta=
-rt_ap=E2=80=99:
->> > brcm80211/brcmfmac/cfg80211.c:4586:10: error: =E2=80=98is_11d=E2=80=99=
- may be used uninitialized in this function [-Werror=3Dmaybe-uninitialized]
->> >
->> > This adds an initialization for the newly introduced case in which
->> > the variable should not really be used, in order to make the warning
->> > go away.
->> >
->> > Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
->> > Cc: Hante Meuleman <hante.meuleman@broadcom.com>
->> > Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
->> > Cc: Kalle Valo <kvalo@codeaurora.org>
->> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>=20
->> Via which tree are you planning to submit this? Should I take it?
->
-> I'd prefer if you can take it and forward it along with your other
-> bugfixes. I'll try to take care of the ones that nobody else
-> picked up.
+This is needed for beacon interval validation; if we don't
+store it, then new interfaces added won't validate that the
+beacon interval is the same as existing ones. Fix this.
 
-Ok, I'll take it. I'm planning to push this to 4.9.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/mesh.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---=20
-Kalle Valo
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index fa2066b56f36..2d8518a37eab 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -183,6 +183,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
+ 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
+ 		wdev->mesh_id_len = setup->mesh_id_len;
+ 		wdev->chandef = setup->chandef;
++		wdev->beacon_interval = setup->beacon_interval;
+ 	}
+ 
+ 	return err;
+@@ -258,6 +259,7 @@ int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
+ 	err = rdev_leave_mesh(rdev, dev);
+ 	if (!err) {
+ 		wdev->mesh_id_len = 0;
++		wdev->beacon_interval = 0;
+ 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+ 		rdev_set_qos_map(rdev, dev, NULL);
+ 	}
+-- 
+2.8.1
