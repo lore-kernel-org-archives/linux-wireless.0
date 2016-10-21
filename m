@@ -1,62 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13949 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751481AbcJYWnK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 18:43:10 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 0/8] cfg80211/mac80211: Fast Initial Link Setup (IEEE 802.11ai)
-Date: Wed, 26 Oct 2016 01:42:29 +0300
-Message-ID: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004335_055273_2718B3A4)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:43482 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933903AbcJUVYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 17:24:17 -0400
+Message-ID: <1477085053.4068.65.camel@sipsolutions.net> (sfid-20161021_232421_739896_FF354A9A)
+Subject: Re: cfg80211: race problem between suspend and disconnect event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Brian Norris <briannorris@google.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Date: Fri, 21 Oct 2016 23:24:13 +0200
+In-Reply-To: <7af766c43f2f426b8db177f8d4e67031@SC-EXCH04.marvell.com>
+References: <67400d1c5c2141b3af75bdce9ec43840@SC-EXCH04.marvell.com>
+         <1476989132.14078.12.camel@sipsolutions.net>
+         <7af766c43f2f426b8db177f8d4e67031@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support for using mac80211-based drivers with Fast
-Initial Link Setup as defined in IEEE 802.11ai (to be published early
-next year; no more technical changes are expected at this point). The
-fils branch in git://w1.fi/hostap.git includes matching commits for
-hostapd and wpa_supplicant to use this functionality and initial set of
-mac80211_hwsim test cases for the functionality. Actually, most of the
-commits are already in the master branch, i.e., only the changes
-depending on the nl80211.h changes from this kernel patchset are waiting
-in the fils branch.
 
-This series covers only the FILS authentication/association
-functionality from IEEE 802.11ai, i.e., the other changes like scanning
-optimizations are not included.
+> Yes. In our case, *802_11_DEAUTHENTICATE command downloaded to
+> firmware takes care of flushing the keys.
+> 
+> I can see below code in cfg80211's disconnect handling. It seems to
+> be there for long time.
 
-Jouni Malinen (8):
-  cfg80211: Rename SAE_DATA to more generic AUTH_DATA
-  mac80211: Allow AUTH_DATA to be used for FILS
-  cfg80211: Add feature flag for Fast Initial Link Setup (FILS)
-  cfg80211: Add Fast Initial Link Setup (FILS) auth algs
-  cfg80211: Add KEK/nonces for FILS association frames
-  mac80211: Add FILS auth alg mapping
-  mac80211: FILS AEAD protection for station mode association frames
-  mac80211: Claim Fast Initial Link Setup (FILS) support
+Yeah, I saw it, but it's not clear to me that there's much point in it.
+In any case, that's an unrelated question in a way, because there
+definitely are things happening here that should be "more synchronous",
+regardless of whether or not the key deletion makes sense.
 
- include/linux/ieee80211.h    |   6 +
- include/net/cfg80211.h       |  19 ++-
- include/uapi/linux/nl80211.h |  26 +++-
- net/mac80211/Makefile        |   1 +
- net/mac80211/aes_cmac.c      |   8 +-
- net/mac80211/aes_cmac.h      |   4 +
- net/mac80211/fils_aead.c     | 354 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/fils_aead.h     |  19 +++
- net/mac80211/ieee80211_i.h   |   5 +
- net/mac80211/main.c          |   1 +
- net/mac80211/mlme.c          |  64 ++++++--
- net/wireless/core.h          |   2 +-
- net/wireless/mlme.c          |   6 +-
- net/wireless/nl80211.c       |  56 +++++--
- 14 files changed, 535 insertions(+), 36 deletions(-)
- create mode 100644 net/mac80211/fils_aead.c
- create mode 100644 net/mac80211/fils_aead.h
+> I think, your cfg80211 change will help. We do ensure that
+> cfg80211_disconnected() is called before exiting
+> mwifiex_cfg80211_disconnect().
+> Sending HostCmd_CMD_802_11_DEAUTHENTICATE command to firmware is a
+> blocking call. cfg80211_disconnected() is called while handling that
+> command's response. 
 
--- 
-1.9.1
+Ah ok, I missed that - I thought it was asynchronous.
+
+> > So somehow you'd have to synchronize with the firmware as well, to
+> > process all those things before suspend, I guess?
+> > 
+[...]
+> This would not be needed. 
+
+Right. Care to test my patch before I properly submit it?
+
+johannes
