@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50630 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754520AbcJQORN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 10:17:13 -0400
-Message-ID: <1476713828.315.5.camel@sipsolutions.net> (sfid-20161017_161716_676121_31FE6A00)
-Subject: Re: [PATCH v4] mac80211: move struct aead_req off the stack
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: herbert@gondor.apana.org.au, sergey.senozhatsky.work@gmail.com
-Date: Mon, 17 Oct 2016 16:17:08 +0200
-In-Reply-To: <1476713133-18355-1-git-send-email-ard.biesheuvel@linaro.org> (sfid-20161017_160545_826866_8595CA02)
-References: <1476713133-18355-1-git-send-email-ard.biesheuvel@linaro.org>
-         (sfid-20161017_160545_826866_8595CA02)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:36636 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754986AbcJUS7i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 14:59:38 -0400
+Received: by mail-wm0-f45.google.com with SMTP id b80so1200200wme.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 11:59:37 -0700 (PDT)
+Subject: Re: [PATCH 2/2] mac80211: use inline kernel-doc for struct
+ ieee80211_hw
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Jani Nikula <jani.nikula@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
+ <1477054644-5945-2-git-send-email-jani.nikula@intel.com>
+ <1477054892.4068.44.camel@sipsolutions.net>
+Cc: linux-doc@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a6fb17b3-0ec6-e23b-4ae3-f84385cf84ae@broadcom.com> (sfid-20161021_205950_578765_54357DB5)
+Date: Fri, 21 Oct 2016 20:59:35 +0200
+MIME-Version: 1.0
+In-Reply-To: <1477054892.4068.44.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-17 at 15:05 +0100, Ard Biesheuvel wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
+On 21-10-16 15:01, Johannes Berg wrote:
+> On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
+>> It's easier to manage the kernel-doc for the fields when they
+>> documentation is next to the field.
+> 
+> Hah, I wasn't even aware this was possible. Thanks!
 
-That really ought to have been you - I think I may have lost that by
-accident. I'll change it.
+Me neither. I actually found it annoying to have all kernel-doc above
+the type definition and indeed easy to miss fields. Now struct
+ieee80211_hw is not alone and we have it all over the place in the
+wireless subsystem. Is this something we want to embrace and maybe find
+janitors/newbies/coccinelle-gurus to address it. Not sure if coccinelle
+could deal with this.
 
-> In addition, take care not to put any of our own stack allocations
-> into
-> scatterlists. This involves reserving some extra room when allocating
-> the
-> aead_request structures, and referring to those allocations in the
-> scatter-
-> lists (while copying the data from/to the stack before/after the
-> crypto
-> operation, as appropriate)
-
-I removed the "to the stack after" language, since that doesn't
-actually occur :)
-
-
-> --- a/net/mac80211/aes_cmac.h
-> +++ b/net/mac80211/aes_cmac.h
-> @@ -11,6 +11,8 @@
->  
->  #include <linux/crypto.h>
->  
-> +#define CMAC_AAD_LEN	20
-
-This part (and aes_cmac.c changes) shouldn't have been there, but that
-was my mistake - removed.
-
-With that, I've applied this. Will send it to davem tomorrow.
-
-johannes
+Regards,
+Arend
