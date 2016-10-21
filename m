@@ -1,32 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:36773 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbcJCXjv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 19:39:51 -0400
-Received: by mail-it0-f41.google.com with SMTP id 188so49066264iti.1
-        for <linux-wireless@vger.kernel.org>; Mon, 03 Oct 2016 16:39:50 -0700 (PDT)
-Date: Mon, 3 Oct 2016 19:36:42 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: Final 4.8 w-t build is wt-2016-10-03
-Message-ID: <20161003233642.GB9911@localhost> (sfid-20161004_013955_216033_4BD35DEF)
-References: <20161003134507.GA9911@localhost>
- <1651822.AbJigUgJvV@debian64>
+Received: from mga11.intel.com ([192.55.52.93]:60798 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754584AbcJUNOV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 09:14:21 -0400
+From: Jani Nikula <jani.nikula@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Subject: Re: [PATCH 1/2] mac80211: fix some sphinx warnings
+In-Reply-To: <1477054872.4068.43.camel@sipsolutions.net>
+References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com> <1477054872.4068.43.camel@sipsolutions.net>
+Date: Fri, 21 Oct 2016 16:14:09 +0300
+Message-ID: <87h985q1y6.fsf@intel.com> (sfid-20161021_151425_490512_CAD9F66C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1651822.AbJigUgJvV@debian64>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 03, 2016 at 04:42:58PM +0200, Christian Lamparter wrote:
-> Thanks for the timely update. 
-> I have a request: can you please pull Linus' kernel tags?
-> Currently the last tag from Linus' is v4.4-rc4 [0] and
-> everything between v4.4-rc5 and v4.8 is missing?!
+On Fri, 21 Oct 2016, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
+>> Signed-off-by: Jani Nikula <jani.nikula@intel.com>
+>> ---
+>>  include/net/mac80211.h | 21 +++++++++++++--------
+>>  1 file changed, 13 insertions(+), 8 deletions(-)
+>> 
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index a810dfcb83c2..e2dba93e374f 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -811,14 +811,18 @@ enum mac80211_rate_control_flags {
+>>   * in the control information, and it will be filled by the rate
+>>   * control algorithm according to what should be sent. For example,
+>>   * if this array contains, in the format { <idx>, <count> } the
+>> - * information
+>> + * information::
+>> 
+> [...]
+>
+> interesting, are these not enabled by default?
 
-I've done this now.
+rst wants indented blocks to be separated by blank lines from the
+preceding and following blocks. For that you could just add the blank
+lines, and it'll work.
+
+I presumed this was nicer as preformatted/monospaced text, and for that
+you'll need the "::". Up to you to have that or not.
+
+> I guess I'll pick up these patches, even if they probably make things
+> worse in my tree, since there it's still using docbook. But once we
+> merge everything it should be good then.
+
+Oh, it's built as reStructuredText in Linus' tree. Again, up to you.
+
+BR,
+Jani.
+
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+Jani Nikula, Intel Open Source Technology Center
