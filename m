@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:41473 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756742AbcJYJDf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 05:03:35 -0400
-Date: Tue, 25 Oct 2016 11:03:40 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        florian.c.schilhabel@googlemail.com
-Subject: Re: [PATCH] staging: rtl8712: Free memory and return failure when
- kmalloc fails
-Message-ID: <20161025090340.GA7765@kroah.com> (sfid-20161025_110413_294033_D1F58148)
-References: <20161020065932.GA21705@symbol-HP-ZBook-15>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161020065932.GA21705@symbol-HP-ZBook-15>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33090 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933841AbcJUNBR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 09:01:17 -0400
+Message-ID: <1477054872.4068.43.camel@sipsolutions.net> (sfid-20161021_150133_678812_AABF20F8)
+Subject: Re: [PATCH 1/2] mac80211: fix some sphinx warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jani Nikula <jani.nikula@intel.com>, linux-wireless@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Date: Fri, 21 Oct 2016 15:01:12 +0200
+In-Reply-To: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
+References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Oct 20, 2016 at 12:29:33PM +0530, Souptick Joarder wrote:
-> This patch is added to free memory and return failure when kmalloc fails
-
-I'm sorry, but I can not parse that sentance.  Can you rephrase this a
-bit better?  What exactly are you doing here?
-
-> 
-> Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
+On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
+> Signed-off-by: Jani Nikula <jani.nikula@intel.com>
 > ---
->  drivers/staging/rtl8712/os_intfs.c     | 3 ++-
->  drivers/staging/rtl8712/rtl871x_cmd.c  | 5 ++++-
->  drivers/staging/rtl8712/rtl871x_xmit.c | 5 ++++-
->  3 files changed, 10 insertions(+), 3 deletions(-)
-
-Any reason why you didn't cc: the driverdevel mailing list?  I doubt
-linux-wireless cares about staging drivers :(
-
+>  include/net/mac80211.h | 21 +++++++++++++--------
+>  1 file changed, 13 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/staging/rtl8712/os_intfs.c b/drivers/staging/rtl8712/os_intfs.c
-> index cbe4de0..aab3141 100644
-> --- a/drivers/staging/rtl8712/os_intfs.c
-> +++ b/drivers/staging/rtl8712/os_intfs.c
-> @@ -313,7 +313,8 @@ u8 r8712_init_drv_sw(struct _adapter *padapter)
->  		return _FAIL;
->  	if (r8712_init_mlme_priv(padapter) == _FAIL)
->  		return _FAIL;
-> -	_r8712_init_xmit_priv(&padapter->xmitpriv, padapter);
-> +	if ((_r8712_init_xmit_priv(&padapter->xmitpriv, padapter)) != _SUCCESS)
-> +		return _FAIL;
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index a810dfcb83c2..e2dba93e374f 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -811,14 +811,18 @@ enum mac80211_rate_control_flags {
+>   * in the control information, and it will be filled by the rate
+>   * control algorithm according to what should be sent. For example,
+>   * if this array contains, in the format { <idx>, <count> } the
+> - * information
+> + * information::
+> 
+[...]
 
-You don't have to unwind anything that r8712_init_mlme_priv() did?
+interesting, are these not enabled by default?
 
->  	_r8712_init_recv_priv(&padapter->recvpriv, padapter);
->  	memset((unsigned char *)&padapter->securitypriv, 0,
->  	       sizeof(struct security_priv));
+I guess I'll pick up these patches, even if they probably make things
+worse in my tree, since there it's still using docbook. But once we
+merge everything it should be good then.
 
-thanks,
-
-greg k-h
+johannes
