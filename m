@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:34227 "EHLO
-        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933304AbcJZVRE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:17:04 -0400
-Received: by mail-yw0-f182.google.com with SMTP id w3so21303684ywg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 14:17:04 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20161026210805.GA14423@localhost>
-References: <1477070156-109965-1-git-send-email-rajatja@google.com>
- <1477084869-15612-1-git-send-email-rajatja@google.com> <20161026201735.GA10192@localhost>
- <20161026204648.GD3989@dtor-ws> <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
- <20161026205634.GA13170@localhost> <20161026210648.GE3989@dtor-ws> <20161026210805.GA14423@localhost>
-From: Rajat Jain <rajatja@google.com>
-Date: Wed, 26 Oct 2016 14:16:22 -0700
-Message-ID: <CACK8Z6GHv6Fm20EExRWh+QafOF8jg7te9aXoZo5GdNNiOxvv6g@mail.gmail.com> (sfid-20161026_231708_845001_5C2537C9)
-Subject: Re: [PATCH v6] mwifiex: parse device tree node for PCIe
-To: Brian Norris <briannorris@chromium.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh@kernel.org>,
-        Rajat Jain <rajatxjain@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:43428 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933808AbcJUVRz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 17:17:55 -0400
+Message-ID: <1477084667.4068.61.camel@sipsolutions.net> (sfid-20161021_231804_485759_B7C3222F)
+Subject: Re: sequence diagrams in rst documentation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Markus Heiser <markus.heiser@darmarit.de>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Date: Fri, 21 Oct 2016 23:17:47 +0200
+In-Reply-To: <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+         <20161011072119.7ad4e3a3@lwn.net>
+         <1476193466.4118.10.camel@sipsolutions.net>
+         <1476194038.4118.11.camel@sipsolutions.net>
+         <1476791021.6425.25.camel@sipsolutions.net>
+         <20161018175236.75c8c4e2@lwn.net>
+         <1476863488.5927.10.camel@sipsolutions.net>
+         <1477053099.4068.42.camel@sipsolutions.net> <87k2d1q2qx.fsf@intel.com>
+         <1477055055.4068.46.camel@sipsolutions.net>
+         <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 2:08 PM, Brian Norris <briannorris@chromium.org> wrote:
-> On Wed, Oct 26, 2016 at 02:06:48PM -0700, Dmitry Torokhov wrote:
->> On Wed, Oct 26, 2016 at 01:56:34PM -0700, Brian Norris wrote:
->> > On Wed, Oct 26, 2016 at 01:51:48PM -0700, Rajat Jain wrote:
->> > >    On Wed, Oct 26, 2016 at 1:46 PM, Dmitry Torokhov
->> > >    <dmitry.torokhov@gmail.com> wrote:
->> > >      On Wed, Oct 26, 2016 at 01:17:36PM -0700, Brian Norris wrote:
->> > >      Sorry, I just saw this... Why do we need devicetree data for
->> > >      discoverable bus (PCI)? How does the driver work on systems that do not
->> > >      use DT? Why do we need them to behave differently?
->> > >
->> > >    There are a couple of out-of-band GPIO pins from Marvell chip that can
->> > >    serve as wake-up pins (wake up the CPU when asserted). The Marvell chip
->> > >    has to be told which GPIO pin is to be used as the wake-up pin. The pin to
->> > >    be used is system / platform dependent. (On some systems it could be
->> > >    GPIO13, on others it could be GPIO14 etc depending on how the marvell chip
->> > >    is wired up to the CPU).
->>
->> So wakeup pin is not wired to PCIe WAKE?
->
-> Not in our case.
->
->> > There's also calibration data. See "marvell,caldata*" and
->> > "marvell,wakeup-pin" properties. Currently only for SDIO, in
->> > Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt, but
->> > we're adding support for PCIe.
->>
->> How would it all work if I moved the PCIe module from one device to
->> another?
->
-> These boards are soldered down, at least in the case I care about.
 
-That is right. Since the out of band wake-up pin is not standard on
-the PCIe connector - this feature is for soldered chips only.
+> I general I think, we should not include Java into our toolchains
+> even if it is optional. Thats, why I won't vote for
+> http://plantuml.com/
 
+Keep in mind though that such a vote may well end up being a vote not
+just against plantuml, but also against having sequence diagrams to
+start with - at least as far as I'm concerned - since we (rightfully!)
+also don't want to start writing our own infrastructure (again). There
+aren't many alternatives. Even seqdiag/blockdiag isn't nearly as fully
+featured as plantuml.
 
->
-> Brian
+> IMO a tool which generates SVG would be the best, I have to check
+> if I find some or if some of the above could used in this way.
+
+plantuml does create svg :->
+
+Ultimately, I actually think it doesn't matter much whether we add java
+or python or whatever to our toolchain.
+
+As soon as we add external dependencies that have to be fulfilled
+outside of the kernel git tree, and such fulfilment is easy (as it is
+in "sudo apt-get install plantuml python3-sphinxcontrib.plantuml"), it
+hardly matters what exactly is behind it.
+
+So ultimately, the way I see it, we essentially have two choices:
+
+ 1) we reject external dependencies entirely, shipping everything in
+    the tree that we need to build documentation
+ 2) we accept external dependencies, hopefully finding ways to make
+    them optional
+
+In case of 1), which we obviously don't have today since we don't ship
+sphinx and everything, we're basically reduced to having very simple
+python-only plugins. As far as I'm concerned this will mean that I'm
+not adding such diagrams to the kernel documentation, life's too short
+to rewrite something like plantuml, and I can't find anything that's
+pure python (and fulfilling your - IMHO a bit exaggerated - standards).
+
+In case of 2), as long as it's easy to install on a typical Linux
+distro, I think it doesn't actually matter that it's java or whatever
+else.
+
+johannes
