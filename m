@@ -1,107 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from packetmixer.de ([79.140.42.25]:49107 "EHLO
-        mail.mail.packetmixer.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935051AbcJXOgz (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:34331 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933451AbcJUVVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 10:36:55 -0400
-From: Simon Wunderlich <sw@simonwunderlich.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if requested
-Date: Mon, 24 Oct 2016 16:36:51 +0200
-Message-ID: <4116422.yZP7iyh9mq@prime> (sfid-20161024_163712_475199_3642E09D)
-In-Reply-To: <1477318562.4085.28.camel@sipsolutions.net>
-References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com> <3178350.ZYYEYN7rIx@prime> <1477318562.4085.28.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1674394.Csatchs6FI"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+        Fri, 21 Oct 2016 17:21:23 -0400
+Received: by mail-pf0-f175.google.com with SMTP id r16so63141812pfg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 14:21:22 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        rajatja@google.com, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Brian Norris <briannorris@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh@kernel.org>
+Cc: rajatxjain@gmail.com
+Subject: [PATCH v6] mwifiex: parse device tree node for PCIe
+Date: Fri, 21 Oct 2016 14:21:09 -0700
+Message-Id: <1477084869-15612-1-git-send-email-rajatja@google.com> (sfid-20161021_232127_249791_EA9AB54F)
+In-Reply-To: <1477070156-109965-1-git-send-email-rajatja@google.com>
+References: <1477070156-109965-1-git-send-email-rajatja@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1674394.Csatchs6FI
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+From: Xinming Hu <huxm@marvell.com>
 
-On Monday, October 24, 2016 4:16:02 PM CEST Johannes Berg wrote:
-> On Mon, 2016-10-24 at 15:42 +0200, Simon Wunderlich wrote:
-> > Otherwise, it would be pretty much impossible to perform CSAs to
-> > another DFS channel.
-> 
-> I was told that to do that you'd need another NIC that's pre-CAC'ing
-> another channel.
+This patch derives device tree node from pcie bus layer framework, and
+fixes a minor memory leak in mwifiex_pcie_probe() (in failure path).
+Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+marvell-8xxx.txt) to accommodate PCIe changes.
 
-Here is the portion from ETSI 301 893 v1.8.1 [1] (the most recent one to my 
-knowledege), section 4.7.1.4 which describes operation from master devices 
-(Access Points):
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Rajat Jain <rajatja@google.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
+v2: Included vendor and product IDs in compatible strings for PCIe
+chipsets(Rob Herring)
+v3: Patch is created using -M option so that it will only include diff of
+original and renamed files(Rob Herring)
+Resend v3: Resending the patch because I missed to include device tree mailing
+while sending v3.
+v4: Fix error handling, also move-on even if no device tree node is present.
+v5: Update commit log to include memory leak, return -EINVAL instead of -1.
+v6: Remove an unnecessary error print, fix typo in commit log
 
-<snip>
+ .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++--
+ drivers/net/wireless/marvell/mwifiex/pcie.c        | 36 +++++++++++++++++++---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
+ 3 files changed, 39 insertions(+), 8 deletions(-)
+ rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
 
-b) A master device shall only start operations on Available Channels. At  
-installation (or reinstallation) of the equipment, the RLAN is assumed to have 
-no Available Channels within the band 5 250 MHz to 5 350 MHz and/or 5 470 MHz 
-to 5 725 MHz. In such a case, before starting operations on one or more of 
-these channels, the master device shall perform either a Channel Availability 
-Check or an Off-Channel CAC to ensure that there are no radars operating on 
-any selected channel. If no radar has been detected, the channel(s) becomes an
-Available Channel(s) and remains as such until a radar signal is detected 
-during the In-Service Monitoring.
-
-The Channel Availability Check or the Off-Channel CAC may be performed over a 
-wider bandwidth such that all channels within the tested bandwidth become 
-Available Channels. 
-
-NOTE 1:The initial Channel Availability Check may be activated manually at 
-installation or reinstallation of the equipment.
-
-c) Once the RLAN has started operations on an Available Channel, then that 
-channel becomes an Operating Channel. During normal operation, the master 
-device shall monitor all Operating Channels (In-Service Monitoring) to ensure 
-that there is no radar operating within these channel(s). If no radar was 
-detected on an Operating Channel but the RLAN stops operating on that channel, 
-then the channel becomes an Available Channel.
-
-NOTE 2:An RLAN is allowed to start transmissions on multiple (adjacent or non-
-adjacent) Available Channels. In this case all these channels become Operating 
-Channels.
-
-<snap>
-
-As I interpret this, (b) states explicitly that we can have many available 
-channels. We only need to mark channels where we detect a radar. 
-
-BTW, there was also something like a 24h disconnect previously, which was 
-removed in 2009 [2].
-
-Cheers,
-     Simon
-
-[1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/01.08.01_60/
-en_301893v010801p.pdf
-[2] http://www.wlan-skynet.de/docs/rechtliches/etsi_301_893.shtml (german 
-only)
-> 
-> johannes
-
-
---nextPart1674394.Csatchs6FI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCgAGBQJYDhyDAAoJEKEr45hCkp6hBJEP/3Fe+NGd6VwDHNdLBbt2gq80
-KGhm9p6HrBtR7MdkhCDg+vt7S8Ah6bQ+aQD7cpJDfYSP7nO01IosPIRukqBseZGU
-K5wgGP/7kM0ou5WxG123IVrp71NTyiXu9klo4VnbNvfKWLziK9ENyt8yNvI4VloP
-3xaS9KoRPibql4x9j1ZdK6iZ2op5sQ4o4dMXfeoJ4zy4T+gnz5tuTPyFSY2/mUIR
-cNn6pU9fdrq29uGXnByyapZ5rnKWEl6W+7Bu/6KmrydLxYjpb1mUpi5vd8x2b2Zx
-eoc2L3Kowe46u5p6R0ZbClwID6mabBYx4ghUAygvdUdGsHBVxIiJgQsRy1k1RWVX
-VSymhXZjuDuR6qn7KwoS8E3LyhBMtDFL3Efb6mfKeLXkvoriAQUiesgO+WaXQnaO
-jfb+136If8BiK+XL6ensyiTf208S381rZOi5k7f+Oz9Ogbnvil8b6VDgWy1aQV3Z
-JTdcXj7pzzqw+Wv1DsiUe4CSTJ1yTzkIJqbzFWG/gH/YnsAPjKJuZoYNeYTZTdS9
-omfNMom1G4pA6VUOOaR38iUWgE4ktgQNoi3HXRmG081Yr0dFBN4QcQFlLNCIVFpU
-tHQKNule9RI8019V1+ASVinliIkFZYM6HKXeRpGD67Gu88p8B6ZRSty45Q7KCqAO
-8Gg9ZreRxkcYmiI0KOe9
-=dI9I
------END PGP SIGNATURE-----
-
---nextPart1674394.Csatchs6FI--
+diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+similarity index 91%
+rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+index c421aba..dfe5f8e 100644
+--- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
++++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+@@ -1,8 +1,8 @@
+-Marvell 8897/8997 (sd8897/sd8997) SDIO devices
++Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
+ ------
+ 
+-This node provides properties for controlling the marvell sdio wireless device.
+-The node is expected to be specified as a child node to the SDIO controller that
++This node provides properties for controlling the marvell sdio/pcie wireless device.
++The node is expected to be specified as a child node to the SDIO/PCIE controller that
+ connects the device to the system.
+ 
+ Required properties:
+@@ -10,6 +10,8 @@ Required properties:
+   - compatible : should be one of the following:
+ 	* "marvell,sd8897"
+ 	* "marvell,sd8997"
++	* "pci11ab,2b42"
++	* "pci1b4b,2b42"
+ 
+ Optional properties:
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3c3c4f1..f7c84d3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -37,6 +37,22 @@ static struct mwifiex_if_ops pcie_ops;
+ 
+ static struct semaphore add_remove_card_sem;
+ 
++static const struct of_device_id mwifiex_pcie_of_match_table[] = {
++	{ .compatible = "pci11ab,2b42" },
++	{ .compatible = "pci1b4b,2b42" },
++	{ }
++};
++
++static int mwifiex_pcie_probe_of(struct device *dev)
++{
++	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
++		dev_err(dev, "required compatible string missing\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int
+ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 		       size_t size, int flags)
+@@ -178,6 +194,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 					const struct pci_device_id *ent)
+ {
+ 	struct pcie_service_card *card;
++	int ret;
+ 
+ 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
+ 		 pdev->vendor, pdev->device, pdev->revision);
+@@ -199,13 +216,24 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 		card->pcie.can_ext_scan = data->can_ext_scan;
+ 	}
+ 
+-	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
+-			     MWIFIEX_PCIE)) {
+-		pr_err("%s failed\n", __func__);
+-		return -1;
++	/* device tree node parsing and platform specific configuration*/
++	if (pdev->dev.of_node) {
++		ret = mwifiex_pcie_probe_of(&pdev->dev);
++		if (ret)
++			goto err_free;
+ 	}
+ 
++	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
++			       MWIFIEX_PCIE);
++	if (ret) {
++		pr_err("%s failed\n", __func__);
++		goto err_free;
++	}
+ 	return 0;
++
++err_free:
++	kfree(card);
++	return ret;
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 2a162c3..c8dccf5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -2218,7 +2218,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+ 		 * The cal-data can be read from device tree and/or
+ 		 * a configuration file and downloaded to firmware.
+ 		 */
+-		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
++		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
++		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
+ 		    adapter->dev->of_node) {
+ 			adapter->dt_node = adapter->dev->of_node;
+ 			if (of_property_read_u32(adapter->dt_node,
+-- 
+2.8.0.rc3.226.g39d4020
