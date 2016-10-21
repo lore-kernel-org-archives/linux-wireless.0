@@ -1,50 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15006 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750833AbcJZJSS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 05:18:18 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 5/8] cfg80211: Add KEK/nonces for FILS association frames
-Date: Wed, 26 Oct 2016 09:18:14 +0000
-Message-ID: <20161026091810.GA3660@jouni.qca.qualcomm.com> (sfid-20161026_111822_540449_FD000ED6)
-References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
- <1477460187.4059.4.camel@sipsolutions.net>
-In-Reply-To: <1477460187.4059.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:60796 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755481AbcJUMZU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 08:25:20 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>,
+        jouni@qca.qualcomm.com, usdutt@qti.qualcomm.com,
+        amarnath@qca.qualcomm.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] cfg80211: validate beacon int as part of iface combinations
+Date: Fri, 21 Oct 2016 14:25:13 +0200
+Message-Id: <1477052714-11223-3-git-send-email-johannes@sipsolutions.net> (sfid-20161021_142531_140574_5E3AB88D)
+In-Reply-To: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
+References: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBPY3QgMjYsIDIwMTYgYXQgMDc6MzY6MjdBTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
-cm90ZToNCj4gPiArKysgYi9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQo+ID4gKwlbTkw4MDIxMV9B
-VFRSX0ZJTFNfS0VLXSA9IHsgLnR5cGUgPSBOTEFfQklOQVJZLA0KPiA+ICsJCQkJwqDCoMKgwqAu
-bGVuID0gRklMU19NQVhfS0VLX0xFTiB9LA0KPiA+ICsJW05MODAyMTFfQVRUUl9GSUxTX05PTkNF
-U10gPSB7IC50eXBlID0gTkxBX0JJTkFSWSwNCj4gPiArCQkJCcKgwqDCoMKgwqDCoMKgLmxlbiA9
-IDIgKiBGSUxTX05PTkNFX0xFTiB9LA0KDQo+IElmIHlvdSByZW1vdmUgdGhlIHR5cGUgPSBOTEFf
-QklOQVJZIGFuZCBqdXN0IGxlYXZlIHRoZSB0eXBlIHplcm8sIHRoZW4NCj4geW91J2xsIGdldCAq
-bWluaW11bSogbGVuZ3RoIHZhbGlkYXRpb24sIHJhdGhlciB0aGFuIGxpbWl0aW5nIHRoZQ0KPiBt
-YXhpbXVtIGxlbmd0aC4gVGhhdCBzZWVtcyBtb3JlIGFwcHJvcHJpYXRlIGZvciB0aGUgbm9uY2Vz
-Pw0KDQpGSUxTX0tFSyBpcyB2YXJpYWJsZSBsZW5ndGgsIGJ1dCBGSUxTX05PTkNFUyBzaG91bGQg
-YmUgZXhhY3RseSAyICoNCkZJTFNfTk9OQ0VfTEVOLiBJIGRpZG4ndCByZW1lbWJlciB0aGUgbWlu
-aW11bSBsZW5ndGggY2FzZSBoZXJlLCBidXQgeWVzLA0KdGhhdCBzb3VuZHMgcmVhc29uYWJsZSBm
-b3IgRklMU19OT05DRVMuDQoNCj4gPiArCWlmIChpbmZvLT5hdHRyc1tOTDgwMjExX0FUVFJfRklM
-U19OT05DRVNdKSB7DQo+ID4gKwkJaWYgKG5sYV9sZW4oaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRS
-X0ZJTFNfTk9OQ0VTXSkNCj4gPiAhPQ0KPiA+ICsJCcKgwqDCoMKgMiAqIEZJTFNfTk9OQ0VfTEVO
-KQ0KPiA+ICsJCQlyZXR1cm4gLUVJTlZBTDsNCj4gDQo+IFlvdSdyZSB2YWxpZGF0aW5nIHRoZSAq
-ZXhhY3QqIGxlbmd0aCBoZXJlLCB3aGljaCB1bmZvcnR1bmF0ZWx5IG5sYXR0cg0KPiBkb2Vzbid0
-IHN1cHBvcnQgcmlnaHQgbm93LCBidXQgcGVyaGFwcyB3ZSBjYW4gbGl2ZSB3aXRoIGNoZWNraW5n
-IHRoYXQNCj4gaXQncyBhdCBsZWFzdCB0aGF0IG1hbnkgYnl0ZXMsIGFuZCB1c2luZyBvbmx5IDIq
-bm9uY2VzPyBXZSBkbyB0aGF0IGZvcg0KPiBtb3N0IG90aGVyIGF0dHJpYnV0ZXMgKGxpa2UgTUFD
-IGFkZHJlc3NlcykuDQoNClRoaXMgd2FzIGJlY2F1c2Ugb2YgdGhlIC5sZW4gYWJvdmUgZW5kaW5n
-IHVwIGFsbG93aW5nIHNob3J0ZXIgdmFsdWVzLi4NClNpbmNlIHdlIGRvIHRoYXQgbWluaW11bSBs
-ZW5ndGggY2hlY2sgb25seSBmb3IgbnVtYmVyIG9mIG90aGVyDQphdHRyaWJ1dGVzLCBJIGd1ZXNz
-IHdlIGNhbiBkbyBpdCBoZXJlIGFzIHdlbGwgYW5kIGlnbm9yZSB3aGF0ZXZlciBlbHNlDQp0aGUg
-dXNlciBzcGFjZSBtaWdodCBoYXZlIGFkZGVkIGluY29ycmVjdGx5Lg0KDQo+IE9yIGRvIHdlIGV4
-cGVjdCB0byBleHRlbmQgdGhpcyB0byBtb3JlIHRoYW4gMiBub25jZXMgaW4gdGhlIGZ1dHVyZSwg
-YXQNCj4gd2hpY2ggcG9pbnQgd2UnbGwgbmVlZCB0aGUgbGVuZ3RoPw0KDQpObywgdGhpcyBzaG91
-bGQgcmVtYWluIGV4YWN0bHkgdHdvIG5vbmNlcyBhbmQgZWFjaCBvZiB0aG9zZSBoYXZpbmcNCmV4
-YWN0bHkgMTYgb2N0ZXRzLg0KDQotLSANCkpvdW5pIE1hbGluZW4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgIFBHUCBpZCBFRkM4OTVGQQ==
+From: Johannes Berg <johannes.berg@intel.com>
+
+Remove the pointless checking against interface combinations in
+the initial basic beacon interval validation, that currently isn't
+taking into account radar detection or channels properly. Instead,
+just validate the basic range there, and then delay real checking
+to the interface combination validation that drivers must do.
+
+This means that drivers wanting to use the beacon_int_min_gcd will
+now have to pass the new_beacon_int when validating the AP/mesh
+start.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 12 +++-----
+ net/wireless/util.c    | 82 +++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 55 insertions(+), 39 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index ec39f891b7a3..d1ffbc3a8e55 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -784,19 +784,15 @@ struct cfg80211_csa_settings {
+  * @iftype_num: array with the number of interfaces of each interface
+  *	type.  The index is the interface type as specified in &enum
+  *	nl80211_iftype.
+- * @beacon_int_gcd: a value specifying GCD of all beaconing interfaces,
+- *	the GCD of a single value is considered the value itself, so for
+- *	a single interface this should be set to that interface's beacon
+- *	interval
+- * @beacon_int_different: a flag indicating whether or not all beacon
+- *	intervals (of beaconing interfaces) are different or not.
++ * @new_beacon_int: set this to the beacon interval of a new interface
++ *	that's not operating yet, if such is to be checked as part of
++ *	the verification
+  */
+ struct iface_combination_params {
+ 	int num_different_channels;
+ 	u8 radar_detect;
+ 	int iftype_num[NUM_NL80211_IFTYPES];
+-	u32 beacon_int_gcd;
+-	bool beacon_int_different;
++	u32 new_beacon_int;
+ };
+ 
+ /**
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 78bf53705466..40d7a6bf9432 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -13,6 +13,7 @@
+ #include <net/dsfield.h>
+ #include <linux/if_vlan.h>
+ #include <linux/mpls.h>
++#include <linux/gcd.h>
+ #include "core.h"
+ #include "rdev-ops.h"
+ 
+@@ -1558,47 +1559,52 @@ bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
+ }
+ EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
+ 
+-int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+-				 enum nl80211_iftype iftype, u32 beacon_int)
++static void cfg80211_calculate_bi_data(struct wiphy *wiphy, u32 new_beacon_int,
++				       u32 *beacon_int_gcd,
++				       bool *beacon_int_different)
+ {
+ 	struct wireless_dev *wdev;
+-	struct iface_combination_params params = {
+-		.beacon_int_gcd = beacon_int,	/* GCD(n) = n */
+-	};
+ 
+-	if (beacon_int < 10 || beacon_int > 10000)
+-		return -EINVAL;
++	*beacon_int_gcd = 0;
++	*beacon_int_different = false;
+ 
+-	params.iftype_num[iftype] = 1;
+-	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
++	list_for_each_entry(wdev, &wiphy->wdev_list, list) {
+ 		if (!wdev->beacon_interval)
+ 			continue;
+ 
+-		params.iftype_num[wdev->iftype]++;
+-	}
+-
+-	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+-		u32 bi_prev = wdev->beacon_interval;
+-
+-		if (!wdev->beacon_interval)
++		if (!*beacon_int_gcd) {
++			*beacon_int_gcd = wdev->beacon_interval;
+ 			continue;
++		}
+ 
+-		/* slight optimisation - skip identical BIs */
+-		if (wdev->beacon_interval == beacon_int)
++		if (wdev->beacon_interval == *beacon_int_gcd)
+ 			continue;
+ 
+-		params.beacon_int_different = true;
+-
+-		/* Get the GCD */
+-		while (bi_prev != 0) {
+-			u32 tmp_bi = bi_prev;
++		*beacon_int_different = true;
++		*beacon_int_gcd = gcd(*beacon_int_gcd, wdev->beacon_interval);
++	}
+ 
+-			bi_prev = params.beacon_int_gcd % bi_prev;
+-			params.beacon_int_gcd = tmp_bi;
+-		}
++	if (new_beacon_int && *beacon_int_gcd != new_beacon_int) {
++		*beacon_int_different = true;
++		*beacon_int_gcd = gcd(*beacon_int_gcd, new_beacon_int);
+ 	}
++}
+ 
+-	return cfg80211_check_combinations(&rdev->wiphy, &params);
++int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
++				 enum nl80211_iftype iftype, u32 beacon_int)
++{
++	/*
++	 * This is just a basic pre-condition check; if interface combinations
++	 * are possible the driver must already be checking those with a call
++	 * to cfg80211_check_combinations(), in which case we'll validate more
++	 * through the cfg80211_calculate_bi_data() call and code in
++	 * cfg80211_iter_combinations().
++	 */
++
++	if (beacon_int < 10 || beacon_int > 10000)
++		return -EINVAL;
++
++	return 0;
+ }
+ 
+ int cfg80211_iter_combinations(struct wiphy *wiphy,
+@@ -1612,6 +1618,21 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 	int i, j, iftype;
+ 	int num_interfaces = 0;
+ 	u32 used_iftypes = 0;
++	u32 beacon_int_gcd;
++	bool beacon_int_different;
++
++	/*
++	 * This is a bit strange, since the iteration used to rely only on
++	 * the data given by the driver, but here it now relies on context,
++	 * in form of the currently operating interfaces.
++	 * This is OK for all current users, and saves us from having to
++	 * push the GCD calculations into all the drivers.
++	 * In the future, this should probably rely more on data that's in
++	 * cfg80211 already - the only thing not would appear to be any new
++	 * interfaces (while being brought up) and channel/radar data.
++	 */
++	cfg80211_calculate_bi_data(wiphy, params->new_beacon_int,
++				   &beacon_int_gcd, &beacon_int_different);
+ 
+ 	if (params->radar_detect) {
+ 		rcu_read_lock();
+@@ -1674,12 +1695,11 @@ int cfg80211_iter_combinations(struct wiphy *wiphy,
+ 		if ((all_iftypes & used_iftypes) != used_iftypes)
+ 			goto cont;
+ 
+-		if (params->beacon_int_gcd) {
++		if (beacon_int_gcd) {
+ 			if (c->beacon_int_min_gcd &&
+-			    params->beacon_int_gcd < c->beacon_int_min_gcd)
++			    beacon_int_gcd < c->beacon_int_min_gcd)
+ 				goto cont;
+-			if (!c->beacon_int_min_gcd &&
+-			    params->beacon_int_different)
++			if (!c->beacon_int_min_gcd && beacon_int_different)
+ 				goto cont;
+ 		}
+ 
+-- 
+2.8.1
