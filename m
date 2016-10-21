@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:38091 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757997AbcJQJa7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:30:59 -0400
-Received: by mail-it0-f44.google.com with SMTP id 66so2764699itl.1
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:30:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476696226.19992.13.camel@sipsolutions.net>
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net>
- <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 17 Oct 2016 10:30:58 +0100
-Message-ID: <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> (sfid-20161017_113104_952836_B68D8AF7)
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42546 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751839AbcJUT43 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 15:56:29 -0400
+Message-ID: <1477079782.4068.50.camel@sipsolutions.net> (sfid-20161021_215633_140987_4E7B31C8)
+Subject: Re: [PATCH 2/2] mac80211: use inline kernel-doc for struct
+ ieee80211_hw
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Jani Nikula <jani.nikula@intel.com>,
+        linux-wireless@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Date: Fri, 21 Oct 2016 21:56:22 +0200
+In-Reply-To: <a6fb17b3-0ec6-e23b-4ae3-f84385cf84ae@broadcom.com> (sfid-20161021_205937_290937_4C8B3DB1)
+References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
+         <1477054644-5945-2-git-send-email-jani.nikula@intel.com>
+         <1477054892.4068.44.camel@sipsolutions.net>
+         <a6fb17b3-0ec6-e23b-4ae3-f84385cf84ae@broadcom.com>
+         (sfid-20161021_205937_290937_4C8B3DB1)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 October 2016 at 10:23, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> Apologies for going back and forth on this, but it appears there may
->> be another way to deal with this.
->>
->> First of all, we only need this handling for the authenticated data,
->
-> Are you sure b_0/j_0 aren't needed? We pass those
-> to aead_request_set_crypt(), and I wasn't sure what that really did
-> internally, perhaps like the internal data.
->
+On Fri, 2016-10-21 at 20:59 +0200, Arend van Spriel wrote:
+> Me neither. I actually found it annoying to have all kernel-doc above
+> the type definition and indeed easy to miss fields. Now struct
+> ieee80211_hw is not alone and we have it all over the place in the
+> wireless subsystem. Is this something we want to embrace and maybe
+> find janitors/newbies/coccinelle-gurus to address it. Not sure if
+> coccinelle could deal with this.
 
-They are the IV[], which is a fixed length parameter of the algorithm.
-In contrast, the AAD[] could be of arbitrary length (from the POV of
-the crypto API) so it uses scatterlists.
+I don't think coccinelle can look into comments, though perhaps it
+could be used to *place* them - use kernel-doc script to extract them
+first, and then make that output a coccinelle script to place the
+comment back at the right spot?
 
-> Testing with that on the stack does seem to work, in fact.
->
-> Surely we need zero for GMAC though, since we also put that into the sg
-> list. Thus for GMAC we definitely need 20+16 bytes, and since I round
-> up to a cacheline (at least on SMP) it doesn't really matter that we
-> could get 36 instead of the 48 I have now.
->
->> and only for CCM and GCM, not CMAC (which does not use scatterlists
->> at all, it simply calls the AES cipher directly)
->
-> I didn't modify CMAC, I think, only GMAC, which also uses scatterlists.
->
+Overall though, not sure that's worth it over just doing it by hand
+once? Then again, that could be used to mass-convert more ... :)
 
-Ah ok, I misread the patch.
-
->> So that leaves a fixed 20 bytes for GCM and fixed 32 bytes for CCM,
->
-> and 36 for GMAC :)
-
-Yes. But as I replied, setting the req size is not supported atm,
-although it is reasonable to demand a way to allocate additional data
-in the request specifically for this issue. So let's proceed with the
-aead_request_alloc/free patch, but I would like to propose something
-on the API side to address this particular issue
+johannes
