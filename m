@@ -1,88 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:35691 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751154AbcJFIH1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 04:07:27 -0400
-Received: by mail-wm0-f46.google.com with SMTP id f193so274320084wmg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 01:07:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
- <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> <CABPxzYKWJ=uGchDkEOd_jL__h5qiR_BAmkPJ-CiaQC-SF5JtCA@mail.gmail.com>
- <CANfLQrbRvQb5a2AsqY0jGYeuDqC1c_7x8tUbQSm2=QPt1gT5eA@mail.gmail.com> <db6d5803-3fec-64d9-5290-32216d1bd031@broadcom.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Thu, 6 Oct 2016 11:07:24 +0300
-Message-ID: <CANfLQrY1NahfQF0xheocVFdJHgxhSE5YbFUwcm3t6e0Fur-YGg@mail.gmail.com> (sfid-20161006_100734_903466_5142010E)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:60800 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932279AbcJUMZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 08:25:25 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>,
+        jouni@qca.qualcomm.com, usdutt@qti.qualcomm.com,
+        amarnath@qca.qualcomm.com, Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: validate new interface's beacon intervals
+Date: Fri, 21 Oct 2016 14:25:14 +0200
+Message-Id: <1477052714-11223-4-git-send-email-johannes@sipsolutions.net> (sfid-20161021_142531_714387_DBF77FD6)
+In-Reply-To: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
+References: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 5, 2016 at 11:12 AM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 4-10-2016 13:39, Gucea Doru wrote:
->> On Sat, Oct 1, 2016 at 2:52 PM, Arend van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>>
->>>>
->>>> On 29-09-16 13:32, Gucea Doru wrote:
->>>>> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->>>>>> What is the decision triggering the exit from the PS mode immediately
->>>>>> after the ping request? I am asking this because 802.11 PS legacy
->>>>>> specifies that the client should wait for a beacon with TIM set in
->>>>>> order to wake up: in my case, there is no beacon between the ping
->>>>>> request message and the Null frame that announces the exit from the PS
->>>>>> mode.
->>>>>
->>>>>
->>>>> Any help would be highly appreciated :)
->>>>
->>>> Actually though I already sent you are reply, but alas here it is.
->>>>
->>>> bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
->>>> drivers. Regardless your question is more for firmware running on the
->>>> device. So like the same behavior would be observed when using brcmfmac
->>>> with same firmware.
->>>>
->>>>> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
->>>>> detects that the bit corresponding to its AID is 1 i the TIM, the STA
->>>>> shall issue a PS Poll". In my capture there are cases when the STA
->>>>> exits the PS mode without waiting for a beacon.
->>>>
->>>> It is a bit tricky, but the standard does not explicitly say the STA
->>>> should be in power-save at any other time. So it is difficult to say
->>>> what event occurred on the STA side to exit PS mode. Also STA means
->>>> P2P-Client as you say. That means that you have multiple interfaces:
->>>> regular STA and P2P-Client. So is the STA connected to some other AP or
->>>> just not connected. wpa_supplicant will do intermittent scan or initiate
->>>> scheduled scan by which firmware will scan at a certain interval. That
->>>> is just some things I can come up with and I am sure there are more.
->>
->> I agree that there may be some events belonging to the regular STA
->> interface that could trigger the Null Frame (which includes the exit
->> from PS Mode). However, I would expect to see some management frames
->> in the air before/after the Null Packet (e.g.: a Probe request in case
->> of a scheduled scan). But in my case the trigger for the Null frame
->> seems to be the ping request packet, the scenario is the same every
->> time: ping request -> Block ACK -> Null Frame (Wireshark trace
->> confirms this behavior).
->>
->> I thought that you had a power save optimization algorithm that keeps
->> the card on a few milliseconds just to see if we can have a fast reply
->> from the peer. Does this ring a bell? :)
->
-> It does not. That would be implemented in firmware. As said I am working
-> on brcmfmac/brcmsmac. So bcmdhd and firmware are not my expertise.
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-Arend, could you please redirect me to a Broadcom firmware maintainer?
+As part of interface combination checking, verify any new
+interface's beacon intervals. In fact, just always add the
+beacon interval since that's harmless.
 
-Thank you,
-Doru
+With this patch, mac80211 is prepared for drivers that set
+the min_beacon_int_gcd parameter in interface combinations.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c  |  3 ++-
+ net/mac80211/util.c | 10 ++++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index eb68add4393c..e91e503bf992 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -864,6 +864,8 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	}
+ 	sdata->needed_rx_chains = sdata->local->rx_chains;
+ 
++	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
++
+ 	mutex_lock(&local->mtx);
+ 	err = ieee80211_vif_use_channel(sdata, &params->chandef,
+ 					IEEE80211_CHANCTX_SHARED);
+@@ -894,7 +896,6 @@ static int ieee80211_start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 					      vlan->vif.type);
+ 	}
+ 
+-	sdata->vif.bss_conf.beacon_int = params->beacon_interval;
+ 	sdata->vif.bss_conf.dtim_period = params->dtim_period;
+ 	sdata->vif.bss_conf.enable_beacon = true;
+ 	sdata->vif.bss_conf.allow_p2p_go_ps = sdata->vif.p2p;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 7f24bdc68f71..ac59fbd280df 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -3326,6 +3326,16 @@ int ieee80211_check_combinations(struct ieee80211_sub_if_data *sdata,
+ 	if (WARN_ON(iftype >= NUM_NL80211_IFTYPES))
+ 		return -EINVAL;
+ 
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT) {
++		/*
++		 * always passing this is harmless, since it'll be the
++		 * same value that cfg80211 finds if it finds the same
++		 * interface ... and that's always allowed
++		 */
++		params.new_beacon_int = sdata->vif.bss_conf.beacon_int;
++	}
++
+ 	/* Always allow software iftypes */
+ 	if (local->hw.wiphy->software_iftypes & BIT(iftype)) {
+ 		if (radar_detect)
+-- 
+2.8.1
