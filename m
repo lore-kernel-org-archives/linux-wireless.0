@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37253 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757081AbcJXLkF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 07:40:05 -0400
-Received: by mail-wm0-f48.google.com with SMTP id f193so113130679wmg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 04:40:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <emfd19c3e4-1b17-443b-b80a-e6b60a49f9dc@nb-mak>
-References: <emfd19c3e4-1b17-443b-b80a-e6b60a49f9dc@nb-mak>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 24 Oct 2016 13:40:03 +0200
-Message-ID: <CA+BoTQkXtEcL9yk8_rYb3Z=CBkzs5R1LyMZfVCbGrsH_3Lx7eg@mail.gmail.com> (sfid-20161024_134009_512740_82945787)
-Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
-To: Matthias Klein <matthias.klein@optimeas.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:33226 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932359AbcJUNRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 09:17:05 -0400
+Message-ID: <1477055820.4068.48.camel@sipsolutions.net> (sfid-20161021_151708_371143_708628EF)
+Subject: Re: [PATCH 1/2] mac80211: fix some sphinx warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jani Nikula <jani.nikula@intel.com>, linux-wireless@vger.kernel.org
+Cc: linux-doc@vger.kernel.org
+Date: Fri, 21 Oct 2016 15:17:00 +0200
+In-Reply-To: <87h985q1y6.fsf@intel.com>
+References: <1477054644-5945-1-git-send-email-jani.nikula@intel.com>
+         <1477054872.4068.43.camel@sipsolutions.net> <87h985q1y6.fsf@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 October 2016 at 12:18, Matthias Klein <matthias.klein@optimeas.de> wr=
-ote:
-> I also try to get a pcie wifi card (Compex WLE600VX) running in the clear=
-fog
-> pro board with kernel 4.4.
->
-> As I read in this thread the "irg.mode=3D1" shoud help:
-> https://www.spinics.net/lists/linux-wireless/msg155685.html
->
-> But it is not working for me:
->
-[...]
-> [ 97.899370] ath10k_pci 0000:01:00.0: Refused to change power state,
-> currently in D3
-> [ 97.938045] ath10k_pci 0000:01:00.0: failed to wake up device : -110
-> [ 97.944973] ath10k_pci: probe of 0000:01:00.0 failed with error -110
-[...]
-> 01:00.0 Network controller: Qualcomm Atheros QCA988x 802.11ac Wireless
-> Network Adapter (rev ff) (prog-if ff)
->         !!! Unknown header type 7f
+On Fri, 2016-10-21 at 16:14 +0300, Jani Nikula wrote:
+> On Fri, 21 Oct 2016, Johannes Berg <johannes@sipsolutions.net> wrote:
+> > 
+> > On Fri, 2016-10-21 at 15:57 +0300, Jani Nikula wrote:
+> > > 
+> > > Signed-off-by: Jani Nikula <jani.nikula@intel.com>
+> > > ---
+> > >  include/net/mac80211.h | 21 +++++++++++++--------
+> > >  1 file changed, 13 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> > > index a810dfcb83c2..e2dba93e374f 100644
+> > > --- a/include/net/mac80211.h
+> > > +++ b/include/net/mac80211.h
+> > > @@ -811,14 +811,18 @@ enum mac80211_rate_control_flags {
+> > >   * in the control information, and it will be filled by the rate
+> > >   * control algorithm according to what should be sent. For
+> > > example,
+> > >   * if this array contains, in the format { <idx>, <count> } the
+> > > - * information
+> > > + * information::
+> > > 
+> > [...]
+> > 
+> > interesting, are these not enabled by default?
 
-The device looks completely unresponsive.
+> rst wants indented blocks to be separated by blank lines from the
+> preceding and following blocks. For that you could just add the blank
+> lines, and it'll work.
+> 
+> I presumed this was nicer as preformatted/monospaced text, and for
+> that you'll need the "::". Up to you to have that or not.
 
-I don't think this is MSI problem. This error happens before
-interrupts are even set up.
+Well, I meant the warnings :)
 
-I suspect platform/PCI/PM specific problem. I would suggest bisecting
-the kernel and seeing which patch is making the difference.
+But yeah, this is better as preformatted text. It never came out that
+way with docbook either, I think, but now we can fix that.
 
-I (naively) went through pci/pm git log and found the following was
-applied on 4.7-rc2 (i.e. prior to 4.7 release):
+> > I guess I'll pick up these patches, even if they probably make
+> > things
+> > worse in my tree, since there it's still using docbook. But once we
+> > merge everything it should be good then.
+> 
+> Oh, it's built as reStructuredText in Linus' tree. Again, up to you.
 
- commit 006d44e49a259b39947366728d65a873a19aadc0
- Author: Mika Westerberg <mika.westerberg@linux.intel.com>
- Date:   Thu Jun 2 11:17:15 2016 +0300
+Right. No worries. I just haven't gotten my own change back from
+Linus's tree into mine, but it only means that generating the doc from
+mac80211-next or net-next might be weird, which isn't a problem.
 
-     PCI: Add runtime PM support for PCIe ports
-
->From reading the commit log it seems to me like it could be it.
-
-ath10k tries to wake up the device during probing before it starts
-talking to it and it does so through MMIO/PCI config space. If it's
-not mapped properly then driver will not be able to wake it up and
-will timeout waiting for it.
-
-Can you try cherry-picking it into your 4.4.24 and see if it helps?
-
-
-Micha=C5=82
+johannes
