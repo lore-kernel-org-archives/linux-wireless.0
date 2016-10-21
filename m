@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ore.jhcloos.com ([198.147.22.87]:40906 "EHLO ore.jhcloos.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S946907AbcJaVEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 17:04:40 -0400
-From: James Cloos <cloos@jhcloos.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Subject: Re: Backwards 11ac
-In-Reply-To: <89dd7bd2-f6de-ea90-79ee-65d73d264522@dd-wrt.com> (Sebastian
-        Gottschall's message of "Mon, 31 Oct 2016 21:13:35 +0100")
-References: <m3oa21ftno.fsf@carbon.jhcloos.org>
-        <f8094de7-1357-a9d0-fee3-b28e06dd3bc7@dd-wrt.com>
-        <m34m3sfjsv.fsf@carbon.jhcloos.org>
-        <89dd7bd2-f6de-ea90-79ee-65d73d264522@dd-wrt.com>
-Date: Mon, 31 Oct 2016 17:02:59 -0400
-Message-ID: <m3y414dyf0.fsf@carbon.jhcloos.org> (sfid-20161031_220443_715269_4DCBB940)
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:34163 "EHLO
+        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933198AbcJUM57 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 21 Oct 2016 08:57:59 -0400
+Received: by mail-yw0-f182.google.com with SMTP id w3so92566836ywg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 05:57:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Nicklas Persson <nicklas.m.persson@gmail.com>
+Date: Fri, 21 Oct 2016 14:57:57 +0200
+Message-ID: <CAJHOaSPSPXh3XD7Rv_7G0g8yUWgu2ior9Qbk_00vNDQNU3UB-g@mail.gmail.com> (sfid-20161021_145813_193936_2DAE752E)
+Subject: wl12xx stuck in fw
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>>> "SG" == Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
+Hi, I have been debugging my WLAN driver interface for a while. I have
+a Beaglebone equivalent board with the TI wl1271 wireless module. I am
+very new to linux drivers and wireless configuration so these couple
+of days I have spent have been really interesting and I have much more
+knowledge now.
 
-JC>> Thanks for that info, but there is still the issue that download
-JC>> bandwidth is limited to around 6 Mbps whereas upload bandwidth is around
-JC>> 50 Mbps
+My problem is that when I run "ifconfig wlan0 up" I get the following
+message over and over again:
 
-SG> thats unusual. i do not suffer from this issue with the latest driver
-SG> code and also never had it. but as i said. the visual tx rate doesnt
-SG> matter and isnt a reason for any issue here.
-SG> its just a number
+"wlcore: ERROR Tx stuck (in FW) for 5000 ms. Starting recover"
 
-Those numbers above are actual throughput, tested via rsync/ssh.  Even
-adding in the rsync, ssh, tcp and ip overheads that is still worse than
-the 11n-40 on the 2.4 band.  And of course backwards.
+I successfully done a calibration, that does not help. I also tried
+with the default .nvs file that is provided.
 
-Does anyone have any explanation for the backwards bandwidth or solution
-for how to fix it?
+I have tried with different firmware binaries with no luck. Actually,
+I have browsed the source code for wl12xx and wlcore and it seems like
+I need to use the 5-series of firmware binaries so I have been using
+those for the most time.
 
--JimC
--- 
-James Cloos <cloos@jhcloos.com>         OpenPGP: 0x997A9F17ED7DAEA6
+I have rebuilt the kernel with a lot of added printk()'s all over the
+place but I do not understand at all what is happening. My guess is
+that there is something with the watchdog and that the driver thinks
+that the firmware/wlan module is not responding.
+
+I am really desperate for some guidance or some pointers. What can I try next?
+
+Thanks,
+Regards Nicklas.
