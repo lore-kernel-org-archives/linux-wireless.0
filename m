@@ -1,47 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39644 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751544AbcJCHvx (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:34279 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754493AbcJVTNK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 03:51:53 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Marty Faltesek <mfaltesek@google.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
-Date: Mon, 3 Oct 2016 07:51:45 +0000
-Message-ID: <87bmz1swdr.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_095156_139475_ADD72684)
-References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
-In-Reply-To: <1473801118-103112-1-git-send-email-mfaltesek@google.com> (Marty
-        Faltesek's message of "Tue, 13 Sep 2016 17:11:58 -0400")
-Content-Type: text/plain; charset="us-ascii"
+        Sat, 22 Oct 2016 15:13:10 -0400
+Received: by mail-qt0-f175.google.com with SMTP id q7so107820390qtq.1
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2016 12:13:10 -0700 (PDT)
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: cookie_counter in wiphy object
+Message-ID: <0e3d457d-b0d1-f2b1-b18b-3f7b3e95365c@broadcom.com> (sfid-20161022_211315_072299_73335A3F)
+Date: Sat, 22 Oct 2016 21:13:04 +0200
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
+Hi Johannes,
 
-> Caching calibration data allows it to be accessed when the
-> device is not active.
->
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+Since commit a442b761b24b ("cfg80211: add add_nan_func / del_nan_func")
+there is a cookie_counter in the wiphy object. It is only used by the
+add_nan_func now, but do we want to consolidate all cookie returning
+functions to use this cookie counter, eg. in .remain_on_channel callback.
 
-[...]
-
-> +int
-> +ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
-> +{
-
-[...]
-
-> +	ath10k_cal_data_alloc(ar, &ar->cal_data);
-[...]
-
-> +	ret =3D ath10k_cal_data_alloc(ar, &file->private_data);
-
-Pointer to pointer parameters can be a source of problems and if we
-could use one shared buffer for both of these cases when it would
-simplify the code and we would need the buf parameter at all.
-
---=20
-Kalle Valo=
+Regards,
+Arend
