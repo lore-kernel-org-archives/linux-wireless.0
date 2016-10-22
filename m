@@ -1,61 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:35605 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbcJLEeY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 00:34:24 -0400
-MIME-Version: 1.0
-In-Reply-To: <1476180668.17022.21.camel@tiscali.nl>
-References: <20161010071943.4717-1-chris@rorvick.com> <1476108164.5210.11.camel@coelho.fi>
- <1476180668.17022.21.camel@tiscali.nl>
-From: Chris Rorvick <chris@rorvick.com>
-Date: Tue, 11 Oct 2016 23:32:47 -0500
-Message-ID: <CAEUsAPbEf=hr1ki267qKpenWW_UBO93KY8q6-EdqWpk15Yhcnw@mail.gmail.com> (sfid-20161012_063501_910309_BD5721AA)
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-To: Paul Bolle <pebolle@tiscali.nl>
-Cc: Luca Coelho <luca@coelho.fi>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:57024 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751816AbcJVUeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Oct 2016 16:34:21 -0400
+Message-ID: <1477168456.4123.10.camel@sipsolutions.net> (sfid-20161022_223424_647264_5427266A)
+Subject: Re: [NOT FOR MERGE] ath9k: work around key cache corruption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Antonio Quartulli <a@unstable.cc>, ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Antonio Quartulli <antonio@open-mesh.com>
+Date: Sat, 22 Oct 2016 22:34:16 +0200
+In-Reply-To: <20161022134222.GQ12558@prodigo.lan> (sfid-20161022_154307_816691_A0A58C81)
+References: <20161018083552.28592-1-a@unstable.cc>
+         <20161022134222.GQ12558@prodigo.lan> (sfid-20161022_154307_816691_A0A58C81)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Oct 11, 2016 at 5:11 AM, Paul Bolle <pebolle@tiscali.nl> wrote:
-> For what it's worth, on my machine I have twenty (!) SPLX entries, all
-> reading:
->     Name (SPLX, Package (0x04)
->     {
->         Zero,
->         Package (0x03)
->         {
->             0x80000000,
->             0x80000000,
->             0x80000000
->         },
->
->         Package (0x03)
->         {
->            0x80000000,
->            0x80000000,
->            0x80000000
->         },
->
->         Package (0x03)
->         {
->             0x80000000,
->             0x80000000,
->             0x80000000
->         }
->     })
 
-I actually see exactly the same on my Dell XPS 13 (9350) when I  use
-acpidump, etc.  I typed the entry I included in the commit log by hand
-based on what the driver gets back from the SPLC method (I added a
-function to dump the returned object.)
+> "The patch itself has (at least) one big problem. It is using some
+> mac80211
+> internals in ath_key_config_iter to make sure that the uploaded keys
+> were
+> actually programmed in the hardware. Without this check the keys
+> could end up
+> in the lower slots and thus break all connections."
 
-Chris
+The KEY_FLAG_UPLOADED_TO_HARDWARE use? Might not be so nice, but it's
+probably not really a problem. If you wanted to avoid it, you could
+just use the hw_key_idx in some way, e.g. the highest-order bit
+indicates that you've set this value, or you just make sure that 0 is
+an invalid value and set it to real index + 1 or something, then you
+can check that?
+
+johannes
