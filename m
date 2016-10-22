@@ -1,64 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54648 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56994 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752864AbcJFLgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 07:36:36 -0400
-Message-ID: <1475753787.2015.13.camel@sipsolutions.net> (sfid-20161006_133639_850419_EC5DAD6F)
-Subject: Re: [PATCHv4] mac80211: check A-MSDU inner frame source address on
- AP interfaces
+        id S1754877AbcJVUaN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 22 Oct 2016 16:30:13 -0400
+Message-ID: <1477168206.4123.6.camel@sipsolutions.net> (sfid-20161022_223017_935583_C739AA7C)
+Subject: Re: sequence diagrams in rst documentation
 From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
-        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
-Date: Thu, 06 Oct 2016 13:36:27 +0200
-In-Reply-To: <bb2ea10f30d2ae8a3cc048974ed148c8@fami-braun.de>
-References: <1475661751-26262-1-git-send-email-michael-dev@fami-braun.de>
-         <1475679558.5257.7.camel@sipsolutions.net>
-         <bb2ea10f30d2ae8a3cc048974ed148c8@fami-braun.de>
+To: Markus Heiser <markus.heiser@darmarit.de>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>,
+        Jonathan Corbet <corbet@lwn.net>,
+        linux-wireless@vger.kernel.org,
+        linux-doc <linux-doc@vger.kernel.org>
+Date: Sat, 22 Oct 2016 22:30:06 +0200
+In-Reply-To: <A533ED1D-9F0F-420D-9835-723F33D6CA83@darmarit.de>
+References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
+         <20161011072119.7ad4e3a3@lwn.net>
+         <1476193466.4118.10.camel@sipsolutions.net>
+         <1476194038.4118.11.camel@sipsolutions.net>
+         <1476791021.6425.25.camel@sipsolutions.net>
+         <20161018175236.75c8c4e2@lwn.net>
+         <1476863488.5927.10.camel@sipsolutions.net>
+         <1477053099.4068.42.camel@sipsolutions.net> <87k2d1q2qx.fsf@intel.com>
+         <1477055055.4068.46.camel@sipsolutions.net>
+         <EFAA684D-941C-45F9-8D37-F28EF3B11F4F@darmarit.de>
+         <1477084793.4068.63.camel@sipsolutions.net>
+         <A533ED1D-9F0F-420D-9835-723F33D6CA83@darmarit.de>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, 2016-10-22 at 18:37 +0200, Markus Heiser wrote:
 
-> The rules when to check sa/da should be independent of the driver
-> and  thus would likely be duplicated by each caller. This is why I
-> had it in ieee80211_amsdu_to_8023s.
+> Yeah, I thought something similar. But is the import of the extension
+> a sufficient criteria? 
+> 
+> About ".. math::"; I guess we have to check if math extension AND
+> pdflatex is installed.
+> 
+> What do you suppose?
 
-That does make sense, I guess. But I feel that it's overly complicated,
-and most drivers don't actually support all those features, in
-particular, 4-addr station/AP is currently exclusive to mac80211.
+TBH, I only considered this briefly, but decided that somebody who went
+to the effort of installing the sphinx extension would likely not mind
+to get a subsequent error when it tries to use something that's not
+installed.
 
-> My patch defaulted into not checking sa/da for interface type not 
-> explicitly given, whereas your code defaults to checking both for
-> those.
-> This makes a difference for IFTYPE_MONITOR, IFTYPE_P2P_*, 
+I was, in fact, quite surprised that I even could install (on Debian)
+the plantuml sphinx extension without plantuml, which seems odd.
 
-Monitor will never get there, and P2P_CLIENT == STATION, P2P_GO == AP
-as far as mac80211's vif.type is concerned, so those are handled.
-
-> IFTYPE_OCB, 
-
-That can't do A-MSDU I believe.
-
-> IFTYPE_UNSPECIFIED, 
-
-That is invalid and can never happen here.
-
-> IFTYPE_WDS. 
-
-This is ... it can't even negotiate HT, so I doubt A-MSDU could be used
-in any way. This is old crap, and I'd actually rather remove it, the 4-
-addr station/AP superseded it.
-
-> I don't know if filtering is appropiate 
-> for those or if they can actually occur there.
-
-I think it's all covered then.
-
-Could you test my patches in your scenario to see they do what we want?
-I'll resend as [PATCH] then, and think about applying them and perhaps
-backporting also.
+In fact, I think it would be *preferable* to only check the extension ;
+we should print a message from the dummy plugin to let them know what
+extensions they need, and if they then go to the effort of installing
+it they probably don't just not mind getting errors on dependencies,
+but actually would *prefer* that, since otherwise it can be daunting to
+try to figure out what *else* you actually have to install.
 
 johannes
