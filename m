@@ -1,53 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:55073 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbcJCLOX (ORCPT
+Received: from mail-vk0-f47.google.com ([209.85.213.47]:33085 "EHLO
+        mail-vk0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935097AbcJVL4L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 07:14:23 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: Michael Braun <michael-dev@fami-braun.de>,
-        linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Subject: [PATCHv2 1/3] mac80211: fix CMD_FRAME for AP_VLAN
-Date: Mon,  3 Oct 2016 13:14:15 +0200
-Message-Id: <1475493257-21841-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161003_131427_265805_ADB81E75)
+        Sat, 22 Oct 2016 07:56:11 -0400
+Received: by mail-vk0-f47.google.com with SMTP id 83so137788318vkd.0
+        for <linux-wireless@vger.kernel.org>; Sat, 22 Oct 2016 04:56:11 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <bffb5d2b-03f3-f451-dd01-ef2c796bfc30@gmail.com>
+References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
+ <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com> <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
+ <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com> <bffb5d2b-03f3-f451-dd01-ef2c796bfc30@gmail.com>
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Sat, 22 Oct 2016 13:55:50 +0200
+Message-ID: <CAOiHx==nbvwiiMZaqg5okdM6ab9ZLc+JOPdHdJJMUh9uhEt3PQ@mail.gmail.com> (sfid-20161022_135618_764526_2840B00E)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+To: Oliver Zemann <oliver.zemann@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using IEEE 802.11r FT OVER-DS roaming with AP_VLAN, hostapd needs to
-send out a frame using CMD_FRAME for a station assigned to an AP_VLAN
-interface.
+Hi,
 
-Right now, the userspace needs to give the exact AP_VLAN interface index
-for CMD_FRAME; hostapd does not do this. Additionally, userspace cannot
-use GET_STATION to query the AP_VLAN ifidx, as while GET_STATION finds
-stations assigned to AP_VLAN even if the AP iface is queried, it does not
-return AP_VLAN ifidx (it returns the queried one).
+On 21 October 2016 at 18:25, Oliver Zemann <oliver.zemann@gmail.com> wrote:
+> The problem is gone with kernel 4.7.3 on armbian - both compex cards work
+> (wle600, wle900),
 
-This breaks IEEE 802.11r over_ds with vlans, as the reply frame does not
-get out. This patch fixes this by using get_sta_bss for CMD_FRAME.
+Interesting to know this issue isn't present in 4.7 - I also
+encountered it in 4.4 with LEDE.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+> unfortunately that kernel does not support sfp (seems like
+> its kind of proprietary drivers from clearfog).
 
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Cc: projekt-wlan@fem.tu-ilmenau.de
----
- net/mac80211/offchannel.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+They aren't really proprietary, they are proper patches that were
+submitted as RFC once, so it shouldn't be much effort to port them to
+e.g. 4.7. Anyways ...
 
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 55a9c5b..688744c 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -819,7 +819,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 		    mgmt->u.action.category == WLAN_CATEGORY_SPECTRUM_MGMT)
- 			break;
- 		rcu_read_lock();
--		sta = sta_info_get(sdata, mgmt->da);
-+		sta = sta_info_get_bss(sdata, mgmt->da);
- 		rcu_read_unlock();
- 		if (!sta)
- 			return -ENOLINK;
--- 
-2.1.4
+> So its a driver issue but i
+> have no clue who to contact or where to file a bug report. The only
+> available kernel which supports sfp (from solidrun, vendor of the clearfog
+> board) is 4.4.23
+>
+> I am wondering if i could simply checkout the 4.4.x sources, merge the
+> atheros drivers in it and try to rebuild the kernel?
+
+the issue seems to be that MSI interrupts do not work on 4.4 (at least
+with ath10k, didn't have any other drivers that support it to test).
+Your options are either to disable support for them in the kernel
+config, or pass irq_mode=1 to ath10k_pci on probe to force legacy
+interrupts; it should work then properly.
+
+
+Regards
+Jonas
