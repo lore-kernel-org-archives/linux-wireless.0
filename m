@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33517 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751967AbcJBWvL (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:38427 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753493AbcJWTmL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:51:11 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: robh+dt@kernel.org, mark.rutland@arm.com, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, nbd@nbd.name
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        ath9k-devel@lists.ath9k.org, kvalo@codeaurora.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [RFC 3/3] ath9k: add OF configuration to disable the 2.4GHz or 5GHz band
-Date: Mon,  3 Oct 2016 00:50:59 +0200
-Message-Id: <20161002225059.16757-4-martin.blumenstingl@googlemail.com> (sfid-20161003_005114_235027_5225086A)
-In-Reply-To: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
-References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com>
+        Sun, 23 Oct 2016 15:42:11 -0400
+Received: by mail-wm0-f53.google.com with SMTP id c78so78678739wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2016 12:42:10 -0700 (PDT)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+To: Jonas Gorski <jonas.gorski@gmail.com>
+References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
+ <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
+ <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
+ <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
+ <bffb5d2b-03f3-f451-dd01-ef2c796bfc30@gmail.com>
+ <CAOiHx==nbvwiiMZaqg5okdM6ab9ZLc+JOPdHdJJMUh9uhEt3PQ@mail.gmail.com>
+ <43544382-075a-6437-8f72-133a907d9def@gmail.com>
+ <CAOiHx=kWh3P=Ye1Bnd35pRvwWyOdqEyYFVXvTTz60_Hj4TDFFg@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <faedb36a-d99c-5891-e9c6-40ecc4d54748@gmail.com> (sfid-20161023_214215_331594_5D3D59FB)
+Date: Sun, 23 Oct 2016 21:42:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOiHx=kWh3P=Ye1Bnd35pRvwWyOdqEyYFVXvTTz60_Hj4TDFFg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some devices are shipped with EEPROMs where a band is enabled which is
-not supported by the actual hardware. Allow disabling the affected
-bands using the new generic IEEE 802.11 bindings.
+Thanks, but its still not working. I dont get any error now when i do 
+modprobe and installed is the wle900
 
-This is the OF equivalent to using ath9k_platform_data's disable_2ghz
-and disable_5ghz attributes.
+[root@alarm alarm]# rmmod ath10k_pci
+[root@alarm alarm]# modprobe ath10k_pci irq_mode=1
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt | 2 ++
- drivers/net/wireless/ath/ath9k/init.c                        | 4 ++++
- 2 files changed, 6 insertions(+)
+but:
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-index 9b58ede..042319a 100644
---- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-@@ -18,6 +18,8 @@ Optional properties:
- 			kernel firmware loader).
- - mac-address: See ethernet.txt in the parent directory
- - local-mac-address: See ethernet.txt in the parent directory
-+- disable-ieee80211-2ghz: See ieee80211.txt in the current directory
-+- disable-ieee80211-5ghz: See ieee80211.txt in the current directory
- 
- 
- In this example, the node is defined as child node of the PCI controller:
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index b7c8ff9..8b3f906 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -21,6 +21,7 @@
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
- #include <linux/of.h>
-+#include <linux/of_ieee80211.h>
- #include <linux/of_net.h>
- #include <linux/relay.h>
- #include <net/ieee80211_radiotap.h>
-@@ -572,6 +573,9 @@ static int ath9k_of_init(struct ath_softc *sc)
- 
- 	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
- 
-+	ah->disable_2ghz = of_ieee80211_is_2ghz_disabled(np);
-+	ah->disable_5ghz = of_ieee80211_is_5ghz_disabled(np);
-+
- 	if (of_property_read_bool(np, "qca,no-eeprom")) {
- 		/* ath9k-eeprom-<bus>-<id>.bin */
- 		scnprintf(eeprom_name, sizeof(eeprom_name),
--- 
-2.10.0
+[root@alarm alarm]# dmesg | grep ath10k
+[  220.356314] ath10k_pci 0000:02:00.0: Refused to change power state, 
+currently in D3
+[  220.394265] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+[  220.400770] ath10k_pci: probe of 0000:02:00.0 failed with error -110
+
+[root@alarm alarm]# cat /proc/cmdline
+console=ttyS0,115200 root=/dev/mmcblk0p1 rw rootwait ath10k_pci.irq_mode=1
+
+Thanks for your patience
+
+Regards
+Oli
+
+Am 23.10.2016 um 21:33 schrieb Jonas Gorski:
+> On 23 October 2016 at 17:53, Oliver Zemann <oliver.zemann@gmail.com> wrote:
+>> Thanks for that info Jonas. I passed optargs=irq_mode=1 in /boot/uEnv.txt on
+>> archlinux arm (kernel 4.4.23) and verified with
+>>
+>> [root@alarm ~]# cat /proc/cmdline
+>> console=ttyS0,115200 root=/dev/mmcblk0p1 rw rootwait irq_mode=1
+>>
+>> But it still does not work:
+>>
+>> [root@alarm ~]# rmmod ath10k_pci
+>> [root@alarm ~]# modprobe ath10k_pci
+>> [   28.791404] ath10k_pci 0000:02:00.0: Refused to change power state,
+>> currently in D3
+>> [   28.829352] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+>> [   28.835861] ath10k_pci: probe of 0000:02:00.0 failed with error -110
+>>
+>> Did i do something wrong? If somehow possible, i would prefer to not rebuild
+>> the kernel and somehow configure the existing one without changes.
+> For the kernel command line you need to prefix with the module name,
+> i.e. "ath10k_pci.irq_mode=1". Alternative is while modprobing with
+> "modprobe ath10_pci irq_mode=1". See
+> <https://www.kernel.org/doc/Documentation/kernel-parameters.txt> for
+> details.
+>
+> Regards
+> Jonas
