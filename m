@@ -1,44 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb1-smtp-cloud2.xs4all.net ([194.109.24.21]:59381 "EHLO
-        lb1-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753933AbcJLGwX (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:36784 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753174AbcJWPxp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 02:52:23 -0400
-Message-ID: <1476255135.1972.5.camel@tiscali.nl> (sfid-20161012_085448_130083_728E64C4)
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Luca Coelho <luca@coelho.fi>, Chris Rorvick <chris@rorvick.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 12 Oct 2016 08:52:15 +0200
-In-Reply-To: <1476252719.7776.6.camel@coelho.fi>
-References: <20161010071943.4717-1-chris@rorvick.com>
-         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
-         <1476252719.7776.6.camel@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Sun, 23 Oct 2016 11:53:45 -0400
+Received: by mail-wm0-f45.google.com with SMTP id b80so64153393wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 23 Oct 2016 08:53:45 -0700 (PDT)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+To: Jonas Gorski <jonas.gorski@gmail.com>
+References: <b61ccf3c-1861-c8f8-ff7d-91c2b6ff4df5@gmail.com>
+ <41e828b1-c340-d6c6-61f4-051c845820c8@gmail.com>
+ <caecaf52-7237-2a86-e5cd-3c9666962391@dd-wrt.com>
+ <80788796-5768-1650-dcef-59ccfbe7be6f@gmail.com>
+ <bffb5d2b-03f3-f451-dd01-ef2c796bfc30@gmail.com>
+ <CAOiHx==nbvwiiMZaqg5okdM6ab9ZLc+JOPdHdJJMUh9uhEt3PQ@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <43544382-075a-6437-8f72-133a907d9def@gmail.com> (sfid-20161023_175349_020633_EC5C13F4)
+Date: Sun, 23 Oct 2016 17:53:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOiHx==nbvwiiMZaqg5okdM6ab9ZLc+JOPdHdJJMUh9uhEt3PQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca,
+Thanks for that info Jonas. I passed optargs=irq_mode=1 in 
+/boot/uEnv.txt on archlinux arm (kernel 4.4.23) and verified with
 
-On Wed, 2016-10-12 at 09:11 +0300, Luca Coelho wrote:
-> By "platform" I meant the PC you are using.  The ACPI table is created
-> by the OEM, so different PCs have different tables.
+[root@alarm ~]# cat /proc/cmdline
+console=ttyS0,115200 root=/dev/mmcblk0p1 rw rootwait irq_mode=1
 
-Like Chris I use a Dell XPS 13 (9350), but mine came with an AC 8260
-out of it's assembly plant:
-    Detected Intel(R) Dual Band Wireless AC 8260, REV=0x208
+But it still does not work:
 
-> In any case, I will rework this code, so I'd prefer if we skip this
-> patch entirely.
+[root@alarm ~]# rmmod ath10k_pci
+[root@alarm ~]# modprobe ath10k_pci
+[   28.791404] ath10k_pci 0000:02:00.0: Refused to change power state, 
+currently in D3
+[   28.829352] ath10k_pci 0000:02:00.0: failed to wake up device : -110
+[   28.835861] ath10k_pci: probe of 0000:02:00.0 failed with error -110
 
-Feel free to prod me for testing whatever you come up with.
+Did i do something wrong? If somehow possible, i would prefer to not 
+rebuild the kernel and somehow configure the existing one without changes.
+
+Kind regards
+
+Oli
 
 
-Paul Bolle
+Am 22.10.2016 um 13:55 schrieb Jonas Gorski:
+> Hi,
+>
+> On 21 October 2016 at 18:25, Oliver Zemann <oliver.zemann@gmail.com> wrote:
+>> The problem is gone with kernel 4.7.3 on armbian - both compex cards work
+>> (wle600, wle900),
+> Interesting to know this issue isn't present in 4.7 - I also
+> encountered it in 4.4 with LEDE.
+>
+>> unfortunately that kernel does not support sfp (seems like
+>> its kind of proprietary drivers from clearfog).
+> They aren't really proprietary, they are proper patches that were
+> submitted as RFC once, so it shouldn't be much effort to port them to
+> e.g. 4.7. Anyways ...
+>
+>> So its a driver issue but i
+>> have no clue who to contact or where to file a bug report. The only
+>> available kernel which supports sfp (from solidrun, vendor of the clearfog
+>> board) is 4.4.23
+>>
+>> I am wondering if i could simply checkout the 4.4.x sources, merge the
+>> atheros drivers in it and try to rebuild the kernel?
+> the issue seems to be that MSI interrupts do not work on 4.4 (at least
+> with ath10k, didn't have any other drivers that support it to test).
+> Your options are either to disable support for them in the kernel
+> config, or pass irq_mode=1 to ath10k_pci on probe to force legacy
+> interrupts; it should work then properly.
+>
+>
+> Regards
+> Jonas
