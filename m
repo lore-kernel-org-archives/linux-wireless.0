@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60792 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755480AbcJUMZU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 08:25:20 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>,
-        jouni@qca.qualcomm.com, usdutt@qti.qualcomm.com,
-        amarnath@qca.qualcomm.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 2/4] cfg80211: disallow beacon_int_min_gcd with IBSS
-Date: Fri, 21 Oct 2016 14:25:12 +0200
-Message-Id: <1477052714-11223-2-git-send-email-johannes@sipsolutions.net> (sfid-20161021_142525_346919_6F7FFF67)
-In-Reply-To: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
-References: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58960 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S938751AbcJXOWU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:22:20 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <dmitry.torokhov@gmail.com>, <briannorris@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/5] mwifiex: remove redundant condition in main process
+Date: Mon, 24 Oct 2016 19:51:28 +0530
+Message-ID: <1477318892-22877-1-git-send-email-akarwar@marvell.com> (sfid-20161024_162223_985147_39D88564)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This condition while calling mwifiex_check_ps_cond() is redundant.
+The function internally already takes care of it.
 
-This can't really be supported right now, because the IBSS
-interface may change its beacon interval at any time due to
-joining another network; thus, there's already "support"
-for different beacon intervals here, implicitly.
-
-Until we figure out how we should handle this case (continue
-to allow it to arbitrarily join? Join only if compatible?)
-disallow advertising that different beacon intervals are
-supported if IBSS is allowed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- net/wireless/core.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/main.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 725adff6c7d4..158c59ecf90a 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -562,6 +562,21 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
- 				    c->limits[j].max > 1))
- 				return -EINVAL;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 2478ccd..3b31ea2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -355,10 +355,8 @@ process_start:
  
-+			/*
-+			 * This isn't well-defined right now. If you have an
-+			 * IBSS interface, then its beacon interval may change
-+			 * by joining other networks, and nothing prevents it
-+			 * from doing that.
-+			 * So technically we probably shouldn't even allow AP
-+			 * and IBSS in the same interface, but it seems that
-+			 * some drivers support that, possibly only with fixed
-+			 * beacon intervals for IBSS.
-+			 */
-+			if (WARN_ON(types & BIT(NL80211_IFTYPE_ADHOC) &&
-+				    c->beacon_int_min_gcd)) {
-+				return -EINVAL;
-+			}
-+
- 			cnt += c->limits[j].max;
- 			/*
- 			 * Don't advertise an unsupported type
+ 		/* Check if we need to confirm Sleep Request
+ 		   received previously */
+-		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+-			if (!adapter->cmd_sent && !adapter->curr_cmd)
+-				mwifiex_check_ps_cond(adapter);
+-		}
++		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
++			mwifiex_check_ps_cond(adapter);
+ 
+ 		/* * The ps_state may have been changed during processing of
+ 		 * Sleep Request event.
 -- 
-2.8.1
+1.9.1
