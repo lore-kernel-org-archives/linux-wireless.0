@@ -1,83 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:38704 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932280AbcJLJC1 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.134]:50150 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933767AbcJXPki (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 05:02:27 -0400
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u9C6H2Pn026163
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 06:17:02 GMT
-Date: Wed, 12 Oct 2016 09:14:58 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: toke@toke.dk
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] mac80211: Move reorder-sensitive TX handlers to after
- TXQ dequeue
-Message-ID: <20161012061458.GM12841@mwanda> (sfid-20161012_110238_197165_14D22F50)
+        Mon, 24 Oct 2016 11:40:38 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+        Jouni Malinen <j@w1.fi>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+Subject: [PATCH] wireless: fix bogus maybe-uninitialized warning
+Date: Mon, 24 Oct 2016 17:38:35 +0200
+Message-Id: <20161024153918.2810634-2-arnd@arndb.de> (sfid-20161024_174213_321363_4B1599BA)
+In-Reply-To: <20161024153918.2810634-1-arnd@arndb.de>
+References: <20161024153918.2810634-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Toke H�iland-J�rgensen,
+The hostap_80211_rx() function is supposed to set up the mac addresses
+for four possible cases, based on two bits of input data. For
+some reason, gcc decides that it's possible that none of the these
+four cases apply and the addresses remain uninitialized:
 
-This is a semi-automatic email about new static checker warnings.
+drivers/net/wireless/intersil/hostap/hostap_80211_rx.c: In function ‘hostap_80211_rx’:
+arch/x86/include/asm/string_32.h:77:14: warning: ‘src’ may be used uninitialized in this function [-Wmaybe-uninitialized]
+drivers/net/wireless/intel/ipw2x00/libipw_rx.c: In function ‘libipw_rx’:
+arch/x86/include/asm/string_32.h:77:14: error: ‘dst’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+arch/x86/include/asm/string_32.h:78:22: error: ‘*((void *)&dst+4)’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-The patch bb42f2d13ffc: "mac80211: Move reorder-sensitive TX handlers 
-to after TXQ dequeue" from Sep 22, 2016, leads to the following 
-Smatch complaint:
+This warning is clearly nonsense, but changing the last case into
+'default' makes it obvious to the compiler too, which avoids the
+warning and probably leads to better object code too.
 
-net/mac80211/tx.c:3242 ieee80211_xmit_fast_finish()
-	 error: we previously assumed 'key' could be null (see line 3209)
+The same code is duplicated several times in the kernel, so this
+patch uses the same workaround for all copies. The exact configuration
+was hit only very rarely in randconfig builds and I only saw it
+in three drivers, but I assume that all of them are potentially
+affected, and it's better to keep the code consistent.
 
-net/mac80211/tx.c
-  3208	
-  3209		if (key)
-                    ^^^
-Check.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c                  | 8 ++++----
+ drivers/net/wireless/intel/ipw2x00/libipw_rx.c         | 2 +-
+ drivers/net/wireless/intersil/hostap/hostap_80211_rx.c | 2 +-
+ net/wireless/lib80211_crypt_tkip.c                     | 2 +-
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-  3210			info->control.hw_key = &key->conf;
-  3211	
-  3212		ieee80211_tx_stats(skb->dev, skb->len);
-  3213	
-  3214		if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
-  3215			tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-  3216			*ieee80211_get_qos_ctl(hdr) = tid;
-  3217			hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
-  3218		} else {
-  3219			info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-  3220			hdr->seq_ctrl = cpu_to_le16(sdata->sequence_number);
-  3221			sdata->sequence_number += 0x10;
-  3222		}
-  3223	
-  3224		if (skb_shinfo(skb)->gso_size)
-  3225			sta->tx_stats.msdu[tid] +=
-  3226				DIV_ROUND_UP(skb->len, skb_shinfo(skb)->gso_size);
-  3227		else
-  3228			sta->tx_stats.msdu[tid]++;
-  3229	
-  3230		info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
-  3231	
-  3232		/* statistics normally done by ieee80211_tx_h_stats (but that
-  3233		 * has to consider fragmentation, so is more complex)
-  3234		 */
-  3235		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
-  3236		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
-  3237	
-  3238		if (pn_offs) {
-                    ^^^^^^^
-Maybe when pn_offs is non-zero that implies key is non-NULL? 
-
-  3239			u64 pn;
-  3240			u8 *crypto_hdr = skb->data + pn_offs;
-  3241	
-  3242			switch (key->conf.cipher) {
-                                ^^^^^
-Unchecked dereference.
-
-  3243			case WLAN_CIPHER_SUITE_CCMP:
-  3244			case WLAN_CIPHER_SUITE_CCMP_256:
-
-regards,
-dan carpenter
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 3fd1cc98fd2f..84a6d12c3f8a 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -421,10 +421,6 @@ int ath6kl_wmi_dot11_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
+ 
+ 	switch ((le16_to_cpu(wh.frame_control)) &
+ 		(IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS)) {
+-	case 0:
+-		memcpy(eth_hdr.h_dest, wh.addr1, ETH_ALEN);
+-		memcpy(eth_hdr.h_source, wh.addr2, ETH_ALEN);
+-		break;
+ 	case IEEE80211_FCTL_TODS:
+ 		memcpy(eth_hdr.h_dest, wh.addr3, ETH_ALEN);
+ 		memcpy(eth_hdr.h_source, wh.addr2, ETH_ALEN);
+@@ -435,6 +431,10 @@ int ath6kl_wmi_dot11_hdr_remove(struct wmi *wmi, struct sk_buff *skb)
+ 		break;
+ 	case IEEE80211_FCTL_FROMDS | IEEE80211_FCTL_TODS:
+ 		break;
++	default:
++		memcpy(eth_hdr.h_dest, wh.addr1, ETH_ALEN);
++		memcpy(eth_hdr.h_source, wh.addr2, ETH_ALEN);
++		break;
+ 	}
+ 
+ 	skb_pull(skb, sizeof(struct ath6kl_llc_snap_hdr));
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+index cef7f7d79cd9..1c1ec7bb9302 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_rx.c
+@@ -507,7 +507,7 @@ int libipw_rx(struct libipw_device *ieee, struct sk_buff *skb,
+ 		memcpy(dst, hdr->addr3, ETH_ALEN);
+ 		memcpy(src, hdr->addr4, ETH_ALEN);
+ 		break;
+-	case 0:
++	default:
+ 		memcpy(dst, hdr->addr1, ETH_ALEN);
+ 		memcpy(src, hdr->addr2, ETH_ALEN);
+ 		break;
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c b/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
+index 599f30f22841..34dbddbf3f9b 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_80211_rx.c
+@@ -855,7 +855,7 @@ void hostap_80211_rx(struct net_device *dev, struct sk_buff *skb,
+ 		memcpy(dst, hdr->addr3, ETH_ALEN);
+ 		memcpy(src, hdr->addr4, ETH_ALEN);
+ 		break;
+-	case 0:
++	default:
+ 		memcpy(dst, hdr->addr1, ETH_ALEN);
+ 		memcpy(src, hdr->addr2, ETH_ALEN);
+ 		break;
+diff --git a/net/wireless/lib80211_crypt_tkip.c b/net/wireless/lib80211_crypt_tkip.c
+index 71447cf86306..ba0a1f398ce5 100644
+--- a/net/wireless/lib80211_crypt_tkip.c
++++ b/net/wireless/lib80211_crypt_tkip.c
+@@ -556,7 +556,7 @@ static void michael_mic_hdr(struct sk_buff *skb, u8 * hdr)
+ 		memcpy(hdr, hdr11->addr3, ETH_ALEN);	/* DA */
+ 		memcpy(hdr + ETH_ALEN, hdr11->addr4, ETH_ALEN);	/* SA */
+ 		break;
+-	case 0:
++	default:
+ 		memcpy(hdr, hdr11->addr1, ETH_ALEN);	/* DA */
+ 		memcpy(hdr + ETH_ALEN, hdr11->addr2, ETH_ALEN);	/* SA */
+ 		break;
+-- 
+2.9.0
