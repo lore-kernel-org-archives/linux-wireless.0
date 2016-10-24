@@ -1,61 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:35236 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750858AbcJAJWN (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:33122 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751783AbcJXR5H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Oct 2016 05:22:13 -0400
-Received: by mail-wm0-f43.google.com with SMTP id f193so25063281wmg.0
-        for <linux-wireless@vger.kernel.org>; Sat, 01 Oct 2016 02:22:12 -0700 (PDT)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Gucea Doru <gucea.doru@gmail.com>,
-        Arend van Spriel <arend@broadcom.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
- <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
-Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <ed4a7366-3f67-79da-0868-876a69b1da54@broadcom.com> (sfid-20161001_112217_967865_C5D7A1B3)
-Date: Sat, 1 Oct 2016 11:22:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Mon, 24 Oct 2016 13:57:07 -0400
+Received: by mail-pf0-f173.google.com with SMTP id 128so103184065pfz.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 10:57:06 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>
+Cc: Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@google.com>, rajatxjain@gmail.com
+Subject: [PATCH 0/3] mwifiex: Make WoWLAN a common feature
+Date: Mon, 24 Oct 2016 10:56:50 -0700
+Message-Id: <1477331813-42151-1-git-send-email-rajatja@google.com> (sfid-20161024_195711_153337_18890AB3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I have a Marvell card on the PCIe bus that needs to support
+WoWLAN (wake-on-wireless-LAN) feature. This is a feature offered
+by the "core" mwifiex card and is not specific to an interface
+(pcie/sdio/usb).
 
+Currently the code to parse the WowLAN pin, and activate it
+resides only in sdio.c [mostly commit ce4f6f0c353b ("mwifiex: add
+platform specific wakeup interrupt support")]. I started by
+copying all that code & data structures in pcie.c/pcie.h but then
+realized that the we should probably have it common since the
+feature is not interface specific.
 
-On 29-09-16 13:32, Gucea Doru wrote:
-> On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
->> What is the decision triggering the exit from the PS mode immediately
->> after the ping request? I am asking this because 802.11 PS legacy
->> specifies that the client should wait for a beacon with TIM set in
->> order to wake up: in my case, there is no beacon between the ping
->> request message and the Null frame that announces the exit from the PS
->> mode.
-> 
-> 
-> Any help would be highly appreciated :)
+Further, I noticed that interface driver had no interest in
+device trees since there are no properties specific to interfaces.
+Currently the only properties needed, are the common ones needed
+by the core mwifiex.
 
-Actually though I already sent you are reply, but alas here it is.
+This patch set thus introduces mwifiex_probe_of() to parse the
+common properties, and then moves the WowLAN specific code to the
+common module so that all the interfaces can use it. Essentially
+this is a single logical patch that has been split up into
+multiple patches only for the reason of simplicity and code
+reviews.
 
-bcmdhd is our aosp driver. I am maintaining the upstream brcm80211
-drivers. Regardless your question is more for firmware running on the
-device. So like the same behavior would be observed when using brcmfmac
-with same firmware.
+This is currently rebased on the top of Linus' tree with the
+following 2 patches applied:
+https://patchwork.kernel.org/patch/9362275/
+https://patchwork.kernel.org/patch/9390225/
 
-> IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
-> detects that the bit corresponding to its AID is 1 i the TIM, the STA
-> shall issue a PS Poll". In my capture there are cases when the STA
-> exits the PS mode without waiting for a beacon.
+Rajat Jain (3):
+  mwifiex: Allow mwifiex early access to device structure
+  mwifiex: Introduce mwifiex_probe_of() to parse common properties
+  mwifiex: Enable WoWLAN for both sdio and pcie
 
-It is a bit tricky, but the standard does not explicitly say the STA
-should be in power-save at any other time. So it is difficult to say
-what event occurred on the STA side to exit PS mode. Also STA means
-P2P-Client as you say. That means that you have multiple interfaces:
-regular STA and P2P-Client. So is the STA connected to some other AP or
-just not connected. wpa_supplicant will do intermittent scan or initiate
-scheduled scan by which firmware will scan at a certain interval. That
-is just some things I can come up with and I am sure there are more.
+ drivers/net/wireless/marvell/mwifiex/main.c    | 58 ++++++++++++++++++-
+ drivers/net/wireless/marvell/mwifiex/main.h    | 28 ++++++++-
+ drivers/net/wireless/marvell/mwifiex/pcie.c    |  8 ++-
+ drivers/net/wireless/marvell/mwifiex/sdio.c    | 79 +++-----------------------
+ drivers/net/wireless/marvell/mwifiex/sdio.h    |  8 ---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  5 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c     |  3 +-
+ 7 files changed, 99 insertions(+), 90 deletions(-)
 
-Regards,
-Arend
+-- 
+2.8.0.rc3.226.g39d4020
