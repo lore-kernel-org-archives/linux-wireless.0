@@ -1,72 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:44758 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753530AbcJEQzi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 12:55:38 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
-        queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> <87k2dm6git.fsf@toke.dk>
-        <878tu2okv7.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 05 Oct 2016 18:55:33 +0200
-In-Reply-To: <878tu2okv7.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 05 Oct 2016 18:50:52 +0300")
-Message-ID: <87d1jeenwa.fsf@toke.dk> (sfid-20161005_185548_399334_2B7360E6)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33725 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941046AbcJXUPQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 16:15:16 -0400
+Received: by mail-wm0-f65.google.com with SMTP id d128so11444659wmf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 13:14:57 -0700 (PDT)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+To: Matthias Klein <matthias.klein@optimeas.de>,
+        Michal Kazior <michal.kazior@tieto.com>
+References: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <45bffe7d-8f27-ef26-b7f9-78709e52652f@gmail.com> (sfid-20161024_221521_887311_A04E07C7)
+Date: Mon, 24 Oct 2016 22:14:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
 
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>>
->>> I understand your point, but I don't want to rush this to 4.9 and then
->>> start getting lots of bug reports and eventually forced to revert it. If
->>> we just found a new serious regression the chances are that there are
->>> more lurking somewhere and this patch is just not ready yet.
->>
->> So, the changes to mac80211 that fixes the known regressions of this
->> patch have gone in.
->
-> I guess you mean this commit:
->
-> bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ de=
-queue
->
-> (Just making sure that I have the same commit in my tree when I apply
-> this)
+>> Can you try cherry-picking it into your 4.4.24 and see if it helps?
+I created a patch which should work for 4.4.24 (at least for arch linux 
+arm it applied successful)
 
-Yup, that's the one :)
+diff --git a/drivers/pci/pcie/portdrv_core.c 
+b/drivers/pci/pcie/portdrv_core.c
+index 88122dc..f2caf38 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -8,6 +8,7 @@
 
->> Any chance of seeing this merged during the current merge window? :)
->
-> I sent last new feature ("-next") patches for 4.9 last week, sorry. So
-> this has to wait for 4.10.
+  #include <linux/module.h>
+  #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+  #include <linux/kernel.h>
+  #include <linux/errno.h>
+  #include <linux/pm.h>
+@@ -350,6 +351,8 @@ static int pcie_device_init(struct pci_dev *pdev, 
+int service, int irq)
+          return retval;
+      }
 
-Ah, right, I think I got my merge windows confused. You already said you
-wouldn't take it for 4.9. So I guess what I'm asking is for you to put
-it into the appropriate -next tree so it can get some wider exposure
-ahead of the *next* merge window...
++        pm_runtime_no_callbacks(device);
++
+      return 0;
+  }
 
-> And I assume I need to take v5:
->
-> https://patchwork.kernel.org/patch/9311037/
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index be35da2..1624cc3 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -93,6 +93,28 @@ static int pcie_port_resume_noirq(struct device *dev)
+      return 0;
+  }
 
-Yes. Haven't noticed anything that changed since that might conflict
-with it, but let me know if I missed something and you want a refreshed
-version.
++static int pcie_port_runtime_suspend(struct device *dev)
++{
++    return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
++
++static int pcie_port_runtime_resume(struct device *dev)
++{
++    return 0;
++}
++
++static int pcie_port_runtime_idle(struct device *dev)
++{
++    /*
++     * Assume the PCI core has set bridge_d3 whenever it thinks the port
++     * should be good to go to D3.  Everything else, including moving
++     * the port to D3, is handled by the PCI core.
++     */
++    return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
+++
++
++
+  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+      .suspend    = pcie_port_device_suspend,
+      .resume        = pcie_port_device_resume,
+@@ -101,6 +123,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+      .poweroff    = pcie_port_device_suspend,
+      .restore    = pcie_port_device_resume,
+      .resume_noirq    = pcie_port_resume_noirq,
++    .runtime_suspend = pcie_port_runtime_suspend,
++    .runtime_resume    = pcie_port_runtime_resume,
++    .runtime_idle    = pcie_port_runtime_idle,
+  };
 
--Toke
+  #define PCIE_PORTDRV_PM_OPS    (&pcie_portdrv_pm_ops)
+@@ -139,11 +164,39 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+       * it by default.
+       */
+      dev->d3cold_allowed = false;
++
++    /*
++     * Prevent runtime PM if the port is advertising support for PCIe
++     * hotplug.  Otherwise the BIOS hotplug SMI code might not be able
++     * to enumerate devices behind this port properly (the port is
++     * powered down preventing all config space accesses to the
++     * subordinate devices).  We can't be sure for native PCIe hotplug
++     * either so prevent that as well.
++     */
++    if (!dev->is_hotplug_bridge) {
++        /*
++         * Keep the port resumed 100ms to make sure things like
++         * config space accesses from userspace (lspci) will not
++         * cause the port to repeatedly suspend and resume.
++         */
++        pm_runtime_set_autosuspend_delay(&dev->dev, 100);
++        pm_runtime_use_autosuspend(&dev->dev);
++        pm_runtime_mark_last_busy(&dev->dev);
++        pm_runtime_put_autosuspend(&dev->dev);
++        pm_runtime_allow(&dev->dev);
++    }
++
+      return 0;
+  }
+
+  static void pcie_portdrv_remove(struct pci_dev *dev)
+  {
++    if (!dev->is_hotplug_bridge) {
++        pm_runtime_forbid(&dev->dev);
++        pm_runtime_get_noresume(&dev->dev);
++        pm_runtime_dont_use_autosuspend(&dev->dev);
++    }
++
+      pcie_port_device_remove(dev);
+  }
+
+Just compiling the kernel... lets see what happens
