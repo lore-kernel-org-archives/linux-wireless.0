@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35590 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752545AbcJESvp (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:36704 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938853AbcJXTTS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 14:51:45 -0400
-Received: by mail-wm0-f42.google.com with SMTP id f193so246422307wmg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 05 Oct 2016 11:51:45 -0700 (PDT)
+        Mon, 24 Oct 2016 15:19:18 -0400
+Received: by mail-pf0-f179.google.com with SMTP id e6so103757928pfk.3
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 12:19:18 -0700 (PDT)
+Date: Mon, 24 Oct 2016 12:19:15 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        dmitry.torokhov@gmail.com
+Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Message-ID: <20161024191914.GB968@localhost> (sfid-20161024_212233_450689_B5C9C0AA)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Wed, 5 Oct 2016 20:51:23 +0200
-Message-ID: <CAFBinCAuCfTeWw3SMVLbeARkUs_66YT6MJVbsd9QH_CqW9SCtg@mail.gmail.com> (sfid-20161005_205150_414950_367A448D)
-Subject: Re: ath10k: device stops working ("failed to install key for vdev"
- error in kernel log)
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477318892-22877-2-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> [54064.293597] ath10k_pci 0000:02:00.0: failed to install key for vdev
-> 0 peer [AP MAC addr]: -145
-> [54064.301234] wlan0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from
-> hardware (-145)
-> [54067.305703] ath10k_pci 0000:02:00.0: failed to install key for vdev
-> 0 peer [AP MAC addr]: -145
-> [54067.313307] wlan0: failed to set key (1, ff:ff:ff:ff:ff:ff) to
-> hardware (-145)
-it just happened again:
-...
-[130266.948005] ath10k_pci 0000:02:00.0: failed to install key for
-vdev 0 peer [AP MAC address]: -145
-[130266.955697] wlan0: failed to remove key (2, ff:ff:ff:ff:ff:ff)
-from hardware (-145)
-[130269.964069] ath10k_pci 0000:02:00.0: failed to install key for
-vdev 0 peer [AP MAC address]: -145
-[130269.971775] wlan0: failed to set key (2, ff:ff:ff:ff:ff:ff) to
-hardware (-145)
-[172198.889700] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
-info request
-[172201.897770] ath10k_pci 0000:02:00.0: failed to send pdev bss chan
-info request
+On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
+> This variable is guarded by spinlock at all other places. This patch
+> takes care of missing spinlock usage in mwifiex_shutdown_drv().
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 82839d9..8e5e424 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+>  
+>  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+>  	/* wait for mwifiex_process to complete */
+> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+>  	if (adapter->mwifiex_processing) {
 
-I tried to get more information from the firmware by looking at the
-fw_* debugfs files:
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_reset_stats
-fw_crash_counter                0
-fw_warm_reset_counter           4
-fw_cold_reset_counter           0
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats
-cat: can't open '/sys/kernel/debug/ieee80211/phy0/ath10k/fw_stats':
-Resource temporarily unavailable
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump
-cat: can't open
-'/sys/kernel/debug/ieee80211/phy0/ath10k/fw_crash_dump': No data
-available
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_dbglog
-0x00000000 0
-# cat /sys/kernel/debug/ieee80211/phy0/ath10k/fw_checksums
-firmware-N.bin          9d340dd9
-athwlan                 8d25deed
-otp                     f3efeb4f
-codeswap                00000000
-board-N.bin             bebc7c08
-board                   bebc7c08
+I'm not quite sure why we have this check in the first place; if the
+main process is still running, then don't we have bigger problems here
+anyway? But this is definitely the "right" way to check this flag, so:
 
-This is still with firmware 10.2.4.70.54.
-Please let me know if you need further information.
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-
-Regards,
-Martin
+> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>  		mwifiex_dbg(adapter, WARN,
+>  			    "main process is still running\n");
+>  		return ret;
+>  	}
+> +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>  
+>  	/* cancel current command */
+>  	if (adapter->curr_cmd) {
+> -- 
+> 1.9.1
+> 
