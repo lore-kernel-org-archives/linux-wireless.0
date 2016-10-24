@@ -1,66 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36114 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755353AbcJLSx6 (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35425 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754611AbcJXRom (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 14:53:58 -0400
-Subject: Re: [PATCH] rtlwifi: Fix regression caused by commit d86e64768859
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20161010233211.13519-1-Larry.Finger@lwfinger.net>
- <87zim9cxtt.fsf@kamboji.qca.qualcomm.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        "Stable [ 4 . 8+ ]" <stable@vger.kernel.org>,
-        Julia Lawall <Julia.Lawall@lip6.fr>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <6dad1453-e82d-49bb-4556-f8c0af4a4dfc@lwfinger.net> (sfid-20161012_205403_287698_3D3D44AC)
-Date: Wed, 12 Oct 2016 13:53:42 -0500
+        Mon, 24 Oct 2016 13:44:42 -0400
+Received: by mail-pf0-f180.google.com with SMTP id s8so102645137pfj.2
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 10:43:58 -0700 (PDT)
+Date: Mon, 24 Oct 2016 10:43:55 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        dmitry.torokhov@gmail.com, briannorris@google.com
+Subject: Re: [PATCH 1/5] mwifiex: remove redundant condition in main process
+Message-ID: <20161024174354.GA968@localhost> (sfid-20161024_194506_742827_5768677A)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <87zim9cxtt.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/12/2016 11:54 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> In commit d86e64768859 ("rtlwifi: rtl818x: constify local structures"),
->> the configuration struct for most of the drivers was changed to be
->> constant. The problem is that five of the modified drivers need to be
->> able to update the firmware name based on the exact model of the card.
->> As the file names were stored in one of the members of that struct,
->> these drivers would fail with a kernel BUG splat when they tried to
->> update the firmware name.
->>
->> Rather than reverting the previous commit, I used a suggestion by
->> Johannes Berg and made the firmware file name pointers be local to
->> the routines that update the software variables.
->>
->> The configuration struct of rtl8192cu, which was not touched in the
->> previous patch, is now constantfied.
->>
->> Fixes: d86e64768859 ("rtlwifi: rtl818x: constify local structures")
->> Suggested-by: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable [4.8+] <stable@vger.kernel.org>
->> Cc: Julia Lawall <Julia.Lawall@lip6.fr>
->
-> I got warnings and after a quick look they look valid but not sure:
->
-> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c: In function 'rtl92c_init_sw_vars':
-> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c:179:6: warning: 'fw_name' may be used uninitialized in this function [-Wuninitialized]
-> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c: In function 'rtl8723e_init_sw_vars':
-> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c:187:6: warning: 'fw_name' may be used uninitialized in this function [-Wuninitialized]
->
-> (Sending manually for the second time as I don't see my first mail
-> anywhere.)
+On Mon, Oct 24, 2016 at 07:51:28PM +0530, Amitkumar Karwar wrote:
+> This condition while calling mwifiex_check_ps_cond() is redundant.
+> The function internally already takes care of it.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Kalle,
+Unless you're intentionally *not* logging the "Delay Sleep Confirm" in
+some cases, this looks good:
 
-I did receive the first one. My compiler failed to show that warning, but I have 
-modified the patch to fix the warnings you see. In fact, the new version is a 
-bit cleaner in that "if () ... else if () ..." constructions are replaced by 
-simple if statements.
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-V2 will be sent shortly.
-
-Larry
+> ---
+>  drivers/net/wireless/marvell/mwifiex/main.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index 2478ccd..3b31ea2 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -355,10 +355,8 @@ process_start:
+>  
+>  		/* Check if we need to confirm Sleep Request
+>  		   received previously */
+> -		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+> -			if (!adapter->cmd_sent && !adapter->curr_cmd)
+> -				mwifiex_check_ps_cond(adapter);
+> -		}
+> +		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
+> +			mwifiex_check_ps_cond(adapter);
+>  
+>  		/* * The ps_state may have been changed during processing of
+>  		 * Sleep Request event.
+> -- 
+> 1.9.1
+> 
