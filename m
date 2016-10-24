@@ -1,119 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:47992 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752366AbcJJOD3 (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:33880 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753745AbcJXUXi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 10:03:29 -0400
-Message-ID: <1476108164.5210.11.camel@coelho.fi> (sfid-20161010_160405_958806_873761C4)
-From: Luca Coelho <luca@coelho.fi>
-To: Chris Rorvick <chris@rorvick.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Mon, 10 Oct 2016 17:02:44 +0300
-In-Reply-To: <20161010071943.4717-1-chris@rorvick.com>
-References: <20161010071943.4717-1-chris@rorvick.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
+        Mon, 24 Oct 2016 16:23:38 -0400
+Received: by mail-pf0-f180.google.com with SMTP id r16so104528279pfg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 13:23:38 -0700 (PDT)
+Date: Mon, 24 Oct 2016 13:23:33 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+ remove_card
+Message-ID: <20161024202332.GD968@localhost> (sfid-20161024_222344_116988_10FF2B62)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-5-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477318892-22877-5-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-On Mon, 2016-10-10 at 02:19 -0500, Chris Rorvick wrote:
-> Commit bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power
-> limitations") looks for a specific structure in the ACPI tables for
-> setting the default power limit.  The data returned for at least some
-> dual band chipsets is not recognized, though.  For example, the AC 8260
-> reports the following:
-
-This is not coming from the NIC itself, but from the platform's ACPI
-tables.  Can you tell us which platform you are using?
-
-
->         Name (SPLX, Package (0x04)
->         {
->             Zero,
->             Package (0x03)
->             {
->                 0,
->                 1200,
->                 1000
->             },
->             Package (0x03)
->             {
->                 0,
->                 1200,
->                 1000
->             },
->             Package (0x03)
->             {
->                 0,
->                 1200,
->                 1000
->             }
->         })
-
-This is not the structure that we are expecting.  We expect this:
-
-               Name (SPLX, Package (0x02)
-               {
-                   Zero,
-                   Package (0x03)
-                   {
-                       0x07,
-                       <value>,
-                       <value>
-                   }
-               })
-
-...as you correctly pointed out.  The data in the structure you have is
-not for WiFi (actually I don't think 0 is a valid value, but I'll
-double-check).
-
-
-> The current logic expects exactly two elements in the outer package,
-> causing the above to be ignored and the power limit unset.
+On Mon, Oct 24, 2016 at 07:51:32PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
 > 
-> Despite the interface being fully functional after initialization, the
-> above condition is reported as an error.  Knock the message down to a
-> warning and provide better context for understanding its consequence.
-
-Reducing this to a warning is an easy way to reduce the verbosity of
-the problem, but I think the correct thing to do would be to accept
-multiple entries and ignore the ones that don't have the WIFI marker.
- And only type-check the WIFI ones.
-
-There are other things that look a bit inconsistent in this code...
-I'll try to find the official ACPI table definitions for this entries
-to make sure it's correct.
-
-
-> Signed-off-by: Chris Rorvick <chris@rorvick.com>
+> This patch ensures to wait for firmware dump completion in
+> mwifiex_remove_card().
+> 
+> For sdio interface, reset_trigger variable is used to identify
+> if mwifiex_sdio_remove() is called by sdio_work during reset or
+> the call is from sdio subsystem.
+> 
+> This patch fixes a kernel crash observed during reboot when firmware
+> dump operation is in process.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 > ---
->  drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/net/wireless/marvell/mwifiex/pcie.c |  2 ++
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++++-
+>  2 files changed, 16 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> index 78cf9a7..19b531f 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-> @@ -540,7 +540,7 @@ static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
->  	    splx->package.count != 2 ||
->  	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
->  	    splx->package.elements[0].integer.value != 0) {
-> -		IWL_ERR(trans, "Unsupported splx structure\n");
-> +		IWL_WARN(trans, "Unsupported splx structure, not limiting WiFi power\n");
->  		return 0;
->  	}
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 986bf07..4512e86 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -528,6 +528,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> +	cancel_work_sync(&pcie_work);
 
-If this is really bothering you, I guess I could apply this patch for
-now.  But as I said, this is not solving the actual problem.
+Is there a good reason you have to cancel the work? What if you were
+just to finish it (i.e., flush_work())?
 
---
-Cheers,
-Luca.
+In any case, I think this is fine, so for the PCIe bits:
+
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+> +
+>  	if (user_rmmod && !adapter->mfg_mode) {
+>  #ifdef CONFIG_PM_SLEEP
+>  		if (adapter->is_suspended)
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index 4cad1c2..f974260 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -46,6 +46,15 @@
+>   */
+>  static u8 user_rmmod;
+>  
+> +/* reset_trigger variable is used to identify if mwifiex_sdio_remove()
+> + * is called by sdio_work during reset or the call is from sdio subsystem.
+> + * We will cancel sdio_work only if the call is from sdio subsystem.
+> + */
+> +static u8 reset_triggered;
+> +
+> +static void mwifiex_sdio_work(struct work_struct *work);
+> +static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+> +
+>  static struct mwifiex_if_ops sdio_ops;
+>  static unsigned long iface_work_flags;
+>  
+> @@ -289,6 +298,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> +	if (!reset_triggered)
+> +		cancel_work_sync(&sdio_work);
+> +
+>  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+>  
+>  	if (user_rmmod && !adapter->mfg_mode) {
+> @@ -2290,7 +2302,9 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+>  	 * discovered and initializes them from scratch.
+>  	 */
+>  
+> +	reset_triggered = 1;
+>  	mwifiex_sdio_remove(func);
+> +	reset_triggered = 0;
+
+Boy that's ugly! Couldn't you just create something like
+__mwifiex_sdio_remove(), which does everything except the
+cancel_work_sync()? Then you'd do this for the .remove() callback:
+
+	cancel_work_sync(&sdio_work);
+	__mwifiex_sdio_remove(func);
+
+and for mwifiex_recreate_adapter() you'd just call
+__mwifiex_sdio_remove()? The static variable that simply serves as a
+(non-reentrant) function call parameter seems like a really poor
+alternative to this simple refactoring.
+
+Or you could just address the TODO in this function, and you wouldn't
+have to do this dance at all...
+
+Brian
+
+>  
+>  	/* power cycle the adapter */
+>  	sdio_claim_host(func);
+> @@ -2621,7 +2635,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
+>  		mwifiex_sdio_card_reset_work(save_adapter);
+>  }
+>  
+> -static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+>  /* This function resets the card */
+>  static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+>  {
+> -- 
+> 1.9.1
+> 
