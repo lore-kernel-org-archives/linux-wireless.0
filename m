@@ -1,54 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48164 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbcJCN3U (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33988 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936498AbcJXR5L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 09:29:20 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
-References: <20160905095128.80560-1-nbd@nbd.name>
-        <201609301636.43363.arnd@arndb.de>
-        <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name>
-        <201609301658.35039.arnd@arndb.de>
-Date: Mon, 03 Oct 2016 16:29:15 +0300
-In-Reply-To: <201609301658.35039.arnd@arndb.de> (Arnd Bergmann's message of
-        "Fri, 30 Sep 2016 16:58:34 +0200")
-Message-ID: <87vax9r26s.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_152933_503333_0B4EA997)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 24 Oct 2016 13:57:11 -0400
+Received: by mail-pf0-f174.google.com with SMTP id r16so102812619pfg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 10:57:11 -0700 (PDT)
+From: Rajat Jain <rajatja@google.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>
+Cc: Rajat Jain <rajatja@google.com>,
+        Brian Norris <briannorris@google.com>, rajatxjain@gmail.com
+Subject: [PATCH 1/3] mwifiex: Allow mwifiex early access to device structure
+Date: Mon, 24 Oct 2016 10:56:51 -0700
+Message-Id: <1477331813-42151-2-git-send-email-rajatja@google.com> (sfid-20161024_195721_916373_0908FCAE)
+In-Reply-To: <1477331813-42151-1-git-send-email-rajatja@google.com>
+References: <1477331813-42151-1-git-send-email-rajatja@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Today all the interface drivers (usb/pcie/sdio) assign the
+adapter->dev in the register_dev() callback, although they
+have this piece of info well before hand.
 
-> On Friday 30 September 2016, Felix Fietkau wrote:
->> >> >> >> +                 device_type = "pci";
->> >> >> >> +                 mediatek,mtd-eeprom = <&factory 0x8000>;
->> >> >> >> +                 mediatek,2ghz = <0>;
->> >> > 
->> >> > It's not clear what the possible values for the 2ghz property are,
->> >> > can you be more verbose in the description? How is <0> different
->> >> > from no property?
->> >> 0 means disabled, no property means unchanged (compared to EEPROM).
->> > 
->> > Maybe have a boolean property instead then to say "mediatek,2ghz-disabled" ?
->> > 
->> > If zero is the only possible value, there is no need to put a number in there.
->> 1 is also possible, which will force-enable the capability.
->
-> Ok, then both those values should be documented in the binding.
+This patch makes the device structure available for mwifiex
+right at the beginning, so that it can be used for early
+initialization if needed.
 
-Related to this, Martin sent patches which add generic bindings for
-enabling 2 Ghz and 5 Ghz bands.
+This is needed for subsequent patches in this patchset that
+intend to unify and consolidate some of the code that would
+otherwise have to be duplicated among the interface drivers
+(sdio, pcie, usb).
 
-[RFC,1/3] Documentation: dt-bindings: add IEEE 802.11 binding documentation
-https://patchwork.kernel.org/patch/9359833/
+Signed-off-by: Rajat Jain <rajatja@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 4 +++-
+ drivers/net/wireless/marvell/mwifiex/main.h | 3 ++-
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 4 +---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 5 +----
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 3 +--
+ 5 files changed, 8 insertions(+), 11 deletions(-)
 
-[RFC,2/3] of: add IEEE 802.11 device configuration support code
-https://patchwork.kernel.org/patch/9359837/
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 2478ccd..dcceab2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1567,7 +1567,8 @@ EXPORT_SYMBOL_GPL(mwifiex_do_flr);
+  */
+ int
+ mwifiex_add_card(void *card, struct semaphore *sem,
+-		 struct mwifiex_if_ops *if_ops, u8 iface_type)
++		 struct mwifiex_if_ops *if_ops, u8 iface_type,
++		 struct device *dev)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 
+@@ -1579,6 +1580,7 @@ mwifiex_add_card(void *card, struct semaphore *sem,
+ 		goto err_init_sw;
+ 	}
+ 
++	adapter->dev = dev;
+ 	adapter->iface_type = iface_type;
+ 	adapter->card_sem = sem;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 26df28f..91218a1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1411,7 +1411,8 @@ static inline u8 mwifiex_is_tdls_link_setup(u8 status)
+ 
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 			     u32 func_init_shutdown);
+-int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8);
++int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8,
++		     struct device *);
+ int mwifiex_remove_card(struct mwifiex_adapter *, struct semaphore *);
+ 
+ void mwifiex_get_version(struct mwifiex_adapter *adapter, char *version,
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f7c84d3..49b5835 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -224,7 +224,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
+-			       MWIFIEX_PCIE);
++			       MWIFIEX_PCIE, &pdev->dev);
+ 	if (ret) {
+ 		pr_err("%s failed\n", __func__);
+ 		goto err_free;
+@@ -2990,11 +2990,9 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct pci_dev *pdev = card->dev;
+ 
+ 	/* save adapter pointer in card */
+ 	card->adapter = adapter;
+-	adapter->dev = &pdev->dev;
+ 
+ 	if (mwifiex_pcie_request_irq(adapter))
+ 		return -1;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 807af13..c95f41f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -206,7 +206,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	}
+ 
+ 	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
+-			       MWIFIEX_SDIO);
++			       MWIFIEX_SDIO, &func->dev);
+ 	if (ret) {
+ 		dev_err(&func->dev, "add card failed\n");
+ 		goto err_disable;
+@@ -2106,9 +2106,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 		return ret;
+ 	}
+ 
+-
+-	adapter->dev = &func->dev;
+-
+ 	strcpy(adapter->fw_name, card->firmware);
+ 	if (card->fw_dump_enh) {
+ 		adapter->mem_type_mapping_tbl = generic_mem_type_map;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 73eb084..f847fff 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -476,7 +476,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	usb_set_intfdata(intf, card);
+ 
+ 	ret = mwifiex_add_card(card, &add_remove_card_sem, &usb_ops,
+-			       MWIFIEX_USB);
++			       MWIFIEX_USB, &card->udev->dev);
+ 	if (ret) {
+ 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
+ 		usb_reset_device(udev);
+@@ -932,7 +932,6 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 	struct usb_card_rec *card = (struct usb_card_rec *)adapter->card;
+ 
+ 	card->adapter = adapter;
+-	adapter->dev = &card->udev->dev;
+ 
+ 	switch (le16_to_cpu(card->udev->descriptor.idProduct)) {
+ 	case USB8997_PID_1:
 -- 
-Kalle Valo
+2.8.0.rc3.226.g39d4020
