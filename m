@@ -1,144 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34946 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbcJBW3Y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:29:24 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, arnd@arndb.de
-Cc: chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2 3/7] ath9k: Add an eeprom_ops callback for retrieving the eepmisc value
-Date: Mon,  3 Oct 2016 00:29:09 +0200
-Message-Id: <20161002222913.12223-4-martin.blumenstingl@googlemail.com> (sfid-20161003_002933_716743_44C8DCAA)
-In-Reply-To: <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
- <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52764 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936517AbcJXOQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:16:06 -0400
+Message-ID: <1477318562.4085.28.camel@sipsolutions.net> (sfid-20161024_161619_492331_FC0F4724)
+Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if
+ requested
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
+Date: Mon, 24 Oct 2016 16:16:02 +0200
+In-Reply-To: <3178350.ZYYEYN7rIx@prime>
+References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com>
+         <20161024121129.GA8925@prodigo.lan>
+         <1477316004.4085.17.camel@sipsolutions.net> <3178350.ZYYEYN7rIx@prime>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows deciding if we have to swap the EEPROM data (so it matches
-the system's native endianness) even if no byte-swapping (swab16, based on
-the first two bytes in the EEPROM) is needed.
+On Mon, 2016-10-24 at 15:42 +0200, Simon Wunderlich wrote:
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom.h        | 1 +
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    | 8 +++++++-
- 5 files changed, 29 insertions(+), 4 deletions(-)
+> Otherwise, it would be pretty much impossible to perform CSAs to
+> another DFS channel.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 270d4ae..3dbfd86 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5498,6 +5498,11 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
- 	}
- }
- 
-+static u8 ar9003_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map4k.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_ar9300_ops = {
- 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
- 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
-@@ -5508,5 +5513,6 @@ const struct eeprom_ops eep_ar9300_ops = {
- 	.set_board_values = ath9k_hw_ar9300_set_board_values,
- 	.set_addac = ath9k_hw_ar9300_set_addac,
- 	.set_txpower = ath9k_hw_ar9300_set_txpower,
--	.get_spur_channel = ath9k_hw_ar9300_get_spur_channel
-+	.get_spur_channel = ath9k_hw_ar9300_get_spur_channel,
-+	.get_eepmisc = ar9003_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index c466ada..408cfa7 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -655,6 +655,7 @@ struct eeprom_ops {
- 			   u16 cfgCtl, u8 twiceAntennaReduction,
- 			   u8 powerLimit, bool test);
- 	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
-+	u8 (*get_eepmisc)(struct ath_hw *ah);
- };
- 
- void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 780cb49..7cd9c64 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1064,6 +1064,11 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	return ah->eeprom.map4k.modalHeader.spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_4k_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map4k.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_4k_ops = {
- 	.check_eeprom		= ath9k_hw_4k_check_eeprom,
- 	.get_eeprom		= ath9k_hw_4k_get_eeprom,
-@@ -1073,5 +1078,6 @@ const struct eeprom_ops eep_4k_ops = {
- 	.get_eeprom_rev		= ath9k_hw_4k_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_4k_set_board_values,
- 	.set_txpower		= ath9k_hw_4k_set_txpower,
--	.get_spur_channel	= ath9k_hw_4k_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_4k_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_4k_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f483ba2..e1ba9bc 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -986,6 +986,11 @@ static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
- 	return ah->eeprom.map9287.modalHeader.spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_ar9287_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map9287.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_ar9287_ops = {
- 	.check_eeprom		= ath9k_hw_ar9287_check_eeprom,
- 	.get_eeprom		= ath9k_hw_ar9287_get_eeprom,
-@@ -995,5 +1000,6 @@ const struct eeprom_ops eep_ar9287_ops = {
- 	.get_eeprom_rev		= ath9k_hw_ar9287_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_ar9287_set_board_values,
- 	.set_txpower		= ath9k_hw_ar9287_set_txpower,
--	.get_spur_channel	= ath9k_hw_ar9287_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_ar9287_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_ar9287_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 39b1b27..087bdb7 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1317,6 +1317,11 @@ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	return ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_def_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.def.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_def_ops = {
- 	.check_eeprom		= ath9k_hw_def_check_eeprom,
- 	.get_eeprom		= ath9k_hw_def_get_eeprom,
-@@ -1327,5 +1332,6 @@ const struct eeprom_ops eep_def_ops = {
- 	.set_board_values	= ath9k_hw_def_set_board_values,
- 	.set_addac		= ath9k_hw_def_set_addac,
- 	.set_txpower		= ath9k_hw_def_set_txpower,
--	.get_spur_channel	= ath9k_hw_def_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_def_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_def_get_eepmisc
- };
--- 
-2.10.0
+I was told that to do that you'd need another NIC that's pre-CAC'ing
+another channel.
+
+johannes
