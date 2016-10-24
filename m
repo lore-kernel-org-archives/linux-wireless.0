@@ -1,85 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33718 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753741AbcJERyd (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33868 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753216AbcJXX5u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 13:54:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> <87k2dm6git.fsf@toke.dk>
-        <878tu2okv7.fsf@kamboji.qca.qualcomm.com> <87d1jeenwa.fsf@toke.dk>
-Date: Wed, 05 Oct 2016 20:54:27 +0300
-In-Reply-To: <87d1jeenwa.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
- =?utf-8?Q?=C3=B8rgensen=22's?= message of
-        "Wed, 05 Oct 2016 18:55:33 +0200")
-Message-ID: <874m4qof58.fsf@kamboji.qca.qualcomm.com> (sfid-20161005_195436_674665_A1CC25B0)
+        Mon, 24 Oct 2016 19:57:50 -0400
+Received: by mail-pf0-f195.google.com with SMTP id 128so17778424pfz.1
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 16:57:49 -0700 (PDT)
+Date: Mon, 24 Oct 2016 16:57:46 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Message-ID: <20161024235746.GC15034@dtor-ws> (sfid-20161025_015752_631446_9AF8C9F4)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
+ <20161024191914.GB968@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161024191914.GB968@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+On Mon, Oct 24, 2016 at 12:19:15PM -0700, Brian Norris wrote:
+> On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
+> > This variable is guarded by spinlock at all other places. This patch
+> > takes care of missing spinlock usage in mwifiex_shutdown_drv().
+> > 
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> > index 82839d9..8e5e424 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> > @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+> >  
+> >  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+> >  	/* wait for mwifiex_process to complete */
+> > +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+> >  	if (adapter->mwifiex_processing) {
+> 
+> I'm not quite sure why we have this check in the first place; if the
+> main process is still running, then don't we have bigger problems here
+> anyway? But this is definitely the "right" way to check this flag, so:
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>
->>> Kalle Valo <kvalo@codeaurora.org> writes:
->>>
->>>> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>>>
->>>> I understand your point, but I don't want to rush this to 4.9 and then
->>>> start getting lots of bug reports and eventually forced to revert it. =
-If
->>>> we just found a new serious regression the chances are that there are
->>>> more lurking somewhere and this patch is just not ready yet.
->>>
->>> So, the changes to mac80211 that fixes the known regressions of this
->>> patch have gone in.
->>
->> I guess you mean this commit:
->>
->> bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ d=
-equeue
->>
->> (Just making sure that I have the same commit in my tree when I apply
->> this)
->
-> Yup, that's the one :)
->
->>> Any chance of seeing this merged during the current merge window? :)
->>
->> I sent last new feature ("-next") patches for 4.9 last week, sorry. So
->> this has to wait for 4.10.
->
-> Ah, right, I think I got my merge windows confused. You already said you
-> wouldn't take it for 4.9. So I guess what I'm asking is for you to put
-> it into the appropriate -next tree so it can get some wider exposure
-> ahead of the *next* merge window...
+No, this is definitely not right way to check it. What exactly does this
+spinlock protect? It seems that the intent is to make sure we do not
+call mwifiex_shutdown_drv() while mwifiex_main_process() is executing.
+It even says above that we are "waiting" for it (but we do not, we may
+bail out or we may not, depends on luck).
 
-Yeah, we have plenty of time for 4.10 :) So my plan is to apply this
-after I open wireless-drivers-next in 2-3 weeks or so. That would mean
-that the patch would hit Linus' tree when 4.10-rc1 is released
-(estimated to happen on 2017-01-01). The timing is actually perfect as
-now we get maximal testing time on -next.
+To implement this properly you not only need to take a lock and check
+the flag, but keep the lock until mwifiex_shutdown_drv() is done, or
+use some other way to let mwifiex_main_process() know it should not
+access the adapter while mwifiex_shutdown_drv() is running.
 
->> And I assume I need to take v5:
->>
->> https://patchwork.kernel.org/patch/9311037/
->
-> Yes. Haven't noticed anything that changed since that might conflict
-> with it, but let me know if I missed something and you want a refreshed
-> version.
+NACK.
 
-Thanks, I'll let you know if there are any problems.
+Thanks.
 
---=20
-Kalle Valo
+> 
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> 
+> > +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> >  		mwifiex_dbg(adapter, WARN,
+> >  			    "main process is still running\n");
+> >  		return ret;
+> >  	}
+> > +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> >  
+> >  	/* cancel current command */
+> >  	if (adapter->curr_cmd) {
+> > -- 
+> > 1.9.1
+> > 
+
+-- 
+Dmitry
