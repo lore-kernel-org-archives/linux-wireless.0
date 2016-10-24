@@ -1,149 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49223 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751233AbcJEO7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 10:59:24 -0400
-Message-ID: <1475679558.5257.7.camel@sipsolutions.net> (sfid-20161005_165927_834066_3A467B5D)
-Subject: Re: [PATCHv4] mac80211: check A-MSDU inner frame source address on
- AP interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        kvalo@codeaurora.org, akarwar@marvell.com, nishants@marvell.com,
-        Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
-Date: Wed, 05 Oct 2016 16:59:18 +0200
-In-Reply-To: <1475661751-26262-1-git-send-email-michael-dev@fami-braun.de>
-References: <1475661751-26262-1-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
+Received: from obi-wan.optimeas.de ([82.165.198.204]:51380 "EHLO
+        obi-wan.optimeas.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752075AbcJXK2G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 06:28:06 -0400
+From: "Matthias Klein" <matthias.klein@optimeas.de>
+To: linux-wireless@vger.kernel.org
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+Cc: "Klein, Matthias" <Matthias.Klein@optimeas.de>
+Date: Mon, 24 Oct 2016 10:18:51 +0000
+Message-Id: <emfd19c3e4-1b17-443b-b80a-e6b60a49f9dc@nb-mak> (sfid-20161024_122810_868391_D9B1DC72)
+Reply-To: "Matthias Klein" <matthias.klein@optimeas.de>
 Mime-Version: 1.0
+Content-Type: text/plain; format=flowed; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-05 at 12:02 +0200, Michael Braun wrote:
-> When using WPA security, the station and thus the required key is
-> identified by its mac address when packets are received. So a
-> station usually cannot spoof its source mac address.
-> 
-> But when a station sends an A-MSDU frame, port control and crypto
-> is done using the outer mac address, while the packets delivered
-> and forwarded use the inner mac address.
-> This might affect ARP/IP filtering on the AccessPoint.
-> 
-> IEEE 802.11-2012 mandates that the outer source mac address should
-> match the inner source address (section 8.3.2.2). For the destination
-> mac address, matching is not required, as a wifi client may send all
-> its traffic to the AP in order to have it forwarded.
-> 
-> Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+I also try to get a pcie wifi card (Compex WLE600VX) running in the 
+clearfog pro board with kernel 4.4.
 
-So as you can see by my own version of this patch, I'm not super happy
-with the way you did things here :)
+As I read in this thread the "irg.mode=1" shoud help: 
+https://www.spinics.net/lists/linux-wireless/msg155685.html
 
-Obviously, the commit log is now pretty much wrong here in your patch,
-since you do much more than that now and don't focus on the SA only.
+But it is not working for me:
+
+debian@clearfog:~$ lsmod
+Module Size Used by
+8021q 36864 0
+garp 16384 1 8021q
+mrp 20480 1 8021q
+stp 16384 1 garp
+llc 16384 2 stp,garp
+bnep 20480 2
+ath10k_pci 45056 0
+ath10k_core 249856 1 ath10k_pci
+ath 32768 1 ath10k_core
+mac80211 786432 1 ath10k_core
+bluetooth 385024 7 bnep
+qcserial 16384 0
+cfg80211 561152 3 ath,mac80211,ath10k_core
+usb_wwan 16384 1 qcserial
+qmi_wwan 24576 0
+cdc_wdm 20480 1 qmi_wwan
+usbserial 40960 2 qcserial,usb_wwan
+usbnet 36864 1 qmi_wwan
+mii 16384 1 usbnet
+rfkill 32768 4 cfg80211,bluetooth
+firmware_class 24576 1 ath10k_core
+marvell_cesa 45056 0
+ehci_orion 16384 0
+des_generic 28672 1 marvell_cesa
+mcp3021 16384 0
+hwmon 16384 1 mcp3021
+evbug 16384 0
+uio_pdrv_genirq 16384 0
+uio 20480 1 uio_pdrv_genirq
+fuse 102400 1
+ipv6 532480 0
+autofs4 36864 2
+
+debian@clearfog:~$ uname -a
+Linux clearfog 4.4.15-clearfog #1 SMP Wed Oct 5 00:03:36 UTC 2016 armv7l 
+GNU/Linux
+
+debian@clearfog:~$ sudo rmmod ath10k_pci ath10k_core
+debian@clearfog:~$ sudo modprobe ath10k_core
+debian@clearfog:~$ sudo modprobe ath10k_pci
+[ 69.529351] ath10k_pci 0000:01:00.0: Refused to change power state, 
+currently in D3
+[ 69.567989] ath10k_pci 0000:01:00.0: failed to wake up device : -110
+[ 69.575267] ath10k_pci: probe of 0000:01:00.0 failed with error -110
+
+debian@clearfog:~$ sudo rmmod ath10k_pci ath10k_core
+debian@clearfog:~$ sudo modprobe ath10k_core
+debian@clearfog:~$ sudo modprobe ath10k_pci irq_mode=1
+[ 97.899370] ath10k_pci 0000:01:00.0: Refused to change power state, 
+currently in D3
+[ 97.938045] ath10k_pci 0000:01:00.0: failed to wake up device : -110
+[ 97.944973] ath10k_pci: probe of 0000:01:00.0 failed with error -110
+
+debian@clearfog:~$ lspci -vvv
+00:02.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev 04) 
+(prog-if 00 [Normal decode])
+         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 64 bytes
+         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+         I/O behind bridge: 0000f000-00000fff
+         Memory behind bridge: f8000000-f82fffff
+         Prefetchable memory behind bridge: 00000000-000fffff
+         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- <SERR- <PERR-
+         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+         Capabilities: <access denied>
+
+00:03.0 PCI bridge: Marvell Technology Group Ltd. Device 6828 (rev 04) 
+(prog-if 00 [Normal decode])
+         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- 
+ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+         I/O behind bridge: 0000f000-00000fff
+         Memory behind bridge: fff00000-000fffff
+         Prefetchable memory behind bridge: 00000000-000fffff
+         Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- <SERR- <PERR-
+         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+         Capabilities: <access denied>
+
+01:00.0 Network controller: Qualcomm Atheros QCA988x 802.11ac Wireless 
+Network Adapter (rev ff) (prog-if ff)
+         !!! Unknown header type 7f
 
 
-> @@ -1436,7 +1436,8 @@ static void
-> iwl_mvm_report_wakeup_reasons(struct iwl_mvm *mvm,
->  
->  			memcpy(skb_put(pkt, pktsize), pktdata,
-> pktsize);
->  
-> -			if (ieee80211_data_to_8023(pkt, vif->addr,
-> vif->type))
-> +			if (ieee80211_data_to_8023(pkt, NULL, vif-
-> >addr,
-> +						   vif->type))
->  				goto report;
+Something else what I can try?
 
-I did something similar in the first patch I sent, but without changing
-the drivers (by using a static inline and a new function name)
-
->  void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct
-> sk_buff_head *list,
-> -			      const u8 *addr, enum nl80211_iftype
-> iftype,
-> +			      const u8 *addr,
-> +			      enum nl80211_iftype iftype,
->  			      const unsigned int extra_headroom,
-> -			      bool has_80211_header);
-> +			      const u8 *ta, const u8 *ra, bool
-> is_4addr,
-> +			      bool is_tdls_data);
-
-Instead of adding 4 new arguments, (ta, ra, is_4addr, is_tdls_data), I
-opted to just add two (check_da and check_sa) and make those NULL when
-no checks are desired.
-
-I *think* that works equivalently, but it'd be great if you could take
-a look.
-
-I had also removed the has_80211_header argument in patch 2, so we
-don't clutter this thing as much.
-
-> -	if (is_multicast_ether_addr(hdr->addr1) &&
-> -	    ((rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN &&
-> -	      rx->sdata->u.vlan.sta) ||
-> -	     (rx->sdata->vif.type == NL80211_IFTYPE_STATION &&
-> -	      rx->sdata->u.mgd.use_4addr)))
-> +	is_4addr = ((rx->sdata->vif.type == NL80211_IFTYPE_AP_VLAN
-> &&
-> +		     rx->sdata->u.vlan.sta) ||
-> +		    (rx->sdata->vif.type == NL80211_IFTYPE_STATION
-> &&
-> +		     rx->sdata->u.mgd.use_4addr));
-> +	if (is_multicast_ether_addr(hdr->addr1) && is_4addr)
->  		return RX_DROP_UNUSABLE;
-
-This also conflicts with the earlier patch I sent to just always drop
-when it's multicast.
-
->  	skb->dev = dev;
->  	__skb_queue_head_init(&frame_list);
->  
-> +	if (ieee80211_data_to_8023(skb, &eth_80211, dev->dev_addr,
-> +				   rx->sdata->vif.type) < 0)
-> +		return RX_DROP_UNUSABLE;
-> +
-> +	is_tdls_data = !ieee80211_has_tods(fc) &&
-> !ieee80211_has_fromds(fc);
->  	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
->  				 rx->sdata->vif.type,
-> -				 rx->local->hw.extra_tx_headroom,
-> true);
-> +				 rx->local->hw.extra_tx_headroom,
-> +				 eth_80211.h_source,
-> +				 eth_80211.h_dest, is_4addr,
-> is_tdls_data);
-
-Because you're passing eth_80211.h_* unconditionally, you need those
-extra arguments, but I don't see why my approach wouldn't work.
-
-> +	/* limit inner src/dst checks depending on iftype */
-> +	switch (iftype) {
-> +	case NL80211_IFTYPE_AP:
-> +	case NL80211_IFTYPE_AP_VLAN:
-> +		if (is_4addr)
-> +			ta = NULL;
-> +		ra = NULL;
-> +		break;
-> +	case NL80211_IFTYPE_ADHOC:
-> +		break;
-> +	case NL80211_IFTYPE_STATION:
-> +		if (is_4addr || !is_tdls_data)
-> +			ta = NULL;
-> +		if (is_4addr)
-> +			ra = NULL;
-> +		break;
-> +	default:
-> +		ta = NULL;
-> +		ra = NULL;
->  	}
-
-I have this in mac80211, which imho makes it easier.
-
-I had half in mind to actually pass something like "expected frame
-type", which wouldn't just be iftype, but be more like "AP, CLIENT,
-TDLS, MESH, IBSS, ...", but it ultimately seemed too complex.
-
-johannes
+Best regards,
+Matthias
