@@ -1,124 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48405 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752236AbcJEL6P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 07:58:15 -0400
-Message-ID: <1475668688.4994.46.camel@sipsolutions.net> (sfid-20161005_135820_417878_97AD8698)
-Subject: Re: [PATCH 3/3] mac80211: multicast to unicast conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        netdev <netdev@vger.kernel.org>
-Date: Wed, 05 Oct 2016 13:58:08 +0200
-In-Reply-To: <1690671fb30f19c53c7883a5207c5721@fami-braun.de>
-References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
-         <1475643324-2845-3-git-send-email-michael-dev@fami-braun.de>
-         <1475662791.4994.39.camel@sipsolutions.net>
-         <1690671fb30f19c53c7883a5207c5721@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51965 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938845AbcJXOUn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:20:43 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH v3] cfg80211: Check radar_detect and
+ num_different_channels with beacon interface combinations.
+Date: Mon, 24 Oct 2016 14:20:31 +0000
+Message-ID: <a413d57641114fbcb4c33d4b0fa46d01@aphydexm01f.ap.qualcomm.com> (sfid-20161024_162048_009222_3232B26E)
+References: <1476371730-23027-1-git-send-email-pkushwah@qti.qualcomm.com>
+         <1477052876.4068.40.camel@sipsolutions.net>
+         <9a1df5c048894351bbec2d502772b862@aphydexm01f.ap.qualcomm.com>
+ <1477316138.4085.19.camel@sipsolutions.net>
+In-Reply-To: <1477316138.4085.19.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-05 at 13:40 +0200, michael-dev wrote:
-> Am 05.10.2016 12:19, schrieb Johannes Berg:
-> > 
-> > > 
-> > > on both ends. Furthermore, I've seen a few mobile phone stations
-> > > locally that indicate qos support but won't complete DHCP if
-> > > their broadcasts are encapsulated as A-MSDU. Though they work
-> > > fine with this series approach.
-> > 
-> > Presumably those phones also don't even try to use DMS, right?
-> 
-> When I traced this two years ago, almost no device indicated DMS 
-> support, even though almost all seem to accepted multicast in unicast
-> a-msdu frames.
-
-Right, that's what I suspected. I'm a bit surprised they accepted
-multicast in unicast A-MSDU too, though I don't actually see any big
-problem with it.
-
-> > How did you determine that it "works fine"?
-> 
-> First, I tested this manually using my own devices or asked friends. 
-[snip
-
-Thanks!
-
-> > I see at least one undesirable impact of this, which DMS doesn't
-> > have; it breaks a client's MUST NOT requirement from RFC 1122:
-> 
-> Okay, so this cannot go into linux, right?
-
-I'm not necessarily saying that, I just think we need to be careful
-documenting possibly unexpected/undesired side-effects.
-
-> > > + * @set_ap_unicast: set the multicast to unicast flag for a AP
-> > > interface
-> > 
-> > That API name isn't very descriptive, I'm sure we can do something
-> > better there.
-> 
-> proposal: "request multicast packets to be trasnmitted as unicast" ?
-
-I was thinking more of the function name ("set_ap_unicast") which by
-itself makes no sense - set_multicast_to_unicast or something like that
-would be better, no?
-
-> > Also, perhaps we should structure this already like we would DMS,
-> > with a per-station toggle or even list of multicast addresses?
-> 
-> should be possible, yes
-
-I'm mostly handwaving though, haven't really looked at what DMS really
-would require from the API, even assuming that hostapd would implement
-all the action frame handling etc.
-
-It's quite possible that on the *client* side, mac80211 should
-implement the DMS client, if supported, and perhaps only if enabled by
-some kind of configuration knob.
-
-> > Was this not documented but also intended to apply to its dependent
-> > VLANs?
-> 
-> it was intended as a per per-BSS toggle, so it applies to all
-> dependent VLANs automatically.
-
-makes sense, but you should document it in the API documentation, which
-today says "for a AP interface" or so (see above)
-
-(btw - writing that out I see that it should be "an AP interface" too)
-
-> > 
-> > > 
-> > > +/* Check if multicast to unicast conversion is needed and do it.
-> > > + * Returns 1 if skb was freed and should not be send out. */
-> > 
-> > wrong comment style :)
-> 
-> you mean the */ at end of line instead of on a new line?
-
-yeah, no big deal though.
-
-I've also mostly gone back to non-davem style with /* also on its own
-line, but it's not so important. :)
-
-> > > +	unicast = nla_data(info->attrs[NL80211_ATTR_UNICAST]);
-> > 
-> > What's this supposed to mean?
-> 
-> this was supposed to be nla_get_u8.
-
-Shouldn't it just be nla_get_flag()? I mean, why do you have a u8 with
-values 0/1 rather than just flag attribute absent/present?
-
-Anyway, perhaps this needs to change to take DMS/per-station into
-account?
-
-Then again, this kind of setting - global multicast-to-unicast -
-fundamentally *cannot* be done on a per-station basis, since if you
-enable it for one station and not for another, the first station that
-has it enabled would get the packets twice...
-
-johannes
+T0sgLiBUaGFua3MgLiBXZSBzaGFsbCB3YWl0IGZvciB0aGVtIHRvIGdldCB1cCBzdHJlYW1lZC4N
+Cg0KUmVnYXJkcywNClN1bmlsDQogIA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2Vu
+dDogTW9uZGF5LCBPY3RvYmVyIDI0LCAyMDE2IDc6MDYgUE0NClRvOiBVbmRla2FyaSwgU3VuaWwg
+RHV0dCA8dXNkdXR0QHF0aS5xdWFsY29tbS5jb20+OyBLdXNod2FoYSwgUHVydXNob3R0YW0gPHBr
+dXNod2FoQHF0aS5xdWFsY29tbS5jb20+DQpDYzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
+b3JnOyBNYWxpbmVuLCBKb3VuaSA8am91bmlAcWNhLnF1YWxjb21tLmNvbT47IEh1bGx1ciBTdWJy
+YW1hbnlhbSwgQW1hcm5hdGggPGFtYXJuYXRoQHFjYS5xdWFsY29tbS5jb20+DQpTdWJqZWN0OiBS
+ZTogW1BBVENIIHYzXSBjZmc4MDIxMTogQ2hlY2sgcmFkYXJfZGV0ZWN0IGFuZCBudW1fZGlmZmVy
+ZW50X2NoYW5uZWxzIHdpdGggYmVhY29uIGludGVyZmFjZSBjb21iaW5hdGlvbnMuDQoNCk9uIE1v
+biwgMjAxNi0xMC0yNCBhdCAxMTo1OSArMDAwMCwgVW5kZWthcmksIFN1bmlsIER1dHQgd3JvdGU6
+DQo+ID4gDQo+ID4gSSd2ZSBqdXN0IHNlbnQgb3V0IGEgZmV3IHBhdGNoZXMgdGhhdCwgSSB0aGlu
+aywgaW1wbGVtZW50IHRoZSANCj4gPiBuZWNlc3NhcnkgdmFsaWRhdGlvbiBmb3IganVzdCB0aGUg
+YmVhY29uIGludGVydmFscywgd2l0aG91dCBhbGwgdGhpcyANCj4gPiBleHRyYSBiYWdnYWdlLiBQ
+bGVhc2UgdGFrZSBhIGxvb2sgYW5kIGxldCBtZSBrbm93IHdoYXQgeW91IHRoaW5rLg0KPiBJIHVu
+ZGVyc3RhbmQgdGhhdCB0aGUgbmV3IHBhdGNoZXMgZnJvbSB5b3UgYXJlIGluIGNvbnNpc3RlbnQg
+d2l0aCB0aGUgDQo+IGV4aXN0aW5nIGRlc2lnbiBvZiB2YWxpZGF0aW5nIHRoZSByYWRhciBkZXRl
+Y3Rpb24gLyBjaGFubmVscyBieSBoYXZpbmcgDQo+IHRoaXMgdmFsaWRhdGlvbiBkb25lIGluIHRo
+ZSBjZmc4MDIxMSBkcml2ZXJzIHRocm91Z2ggDQo+IGNmZzgwMjExX2NoZWNrX2NvbWJpbmF0aW9u
+cy4NCg0KT2ssIHNvIHdlIGFncmVlIGhlcmUsIHRoYXQncyBnb29kIDopDQoNCj4gV2l0aCB0aGlz
+IGFwcHJvYWNoICwgd291bGRuJ3QgdGhlIGV4aXN0aW5nIGNmZzgwMjExIGRyaXZlcnMgYmVoYXZl
+IHRoZSANCj4gb3RoZXIgd2F5ID8gSSBtZWFuICwgd2l0aCB0aGVzZSBjb21taXRzIGFuZCB0aGUg
+Y3VycmVudCBjZmc4MDIxMSANCj4gZHJpdmVycyAoIGRvIG5vdCBhZHZlcnRpc2UgYmVhY29uX2lu
+dF9taW5fZ2NkIGFuZCBpbnZva2UNCj4gY2ZnODAyMTFfY2hlY2tfY29tYmluYXRpb25zKSAsIHRo
+ZSB2YWxpZGF0aW9uIGZvciB0aGUgZGlmZmVyZW50IGJlYWNvbiANCj4gaW50ZXJ2YWwgc2hhbGwg
+c3VjY2VlZCAsIGJ1dCB0aGUgY3VycmVudCBrZXJuZWwgKCBjZmc4MDIxMSBpbnRlcmZhY2UgKSAN
+Cj4gd2l0aCB0aGUgc2FtZSBkcml2ZXIgZmFpbHMgdGhlIHN0YXJ0IG9mIHRoZSBBUCAvIG1lc2gu
+DQo+IElzIGl0IG5vdCBicmVha2luZyB0aGUgYmFja3dhcmQgY29tcGF0aWJpbGl0eSA/IElzIHRo
+aXMgZXhwZWN0ZWQgPw0KDQpBbnkgZHJpdmVyIHRoYXQgc3VwcG9ydHMgY29tYmluYXRpb25zIHNo
+b3VsZCBhbHNvIGludm9rZSBjaGVja19jb21iaW5hdGlvbnMuIFRoaXMgZG9lc24ndCBhcHBlYXIg
+dG8gYmUgdHJ1ZSBmb3IgbXdpZmlleCwgYnV0IHRoYXQncyBhbHJlYWR5IGEgYnVnL3Byb2JsZW0g
+aW4gdGhhdCBkcml2ZXIsIGl0IGRvZXNuJ3QgcmVhbGx5IGNoYW5nZSBtdWNoPw0KDQpqb2hhbm5l
+cw0K
