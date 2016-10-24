@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54884 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754019AbcJGLW6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 7 Oct 2016 07:22:58 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com>
-References: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Message-Id: <20161007112258.241FA61AD5@smtp.codeaurora.org> (sfid-20161007_132303_111943_D4A50856)
-Date: Fri,  7 Oct 2016 11:22:58 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52930 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932525AbcJXOij (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:38:39 -0400
+Message-ID: <1477319916.4085.29.camel@sipsolutions.net> (sfid-20161024_163843_189042_A4EA44C3)
+Subject: Re: [PATCH v2 2/2] mac80211: passively scan DFS channels if
+ requested
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+Cc: Antonio Quartulli <a@unstable.cc>, linux-wireless@vger.kernel.org
+Date: Mon, 24 Oct 2016 16:38:36 +0200
+In-Reply-To: <4116422.yZP7iyh9mq@prime>
+References: <1447464560-28104-1-git-send-email-antonio@meshcoding.com>
+         <3178350.ZYYEYN7rIx@prime> <1477318562.4085.28.camel@sipsolutions.net>
+         <4116422.yZP7iyh9mq@prime>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, 2016-10-24 at 16:36 +0200, Simon Wunderlich wrote:
+> On Monday, October 24, 2016 4:16:02 PM CEST Johannes Berg wrote:
+> > 
+> > On Mon, 2016-10-24 at 15:42 +0200, Simon Wunderlich wrote:
+> > > 
+> > > Otherwise, it would be pretty much impossible to perform CSAs to
+> > > another DFS channel.
+> > 
+> > I was told that to do that you'd need another NIC that's pre-
+> > CAC'ing another channel.
 > 
-> A device running without RX package aggregation could return more data
-> in the USB packet than the actual network packet. In this case we
-> could would clone the skb but then determine that that there was no
-> packet to handle and exit without freeing the cloned skb first.
-> 
-> This has so far only been observed with 8188eu devices, but could
-> affect others.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Cc: stable@vger.kernel.org # 4.8+
+> Here is the portion from ETSI 301 893 v1.8.1 [1] (the most recent one
+> to my knowledege), section 4.7.1.4 which describes operation from
+> master devices (Access Points):
+> [...]
 
-2 patches applied to wireless-drivers.git, thanks.
+Yeah I'm pretty sure there are differences in ETSI vs. FCC. Perhaps the
+information I was told about was for FCC. But perhaps it's all just
+completely wrong :)
 
-1e54134ccad0 rtl8xxxu: Fix memory leak in handling rxdesc16 packets
-8a55698f2f29 rtl8xxxu: Fix big-endian problem reporting mactime
-
--- 
-https://patchwork.kernel.org/patch/9356961/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
