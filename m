@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49150 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751689AbcJMHoJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 03:44:09 -0400
-Message-ID: <1476343431.4904.7.camel@sipsolutions.net> (sfid-20161013_094515_642504_F804A1F6)
-Subject: Re: [PATCHv4] mac80211: fix A-MSDU outer SA/DA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>,
-        Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de
-Date: Thu, 13 Oct 2016 09:23:51 +0200
-In-Reply-To: <fc2ae46b-f049-41de-3eec-465e83b5ecef@nbd.name>
-References: <1476337315-26845-1-git-send-email-michael-dev@fami-braun.de>
-         <fc2ae46b-f049-41de-3eec-465e83b5ecef@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57841 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S938751AbcJXOW2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:22:28 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <dmitry.torokhov@gmail.com>, <briannorris@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in shutdown_drv
+Date: Mon, 24 Oct 2016 19:51:29 +0530
+Message-ID: <1477318892-22877-2-git-send-email-akarwar@marvell.com> (sfid-20161024_162231_409325_1F5DD544)
+In-Reply-To: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This variable is guarded by spinlock at all other places. This patch
+takes care of missing spinlock usage in mwifiex_shutdown_drv().
 
-> > +     /* h_80211_src/dst is addr* field within hdr */
-> > +     h_80211_src = data + fast_tx->sa_offs;
-> > +     h_80211_dst = data + fast_tx->da_offs;
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-[...]
-
-> > +	if (bssid && ieee80211_has_fromds(hdr->frame_control))
-> > +		memcpy(h_80211_src, bssid, ETH_ALEN);
-> > +
-> > +	if (bssid && ieee80211_has_tods(hdr->frame_control))
-> > +		memcpy(h_80211_dst, bssid, ETH_ALEN);
-
-> I think this is probably wrong for 4-addr, since there both FromDS
-> and ToDS are set. Maybe you should use !ieee80211_has_tods instead of
-> ieee80211_has_fromds and vice versa.
-
-It helps to look at the spec ;-)
-
-For 4-addr frames, dest/src are addr 3/4 respectively, and in the spec
-both *should* actually be set to the BSSID.
-
-It's kinda pointless to be doing that and using a 4-addr frame here,
-but I suppose it would be expected by the receiver in 4-addr mode, so
-makes some sense.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 82839d9..8e5e424 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+ 
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+ 	/* wait for mwifiex_process to complete */
++	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+ 	if (adapter->mwifiex_processing) {
++		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 		mwifiex_dbg(adapter, WARN,
+ 			    "main process is still running\n");
+ 		return ret;
+ 	}
++	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+ 
+ 	/* cancel current command */
+ 	if (adapter->curr_cmd) {
+-- 
+1.9.1
