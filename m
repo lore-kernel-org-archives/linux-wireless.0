@@ -1,91 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8358 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbcJOF2F (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33739 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753901AbcJXXrY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Oct 2016 01:28:05 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: Steve deRosier <derosier@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
-Date: Sat, 15 Oct 2016 05:24:42 +0000
-Message-ID: <87funy9obq.fsf@kamboji.qca.qualcomm.com> (sfid-20161015_072811_187517_4B89701D)
-References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
-        <CALupW3CrY5sZYBcx5Bd3E_M_Kx2sx8_N9h_uexvg_DSO0c-tJA@mail.gmail.com>
-        <87y41rbleo.fsf@kamboji.qca.qualcomm.com>
-        <656f8674-64b9-0440-f8ae-28177c300b1c@gmail.com>
-In-Reply-To: <656f8674-64b9-0440-f8ae-28177c300b1c@gmail.com> (Erik
-        Stromdahl's message of "Fri, 14 Oct 2016 17:38:35 +0200")
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 24 Oct 2016 19:47:24 -0400
+Received: by mail-pf0-f194.google.com with SMTP id i85so17746614pfa.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 16:47:23 -0700 (PDT)
+Date: Mon, 24 Oct 2016 16:47:20 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        briannorris@google.com
+Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Message-ID: <20161024234720.GB15034@dtor-ws> (sfid-20161025_014727_907888_097F3190)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477318892-22877-2-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding ath10k list to CC)
+On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
+> This variable is guarded by spinlock at all other places. This patch
+> takes care of missing spinlock usage in mwifiex_shutdown_drv().
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 82839d9..8e5e424 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+>  
+>  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+>  	/* wait for mwifiex_process to complete */
+> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+>  	if (adapter->mwifiex_processing) {
+> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>  		mwifiex_dbg(adapter, WARN,
+>  			    "main process is still running\n");
+>  		return ret;
+>  	}
+> +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+What happens if adapter->mwifiex_processing will become true here?
 
->> Exactly what I was thinking. When I saw terms like "HTT" and "unified
->> WMI" my first thought was that is this actually an ath10k based design?
->> The product numbers really don't give any indication what driver
->> supports, the division goes something like this:
->>=20
->> * ath9k: "non-mobile" 11n chips
->> * ath6k: mobile 11n chips
->> * ath10k: mobile and "non-mobile" 11ac chips
->>=20
->> For example QCA6174 is an 11ac mobile chip supported by ath10k. ath10k
->> only supports PCI bus at the moment, but I'm hoping someone would add
->> USB and SDIO support. Patches are very welcome.
->>=20
->> I'm starting to suspect that QCA6584 is actually based on the same
->> design as QCA6174. If that's the case when we should also think if
->> instead we should add SDIO support to ath10k, maybe by taking relevant
->> parts from ath6kl?
->>=20
->> I'll investigate more what this QCA6584 is, I haven't heard about it
->> before.
->>=20
->
-> The reason I have patched to ath6kl driver was that it is the
-> only driver with sdio/mbox support.
->
-> I was actually thinking of writing a new driver from scratch, but I
-> thought that it was less work to modify the existing ath6kl driver.
+>  
+>  	/* cancel current command */
+>  	if (adapter->curr_cmd) {
+> -- 
+> 1.9.1
+> 
 
-Ok.
-
-> I just haven't considered the option to add sdio/mbox support to ath10k.
-> This is definitely something I will have a look at.
->
-> I should mention that I have been using the qcacld2.0 driver as
-> "documentation" of the chipset.
->
-> The qcacld driver identifies the chipset as AR6320
->
-> From the qcacld2.0 driver bmi_msg.h:
->
-> #define TARGET_TYPE_AR6320    8
->
-> Perhaps this can shed some light on what kind of chip this is?
-
-I'm pretty sure that this is QCA6174 based design which is already
-supported by ath10k. So my suggestion is to first look at adding SDIO
-support to ath10k and see if that's feasible. We already have PCI code
-split from the core code (ath10k_core.ko and ath10k_pci.ko) just because
-I was expecting that we would add SDIO and USB support later. That has
-just never happened due to lack of time, hopefully you can fix that now
-;)
-
-I haven't studied SDIO support at all yet but hopefully WMI, core.c and
-mac.c won't need that much modifications. HTT and HTC most likely need
-bigger changes. And then you would need to add sdio.c, similarly like we
-have pci.c now. Keep in mind that later we might want to add USB support
-also so if there's something which both SDIO and USB need to that would
-need to be easily sharable. Actually after adding SDIO I hope USB would
-be easier to add.
-
---=20
-Kalle Valo=
+-- 
+Dmitry
