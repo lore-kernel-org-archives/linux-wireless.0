@@ -1,58 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33306 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935057AbcJGAQ5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8901 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754163AbcJYWrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 20:16:57 -0400
-Received: by mail-wm0-f68.google.com with SMTP id i130so342341wmg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 06 Oct 2016 17:16:56 -0700 (PDT)
-From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-To: johannes.berg@intel.com
-Cc: emmanuel.grumbach@intel.com, luciano.coelho@intel.com,
-        linux-wireless@vger.kernel.org
-Subject: Non-fatal errors when disabling WiFi - Intel 7260
-Message-ID: <9bf978c3-17eb-a172-50b1-01ffb47490f4@gmail.com> (sfid-20161007_021736_500101_36067504)
-Date: Fri, 7 Oct 2016 02:16:53 +0200
+        Tue, 25 Oct 2016 18:47:22 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 3/8] cfg80211: Add feature flag for Fast Initial Link Setup (FILS)
+Date: Wed, 26 Oct 2016 01:42:32 +0300
+Message-ID: <1477435357-8495-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004726_369613_F74C17D2)
+In-Reply-To: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This defines a feature flag that drivers can use to indicate that they
+support (IEEE 802.11ai) when using user space SME
+(NL80211_CMD_AUTHENTICATE) in station mode.
 
-since commit b7a08b284dcf ("iwlwifi: pcie: extend device reset delay")
-I get the following errors when I disable the WiFi:
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/uapi/linux/nl80211.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-[   66.702845] iwlwifi 0000:02:00.0: RF_KILL bit toggled to disable radio.
-[   66.737893] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.737927] iwlwifi 0000:02:00.0: Error sending TXPATH_FLUSH: enqueue_hcmd failed: -5
-[   66.737933] iwlwifi 0000:02:00.0: Failed to send flush command (-5)
-[   66.772678] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.772698] iwlwifi 0000:02:00.0: Error sending REMOVE_STA: enqueue_hcmd failed: -5
-[   66.772699] iwlwifi 0000:02:00.0: Failed to remove station. Id=2
-[   66.772701] iwlwifi 0000:02:00.0: Failed sending remove station
-[   66.807518] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.807531] iwlwifi 0000:02:00.0: Error sending BINDING_CONTEXT_CMD: enqueue_hcmd failed: -5
-[   66.807533] iwlwifi 0000:02:00.0: Failed to send binding (action:3): -5
-[   66.842413] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.842430] iwlwifi 0000:02:00.0: Error sending MAC_PM_POWER_TABLE: enqueue_hcmd failed: -5
-[   66.877120] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.877150] iwlwifi 0000:02:00.0: Error sending MAC_CONTEXT_CMD: enqueue_hcmd failed: -5
-[   66.877153] iwlwifi 0000:02:00.0: Failed to remove MAC context: -5
-[   66.911995] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.912015] iwlwifi 0000:02:00.0: Error sending SCD_QUEUE_CFG: enqueue_hcmd failed: -5
-[   66.912019] iwlwifi 0000:02:00.0: Failed to disable queue 8 (ret=-5)
-[   66.947134] iwlwifi 0000:02:00.0: Failed to wake NIC for hcmd
-[   66.947163] iwlwifi 0000:02:00.0: Error sending TXPATH_FLUSH: enqueue_hcmd failed: -5
-[   66.947165] iwlwifi 0000:02:00.0: Failed to send flush command (-5)
-
-Other than these, there seems to be no noticeable issue, I can
-re-enable the WiFi and use it normally.
-
-Reverting the commit on top of 4.8 get rids of the errors.
-
-My laptop has an Intel Corporation Wireless 7260 (rev 6b),
-the firmware currently used is 17.352738.0.
-
-Regards,
-Gabriele
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 528aa48..39e1647 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4641,6 +4641,8 @@ enum nl80211_feature_flags {
+  *	configuration (AP/mesh) with HT rates.
+  * @NL80211_EXT_FEATURE_BEACON_RATE_VHT: Driver supports beacon rate
+  *	configuration (AP/mesh) with VHT rates.
++ * @NL80211_EXT_FEATURE_FILS: This driver supports Fast Initial Link Setup with
++ *	user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4655,6 +4657,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_BEACON_RATE_LEGACY,
+ 	NL80211_EXT_FEATURE_BEACON_RATE_HT,
+ 	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
++	NL80211_EXT_FEATURE_FILS,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+-- 
+1.9.1
