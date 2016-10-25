@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50174 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752385AbcJNKTX (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41473 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756742AbcJYJDf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 06:19:23 -0400
-Subject: [PATCH v2 1/2] ath10k: refactor ath10k_peer_assoc_h_phymode()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Fri, 14 Oct 2016 13:18:59 +0300
-Message-ID: <20161014101859.5300.47040.stgit@potku.adurom.net> (sfid-20161014_121926_194539_2FA52735)
-In-Reply-To: <20161014101710.5300.21550.stgit@potku.adurom.net>
-References: <20161014101710.5300.21550.stgit@potku.adurom.net>
+        Tue, 25 Oct 2016 05:03:35 -0400
+Date: Tue, 25 Oct 2016 11:03:40 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+        florian.c.schilhabel@googlemail.com
+Subject: Re: [PATCH] staging: rtl8712: Free memory and return failure when
+ kmalloc fails
+Message-ID: <20161025090340.GA7765@kroah.com> (sfid-20161025_110413_294033_D1F58148)
+References: <20161020065932.GA21705@symbol-HP-ZBook-15>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161020065932.GA21705@symbol-HP-ZBook-15>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When adding VHT160 support to ath10k_peer_assoc_h_phymode() the VHT mode
-selection code becomes too complex. Simplify it by refactoring the vht part to
-a separate function.
+On Thu, Oct 20, 2016 at 12:29:33PM +0530, Souptick Joarder wrote:
+> This patch is added to free memory and return failure when kmalloc fails
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c |   22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+I'm sorry, but I can not parse that sentance.  Can you rephrase this a
+bit better?  What exactly are you doing here?
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 691b7b58c584..cbd0f4c3dad4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2498,6 +2498,21 @@ static bool ath10k_mac_sta_has_ofdm_only(struct ieee80211_sta *sta)
- 	       ATH10K_MAC_FIRST_OFDM_RATE_IDX;
- }
- 
-+static enum wmi_phy_mode ath10k_mac_get_phymode_vht(struct ath10k *ar,
-+						    struct ieee80211_sta *sta)
-+{
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
-+		return MODE_11AC_VHT80;
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
-+		return MODE_11AC_VHT40;
-+
-+	if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
-+		return MODE_11AC_VHT20;
-+
-+	return MODE_UNKNOWN;
-+}
-+
- static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
- 					struct ieee80211_vif *vif,
- 					struct ieee80211_sta *sta,
-@@ -2544,12 +2559,7 @@ static void ath10k_peer_assoc_h_phymode(struct ath10k *ar,
- 		 */
- 		if (sta->vht_cap.vht_supported &&
- 		    !ath10k_peer_assoc_h_vht_masked(vht_mcs_mask)) {
--			if (sta->bandwidth == IEEE80211_STA_RX_BW_80)
--				phymode = MODE_11AC_VHT80;
--			else if (sta->bandwidth == IEEE80211_STA_RX_BW_40)
--				phymode = MODE_11AC_VHT40;
--			else if (sta->bandwidth == IEEE80211_STA_RX_BW_20)
--				phymode = MODE_11AC_VHT20;
-+			phymode = ath10k_mac_get_phymode_vht(ar, sta);
- 		} else if (sta->ht_cap.ht_supported &&
- 			   !ath10k_peer_assoc_h_ht_masked(ht_mcs_mask)) {
- 			if (sta->bandwidth >= IEEE80211_STA_RX_BW_40)
+> 
+> Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
+> ---
+>  drivers/staging/rtl8712/os_intfs.c     | 3 ++-
+>  drivers/staging/rtl8712/rtl871x_cmd.c  | 5 ++++-
+>  drivers/staging/rtl8712/rtl871x_xmit.c | 5 ++++-
+>  3 files changed, 10 insertions(+), 3 deletions(-)
+
+Any reason why you didn't cc: the driverdevel mailing list?  I doubt
+linux-wireless cares about staging drivers :(
+
+> 
+> diff --git a/drivers/staging/rtl8712/os_intfs.c b/drivers/staging/rtl8712/os_intfs.c
+> index cbe4de0..aab3141 100644
+> --- a/drivers/staging/rtl8712/os_intfs.c
+> +++ b/drivers/staging/rtl8712/os_intfs.c
+> @@ -313,7 +313,8 @@ u8 r8712_init_drv_sw(struct _adapter *padapter)
+>  		return _FAIL;
+>  	if (r8712_init_mlme_priv(padapter) == _FAIL)
+>  		return _FAIL;
+> -	_r8712_init_xmit_priv(&padapter->xmitpriv, padapter);
+> +	if ((_r8712_init_xmit_priv(&padapter->xmitpriv, padapter)) != _SUCCESS)
+> +		return _FAIL;
+
+You don't have to unwind anything that r8712_init_mlme_priv() did?
+
+>  	_r8712_init_recv_priv(&padapter->recvpriv, padapter);
+>  	memset((unsigned char *)&padapter->securitypriv, 0,
+>  	       sizeof(struct security_priv));
+
+thanks,
+
+greg k-h
