@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54724 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752512AbcJFLzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 07:55:14 -0400
-Message-ID: <1475754909.2015.15.camel@sipsolutions.net> (sfid-20161006_135517_738897_9F49AF56)
-Subject: Re: [PATCH 3/3] mac80211: multicast to unicast conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        netdev <netdev@vger.kernel.org>
-Date: Thu, 06 Oct 2016 13:55:09 +0200
-In-Reply-To: <199ae52e4e3000456d8d65b81500d874@fami-braun.de>
-References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
-         <1475643324-2845-3-git-send-email-michael-dev@fami-braun.de>
-         <1475662791.4994.39.camel@sipsolutions.net>
-         <1690671fb30f19c53c7883a5207c5721@fami-braun.de>
-         <1475668688.4994.46.camel@sipsolutions.net>
-         <199ae52e4e3000456d8d65b81500d874@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13949 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751481AbcJYWnK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 25 Oct 2016 18:43:10 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 0/8] cfg80211/mac80211: Fast Initial Link Setup (IEEE 802.11ai)
+Date: Wed, 26 Oct 2016 01:42:29 +0300
+Message-ID: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_004335_055273_2718B3A4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-06 at 13:53 +0200, michael-dev wrote:
-> Am 05.10.2016 13:58, schrieb Johannes Berg:
-> > 
-> > 
-> > Anyway, perhaps this needs to change to take DMS/per-station into
-> > account?
-> > 
-> > Then again, this kind of setting - global multicast-to-unicast -
-> > fundamentally *cannot* be done on a per-station basis, since if you
-> > enable it for one station and not for another, the first station
-> > that has it enabled would get the packets twice...
-> 
-> as I see it, that is exactly how DMS is standarized.
-> 
-> IEEE 802.11-2012 section 10.23.15 DMS procedures:
-> 
-> "If the requested DMS is accepted by the AP, the AP shall send 
-> subsequent group addressed MSDUs that
-> match the frame classifier specified in the DMS Descriptors to the 
-> requesting STA as A-MSDU subframes
-> within an individually addressed A-MSDU frame (see 8.3.2.2 and
-> 9.11)."
-> 
->   -> so the multicast packets shall go out as unicast A-MSDU frames
-> to  stations that requested this
+This series adds support for using mac80211-based drivers with Fast
+Initial Link Setup as defined in IEEE 802.11ai (to be published early
+next year; no more technical changes are expected at this point). The
+fils branch in git://w1.fi/hostap.git includes matching commits for
+hostapd and wpa_supplicant to use this functionality and initial set of
+mac80211_hwsim test cases for the functionality. Actually, most of the
+commits are already in the master branch, i.e., only the changes
+depending on the nl80211.h changes from this kernel patchset are waiting
+in the fils branch.
 
-Correct.
+This series covers only the FILS authentication/association
+functionality from IEEE 802.11ai, i.e., the other changes like scanning
+optimizations are not included.
 
-> "The AP shall continue to transmit the matching frames as group 
-> addressed frames (see 9.3.6, and 10.2.1.16) if at least one
-> associated 
-> STA has not requested DMS for these frames."
-> 
->   -> so it will continue to send it as multicast frames as well.
-> 
-> As with DMS the station requested DMS for a specific multicast
-> address, it could then drop multicast frames addressed to the
-> multicast address it registered for DMS.
+Jouni Malinen (8):
+  cfg80211: Rename SAE_DATA to more generic AUTH_DATA
+  mac80211: Allow AUTH_DATA to be used for FILS
+  cfg80211: Add feature flag for Fast Initial Link Setup (FILS)
+  cfg80211: Add Fast Initial Link Setup (FILS) auth algs
+  cfg80211: Add KEK/nonces for FILS association frames
+  mac80211: Add FILS auth alg mapping
+  mac80211: FILS AEAD protection for station mode association frames
+  mac80211: Claim Fast Initial Link Setup (FILS) support
 
-Yes, the DMS spec tells it to do this. However, we can't implement non-
-DMS similarly, because then the station won't request it and won't drop
-the duplicates.
+ include/linux/ieee80211.h    |   6 +
+ include/net/cfg80211.h       |  19 ++-
+ include/uapi/linux/nl80211.h |  26 +++-
+ net/mac80211/Makefile        |   1 +
+ net/mac80211/aes_cmac.c      |   8 +-
+ net/mac80211/aes_cmac.h      |   4 +
+ net/mac80211/fils_aead.c     | 354 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/fils_aead.h     |  19 +++
+ net/mac80211/ieee80211_i.h   |   5 +
+ net/mac80211/main.c          |   1 +
+ net/mac80211/mlme.c          |  64 ++++++--
+ net/wireless/core.h          |   2 +-
+ net/wireless/mlme.c          |   6 +-
+ net/wireless/nl80211.c       |  56 +++++--
+ 14 files changed, 535 insertions(+), 36 deletions(-)
+ create mode 100644 net/mac80211/fils_aead.c
+ create mode 100644 net/mac80211/fils_aead.h
 
-So for this non-standard multicast-to-unicast, it's all or nothing, it
-can't be done for some stations only.
-
-johannes
+-- 
+1.9.1
