@@ -1,166 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:50142 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S943177AbcJSOzE (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50558 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754447AbcJYQAg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:55:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Wed, 19 Oct 2016 10:27:25 +0300
-Message-Id: <20161019072726.22018-7-luca@coelho.fi> (sfid-20161019_165618_581818_1A7B4D76)
-In-Reply-To: <20161019072726.22018-1-luca@coelho.fi>
-References: <20161019072726.22018-1-luca@coelho.fi>
-Subject: [PATCH 6/7] iwlwifi: pcie: fix SPLC structure parsing
+        Tue, 25 Oct 2016 12:00:36 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "briannorris@google.com" <briannorris@google.com>
+Subject: RE: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Date: Tue, 25 Oct 2016 16:00:32 +0000
+Message-ID: <1229e7aa12fa4601831872f3e3ac546d@SC-EXCH04.marvell.com> (sfid-20161025_180040_330096_82DCFD00)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
+ <20161024234720.GB15034@dtor-ws> <20161024235555.GA7745@localhost>
+In-Reply-To: <20161024235555.GA7745@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Hi Brian/Dmitry,
 
-The SPLC data parsing is too restrictive and was not trying find the
-correct element for WiFi.  This causes problems with some BIOSes where
-the SPLC method exists, but doesn't have a WiFi entry on the first
-element of the list.  The domain type values are also incorrect
-according to the specification.
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Tuesday, October 25, 2016 5:26 AM
+> To: Dmitry Torokhov
+> Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
+> Sarmukadam; briannorris@google.com
+> Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing'
+> in shutdown_drv
+> 
+> Hi,
+> 
+> On Mon, Oct 24, 2016 at 04:47:20PM -0700, Dmitry Torokhov wrote:
+> > On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
+> > > This variable is guarded by spinlock at all other places. This patch
+> > > takes care of missing spinlock usage in mwifiex_shutdown_drv().
+> > >
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > ---
+> > >  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+> > >  1 file changed, 3 insertions(+)
+> > >
+> > > diff --git a/drivers/net/wireless/marvell/mwifiex/init.c
+> > > b/drivers/net/wireless/marvell/mwifiex/init.c
+> > > index 82839d9..8e5e424 100644
+> > > --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> > > @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter
+> > > *adapter)
+> > >
+> > >  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+> > >  	/* wait for mwifiex_process to complete */
+> > > +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+> > >  	if (adapter->mwifiex_processing) {
+> > > +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> > >  		mwifiex_dbg(adapter, WARN,
+> > >  			    "main process is still running\n");
+> > >  		return ret;
+> > >  	}
+> > > +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+> >
+> > What happens if adapter->mwifiex_processing will become true here?
+> 
+> That's why I commented:
+> 
+> "I'm not quite sure why we have this check in the first place; if the
+> main process is still running, then don't we have bigger problems here
+> anyway?"
 
-Fix this by complying with the actual specification.
+If mwifiex_processing is true here, it means main_process is still running. We have set "adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING" in mwifiex_shutdown_drv().
+Now we will wait until main_process() gets completed.
 
-Additionally, replace all occurrences of SPLX to SPLC, since SPLX is
-only a structure internal to the ACPI tables, and may not even exist.
+---------------------
+if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
+     wait_event_interruptible(adapter->init_wait_q,
+				      adapter->init_wait_q_woken);
+--------------
 
-Fixes: bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power limitations")
-Reported-by: Chris Rorvick <chris@rorvick.com>
-Tested-by: Paul Bolle <pebolle@tiscali.nl>
-Tested-by: Chris Rorvick <chris@rorvick.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 79 ++++++++++++++++-----------
- 1 file changed, 48 insertions(+), 31 deletions(-)
+We have following logic at the end of main_process()
+-------
+exit_main_proc:
+        if (adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING)
+                mwifiex_shutdown_drv(adapter);
+--------
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 001be40..2f8134b 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -541,48 +541,64 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
- 
- #ifdef CONFIG_ACPI
--#define SPL_METHOD		"SPLC"
--#define SPL_DOMAINTYPE_MODULE	BIT(0)
--#define SPL_DOMAINTYPE_WIFI	BIT(1)
--#define SPL_DOMAINTYPE_WIGIG	BIT(2)
--#define SPL_DOMAINTYPE_RFEM	BIT(3)
-+#define ACPI_SPLC_METHOD	"SPLC"
-+#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
- 
--static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
-+static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
- {
--	union acpi_object *limits, *domain_type, *power_limit;
--
--	if (splx->type != ACPI_TYPE_PACKAGE ||
--	    splx->package.count != 2 ||
--	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    splx->package.elements[0].integer.value != 0) {
--		IWL_ERR(trans, "Unsupported splx structure\n");
-+	union acpi_object *data_pkg, *dflt_pwr_limit;
-+	int i;
-+
-+	/* We need at least two elements, one for the revision and one
-+	 * for the data itself.  Also check that the revision is
-+	 * supported (currently only revision 0).
-+	*/
-+	if (splc->type != ACPI_TYPE_PACKAGE ||
-+	    splc->package.count < 2 ||
-+	    splc->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+	    splc->package.elements[0].integer.value != 0) {
-+		IWL_DEBUG_INFO(trans,
-+			       "Unsupported structure returned by the SPLC method.  Ignoring.\n");
- 		return 0;
- 	}
- 
--	limits = &splx->package.elements[1];
--	if (limits->type != ACPI_TYPE_PACKAGE ||
--	    limits->package.count < 2 ||
--	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
--		IWL_ERR(trans, "Invalid limits element\n");
--		return 0;
-+	/* loop through all the packages to find the one for WiFi */
-+	for (i = 1; i < splc->package.count; i++) {
-+		union acpi_object *domain;
-+
-+		data_pkg = &splc->package.elements[i];
-+
-+		/* Skip anything that is not a package with the right
-+		 * amount of elements (i.e. at least 2 integers).
-+		 */
-+		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
-+		    data_pkg->package.count < 2 ||
-+		    data_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+		    data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
-+			continue;
-+
-+		domain = &data_pkg->package.elements[0];
-+		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
-+			break;
-+
-+		data_pkg = NULL;
- 	}
- 
--	domain_type = &limits->package.elements[0];
--	power_limit = &limits->package.elements[1];
--	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
--		IWL_DEBUG_INFO(trans, "WiFi power is not limited\n");
-+	if (!data_pkg) {
-+		IWL_DEBUG_INFO(trans,
-+			       "No element for the WiFi domain returned by the SPLC method.\n");
- 		return 0;
- 	}
- 
--	return power_limit->integer.value;
-+	dflt_pwr_limit = &data_pkg->package.elements[1];
-+	return dflt_pwr_limit->integer.value;
- }
- 
- static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
- {
- 	acpi_handle pxsx_handle;
- 	acpi_handle handle;
--	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
-+	struct acpi_buffer splc = {ACPI_ALLOCATE_BUFFER, NULL};
- 	acpi_status status;
- 
- 	pxsx_handle = ACPI_HANDLE(&pdev->dev);
-@@ -593,23 +609,24 @@ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
- 	}
- 
- 	/* Get the method's handle */
--	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
-+	status = acpi_get_handle(pxsx_handle, (acpi_string)ACPI_SPLC_METHOD,
-+				 &handle);
- 	if (ACPI_FAILURE(status)) {
--		IWL_DEBUG_INFO(trans, "SPL method not found\n");
-+		IWL_DEBUG_INFO(trans, "SPLC method not found\n");
- 		return;
- 	}
- 
- 	/* Call SPLC with no arguments */
--	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
-+	status = acpi_evaluate_object(handle, NULL, NULL, &splc);
- 	if (ACPI_FAILURE(status)) {
- 		IWL_ERR(trans, "SPLC invocation failed (0x%x)\n", status);
- 		return;
- 	}
- 
--	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
-+	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, splc.pointer);
- 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
- 		       trans->dflt_pwr_limit);
--	kfree(splx.pointer);
-+	kfree(splc.pointer);
- }
- 
- #else /* CONFIG_ACPI */
--- 
-2.9.3
+Regards,
+Amitkumar Karwar
