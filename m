@@ -1,118 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17253 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754329AbcJZVpn (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50384 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1757654AbcJYQUn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 17:45:43 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 5/9] cfg80211: Add Fast Initial Link Setup (FILS) auth algs
-Date: Thu, 27 Oct 2016 00:42:02 +0300
-Message-ID: <1477518126-823-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234547_043900_C8E64606)
-In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+        Tue, 25 Oct 2016 12:20:43 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "briannorris@google.com" <briannorris@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+ remove_card
+Date: Tue, 25 Oct 2016 16:20:00 +0000
+Message-ID: <dcb5657e1a1140fba2273e2a7917513e@SC-EXCH04.marvell.com> (sfid-20161025_182048_515946_7C3CBD23)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-5-git-send-email-akarwar@marvell.com>
+ <20161025001405.GE15034@dtor-ws>
+In-Reply-To: <20161025001405.GE15034@dtor-ws>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This defines authentication algorithms for FILS (IEEE 802.11ai).
+Hi Dmitry,
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/linux/ieee80211.h    |  3 +++
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/nl80211.c       | 21 +++++++++++++++++++--
- 3 files changed, 28 insertions(+), 2 deletions(-)
+> From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
+> Sent: Tuesday, October 25, 2016 5:44 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> briannorris@google.com; Xinming Hu
+> Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+> remove_card
+> 
+> On Mon, Oct 24, 2016 at 07:51:32PM +0530, Amitkumar Karwar wrote:
+> > From: Xinming Hu <huxm@marvell.com>
+> >
+> > This patch ensures to wait for firmware dump completion in
+> > mwifiex_remove_card().
+> >
+> > For sdio interface, reset_trigger variable is used to identify if
+> > mwifiex_sdio_remove() is called by sdio_work during reset or the call
+> > is from sdio subsystem.
+> >
+> > This patch fixes a kernel crash observed during reboot when firmware
+> > dump operation is in process.
+> >
+> > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/pcie.c |  2 ++
+> > drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++++-
+> >  2 files changed, 16 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > index 986bf07..4512e86 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> > @@ -528,6 +528,8 @@ static void mwifiex_pcie_remove(struct pci_dev
+> *pdev)
+> >  	if (!adapter || !adapter->priv_num)
+> >  		return;
+> >
+> > +	cancel_work_sync(&pcie_work);
+> > +
+> >  	if (user_rmmod && !adapter->mfg_mode) {  #ifdef CONFIG_PM_SLEEP
+> >  		if (adapter->is_suspended)
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > index 4cad1c2..f974260 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > @@ -46,6 +46,15 @@
+> >   */
+> >  static u8 user_rmmod;
+> >
+> > +/* reset_trigger variable is used to identify if
+> > +mwifiex_sdio_remove()
+> > + * is called by sdio_work during reset or the call is from sdio
+> subsystem.
+> > + * We will cancel sdio_work only if the call is from sdio subsystem.
+> > + */
+> > +static u8 reset_triggered;
+> 
+> It would be really great if the driver supported multiple devices. IOW
+> please avoid module-globals.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index d428adf..793a017 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1576,6 +1576,9 @@ struct ieee80211_vht_operation {
- #define WLAN_AUTH_SHARED_KEY 1
- #define WLAN_AUTH_FT 2
- #define WLAN_AUTH_SAE 3
-+#define WLAN_AUTH_FILS_SK 4
-+#define WLAN_AUTH_FILS_SK_PFS 5
-+#define WLAN_AUTH_FILS_PK 6
- #define WLAN_AUTH_LEAP 128
- 
- #define WLAN_AUTH_CHALLENGE_LEN 128
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f7e0791..dcf8f6f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3667,6 +3667,9 @@ enum nl80211_bss_status {
-  * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
-  * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
-  * @NL80211_AUTHTYPE_SAE: Simultaneous authentication of equals
-+ * @NL80211_AUTHTYPE_FILS_SK: Fast Initial Link Setup shared key
-+ * @NL80211_AUTHTYPE_FILS_SK_PFS: Fast Initial Link Setup shared key with PFS
-+ * @NL80211_AUTHTYPE_FILS_PK: Fast Initial Link Setup public key
-  * @__NL80211_AUTHTYPE_NUM: internal
-  * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
-  * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
-@@ -3679,6 +3682,9 @@ enum nl80211_auth_type {
- 	NL80211_AUTHTYPE_FT,
- 	NL80211_AUTHTYPE_NETWORK_EAP,
- 	NL80211_AUTHTYPE_SAE,
-+	NL80211_AUTHTYPE_FILS_SK,
-+	NL80211_AUTHTYPE_FILS_SK_PFS,
-+	NL80211_AUTHTYPE_FILS_PK,
- 
- 	/* keep last */
- 	__NL80211_AUTHTYPE_NUM,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1a51bd4..893e321 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3777,12 +3777,23 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
- 		if (!(rdev->wiphy.features & NL80211_FEATURE_SAE) &&
- 		    auth_type == NL80211_AUTHTYPE_SAE)
- 			return false;
-+		if (!wiphy_ext_feature_isset(&rdev->wiphy,
-+					     NL80211_EXT_FEATURE_FILS_STA) &&
-+		    (auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+		     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+		     auth_type == NL80211_AUTHTYPE_FILS_PK))
-+			return false;
- 		return true;
- 	case NL80211_CMD_CONNECT:
- 	case NL80211_CMD_START_AP:
- 		/* SAE not supported yet */
- 		if (auth_type == NL80211_AUTHTYPE_SAE)
- 			return false;
-+		/* FILS not supported yet */
-+		if (auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+		    auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+		    auth_type == NL80211_AUTHTYPE_FILS_PK)
-+			return false;
- 		return true;
- 	default:
- 		return false;
-@@ -7809,12 +7820,18 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
- 	if (!nl80211_valid_auth_type(rdev, auth_type, NL80211_CMD_AUTHENTICATE))
- 		return -EINVAL;
- 
--	if (auth_type == NL80211_AUTHTYPE_SAE &&
-+	if ((auth_type == NL80211_AUTHTYPE_SAE ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_SK ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
-+	     auth_type == NL80211_AUTHTYPE_FILS_PK) &&
- 	    !info->attrs[NL80211_ATTR_AUTH_DATA])
- 		return -EINVAL;
- 
- 	if (info->attrs[NL80211_ATTR_AUTH_DATA]) {
--		if (auth_type != NL80211_AUTHTYPE_SAE)
-+		if (auth_type != NL80211_AUTHTYPE_SAE &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_SK &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_SK_PFS &&
-+		    auth_type != NL80211_AUTHTYPE_FILS_PK)
- 			return -EINVAL;
- 		auth_data = nla_data(info->attrs[NL80211_ATTR_AUTH_DATA]);
- 		auth_data_len = nla_len(info->attrs[NL80211_ATTR_AUTH_DATA]);
--- 
-1.9.1
+You are right. As Brian pointed out in other email, I will refactor the code and get rid of global variable.
+
+> 
+> > +
+> > +static void mwifiex_sdio_work(struct work_struct *work); static
+> > +DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+> > +
+> >  static struct mwifiex_if_ops sdio_ops;  static unsigned long
+> > iface_work_flags;
+> >
+> > @@ -289,6 +298,9 @@ mwifiex_sdio_remove(struct sdio_func *func)
+> >  	if (!adapter || !adapter->priv_num)
+> >  		return;
+> >
+> > +	if (!reset_triggered)
+> > +		cancel_work_sync(&sdio_work);
+> > +
+> >  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+> >
+> >  	if (user_rmmod && !adapter->mfg_mode) { @@ -2290,7 +2302,9 @@
+> static
+> > void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+> >  	 * discovered and initializes them from scratch.
+> >  	 */
+> >
+> > +	reset_triggered = 1;
+> >  	mwifiex_sdio_remove(func);
+> > +	reset_triggered = 0;
+> 
+> What exactly happens if I trigger mwifiex_sdio_remove() from sysfs at
+> the same time this code is running?
+
+Yes. There would be a race. It will be avoided with Brian's code refactoring approach.
+
+Regards,
+Amitkumar
