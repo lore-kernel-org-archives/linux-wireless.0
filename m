@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:49231 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754096AbcJQWQO (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33458 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758111AbcJYART (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 18:16:14 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
-Date: Tue, 18 Oct 2016 00:13:40 +0200
-Message-Id: <20161017221355.1861551-7-arnd@arndb.de> (sfid-20161018_001637_835989_76E8BD0B)
-In-Reply-To: <20161017220342.1627073-1-arnd@arndb.de>
-References: <20161017220342.1627073-1-arnd@arndb.de>
+        Mon, 24 Oct 2016 20:17:19 -0400
+Received: by mail-pf0-f196.google.com with SMTP id i85so17802008pfa.0
+        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 17:17:19 -0700 (PDT)
+Date: Mon, 24 Oct 2016 17:17:16 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        briannorris@google.com, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 3/5] mwifiex: do not free firmware dump memory in
+ shutdown_drv
+Message-ID: <20161025001716.GF15034@dtor-ws> (sfid-20161025_021728_387304_4D31FDD4)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-3-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477318892-22877-3-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A bugfix added a sanity check around the assignment and use of the
-'is_11d' variable, which looks correct to me, but as the function is
-rather complex already, this confuses the compiler to the point where
-it can no longer figure out if the variable is always initialized
-correctly:
+On Mon, Oct 24, 2016 at 07:51:30PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> mwifiex_upload_device_dump() already takes care of freeing firmware dump
+> memory. Doing the same thing in mwifiex_shutdown_drv() is redundant.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c | 19 -------------------
+>  1 file changed, 19 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 8e5e424..365efb8 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -407,8 +407,6 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
+>  static void
+>  mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+>  {
+> -	int idx;
+> -
+>  	if (!adapter) {
+>  		pr_err("%s: adapter is NULL\n", __func__);
+>  		return;
+> @@ -426,23 +424,6 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+>  	mwifiex_dbg(adapter, INFO, "info: free cmd buffer\n");
+>  	mwifiex_free_cmd_buffer(adapter);
+>  
+> -	for (idx = 0; idx < adapter->num_mem_types; idx++) {
+> -		struct memory_type_mapping *entry =
+> -				&adapter->mem_type_mapping_tbl[idx];
+> -
+> -		if (entry->mem_ptr) {
+> -			vfree(entry->mem_ptr);
+> -			entry->mem_ptr = NULL;
+> -		}
+> -		entry->mem_size = 0;
+> -	}
+> -
+> -	if (adapter->drv_info_dump) {
+> -		vfree(adapter->drv_info_dump);
+> -		adapter->drv_info_dump = NULL;
+> -		adapter->drv_info_size = 0;
+> -	}
 
-brcm80211/brcmfmac/cfg80211.c: In function ‘brcmf_cfg80211_start_ap’:
-brcm80211/brcmfmac/cfg80211.c:4586:10: error: ‘is_11d’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+Why do you even keep the pointer to dump memory in the adapter
+structure? You allocate it in mwifiex_drv_info_dump() and immediately
+use it in mwifiex_upload_device_dump(). Why not simply pass the pointer
+between the functions?
 
-This adds an initialization for the newly introduced case in which
-the variable should not really be used, in order to make the warning
-go away.
+Thanks.
 
-Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
-Cc: Hante Meuleman <hante.meuleman@broadcom.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index b777e1b..78d9966 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4516,7 +4516,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	/* store current 11d setting */
- 	if (brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_REGULATORY,
- 				  &ifp->vif->is_11d)) {
--		supports_11d = false;
-+		is_11d = supports_11d = false;
- 	} else {
- 		country_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
- 					      settings->beacon.tail_len,
 -- 
-2.9.0
+Dmitry
