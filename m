@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f46.google.com ([209.85.213.46]:35815 "EHLO
-        mail-vk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755215AbcJMFqy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47318 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754480AbcJZIJ4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 01:46:54 -0400
-Received: by mail-vk0-f46.google.com with SMTP id q126so13912219vkd.2
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 22:46:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1476282127.5271.30.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish> <1476282127.5271.30.camel@sipsolutions.net>
-From: Andy Lutomirski <luto@amacapital.net>
-Date: Wed, 12 Oct 2016 22:39:49 -0700
-Message-ID: <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com> (sfid-20161013_074658_415008_ECF80295)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 26 Oct 2016 04:09:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Wed, 26 Oct 2016 11:09:47 +0300
+Message-Id: <20161026080947.11647-1-luca@coelho.fi> (sfid-20161026_101001_639047_A79C17AD)
+In-Reply-To: <20161019100755.23874-10-luca@coelho.fi>
+References: <20161019100755.23874-10-luca@coelho.fi>
+Subject: [PATCH v2] iwlwifi: mvm: enable dynamic queue allocation mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 12, 2016 at 7:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> > Can you elaborate on how exactly it kills your system?
->>
->> the last time I saw it it was a NULL deref at
->> ieee80211_aes_ccm_decrypt.
->
-> Hm. I was expecting something within the crypto code would cause the
-> crash, this seems strange.
->
-> Anyway, I'm surely out of my depth wrt. the actual cause. Something
-> like the patch below probably works around it, but it's horribly
-> inefficient due to the locking and doesn't cover CMAC/GMAC either.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-In a pinch, I have these patches sitting around:
+New firmwares support dynamic queue allocation (DQA), which enables
+on-demand allocation of queues per RA/TID, instead of allocating them
+statically per vif.  This allows an AP to send, for instance, BE
+traffic to STA2 even if it also needs to send traffic to a sleeping
+STA1, without being blocked by the sleeping station.
 
-https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
-https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
+The implementation in the driver is now ready, so we can enable this
+feature by default when running firmwares that support it.
 
-I don't like them, though.  I think it's rather silly that we can't
-just pass virtual addresses to the crypto code.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+[reworded the commit message]
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 726ba48..cde8c6c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1111,9 +1111,8 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
+ 
+ static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
+ {
+-	/* Make sure DQA isn't allowed in driver until feature is complete */
+-	return false && fw_has_capa(&mvm->fw->ucode_capa,
+-				    IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
++	return fw_has_capa(&mvm->fw->ucode_capa,
++			   IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
+ }
+ 
+ static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
+-- 
+2.9.3
