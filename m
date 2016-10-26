@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53902 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932667AbcJZQKP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 12:10:15 -0400
-Message-ID: <1477498212.5563.2.camel@sipsolutions.net> (sfid-20161026_181018_644403_1335061A)
-Subject: Re: [PATCH 2/8] mac80211: Allow AUTH_DATA to be used for FILS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 26 Oct 2016 18:10:12 +0200
-In-Reply-To: <20161026153559.GA13254@jouni.qca.qualcomm.com>
-References: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
-         <1477435357-8495-3-git-send-email-jouni@qca.qualcomm.com>
-         <1477459800.4059.1.camel@sipsolutions.net>
-         <20161026153559.GA13254@jouni.qca.qualcomm.com>
+Received: from mout.kundenserver.de ([217.72.192.74]:59759 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752779AbcJZJ5h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 05:57:37 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Subject: Re: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
+Date: Wed, 26 Oct 2016 11:57:23 +0200
+Message-ID: <3406231.8mt2808XDi@wuerfel> (sfid-20161026_115816_090876_EF9B7275)
+In-Reply-To: <87zilr61ux.fsf@kamboji.qca.qualcomm.com>
+References: <20161017220342.1627073-1-arnd@arndb.de> <20161017221355.1861551-7-arnd@arndb.de> <87zilr61ux.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> This is admittedly a bit strange design with that special case needed
-> for SAE. If we were to design the SAE case now in combination with
-> FILS, I guess this would be quite different (e.g., separate
-> attributes for Authentication transaction sequence number and Status
-> code). Unlike the mesh use case with SAE, FILS is only between an AP
-> and a station and as such, there would not really be a case where the
-> station would send an Authentication frame with non-zero Status code.
+On Wednesday, October 26, 2016 9:49:58 AM CEST Kalle Valo wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
 > 
-> A future amendment might define a new authentication algorithm that
-> ends up using more than a single Authentication frame exchange. In
-> such a case, we would actually have need for Authentication
-> transaction sequence number even though FILS doesn't need it.
+> > A bugfix added a sanity check around the assignment and use of the
+> > 'is_11d' variable, which looks correct to me, but as the function is
+> > rather complex already, this confuses the compiler to the point where
+> > it can no longer figure out if the variable is always initialized
+> > correctly:
+> >
+> > brcm80211/brcmfmac/cfg80211.c: In function ‘brcmf_cfg80211_start_ap’:
+> > brcm80211/brcmfmac/cfg80211.c:4586:10: error: ‘is_11d’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> >
+> > This adds an initialization for the newly introduced case in which
+> > the variable should not really be used, in order to make the warning
+> > go away.
+> >
+> > Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
+> > Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+> > Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+> > Cc: Kalle Valo <kvalo@codeaurora.org>
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> I think I'd rather maintain a consistent attribute design for all
-> authentication algorithms and leave this as-is now. Another option
-> would be to not apply the rename SAE attributes patch and define
-> something new as a more generic solution, but I'm not sure there is
-> sufficient justification for the added complexity since we cannot
-> really get rid of the current SAE design any time soon.
+> Via which tree are you planning to submit this? Should I take it?
 
-Yes, fair point.
+I'd prefer if you can take it and forward it along with your other
+bugfixes. I'll try to take care of the ones that nobody else
+picked up.
 
-Maybe you can clarify the nl80211 attribute documentation wrt. this? It
-just states that it starts with the Authentication transaction sequence
-field, but afaict that's not true, it also has the status code field,
-which is also ignored here.
-
-johannes
+	Arnd
