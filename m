@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:38839 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752015AbcJESZW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15006 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750833AbcJZJSS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 14:25:22 -0400
+        Wed, 26 Oct 2016 05:18:18 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 5/8] cfg80211: Add KEK/nonces for FILS association frames
+Date: Wed, 26 Oct 2016 09:18:14 +0000
+Message-ID: <20161026091810.GA3660@jouni.qca.qualcomm.com> (sfid-20161026_111822_540449_FD000ED6)
+References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
+ <1477460187.4059.4.camel@sipsolutions.net>
+In-Reply-To: <1477460187.4059.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
-References: <20161002225059.16757-1-martin.blumenstingl@googlemail.com> <CAL_Jsq+cie=enhUYBF-OSrMdQ5S_048JF31ghEjtBNAmkGbB9Q@mail.gmail.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Wed, 5 Oct 2016 20:25:00 +0200
-Message-ID: <CAFBinCCDjZs6szRw0D1rwB89tUo+-RNFH2_g=K+Xj2iRJuUZDQ@mail.gmail.com> (sfid-20161005_202527_125224_B8AF9789)
-Subject: Re: [RFC 0/3] of: add common bindings to (de)activate IEEE 802.11 bands
-To: Rob Herring <robh+dt@kernel.org>, Felix Fietkau <nbd@nbd.name>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 3, 2016 at 5:22 PM, Rob Herring <robh+dt@kernel.org> wrote:
-> On Sun, Oct 2, 2016 at 5:50 PM, Martin Blumenstingl
-> <martin.blumenstingl@googlemail.com> wrote:
->> There are at least two drivers (ath9k and mt76) out there, where
->> devicetree authors need to override the enabled bands.
->>
->> For ath9k there is only one use-case: disabling a band which has been
->> incorrectly enabled by the vendor in the EEPROM (enabling a band is not
->> possible because the calibration data would be missing in the EEPROM).
->> The mt76 driver (currently pending for review) however allows enabling
->> and disabling the 2.4GHz and 5GHz band, see [0].
->>
->> Based on the discussion of (earlier versions of) my ath9k devicetree
->> patch it was suggested [1] that we use enable- and disable- properties.
->> The current patch implements:
->> - bands can be enabled or disabled with the corresponding property
->> - if both (disable and enable) properties are given and a driver asks
->>   whether the band is enabled then the logic will return false (= not
->>   enabled, preferring the disabled flag)
->> - if both (disable and enable) properties are given and a driver asks
->>   whether the band is disabled then the logic will return true (again,
->>   preferring the disabled flag over the enabled flag)
->>
->> We can still change the logic to do what the mt76 driver does (I am
->> fine with both solutions):
->> - property not available: driver decides which bands to enable
->> - property set to 0: disable the band
->> - property set to 1: enable the band
->
-> I prefer this way. Really, I'd prefer just a boolean disable property.
-> I'm not sure why you need the enable. We usually have these tri-state
-> properties when you want not present to mean use the bootloader or
-> default setting. Try to make not present the most common case.
-Felix: could you please give a few details why mt76 can not only
-disable but also enable a specific band?
-There is no specific comment in the sources [0] why this is needed.
-All other drivers that I am aware of (ath9k, rt2x00) only allow
-disabling a specific band, they never enable it (this has to be done
-explicitly by the EEPROM).
-
->> The new code has been integrated into ath9k to demonstrate how to use
->> it (with the benefit that the disable_2ghz and disable_5ghz settings
->> from the ath9k_platform_data can now also be configured via .dts).
->>
->> open questions/decisions needed:
->> - where to place this new code? I put it into drivers/of/of_ieee80211
->>   because that's where most other functions live.
->>   However, I found that this makes backporting the code harder (using
->>   wireless-backports from the driver-backports project [2])
->
-> We are generally moving subsystem specific code like this out of
-> drivers/of/, so please do that here. Maybe someone will get motivated
-> to move the other networking code out too.
-OK, thanks for the hint.
-
-[0] https://github.com/openwrt/mt76/blob/master/eeprom.c
+T24gV2VkLCBPY3QgMjYsIDIwMTYgYXQgMDc6MzY6MjdBTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
+cm90ZToNCj4gPiArKysgYi9uZXQvd2lyZWxlc3Mvbmw4MDIxMS5jDQo+ID4gKwlbTkw4MDIxMV9B
+VFRSX0ZJTFNfS0VLXSA9IHsgLnR5cGUgPSBOTEFfQklOQVJZLA0KPiA+ICsJCQkJwqDCoMKgwqAu
+bGVuID0gRklMU19NQVhfS0VLX0xFTiB9LA0KPiA+ICsJW05MODAyMTFfQVRUUl9GSUxTX05PTkNF
+U10gPSB7IC50eXBlID0gTkxBX0JJTkFSWSwNCj4gPiArCQkJCcKgwqDCoMKgwqDCoMKgLmxlbiA9
+IDIgKiBGSUxTX05PTkNFX0xFTiB9LA0KDQo+IElmIHlvdSByZW1vdmUgdGhlIHR5cGUgPSBOTEFf
+QklOQVJZIGFuZCBqdXN0IGxlYXZlIHRoZSB0eXBlIHplcm8sIHRoZW4NCj4geW91J2xsIGdldCAq
+bWluaW11bSogbGVuZ3RoIHZhbGlkYXRpb24sIHJhdGhlciB0aGFuIGxpbWl0aW5nIHRoZQ0KPiBt
+YXhpbXVtIGxlbmd0aC4gVGhhdCBzZWVtcyBtb3JlIGFwcHJvcHJpYXRlIGZvciB0aGUgbm9uY2Vz
+Pw0KDQpGSUxTX0tFSyBpcyB2YXJpYWJsZSBsZW5ndGgsIGJ1dCBGSUxTX05PTkNFUyBzaG91bGQg
+YmUgZXhhY3RseSAyICoNCkZJTFNfTk9OQ0VfTEVOLiBJIGRpZG4ndCByZW1lbWJlciB0aGUgbWlu
+aW11bSBsZW5ndGggY2FzZSBoZXJlLCBidXQgeWVzLA0KdGhhdCBzb3VuZHMgcmVhc29uYWJsZSBm
+b3IgRklMU19OT05DRVMuDQoNCj4gPiArCWlmIChpbmZvLT5hdHRyc1tOTDgwMjExX0FUVFJfRklM
+U19OT05DRVNdKSB7DQo+ID4gKwkJaWYgKG5sYV9sZW4oaW5mby0+YXR0cnNbTkw4MDIxMV9BVFRS
+X0ZJTFNfTk9OQ0VTXSkNCj4gPiAhPQ0KPiA+ICsJCcKgwqDCoMKgMiAqIEZJTFNfTk9OQ0VfTEVO
+KQ0KPiA+ICsJCQlyZXR1cm4gLUVJTlZBTDsNCj4gDQo+IFlvdSdyZSB2YWxpZGF0aW5nIHRoZSAq
+ZXhhY3QqIGxlbmd0aCBoZXJlLCB3aGljaCB1bmZvcnR1bmF0ZWx5IG5sYXR0cg0KPiBkb2Vzbid0
+IHN1cHBvcnQgcmlnaHQgbm93LCBidXQgcGVyaGFwcyB3ZSBjYW4gbGl2ZSB3aXRoIGNoZWNraW5n
+IHRoYXQNCj4gaXQncyBhdCBsZWFzdCB0aGF0IG1hbnkgYnl0ZXMsIGFuZCB1c2luZyBvbmx5IDIq
+bm9uY2VzPyBXZSBkbyB0aGF0IGZvcg0KPiBtb3N0IG90aGVyIGF0dHJpYnV0ZXMgKGxpa2UgTUFD
+IGFkZHJlc3NlcykuDQoNClRoaXMgd2FzIGJlY2F1c2Ugb2YgdGhlIC5sZW4gYWJvdmUgZW5kaW5n
+IHVwIGFsbG93aW5nIHNob3J0ZXIgdmFsdWVzLi4NClNpbmNlIHdlIGRvIHRoYXQgbWluaW11bSBs
+ZW5ndGggY2hlY2sgb25seSBmb3IgbnVtYmVyIG9mIG90aGVyDQphdHRyaWJ1dGVzLCBJIGd1ZXNz
+IHdlIGNhbiBkbyBpdCBoZXJlIGFzIHdlbGwgYW5kIGlnbm9yZSB3aGF0ZXZlciBlbHNlDQp0aGUg
+dXNlciBzcGFjZSBtaWdodCBoYXZlIGFkZGVkIGluY29ycmVjdGx5Lg0KDQo+IE9yIGRvIHdlIGV4
+cGVjdCB0byBleHRlbmQgdGhpcyB0byBtb3JlIHRoYW4gMiBub25jZXMgaW4gdGhlIGZ1dHVyZSwg
+YXQNCj4gd2hpY2ggcG9pbnQgd2UnbGwgbmVlZCB0aGUgbGVuZ3RoPw0KDQpObywgdGhpcyBzaG91
+bGQgcmVtYWluIGV4YWN0bHkgdHdvIG5vbmNlcyBhbmQgZWFjaCBvZiB0aG9zZSBoYXZpbmcNCmV4
+YWN0bHkgMTYgb2N0ZXRzLg0KDQotLSANCkpvdW5pIE1hbGluZW4gICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgIFBHUCBpZCBFRkM4OTVGQQ==
