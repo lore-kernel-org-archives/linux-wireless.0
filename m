@@ -1,77 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:33643 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752220AbcJJPEy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:47328 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754013AbcJZINy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 11:04:54 -0400
-Date: Tue, 11 Oct 2016 00:03:58 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        linux-next@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161010150358.GA514@swordfish> (sfid-20161010_170519_610396_3625E5BD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 26 Oct 2016 04:13:54 -0400
+Message-ID: <1477469629.27792.8.camel@coelho.fi> (sfid-20161026_101359_225122_77E998F9)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Date: Wed, 26 Oct 2016 11:13:49 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-utUVR5m/PWFe2AFKpL84"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2016-10-25-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
 
-current -git kills my system. adding
+--=-utUVR5m/PWFe2AFKpL84
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-	if (!virt_addr_valid(&aad[2])) {
-		WARN_ON(1);
-		return -EINVAL;
-	}
+Hi Kalle,
 
-to ieee80211_aes_ccm_decrypt() given the following backtrace
+Here's an updated pull-request, replacing 2016-10-25, with one commit
+message reworded, as you requested.
 
- WARNING: CPU: 5 PID: 252 at net/mac80211/aes_ccm.c:77 ieee80211_aes_ccm_decrypt+0xc8/0x197
- CPU: 5 PID: 252 Comm: irq/29-iwlwifi Tainted: G        W       4.8.0-next-20161010-dbg-00007-g79797e9-dirty #88
-  ffffc90000413638 ffffffff811ff0e3 0000000000000000 0000000000000000
-  ffffc90000413678 ffffffff8103fe91 0000004d000001c8 1ffff920000826d3
-  ffff88040fc526d8 0000000000000008 ffffc90000413978 ffffc9000041397a
- Call Trace:
-  [<ffffffff811ff0e3>] dump_stack+0x4f/0x65
-  [<ffffffff8103fe91>] __warn+0xc2/0xdd
-  [<ffffffff8103ff1c>] warn_slowpath_null+0x1d/0x1f
-  [<ffffffff8142aaa5>] ieee80211_aes_ccm_decrypt+0xc8/0x197
-  [<ffffffff810ed595>] ? __put_page+0x3c/0x3f
-  [<ffffffff8131fa42>] ? put_page+0x4a/0x62
-  [<ffffffff813218d3>] ? __pskb_pull_tail+0x1e8/0x279
-  [<ffffffff8141a7dc>] ? ccmp_special_blocks.isra.5+0x51/0x12d
-  [<ffffffff8141b226>] ieee80211_crypto_ccmp_decrypt+0x1ba/0x221
-  [<ffffffff81432e80>] ieee80211_rx_handlers+0x52a/0x19c2
-  [<ffffffff81070000>] ? start_dl_timer+0xa8/0xb4
-  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
-  [<ffffffff8108ebec>] ? del_timer+0x57/0x61
-  [<ffffffff814351a8>] ieee80211_prepare_and_rx_handle+0xcd6/0xd2a
-  [<ffffffff810742a5>] ? local_clock+0x10/0x12
-  [<ffffffff8107642b>] ? __lock_acquire.isra.31+0x202/0x57e
-  [<ffffffff8143207b>] ? rcu_read_unlock+0x23/0x23
-  [<ffffffff81066e77>] ? sched_clock_cpu+0x17/0xc6
-  [<ffffffff814357ab>] ieee80211_rx_napi+0x5af/0x698
-  [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
-  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
-  [<ffffffffa023aaa9>] iwl_mvm_rx_rx_mpdu+0x5ab/0x60c [iwlmvm]
-  [<ffffffff810742c0>] ? get_lock_stats+0x19/0x50
-  [<ffffffffa0235c80>] iwl_mvm_rx+0x45/0x69 [iwlmvm]
-  [<ffffffffa01a989e>] iwl_pcie_rx_handle+0x478/0x584 [iwlwifi]
-  [<ffffffffa01aaafd>] iwl_pcie_irq_handler+0x39c/0x52d [iwlwifi]
-  [<ffffffff81080824>] ? irq_finalize_oneshot+0xa7/0xa7
-  [<ffffffff81080841>] irq_thread_fn+0x1d/0x34
-  [<ffffffff81080ab5>] irq_thread+0xe6/0x1bb
-  [<ffffffff8108093a>] ? wake_threads_waitq+0x2c/0x2c
-  [<ffffffff810809cf>] ? irq_thread_dtor+0x95/0x95
-  [<ffffffff81059d79>] kthread+0xc6/0xce
-  [<ffffffff8107462d>] ? put_lock_stats.isra.24+0xe/0x20
-  [<ffffffff81059cb3>] ? __list_del_entry+0x22/0x22
-  [<ffffffff814669d2>] ret_from_fork+0x22/0x30
- ---[ end trace 94da6d4698b938b2 ]---
+I sent v2 of that patch to the linux-wireless mailing list.
 
-	-ss
+Let me know if everything's fine (or not). :)
+
+Luca.
+
+
+The following changes since commit 15b95a15950238eff4d7f24be1716086eea67835=
+:
+
+  Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/a=
+th.git (2016-09-28 16:37:33 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2016-10-25-2
+
+for you to fetch changes up to 7e62a699aafbd97928f19a8356d719b71b0e151c:
+
+  iwlwifi: mvm: use dev_coredumpsg() (2016-10-26 11:04:15 +0300)
+
+----------------------------------------------------------------
+* Finalize and enable dynamic queue allocation;
+* Use dev_coredumpmsg() to prevent locking the driver;
+* Small fix to pass the AID to the FW;
+* Use FW PS decisions with multi-queue;
+
+----------------------------------------------------------------
+Aviya Erenfeld (1):
+      iwlwifi: mvm: use dev_coredumpsg()
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: tell the firmware about the AID of the peer
+
+Johannes Berg (1):
+      iwlwifi: mvm: use firmware station PM notification for AP_LINK_PS
+
+Liad Kaufman (5):
+      iwlwifi: mvm: update txq metadata to current owner
+      iwlwifi: mvm: fix reserved txq freeing
+      iwlwifi: mvm: support MONITOR vif in DQA mode
+      iwlwifi: mvm: fix dqa deferred frames marking
+      iwlwifi: mvm: enable dynamic queue allocation mode
+
+Sara Sharon (1):
+      iwlwifi: mvm: assign cab queue to the correct station
+
+Sharon Dvir (1):
+      iwlwifi: pcie: give a meaningful name to interrupt request
+
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h    |   2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h  |  26 ++++++++++++++++=
+++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h |   9 ++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h     |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c     | 100 ++++++++++++++++=
++++++++++++++++++++++++++----------------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c   |  24 +++++++++-------=
+--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c   |  86 ++++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h        |   6 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c        |   3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c        |  37 ++++++++++++++++=
+++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h        |   1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c     |  29 ++++++++++++++++=
++++++-
+ 12 files changed, 249 insertions(+), 75 deletions(-)
+--=-utUVR5m/PWFe2AFKpL84
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAABCAAGBQJYEGW9AAoJEKFHnKIaPMX6u8YQAJMcOIpXQmvrnqAH2k+qHEyN
+6Ow4tDdAnYYc9vnuxDuLVPEL+9lw6XKsfb6FlwA8EE8shKkNl/vTDcgaov13Ej3x
+xHKX6AWHr63qb5A2/pU7inam3TCA/uxBzIvs5XdLGP6TFdadiEhRjDldh84Sq5LS
+PP36piOql0tmDumQVgHv3Qn58yu1Nyioo54J0NRzD62pOF9EOuaMlT9jinxUEd2Y
+bauzhM2lBRI6p4G2B4/UOBrbo/AVHu1ByFnnuKd07FKcyuDlTlFyHx94A3G+x6nb
+5eIdk92xkKbo3fC2+JW/aHwiAwwUbnugImWUQdjFHbkZ1oBOGCiAz/OTF/1exwf5
+Zbq/L0AJzAbEgeMQWOO0dehV5FoAAve9FVrWCsn0XilX7Ob+8e9akBc7S5cbFmcj
+lqeeJJ0OmnihokGSDyG0vzGUUCjeC4R9Pt7kLk01eD7QbwHzPeh4AnCNmyKGxNaR
+7j8/tBAO/fd4JVz5Shi9+VLByUQrNgGDrYEL1zZAwZbaQTeSDwhuA3rCGjuHyJQH
+CqQufyK1HfDiIQNaG127k1MK8lcTZwg3VCOLq/RRrZods43/eUmXEslyJEn3ISDF
+RcyOY6FcTVd40+Eg91HNMV32Pc2QPO/yshlpE6vA86Dq+AYtPTRLJZ3jexw7s+gn
+WIgkvJeSJR3oaTg8ZgNI
+=cz6f
+-----END PGP SIGNATURE-----
+
+--=-utUVR5m/PWFe2AFKpL84--
