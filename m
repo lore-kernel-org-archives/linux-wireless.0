@@ -1,87 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35677 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757469AbcJ3Uld (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 16:41:33 -0400
-Date: Sun, 30 Oct 2016 15:41:31 -0500
-From: Rob Herring <robh@kernel.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>, rajatxjain@gmail.com
-Subject: Re: [PATCH v6] mwifiex: parse device tree node for PCIe
-Message-ID: <20161030204131.pwfjqekpwd6nr3gb@rob-hp-laptop> (sfid-20161030_214254_731520_8E4D83E6)
-References: <1477070156-109965-1-git-send-email-rajatja@google.com>
- <1477084869-15612-1-git-send-email-rajatja@google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477084869-15612-1-git-send-email-rajatja@google.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52076 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935357AbcJZMpm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 08:45:42 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: use nla_parse_nested() instead of nla_parse()
+Date: Wed, 26 Oct 2016 14:45:38 +0200
+Message-Id: <1477485938-307-1-git-send-email-johannes@sipsolutions.net> (sfid-20161026_144549_760393_43B2FCBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Oct 21, 2016 at 02:21:09PM -0700, Rajat Jain wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> This patch derives device tree node from pcie bus layer framework, and
-> fixes a minor memory leak in mwifiex_pcie_probe() (in failure path).
-> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> marvell-8xxx.txt) to accommodate PCIe changes.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> ---
-> v2: Included vendor and product IDs in compatible strings for PCIe
-> chipsets(Rob Herring)
-> v3: Patch is created using -M option so that it will only include diff of
-> original and renamed files(Rob Herring)
-> Resend v3: Resending the patch because I missed to include device tree mailing
-> while sending v3.
-> v4: Fix error handling, also move-on even if no device tree node is present.
-> v5: Update commit log to include memory leak, return -EINVAL instead of -1.
-> v6: Remove an unnecessary error print, fix typo in commit log
-> 
->  .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++--
->  drivers/net/wireless/marvell/mwifiex/pcie.c        | 36 +++++++++++++++++++---
->  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
->  3 files changed, 39 insertions(+), 8 deletions(-)
->  rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> similarity index 91%
-> rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> index c421aba..dfe5f8e 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> @@ -1,8 +1,8 @@
-> -Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-> +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
->  ------
->  
-> -This node provides properties for controlling the marvell sdio wireless device.
-> -The node is expected to be specified as a child node to the SDIO controller that
-> +This node provides properties for controlling the marvell sdio/pcie wireless device.
+From: Johannes Berg <johannes.berg@intel.com>
 
-s/marvell/Marvell/
-s/sdio\/pcie/SDIO\/PCIE/
+It's just an inline doing the same thing, but the code
+is nicer with it.
 
-> +The node is expected to be specified as a child node to the SDIO/PCIE controller that
->  connects the device to the system.
->  
->  Required properties:
-> @@ -10,6 +10,8 @@ Required properties:
->    - compatible : should be one of the following:
->  	* "marvell,sd8897"
->  	* "marvell,sd8997"
-> +	* "pci11ab,2b42"
-> +	* "pci1b4b,2b42"
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 85 ++++++++++++++++++++++----------------------------
+ 1 file changed, 37 insertions(+), 48 deletions(-)
 
-I think I already said this, but you have the vendor and product IDs 
-reversed.
-
-Rob
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b0440de82171..ad49a4c43e01 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2318,10 +2318,9 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 		nla_for_each_nested(nl_txq_params,
+ 				    info->attrs[NL80211_ATTR_WIPHY_TXQ_PARAMS],
+ 				    rem_txq_params) {
+-			result = nla_parse(tb, NL80211_TXQ_ATTR_MAX,
+-					   nla_data(nl_txq_params),
+-					   nla_len(nl_txq_params),
+-					   txq_params_policy);
++			result = nla_parse_nested(tb, NL80211_TXQ_ATTR_MAX,
++						  nl_txq_params,
++						  txq_params_policy);
+ 			if (result)
+ 				return result;
+ 			result = parse_txq_params(tb, &txq_params);
+@@ -3571,8 +3570,8 @@ static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
+ 		sband = rdev->wiphy.bands[band];
+ 		if (sband == NULL)
+ 			return -EINVAL;
+-		err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+-				nla_len(tx_rates), nl80211_txattr_policy);
++		err = nla_parse_nested(tb, NL80211_TXRATE_MAX, tx_rates,
++				       nl80211_txattr_policy);
+ 		if (err)
+ 			return err;
+ 		if (tb[NL80211_TXRATE_LEGACY]) {
+@@ -6328,9 +6327,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	nla_for_each_nested(nl_reg_rule, info->attrs[NL80211_ATTR_REG_RULES],
+ 			    rem_reg_rules) {
+-		r = nla_parse(tb, NL80211_REG_RULE_ATTR_MAX,
+-			      nla_data(nl_reg_rule), nla_len(nl_reg_rule),
+-			      reg_rule_policy);
++		r = nla_parse_nested(tb, NL80211_REG_RULE_ATTR_MAX,
++				     nl_reg_rule, reg_rule_policy);
+ 		if (r)
+ 			goto bad_reg;
+ 		r = parse_reg_rule(tb, &rd->reg_rules[rule_idx]);
+@@ -6397,8 +6395,8 @@ static int parse_bss_select(struct nlattr *nla, struct wiphy *wiphy,
+ 	if (!nla_ok(nest, nla_len(nest)))
+ 		return -EINVAL;
+ 
+-	err = nla_parse(attr, NL80211_BSS_SELECT_ATTR_MAX, nla_data(nest),
+-			nla_len(nest), nl80211_bss_select_policy);
++	err = nla_parse_nested(attr, NL80211_BSS_SELECT_ATTR_MAX, nest,
++			       nl80211_bss_select_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -6788,9 +6786,8 @@ nl80211_parse_sched_scan_plans(struct wiphy *wiphy, int n_plans,
+ 		if (WARN_ON(i >= n_plans))
+ 			return -EINVAL;
+ 
+-		err = nla_parse(plan, NL80211_SCHED_SCAN_PLAN_MAX,
+-				nla_data(attr), nla_len(attr),
+-				nl80211_plan_policy);
++		err = nla_parse_nested(plan, NL80211_SCHED_SCAN_PLAN_MAX,
++				       attr, nl80211_plan_policy);
+ 		if (err)
+ 			return err;
+ 
+@@ -6879,9 +6876,9 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 				    tmp) {
+ 			struct nlattr *rssi;
+ 
+-			err = nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+-					nla_data(attr), nla_len(attr),
+-					nl80211_match_policy);
++			err = nla_parse_nested(tb,
++					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
++					       attr, nl80211_match_policy);
+ 			if (err)
+ 				return ERR_PTR(err);
+ 			/* add other standalone attributes here */
+@@ -7052,9 +7049,9 @@ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 				    tmp) {
+ 			struct nlattr *ssid, *rssi;
+ 
+-			err = nla_parse(tb, NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
+-					nla_data(attr), nla_len(attr),
+-					nl80211_match_policy);
++			err = nla_parse_nested(tb,
++					       NL80211_SCHED_SCAN_MATCH_ATTR_MAX,
++					       attr, nl80211_match_policy);
+ 			if (err)
+ 				goto out_free;
+ 			ssid = tb[NL80211_SCHED_SCAN_MATCH_ATTR_SSID];
+@@ -9754,9 +9751,8 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
+ 	if (!rdev->wiphy.wowlan->tcp)
+ 		return -EINVAL;
+ 
+-	err = nla_parse(tb, MAX_NL80211_WOWLAN_TCP,
+-			nla_data(attr), nla_len(attr),
+-			nl80211_wowlan_tcp_policy);
++	err = nla_parse_nested(tb, MAX_NL80211_WOWLAN_TCP, attr,
++			       nl80211_wowlan_tcp_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -9901,9 +9897,7 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
+ 		goto out;
+ 	}
+ 
+-	err = nla_parse(tb, NL80211_ATTR_MAX,
+-			nla_data(attr), nla_len(attr),
+-			nl80211_policy);
++	err = nla_parse_nested(tb, NL80211_ATTR_MAX, attr, nl80211_policy);
+ 	if (err)
+ 		goto out;
+ 
+@@ -9937,10 +9931,9 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 		goto set_wakeup;
+ 	}
+ 
+-	err = nla_parse(tb, MAX_NL80211_WOWLAN_TRIG,
+-			nla_data(info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]),
+-			nla_len(info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS]),
+-			nl80211_wowlan_policy);
++	err = nla_parse_nested(tb, MAX_NL80211_WOWLAN_TRIG,
++			       info->attrs[NL80211_ATTR_WOWLAN_TRIGGERS],
++			       nl80211_wowlan_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -10022,8 +10015,8 @@ static int nl80211_set_wowlan(struct sk_buff *skb, struct genl_info *info)
+ 				    rem) {
+ 			u8 *mask_pat;
+ 
+-			nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
+-				  nla_len(pat), NULL);
++			nla_parse_nested(pat_tb, MAX_NL80211_PKTPAT, pat,
++					 NULL);
+ 			err = -EINVAL;
+ 			if (!pat_tb[NL80211_PKTPAT_MASK] ||
+ 			    !pat_tb[NL80211_PKTPAT_PATTERN])
+@@ -10233,8 +10226,8 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
+ 	int rem, pat_len, mask_len, pkt_offset, n_patterns = 0;
+ 	struct nlattr *pat_tb[NUM_NL80211_PKTPAT];
+ 
+-	err = nla_parse(tb, NL80211_ATTR_COALESCE_RULE_MAX, nla_data(rule),
+-			nla_len(rule), nl80211_coalesce_policy);
++	err = nla_parse_nested(tb, NL80211_ATTR_COALESCE_RULE_MAX, rule,
++			       nl80211_coalesce_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -10272,8 +10265,7 @@ static int nl80211_parse_coalesce_rule(struct cfg80211_registered_device *rdev,
+ 			    rem) {
+ 		u8 *mask_pat;
+ 
+-		nla_parse(pat_tb, MAX_NL80211_PKTPAT, nla_data(pat),
+-			  nla_len(pat), NULL);
++		nla_parse_nested(pat_tb, MAX_NL80211_PKTPAT, pat, NULL);
+ 		if (!pat_tb[NL80211_PKTPAT_MASK] ||
+ 		    !pat_tb[NL80211_PKTPAT_PATTERN])
+ 			return -EINVAL;
+@@ -10392,10 +10384,9 @@ static int nl80211_set_rekey_data(struct sk_buff *skb, struct genl_info *info)
+ 	if (!info->attrs[NL80211_ATTR_REKEY_DATA])
+ 		return -EINVAL;
+ 
+-	err = nla_parse(tb, MAX_NL80211_REKEY_DATA,
+-			nla_data(info->attrs[NL80211_ATTR_REKEY_DATA]),
+-			nla_len(info->attrs[NL80211_ATTR_REKEY_DATA]),
+-			nl80211_rekey_policy);
++	err = nla_parse_nested(tb, MAX_NL80211_REKEY_DATA,
++			       info->attrs[NL80211_ATTR_REKEY_DATA],
++			       nl80211_rekey_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -10704,10 +10695,9 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
+ 	    wdev->owner_nlportid != info->snd_portid)
+ 		return -ENOTCONN;
+ 
+-	err = nla_parse(tb, NL80211_NAN_FUNC_ATTR_MAX,
+-			nla_data(info->attrs[NL80211_ATTR_NAN_FUNC]),
+-			nla_len(info->attrs[NL80211_ATTR_NAN_FUNC]),
+-			nl80211_nan_func_policy);
++	err = nla_parse_nested(tb, NL80211_NAN_FUNC_ATTR_MAX,
++			       info->attrs[NL80211_ATTR_NAN_FUNC],
++			       nl80211_nan_func_policy);
+ 	if (err)
+ 		return err;
+ 
+@@ -10802,10 +10792,9 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
+ 	if (tb[NL80211_NAN_FUNC_SRF]) {
+ 		struct nlattr *srf_tb[NUM_NL80211_NAN_SRF_ATTR];
+ 
+-		err = nla_parse(srf_tb, NL80211_NAN_SRF_ATTR_MAX,
+-				nla_data(tb[NL80211_NAN_FUNC_SRF]),
+-				nla_len(tb[NL80211_NAN_FUNC_SRF]),
+-				nl80211_nan_srf_policy);
++		err = nla_parse_nested(srf_tb, NL80211_NAN_SRF_ATTR_MAX,
++				       tb[NL80211_NAN_FUNC_SRF],
++				       nl80211_nan_srf_policy);
+ 		if (err)
+ 			goto out;
+ 
+-- 
+2.8.1
