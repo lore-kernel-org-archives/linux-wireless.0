@@ -1,114 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15623 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750890AbcJCHrD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6060 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754018AbcJZVmY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 03:47:03 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Marty Faltesek <mfaltesek@google.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: cache calibration data when the core is stopped.
-Date: Mon, 3 Oct 2016 07:46:54 +0000
-Message-ID: <87fuodswlu.fsf@kamboji.qca.qualcomm.com> (sfid-20161003_094707_584259_35D160FA)
-References: <1473801118-103112-1-git-send-email-mfaltesek@google.com>
-In-Reply-To: <1473801118-103112-1-git-send-email-mfaltesek@google.com> (Marty
-        Faltesek's message of "Tue, 13 Sep 2016 17:11:58 -0400")
-Content-Type: text/plain; charset="us-ascii"
+        Wed, 26 Oct 2016 17:42:24 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 0/9] cfg80211/mac80211: Fast Initial Link Setup (IEEE 802.11ai)
+Date: Thu, 27 Oct 2016 00:41:57 +0300
+Message-ID: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234227_951454_5FCC1AF5)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
+This series adds support for using mac80211-based drivers with Fast
+Initial Link Setup as defined in IEEE 802.11ai (to be published early
+next year; no more technical changes are expected at this point). The
+fils branch in git://w1.fi/hostap.git includes matching commits for
+hostapd and wpa_supplicant to use this functionality and initial set of
+mac80211_hwsim test cases for the functionality. Actually, most of the
+commits are already in the master branch, i.e., only the changes
+depending on the nl80211.h changes from this kernel patchset are waiting
+in the fils branch.
 
-> Caching calibration data allows it to be accessed when the
-> device is not active.
->
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+This series covers only the FILS authentication/association
+functionality from IEEE 802.11ai, i.e., the other changes like scanning
+optimizations are not included.
 
-No comma in the title, please.
+v2: Updates to address comments from Johannes
 
-What tree did you use as the baseline? This doesn't seem to apply to
-ath.git:
+Jouni Malinen (9):
+  cfg80211: Rename SAE_DATA to more generic AUTH_DATA
+  mac80211: Allow AUTH_DATA to be used for FILS
+  cfg80211: Add feature flag for Fast Initial Link Setup (FILS) as STA
+  cfg80211: Define IEEE P802.11ai (FILS) information elements
+  cfg80211: Add Fast Initial Link Setup (FILS) auth algs
+  cfg80211: Add KEK/nonces for FILS association frames
+  mac80211: Add FILS auth alg mapping
+  mac80211: FILS AEAD protection for station mode association frames
+  mac80211: Claim Fast Initial Link Setup (FILS) STA support
 
-Applying: ath10k: cache calibration data when the core is stopped.
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath=
-10k/core.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0001 ath10k: cache calibration data when the core is stoppe=
-d.
+ include/linux/ieee80211.h    |  26 ++++
+ include/net/cfg80211.h       |  40 ++++-
+ include/uapi/linux/nl80211.h |  30 +++-
+ net/mac80211/Makefile        |   1 +
+ net/mac80211/aes_cmac.c      |   8 +-
+ net/mac80211/aes_cmac.h      |   4 +
+ net/mac80211/fils_aead.c     | 347 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/fils_aead.h     |  19 +++
+ net/mac80211/ieee80211_i.h   |   4 +
+ net/mac80211/main.c          |   1 +
+ net/mac80211/mlme.c          |  57 ++++++-
+ net/wireless/core.h          |   2 +-
+ net/wireless/mlme.c          |   6 +-
+ net/wireless/nl80211.c       |  51 +++++--
+ 14 files changed, 561 insertions(+), 35 deletions(-)
+ create mode 100644 net/mac80211/fils_aead.c
+ create mode 100644 net/mac80211/fils_aead.h
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -1227,6 +1227,42 @@ success:
->  	return 0;
->  }
-> =20
-> +int
-> +ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
-> +{
-> +	u32 hi_addr;
-> +	__le32 addr;
-> +	int ret;
-
-I think this function should be in debug.c. That way the code is not
-wasting memory if DEBUGFS is disabled.=20
-
-> +	vfree(*buf);
-> +	*buf =3D vmalloc(QCA988X_CAL_DATA_LEN);
-> +	if (!*buf) {
-> +		return -EAGAIN;
-> +	}
-
-Is it really necessary to allocate memory every time? What if allocate
-it only once when module is loaded, just like with
-ar->debug.fw_crash_data?
-
-Also please note that this patch (which I'm queuing to 4.9) touches the
-same area:
-
-ath10k: fix debug cal data file
-
-https://patchwork.kernel.org/patch/9340953/
-
-> +	hi_addr =3D host_interest_item_address(HI_ITEM(hi_board_data));
-> +
-> +	ret =3D ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
-> +
-> +	if (ret) {
-> +		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
-> +	} else {
-> +		ret =3D ath10k_hif_diag_read(ar, le32_to_cpu(addr), *buf,
-> +					   QCA988X_CAL_DATA_LEN);
-> +		if (ret) {
-> +			ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
-> +		}
-> +	}
-
-We try to avoid using else branches so that only error handling is
-indented and the main code flow is not.
-
-> +	/*
-> +	 * We are up now, so no need to cache calibration data.
-> +	 */
-> +	vfree(ar->cal_data);
-> +        ar->cal_data =3D NULL;
-
-Indentation looks wrongs here.
-
-> @@ -1757,6 +1799,11 @@ void ath10k_core_stop(struct ath10k *ar)
->  	lockdep_assert_held(&ar->conf_mutex);
->  	ath10k_debug_stop(ar);
-> =20
-> +	/*
-> +	 * Cache caclibration data while stopped.
-> +	 */
-> +	ath10k_cal_data_alloc(ar, &ar->cal_data);
-
-I like the idea that the calibration data is copied during stop(), but
-can you do this from debug.c? For example, add ath10k_debug_stop() and
-call it from there? I don't think any of this should be in core.c.
-
---=20
-Kalle Valo=
+-- 
+1.9.1
