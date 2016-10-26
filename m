@@ -1,72 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:35953 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751284AbcJ3JII (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33051 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934342AbcJZVGv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 05:08:08 -0400
-Received: by mail-wm0-f50.google.com with SMTP id p190so94251759wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2016 02:08:08 -0700 (PDT)
-Received: from localhost.localdomain (127.7.150.83.ftth.as8758.net. [83.150.7.127])
-        by smtp.gmail.com with ESMTPSA id e5sm18450138wma.10.2016.10.30.02.08.06
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 30 Oct 2016 02:08:06 -0700 (PDT)
-Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
-References: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
- <386d6f28-9a13-51cc-27ae-0028d517cf27@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Oliver Zemann <oliver.zemann@gmail.com>
-Message-ID: <6445d07d-d935-9671-b4fb-5ca7e2b38724@gmail.com> (sfid-20161030_100830_525803_1C0D7234)
-Date: Sun, 30 Oct 2016 10:08:06 +0100
+        Wed, 26 Oct 2016 17:06:51 -0400
+Date: Wed, 26 Oct 2016 14:06:48 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Rajat Jain <rajatja@google.com>, linux-wireless@vger.kernel.org,
+        devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Brian Norris <briannorris@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh@kernel.org>,
+        Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH v6] mwifiex: parse device tree node for PCIe
+Message-ID: <20161026210648.GE3989@dtor-ws> (sfid-20161026_230707_607393_07F9597C)
+References: <1477070156-109965-1-git-send-email-rajatja@google.com>
+ <1477084869-15612-1-git-send-email-rajatja@google.com>
+ <20161026201735.GA10192@localhost>
+ <20161026204648.GD3989@dtor-ws>
+ <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
+ <20161026205634.GA13170@localhost>
 MIME-Version: 1.0
-In-Reply-To: <386d6f28-9a13-51cc-27ae-0028d517cf27@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026205634.GA13170@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 26, 2016 at 01:56:34PM -0700, Brian Norris wrote:
+> On Wed, Oct 26, 2016 at 01:51:48PM -0700, Rajat Jain wrote:
+> >    On Wed, Oct 26, 2016 at 1:46 PM, Dmitry Torokhov
+> >    <dmitry.torokhov@gmail.com> wrote:
+> >      On Wed, Oct 26, 2016 at 01:17:36PM -0700, Brian Norris wrote:
+> >      Sorry, I just saw this... Why do we need devicetree data for
+> >      discoverable bus (PCI)? How does the driver work on systems that do not
+> >      use DT? Why do we need them to behave differently?
+> > 
+> >    There are a couple of out-of-band GPIO pins from Marvell chip that can
+> >    serve as wake-up pins (wake up the CPU when asserted). The Marvell chip
+> >    has to be told which GPIO pin is to be used as the wake-up pin. The pin to
+> >    be used is system / platform dependent. (On some systems it could be
+> >    GPIO13, on others it could be GPIO14 etc depending on how the marvell chip
+> >    is wired up to the CPU).
 
+So wakeup pin is not wired to PCIe WAKE?
 
- >> I (naively) went through pci/pm git log and found the following was
- >> applied on 4.7-rc2 (i.e. prior to 4.7 release):
- >>
- >>  commit 006d44e49a259b39947366728d65a873a19aadc0
- >>  Author: Mika Westerberg <mika.westerberg@linux.intel.com>
- >>  Date:   Thu Jun 2 11:17:15 2016 +0300
- >>
- >>      PCI: Add runtime PM support for PCIe ports
- >>
- >> From reading the commit log it seems to me like it could be it.
- >>
- >> ath10k tries to wake up the device during probing before it starts
- >> talking to it and it does so through MMIO/PCI config space. If it's
- >> not mapped properly then driver will not be able to wake it up and
- >> will timeout waiting for it.
- >>
- >> Can you try cherry-picking it into your 4.4.24 and see if it helps?
- >>
- >>
- > Thanks for the help!
- >
- > Until now I did not compile a kernel for the board.
- > I will give it a try and come back with the results ...
- >
- >
- > Best regards,
- > Matthias
- >
-  good news, just got a message from the support with a quote from one 
-of their developers:
-  Have the customer that needs support for the ath cards to use this 
-branch. https://github.com/SolidRun/linux-stable/tree/linux-4.4.y-marvell
-  note that the device-tree is board specific and for now they should 
-create a symlink from their board file to armada-388-clearfog.dtb
+> There's also calibration data. See "marvell,caldata*" and
+> "marvell,wakeup-pin" properties. Currently only for SDIO, in
+> Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt, but
+> we're adding support for PCIe.
 
-  when i look at the change, 
-https://github.com/SolidRun/linux-stable/commit/e12aa24ca56ca773b5c59a3cc2915b4e82e6be18 
-this looks exactly like the problem we had :)
+How would it all work if I moved the PCIe module from one device to
+another?
 
-  I will try this today.
+Thanks.
 
-  Regards
-  Oli
+-- 
+Dmitry
