@@ -1,69 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:35264 "EHLO
-        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750882AbcJNJFB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55376 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754623AbcJZLLf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 05:05:01 -0400
-Received: by mail-io0-f182.google.com with SMTP id i202so113977404ioi.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 02:05:01 -0700 (PDT)
+        Wed, 26 Oct 2016 07:11:35 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Subject: Re: [PATCH 19/28] brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
+References: <20161017220342.1627073-1-arnd@arndb.de>
+        <20161017221355.1861551-7-arnd@arndb.de>
+        <87zilr61ux.fsf@kamboji.qca.qualcomm.com> <3406231.8mt2808XDi@wuerfel>
+Date: Wed, 26 Oct 2016 14:11:23 +0300
+In-Reply-To: <3406231.8mt2808XDi@wuerfel> (Arnd Bergmann's message of "Wed, 26
+        Oct 2016 11:57:23 +0200")
+Message-ID: <87funj5pr8.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_131153_960641_42750D36)
 MIME-Version: 1.0
-In-Reply-To: <1476435303.31114.14.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
- <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
- <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com>
- <1476434561.31114.7.camel@sipsolutions.net> <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com>
- <1476435303.31114.14.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 10:05:00 +0100
-Message-ID: <CAKv+Gu9KObA61fEYxr1FFj_3SKNS2RUbqZo01yfnm9Bf0AncwA@mail.gmail.com> (sfid-20161014_110531_114708_94483937)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 09:55, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-10-14 at 09:47 +0100, Ard Biesheuvel wrote:
->>
->> Do you have a reference for the sg_set_buf() call on odata?
->> crypto/ccm.c does not seem to have it (afaict),
+Arnd Bergmann <arnd@arndb.de> writes:
+
+> On Wednesday, October 26, 2016 9:49:58 AM CEST Kalle Valo wrote:
+>> Arnd Bergmann <arnd@arndb.de> writes:
+>>=20
+>> > A bugfix added a sanity check around the assignment and use of the
+>> > 'is_11d' variable, which looks correct to me, but as the function is
+>> > rather complex already, this confuses the compiler to the point where
+>> > it can no longer figure out if the variable is always initialized
+>> > correctly:
+>> >
+>> > brcm80211/brcmfmac/cfg80211.c: In function =E2=80=98brcmf_cfg80211_sta=
+rt_ap=E2=80=99:
+>> > brcm80211/brcmfmac/cfg80211.c:4586:10: error: =E2=80=98is_11d=E2=80=99=
+ may be used uninitialized in this function [-Werror=3Dmaybe-uninitialized]
+>> >
+>> > This adds an initialization for the newly introduced case in which
+>> > the variable should not really be used, in order to make the warning
+>> > go away.
+>> >
+>> > Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
+>> > Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+>> > Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> > Cc: Kalle Valo <kvalo@codeaurora.org>
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>>=20
+>> Via which tree are you planning to submit this? Should I take it?
 >
-> It's indirect - crypto_ccm_encrypt() calls crypto_ccm_init_crypt()
-> which does it.
->
+> I'd prefer if you can take it and forward it along with your other
+> bugfixes. I'll try to take care of the ones that nobody else
+> picked up.
 
-Indeed. And the decrypt path does the same for auth_tag[].
+Ok, I'll take it. I'm planning to push this to 4.9.
 
-But that still means there are two separate problems here, one which
-affects the WPA code, and one that only affects the generic CCM
-chaining mode (but not the accelerated arm64 implementation)
-
-Unsurprisingly, I would strongly prefer those to be fixed properly
-rather than backing out my patch, but I'm happy to help out whichever
-solution we reach consensus on.
-
->> and the same problem
->> does not exist in the accelerated arm64 implementation. In the mean
->> time, I will try and see if we can move aad[] off the stack in the
->> WPA code.
->
-> I had that with per-CPU buffers, just sent the patch upthread.
->
-
-I will check whether this removes the issue when not using crypto/ccm.ko
+--=20
+Kalle Valo
