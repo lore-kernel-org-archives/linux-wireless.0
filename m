@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54982 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751437AbcJJJWC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 05:22:02 -0400
-Message-ID: <1476091316.7895.6.camel@sipsolutions.net> (sfid-20161010_112205_229601_9CF4BDEF)
-Subject: Re: [PATCH] Report scan_abort as part of iw phy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-        Ola Olsson <ola.olsson@sonymobile.com>
-Date: Mon, 10 Oct 2016 11:21:56 +0200
-In-Reply-To: <1475934036-5981-1-git-send-email-ola1olsson@gmail.com> (sfid-20161008_154139_617958_B7F51579)
-References: <1475934036-5981-1-git-send-email-ola1olsson@gmail.com>
-         (sfid-20161008_154139_617958_B7F51579)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:43060 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756564AbcJZG7s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 02:59:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/7] iwlwifi: mvm: fix d3_test with unified D0/D3 images
+References: <20161019071122.18977-1-luca@coelho.fi>
+        <20161019071122.18977-4-luca@coelho.fi>
+        <87insf7htp.fsf@kamboji.qca.qualcomm.com>
+        <1477464427.27792.5.camel@coelho.fi>
+Date: Wed, 26 Oct 2016 09:59:43 +0300
+In-Reply-To: <1477464427.27792.5.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 26 Oct 2016 09:47:07 +0300")
+Message-ID: <87vawf61eo.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_090013_967010_4668A0E2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-10-08 at 15:40 +0200, Ola Olsson wrote:
-> nl80211: abort_scan has not been reported under the 'Supported
-> commands'
-> category when calling iw phy. Add that.
-> 
-> Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
-> ---
->  net/wireless/nl80211.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 95d55d2..0bbce4f 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1526,6 +1526,7 @@ static int nl80211_send_wiphy(struct
-> cfg80211_registered_device *rdev,
->  		CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
->  		CMD(mgmt_tx, FRAME);
->  		CMD(mgmt_tx_cancel_wait, FRAME_WAIT_CANCEL);
-> +		CMD(abort_scan, ABORT_SCAN);
-> 
+Luca Coelho <luca@coelho.fi> writes:
 
-You can't add this here, it has to be inside the "state->split" if.
+> On Wed, 2016-10-26 at 09:19 +0300, Kalle Valo wrote:
+>> Luca Coelho <luca@coelho.fi> writes:
+>> 
+>> > From: Luca Coelho <luciano.coelho@intel.com>
+>> > 
+>> > When a unified D0/D3 image is used, we don't restart the FW in the
+>> > D0->D3->D0 transitions.  Therefore, the d3_test functionality should
+>> > not call ieee8021_restart_hw() when the resuming either.
+>> > 
+>> > Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+>> 
+>> The word "commit" is not needed in the Fixes line, but no need to change
+>> that now.
+>
+> Oh, I didn't know that.  Thanks for pointing out.  I'll keep it in mind
+> for future patches.
 
-johannes
+Related to this Documentation/SubmittingPatches has a handy tip:
+
+----------------------------------------------------------------------
+The following ``git config`` settings can be used to add a pretty format for
+outputting the above style in the ``git log`` or ``git show`` commands::
+
+        [core]
+                abbrev = 12
+        [pretty]
+                fixes = Fixes: %h (\"%s\")
+----------------------------------------------------------------------
+
+And then you can do just:
+
+$ git show --format=fixes 23ae61282b88 | head -1
+Fixes: 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+$
+
+Perfect for a lazy person like me :)
+
+-- 
+Kalle Valo
