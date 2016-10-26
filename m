@@ -1,31 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51892 "EHLO sipsolutions.net"
+Received: from hupie.dyndns.org ([80.101.237.101]:56357 "EHLO hupie.dyndns.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753765AbcJUHzJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 03:55:09 -0400
-Message-ID: <1477036505.4068.7.camel@sipsolutions.net> (sfid-20161021_095512_612733_9005813C)
-Subject: Re: [PATCH] cfg80211: add generic helper to check interface is
- running
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 21 Oct 2016 09:55:05 +0200
-In-Reply-To: <1476990502-32472-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1476990502-32472-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752099AbcJZPPt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 11:15:49 -0400
+Subject: Re: [ath9k-devel] [NOT FOR MERGE] ath9k: work around key cache
+ corruption
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Antonio Quartulli <a@unstable.cc>
+References: <20161018083552.28592-1-a@unstable.cc>
+ <87lgxbxl2d.fsf@purkki.adurom.net>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+        Antonio Quartulli <antonio@open-mesh.com>
+From: Ferry Huberts <mailings@hupie.com>
+Message-ID: <8dbef9e2-129e-ee65-0906-4ed9020fa712@hupie.com> (sfid-20161026_171553_631983_3E74703E)
+Date: Wed, 26 Oct 2016 16:43:00 +0200
+MIME-Version: 1.0
+In-Reply-To: <87lgxbxl2d.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-10-20 at 20:08 +0100, Arend van Spriel wrote:
-> Adding a helper using wdev to check if interface is running. This
-> deals with both non-netdev and netdev interfaces. In struct
-> wireless_dev replacing 'p2p_started' and 'nan_started' by
-> 'is_running' as those are mutual exclusive anyway.
+do a grep in the kernel: dual license bsd/gpl
 
-Applied, thanks.
+On 26/10/16 16:05, Kalle Valo wrote:
+> Antonio Quartulli <a@unstable.cc> writes:
+>
+>> From: Antonio Quartulli <antonio@open-mesh.com>
+>>
+>> This patch was crafted long time ago to work around a key cache
+>> corruption problem on ath9k chipsets.
+>>
+>> The workaround consists in periodically triggering a worker that
+>> uploads all the keys to the HW cache. The worker is triggered also
+>> when the vif detects 21 undecryptable packets.
+>>
+>>
+>> This patch is based on top compat-wireless-2015-10-26.
+>>
+>>
+>> I was asked to release this code to the public and, since it is
+>> GPL, I am now doing it.
+>
+> GPL? AFAICS ath9k is under ISC. I'm not sure what you mean with the
+> sentence above, but it's possible to interpret it so that this patch is
+> not under ISC license, which is problematic.
+>
 
-I renamed the helper to just wdev_running() because we also have
-sdata_running() in mac80211.
-
-johannes
+-- 
+Ferry Huberts
