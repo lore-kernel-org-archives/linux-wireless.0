@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49134 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757687AbcJQH5q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 03:57:46 -0400
-Message-ID: <1476691059.19992.6.camel@sipsolutions.net> (sfid-20161017_095949_711509_94BA1964)
-Subject: Re: [PATCH] crypto: ccm - avoid scatterlist for MAC encryption
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Date: Mon, 17 Oct 2016 09:57:39 +0200
-In-Reply-To: <CAKv+Gu9EPAF+Oihz0tXCqWURGom-wgSPCMp0dEHHnxqw-pYYJw@mail.gmail.com> (sfid-20161017_095011_197525_132B0910)
-References: <1476551776-8099-1-git-send-email-ard.biesheuvel@linaro.org>
-         <1476689310.19992.1.camel@sipsolutions.net>
-         <CAKv+Gu_P-6sHW3t7tp1N+3v9ZGqWcQrzMZkASY5g=QR76KN4wg@mail.gmail.com>
-         <1476690478.19992.4.camel@sipsolutions.net>
-         <CAKv+Gu9EPAF+Oihz0tXCqWURGom-wgSPCMp0dEHHnxqw-pYYJw@mail.gmail.com>
-         (sfid-20161017_095011_197525_132B0910)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36486 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753744AbcJZJwo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 05:52:44 -0400
+Received: by mail-wm0-f47.google.com with SMTP id b80so214599620wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 02:52:43 -0700 (PDT)
+Date: Wed, 26 Oct 2016 11:52:38 +0200
+From: Thomas Graf <tgraf@suug.ch>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: davem@davemloft.net, daniel@iogearbox.net, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next] netlink: Add nla_memdup() to wrap kmemdup() use
+ on nlattr
+Message-ID: <20161026095238.GB16590@pox.localdomain> (sfid-20161026_115247_614858_6F36C9B0)
+References: <2d0864c85200f1b42b1ebceee7c2dc60fe29f26a.1477471562.git.tgraf@suug.ch>
+ <1477472376.4059.23.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1477472376.4059.23.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-17 at 08:50 +0100, Ard Biesheuvel wrote:
-
-> I just realised that patch should probably use
-> aead_request_alloc/aead_request_free [and drop the memset]. That also
-> fixes the latent bug where the alignment of the req ctx is not take
-> into account.
-
-Good point, I'll fix that up.
-
-> > 
-> > > 
-> > > Also, regarding your __percpu patch: those are located in the
-> > > vmalloc
-> > > area as well, at least on arm64, and likely other architectures
-> > > too.
-> > 
-> > Crap. Any other bright ideas?
-> > 
+On 10/26/16 at 10:59am, Johannes Berg wrote:
 > 
-> kmem_cache_create() and kmem_cache_alloc()
+> >  /**
+> > + * nla_memdup - duplicate attribute memory (kmemdup)
+> > + * @src: netlink attribute to duplicate from
+> > + * @gfp: GFP mask
+> 
+> Actually, is there any point in passing a GFP mask? None of the current
+> users need it, and it seems fairly unlikely to be needed since this is
+> typically used on the netlink input path, where you surely shouldn't
+> need GFP_ATOMIC or so?
 
-for the aad/b0/j0/etc? Hmm. Yeah I guess we should do those dynamically
-as well then.
-
-johannes
+I'm fine either way. I didn't want to make assumptions which need
+later changes. It's not hurting either and the function prototype
+is very small.
