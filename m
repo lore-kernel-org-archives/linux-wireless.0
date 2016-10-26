@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35775 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761967AbcJaICc (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4975 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753762AbcJZHXo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 04:02:32 -0400
-Received: by mail-pf0-f196.google.com with SMTP id s8so8096810pfj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:32 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: [PATCH 01/12] mwifiex: fix power save issue when suspend
-Date: Mon, 31 Oct 2016 16:02:09 +0800
-Message-Id: <1477900940-10549-1-git-send-email-huxinming820@marvell.com> (sfid-20161031_090242_333448_A0B65318)
+        Wed, 26 Oct 2016 03:23:44 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Kaufman, Liad" <liad.kaufman@intel.com>
+Subject: Re: [PATCH 09/10] iwlwifi: mvm: operate in dqa mode
+Date: Wed, 26 Oct 2016 07:23:34 +0000
+Message-ID: <87mvhr60ay.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_092348_805355_B7CC97FC)
+References: <20161019100755.23874-1-luca@coelho.fi>
+        <20161019100755.23874-10-luca@coelho.fi>
+        <87eg337h7v.fsf@kamboji.qca.qualcomm.com>
+        <1477464284.27792.4.camel@intel.com>
+        <87r37360qq.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87r37360qq.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Wed, 26 Oct 2016 10:14:05 +0300")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-This patch fixes a corner case for "FROMLIST: mwifiex: fix corner case
-power save issue", main process will check the power save condition in
-PS_PRE_SLEEP status so the sleep handshake could continue.
+>> Since we've been working on this for so long and already use the term
+>> DQA broadly, we thought it wouldn't be necessary to explain more when
+>> we are finally enabling it by default.  But of course I can change that
+>> if you prefer.
+>
+> I guessed I could find more information from the history and I know this
+> is obvious to your team, but it's not obvious to everyone. The commit
+> log should always answer the questions "Why?" and this isn't answering
+> that. For example, I need this information when sending pull requests to
+> Dave and I'm sure lots of other people find it useful as well,
+> especially when enabling a new feature.
+>
+> So I'm not asking for a long essay, something like this would be
+> adequate:
+>
+> "Run DQA flows by default, as long as the FW supports it. It's currently
+> supported on 1234, 3456 and 7654, maybe more in the future. DQA improves
+> latency when X is used or throughput when Y is disabled. On the downside
+> it sometimes slows down throughput when using Z but that's still
+> accetable as it's so rarely used."
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Oh, I forgot that the acronym should be also spelled out in the commit
+log.
 
-BUG=chrome-os-partner:58164
-TEST=stress Wifi w/ power_save enabled
-
-Change-Id: I5a36d9eaeb7fe5faaccc533e0d1ba1f3253666dc
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 ++-
- drivers/net/wireless/marvell/mwifiex/main.c   | 5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 5347728..9075be5 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1123,8 +1123,9 @@ mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
- 		mwifiex_dnld_sleep_confirm_cmd(adapter);
- 	else
- 		mwifiex_dbg(adapter, CMD,
--			    "cmd: Delay Sleep Confirm (%s%s%s)\n",
-+			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
- 			    (adapter->cmd_sent) ? "D" : "",
-+			    (adapter->data_sent) ? "T" : "",
- 			    (adapter->curr_cmd) ? "C" : "",
- 			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 2478ccd..f559ead 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -308,6 +308,11 @@ process_start:
- 			/* We have tried to wakeup the card already */
- 			if (adapter->pm_wakeup_fw_try)
- 				break;
-+			if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
-+				if (!adapter->cmd_sent && !adapter->curr_cmd)
-+					mwifiex_check_ps_cond(adapter);
-+			}
-+
- 			if (adapter->ps_state != PS_STATE_AWAKE)
- 				break;
- 			if (adapter->tx_lock_flag) {
--- 
-1.8.1.4
+--=20
+Kalle Valo=
