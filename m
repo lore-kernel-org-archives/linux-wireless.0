@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60788 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755451AbcJUMZT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 08:25:19 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>,
-        jouni@qca.qualcomm.com, usdutt@qti.qualcomm.com,
-        amarnath@qca.qualcomm.com, Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] cfg80211: mesh: track (and thus validate) beacon interval
-Date: Fri, 21 Oct 2016 14:25:11 +0200
-Message-Id: <1477052714-11223-1-git-send-email-johannes@sipsolutions.net> (sfid-20161021_142535_723754_7D056CDA)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14166 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932557AbcJZVnl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 17:43:41 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 3/9] cfg80211: Add feature flag for Fast Initial Link Setup (FILS) as STA
+Date: Thu, 27 Oct 2016 00:42:00 +0300
+Message-ID: <1477518126-823-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234344_819201_BBF06323)
+In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This defines a feature flag that drivers can use to indicate that they
+support FILS authentication/association (IEEE 802.11ai) when using user
+space SME (NL80211_CMD_AUTHENTICATE) in station mode.
 
-This is needed for beacon interval validation; if we don't
-store it, then new interfaces added won't validate that the
-beacon interval is the same as existing ones. Fix this.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- net/wireless/mesh.c | 2 ++
- 1 file changed, 2 insertions(+)
+ include/uapi/linux/nl80211.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index fa2066b56f36..2d8518a37eab 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -183,6 +183,7 @@ int __cfg80211_join_mesh(struct cfg80211_registered_device *rdev,
- 		memcpy(wdev->ssid, setup->mesh_id, setup->mesh_id_len);
- 		wdev->mesh_id_len = setup->mesh_id_len;
- 		wdev->chandef = setup->chandef;
-+		wdev->beacon_interval = setup->beacon_interval;
- 	}
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6f74714..f7e0791 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4645,6 +4645,8 @@ enum nl80211_feature_flags {
+  *	configuration (AP/mesh) with HT rates.
+  * @NL80211_EXT_FEATURE_BEACON_RATE_VHT: Driver supports beacon rate
+  *	configuration (AP/mesh) with VHT rates.
++ * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial Link Setup
++ *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4659,6 +4661,7 @@ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_BEACON_RATE_LEGACY,
+ 	NL80211_EXT_FEATURE_BEACON_RATE_HT,
+ 	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
++	NL80211_EXT_FEATURE_FILS_STA,
  
- 	return err;
-@@ -258,6 +259,7 @@ int __cfg80211_leave_mesh(struct cfg80211_registered_device *rdev,
- 	err = rdev_leave_mesh(rdev, dev);
- 	if (!err) {
- 		wdev->mesh_id_len = 0;
-+		wdev->beacon_interval = 0;
- 		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
- 		rdev_set_qos_map(rdev, dev, NULL);
- 	}
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
 -- 
-2.8.1
+1.9.1
