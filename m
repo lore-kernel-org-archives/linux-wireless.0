@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:35654 "EHLO
-        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932648AbcJQKDA (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:36337 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754465AbcJZU4i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 06:03:00 -0400
-Received: by mail-lf0-f48.google.com with SMTP id l131so235825751lfl.2
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 03:03:00 -0700 (PDT)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> <1476696918.19992.15.camel@sipsolutions.net> <67161BCC-596E-4DDE-A58E-9195BB5570C2@linaro.org> <1476698041.19992.19.camel@sipsolutions.net>
-In-Reply-To: <1476698041.19992.19.camel@sipsolutions.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=us-ascii
-Message-Id: <41D0AC2F-E86E-4A98-AD8B-1239D7E6123A@linaro.org> (sfid-20161017_120305_807815_90BC1099)
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-Date: Mon, 17 Oct 2016 11:02:53 +0100
-To: Johannes Berg <johannes@sipsolutions.net>
+        Wed, 26 Oct 2016 16:56:38 -0400
+Received: by mail-pf0-f171.google.com with SMTP id e6so2941689pfk.3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 13:56:37 -0700 (PDT)
+Date: Wed, 26 Oct 2016 13:56:34 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Rajat Jain <rajatja@google.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Brian Norris <briannorris@google.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Rob Herring <robh@kernel.org>,
+        Rajat Jain <rajatxjain@gmail.com>
+Subject: Re: [PATCH v6] mwifiex: parse device tree node for PCIe
+Message-ID: <20161026205634.GA13170@localhost> (sfid-20161026_225642_630051_21372761)
+References: <1477070156-109965-1-git-send-email-rajatja@google.com>
+ <1477084869-15612-1-git-send-email-rajatja@google.com>
+ <20161026201735.GA10192@localhost>
+ <20161026204648.GD3989@dtor-ws>
+ <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Oct 26, 2016 at 01:51:48PM -0700, Rajat Jain wrote:
+>    On Wed, Oct 26, 2016 at 1:46 PM, Dmitry Torokhov
+>    <dmitry.torokhov@gmail.com> wrote:
+>      On Wed, Oct 26, 2016 at 01:17:36PM -0700, Brian Norris wrote:
+>      Sorry, I just saw this... Why do we need devicetree data for
+>      discoverable bus (PCI)? How does the driver work on systems that do not
+>      use DT? Why do we need them to behave differently?
+> 
+>    There are a couple of out-of-band GPIO pins from Marvell chip that can
+>    serve as wake-up pins (wake up the CPU when asserted). The Marvell chip
+>    has to be told which GPIO pin is to be used as the wake-up pin. The pin to
+>    be used is system / platform dependent. (On some systems it could be
+>    GPIO13, on others it could be GPIO14 etc depending on how the marvell chip
+>    is wired up to the CPU).
 
+There's also calibration data. See "marvell,caldata*" and
+"marvell,wakeup-pin" properties. Currently only for SDIO, in
+Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt, but
+we're adding support for PCIe.
 
-> On 17 Oct 2016, at 10:54, Johannes Berg <johannes@sipsolutions.net> wrote:=
-
->=20
->=20
->>> Well, if your other patch to make it OK to be on-stack would be
->>> applied instead, this wouldn't make much sense either :)
->>>=20
->>=20
->> Yes but that one only fixes ccm not gcm
->=20
-> Yes, but we can do the same for GCM, no?
->=20
-
-No, not really. ccm happens to use aes with the same key for the mac and the=
- encryption. gcm uses an another algo entirely for the mac
-
->>> In this particular patch, we could reduce the size of the struct,
->>> but I
->>> don't actually think it'll make a difference to go from 48 to 36
->>> bytes,
->>> given alignment etc., so I think I'll just leave it as is.
->>>=20
->>=20
->> I understand you are in a hurry, but this is unlikely to be the only
->> such issue. I will propose an 'auxdata' feature for the crypto api
->> that can be used here, but also for any other occurrence where client
->> data assoiciated with the request can no longer be allocated on the
->> stack
->=20
-> No objections. I'll merge this anyway today I think, reverting is easy
-> later.
->=20
-
-ok fair enough=
+Brian
