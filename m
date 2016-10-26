@@ -1,65 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42548 "EHLO sipsolutions.net"
+Received: from sym2.noone.org ([178.63.92.236]:57176 "EHLO sym2.noone.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934208AbcJ0Smy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 27 Oct 2016 14:42:54 -0400
-Message-ID: <1477593768.4534.26.camel@sipsolutions.net> (sfid-20161027_204257_996379_95A611F4)
-Subject: Re: [PATCH][RFC] nl80211/mac80211: Rounded RSSI reporting
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        "Zaborowski, Andrew" <andrew.zaborowski@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 27 Oct 2016 20:42:48 +0200
-In-Reply-To: <581243A0.3070907@gmail.com> (sfid-20161027_201251_959616_3727A6AF)
-References: <1477010947-6207-1-git-send-email-andrew.zaborowski@intel.com>
-         <1477038639.4068.28.camel@sipsolutions.net>
-         <F1E72F916E15444E976109681700BEE23F6AF7D9@IRSMSX102.ger.corp.intel.com>
-         <1477487137.4059.43.camel@sipsolutions.net> <581243A0.3070907@gmail.com>
-         (sfid-20161027_201251_959616_3727A6AF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752363AbcJZJOb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 05:14:31 -0400
+Date: Wed, 26 Oct 2016 11:03:47 +0200
+From: Tobias Klauser <tklauser@distanz.ch>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Vincent Cuissard <cuissard@marvell.com>,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH] NFC: nfcmrvl: Include unaligned.h instead of access_ok.h
+Message-ID: <20161026090347.GA27488@distanz.ch> (sfid-20161026_111434_902933_35AE642B)
+References: <20161026090012.29747-1-tklauser@distanz.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026090012.29747-1-tklauser@distanz.ch>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2016-10-26 at 11:00:12 +0200, Tobias Klauser <tklauser@distanz.ch> wrote:
+> Including linux/unaligned/access_ok.h causes the allmodconfig build on
+> ia64 (and maybe others) to fail with the following warnings:
+> 
+> include/linux/unaligned/access_ok.h:7:19: error: redefinition of 'get_unaligned_le16'
+> include/linux/unaligned/access_ok.h:12:19: error: redefinition of 'get_unaligned_le32'
+> include/linux/unaligned/access_ok.h:17:19: error: redefinition of 'get_unaligned_le64'
+> include/linux/unaligned/access_ok.h:22:19: error: redefinition of 'get_unaligned_be16'
+> include/linux/unaligned/access_ok.h:27:19: error: redefinition of 'get_unaligned_be32'
+> include/linux/unaligned/access_ok.h:32:19: error: redefinition of 'get_unaligned_be64'
+> include/linux/unaligned/access_ok.h:37:20: error: redefinition of 'put_unaligned_le16'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_le32'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_le64'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be16'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be32'
+> include/linux/unaligned/access_ok.h:42:20: error: redefinition of 'put_unaligned_be64'
+> 
+> Fix these by including asm/unaligned.h instead and leave it up to the
+> architecture to decide how to implement unaligned accesses.
+> 
+> Fixes: 3194c6870158 ("NFC: nfcmrvl: add firmware download support")
+> Reported-by: kbuild test robot <fengguang.wu@intel.com>
+> Link: https://lkml.org/lkml/2016/10/22/247
+> Cc: Vincent Cuissard <cuissard@marvell.com>
+> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
 
-> Pardon a dumb question, but can filtering be turned off?  I doubt
-> anyone would want to, but just wondering.
+There are two other instances of the same issue in the NFC subsystem,
+namely in drivers/nfc/nxp-nci/firmware.c and drivers/nfc/nxp-nci/i2c.c
 
-Generally I assume that a typical device/firmware will be able to turn
-it off (I know ours can), but we don't think we even provide a knob for
-it for anyone to request it, so you'd have to modify the driver.
+Guenter Roeck already sent a patch for these on 2015-08-01. It would be
+nice if it could be applied as well.
 
-> Is there anything you have in mind?  Our goal is to minimize 
-> hardware-kernel-userspace wakeups.  With the nl80211 API as it is
-> today, it doesn't seem feasible to do anything besides
-> polling.  Whatever we come up with will surely be better than that.
+[1] https://patchwork.kernel.org/patch/6922341/
 
-I was thinking of just providing two thresholds, since you should be
-able to emulate more of them with that, without much cost.
-
-> So you're thinking of having high and low threshold.  So we'd get an 
-> event when we're higher than the high threshold and lower than the
-> low threshold, right?  
-
-I'm mostly handwaving, but yes.
-
-> Then we'd need to bootstrap our current rssi somehow, or do we get
-> another event?  I'm guessing we're going to have some race condition
-> issues?
-
-Generally, with CQM, when you initially program it you get an event
-telling you where you're at right now - so hopefully you'd get "middle"
-(rather than "low"/"high") with the actual signal falling squarely into
-your range, and from there on you're pretty much good to go.
-
-> Would using an n-threshold API be possible?  That way user space can 
-> program in whatever threholds once, and then the kernel would figure
-> out how to support that given the relevant hardware capabilities.
-
-That seems like a reasonable idea. We'd want to have code in cfg80211
-that does the emulation as we discussed above, so that from a userspace
-POV an "arbitrary" number of thresholds is supported (if the capability
-is supported at all, which would depend on the device doing >=2
-thresholds).
-
-johannes
+Thanks
