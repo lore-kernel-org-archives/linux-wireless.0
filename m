@@ -1,88 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:58832 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935768AbcJXPj2 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39161 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752208AbcJZPXL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 11:39:28 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Arnd Bergmann <arnd@arndb.de>,
-        Kurt Kanzenbach <kurt@kmk-computers.de>,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8192x: fix bogus maybe-uninitialized warning
-Date: Mon, 24 Oct 2016 17:38:34 +0200
-Message-Id: <20161024153918.2810634-1-arnd@arndb.de> (sfid-20161024_173952_119403_76EE32FF)
+        Wed, 26 Oct 2016 11:23:11 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: Brian Norris <briannorris@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        "Nishant Sarmukadam" <nishants@marvell.com>
+Subject: RE: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Date: Wed, 26 Oct 2016 15:23:08 +0000
+Message-ID: <24731897638e42ba8b05acd6afafef3b@SC-EXCH04.marvell.com> (sfid-20161026_172315_408355_438B969C)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
+ <20161024191914.GB968@localhost> <20161024235746.GC15034@dtor-ws>
+ <91f0f4390ac14afc9e4f3498d1b79c78@SC-EXCH04.marvell.com>
+ <20161025163520.GA10979@dtor-ws>
+In-Reply-To: <20161025163520.GA10979@dtor-ws>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtllib_rx_extract_addr() is supposed to set up the mac addresses
-for four possible cases, based on two bits of input data. For
-some reason, gcc decides that it's possible that none of the these
-four cases apply and the addresses remain uninitialized:
+Hi Dmitry,
 
-drivers/staging/rtl8192e/rtllib_rx.c: In function ‘rtllib_rx_InfraAdhoc’:
-include/linux/etherdevice.h:316:61: error: ‘*((void *)&dst+4)’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
-drivers/staging/rtl8192e/rtllib_rx.c:1318:5: note: ‘*((void *)&dst+4)’ was declared here
-ded from /git/arm-soc/drivers/staging/rtl8192e/rtllib_rx.c:40:0:
-include/linux/etherdevice.h:316:36: error: ‘dst’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
-drivers/staging/rtl8192e/rtllib_rx.c:1318:5: note: ‘dst’ was declared here
+> From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
+> Sent: Tuesday, October 25, 2016 10:05 PM
+> To: Amitkumar Karwar
+> Cc: Brian Norris; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
+> Sarmukadam
+> Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing'
+> in shutdown_drv
+> 
+> On Tue, Oct 25, 2016 at 04:11:14PM +0000, Amitkumar Karwar wrote:
+> > Hi Dmitry,
+> >
+> > > From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
+> > > Sent: Tuesday, October 25, 2016 5:28 AM
+> > > To: Brian Norris
+> > > Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org; Cathy Luo;
+> > > Nishant Sarmukadam
+> > > Subject: Re: [PATCH 2/5] mwifiex: use spinlock for
+> 'mwifiex_processing'
+> > > in shutdown_drv
+> > >
+> > > On Mon, Oct 24, 2016 at 12:19:15PM -0700, Brian Norris wrote:
+> > > > On Mon, Oct 24, 2016 at 07:51:29PM +0530, Amitkumar Karwar wrote:
+> > > > > This variable is guarded by spinlock at all other places. This
+> > > > > patch takes care of missing spinlock usage in
+> mwifiex_shutdown_drv().
+> > > > >
+> > > > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > > > ---
+> > > > >  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+> > > > >  1 file changed, 3 insertions(+)
+> > > > >
+> > > > > diff --git a/drivers/net/wireless/marvell/mwifiex/init.c
+> > > > > b/drivers/net/wireless/marvell/mwifiex/init.c
+> > > > > index 82839d9..8e5e424 100644
+> > > > > --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> > > > > +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> > > > > @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct
+> > > > > mwifiex_adapter
+> > > > > *adapter)
+> > > > >
+> > > > >  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+> > > > >  	/* wait for mwifiex_process to complete */
+> > > > > +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+> > > > >  	if (adapter->mwifiex_processing) {
+> > > >
+> > > > I'm not quite sure why we have this check in the first place; if
+> > > > the main process is still running, then don't we have bigger
+> > > > problems here anyway? But this is definitely the "right" way to
+> check this flag, so:
+> > >
+> > > No, this is definitely not right way to check it. What exactly does
+> > > this spinlock protect? It seems that the intent is to make sure we
+> > > do not call mwifiex_shutdown_drv() while mwifiex_main_process() is
+> executing.
+> > > It even says above that we are "waiting" for it (but we do not, we
+> > > may bail out or we may not, depends on luck).
+> > >
+> > > To implement this properly you not only need to take a lock and
+> > > check the flag, but keep the lock until mwifiex_shutdown_drv() is
+> > > done, or use some other way to let mwifiex_main_process() know it
+> > > should not access the adapter while mwifiex_shutdown_drv() is
+> running.
+> > >
+> > > NACK.
+> > >
+> >
+> > As I explained in other email, here is the sequence.
+> > 1) We find mwifiex_processing is true in mwifiex_shitdown_drv(). "-
+> EINPROGRESS" is returned by the function and hw_status state is changed
+> to MWIFIEX_HW_STATUS_CLOSING.
+> > 2) We wait until main_process is completed.
+> >
+> >                 if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
+> >                         wait_event_interruptible(adapter->init_wait_q,
+> >
+> > adapter->init_wait_q_woken);
+> >
+> > 3) We have following check at the end of main_process()
+> >
+> > exit_main_proc:
+> >         if (adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING)
+> >                 mwifiex_shutdown_drv(adapter);
+> >
+> > 4) Here at the end of mwifiex_shutdown_drv(), we are setting
+> > "adapter->init_wait_q_woken" and waking up the thread in point (2)
+> 
+> 1. We do not find mwifiex_processing to be true
+> 2. We proceed to try and shut down the driver
+> 3. Interrupt is raised in the meantime, kicking work item
+> 4. mwifiex_main_process() sees that adapter->hw_status is
+> MWIFIEX_HW_STATUS_CLOSING and jumps to exit_main_proc
+> 5.mwifiex_main_process() calls into mwifiex_shutdown_drv() that is now
+> racing with another copy of the same.
 
-This warning is clearly nonsense, but changing the last case into
-'default' makes it obvious to the compiler too, which avoids the
-warning and probably leads to better object code too.
+This race won't occur. At this point of time(i.e while calling mwifiex_shutdown_drv() in deinit), following things are completed. We don't expect mwifiex_main_process() to be scheduled.
+1) Connection to peer device is terminated at the beginning of teardown thread. So we don't receive any Tx data from kernel.
+2) Last command SHUTDOWN is exchanged with firmware. So there won't be any activity/interrupt from firmware.
+3) Interrupts are disabled.
+4) "adapter->surprise_removed" flag is set. It will skip mwifiex_main_process() calls.
 
-As the same warning appears in other files that have the exact
-same code, I'm fixing it in both rtl8192e and rtl8192u, even
-though I did not observe it for the latter.
+-----------
+static void mwifiex_main_work_queue(struct work_struct *work)
+{
+        struct mwifiex_adapter *adapter =
+                container_of(work, struct mwifiex_adapter, main_work);
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/rtl8192e/rtllib_rx.c                      | 2 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c | 2 +-
- drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c         | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+        if (adapter->surprise_removed)
+                return;
+        mwifiex_main_process(adapter);
+}
+----------
+5) We have "mwifiex_terminate_workqueue(adapter)" call to flush and destroy workqueue.
 
-diff --git a/drivers/staging/rtl8192e/rtllib_rx.c b/drivers/staging/rtl8192e/rtllib_rx.c
-index c743182b933e..d6777ecda64d 100644
---- a/drivers/staging/rtl8192e/rtllib_rx.c
-+++ b/drivers/staging/rtl8192e/rtllib_rx.c
-@@ -986,7 +986,7 @@ static void rtllib_rx_extract_addr(struct rtllib_device *ieee,
- 		ether_addr_copy(src, hdr->addr4);
- 		ether_addr_copy(bssid, ieee->current_network.bssid);
- 		break;
--	case 0:
-+	default:
- 		ether_addr_copy(dst, hdr->addr1);
- 		ether_addr_copy(src, hdr->addr2);
- 		ether_addr_copy(bssid, hdr->addr3);
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-index 6fa96d57d316..e68850897adf 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c
-@@ -553,7 +553,7 @@ static void michael_mic_hdr(struct sk_buff *skb, u8 *hdr)
- 		memcpy(hdr, hdr11->addr3, ETH_ALEN); /* DA */
- 		memcpy(hdr + ETH_ALEN, hdr11->addr4, ETH_ALEN); /* SA */
- 		break;
--	case 0:
-+	default:
- 		memcpy(hdr, hdr11->addr1, ETH_ALEN); /* DA */
- 		memcpy(hdr + ETH_ALEN, hdr11->addr2, ETH_ALEN); /* SA */
- 		break;
-diff --git a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-index 89cbc077a48d..2e4d2d7bc2e7 100644
---- a/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-+++ b/drivers/staging/rtl8192u/ieee80211/ieee80211_rx.c
-@@ -1079,7 +1079,7 @@ int ieee80211_rx(struct ieee80211_device *ieee, struct sk_buff *skb,
- 		memcpy(src, hdr->addr4, ETH_ALEN);
- 		memcpy(bssid, ieee->current_network.bssid, ETH_ALEN);
- 		break;
--	case 0:
-+	default:
- 		memcpy(dst, hdr->addr1, ETH_ALEN);
- 		memcpy(src, hdr->addr2, ETH_ALEN);
- 		memcpy(bssid, hdr->addr3, ETH_ALEN);
--- 
-2.9.0
+> 
+> It seems to me that mwifiex_main_process() is [almost] always used from
+> a workqueue. Can you instead of sprinkling spinlocks ensure that
+> mwifiex_shutdown_drv():
+> 
+> 1. Inhibits scheduling of mwifiex_main_process()
+> 2. Does cancel_work_sync(...) to ensure that mwifiex_main_process() does not run
+> 3. Continues shutting down the driver.
+
+I think, this is already taken care of in current implementation.
+
+> 
+> Alternatively, do these have to be spinlocks? Can you make them mutexes
+> and take them for the duration of mwifiex_main_process() and
+> mwifiex_shutdown_drv() and others, as needed?
+> 
+
+As I explained above, there won't be a race between mwifiex_main_process() and mwifiex_shutdown_drv().
+Let me know if you think otherwise and have any suggestions.
+
+Regards,
+Amitkumar
