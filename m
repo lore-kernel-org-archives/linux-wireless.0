@@ -1,68 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35756 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S945628AbcJSPoP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:44:15 -0400
-Message-ID: <1476863488.5927.10.camel@sipsolutions.net> (sfid-20161019_174435_424464_55A9CFED)
-Subject: Re: sequence diagrams in rst documentation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: linux-wireless@vger.kernel.org,
-        linux-doc <linux-doc@vger.kernel.org>
-Date: Wed, 19 Oct 2016 09:51:28 +0200
-In-Reply-To: <20161018175236.75c8c4e2@lwn.net>
-References: <1476190613-2403-1-git-send-email-johannes@sipsolutions.net>
-         <20161011072119.7ad4e3a3@lwn.net>
-         <1476193466.4118.10.camel@sipsolutions.net>
-         <1476194038.4118.11.camel@sipsolutions.net>
-         <1476791021.6425.25.camel@sipsolutions.net>
-         <20161018175236.75c8c4e2@lwn.net>
+Received: from paleale.coelho.fi ([176.9.41.70]:47310 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751164AbcJZH0m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 03:26:42 -0400
+Message-ID: <1477466798.27792.6.camel@coelho.fi> (sfid-20161026_092645_368235_4B0BFFE8)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 26 Oct 2016 10:26:38 +0300
+In-Reply-To: <87vawf61eo.fsf@kamboji.qca.qualcomm.com>
+References: <20161019071122.18977-1-luca@coelho.fi>
+         <20161019071122.18977-4-luca@coelho.fi>
+         <87insf7htp.fsf@kamboji.qca.qualcomm.com>
+         <1477464427.27792.5.camel@coelho.fi>
+         <87vawf61eo.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: [PATCH 3/7] iwlwifi: mvm: fix d3_test with unified D0/D3 images
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-10-18 at 17:52 -0600, Jonathan Corbet wrote:
-
-> In summary, I think we can consider taking on a module if it's what
-> we need to do the docs right.  And if somebody agrees to maintain it!
-> :)
-
-:)
-
-I think for the ones that we carry, they're probably specific?
-
-> I've heard others say they would like better diagramming support.  Do
-> you think that, maybe, something like aafigure would do the trick?
+On Wed, 2016-10-26 at 09:59 +0300, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
 > 
-> 	https://pythonhosted.org/sphinxcontrib-aafig/
+> > On Wed, 2016-10-26 at 09:19 +0300, Kalle Valo wrote:
+> > > Luca Coelho <luca@coelho.fi> writes:
+> > > 
+> > > > From: Luca Coelho <luciano.coelho@intel.com>
+> > > > 
+> > > > When a unified D0/D3 image is used, we don't restart the FW in the
+> > > > D0->D3->D0 transitions.  Therefore, the d3_test functionality should
+> > > > not call ieee8021_restart_hw() when the resuming either.
+> > > > 
+> > > > Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+> > > 
+> > > The word "commit" is not needed in the Fixes line, but no need to change
+> > > that now.
+> > 
+> > Oh, I didn't know that.  Thanks for pointing out.  I'll keep it in mind
+> > for future patches.
 > 
-> I've not actually played with it at all, but I like the idea that
-> we'd have readable diagrams in the source docs as well...
+> Related to this Documentation/SubmittingPatches has a handy tip:
+> 
+> ----------------------------------------------------------------------
+> The following ``git config`` settings can be used to add a pretty format for
+> outputting the above style in the ``git log`` or ``git show`` commands::
+> 
+>         [core]
+>                 abbrev = 12
+>         [pretty]
+>                 fixes = Fixes: %h (\"%s\")
+> ----------------------------------------------------------------------
+> 
+> And then you can do just:
+> 
+> $ git show --format=fixes 23ae61282b88 | head -1
+> Fixes: 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+> $
+> 
+> Perfect for a lazy person like me :)
 
-Well, maybe. I agree having it readable in the source docs as well is
-nice, but for sequence diagrams in particular, I don't think
+Wow, really perfect for me too! Thanks! I should read SubmittingPatches
+more often. :)
 
-    +-------+         +-----------+
-    | Hello +-------->+ aafigure! |
-    +-------+         +-----------+
-
-really beats
-
-   Hello -> aafigure!
-
-by much. You could do some alignment even with the latter version, and
-the above isn't even really a sequence diagram anyway :)
-
-Some of the sequence diagrams may also be automatically generated from
-runtime behaviour observation (e.g. tracing, we've actually done that),
-and outputting the types of ascii boxes is much more difficult there.
-
-For other types of diagrams this may be nice though.
-
-Anyway, I guess we'll cross that bridge when we get to it. I'd like to
-have these types of documentation, perhaps with a script to auto-
-generate from tracing - such as script and visual display can even
-serve as a debugging aid :)
-
-johannes
+--
+Luca.
