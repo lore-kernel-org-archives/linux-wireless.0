@@ -1,47 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33643 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755004AbcJLONn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33426 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751129AbcJZGc6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:13:43 -0400
-Date: Wed, 12 Oct 2016 23:12:45 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        linux-next@vger.kernel.org,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161012141245.GA436@swordfish> (sfid-20161012_161403_656133_FAFDC477)
-References: <20161010150358.GA514@swordfish>
- <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net>
+        Wed, 26 Oct 2016 02:32:58 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 09/10] iwlwifi: mvm: operate in dqa mode
+References: <20161019100755.23874-1-luca@coelho.fi>
+        <20161019100755.23874-10-luca@coelho.fi>
+Date: Wed, 26 Oct 2016 09:32:52 +0300
+In-Reply-To: <20161019100755.23874-10-luca@coelho.fi> (Luca Coelho's message
+        of "Wed, 19 Oct 2016 13:07:54 +0300")
+Message-ID: <87eg337h7v.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_083303_524546_DAD209E6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476263106.5271.23.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Luca Coelho <luca@coelho.fi> writes:
 
-On (10/12/16 11:05), Johannes Berg wrote:
-> Sorry - I meant to look into this yesterday but forgot.
-> 
-> > Andy, can this be related to CONFIG_VMAP_STACK?
-> 
-> I think it is.
+> From: Liad Kaufman <liad.kaufman@intel.com>
+>
+> Run DQA flows by default, as long as the FW supports it.
+>
+> Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 
-yeah, the system works fine with !CONFIG_VMAP_STACK.
+What's this DQA mode? A short summary would have been nice why it's
+useful.
 
-> > > current -git kills my system.
-> 
-> Can you elaborate on how exactly it kills your system?
-
-the last time I saw it it was a NULL deref at ieee80211_aes_ccm_decrypt.
-
-	-ss
+-- 
+Kalle Valo
