@@ -1,72 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22822 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753077AbcJCVPr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 3 Oct 2016 17:15:47 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Xu, Peng" <pxu@qca.qualcomm.com>
-Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
-Date: Mon, 3 Oct 2016 21:15:24 +0000
-Message-ID: <20161003211523.GA6585@jouni.qca.qualcomm.com> (sfid-20161003_231551_583405_1CE5D2EC)
-References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
- <1471330367.16783.23.camel@sipsolutions.net>
- <20160816123441.GA3678@jouni.qca.qualcomm.com>
- <1472198948.390.20.camel@sipsolutions.net>
- <1473674982.29016.10.camel@sipsolutions.net>
-In-Reply-To: <1473674982.29016.10.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:50392 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752915AbcJZJpl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 05:45:41 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: move unsplit command advertising to a separate function
+Date: Wed, 26 Oct 2016 11:44:56 +0200
+Message-Id: <1477475096-798-1-git-send-email-johannes@sipsolutions.net> (sfid-20161026_114600_463358_94185C5F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBTZXAgMTIsIDIwMTYgYXQgMTI6MDk6NDJQTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
-cm90ZToNCj4gSSBoYXZlIG5vIG1ham9yIG9iamVjdGlvbnMgdG8gdGhpcy4gSG93ZXZlciwgYSBm
-ZXcgdGhpbmdzOg0KPiANCj4gMSkgYXJlIHlvdSBwbGFubmluZyB0byBhZGQgc3VwcG9ydCBmb3Ig
-dGhpcyBpbnRvIGEga2VybmVsIGRyaXZlciBhdA0KPiDCoCDCoGFsbCwgYW55d2F5Pw0KPiAyKSBh
-cmUgeW91IHBsYW5uaW5nIHRvIGhhdmUgYSBkcml2ZXIgdXBzdHJlYW0gdGhhdCBjb250YWlucyB0
-aGUgbm93DQo+IMKgIMKgbmVjZXNzYXJ5IHBhcnNpbmc/DQo+IA0KPiBEZXBlbmRpbmcgb24gdGhl
-IGFuc3dlcnMsIEkgc3VwcG9zZSB3ZSBjb3VsZC9zaG91bGQgbWVyZ2UgdGhpczoNCj4gDQo+IG5v
-IMKgKiDCoDogZG9uJ3QgbWVyZ2UNCj4geWVzIG5vIDogbWVyZ2UNCj4geWVzIHllczogZG9uJ3Qg
-bWVyZ2UsIHB1dCBwYXJzaW5nIGludG8gY2ZnODAyMTENCj4gDQo+IEkgZ3Vlc3M/DQoNClRoZSBt
-YWluIGdvYWwgb2YgdGhpcyB3YXMgdG8gc2VlIGlmIHdlIGNhbiByZWR1Y2UgYWN0dWFsIGRyaXZl
-cg0KaW1wbGVtZW50YXRpb24gc2l6ZSBhbmQgbWF5YmUgZXZlbiBtb3JlIHNvIHRvIHByZXBhcmUg
-Zm9yIDgwMi4xMWF4DQpjaGFuZ2VzIChpLmUuLCBzZWUgd2hhdCB3ZSBhcmUgZG9pbmcgY3VycmVu
-dGx5IGZvciBjb25maWd1cmluZyBIVC9WSFQgaW4NCmEgd2F5IHRoYXQgY291bGQgYmUgZG9uZSBi
-ZXR0ZXIpLg0KDQpBcyB5b3Ugbm90ZWQgZWFybGllciwgdGhpcyB3b3VsZCBub3QgcmVhbGx5IGFs
-bG93IHRoZSBkcml2ZXIgdG8gZHJvcCBpdHMNCkhUL1ZIVCByZWxhdGVkIHBhcnNpbmcgb3BlcmF0
-aW9ucyB3aXRob3V0IG1ha2luZyBzdXJlIHVzZXIgc3BhY2UNCmNvbXBvbmVudHMgd2VyZSB1cGRh
-dGVkIGFzIHdlbGwuIFRoZSBhcHByb2FjaCB0byBhdm9pZCB0aGF0IGlzIHRoYXQNCiJwYXJzaW5n
-IGludG8gY2ZnODAyMTEiLg0KDQpMb29raW5nIGF0IHRoZSBjdXJyZW50IGluLXRyZWUgZHJpdmVy
-cywgaXQgbG9va3MgbGlrZSBmb2xsb3dpbmcNCmFwcHJvYWNoZXMgaGF2ZSBiZWVuIHVzZWQ6DQoN
-CmF0aDZrbDoNClVzZSBjZmc4MDIxMV9nZXRfY2hhbmRlZl90eXBlKCZpbmZvLT5jaGFuZGVmKSAh
-PSBOTDgwMjExX0NIQU5fTk9fSFQgdG8NCmRldGVybWluZSB3aGV0aGVyIEhUIGlzIGVuYWJsZWQu
-IE5vIFZIVCBzdXBwb3J0LiBIVC1yZXF1aXJlZCBjYXNlIG5vdA0KY292ZXJlZC4gTm8gcGFyc2lu
-ZyBvZiBIVC9WSFQgSUVzIHVzZWQuDQoNCmJyY21mbWFjOg0KVXNlcyBpbmZvLT5jaGFuZGVmLiBO
-b3QgY2xlYXIgaG93IEhUL1ZIVCBjb3VsZCBiZSBkaXNhYmxlZCBvciByZXF1aXJlZC4NCk5vdGU6
-IFBhcnNlcyBCZWFjb24gSUVzIGZvciBDb3VudHJ5IGFuZCBTU0lEIChhcyBiYWNrdXAgZm9yIHNz
-aWQgPT0NCk5VTEwhPyksIFJTTiwgV1BBLg0KDQptd2lmaWV4Og0KVXNlcyBpbmZvLT5jaGFuZGVm
-LiBQYXJzZXMgQmVhY29uIHRhaWw6IEVuYWJsZXMgVkhUIGJhc2VkIG9uIHNlYXJjaGluZw0KaW5m
-by0+YmVhY29uLnRhaWwgZm9yIFZIVCBDYXBhYmlsaXR5IGVsZW1lbnQuIFBhcnNlcyBIVCBDYXBh
-YmlsaXR5IHRvDQpkZXRlcm1pbmUgd2hldGhlciBIVCBpcyB0byBiZSBzdXBwb3J0ZWQgYW5kIGFs
-c28gdG8gc2V0IHZhcmlvdXMgSFQNCnBhcmFtZXRlcnMuIERvZXMgbm90IHNlZW0gdG8gaGF2ZSBz
-dXBwb3J0IGZvciBIVC9WSFQtcmVxdWlyZWQuDQoNCg0KU28gSSBndWVzcyB0aGVyZSBjb3VsZCBi
-ZSBzb21lIGNvZGUgc2hhcmluZyBhbmQgY2xlYW51cCBkb25lIHdpdGggdGhlDQpleGlzdGluZyBp
-bi10cmVlIGRyaXZlcnMuIEVzcGVjaWFsbHkgdGhlIG13aWZpZXggZXhhbXBsZSBsb29rcyBsaWtl
-DQpzb21ldGhpbmcgdGhhdCB0cmlnZ2VyZWQgdXMgdG8gbG9vayBhdCB0aGlzLiBJJ20gbm90IHN1
-cmUgd2UnZCBwcm9wb3NlDQphZGRpbmcgYW55IG5ldyBkcml2ZXIgd2l0aCB0aGUgZHJpdmVyIGNv
-ZGUgaXRzZWxmIGRvaW5nIEhUL1ZIVCBJRQ0KcGFyc2luZyBhbmQgc2luY2UgYXRoNmtsIGRpZCBu
-b3QgZG8gdGhpcyBlaXRoZXIsIEkgZG9uJ3Qgc2VlIHVzIGNoYW5naW5nDQpleGlzdGluZyBpbi10
-cmVlIGRyaXZlcnMgdG8gdXNlIHRoaXMgZWl0aGVyLg0KDQpJJ20gbm90IHN1cmUgdGhlcmUgd291
-bGQgcmVhbGx5IGJlIGVub3VnaCBqdXN0aWZpY2F0aW9uIHRvIGFkZCB0aGlzDQpzcGVjaWZpYyBw
-YXRjaCBkdWUgdG8gdGhlIGFzc3VtZWQgdXNlciBzcGFjZSB1cGRhdGUuIEFkZGluZyBzb21lIG9m
-IHRoZQ0KSFQvVkhUIGVsZW1lbnQgcGFyc2luZyBpbiBjZmc4MDIxMSBtaWdodCBiZW5lZml0IG9u
-IG9yIHR3byBvZiB0aGUNCmluLXRyZWUgZHJpdmVycyBpZiB0aGVpciBtYWludGFpbmVycyBhcmUg
-aW50ZXJlc3RlZCBpbiB0aGF0LiBUaGF0IHNhaWQsDQp3aXRob3V0IGFkZGl0aW9uYWwgaW50ZXJl
-c3QsIEknbSBzdGFydGluZyB0byBsZWFuIHRvd2FyZHMgdXNpbmcgdGhpcyBhcw0KYW4gZXhhbXBs
-ZSBvZiB3aGF0IHR5cGUgb2YgcGFyYW1ldGVycyB3ZSBuZWVkIHRvIGFkZCBmb3IgSEUgZnJvbSB0
-aGUNCmJlZ2lubmluZyBhbmQgbm90IG1lcmdlIHRoaXMgcGF0Y2guDQoNCi0tIA0KSm91bmkgTWFs
-aW5lbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUEdQIGlkIEVG
-Qzg5NUZB
+From: Johannes Berg <johannes.berg@intel.com>
+
+When we split the wiphy dump because it got too large, I added a
+comment and asked that all new command advertising be done only
+for userspace clients capable of receiving split data, in order
+to not break older ones (which can't use the new commands anyway)
+
+This mostly worked, and we haven't added many new commands, but
+I occasionally get patches that modify the wrong place.
+
+Make this easier to detect and understand by splitting out the
+old commands to a separate function that makes it more clear it
+should never be modified again.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 142 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 79 insertions(+), 63 deletions(-)
+
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46cd48993ce9..b0440de82171 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1328,6 +1328,82 @@ nl80211_send_mgmt_stypes(struct sk_buff *msg,
+ 	return 0;
+ }
+ 
++#define CMD(op, n)							\
++	 do {								\
++		if (rdev->ops->op) {					\
++			i++;						\
++			if (nla_put_u32(msg, i, NL80211_CMD_ ## n)) 	\
++				goto nla_put_failure;			\
++		}							\
++	} while (0)
++
++static int nl80211_add_commands_unsplit(struct cfg80211_registered_device *rdev,
++					struct sk_buff *msg)
++{
++	int i = 0;
++
++	/*
++	 * do *NOT* add anything into this function, new things need to be
++	 * advertised only to new versions of userspace that can deal with
++	 * the split (and they can't possibly care about new features...
++	 */
++	CMD(add_virtual_intf, NEW_INTERFACE);
++	CMD(change_virtual_intf, SET_INTERFACE);
++	CMD(add_key, NEW_KEY);
++	CMD(start_ap, START_AP);
++	CMD(add_station, NEW_STATION);
++	CMD(add_mpath, NEW_MPATH);
++	CMD(update_mesh_config, SET_MESH_CONFIG);
++	CMD(change_bss, SET_BSS);
++	CMD(auth, AUTHENTICATE);
++	CMD(assoc, ASSOCIATE);
++	CMD(deauth, DEAUTHENTICATE);
++	CMD(disassoc, DISASSOCIATE);
++	CMD(join_ibss, JOIN_IBSS);
++	CMD(join_mesh, JOIN_MESH);
++	CMD(set_pmksa, SET_PMKSA);
++	CMD(del_pmksa, DEL_PMKSA);
++	CMD(flush_pmksa, FLUSH_PMKSA);
++	if (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL)
++		CMD(remain_on_channel, REMAIN_ON_CHANNEL);
++	CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
++	CMD(mgmt_tx, FRAME);
++	CMD(mgmt_tx_cancel_wait, FRAME_WAIT_CANCEL);
++	if (rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
++		i++;
++		if (nla_put_u32(msg, i, NL80211_CMD_SET_WIPHY_NETNS))
++			goto nla_put_failure;
++	}
++	if (rdev->ops->set_monitor_channel || rdev->ops->start_ap ||
++	    rdev->ops->join_mesh) {
++		i++;
++		if (nla_put_u32(msg, i, NL80211_CMD_SET_CHANNEL))
++			goto nla_put_failure;
++	}
++	CMD(set_wds_peer, SET_WDS_PEER);
++	if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
++		CMD(tdls_mgmt, TDLS_MGMT);
++		CMD(tdls_oper, TDLS_OPER);
++	}
++	if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
++		CMD(sched_scan_start, START_SCHED_SCAN);
++	CMD(probe_client, PROBE_CLIENT);
++	CMD(set_noack_map, SET_NOACK_MAP);
++	if (rdev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS) {
++		i++;
++		if (nla_put_u32(msg, i, NL80211_CMD_REGISTER_BEACONS))
++			goto nla_put_failure;
++	}
++	CMD(start_p2p_device, START_P2P_DEVICE);
++	CMD(set_mcast_rate, SET_MCAST_RATE);
++#ifdef CONFIG_NL80211_TESTMODE
++	CMD(testmode_cmd, TESTMODE);
++#endif
++	return i;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
+ struct nl80211_dump_wiphy_state {
+ 	s64 filter_wiphy;
+ 	long start;
+@@ -1555,68 +1631,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 		if (!nl_cmds)
+ 			goto nla_put_failure;
+ 
+-		i = 0;
+-#define CMD(op, n)							\
+-		 do {							\
+-			if (rdev->ops->op) {				\
+-				i++;					\
+-				if (nla_put_u32(msg, i, NL80211_CMD_ ## n)) \
+-					goto nla_put_failure;		\
+-			}						\
+-		} while (0)
+-
+-		CMD(add_virtual_intf, NEW_INTERFACE);
+-		CMD(change_virtual_intf, SET_INTERFACE);
+-		CMD(add_key, NEW_KEY);
+-		CMD(start_ap, START_AP);
+-		CMD(add_station, NEW_STATION);
+-		CMD(add_mpath, NEW_MPATH);
+-		CMD(update_mesh_config, SET_MESH_CONFIG);
+-		CMD(change_bss, SET_BSS);
+-		CMD(auth, AUTHENTICATE);
+-		CMD(assoc, ASSOCIATE);
+-		CMD(deauth, DEAUTHENTICATE);
+-		CMD(disassoc, DISASSOCIATE);
+-		CMD(join_ibss, JOIN_IBSS);
+-		CMD(join_mesh, JOIN_MESH);
+-		CMD(set_pmksa, SET_PMKSA);
+-		CMD(del_pmksa, DEL_PMKSA);
+-		CMD(flush_pmksa, FLUSH_PMKSA);
+-		if (rdev->wiphy.flags & WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL)
+-			CMD(remain_on_channel, REMAIN_ON_CHANNEL);
+-		CMD(set_bitrate_mask, SET_TX_BITRATE_MASK);
+-		CMD(mgmt_tx, FRAME);
+-		CMD(mgmt_tx_cancel_wait, FRAME_WAIT_CANCEL);
+-		if (rdev->wiphy.flags & WIPHY_FLAG_NETNS_OK) {
+-			i++;
+-			if (nla_put_u32(msg, i, NL80211_CMD_SET_WIPHY_NETNS))
+-				goto nla_put_failure;
+-		}
+-		if (rdev->ops->set_monitor_channel || rdev->ops->start_ap ||
+-		    rdev->ops->join_mesh) {
+-			i++;
+-			if (nla_put_u32(msg, i, NL80211_CMD_SET_CHANNEL))
+-				goto nla_put_failure;
+-		}
+-		CMD(set_wds_peer, SET_WDS_PEER);
+-		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_TDLS) {
+-			CMD(tdls_mgmt, TDLS_MGMT);
+-			CMD(tdls_oper, TDLS_OPER);
+-		}
+-		if (rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
+-			CMD(sched_scan_start, START_SCHED_SCAN);
+-		CMD(probe_client, PROBE_CLIENT);
+-		CMD(set_noack_map, SET_NOACK_MAP);
+-		if (rdev->wiphy.flags & WIPHY_FLAG_REPORTS_OBSS) {
+-			i++;
+-			if (nla_put_u32(msg, i, NL80211_CMD_REGISTER_BEACONS))
+-				goto nla_put_failure;
+-		}
+-		CMD(start_p2p_device, START_P2P_DEVICE);
+-		CMD(set_mcast_rate, SET_MCAST_RATE);
+-#ifdef CONFIG_NL80211_TESTMODE
+-		CMD(testmode_cmd, TESTMODE);
+-#endif
++		i = nl80211_add_commands_unsplit(rdev, msg);
++		if (i < 0)
++			goto nla_put_failure;
+ 		if (state->split) {
+ 			CMD(crit_proto_start, CRIT_PROTOCOL_START);
+ 			CMD(crit_proto_stop, CRIT_PROTOCOL_STOP);
+@@ -1627,7 +1644,6 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 					NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
+ 				CMD(add_tx_ts, ADD_TX_TS);
+ 		}
+-		/* add into the if now */
+ #undef CMD
+ 
+ 		if (rdev->ops->connect || rdev->ops->auth) {
+-- 
+2.8.1
