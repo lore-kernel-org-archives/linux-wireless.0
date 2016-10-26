@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lb2-smtp-cloud2.xs4all.net ([194.109.24.25]:58741 "EHLO
-        lb2-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753901AbcJLMl0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 08:41:26 -0400
-Message-ID: <1476275787.9670.12.camel@tiscali.nl> (sfid-20161012_150403_547041_91D60657)
-Subject: Re: [PATCH] iwlwifi: pcie: reduce "unsupported splx" to a warning
-From: Paul Bolle <pebolle@tiscali.nl>
-To: Luca Coelho <luca@coelho.fi>, Chris Rorvick <chris@rorvick.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Oren Givon <oren.givon@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 12 Oct 2016 14:36:27 +0200
-In-Reply-To: <1476275099.7776.28.camel@coelho.fi>
-References: <20161010071943.4717-1-chris@rorvick.com>
-         <1476108164.5210.11.camel@coelho.fi> <1476180668.17022.21.camel@tiscali.nl>
-         <CAEUsAPbEf=hr1ki267qKpenWW_UBO93KY8q6-EdqWpk15Yhcnw@mail.gmail.com>
-         <1476275099.7776.28.camel@coelho.fi>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50254 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932453AbcJZJ0e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 05:26:34 -0400
+Message-ID: <1477473991.4059.26.camel@sipsolutions.net> (sfid-20161026_112638_763103_DB4719BC)
+Subject: Re: [PATCH 8/8] mac80211: Claim Fast Initial Link Setup (FILS)
+ support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 26 Oct 2016 11:26:31 +0200
+In-Reply-To: <20161026092315.GB3660@jouni.qca.qualcomm.com>
+References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
+         <1477435489-8555-4-git-send-email-jouni@qca.qualcomm.com>
+         <1477461036.4059.14.camel@sipsolutions.net>
+         <20161026092315.GB3660@jouni.qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-10-12 at 15:24 +0300, Luca Coelho wrote:
-> Okay... Actually this is a structure in the BIOS and the actual method
-> we call is SPLC.  The SPLC method may return one item from this table,
-> or something entirely different, possible one of the three values
-> depending on a configuration option or so.
+On Wed, 2016-10-26 at 09:23 +0000, Malinen, Jouni wrote:
+> On Wed, Oct 26, 2016 at 07:50:36AM +0200, Johannes Berg wrote:
+> > 
+> > On Wed, 2016-10-26 at 01:44 +0300, Jouni Malinen wrote:
+> > > 
+> > > With the previous commits, initial FILS support is now functional
+> > > in
+> > > mac80211-based drivers for both AP and stations roles.
+> > 
+> > That's a bit misleading, I guess AP role is handled entirely in
+> > hostapd? You documented the extended feature bit to explicitly mean
+> > station role only :)
 > 
-> Can you to find and send me the actual SPLC method that we call, from
-> your BIOS?
+> Yeah.. In case of mac80211, there was not really changes needed in
+> the kernel side for AP mode. That may be different with non-mac80211
+> drivers, though, since they might be easier to handle with the AES-
+> SIV operations for associations frames handled within the driver.
 
-It seems Chris and I basically have identical setups, so I'll answer.
+Right.
 
-There are 20 SPLC methods in the BIOS. The first reads
-    Method (SPLC, 0, Serialized)
-    {
-        DerefOf (SPLX [One]) [Zero] = DOM1 /* \DOM1 */
-        DerefOf (SPLX [One]) [One] = LIM1 /* \LIM1 */
-        DerefOf (SPLX [One]) [0x02] = TIM1 /* \TIM1 */
-        DerefOf (SPLX [0x02]) [Zero] = DOM2 /* \DOM2 */
-        DerefOf (SPLX [0x02]) [One] = LIM2 /* \LIM2 */
-        DerefOf (SPLX [0x02]) [0x02] = TIM2 /* \TIM2 */
-        DerefOf (SPLX [0x03]) [Zero] = DOM3 /* \DOM3 */
-        DerefOf (SPLX [0x03]) [One] = LIM3 /* \LIM3 */
-        DerefOf (SPLX [0x03]) [0x02] = TIM3 /* \TIM3 */
-        Return (SPLX) /* \_SB_.PCI0.RP01.PXSX.SPLX */
-    }
+> Would you prefer to split that NL80211_EXT_FEATURE_FILS into two
+> separate values (_STA and _AP) 
 
-The only difference is in the last comment. Ie, RP01 is increased until
-it reaches RP20. (The machine has 20 PCI devices according to lspci. I
-have no clue how to match that RPxx number to the 20 devices showing up
-in lspci, sorry.)
+I think having it called _STA may be a little clearer, but I think I'm
+OK with it the way it is (documented as station) as well.
 
+> and have mac80211 advertise both? 
 
-Paul Bolle
+I wouldn't do that, there's nothing that makes it have that capability.
+
+> Or just add a _STA only case for now and see what we need to do with
+> NL80211_ATTR_DEVICE_AP_SME cases separately once such a thing is in
+> in functional state?
+
+Yeah, we should do that.
+
+Really all I thought you should do was reword the commit message to
+make it clear that the flag only implied the station case, and that the
+AP case needed no changes.
+
+Perhaps renaming the flag to ..._STA will make that a bit clearer.
+
+johannes
