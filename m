@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34879 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761936AbcJaIC6 (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34747 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932275AbcJZQgK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 04:02:58 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s8so8097819pfj.2
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:57 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
+        Wed, 26 Oct 2016 12:36:10 -0400
+Received: by mail-pf0-f194.google.com with SMTP id u84so2825393pfj.1
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 09:36:10 -0700 (PDT)
+Date: Wed, 26 Oct 2016 09:36:07 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
         Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 09/12] mwifiex: usb: handle HS failures
-Date: Mon, 31 Oct 2016 16:02:17 +0800
-Message-Id: <1477900940-10549-9-git-send-email-huxinming820@marvell.com> (sfid-20161031_090306_217994_EFF26D68)
-In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Message-ID: <20161026163607.GA3989@dtor-ws> (sfid-20161026_183615_046518_14453513)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-2-git-send-email-akarwar@marvell.com>
+ <20161024191914.GB968@localhost>
+ <20161024235746.GC15034@dtor-ws>
+ <91f0f4390ac14afc9e4f3498d1b79c78@SC-EXCH04.marvell.com>
+ <20161025163520.GA10979@dtor-ws>
+ <24731897638e42ba8b05acd6afafef3b@SC-EXCH04.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <24731897638e42ba8b05acd6afafef3b@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+Hi Amit,
 
-SDIO and PCIe drivers handle this. Let's imitate it.
+On Wed, Oct 26, 2016 at 03:23:08PM +0000, Amitkumar Karwar wrote:
+> 
+> This race won't occur. At this point of time(i.e while calling mwifiex_shutdown_drv() in deinit), following things are completed. We don't expect mwifiex_main_process() to be scheduled.
+> 1) Connection to peer device is terminated at the beginning of teardown thread. So we don't receive any Tx data from kernel.
+> 2) Last command SHUTDOWN is exchanged with firmware. So there won't be any activity/interrupt from firmware.
+> 3) Interrupts are disabled.
+> 4) "adapter->surprise_removed" flag is set. It will skip mwifiex_main_process() calls.
+> 
+> -----------
+> static void mwifiex_main_work_queue(struct work_struct *work)
+> {
+>         struct mwifiex_adapter *adapter =
+>                 container_of(work, struct mwifiex_adapter, main_work);
+> 
+>         if (adapter->surprise_removed)
+>                 return;
+>         mwifiex_main_process(adapter);
+> }
+> ----------
+> 5) We have "mwifiex_terminate_workqueue(adapter)" call to flush and destroy workqueue.
 
-Not tested.
+OK, but if interrupts are disabled and you ensure that work is flushed
+or completed before you call mwifiex_shutdown_drv() then I do not
+understand why you need all of this at all? Why do you need to check
+status in mwifiex_shutdown_drv() and why do you want
+mwifiex_main_process() to call mwifiex_shutdown_drv() in certain cases?
+Can you simply remove all this stuff?
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Thanks.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 70126c3..c26daf4 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -521,7 +521,14 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 		mwifiex_dbg(adapter, WARN,
- 			    "Device already suspended\n");
- 
--	mwifiex_enable_hs(adapter);
-+	/* Enable the Host Sleep */
-+	if (!mwifiex_enable_hs(adapter)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "cmd: failed to suspend\n");
-+		adapter->hs_enabling = false;
-+		return -EFAULT;
-+	}
-+
- 
- 	/* 'is_suspended' flag indicates device is suspended.
- 	 * It must be set here before the usb_kill_urb() calls. Reason
 -- 
-1.8.1.4
+Dmitry
