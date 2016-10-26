@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48372 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750771AbcJAM3p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 1 Oct 2016 08:29:45 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        Larry.Finger@lwfinger.net, stable@vger.kernel.org
-Subject: Re: [PATCH 1/2] rtl8xxxu: Fix rtl8723bu driver reload issue
-References: <1475278518-18527-1-git-send-email-Jes.Sorensen@redhat.com>
-        <1475278518-18527-2-git-send-email-Jes.Sorensen@redhat.com>
-        <20161001115622.GB15156@kroah.com>
-Date: Sat, 01 Oct 2016 08:29:42 -0400
-In-Reply-To: <20161001115622.GB15156@kroah.com> (Greg KH's message of "Sat, 1
-        Oct 2016 13:56:22 +0200")
-Message-ID: <wrfjshsg5k21.fsf@redhat.com> (sfid-20161001_143003_600013_4DEE6929)
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35490 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932320AbcJZUZ0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 16:25:26 -0400
+Received: by mail-wm0-f52.google.com with SMTP id e69so56282232wmg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 13:25:26 -0700 (PDT)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+To: Matthias Klein <matthias.klein@optimeas.de>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Jonas Gorski <jonas.gorski@gmail.com>
+References: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <7991f55c-ce11-9261-5c8f-3ff8c051b6d1@gmail.com> (sfid-20161026_222531_345639_6CB7E82C)
+Date: Wed, 26 Oct 2016 22:25:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <greg@kroah.com> writes:
-> On Fri, Sep 30, 2016 at 07:35:17PM -0400, Jes.Sorensen@redhat.com wrote:
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->> 
->> The generic disable_rf() function clears bits 22 and 23 in
->> REG_RX_WAIT_CCA, however we did not re-enable them again in
->> rtl8723b_enable_rf()
->> 
->> This resolves the problem for me with 8723bu devices not working again
->> after reloading the driver.
->> 
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 4 ++++
->>  1 file changed, 4 insertions(+)
->
-> <formletter>
->
-> This is not the correct way to submit patches for inclusion in the
-> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
->
-> </formletter>
 
-DOH Kalle told me to CC stable I took it for granted that you meant CC
-in the email sense. Guess I get to blame my self for looking like a
-fool in public.
 
-I'll send you an email directly with the SHA once it hits Linus' tree
-instead.
-
-Jes
+>
+>> I (naively) went through pci/pm git log and found the following was
+>> applied on 4.7-rc2 (i.e. prior to 4.7 release):
+>>
+>>  commit 006d44e49a259b39947366728d65a873a19aadc0
+>>  Author: Mika Westerberg <mika.westerberg@linux.intel.com>
+>>  Date:   Thu Jun 2 11:17:15 2016 +0300
+>>
+>>      PCI: Add runtime PM support for PCIe ports
+>>
+>> From reading the commit log it seems to me like it could be it.
+>>
+>> ath10k tries to wake up the device during probing before it starts
+>> talking to it and it does so through MMIO/PCI config space. If it's
+>> not mapped properly then driver will not be able to wake it up and
+>> will timeout waiting for it.
+>>
+>> Can you try cherry-picking it into your 4.4.24 and see if it helps?
+>>
+>>
+> Thanks for the help!
+>
+> Until now I did not compile a kernel for the board.
+> I will give it a try and come back with the results ...
+>
+>
+> Best regards,
+> Matthias
+>
+Any news on that? I am in contact with the support of SolidRun 
+(clearfog). Unfortunately they will stay at 4.4.x - no upgrade to 4.8 
+nor 4.9 planned. Unfortunately the commit (006d44e) is incompatible to 
+4.4. because pci_dev does not know bridge_d3
