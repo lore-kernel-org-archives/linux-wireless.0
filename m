@@ -1,45 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:32844 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757005AbcJQJtH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17253 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754329AbcJZVpn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 17 Oct 2016 05:49:07 -0400
-Received: by mail-lf0-f54.google.com with SMTP id x79so285664560lff.0
-        for <linux-wireless@vger.kernel.org>; Mon, 17 Oct 2016 02:49:06 -0700 (PDT)
-References: <1476693195-14071-1-git-send-email-johannes@sipsolutions.net> <CAKv+Gu-aZhCBvnEQoZUZLDPXCrvgxO1pSd=6EHz+tMB+dFz5hg@mail.gmail.com> <1476696226.19992.13.camel@sipsolutions.net> <CAKv+Gu_ZH9hO_xbVfOfk90CxFJ6ZTz3PKWB1v23LRVzpBrb=oQ@mail.gmail.com> <1476696918.19992.15.camel@sipsolutions.net>
-In-Reply-To: <1476696918.19992.15.camel@sipsolutions.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=us-ascii
-Message-Id: <38BC2B4F-4050-4060-9FF0-54212DE3E1CF@linaro.org> (sfid-20161017_114910_933665_5FBC7063)
-Cc: "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v4] mac80211: move extra crypto data off the stack
-Date: Mon, 17 Oct 2016 10:49:01 +0100
+        Wed, 26 Oct 2016 17:45:43 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 5/9] cfg80211: Add Fast Initial Link Setup (FILS) auth algs
+Date: Thu, 27 Oct 2016 00:42:02 +0300
+Message-ID: <1477518126-823-6-git-send-email-jouni@qca.qualcomm.com> (sfid-20161026_234547_043900_C8E64606)
+In-Reply-To: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1477518126-823-1-git-send-email-jouni@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This defines authentication algorithms for FILS (IEEE 802.11ai).
 
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/linux/ieee80211.h    |  3 +++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       | 21 +++++++++++++++++++--
+ 3 files changed, 28 insertions(+), 2 deletions(-)
 
-> On 17 Oct 2016, at 10:35, Johannes Berg <johannes@sipsolutions.net> wrote:
-> 
->> On Mon, 2016-10-17 at 10:30 +0100, Ard Biesheuvel wrote:
->> 
->> Yes. But as I replied, setting the req size is not supported atm,
->> although it is reasonable to demand a way to allocate additional data
->> in the request specifically for this issue. So let's proceed with the
->> aead_request_alloc/free patch, but I would like to propose something
->> on the API side to address this particular issue
-> 
-> Well, if your other patch to make it OK to be on-stack would be applied
-> instead, this wouldn't make much sense either :)
-> 
-> In this particular patch, we could reduce the size of the struct, but I
-> don't actually think it'll make a difference to go from 48 to 36 bytes,
-> given alignment etc., so I think I'll just leave it as is.
-> 
-> johannes
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index d428adf..793a017 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1576,6 +1576,9 @@ struct ieee80211_vht_operation {
+ #define WLAN_AUTH_SHARED_KEY 1
+ #define WLAN_AUTH_FT 2
+ #define WLAN_AUTH_SAE 3
++#define WLAN_AUTH_FILS_SK 4
++#define WLAN_AUTH_FILS_SK_PFS 5
++#define WLAN_AUTH_FILS_PK 6
+ #define WLAN_AUTH_LEAP 128
+ 
+ #define WLAN_AUTH_CHALLENGE_LEN 128
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f7e0791..dcf8f6f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3667,6 +3667,9 @@ enum nl80211_bss_status {
+  * @NL80211_AUTHTYPE_FT: Fast BSS Transition (IEEE 802.11r)
+  * @NL80211_AUTHTYPE_NETWORK_EAP: Network EAP (some Cisco APs and mainly LEAP)
+  * @NL80211_AUTHTYPE_SAE: Simultaneous authentication of equals
++ * @NL80211_AUTHTYPE_FILS_SK: Fast Initial Link Setup shared key
++ * @NL80211_AUTHTYPE_FILS_SK_PFS: Fast Initial Link Setup shared key with PFS
++ * @NL80211_AUTHTYPE_FILS_PK: Fast Initial Link Setup public key
+  * @__NL80211_AUTHTYPE_NUM: internal
+  * @NL80211_AUTHTYPE_MAX: maximum valid auth algorithm
+  * @NL80211_AUTHTYPE_AUTOMATIC: determine automatically (if necessary by
+@@ -3679,6 +3682,9 @@ enum nl80211_auth_type {
+ 	NL80211_AUTHTYPE_FT,
+ 	NL80211_AUTHTYPE_NETWORK_EAP,
+ 	NL80211_AUTHTYPE_SAE,
++	NL80211_AUTHTYPE_FILS_SK,
++	NL80211_AUTHTYPE_FILS_SK_PFS,
++	NL80211_AUTHTYPE_FILS_PK,
+ 
+ 	/* keep last */
+ 	__NL80211_AUTHTYPE_NUM,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1a51bd4..893e321 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3777,12 +3777,23 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
+ 		if (!(rdev->wiphy.features & NL80211_FEATURE_SAE) &&
+ 		    auth_type == NL80211_AUTHTYPE_SAE)
+ 			return false;
++		if (!wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_FILS_STA) &&
++		    (auth_type == NL80211_AUTHTYPE_FILS_SK ||
++		     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
++		     auth_type == NL80211_AUTHTYPE_FILS_PK))
++			return false;
+ 		return true;
+ 	case NL80211_CMD_CONNECT:
+ 	case NL80211_CMD_START_AP:
+ 		/* SAE not supported yet */
+ 		if (auth_type == NL80211_AUTHTYPE_SAE)
+ 			return false;
++		/* FILS not supported yet */
++		if (auth_type == NL80211_AUTHTYPE_FILS_SK ||
++		    auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
++		    auth_type == NL80211_AUTHTYPE_FILS_PK)
++			return false;
+ 		return true;
+ 	default:
+ 		return false;
+@@ -7809,12 +7820,18 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
+ 	if (!nl80211_valid_auth_type(rdev, auth_type, NL80211_CMD_AUTHENTICATE))
+ 		return -EINVAL;
+ 
+-	if (auth_type == NL80211_AUTHTYPE_SAE &&
++	if ((auth_type == NL80211_AUTHTYPE_SAE ||
++	     auth_type == NL80211_AUTHTYPE_FILS_SK ||
++	     auth_type == NL80211_AUTHTYPE_FILS_SK_PFS ||
++	     auth_type == NL80211_AUTHTYPE_FILS_PK) &&
+ 	    !info->attrs[NL80211_ATTR_AUTH_DATA])
+ 		return -EINVAL;
+ 
+ 	if (info->attrs[NL80211_ATTR_AUTH_DATA]) {
+-		if (auth_type != NL80211_AUTHTYPE_SAE)
++		if (auth_type != NL80211_AUTHTYPE_SAE &&
++		    auth_type != NL80211_AUTHTYPE_FILS_SK &&
++		    auth_type != NL80211_AUTHTYPE_FILS_SK_PFS &&
++		    auth_type != NL80211_AUTHTYPE_FILS_PK)
+ 			return -EINVAL;
+ 		auth_data = nla_data(info->attrs[NL80211_ATTR_AUTH_DATA]);
+ 		auth_data_len = nla_len(info->attrs[NL80211_ATTR_AUTH_DATA]);
+-- 
+1.9.1
