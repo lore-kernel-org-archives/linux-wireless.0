@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41956 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752481AbcJEPu6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45737 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753064AbcJZPhE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 5 Oct 2016 11:50:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-        <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> <87k2dm6git.fsf@toke.dk>
-Date: Wed, 05 Oct 2016 18:50:52 +0300
-In-Reply-To: <87k2dm6git.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
- =?utf-8?Q?=C3=B8rgensen=22's?= message of
-        "Wed, 05 Oct 2016 16:02:02 +0200")
-Message-ID: <878tu2okv7.fsf@kamboji.qca.qualcomm.com> (sfid-20161005_175102_217540_D5D00E85)
+        Wed, 26 Oct 2016 11:37:04 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/8] mac80211: Allow AUTH_DATA to be used for FILS
+Date: Wed, 26 Oct 2016 15:36:02 +0000
+Message-ID: <20161026153559.GA13254@jouni.qca.qualcomm.com> (sfid-20161026_173708_197871_4717BF66)
+References: <1477435357-8495-1-git-send-email-jouni@qca.qualcomm.com>
+ <1477435357-8495-3-git-send-email-jouni@qca.qualcomm.com>
+ <1477459800.4059.1.camel@sipsolutions.net>
+In-Reply-To: <1477459800.4059.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
-
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->>
->> I understand your point, but I don't want to rush this to 4.9 and then
->> start getting lots of bug reports and eventually forced to revert it. If
->> we just found a new serious regression the chances are that there are
->> more lurking somewhere and this patch is just not ready yet.
->
-> So, the changes to mac80211 that fixes the known regressions of this
-> patch have gone in.
-
-I guess you mean this commit:
-
-bb42f2d13ffc mac80211: Move reorder-sensitive TX handlers to after TXQ dequ=
-eue
-
-(Just making sure that I have the same commit in my tree when I apply this)
-
-> Any chance of seeing this merged during the current merge window? :)
-
-I sent last new feature ("-next") patches for 4.9 last week, sorry. So
-this has to wait for 4.10.
-
-And I assume I need to take v5:
-
-https://patchwork.kernel.org/patch/9311037/
-
---=20
-Kalle Valo
+T24gV2VkLCBPY3QgMjYsIDIwMTYgYXQgMDc6MzA6MDBBTSArMDIwMCwgSm9oYW5uZXMgQmVyZyB3
+cm90ZToNCj4gDQo+ID4gwqAJaWYgKHJlcS0+YXV0aF9kYXRhX2xlbiA+PSA0KSB7DQo+ID4gLQkJ
+X19sZTE2ICpwb3MgPSAoX19sZTE2ICopIHJlcS0+YXV0aF9kYXRhOw0KPiA+IC0JCWF1dGhfZGF0
+YS0+c2FlX3RyYW5zID0gbGUxNl90b19jcHUocG9zWzBdKTsNCj4gPiAtCQlhdXRoX2RhdGEtPnNh
+ZV9zdGF0dXMgPSBsZTE2X3RvX2NwdShwb3NbMV0pOw0KPiA+ICsJCWlmIChyZXEtPmF1dGhfdHlw
+ZSA9PSBOTDgwMjExX0FVVEhUWVBFX1NBRSkgew0KPiA+ICsJCQlfX2xlMTYgKnBvcyA9IChfX2xl
+MTYgKikgcmVxLT5hdXRoX2RhdGE7DQo+ID4gKwkJCWF1dGhfZGF0YS0+c2FlX3RyYW5zID0gbGUx
+Nl90b19jcHUocG9zWzBdKTsNCj4gPiArCQkJYXV0aF9kYXRhLT5zYWVfc3RhdHVzID0gbGUxNl90
+b19jcHUocG9zWzFdKTsNCj4gPiArCQl9DQo+ID4gwqAJCW1lbWNweShhdXRoX2RhdGEtPmRhdGEs
+IHJlcS0+YXV0aF9kYXRhICsgNCwNCj4gPiDCoAkJwqDCoMKgwqDCoMKgwqByZXEtPmF1dGhfZGF0
+YV9sZW4gLSA0KTsNCj4gPiDCoAkJYXV0aF9kYXRhLT5kYXRhX2xlbiArPSByZXEtPmF1dGhfZGF0
+YV9sZW4gLSA0Ow0KPiANCj4gSG1tLiBEbyB3ZSByZWFsbHkgd2FudCB0byBzdGlsbCBza2lwIHRo
+ZSBmaXJzdCBmb3VyIGJ5dGVzIG9mIHRoZSBkYXRhDQo+IHVzZXJzcGFjZSBwYXNzZWQ/IFRoYXQg
+c2VlbXMgYSBiaXQgc3RyYW5nZSB0byBtZS4gVGhlIGRvY3MgaW4gbmw4MDIxMS5oDQo+IGRvIHNh
+eSBpdCB0aGF0IHdheSBub3csIGJ1dCBzaG91bGQgd2UgcmVhbGx5IGluY2x1ZGUgYSBkdW1teQ0K
+PiBBdXRoZW50aWNhdGlvbiB0cmFuc2FjdGlvbiBzZXF1ZW5jZSBudW1iZXIgZmllbGQ/DQoNClRo
+aXMgaXMgYWRtaXR0ZWRseSBhIGJpdCBzdHJhbmdlIGRlc2lnbiB3aXRoIHRoYXQgc3BlY2lhbCBj
+YXNlIG5lZWRlZA0KZm9yIFNBRS4gSWYgd2Ugd2VyZSB0byBkZXNpZ24gdGhlIFNBRSBjYXNlIG5v
+dyBpbiBjb21iaW5hdGlvbiB3aXRoIEZJTFMsDQpJIGd1ZXNzIHRoaXMgd291bGQgYmUgcXVpdGUg
+ZGlmZmVyZW50IChlLmcuLCBzZXBhcmF0ZSBhdHRyaWJ1dGVzIGZvcg0KQXV0aGVudGljYXRpb24g
+dHJhbnNhY3Rpb24gc2VxdWVuY2UgbnVtYmVyIGFuZCBTdGF0dXMgY29kZSkuIFVubGlrZSB0aGUN
+Cm1lc2ggdXNlIGNhc2Ugd2l0aCBTQUUsIEZJTFMgaXMgb25seSBiZXR3ZWVuIGFuIEFQIGFuZCBh
+IHN0YXRpb24gYW5kIGFzDQpzdWNoLCB0aGVyZSB3b3VsZCBub3QgcmVhbGx5IGJlIGEgY2FzZSB3
+aGVyZSB0aGUgc3RhdGlvbiB3b3VsZCBzZW5kIGFuDQpBdXRoZW50aWNhdGlvbiBmcmFtZSB3aXRo
+IG5vbi16ZXJvIFN0YXR1cyBjb2RlLg0KDQpBIGZ1dHVyZSBhbWVuZG1lbnQgbWlnaHQgZGVmaW5l
+IGEgbmV3IGF1dGhlbnRpY2F0aW9uIGFsZ29yaXRobSB0aGF0IGVuZHMNCnVwIHVzaW5nIG1vcmUg
+dGhhbiBhIHNpbmdsZSBBdXRoZW50aWNhdGlvbiBmcmFtZSBleGNoYW5nZS4gSW4gc3VjaCBhDQpj
+YXNlLCB3ZSB3b3VsZCBhY3R1YWxseSBoYXZlIG5lZWQgZm9yIEF1dGhlbnRpY2F0aW9uIHRyYW5z
+YWN0aW9uDQpzZXF1ZW5jZSBudW1iZXIgZXZlbiB0aG91Z2ggRklMUyBkb2Vzbid0IG5lZWQgaXQu
+DQoNCkkgdGhpbmsgSSdkIHJhdGhlciBtYWludGFpbiBhIGNvbnNpc3RlbnQgYXR0cmlidXRlIGRl
+c2lnbiBmb3IgYWxsDQphdXRoZW50aWNhdGlvbiBhbGdvcml0aG1zIGFuZCBsZWF2ZSB0aGlzIGFz
+LWlzIG5vdy4gQW5vdGhlciBvcHRpb24gd291bGQNCmJlIHRvIG5vdCBhcHBseSB0aGUgcmVuYW1l
+IFNBRSBhdHRyaWJ1dGVzIHBhdGNoIGFuZCBkZWZpbmUgc29tZXRoaW5nIG5ldw0KYXMgYSBtb3Jl
+IGdlbmVyaWMgc29sdXRpb24sIGJ1dCBJJ20gbm90IHN1cmUgdGhlcmUgaXMgc3VmZmljaWVudA0K
+anVzdGlmaWNhdGlvbiBmb3IgdGhlIGFkZGVkIGNvbXBsZXhpdHkgc2luY2Ugd2UgY2Fubm90IHJl
+YWxseSBnZXQgcmlkIG9mDQp0aGUgY3VycmVudCBTQUUgZGVzaWduIGFueSB0aW1lIHNvb24uDQoN
+Ci0tIA0KSm91bmkgTWFsaW5lbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgUEdQIGlkIEVGQzg5NUZB
