@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:38505 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752848AbcJXURG (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:36385 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933606AbcJZXn5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 16:17:06 -0400
-Received: by mail-qk0-f181.google.com with SMTP id v138so7455613qka.5
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 13:17:06 -0700 (PDT)
+        Wed, 26 Oct 2016 19:43:57 -0400
+Received: by mail-pf0-f173.google.com with SMTP id e6so5025324pfk.3
+        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 16:43:57 -0700 (PDT)
+Date: Wed, 26 Oct 2016 16:43:54 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH] mwifiex: don't do unbalanced free()'ing in cleanup_if()
+Message-ID: <20161026234353.GA24417@localhost> (sfid-20161027_014401_780834_96072167)
+References: <1477524560-49226-1-git-send-email-briannorris@chromium.org>
+ <20161026233554.GF27930@dtor-ws>
 MIME-Version: 1.0
-In-Reply-To: <1477286912.4085.1.camel@sipsolutions.net>
-References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
- <1477286912.4085.1.camel@sipsolutions.net>
-From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjornsmedman@gmail.com>
-Date: Mon, 24 Oct 2016 22:17:04 +0200
-Message-ID: <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com> (sfid-20161024_221710_189489_49FBE8B5)
-Subject: Re: Bayesian rate control
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161026233554.GF27930@dtor-ws>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Wed, Oct 26, 2016 at 04:35:54PM -0700, Dmitry Torokhov wrote:
+> On Wed, Oct 26, 2016 at 04:29:20PM -0700, Brian Norris wrote:
 
-Thanks for the pointers.
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > index 8718950004f3..f04cf5a551b3 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
 
-On Mon, Oct 24, 2016 at 7:28 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> I'm thinking the best driver for rate control experimentation would
->> be ath9k, right? If so then a TP-Link TL-WA901ND router (apparently
->> based on Qualcomm QCA956x SOC) with OpenWrt, and a TP-Link TL-WDN4800
->> PCIe card (apparently based on Atheros AR9380 with PCI ID 168c:0030)
->> for my desktop sounds like a good combo, no?
->
-> Seems reasonable, yes. You wouldn't have VHT, but HT has enough search
-> space to keep you busy ;-)
+> > @@ -2291,6 +2287,14 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+> >  
+> >  	mwifiex_sdio_remove(func);
+> >  
+> > +	/*
+> > +	 * Normally, we would let the driver core take care of releasing these.
+> > +	 * But we're not letting the driver core handle this one. See above
+> > +	 * TODO.
+> > +	 */
+> > +	sdio_set_drvdata(func, NULL);
+> > +	devm_kfree(&func->dev, card);
+> 
+> Ugh, this really messes the unwind order... I guess it is OK since it is
+> the only resource allocated with devm, but I'd be happier if we could
+> reuse existing "card" structure.
 
-Are there any cards out there that support VHT and use s/w rate
-control (Minstrel)? Just in case I run out of search space. :P
+I'm really not interested in cleaning up the hacky reset function here
+(see the other TODOs here). I'm sure it's broken in other ways too. In
+its current "design" (if you can call it that) where we remove and
+re-probe the device, I'm not sure there's a way to get it to reuse the
+'card'.
 
-BR Bj=C3=B6rn
+If you insist on refactoring this to protect the potential future unwind
+order (if we use devm more heavily), then I guess I'd have to go back to
+manual k{zalloc,free}() for sdio.c.
+
+Brian
