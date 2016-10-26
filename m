@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:33122 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751783AbcJXR5H (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 24 Oct 2016 13:57:07 -0400
-Received: by mail-pf0-f173.google.com with SMTP id 128so103184065pfz.0
-        for <linux-wireless@vger.kernel.org>; Mon, 24 Oct 2016 10:57:06 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Xinming Hu <huxm@marvell.com>
-Cc: Rajat Jain <rajatja@google.com>,
-        Brian Norris <briannorris@google.com>, rajatxjain@gmail.com
-Subject: [PATCH 0/3] mwifiex: Make WoWLAN a common feature
-Date: Mon, 24 Oct 2016 10:56:50 -0700
-Message-Id: <1477331813-42151-1-git-send-email-rajatja@google.com> (sfid-20161024_195711_153337_18890AB3)
+Received: from s3.sipsolutions.net ([5.9.151.49]:47594 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751599AbcJZFgc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 26 Oct 2016 01:36:32 -0400
+Message-ID: <1477460187.4059.4.camel@sipsolutions.net> (sfid-20161026_073635_908431_D63162EE)
+Subject: Re: [PATCH 5/8] cfg80211: Add KEK/nonces for FILS association frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 26 Oct 2016 07:36:27 +0200
+In-Reply-To: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1477435489-8555-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a Marvell card on the PCIe bus that needs to support
-WoWLAN (wake-on-wireless-LAN) feature. This is a feature offered
-by the "core" mwifiex card and is not specific to an interface
-(pcie/sdio/usb).
 
-Currently the code to parse the WowLAN pin, and activate it
-resides only in sdio.c [mostly commit ce4f6f0c353b ("mwifiex: add
-platform specific wakeup interrupt support")]. I started by
-copying all that code & data structures in pcie.c/pcie.h but then
-realized that the we should probably have it common since the
-feature is not interface specific.
+> +++ b/net/wireless/nl80211.c
+> @@ -414,6 +414,10 @@ enum nl80211_multicast_groups {
+>  	[NL80211_ATTR_NAN_MASTER_PREF] = { .type = NLA_U8 },
+>  	[NL80211_ATTR_NAN_DUAL] = { .type = NLA_U8 },
+>  	[NL80211_ATTR_NAN_FUNC] = { .type = NLA_NESTED },
+> +	[NL80211_ATTR_FILS_KEK] = { .type = NLA_BINARY,
+> +				    .len = FILS_MAX_KEK_LEN },
+> +	[NL80211_ATTR_FILS_NONCES] = { .type = NLA_BINARY,
+> +				       .len = 2 * FILS_NONCE_LEN },
+>  };
 
-Further, I noticed that interface driver had no interest in
-device trees since there are no properties specific to interfaces.
-Currently the only properties needed, are the common ones needed
-by the core mwifiex.
+If you remove the type = NLA_BINARY and just leave the type zero, then
+you'll get *minimum* length validation, rather than limiting the
+maximum length. That seems more appropriate for the nonces?
 
-This patch set thus introduces mwifiex_probe_of() to parse the
-common properties, and then moves the WowLAN specific code to the
-common module so that all the interfaces can use it. Essentially
-this is a single logical patch that has been split up into
-multiple patches only for the reason of simplicity and code
-reviews.
+> +	if (info->attrs[NL80211_ATTR_FILS_NONCES]) {
+> +		if (nla_len(info->attrs[NL80211_ATTR_FILS_NONCES])
+> !=
+> +		    2 * FILS_NONCE_LEN)
+> +			return -EINVAL;
 
-This is currently rebased on the top of Linus' tree with the
-following 2 patches applied:
-https://patchwork.kernel.org/patch/9362275/
-https://patchwork.kernel.org/patch/9390225/
+You're validating the *exact* length here, which unfortunately nlattr
+doesn't support right now, but perhaps we can live with checking that
+it's at least that many bytes, and using only 2*nonces? We do that for
+most other attributes (like MAC addresses).
 
-Rajat Jain (3):
-  mwifiex: Allow mwifiex early access to device structure
-  mwifiex: Introduce mwifiex_probe_of() to parse common properties
-  mwifiex: Enable WoWLAN for both sdio and pcie
+Or do we expect to extend this to more than 2 nonces in the future, at
+which point we'll need the length?
 
- drivers/net/wireless/marvell/mwifiex/main.c    | 58 ++++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/main.h    | 28 ++++++++-
- drivers/net/wireless/marvell/mwifiex/pcie.c    |  8 ++-
- drivers/net/wireless/marvell/mwifiex/sdio.c    | 79 +++-----------------------
- drivers/net/wireless/marvell/mwifiex/sdio.h    |  8 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  5 +-
- drivers/net/wireless/marvell/mwifiex/usb.c     |  3 +-
- 7 files changed, 99 insertions(+), 90 deletions(-)
-
--- 
-2.8.0.rc3.226.g39d4020
+johannes
