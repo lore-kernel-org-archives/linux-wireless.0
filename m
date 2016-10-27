@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:36337 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754465AbcJZU4i (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35088 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbcJ0RoZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 16:56:38 -0400
-Received: by mail-pf0-f171.google.com with SMTP id e6so2941689pfk.3
-        for <linux-wireless@vger.kernel.org>; Wed, 26 Oct 2016 13:56:37 -0700 (PDT)
-Date: Wed, 26 Oct 2016 13:56:34 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Rajat Jain <rajatja@google.com>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh@kernel.org>,
-        Rajat Jain <rajatxjain@gmail.com>
-Subject: Re: [PATCH v6] mwifiex: parse device tree node for PCIe
-Message-ID: <20161026205634.GA13170@localhost> (sfid-20161026_225642_630051_21372761)
-References: <1477070156-109965-1-git-send-email-rajatja@google.com>
- <1477084869-15612-1-git-send-email-rajatja@google.com>
- <20161026201735.GA10192@localhost>
- <20161026204648.GD3989@dtor-ws>
- <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
+        Thu, 27 Oct 2016 13:44:25 -0400
+Received: by mail-pf0-f194.google.com with SMTP id s8so3196856pfj.2
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2016 10:44:25 -0700 (PDT)
+Date: Thu, 27 Oct 2016 10:44:22 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        briannorris@google.com
+Subject: Re: [PATCH v2 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Message-ID: <20161027174422.GA509@dtor-ws> (sfid-20161027_194429_872289_95ADC7C6)
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+ <1477559563-18328-2-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6H1ACBo7nDxaXR3Vn9cPdyRqxxzdgYz7vNmojiSvjbW5A@mail.gmail.com>
+In-Reply-To: <1477559563-18328-2-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Oct 26, 2016 at 01:51:48PM -0700, Rajat Jain wrote:
->    On Wed, Oct 26, 2016 at 1:46 PM, Dmitry Torokhov
->    <dmitry.torokhov@gmail.com> wrote:
->      On Wed, Oct 26, 2016 at 01:17:36PM -0700, Brian Norris wrote:
->      Sorry, I just saw this... Why do we need devicetree data for
->      discoverable bus (PCI)? How does the driver work on systems that do not
->      use DT? Why do we need them to behave differently?
+Hi Amit,
+
+On Thu, Oct 27, 2016 at 02:42:40PM +0530, Amitkumar Karwar wrote:
+> This variable is guarded by spinlock at all other places. This patch
+> takes care of missing spinlock usage in mwifiex_shutdown_drv().
+
+Since in the previous discussion you stated that we inhibit interrupts
+and flush the workqueue so that mwifiex_shutdown_drv() can't run
+simultaneously with the main processing routine, why do we need this?
+
+Instead please remove call to mwifiex_shutdown_drv() in the main routine
+and "if (adapter->mwifiex_processing)" check here.
+
+Thanks.
+
 > 
->    There are a couple of out-of-band GPIO pins from Marvell chip that can
->    serve as wake-up pins (wake up the CPU when asserted). The Marvell chip
->    has to be told which GPIO pin is to be used as the wake-up pin. The pin to
->    be used is system / platform dependent. (On some systems it could be
->    GPIO13, on others it could be GPIO14 etc depending on how the marvell chip
->    is wired up to the CPU).
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v2: Same as v1
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 82839d9..8e5e424 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -670,11 +670,14 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
+>  
+>  	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
+>  	/* wait for mwifiex_process to complete */
+> +	spin_lock_irqsave(&adapter->main_proc_lock, flags);
+>  	if (adapter->mwifiex_processing) {
+> +		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>  		mwifiex_dbg(adapter, WARN,
+>  			    "main process is still running\n");
+>  		return ret;
+>  	}
+> +	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
+>  
+>  	/* cancel current command */
+>  	if (adapter->curr_cmd) {
+> -- 
+> 1.9.1
+> 
 
-There's also calibration data. See "marvell,caldata*" and
-"marvell,wakeup-pin" properties. Currently only for SDIO, in
-Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt, but
-we're adding support for PCIe.
-
-Brian
+-- 
+Dmitry
