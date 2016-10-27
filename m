@@ -1,36 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59526 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753085AbcJZGTw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 26 Oct 2016 02:19:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/7] iwlwifi: mvm: fix d3_test with unified D0/D3 images
-References: <20161019071122.18977-1-luca@coelho.fi>
-        <20161019071122.18977-4-luca@coelho.fi>
-Date: Wed, 26 Oct 2016 09:19:46 +0300
-In-Reply-To: <20161019071122.18977-4-luca@coelho.fi> (Luca Coelho's message of
-        "Wed, 19 Oct 2016 10:11:18 +0300")
-Message-ID: <87insf7htp.fsf@kamboji.qca.qualcomm.com> (sfid-20161026_081956_395509_D6AC50D9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:39528 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941535AbcJ0NyU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 09:54:20 -0400
+Message-ID: <1477571393.4534.11.camel@sipsolutions.net> (sfid-20161027_161918_500736_DFCB7916)
+Subject: Re: [PATCH v6 4/4] mac80211: multicast to unicast conversion
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
+        netdev@vger.kernel.org
+Date: Thu, 27 Oct 2016 14:29:53 +0200
+In-Reply-To: <1476119543-24509-4-git-send-email-michael-dev@fami-braun.de>
+References: <1476119543-24509-1-git-send-email-michael-dev@fami-braun.de>
+         <1476119543-24509-4-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
 
-> From: Luca Coelho <luciano.coelho@intel.com>
->
-> When a unified D0/D3 image is used, we don't restart the FW in the
-> D0->D3->D0 transitions.  Therefore, the d3_test functionality should
-> not call ieee8021_restart_hw() when the resuming either.
->
-> Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
+> @@ -2242,6 +2242,20 @@ static int ieee80211_set_wds_peer(struct wiphy
+> *wiphy, struct net_device *dev,
+>  	return 0;
+>  }
+>  
+> +static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
+> +					      struct net_device
+> *dev,
+> +					      const bool enabled)
 
-The word "commit" is not needed in the Fixes line, but no need to change
-that now.
+I don't understand why you put this with set_wds_peer, please add it
+here also at the end like anywhere else - I've changed that for you in
+the cfg80211 patch.
 
--- 
-Kalle Valo
+> +	struct ieee80211_sub_if_data *sdata =
+> IEEE80211_DEV_TO_SUB_IF(dev);
+> +
+> +	if (sdata->vif.type != NL80211_IFTYPE_AP)
+> +		return -1;
+
+Not needed. Also, don't ever just blindly return -1 in the kernel, that
+means -EPERM, i.e. permission denied.
+
+> +/* rewrite destination mac address */
+
+that's a pretty useless comment ...
+
+> +/* Check if multicast to unicast conversion is needed and do it.
+> + * Returns 1 if skb was freed and should not be send out.
+
+Follow kernel convention of returning a negative error code, e.g.
+-ENOTCONN in this case, and remove this comment.
+
+> +	/* clone packets and update destination mac */
+> +	list_for_each_entry_rcu(sta, &local->sta_list, list) {
+> +		if (sdata != sta->sdata)
+> +			continue;
+> +		if (unlikely(!ether_addr_equal(eth->h_source, sta-
+> >sta.addr)))
+> +			/* do not send back to source */
+> +			continue;
+> +		if (!prev) {
+> +			prev = sta;
+> +			continue;
+> +		}
+> +		cloned_skb = skb_clone(skb, GFP_ATOMIC);
+> +		if (unlikely(ieee80211_change_da(cloned_skb, prev)))
+> {
+> +			dev_kfree_skb(cloned_skb);
+> +			continue;
+> +		}
+> +		__ieee80211_subif_start_xmit(cloned_skb, cloned_skb-
+> >dev, 0);
+
+I don't like the recursion here.
+
+I think we can call this from ieee80211_subif_start_xmit(), and then do
+something like
+
+if (unlikely(multicast)) {
+	struct skb_queue queue;
+
+	__skb_queue_head_init(&queue);
+	convert_frames(
+	while ((skb = __skb_dequeue(&queue))
+		__ieee80211_subif_start_xmit(...);
+} else {
+	__ieee80211_subif_start_xmit(...);
+}
+
+Yes, that's a little less efficient (RCU stuff, although that could
+even move in theory), but it avoids the recursion which imho is better.
+
+johannes
