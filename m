@@ -1,60 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35041 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbcJNPzF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 11:55:05 -0400
-Received: by mail-lf0-f67.google.com with SMTP id x79so18605175lff.2
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 08:54:30 -0700 (PDT)
-Subject: Re: [RFC 0/5] ath6kl: non WMI data service support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1476376769-4708-1-git-send-email-erik.stromdahl@gmail.com>
- <87k2dbbczu.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <ce941451-4d1c-4931-0f26-da52f5334f08@gmail.com> (sfid-20161014_175510_345990_517C6350)
-Date: Fri, 14 Oct 2016 17:54:27 +0200
-MIME-Version: 1.0
-In-Reply-To: <87k2dbbczu.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:40224 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S943246AbcJ0PGz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 11:06:55 -0400
+Message-ID: <1477580802.4534.20.camel@sipsolutions.net> (sfid-20161027_170750_528551_81C36B68)
+Subject: Re: [NOT FOR MERGE] ath9k: work around key cache corruption
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Antonio Quartulli <a@unstable.cc>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+        sw@simonwunderlich.de, Antonio Quartulli <antonio@open-mesh.com>
+Date: Thu, 27 Oct 2016 17:06:42 +0200
+In-Reply-To: <62a2dc74-4a7c-d3d4-4170-4d5759b07ab3@dd-wrt.com> (sfid-20161027_165606_267532_E06CA534)
+References: <20161018083552.28592-1-a@unstable.cc>
+         <87lgxbxl2d.fsf@purkki.adurom.net> <20161026141016.GB26376@prodigo.lan>
+         <87bmy65nz8.fsf@kamboji.qca.qualcomm.com>
+         <62a2dc74-4a7c-d3d4-4170-4d5759b07ab3@dd-wrt.com>
+         (sfid-20161027_165606_267532_E06CA534)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2016-10-27 at 09:54 +0200, Sebastian Gottschall wrote:
+> all patches have a unclear license since most patches are not comming
+> with any licence declaration ;-)
 
+You should read the DCO some time. Maybe you shouldn't be sending
+patches if you think so.
 
-On 10/14/2016 09:34 AM, Valo, Kalle wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
-> 
->> This patch series is intended to prepare the ath6kl driver
->> for newer chipsets that doesn't use the current WMI data
->> endpoints for data traffic.
->>
->> The chipset I have been working with (and used for testing)
->> is QCA6584. It is SDIO based (at least the variant I have
->> been using) with 802.11p WAVE DSRC capabilities.
->>
->> This chipset is different from the AR600X family in that
->> it does not use the WMI data services (service id's 0x101
->> to 0x104 ) for data traffic.
->> Instead it uses the HTT data service for data and wmi unified
->> for control messages.
->> It is also different when it comes to mailbox addresses
->> and HTC header format as well, but these differences are not
->> part of this patch series.
-> 
-> Do you have more patches implemented, like something already working or
-> have just started?
-> 
-
-I have an implementation with all features I need so far, but the other
-patches will require cleanup before I can submit anything.
-
-I have been using the qcacld driver as a basis for the work and some of
-the stuff in that driver is not really compliant with the kernel coding
-style (to say the least).
-
-I have so far mainly been focused on getting all features up and running
-and that has (unfortunately) resulted in some copy-pasting from qcacld.
-
-I will start having a look at ath10k and see how much work it would be
-to add sdio support to it...
+johannes
