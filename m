@@ -1,104 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:35844 "EHLO
-        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751865AbcJMNrx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:47:53 -0400
-Date: Thu, 13 Oct 2016 22:42:52 +0900
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-To: Andy Lutomirski <luto@amacapital.net>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-Message-ID: <20161013134252.GA583@swordfish> (sfid-20161013_154821_071374_CA85E09B)
-References: <20161010150358.GA514@swordfish>
- <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net>
- <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net>
- <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1476338524.4904.1.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42548 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934208AbcJ0Smy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 14:42:54 -0400
+Message-ID: <1477593768.4534.26.camel@sipsolutions.net> (sfid-20161027_204257_996379_95A611F4)
+Subject: Re: [PATCH][RFC] nl80211/mac80211: Rounded RSSI reporting
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        "Zaborowski, Andrew" <andrew.zaborowski@intel.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 27 Oct 2016 20:42:48 +0200
+In-Reply-To: <581243A0.3070907@gmail.com> (sfid-20161027_201251_959616_3727A6AF)
+References: <1477010947-6207-1-git-send-email-andrew.zaborowski@intel.com>
+         <1477038639.4068.28.camel@sipsolutions.net>
+         <F1E72F916E15444E976109681700BEE23F6AF7D9@IRSMSX102.ger.corp.intel.com>
+         <1477487137.4059.43.camel@sipsolutions.net> <581243A0.3070907@gmail.com>
+         (sfid-20161027_201251_959616_3727A6AF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On (10/13/16 08:02), Johannes Berg wrote:
-> On Wed, 2016-10-12 at 22:39 -0700, Andy Lutomirski wrote:
-> 
-> > In a pinch, I have these patches sitting around:
-> > 
-> > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=0a39cfa6fbb5d5635c85253cc7d6b44b54822afd
-> > https://git.kernel.org/cgit/linux/kernel/git/luto/linux.git/commit/?h=x86/vmap_stack&id=bf8cfa200b5a01383ea39fc8ce2f32909767baa8
-> 
-> That truly sounds like something we'd rather avoid in the TX/RX paths
-> though, which should perform well.
 
-didn't fix.
+> Pardon a dumb question, but can filtering be turned off?  I doubt
+> anyone would want to, but just wondering.
 
-so I finally had some time to do a better bug-reporter job.
+Generally I assume that a typical device/firmware will be able to turn
+it off (I know ours can), but we don't think we even provide a knob for
+it for anyone to request it, so you'd have to modify the driver.
 
-I added a bunch of printk-s and several virt_addr_valid()-s
-to ieee80211_aes_ccm_encrypt().
+> Is there anything you have in mind?  Our goal is to minimize 
+> hardware-kernel-userspace wakeups.  With the nl80211 API as it is
+> today, it doesn't seem feasible to do anything besides
+> polling.  Whatever we come up with will surely be better than that.
 
-and right befoe the Oops I see the following report from
-virt_addr_valid()
+I was thinking of just providing two thresholds, since you should be
+able to emulate more of them with that, without much cost.
 
+> So you're thinking of having high and low threshold.  So we'd get an 
+> event when we're higher than the high threshold and lower than the
+> low threshold, right?  
 
- FAIL: 00004100002cba02 > ffffc900802cba02 || 1 -> (00004100002cba02 >> 39) == 130
+I'm mostly handwaving, but yes.
 
+> Then we'd need to bootstrap our current rssi somehow, or do we get
+> another event?  I'm guessing we're going to have some race condition
+> issues?
 
-which is basically failed '!phys_addr_valid(x)' in __virt_addr_valid()
+Generally, with CQM, when you initially program it you get an event
+telling you where you're at right now - so hopefully you'd get "middle"
+(rather than "low"/"high") with the actual signal falling squarely into
+your range, and from there on you're pretty much good to go.
 
-		/* carry flag will be set if starting x was >= PAGE_OFFSET */
-		if ((x > y) || !phys_addr_valid(x))
-			return false;
+> Would using an n-threshold API be possible?  That way user space can 
+> program in whatever threholds once, and then the kernel would figure
+> out how to support that given the relevant hardware capabilities.
 
-backtrace
+That seems like a reasonable idea. We'd want to have code in cfg80211
+that does the emulation as we discussed above, so that from a userspace
+POV an "arbitrary" number of thresholds is supported (if the capability
+is supported at all, which would depend on the device doing >=2
+thresholds).
 
- ------------[ cut here ]------------
- WARNING: CPU: 7 PID: 246 at arch/x86/mm/physaddr.c:68 __virt_addr_valid+0xab/0xed
-  ffffc900002cb6f0 ffffffff8122168c 0000000000000000 0000000000000000
-  ffffc900002cb730 ffffffff810428d8 0000004400000198 ffff88041bd21022
-  ffffc900002cba02 1ffff920000596ed ffff88041932d1e0 ffffc900002cba00
- Call Trace:
-  [<ffffffff8122168c>] dump_stack+0x4f/0x65
-  [<ffffffff810428d8>] __warn+0xc2/0xdd
-  [<ffffffff81042963>] warn_slowpath_null+0x1d/0x1f
-  [<ffffffff8103c226>] __virt_addr_valid+0xab/0xed
-  [<ffffffff8146d31a>] ieee80211_aes_ccm_decrypt+0x8f/0x2da
-  [<ffffffff812372de>] ? debug_smp_processor_id+0x17/0x19
-  [<ffffffff810fb7e1>] ? __put_page+0x3c/0x3f
-  [<ffffffff8145b879>] ? ccmp_special_blocks.isra.1+0x51/0x12d
-  [<ffffffff8145c445>] ieee80211_crypto_ccmp_decrypt+0x204/0x298
-  [<ffffffff81476dd1>] ieee80211_rx_handlers+0x7df/0x1c1d
-  [<ffffffff814791c1>] ieee80211_prepare_and_rx_handle+0xdc2/0xe79
-  [<ffffffff814793cc>] ? ieee80211_rx_napi+0x154/0x7a5
-  [<ffffffff814796ec>] ieee80211_rx_napi+0x474/0x7a5
-  [<ffffffffa01fce3b>] iwl_mvm_rx_rx_mpdu+0x6e6/0x751 [iwlmvm]
-  [<ffffffffa01f6c49>] iwl_mvm_rx+0x7e/0x98 [iwlmvm]
-  [<ffffffffa01c0bca>] iwl_pcie_rx_handle+0x523/0x698 [iwlwifi]
-  [<ffffffffa01c2015>] iwl_pcie_irq_handler+0x45d/0x64d [iwlwifi]
-  [<ffffffff81089411>] ? irq_finalize_oneshot+0xd4/0xd4
-  [<ffffffff8108942e>] irq_thread_fn+0x1d/0x34
-  [<ffffffff810896a2>] irq_thread+0xe6/0x1bb
-  [<ffffffff81089527>] ? wake_threads_waitq+0x2c/0x2c
-  [<ffffffff810895bc>] ? irq_thread_dtor+0x95/0x95
-  [<ffffffff8105d7a3>] kthread+0xfc/0x104
-  [<ffffffff8107d3ad>] ? put_lock_stats.isra.9+0xe/0x20
-  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
-  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
-  [<ffffffff8105d6a7>] ? kthread_create_on_node+0x3f/0x3f
-  [<ffffffff814b2952>] ret_from_fork+0x22/0x30
-
-	-ss
+johannes
