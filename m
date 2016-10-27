@@ -1,110 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53548 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24738 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752492AbcJJO5Q (ORCPT
+        with ESMTP id S1754835AbcJ0Nv6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 10:57:16 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Marty Faltesek <mfaltesek@google.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: cache calibration data when the core is
- stopped
-Date: Mon, 10 Oct 2016 14:54:08 +0000
-Message-ID: <8760p0jlv4.fsf@kamboji.qca.qualcomm.com> (sfid-20161010_165720_417861_512FCA1B)
-References: <1475699037-136212-1-git-send-email-mfaltesek@google.com>
-In-Reply-To: <1475699037-136212-1-git-send-email-mfaltesek@google.com> (Marty
-        Faltesek's message of "Wed, 5 Oct 2016 16:23:57 -0400")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 27 Oct 2016 09:51:58 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        vamsi krishna <vamsin@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2] cfg80211: Add support to update connection parameters
+Date: Thu, 27 Oct 2016 16:51:11 +0300
+Message-ID: <1477576271-12696-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161027_155257_018792_C5D0DCDE)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
+From: vamsi krishna <vamsin@qti.qualcomm.com>
 
-> Caching calibration data allows it to be accessed when the
-> device is not active.
->
-> ---
+Add functionality to update the connection parameters when in connected
+state, so that driver/firmware uses the updated parameters for
+subsequent roaming. This is for drivers that support internal BSS
+selection and roaming. The new command does not change the current
+association state, i.e., it can be used to update IE contents for future
+(re)associations without causing an immediate disassociation or
+reassociation with the current BSS.
 
-Signed-off-by missing. Can you send it as a reply to this message and
-I'll add it to v3?
+This commit implements the required functionality for updating IEs for
+(Re)Association Request frame only. Other parameters can be added in
+future when required.
 
->  drivers/net/wireless/ath/ath10k/core.h  |  1 +
->  drivers/net/wireless/ath/ath10k/debug.c | 72 ++++++++++++++-------------=
-------
->  2 files changed, 31 insertions(+), 42 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireles=
-s/ath/ath10k/core.h
-> index 6e5aa2d..7274ebe 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -452,6 +452,7 @@ struct ath10k_debug {
->  	u32 nf_cal_period;
-> =20
->  	struct ath10k_fw_crash_data *fw_crash_data;
-> +	void *cal_data;
+Signed-off-by: vamsi krishna <vamsin@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/net/cfg80211.h       | 24 ++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h |  7 +++++++
+ net/wireless/nl80211.c       | 39 +++++++++++++++++++++++++++++++++++++++
+ net/wireless/rdev-ops.h      | 12 ++++++++++++
+ net/wireless/trace.h         | 18 ++++++++++++++++++
+ 5 files changed, 100 insertions(+)
 
-To properly document locking I'll move this under the "protected by
-conf_mutex" comment.
+v2:
+- Address the comments from Arend and Johannes:
+  * replace _valid struct with u32 changed
+  * fix couple of typos in the comments
+  * remove unnecessary wrapper function from sme.c
+  * use C99 initializer to clear struct data
+  * use wdev_lock/unlock() around the current_bss check and driver call
+- fix EOPNOTSUPP logic in nl80211_update_connect_params()
 
-> -static int ath10k_debug_cal_data_open(struct inode *inode, struct file *=
-file)
-> +static int ath10k_debug_cal_data_fetch(struct ath10k *ar)
->  {
-> -	struct ath10k *ar =3D inode->i_private;
-> -	void *buf;
->  	u32 hi_addr;
->  	__le32 addr;
->  	int ret;
-> =20
-> -	mutex_lock(&ar->conf_mutex);
-
-I'll add lockdep_assert_held() here.
-
->  static ssize_t ath10k_debug_cal_data_read(struct file *file,
-> -					  char __user *user_buf,
-> -					  size_t count, loff_t *ppos)
-> +                                          char __user *user_buf,
-> +                                          size_t count, loff_t *ppos)
->  {
->  	struct ath10k *ar =3D file->private_data;
-> -	void *buf =3D file->private_data;
-> =20
->  	return simple_read_from_buffer(user_buf, count, ppos,
-> -				       buf, ar->hw_params.cal_data_len);
-> -}
-
-I'll add locking to this function.
-
-> @@ -2343,7 +2327,9 @@ int ath10k_debug_create(struct ath10k *ar)
->  	ar->debug.fw_crash_data =3D vzalloc(sizeof(*ar->debug.fw_crash_data));
->  	if (!ar->debug.fw_crash_data)
->  		return -ENOMEM;
-> -
-> +	ar->debug.cal_data =3D vzalloc(ar->hw_params.cal_data_len);
-> +	if (!ar->debug.cal_data)
-> +		return -ENOMEM;
->  	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
->  	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
->  	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
-> @@ -2355,7 +2341,9 @@ int ath10k_debug_create(struct ath10k *ar)
->  void ath10k_debug_destroy(struct ath10k *ar)
->  {
->  	vfree(ar->debug.fw_crash_data);
-> +	vfree(ar->debug.cal_data);
->  	ar->debug.fw_crash_data =3D NULL;
-> +	ar->debug.cal_data =3D NULL;
-
-Actually I gave you a bad advice, this won't work as
-ar->hw_params.cal_data_len is not yet initialised, we initialise it only
-after we have probed the capabilities during the first firmware boot. I
-changed the allocation to a fixed length buffer for now, it's only few
-kBs virtual memory anyway so it shouldn't matter to anyone.
-
-I have now v3 ready and tested. I'll just need your Signed-off-by and I
-can then submit it.
-
---=20
-Kalle Valo=
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 41ae3f5..c575583 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2051,6 +2051,18 @@ struct cfg80211_connect_params {
+ };
+ 
+ /**
++ * enum cfg80211_connect_params_changed - Connection parameters being updated
++ *
++ * This enum provides information of all connect parameters that
++ * have to be updated as part of update_connect_params() call.
++ *
++ * @UPDATE_ASSOC_IES: Indicates whether association request IEs are updated
++ */
++enum cfg80211_connect_params_changed {
++	UPDATE_ASSOC_IES		= BIT(0),
++};
++
++/**
+  * enum wiphy_params_flags - set_wiphy_params bitfield values
+  * @WIPHY_PARAM_RETRY_SHORT: wiphy->retry_short has changed
+  * @WIPHY_PARAM_RETRY_LONG: wiphy->retry_long has changed
+@@ -2571,6 +2583,14 @@ struct cfg80211_nan_func {
+  *	cases, the result of roaming is indicated with a call to
+  *	cfg80211_roamed() or cfg80211_roamed_bss().
+  *	(invoked with the wireless_dev mutex held)
++ * @update_connect_params: Update the connect parameters while connected to a
++ *	BSS. The updated parameters can be used by driver/firmware for
++ *	subsequent BSS selection (roaming) decisions and to form the
++ *	Authentication/(Re)Association Request frames. This call does not
++ *	request an immediate disassociation or reassociation with the current
++ *	BSS, i.e., this impacts only subsequent (re)associations. The bits in
++ *	changed are defined in &enum cfg80211_connect_params_changed.
++ *	(invoked with the wireless_dev mutex held)
+  * @disconnect: Disconnect from the BSS/ESS or stop connection attempts if
+  *      connection is in progress. Once done, call cfg80211_disconnected() in
+  *      case connection was already established (invoked with the
+@@ -2858,6 +2878,10 @@ struct cfg80211_ops {
+ 
+ 	int	(*connect)(struct wiphy *wiphy, struct net_device *dev,
+ 			   struct cfg80211_connect_params *sme);
++	int	(*update_connect_params)(struct wiphy *wiphy,
++					 struct net_device *dev,
++					 struct cfg80211_connect_params *sme,
++					 u32 changed);
+ 	int	(*disconnect)(struct wiphy *wiphy, struct net_device *dev,
+ 			      u16 reason_code);
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e21d23d..67b464f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -888,6 +888,11 @@
+  *	This will contain a %NL80211_ATTR_NAN_MATCH nested attribute and
+  *	%NL80211_ATTR_COOKIE.
+  *
++ * @NL80211_CMD_UPDATE_CONNECT_PARAMS: Update one or more connect parameters
++ *	for subsequent roaming cases if the driver or firmware uses internal
++ *	BSS selection. This command can be issued only while connected and it
++ *	does not result in a change for the current association.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1085,6 +1090,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_MULTICAST_TO_UNICAST,
+ 
++	NL80211_CMD_UPDATE_CONNECT_PARAMS,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46b2e8c..26821d4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8778,6 +8778,37 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	return err;
+ }
+ 
++static int nl80211_update_connect_params(struct sk_buff *skb,
++					 struct genl_info *info)
++{
++	struct cfg80211_connect_params connect = {};
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	u32 changed = 0;
++	int ret;
++
++	if (!rdev->ops->update_connect_params)
++		return -EOPNOTSUPP;
++
++	if (info->attrs[NL80211_ATTR_IE]) {
++		if (!is_valid_ie_attr(info->attrs[NL80211_ATTR_IE]))
++			return -EINVAL;
++		connect.ie = nla_data(info->attrs[NL80211_ATTR_IE]);
++		connect.ie_len = nla_len(info->attrs[NL80211_ATTR_IE]);
++		changed |= UPDATE_ASSOC_IES;
++	}
++
++	wdev_lock(dev->ieee80211_ptr);
++	if (!wdev->current_bss)
++		ret = -ENOLINK;
++	else
++		ret = rdev_update_connect_params(rdev, dev, &connect, changed);
++	wdev_unlock(dev->ieee80211_ptr);
++
++	return ret;
++}
++
+ static int nl80211_disconnect(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -12231,6 +12262,14 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_UPDATE_CONNECT_PARAMS,
++		.doit = nl80211_update_connect_params,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_DISCONNECT,
+ 		.doit = nl80211_disconnect,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index e9ecf23..2f42507 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -490,6 +490,18 @@ static inline int rdev_connect(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+ 
++static inline int
++rdev_update_connect_params(struct cfg80211_registered_device *rdev,
++			   struct net_device *dev,
++			   struct cfg80211_connect_params *sme, u32 changed)
++{
++	int ret;
++	trace_rdev_update_connect_params(&rdev->wiphy, dev, sme, changed);
++	ret = rdev->ops->update_connect_params(&rdev->wiphy, dev, sme, changed);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
+ static inline int rdev_disconnect(struct cfg80211_registered_device *rdev,
+ 				  struct net_device *dev, u16 reason_code)
+ {
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 25f8318..ea1b47e 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1281,6 +1281,24 @@
+ 		  __entry->wpa_versions, __entry->flags, MAC_PR_ARG(prev_bssid))
+ );
+ 
++TRACE_EVENT(rdev_update_connect_params,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
++		 struct cfg80211_connect_params *sme, u32 changed),
++	TP_ARGS(wiphy, netdev, sme, changed),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(u32, changed)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->changed = changed;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", parameters changed: %u",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG,  __entry->changed)
++);
++
+ TRACE_EVENT(rdev_set_cqm_rssi_config,
+ 	TP_PROTO(struct wiphy *wiphy,
+ 		 struct net_device *netdev, s32 rssi_thold,
+-- 
+1.9.1
