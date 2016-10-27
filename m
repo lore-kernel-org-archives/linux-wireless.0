@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49034 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750926AbcJMHOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 03:14:17 -0400
-Message-ID: <1476341781.4904.4.camel@sipsolutions.net> (sfid-20161013_091420_929256_1922F7B4)
-Subject: Re: [PATCHv4] mac80211: fix A-MSDU outer SA/DA
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Felix Fietkau <nbd@openwrt.org>
-Date: Thu, 13 Oct 2016 08:56:21 +0200
-In-Reply-To: <1476337315-26845-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161013_074406_501207_29437AE6)
-References: <1476337315-26845-1-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20161013_074406_501207_29437AE6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:35492 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936537AbcJ0Pcu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 11:32:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2016-10-25-2
+References: <1477469629.27792.8.camel@coelho.fi>
+Date: Thu, 27 Oct 2016 18:32:46 +0300
+In-Reply-To: <1477469629.27792.8.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 26 Oct 2016 11:13:49 +0300")
+Message-ID: <8760od4xk1.fsf@kamboji.qca.qualcomm.com> (sfid-20161027_173256_276782_5AC8975A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Luca Coelho <luca@coelho.fi> writes:
 
-I think this looks good now. I'd prefer, however, doing the reorg that
-gets rid of the memcpy() separately, that's now more or less orthogonal
-to the changes you're making. I suspect it's due to you having just
-edited the original, rather than starting from scratch, but I think it
-makes sense to split it.
+> Hi Kalle,
+>
+> Here's an updated pull-request, replacing 2016-10-25, with one commit
+> message reworded, as you requested.
+>
+> I sent v2 of that patch to the linux-wireless mailing list.
+>
+> Let me know if everything's fine (or not). :)
+>
+> Luca.
+>
+>
+> The following changes since commit 15b95a15950238eff4d7f24be1716086eea67835:
+>
+>   Merge ath-next from git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git (2016-09-28 16:37:33 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-10-25-2
 
-> +	memcpy(amsdu_hdr->h_source, h_80211_src, ETH_ALEN);
-> +	memcpy(amsdu_hdr->h_dest, h_80211_dst, ETH_ALEN);
+Pulled, thanks.
 
-ether_addr_copy()? Alignment should be OK here.
-
-johannes
+-- 
+Kalle Valo
