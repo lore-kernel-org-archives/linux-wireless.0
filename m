@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:34136 "EHLO
-        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751033AbcJNIsU (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47414 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933572AbcJ0JNe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:48:20 -0400
-Received: by mail-io0-f181.google.com with SMTP id r30so114110142ioi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 01:47:21 -0700 (PDT)
+        Thu, 27 Oct 2016 05:13:34 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2 3/5] mwifiex: do not free firmware dump memory in shutdown_drv
+Date: Thu, 27 Oct 2016 14:42:41 +0530
+Message-ID: <1477559563-18328-3-git-send-email-akarwar@marvell.com> (sfid-20161027_111339_850349_15FB2679)
+In-Reply-To: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <1476434561.31114.7.camel@sipsolutions.net>
-References: <20161010150358.GA514@swordfish> <20161010153050.GA836@swordfish>
- <1476263106.5271.23.camel@sipsolutions.net> <20161012141245.GA436@swordfish>
- <1476282127.5271.30.camel@sipsolutions.net> <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
- <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
- <1476366354.4904.31.camel@sipsolutions.net> <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
- <1476429916.4382.12.camel@sipsolutions.net> <1476433699.31114.6.camel@sipsolutions.net>
- <CAKv+Gu8hTy8U7FcA58P1YWt2rHU09xP9v1UU0KcnD4uuaK8How@mail.gmail.com>
- <CAKv+Gu_v+4D_7EvRkrSrStheuP1L-oPh=o7Ub+NU7-wgLYks4w@mail.gmail.com> <1476434561.31114.7.camel@sipsolutions.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 14 Oct 2016 09:47:20 +0100
-Message-ID: <CAKv+Gu896xme5sd5i8hs7tA=Xt=qQKCiAx7fQg1ZECn50NttbQ@mail.gmail.com> (sfid-20161014_104924_658745_BEAD16E5)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 October 2016 at 09:42, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-10-14 at 09:41 +0100, Ard Biesheuvel wrote:
->
->> > I assume the stack buffer itself is not the problem here, but aad,
->> > which is allocated on the stack one frame up.
->> > Do we really need to revert the whole patch to fix that?
->>
->> Ah never mind, this is about 'odata'. Apologies, should have read
->> first
->
-> Right, odata also goes into an sg list and further on.
->
-> I think we should wait for Herbert to chime in before we do any further
-> work though, perhaps he has any better ideas.
->
+From: Xinming Hu <huxm@marvell.com>
 
-Do you have a reference for the sg_set_buf() call on odata?
-crypto/ccm.c does not seem to have it (afaict), and the same problem
-does not exist in the accelerated arm64 implementation. In the mean
-time, I will try and see if we can move aad[] off the stack in the WPA
-code.
+mwifiex_upload_device_dump() already takes care of freeing firmware dump
+memory. Doing the same thing in mwifiex_shutdown_drv() is redundant.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: Same as v1. 
+drv_info_dump and drv_info_size need not be in adapter structure. Saparate
+patch is created for this (Dmitry Torokhov)
+---
+ drivers/net/wireless/marvell/mwifiex/init.c | 19 -------------------
+ 1 file changed, 19 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 8e5e424..365efb8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -407,8 +407,6 @@ static void mwifiex_free_lock_list(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ {
+-	int idx;
+-
+ 	if (!adapter) {
+ 		pr_err("%s: adapter is NULL\n", __func__);
+ 		return;
+@@ -426,23 +424,6 @@ mwifiex_adapter_cleanup(struct mwifiex_adapter *adapter)
+ 	mwifiex_dbg(adapter, INFO, "info: free cmd buffer\n");
+ 	mwifiex_free_cmd_buffer(adapter);
+ 
+-	for (idx = 0; idx < adapter->num_mem_types; idx++) {
+-		struct memory_type_mapping *entry =
+-				&adapter->mem_type_mapping_tbl[idx];
+-
+-		if (entry->mem_ptr) {
+-			vfree(entry->mem_ptr);
+-			entry->mem_ptr = NULL;
+-		}
+-		entry->mem_size = 0;
+-	}
+-
+-	if (adapter->drv_info_dump) {
+-		vfree(adapter->drv_info_dump);
+-		adapter->drv_info_dump = NULL;
+-		adapter->drv_info_size = 0;
+-	}
+-
+ 	if (adapter->sleep_cfm)
+ 		dev_kfree_skb_any(adapter->sleep_cfm);
+ }
+-- 
+1.9.1
