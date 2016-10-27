@@ -1,33 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57006 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751816AbcJVUbo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 22 Oct 2016 16:31:44 -0400
-Message-ID: <1477168300.4123.8.camel@sipsolutions.net> (sfid-20161022_223147_083849_68A9A863)
-Subject: Re: crypto: aesni - add ccm(aes) algorithm implementation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-        Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org, Yauhen Kharuzhy <jekhor@gmail.com>
-Date: Sat, 22 Oct 2016 22:31:40 +0200
-In-Reply-To: <4298972.T1UOBYP9Tx@debian64> (sfid-20161022_211600_609367_51AA87DC)
-References: <1476895046-16549-1-git-send-email-greearb@candelatech.com>
-         <3e0552f3-b7f5-2ff3-1f63-9001bceb96f0@candelatech.com>
-         <4298972.T1UOBYP9Tx@debian64> (sfid-20161022_211600_609367_51AA87DC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:34204 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932768AbcJ0P2T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 11:28:19 -0400
+Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id C97516134F
+        for <linux-wireless@vger.kernel.org>; Thu, 27 Oct 2016 15:28:17 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-drivers-next open for 4.10
+Date: Thu, 27 Oct 2016 18:28:14 +0300
+Message-ID: <87a8dp4xrl.fsf@kamboji.qca.qualcomm.com> (sfid-20161027_172824_710925_BF0C7900)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-10-22 at 21:15 +0200, Christian Lamparter wrote:
-> 
-> It would be a great if mac80211 would do to the encryption and
-> decryption asynchronously. As this would work for other ciphers
-> and also allows crypto offload to dedicated crypto hardware.
+Delayed due to my trip last week but wireless-drivers-next is now open
+for new features going to 4.10.
 
-The only problem with that is that we'd essentially need a software
-queue for *all* frames, and release them from there in RX order after
-decrypt. That's surely doable, but so far nobody has thought it
-important enough since mostly HW crypto is used ...
+wireless-drivers remains open for important fixes for 4.9.
 
-johannes
+-- 
+Kalle Valo
