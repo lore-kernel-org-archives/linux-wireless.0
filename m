@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57485 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39530 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751297AbcJNI2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 04:28:32 -0400
-Message-ID: <1476433699.31114.6.camel@sipsolutions.net> (sfid-20161014_102859_339491_75284213)
-Subject: Re: [mac80211] BUG_ON with current -git (4.8.0-11417-g24532f7)
+        id S941614AbcJ0NyX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 09:54:23 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Jouni Malinen <j@w1.fi>
-Date: Fri, 14 Oct 2016 10:28:19 +0200
-In-Reply-To: <1476429916.4382.12.camel@sipsolutions.net> (sfid-20161014_092541_208009_922C51BD)
-References: <20161010150358.GA514@swordfish>
-         <20161010153050.GA836@swordfish>
-         <1476263106.5271.23.camel@sipsolutions.net>
-         <20161012141245.GA436@swordfish>
-         <1476282127.5271.30.camel@sipsolutions.net>
-         <CALCETrXg9-OpJx5Rqz8afyaug+0DjzxvpdbOV9q6i01=zCZbcQ@mail.gmail.com>
-         <1476338524.4904.1.camel@sipsolutions.net> <20161013134252.GA583@swordfish>
-         <1476366354.4904.31.camel@sipsolutions.net>
-         <CALCETrW8imkGTtR9-mFB=e=Gdr1QXVuhXN3GRs2B6wbmPaaGhA@mail.gmail.com>
-         (sfid-20161013_235018_225755_5BCF27D2) <1476429916.4382.12.camel@sipsolutions.net>
-         (sfid-20161014_092541_208009_922C51BD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-10-27
+Date: Thu, 27 Oct 2016 10:05:49 +0200
+Message-Id: <20161027080550.31309-1-johannes@sipsolutions.net> (sfid-20161027_161914_679458_6D404EA1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
 
->    1. revert that patch (doing so would need some major adjustments now,
->       since it's pretty old and a number of new things were added in the
->       meantime)
+Before I go off for LPC and the workshop and everything, I have
+two fixes. Neither is very important, but I figured I'd get them
+out since I won't have any others soon.
 
-This it will have to be, I guess.
+Let me know if there's any problem.
 
->    2. allocate a per-CPU buffer for all the things that we put on the
->       stack and use in SG lists, those are:
->        * CCM/GCM: AAD (32B), B_0/J_0 (16B)
->        * GMAC: AAD (20B), zero (16B)
->        * (not sure why CMAC isn't using this API, but it would be like GMAC)
-
-This doesn't work - I tried to move the mac80211 buffers, but because
-we also put the struct aead_request on the stack, and crypto_ccm has
-the "odata" in there, and we can't separate the odata from that struct,
-we'd have to also put that into a per-CPU buffer, but it's very big -
-456 bytes for CCM, didn't measure the others but I'd expect them to be
-larger, if different.
-
-I don't think we can allocate half a kb for each CPU just to be able to
-possibly use the acceleration here. We can't even make that conditional
-on not having hardware crypto in the wifi NIC because drivers are
-always allowed to pass undecrypted frames, regardless of whether or not
-HW crypto was attempted, so we don't know upfront if we'll have to
-decrypt anything in software...
-
-Given that, I think we have had a bug in here basically since Ard's
-patch, we never should've put these structs on the stack. Herbert, you
-also touched this later and converted the API usage, did you see the
-way the stack is used here and think it should be OK, or did you simply
-not realize that?
-
-Ard, are you able to help out working on a revert of your patch? That
-would require also reverting a number of other patches (various fixes,
-API adjustments, etc. to the AEAD usage), but the more complicated part
-is that in the meantime Jouni introduced GCMP and CCMP-256, both of
-which we of course need to retain.
-
+Thanks,
 johannes
+
+
+
+The following changes since commit b4f0fd4baa90ecce798e0d26d1cce8f4457f2028:
+
+  qed: Use list_move_tail instead of list_del/list_add_tail (2016-10-18 16:40:41 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-10-27
+
+for you to fetch changes up to b4f7f4ad425a84fd5d40da21aff8681997b25ff9:
+
+  mac80211: fix some sphinx warnings (2016-10-26 08:01:07 +0200)
+
+----------------------------------------------------------------
+Just two fixes:
+ * a fix to process all events while suspending, so any
+   potential calls into the driver are done before it is
+   suspended
+ * small markup fixes for the sphinx documentation conversion
+   that's coming into the tree via the doc tree
+
+----------------------------------------------------------------
+Jani Nikula (1):
+      mac80211: fix some sphinx warnings
+
+Johannes Berg (1):
+      cfg80211: process events caused by suspend before suspending
+
+ include/net/mac80211.h | 21 +++++++++++++--------
+ net/wireless/sysfs.c   |  5 ++++-
+ 2 files changed, 17 insertions(+), 9 deletions(-)
