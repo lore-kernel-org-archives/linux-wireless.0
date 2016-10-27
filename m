@@ -1,160 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:34331 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933451AbcJUVVX (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47438 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755183AbcJ0JNz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 17:21:23 -0400
-Received: by mail-pf0-f175.google.com with SMTP id r16so63141812pfg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 21 Oct 2016 14:21:22 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org,
-        rajatja@google.com, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@google.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Rob Herring <robh@kernel.org>
-Cc: rajatxjain@gmail.com
-Subject: [PATCH v6] mwifiex: parse device tree node for PCIe
-Date: Fri, 21 Oct 2016 14:21:09 -0700
-Message-Id: <1477084869-15612-1-git-send-email-rajatja@google.com> (sfid-20161021_232127_249791_EA9AB54F)
-In-Reply-To: <1477070156-109965-1-git-send-email-rajatja@google.com>
-References: <1477070156-109965-1-git-send-email-rajatja@google.com>
+        Thu, 27 Oct 2016 05:13:55 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2 5/5] mwifiex: wait firmware dump complete during card remove process
+Date: Thu, 27 Oct 2016 14:42:43 +0530
+Message-ID: <1477559563-18328-5-git-send-email-akarwar@marvell.com> (sfid-20161027_111536_791543_0A2B3A61)
+In-Reply-To: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Xinming Hu <huxm@marvell.com>
 
-This patch derives device tree node from pcie bus layer framework, and
-fixes a minor memory leak in mwifiex_pcie_probe() (in failure path).
-Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-marvell-8xxx.txt) to accommodate PCIe changes.
+Wait for firmware dump complete in card remove function.
+For sdio interface, there are two diffenrent cases,
+card reset trigger sdio_work and firmware dump trigger sdio_work.
+Do code rearrangement for distinguish between these two cases.
 
 Signed-off-by: Xinming Hu <huxm@marvell.com>
 Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
 ---
-v2: Included vendor and product IDs in compatible strings for PCIe
-chipsets(Rob Herring)
-v3: Patch is created using -M option so that it will only include diff of
-original and renamed files(Rob Herring)
-Resend v3: Resending the patch because I missed to include device tree mailing
-while sending v3.
-v4: Fix error handling, also move-on even if no device tree node is present.
-v5: Update commit log to include memory leak, return -EINVAL instead of -1.
-v6: Remove an unnecessary error print, fix typo in commit log
+v2: 1. Get rid of reset_triggered flag. Instead split the code and use
+    __mwifiex_sdio_remove() (Brian Norris/Dmitry Torokhov)
+    2. "v1 4/5 mwifiex: firmware dump code rearrangement.." is dropped. So
+    rebased accordingly.
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c |  6 +++++-
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++---
+ 2 files changed, 17 insertions(+), 4 deletions(-)
 
- .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++--
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 36 +++++++++++++++++++---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
- 3 files changed, 39 insertions(+), 8 deletions(-)
- rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-similarity index 91%
-rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index c421aba..dfe5f8e 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,8 +1,8 @@
--Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
- 
--This node provides properties for controlling the marvell sdio wireless device.
--The node is expected to be specified as a child node to the SDIO controller that
-+This node provides properties for controlling the marvell sdio/pcie wireless device.
-+The node is expected to be specified as a child node to the SDIO/PCIE controller that
- connects the device to the system.
- 
- Required properties:
-@@ -10,6 +10,8 @@ Required properties:
-   - compatible : should be one of the following:
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
-+	* "pci11ab,2b42"
-+	* "pci1b4b,2b42"
- 
- Optional properties:
- 
 diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3c3c4f1..f7c84d3 100644
+index 9025af7..6c421ad 100644
 --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
 +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,6 +37,22 @@ static struct mwifiex_if_ops pcie_ops;
+@@ -37,6 +37,9 @@ static struct mwifiex_if_ops pcie_ops;
  
  static struct semaphore add_remove_card_sem;
  
-+static const struct of_device_id mwifiex_pcie_of_match_table[] = {
-+	{ .compatible = "pci11ab,2b42" },
-+	{ .compatible = "pci1b4b,2b42" },
-+	{ }
-+};
-+
-+static int mwifiex_pcie_probe_of(struct device *dev)
-+{
-+	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-+		dev_err(dev, "required compatible string missing\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
++static void mwifiex_pcie_work(struct work_struct *work);
++static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
 +
  static int
  mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
  		       size_t size, int flags)
-@@ -178,6 +194,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent)
- {
- 	struct pcie_service_card *card;
-+	int ret;
+@@ -249,6 +252,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
  
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
- 		 pdev->vendor, pdev->device, pdev->revision);
-@@ -199,13 +216,24 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
--	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
--			     MWIFIEX_PCIE)) {
--		pr_err("%s failed\n", __func__);
--		return -1;
-+	/* device tree node parsing and platform specific configuration*/
-+	if (pdev->dev.of_node) {
-+		ret = mwifiex_pcie_probe_of(&pdev->dev);
-+		if (ret)
-+			goto err_free;
- 	}
- 
-+	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
-+			       MWIFIEX_PCIE);
-+	if (ret) {
-+		pr_err("%s failed\n", __func__);
-+		goto err_free;
-+	}
- 	return 0;
++	cancel_work_sync(&pcie_work);
 +
-+err_free:
-+	kfree(card);
-+	return ret;
+ 	if (user_rmmod && !adapter->mfg_mode) {
+ #ifdef CONFIG_PM_SLEEP
+ 		if (adapter->is_suspended)
+@@ -2716,7 +2721,6 @@ static void mwifiex_pcie_work(struct work_struct *work)
+ 		mwifiex_pcie_device_dump_work(save_adapter);
  }
  
+-static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
+ /* This function dumps FW information */
+ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
+ {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 241d2b3..5d84c563 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -46,6 +46,9 @@
+  */
+ static u8 user_rmmod;
+ 
++static void mwifiex_sdio_work(struct work_struct *work);
++static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
++
+ static struct mwifiex_if_ops sdio_ops;
+ static unsigned long iface_work_flags;
+ 
+@@ -275,7 +278,7 @@ static int mwifiex_sdio_resume(struct device *dev)
+  * This function removes the interface and frees up the card structure.
+  */
+ static void
+-mwifiex_sdio_remove(struct sdio_func *func)
++__mwifiex_sdio_remove(struct sdio_func *func)
+ {
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+@@ -305,6 +308,13 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
+ }
+ 
++static void
++mwifiex_sdio_remove(struct sdio_func *func)
++{
++	cancel_work_sync(&sdio_work);
++	__mwifiex_sdio_remove(func);
++}
++
  /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 2a162c3..c8dccf5 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2218,7 +2218,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
-+		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
-+		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
- 		    adapter->dev->of_node) {
- 			adapter->dt_node = adapter->dev->of_node;
- 			if (of_property_read_u32(adapter->dt_node,
+  * SDIO suspend.
+  *
+@@ -2290,7 +2300,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+ 	 * discovered and initializes them from scratch.
+ 	 */
+ 
+-	mwifiex_sdio_remove(func);
++	__mwifiex_sdio_remove(func);
+ 
+ 	/* power cycle the adapter */
+ 	sdio_claim_host(func);
+@@ -2623,7 +2633,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
+ 		mwifiex_sdio_card_reset_work(save_adapter);
+ }
+ 
+-static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+ /* This function resets the card */
+ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+ {
 -- 
-2.8.0.rc3.226.g39d4020
+1.9.1
