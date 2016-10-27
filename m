@@ -1,88 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48720 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:48958 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751494AbcJ3JUw (ORCPT
+        with ESMTP id S935162AbcJ0PGW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 05:20:52 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers-next 2016-10-30
-Date: Sun, 30 Oct 2016 11:20:46 +0200
-Message-ID: <87insaw5u9.fsf@kamboji.qca.qualcomm.com> (sfid-20161030_102110_281402_39AF51A3)
+        Thu, 27 Oct 2016 11:06:22 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [19/28] brcmfmac: avoid maybe-uninitialized warning in
+ brcmf_cfg80211_start_ap
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161017221355.1861551-7-arnd@arndb.de>
+References: <20161017221355.1861551-7-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
+Message-Id: <20161027150523.B600361656@smtp.codeaurora.org> (sfid-20161027_170751_111111_93B8E6CE)
+Date: Thu, 27 Oct 2016 15:05:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Arnd Bergmann <arnd@arndb.de> wrote:
+> A bugfix added a sanity check around the assignment and use of the
+> 'is_11d' variable, which looks correct to me, but as the function is
+> rather complex already, this confuses the compiler to the point where
+> it can no longer figure out if the variable is always initialized
+> correctly:
+> 
+> brcm80211/brcmfmac/cfg80211.c: In function ‘brcmf_cfg80211_start_ap’:
+> brcm80211/brcmfmac/cfg80211.c:4586:10: error: ‘is_11d’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> This adds an initialization for the newly introduced case in which
+> the variable should not really be used, in order to make the warning
+> go away.
+> 
+> Fixes: b3589dfe0212 ("brcmfmac: ignore 11d configuration errors")
+> Cc: Hante Meuleman <hante.meuleman@broadcom.com>
+> Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-few fixes for 4.9. I tagged this on the plane over a slow mosh
-connection while travelling to Plumbers so I might have done something
-wrong, please check more carefully than usually. For example I had to
-redo the signed tag because of some whitespace damage.
+Patch applied to wireless-drivers.git, thanks.
 
-Please let me know if there are any problems.
+d3532ea6ce4e brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
 
-Kalle
+-- 
+https://patchwork.kernel.org/patch/9380763/
 
-The following changes since commit 67f0160fe34ec5391a428603b9832c9f99d8f3a1:
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-  MAINTAINERS: Update qlogic networking drivers (2016-10-26 23:29:12 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-10-30
-
-for you to fetch changes up to d3532ea6ce4ea501e421d130555e59edc2945f99:
-
-  brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap (2016-10-27 18:04:54 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.9
-
-iwlwifi
-
-* some fixes for suspend/resume with unified FW images
-* a fix for a false-positive lockdep report
-* a fix for multi-queue that caused an unnecessary 1 second latency
-* a fix for an ACPI parsing bug that caused a misleading error message
-
-brcmfmac
-
-* fix a variable uninitialised warning in brcmf_cfg80211_start_ap()
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      brcmfmac: avoid maybe-uninitialized warning in brcmf_cfg80211_start_ap
-
-Haim Dreyfuss (1):
-      iwlwifi: mvm: comply with fw_restart mod param on suspend
-
-Johannes Berg (1):
-      iwlwifi: pcie: mark command queue lock with separate lockdep class
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2015-10-25' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Luca Coelho (4):
-      iwlwifi: mvm: use ssize_t for len in iwl_debugfs_mem_read()
-      iwlwifi: mvm: fix d3_test with unified D0/D3 images
-      iwlwifi: pcie: fix SPLC structure parsing
-      iwlwifi: mvm: fix netdetect starting/stopping for unified images
-
-Sara Sharon (1):
-      iwlwifi: mvm: wake the wait queue when the RX sync counter is zero
-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |    2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |   49 +++++++++---
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c   |    4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |    3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |    1 +
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |    1 +
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |    3 +-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |   33 ++++++--
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |   79 ++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       |    8 ++
- 10 files changed, 129 insertions(+), 54 deletions(-)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
