@@ -1,29 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:52256 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbcJ2Tyx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47322 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933120AbcJ0PCb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 29 Oct 2016 15:54:53 -0400
-Date: Sat, 29 Oct 2016 15:54:42 -0400 (EDT)
-Message-Id: <20161029.155442.1577682784605437726.davem@davemloft.net> (sfid-20161029_215528_103430_FB1B0566)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2016-10-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20161027080550.31309-1-johannes@sipsolutions.net>
-References: <20161027080550.31309-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Thu, 27 Oct 2016 11:02:31 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi 2016-10-25
+References: <1477388323.17122.27.camel@coelho.fi>
+Date: Thu, 27 Oct 2016 18:02:25 +0300
+In-Reply-To: <1477388323.17122.27.camel@coelho.fi> (Luca Coelho's message of
+        "Tue, 25 Oct 2016 12:38:43 +0300")
+Message-ID: <87eg314yym.fsf@kamboji.qca.qualcomm.com> (sfid-20161027_170315_537564_A5C7D885)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 27 Oct 2016 10:05:49 +0200
+Luca Coelho <luca@coelho.fi> writes:
 
-> Before I go off for LPC and the workshop and everything, I have
-> two fixes. Neither is very important, but I figured I'd get them
-> out since I won't have any others soon.
-> 
-> Let me know if there's any problem.
+> Hi Kalle,
+>
+> Here are 7 patches intended for 4.9. =C2=A0They fix some small issues, as
+> described in the tag itself.  I sent them out for review on 2016-10-19,=20
+> and pushed to a pending branch.  Kbuildbot didn't find any issues.
+>
+> Let me know if everything's fine (or not). :)
+>
+> Luca.
+>
+>
+> The following changes since commit 1ea2643961b0d1b8d0e4a11af5aa69b0f92d05=
+33:
+>
+>   ath6kl: add Dell OEM SDIO I/O for the Venue 8 Pro (2016-10-13 14:16:33 =
++0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git=
+ tags/iwlwifi-for-kalle-2016-10-25
 
 Pulled, thanks.
+
+--=20
+Kalle Valo
