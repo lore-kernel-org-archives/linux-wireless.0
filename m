@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:35792 "EHLO
-        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754399AbcJPU7o (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:48828 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965089AbcJ0OzH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 16 Oct 2016 16:59:44 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        robh+dt@kernel.org
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v8 0/3] add devicetree support to ath9k
-Date: Sun, 16 Oct 2016 22:59:04 +0200
-Message-Id: <20161016205907.19927-1-martin.blumenstingl@googlemail.com> (sfid-20161016_225956_878314_4051A316)
-In-Reply-To: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
-References: <20161002214743.2263-1-martin.blumenstingl@googlemail.com>
+        Thu, 27 Oct 2016 10:55:07 -0400
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Antonio Quartulli <a@unstable.cc>
+References: <20161018083552.28592-1-a@unstable.cc>
+ <87lgxbxl2d.fsf@purkki.adurom.net> <20161026141016.GB26376@prodigo.lan>
+ <87bmy65nz8.fsf@kamboji.qca.qualcomm.com>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+        sw@simonwunderlich.de, Antonio Quartulli <antonio@open-mesh.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <62a2dc74-4a7c-d3d4-4170-4d5759b07ab3@dd-wrt.com> (sfid-20161027_165606_267532_E06CA534)
+Date: Thu, 27 Oct 2016 09:54:10 +0200
+MIME-Version: 1.0
+In-Reply-To: <87bmy65nz8.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [NOT FOR MERGE] ath9k: work around key cache corruption
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series adds support for configuring ath9k based devices via
-devicetree. This was tested on PCI(e) based devices. This should work
-for AHB based devices as well (adding more AHB specific properties may
-still be needed) as soon as the ath79 platform is ready to populate the
-ath9k wmac via devicetree.
+all patches have a unclear license since most patches are not comming 
+with any licence declaration ;-)
 
-Changes since v7:
-- renamed node in the example (use wifi@... instead of ath9k@...), thanks
-  Rob Herring for the hint
-- added the QCA PCI vendor ID and a list of PCI IDs with the corresponding
-  chipsets. This documents all known PCI IDs, but some device IDs are used
-  by multiple chipsets the list of chipset(s) per device ID may be
-  incomplete. Also some chipsets seem to use multiple PCI device IDs, such
-  as AR9485 as documented here: https://wiki.debian.org/ath9k
+Am 27.10.2016 um 08:02 schrieb Kalle Valo:
+> Antonio Quartulli <a@unstable.cc> writes:
+>
+>> On Wed, Oct 26, 2016 at 05:05:14PM +0300, Kalle Valo wrote:
+>>> Antonio Quartulli <a@unstable.cc> writes:
+>>>
+>>>> From: Antonio Quartulli <antonio@open-mesh.com>
+>>>>
+>>>> This patch was crafted long time ago to work around a key cache
+>>>> corruption problem on ath9k chipsets.
+>>>>
+>>>> The workaround consists in periodically triggering a worker that
+>>>> uploads all the keys to the HW cache. The worker is triggered also
+>>>> when the vif detects 21 undecryptable packets.
+>>>>
+>>>>
+>>>> This patch is based on top compat-wireless-2015-10-26.
+>>>>
+>>>>
+>>>> I was asked to release this code to the public and, since it is
+>>>> GPL, I am now doing it.
+>>> GPL? AFAICS ath9k is under ISC. I'm not sure what you mean with the
+>>> sentence above, but it's possible to interpret it so that this patch is
+>>> not under ISC license, which is problematic.
+>> Honestly, my sentence was just a way to say "it makes sense to release this
+>> patch to the public".
+> I was suspecting it was like that, I just wasn't sure.
+>
+>> If it needs to be ISC in order to be merged, then it can be released under ISC.
+>>
+>> I don't want to enter a legal case :)
+> Me neither. But I can't apply patches with unclear license.
+>
 
-
-Changes since v6:
-- updated documentation to reflect that "reg" is a mandatory attribute
-- dropped "qca,clk-25mhz" as it is only useful for AHB devices. OF
-  support for AHB devices needs more work, so we can still introduce it
-  later
-- removed qca,disable-2ghz and qca,disable-5ghz as these will be
-  introduced as generic bindings in a separate series
-
-
-Changes since v5:
-- updated the example in the documentation (keeping it at a bare
-  minimum: removed the PCI bridge, use a better real-world example with
-  less-confusing device/fn numbers, added the actual size of the config
-  space to the reg property)
-
-
-Martin Blumenstingl (3):
-  Documentation: dt: net: add ath9k wireless device binding
-  ath9k: add a helper to get the string representation of ath_bus_type
-  ath9k: parse the device configuration from an OF node
-
- .../devicetree/bindings/net/wireless/qca,ath9k.txt | 48 ++++++++++++++++++++++
- drivers/net/wireless/ath/ath.h                     |  6 +++
- drivers/net/wireless/ath/ath9k/init.c              | 42 +++++++++++++++++++
- drivers/net/wireless/ath/main.c                    |  7 ++++
- 4 files changed, 103 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
 
 -- 
-2.10.0
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
