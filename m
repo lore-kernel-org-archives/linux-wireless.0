@@ -1,58 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38276 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752646AbcJNOXC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 14 Oct 2016 10:23:02 -0400
-Received: by mail-wm0-f49.google.com with SMTP id d128so772248wmf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 14 Oct 2016 07:23:01 -0700 (PDT)
-References: <1476450540-1760-1-git-send-email-ard.biesheuvel@linaro.org> <1476450635.31114.42.camel@sipsolutions.net> <CAKv+Gu_eS-C84rH_MLYy--ivC0a99wwJvNDLhETfrBkYXW-XpA@mail.gmail.com> <1476450941.31114.45.camel@sipsolutions.net> <CAKv+Gu81RYq1aZUQ2Aru3Vev4LGgb1zFwWz8gepE0tQEhQi9Uw@mail.gmail.com> <1476452792.31114.46.camel@sipsolutions.net>
-In-Reply-To: <1476452792.31114.46.camel@sipsolutions.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=us-ascii
-Message-Id: <7531788D-2651-449B-9824-E418F773F23C@linaro.org> (sfid-20161014_162329_185264_D1263703)
-Cc: Andy Lutomirski <luto@amacapital.net>,
-        Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        "<linux-wireless@vger.kernel.org>" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jouni Malinen <j@w1.fi>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] mac80211: aes_ccm: move struct aead_req off the stack
-Date: Fri, 14 Oct 2016 15:22:50 +0100
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39608 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935657AbcJ0OAb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 27 Oct 2016 10:00:31 -0400
+Message-ID: <1477576826.4534.19.camel@sipsolutions.net> (sfid-20161027_160131_419201_0FF80E57)
+Subject: Re: [PATCH v2] cfg80211: Add support to update connection parameters
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Thu, 27 Oct 2016 16:00:26 +0200
+In-Reply-To: <1477576271-12696-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1477576271-12696-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2016-10-27 at 16:51 +0300, Jouni Malinen wrote:
+> From: vamsi krishna <vamsin@qti.qualcomm.com>
+> 
+> Add functionality to update the connection parameters when in
+> connected
+> state, so that driver/firmware uses the updated parameters for
+> subsequent roaming. This is for drivers that support internal BSS
+> selection and roaming. The new command does not change the current
+> association state, i.e., it can be used to update IE contents for
+> future
+> (re)associations without causing an immediate disassociation or
+> reassociation with the current BSS.
+> 
+> [...]
 
-> On 14 Oct 2016, at 14:46, Johannes Berg <johannes@sipsolutions.net> wrote:=
+applied.
 
->=20
->=20
->>=20
->> Is the aad[] actually reused? I would assume it only affects the mac
->> on encryption, and the verification on decryption but I don't think
->> we actually need it back from the crypto routines.
->=20
-> I don't think it's reused.
->=20
->> Exactly what you said above :-) My patch only touches CCM but as you
->> said,
->>=20
->> """
->> 'Also there's B_0/J_0 for CCM/GCM, and the 'zero' thing that GMAC
->> has.
->> """
->=20
-> Ah, but we can/should do the same for the others, no?
->=20
-
-Yes, but then we end up kmalloc/kfreeing chunks of 16 bytes, which is actual=
-ly another problem.
-
-I still think we are not violating the api by putting aead_req on the stack (=
-but herbert should confirm). The aad[] issue does violate the api, so it des=
-erves a separate fix imo=
+johannes
