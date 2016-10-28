@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37243 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753322AbcJLHi7 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:57837 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756062AbcJ1K0g (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 03:38:59 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [v2,1/2] ath10k: clean up HTT tx buffer allocation and free
-Date: Wed, 12 Oct 2016 07:35:43 +0000
-Message-ID: <87zimaf29d.fsf@kamboji.qca.qualcomm.com> (sfid-20161012_094120_634366_845B0D36)
-References: <1475743188-12007-1-git-send-email-mohammed@qca.qualcomm.com>
-        <c617b703956d4a038349494b87f65d0a@euamsexm01a.eu.qualcomm.com>
-        <20161012070918.GA2993@atheros-ThinkPad-T61>
-In-Reply-To: <20161012070918.GA2993@atheros-ThinkPad-T61> (Mohammed Shafi
-        Shajakhan's message of "Wed, 12 Oct 2016 12:39:18 +0530")
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 28 Oct 2016 06:26:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] mac80211: fils_aead: fix encrypt error handling
+Date: Fri, 28 Oct 2016 12:25:53 +0200
+Message-Id: <20161028102621.1881878-1-arnd@arndb.de> (sfid-20161028_122652_056750_1D719C10)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+gcc -Wmaybe-uninitialized reports a bug in aes_siv_encryp:
 
-> Hi Kalle,
->
-> On Tue, Oct 11, 2016 at 01:36:22PM +0200, Kalle Valo wrote:
->> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
->> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->> >=20
->> > cleanup 'ath10k_htt_tx_alloc' by introducing the API's
->> > 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
->> > re-use them whereever needed
->> >=20
->> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->>=20
->> Applies but fails to build:
->
-> [shafi] sorry for the trouble again, I just figured out I had a private p=
-atch by
-> mistake  and it worked for me, I will make sure that v3 is properly rebas=
-ed
-> without any errors.
+net/mac80211/fils_aead.c: In function ‘aes_siv_encrypt.constprop’:
+net/mac80211/fils_aead.c:84:26: error: ‘tfm2’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Thanks. And no worries, I now have a script which does commit and build
-tests semi-automatically and sends an email if it fails. Yay! This was a
-good real life test for the script :)
+At the time that the memory allocation fails, 'tfm2' has not been
+allocated, so we should not attempt to free it later, and we can
+simply return an error.
 
---=20
-Kalle Valo=
+Fixes: 39404feee691 ("mac80211: FILS AEAD protection for station mode association frames")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ net/mac80211/fils_aead.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/net/mac80211/fils_aead.c b/net/mac80211/fils_aead.c
+index b81b4f2472cf..ecfdd97758a3 100644
+--- a/net/mac80211/fils_aead.c
++++ b/net/mac80211/fils_aead.c
+@@ -110,10 +110,8 @@ static int aes_siv_encrypt(const u8 *key, size_t key_len,
+ 	 * overwriting this during AES-CTR.
+ 	 */
+ 	tmp = kmemdup(plain, plain_len, GFP_KERNEL);
+-	if (!tmp) {
+-		res = -ENOMEM;
+-		goto fail;
+-	}
++	if (!tmp)
++		return -ENOMEM;
+ 
+ 	/* IV for CTR before encrypted data */
+ 	memcpy(out, v, AES_BLOCK_SIZE);
+-- 
+2.9.0
