@@ -1,68 +1,287 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36973 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12629 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751638AbcJLFGF (ORCPT
+        with ESMTP id S1751346AbcJ2Fvo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 01:06:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v3] ath10k: cache calibration data when the core is stopped
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1476115204-7385-1-git-send-email-kvalo@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Marty Faltesek" <mfaltesek@google.com>
-Message-ID: <56268b973ebe4cfa9f80592b2110999b@euamsexm01a.eu.qualcomm.com> (sfid-20161012_070612_600500_6268DD51)
-Date: Wed, 12 Oct 2016 07:05:00 +0200
+        Sat, 29 Oct 2016 01:51:44 -0400
+Cc: Dedy Lansky <qca_dlansky@qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 1/7] wil6210: fix net queue stop/wake
+Date: Sat, 29 Oct 2016 08:51:21 +0300
+Message-Id: <1477720287-17606-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161029_075151_268259_D9052F8B)
+In-Reply-To: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Marty Faltesek <mfaltesek@google.com>
-> 
-> Commit 0b8e3c4ca29f ("ath10k: move cal data len to hw_params") broke retrieving
-> the calibration data from cal_data debugfs file. The length of file was always
-> zero. The reason is:
-> 
->     static ssize_t ath10k_debug_cal_data_read(struct file *file,
->                                           char __user *user_buf,
->                                           size_t count, loff_t *ppos)
->     {
->         struct ath10k *ar = file->private_data;
->         void *buf = file->private_data;
-> 
-> 
-> This is obviously bogus, private_data cannot contain both struct ath10k and the
-> buffer. Fix it by caching calibration data to ar->debug.cal_data. This also
-> allows it to be accessed when the device is not active (interface is down).
-> 
-> The cal_data buffer is fixed size because during the first firmware probe we
-> don't yet know what will be the lenght of the calibration data. It was simplest
-> just to use a fixed length. There's a WARN_ON() in
-> ath10k_debug_cal_data_fetch() if the buffer is too small.
-> 
-> Tested with qca988x and firmware 10.2.4.70.56.
-> 
-> Reported-by: Nikolay Martynov <mar.kolya@gmail.com>
-> Fixes: 0b8e3c4ca29f ("ath10k: move cal data len to hw_params")
-> Cc: stable@vger.kernel.org # 4.7+
-> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
-> [kvalo@qca.qualcomm.com: improve commit log and minor other changes]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
 
-There were few checkpatch warnings, I fixed those in the pending branch.
+Driver calls to netif_tx_stop_all_queues/netif_tx_wake_all_queues are
+inconsistent. In several cases, driver can get to a situation where net
+queues are stopped forever and data cannot be sent.
 
-drivers/net/wireless/ath/ath10k/debug.c:1472: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/debug.c:1504: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/debug.c:1504: please, no spaces at the start of a line
-drivers/net/wireless/ath/ath10k/debug.c:1505: code indent should use tabs where possible
-drivers/net/wireless/ath/ath10k/debug.c:1505: please, no spaces at the start of a line
+The fix is to stop net queues if there is at least one vring which is
+"full" and to wake net queues if all vrings are not "full".
 
+Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c    |  12 +++-
+ drivers/net/wireless/ath/wil6210/netdev.c  |   2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c    | 110 ++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/wil6210/wil6210.h |   6 ++
+ drivers/net/wireless/ath/wil6210/wmi.c     |   3 +-
+ 5 files changed, 117 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index e7130b5..b04ff87 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -213,7 +213,7 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	memset(&sta->stats, 0, sizeof(sta->stats));
+ }
+ 
+-static bool wil_ap_is_connected(struct wil6210_priv *wil)
++static bool wil_is_connected(struct wil6210_priv *wil)
+ {
+ 	int i;
+ 
+@@ -267,7 +267,7 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 	case NL80211_IFTYPE_STATION:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		wil_bcast_fini(wil);
+-		netif_tx_stop_all_queues(ndev);
++		wil_update_net_queues_bh(wil, NULL, true);
+ 		netif_carrier_off(ndev);
+ 
+ 		if (test_bit(wil_status_fwconnected, wil->status)) {
+@@ -283,8 +283,12 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 	case NL80211_IFTYPE_P2P_GO:
+-		if (!wil_ap_is_connected(wil))
++		if (!wil_is_connected(wil)) {
++			wil_update_net_queues_bh(wil, NULL, true);
+ 			clear_bit(wil_status_fwconnected, wil->status);
++		} else {
++			wil_update_net_queues_bh(wil, NULL, false);
++		}
+ 		break;
+ 	default:
+ 		break;
+@@ -516,6 +520,8 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	INIT_LIST_HEAD(&wil->pending_wmi_ev);
+ 	INIT_LIST_HEAD(&wil->probe_client_pending);
+ 	spin_lock_init(&wil->wmi_ev_lock);
++	spin_lock_init(&wil->net_queue_lock);
++	wil->net_queue_stopped = 1;
+ 	init_waitqueue_head(&wil->wq);
+ 
+ 	wil->wmi_wq = create_singlethread_workqueue(WIL_NAME "_wmi");
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 61de5e9..713b967 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -229,7 +229,7 @@ int wil_if_add(struct wil6210_priv *wil)
+ 	netif_tx_napi_add(ndev, &wil->napi_tx, wil6210_netdev_poll_tx,
+ 			  WIL6210_NAPI_BUDGET);
+ 
+-	netif_tx_stop_all_queues(ndev);
++	wil_update_net_queues_bh(wil, NULL, true);
+ 
+ 	rc = register_netdev(ndev);
+ 	if (rc < 0) {
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 4c38520..4ac9ba0 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -88,6 +88,18 @@ static inline int wil_vring_wmark_high(struct vring *vring)
+ 	return vring->size/4;
+ }
+ 
++/* returns true if num avail descriptors is lower than wmark_low */
++static inline int wil_vring_avail_low(struct vring *vring)
++{
++	return wil_vring_avail_tx(vring) < wil_vring_wmark_low(vring);
++}
++
++/* returns true if num avail descriptors is higher than wmark_high */
++static inline int wil_vring_avail_high(struct vring *vring)
++{
++	return wil_vring_avail_tx(vring) > wil_vring_wmark_high(vring);
++}
++
+ /* wil_val_in_range - check if value in [min,max) */
+ static inline bool wil_val_in_range(int val, int min, int max)
+ {
+@@ -1780,6 +1792,89 @@ static int wil_tx_vring(struct wil6210_priv *wil, struct vring *vring,
+ 	return rc;
+ }
+ 
++/**
++ * Check status of tx vrings and stop/wake net queues if needed
++ *
++ * This function does one of two checks:
++ * In case check_stop is true, will check if net queues need to be stopped. If
++ * the conditions for stopping are met, netif_tx_stop_all_queues() is called.
++ * In case check_stop is false, will check if net queues need to be waked. If
++ * the conditions for waking are met, netif_tx_wake_all_queues() is called.
++ * vring is the vring which is currently being modified by either adding
++ * descriptors (tx) into it or removing descriptors (tx complete) from it. Can
++ * be null when irrelevant (e.g. connect/disconnect events).
++ *
++ * The implementation is to stop net queues if modified vring has low
++ * descriptor availability. Wake if all vrings are not in low descriptor
++ * availability and modified vring has high descriptor availability.
++ */
++static inline void __wil_update_net_queues(struct wil6210_priv *wil,
++					   struct vring *vring,
++					   bool check_stop)
++{
++	int i;
++
++	if (vring)
++		wil_dbg_txrx(wil, "vring %d, check_stop=%d, stopped=%d",
++			     (int)(vring - wil->vring_tx), check_stop,
++			     wil->net_queue_stopped);
++	else
++		wil_dbg_txrx(wil, "check_stop=%d, stopped=%d",
++			     check_stop, wil->net_queue_stopped);
++
++	if (check_stop == wil->net_queue_stopped)
++		/* net queues already in desired state */
++		return;
++
++	if (check_stop) {
++		if (!vring || unlikely(wil_vring_avail_low(vring))) {
++			/* not enough room in the vring */
++			netif_tx_stop_all_queues(wil_to_ndev(wil));
++			wil->net_queue_stopped = true;
++			wil_dbg_txrx(wil, "netif_tx_stop called\n");
++		}
++		return;
++	}
++
++	/* check wake */
++	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
++		struct vring *cur_vring = &wil->vring_tx[i];
++		struct vring_tx_data *txdata = &wil->vring_tx_data[i];
++
++		if (!cur_vring->va || !txdata->enabled || cur_vring == vring)
++			continue;
++
++		if (wil_vring_avail_low(cur_vring)) {
++			wil_dbg_txrx(wil, "vring %d full, can't wake\n",
++				     (int)(cur_vring - wil->vring_tx));
++			return;
++		}
++	}
++
++	if (!vring || wil_vring_avail_high(vring)) {
++		/* enough room in the vring */
++		wil_dbg_txrx(wil, "calling netif_tx_wake\n");
++		netif_tx_wake_all_queues(wil_to_ndev(wil));
++		wil->net_queue_stopped = false;
++	}
++}
++
++void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
++			   bool check_stop)
++{
++	spin_lock(&wil->net_queue_lock);
++	__wil_update_net_queues(wil, vring, check_stop);
++	spin_unlock(&wil->net_queue_lock);
++}
++
++void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
++			      bool check_stop)
++{
++	spin_lock_bh(&wil->net_queue_lock);
++	__wil_update_net_queues(wil, vring, check_stop);
++	spin_unlock_bh(&wil->net_queue_lock);
++}
++
+ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ {
+ 	struct wil6210_priv *wil = ndev_to_wil(ndev);
+@@ -1822,14 +1917,10 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	/* set up vring entry */
+ 	rc = wil_tx_vring(wil, vring, skb);
+ 
+-	/* do we still have enough room in the vring? */
+-	if (unlikely(wil_vring_avail_tx(vring) < wil_vring_wmark_low(vring))) {
+-		netif_tx_stop_all_queues(wil_to_ndev(wil));
+-		wil_dbg_txrx(wil, "netif_tx_stop : ring full\n");
+-	}
+-
+ 	switch (rc) {
+ 	case 0:
++		/* shall we stop net queues? */
++		wil_update_net_queues_bh(wil, vring, true);
+ 		/* statistics will be updated on the tx_complete */
+ 		dev_kfree_skb_any(skb);
+ 		return NETDEV_TX_OK;
+@@ -1978,10 +2069,9 @@ int wil_tx_complete(struct wil6210_priv *wil, int ringid)
+ 		txdata->last_idle = get_cycles();
+ 	}
+ 
+-	if (wil_vring_avail_tx(vring) > wil_vring_wmark_high(vring)) {
+-		wil_dbg_txrx(wil, "netif_tx_wake : ring not full\n");
+-		netif_tx_wake_all_queues(wil_to_ndev(wil));
+-	}
++	/* shall we wake net queues? */
++	if (done)
++		wil_update_net_queues(wil, vring, false);
+ 
+ 	return done;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index a949cd6..12cd81b 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -624,6 +624,8 @@ struct wil6210_priv {
+ 	 * - consumed in thread by wmi_event_worker
+ 	 */
+ 	spinlock_t wmi_ev_lock;
++	spinlock_t net_queue_lock; /* guarding stop/wake netif queue */
++	int net_queue_stopped; /* netif_tx_stop_all_queues invoked */
+ 	struct napi_struct napi_rx;
+ 	struct napi_struct napi_tx;
+ 	/* keep alive */
+@@ -886,6 +888,10 @@ int wil_vring_init_bcast(struct wil6210_priv *wil, int id, int size);
+ int wil_bcast_init(struct wil6210_priv *wil);
+ void wil_bcast_fini(struct wil6210_priv *wil);
+ 
++void wil_update_net_queues(struct wil6210_priv *wil, struct vring *vring,
++			   bool should_stop);
++void wil_update_net_queues_bh(struct wil6210_priv *wil, struct vring *vring,
++			      bool check_stop);
+ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev);
+ int wil_tx_complete(struct wil6210_priv *wil, int ringid);
+ void wil6210_unmask_irq_tx(struct wil6210_priv *wil);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index fae4f12..890960e 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -548,7 +548,6 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 	if ((wdev->iftype == NL80211_IFTYPE_STATION) ||
+ 	    (wdev->iftype == NL80211_IFTYPE_P2P_CLIENT)) {
+ 		if (rc) {
+-			netif_tx_stop_all_queues(ndev);
+ 			netif_carrier_off(ndev);
+ 			wil_err(wil,
+ 				"%s: cfg80211_connect_result with failure\n",
+@@ -588,7 +587,7 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 
+ 	wil->sta[evt->cid].status = wil_sta_connected;
+ 	set_bit(wil_status_fwconnected, wil->status);
+-	netif_tx_wake_all_queues(ndev);
++	wil_update_net_queues_bh(wil, NULL, false);
+ 
+ out:
+ 	if (rc)
 -- 
-https://patchwork.kernel.org/patch/9369685/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
