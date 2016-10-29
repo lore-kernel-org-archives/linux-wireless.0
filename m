@@ -1,177 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:48666 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753302AbcJMKWO (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12629 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751982AbcJ2Fvv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 06:22:14 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org, chris@rorvick.com,
-        pebolle@tiscali.nl
-Cc: linuxwifi@intel.com, emmanuel.grumbach@intel.com,
-        johannes@sipsolutions.net, kvalo@codeaurora.org,
-        oren.givon@intel.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Thu, 13 Oct 2016 13:21:55 +0300
-Message-Id: <20161013102155.14547-1-luca@coelho.fi> (sfid-20161013_122248_837994_CB90AF66)
-In-Reply-To: <1476349269.3880.18.camel@coelho.fi>
-References: <1476349269.3880.18.camel@coelho.fi>
-Subject: [PATCH] iwlwifi: pcie: fix SPLC structure parsing
+        Sat, 29 Oct 2016 01:51:51 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 5/7] wil6210: align to latest auto generated wmi.h
+Date: Sat, 29 Oct 2016 08:51:25 +0300
+Message-Id: <1477720287-17606-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161029_075156_089091_AA56669F)
+In-Reply-To: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1477720287-17606-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-The SPLC data parsing is too restrictive and was not trying find the
-correct element for WiFi.  This causes problems with some BIOSes where
-the SPLC method exists, but doesn't have a WiFi entry on the first
-element of the list.  The domain type values are also incorrect
-according to the specification.
+Align to latest version of the auto generated wmi file
+describing the interface with FW.
 
-Fix this by complying with the actual specification.
-
-Additionally, replace all occurrences of SPLX to SPLC, since SPLX is
-only a structure internal to the ACPI tables, and may not even exist.
-
-Fixes: bcb079a14d75 ("iwlwifi: pcie: retrieve and parse ACPI power limitations")
-Reported-by: Chris Rorvick <chris@rorvick.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/wil6210/wmi.h | 208 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 206 insertions(+), 2 deletions(-)
 
-Paul, Chris,
-
-Could you please give this a spin? I have tested it with some handmade
-ACPI tables in QEMU and it seems to work fine now.
-
-Thanks!
-
-
-drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 79 ++++++++++++++++-----------
- 1 file changed, 48 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 001be40..da4810f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -541,48 +541,64 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- MODULE_DEVICE_TABLE(pci, iwl_hw_card_ids);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index f430e8a..2cc7775 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -51,8 +51,10 @@ enum wmi_mid {
+  * the host
+  */
+ enum wmi_fw_capability {
+-	WMI_FW_CAPABILITY_FTM		= 0,
+-	WMI_FW_CAPABILITY_PS_CONFIG	= 1,
++	WMI_FW_CAPABILITY_FTM			= 0,
++	WMI_FW_CAPABILITY_PS_CONFIG		= 1,
++	WMI_FW_CAPABILITY_RF_SECTORS		= 2,
++	WMI_FW_CAPABILITY_MGMT_RETRY_LIMIT	= 3,
+ 	WMI_FW_CAPABILITY_MAX,
+ };
  
- #ifdef CONFIG_ACPI
--#define SPL_METHOD		"SPLC"
--#define SPL_DOMAINTYPE_MODULE	BIT(0)
--#define SPL_DOMAINTYPE_WIFI	BIT(1)
--#define SPL_DOMAINTYPE_WIGIG	BIT(2)
--#define SPL_DOMAINTYPE_RFEM	BIT(3)
-+#define ACPI_SPLC_METHOD	"SPLC"
-+#define ACPI_SPLC_DOMAIN_WIFI	(0x07)
+@@ -182,11 +184,18 @@ enum wmi_command_id {
+ 	WMI_RS_CFG_CMDID			= 0x921,
+ 	WMI_GET_DETAILED_RS_RES_CMDID		= 0x922,
+ 	WMI_AOA_MEAS_CMDID			= 0x923,
++	WMI_SET_MGMT_RETRY_LIMIT_CMDID		= 0x930,
++	WMI_GET_MGMT_RETRY_LIMIT_CMDID		= 0x931,
+ 	WMI_TOF_SESSION_START_CMDID		= 0x991,
+ 	WMI_TOF_GET_CAPABILITIES_CMDID		= 0x992,
+ 	WMI_TOF_SET_LCR_CMDID			= 0x993,
+ 	WMI_TOF_SET_LCI_CMDID			= 0x994,
+ 	WMI_TOF_CHANNEL_INFO_CMDID		= 0x995,
++	WMI_GET_RF_SECTOR_PARAMS_CMDID		= 0x9A0,
++	WMI_SET_RF_SECTOR_PARAMS_CMDID		= 0x9A1,
++	WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID	= 0x9A2,
++	WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID	= 0x9A3,
++	WMI_SET_RF_SECTOR_ON_CMDID		= 0x9A4,
+ 	WMI_SET_MAC_ADDRESS_CMDID		= 0xF003,
+ 	WMI_ABORT_SCAN_CMDID			= 0xF007,
+ 	WMI_SET_PROMISCUOUS_MODE_CMDID		= 0xF041,
+@@ -879,6 +888,14 @@ struct wmi_aoa_meas_cmd {
+ 	__le32 meas_rf_mask;
+ } __packed;
  
--static u64 splx_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splx)
-+static u64 splc_get_pwr_limit(struct iwl_trans *trans, union acpi_object *splc)
- {
--	union acpi_object *limits, *domain_type, *power_limit;
--
--	if (splx->type != ACPI_TYPE_PACKAGE ||
--	    splx->package.count != 2 ||
--	    splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    splx->package.elements[0].integer.value != 0) {
--		IWL_ERR(trans, "Unsupported splx structure\n");
-+	union acpi_object *data_pkg, *dflt_pwr_limit;
-+	int i;
++/* WMI_SET_MGMT_RETRY_LIMIT_CMDID */
++struct wmi_set_mgmt_retry_limit_cmd {
++	/* MAC retransmit limit for mgmt frames */
++	u8 mgmt_retry_limit;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
 +
-+	/* We need at least two elemets, one for the revision and one
-+	 * for the data itself.  Also check that the revision is
-+	 * supported (currently only revision 0).
-+	*/
-+	if (splc->type != ACPI_TYPE_PACKAGE ||
-+	    splc->package.count < 2 ||
-+	    splc->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+	    splc->package.elements[0].integer.value != 0) {
-+		IWL_DEBUG_INFO(trans,
-+			       "Unsupported structure returned by the SPLC method.  Ignoring.\n");
- 		return 0;
- 	}
+ enum wmi_tof_burst_duration {
+ 	WMI_TOF_BURST_DURATION_250_USEC		= 2,
+ 	WMI_TOF_BURST_DURATION_500_USEC		= 3,
+@@ -1035,12 +1052,19 @@ enum wmi_event_id {
+ 	WMI_RS_CFG_DONE_EVENTID				= 0x1921,
+ 	WMI_GET_DETAILED_RS_RES_EVENTID			= 0x1922,
+ 	WMI_AOA_MEAS_EVENTID				= 0x1923,
++	WMI_SET_MGMT_RETRY_LIMIT_EVENTID		= 0x1930,
++	WMI_GET_MGMT_RETRY_LIMIT_EVENTID		= 0x1931,
+ 	WMI_TOF_SESSION_END_EVENTID			= 0x1991,
+ 	WMI_TOF_GET_CAPABILITIES_EVENTID		= 0x1992,
+ 	WMI_TOF_SET_LCR_EVENTID				= 0x1993,
+ 	WMI_TOF_SET_LCI_EVENTID				= 0x1994,
+ 	WMI_TOF_FTM_PER_DEST_RES_EVENTID		= 0x1995,
+ 	WMI_TOF_CHANNEL_INFO_EVENTID			= 0x1996,
++	WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID		= 0x19A0,
++	WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID		= 0x19A1,
++	WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID	= 0x19A2,
++	WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID	= 0x19A3,
++	WMI_SET_RF_SECTOR_ON_DONE_EVENTID		= 0x19A4,
+ 	WMI_SET_CHANNEL_EVENTID				= 0x9000,
+ 	WMI_ASSOC_REQ_EVENTID				= 0x9001,
+ 	WMI_EAPOL_RX_EVENTID				= 0x9002,
+@@ -2070,6 +2094,22 @@ struct wmi_aoa_meas_event {
+ 	u8 meas_data[WMI_AOA_MAX_DATA_SIZE];
+ } __packed;
  
--	limits = &splx->package.elements[1];
--	if (limits->type != ACPI_TYPE_PACKAGE ||
--	    limits->package.count < 2 ||
--	    limits->package.elements[0].type != ACPI_TYPE_INTEGER ||
--	    limits->package.elements[1].type != ACPI_TYPE_INTEGER) {
--		IWL_ERR(trans, "Invalid limits element\n");
--		return 0;
-+	/* loop through all the packages to find the one for WiFi */
-+	for (i = 1; i < splc->package.count; i++) {
-+		union acpi_object *domain;
++/* WMI_SET_MGMT_RETRY_LIMIT_EVENTID */
++struct wmi_set_mgmt_retry_limit_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
 +
-+		data_pkg = &splc->package.elements[i];
++/* WMI_GET_MGMT_RETRY_LIMIT_EVENTID */
++struct wmi_get_mgmt_retry_limit_event {
++	/* MAC retransmit limit for mgmt frames */
++	u8 mgmt_retry_limit;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
 +
-+		/* Skip anything that is not a package with the right
-+		 * amount of elements (i.e. at least 2 integers).
-+		 */
-+		if (data_pkg->type != ACPI_TYPE_PACKAGE ||
-+		    data_pkg->package.count < 2 ||
-+		    data_pkg->package.elements[0].type != ACPI_TYPE_INTEGER ||
-+		    data_pkg->package.elements[1].type != ACPI_TYPE_INTEGER)
-+			continue;
+ /* WMI_TOF_GET_CAPABILITIES_EVENTID */
+ struct wmi_tof_get_capabilities_event {
+ 	u8 ftm_capability;
+@@ -2184,4 +2224,168 @@ struct wmi_tof_channel_info_event {
+ 	u8 report[0];
+ } __packed;
+ 
++/* Result status codes for WMI commands */
++enum wmi_rf_sector_status {
++	WMI_RF_SECTOR_STATUS_SUCCESS			= 0x00,
++	WMI_RF_SECTOR_STATUS_BAD_PARAMETERS_ERROR	= 0x01,
++	WMI_RF_SECTOR_STATUS_BUSY_ERROR			= 0x02,
++	WMI_RF_SECTOR_STATUS_NOT_SUPPORTED_ERROR	= 0x03,
++};
 +
-+		domain = &data_pkg->package.elements[0];
-+		if (domain->integer.value == ACPI_SPLC_DOMAIN_WIFI)
-+			break;
++/* Types of the RF sector (TX,RX) */
++enum wmi_rf_sector_type {
++	WMI_RF_SECTOR_TYPE_RX	= 0x00,
++	WMI_RF_SECTOR_TYPE_TX	= 0x01,
++};
 +
-+		data_pkg = NULL;
- 	}
- 
--	domain_type = &limits->package.elements[0];
--	power_limit = &limits->package.elements[1];
--	if (!(domain_type->integer.value & SPL_DOMAINTYPE_WIFI)) {
--		IWL_DEBUG_INFO(trans, "WiFi power is not limited\n");
-+	if (!data_pkg) {
-+		IWL_DEBUG_INFO(trans,
-+			       "No element for the WiFi domain returned by the SPLC method.\n");
- 		return 0;
- 	}
- 
--	return power_limit->integer.value;
-+	dflt_pwr_limit = &data_pkg->package.elements[1];
-+	return dflt_pwr_limit->integer.value;
- }
- 
- static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
- {
- 	acpi_handle pxsx_handle;
- 	acpi_handle handle;
--	struct acpi_buffer splx = {ACPI_ALLOCATE_BUFFER, NULL};
-+	struct acpi_buffer splc = {ACPI_ALLOCATE_BUFFER, NULL};
- 	acpi_status status;
- 
- 	pxsx_handle = ACPI_HANDLE(&pdev->dev);
-@@ -593,23 +609,24 @@ static void set_dflt_pwr_limit(struct iwl_trans *trans, struct pci_dev *pdev)
- 	}
- 
- 	/* Get the method's handle */
--	status = acpi_get_handle(pxsx_handle, (acpi_string)SPL_METHOD, &handle);
-+	status = acpi_get_handle(pxsx_handle, (acpi_string)ACPI_SPLC_METHOD,
-+				 &handle);
- 	if (ACPI_FAILURE(status)) {
--		IWL_DEBUG_INFO(trans, "SPL method not found\n");
-+		IWL_DEBUG_INFO(trans, "SPLC method not found\n");
- 		return;
- 	}
- 
- 	/* Call SPLC with no arguments */
--	status = acpi_evaluate_object(handle, NULL, NULL, &splx);
-+	status = acpi_evaluate_object(handle, NULL, NULL, &splc);
- 	if (ACPI_FAILURE(status)) {
- 		IWL_ERR(trans, "SPLC invocation failed (0x%x)\n", status);
- 		return;
- 	}
- 
--	trans->dflt_pwr_limit = splx_get_pwr_limit(trans, splx.pointer);
-+	trans->dflt_pwr_limit = splc_get_pwr_limit(trans, splc.pointer);
- 	IWL_DEBUG_INFO(trans, "Default power limit set to %lld\n",
- 		       trans->dflt_pwr_limit);
--	kfree(splx.pointer);
-+	kfree(splc.pointer);
- }
- 
- #else /* CONFIG_ACPI */
++/* Content of RF Sector (six 32-bits registers) */
++struct wmi_rf_sector_info {
++	/* Phase values for RF Chains[15-0] (2bits per RF chain) */
++	__le32 psh_hi;
++	/* Phase values for RF Chains[31-16] (2bits per RF chain) */
++	__le32 psh_lo;
++	/* ETYPE Bit0 for all RF chains[31-0] - bit0 of Edge amplifier gain
++	 * index
++	 */
++	__le32 etype0;
++	/* ETYPE Bit1 for all RF chains[31-0] - bit1 of Edge amplifier gain
++	 * index
++	 */
++	__le32 etype1;
++	/* ETYPE Bit2 for all RF chains[31-0] - bit2 of Edge amplifier gain
++	 * index
++	 */
++	__le32 etype2;
++	/* D-Type values (3bits each) for 8 Distribution amplifiers + X16
++	 * switch bits
++	 */
++	__le32 dtype_swch_off;
++} __packed;
++
++#define WMI_INVALID_RF_SECTOR_INDEX	(0xFFFF)
++#define WMI_MAX_RF_MODULES_NUM		(8)
++
++/* WMI_GET_RF_SECTOR_PARAMS_CMD */
++struct wmi_get_rf_sector_params_cmd {
++	/* Sector number to be retrieved */
++	__le16 sector_idx;
++	/* enum wmi_rf_sector_type - type of requested RF sector */
++	u8 sector_type;
++	/* bitmask vector specifying destination RF modules */
++	u8 rf_modules_vec;
++} __packed;
++
++/* \WMI_GET_RF_SECTOR_PARAMS_DONE_EVENT */
++struct wmi_get_rf_sector_params_done_event {
++	/* result status of WMI_GET_RF_SECTOR_PARAMS_CMD (enum
++	 * wmi_rf_sector_status)
++	 */
++	u8 status;
++	/* align next field to U64 boundary */
++	u8 reserved[7];
++	/* TSF timestamp when RF sectors where retrieved */
++	__le64 tsf;
++	/* Content of RF sector retrieved from each RF module */
++	struct wmi_rf_sector_info sectors_info[WMI_MAX_RF_MODULES_NUM];
++} __packed;
++
++/* WMI_SET_RF_SECTOR_PARAMS_CMD */
++struct wmi_set_rf_sector_params_cmd {
++	/* Sector number to be retrieved */
++	__le16 sector_idx;
++	/* enum wmi_rf_sector_type - type of requested RF sector */
++	u8 sector_type;
++	/* bitmask vector specifying destination RF modules */
++	u8 rf_modules_vec;
++	/* Content of RF sector to be written to each RF module */
++	struct wmi_rf_sector_info sectors_info[WMI_MAX_RF_MODULES_NUM];
++} __packed;
++
++/* \WMI_SET_RF_SECTOR_PARAMS_DONE_EVENT */
++struct wmi_set_rf_sector_params_done_event {
++	/* result status of WMI_SET_RF_SECTOR_PARAMS_CMD (enum
++	 * wmi_rf_sector_status)
++	 */
++	u8 status;
++} __packed;
++
++/* WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD - Get RF sector index selected by
++ * TXSS/BRP for communication with specified CID
++ */
++struct wmi_get_selected_rf_sector_index_cmd {
++	/* Connection/Station ID in [0:7] range */
++	u8 cid;
++	/* type of requested RF sector (enum wmi_rf_sector_type) */
++	u8 sector_type;
++	/* align to U32 boundary */
++	u8 reserved[2];
++} __packed;
++
++/* \WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT - Returns retrieved RF sector
++ * index selected by TXSS/BRP for communication with specified CID
++ */
++struct wmi_get_selected_rf_sector_index_done_event {
++	/* Retrieved sector index selected in TXSS (for TX sector request) or
++	 * BRP (for RX sector request)
++	 */
++	__le16 sector_idx;
++	/* result status of WMI_GET_SELECTED_RF_SECTOR_INDEX_CMD (enum
++	 * wmi_rf_sector_status)
++	 */
++	u8 status;
++	/* align next field to U64 boundary */
++	u8 reserved[5];
++	/* TSF timestamp when result was retrieved */
++	__le64 tsf;
++} __packed;
++
++/* WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD - Force RF sector index for
++ * communication with specified CID. Assumes that TXSS/BRP is disabled by
++ * other command
++ */
++struct wmi_set_selected_rf_sector_index_cmd {
++	/* Connection/Station ID in [0:7] range */
++	u8 cid;
++	/* type of requested RF sector (enum wmi_rf_sector_type) */
++	u8 sector_type;
++	/* Forced sector index */
++	__le16 sector_idx;
++} __packed;
++
++/* \WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENT - Success/Fail status for
++ * WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD
++ */
++struct wmi_set_selected_rf_sector_index_done_event {
++	/* result status of WMI_SET_SELECTED_RF_SECTOR_INDEX_CMD (enum
++	 * wmi_rf_sector_status)
++	 */
++	u8 status;
++	/* align to U32 boundary */
++	u8 reserved[3];
++} __packed;
++
++/* WMI_SET_RF_SECTOR_ON_CMD - Activates specified sector for specified rf
++ * modules
++ */
++struct wmi_set_rf_sector_on_cmd {
++	/* Sector index to be activated */
++	__le16 sector_idx;
++	/* type of requested RF sector (enum wmi_rf_sector_type) */
++	u8 sector_type;
++	/* bitmask vector specifying destination RF modules */
++	u8 rf_modules_vec;
++} __packed;
++
++/* \WMI_SET_RF_SECTOR_ON_DONE_EVENT - Success/Fail status for
++ * WMI_SET_RF_SECTOR_ON_CMD
++ */
++struct wmi_set_rf_sector_on_done_event {
++	/* result status of WMI_SET_RF_SECTOR_ON_CMD (enum
++	 * wmi_rf_sector_status)
++	 */
++	u8 status;
++	/* align to U32 boundary */
++	u8 reserved[3];
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
 -- 
-2.9.3
+1.9.1
