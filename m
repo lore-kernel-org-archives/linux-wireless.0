@@ -1,91 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18200 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752522AbcJJOVk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 10 Oct 2016 10:21:40 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix kernel panic due to race in accessing arvif list
-Date: Mon, 10 Oct 2016 19:51:18 +0530
-Message-ID: <1476109278-7957-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20161010_162144_021603_EBDA0F79)
+Received: from rs224.mailgun.us ([209.61.151.224]:56973 "EHLO rs224.mailgun.us"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750806AbcJ2Uu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 29 Oct 2016 16:50:57 -0400
+Received: by mail-qt0-f175.google.com with SMTP id n6so19809432qtd.1
+        for <linux-wireless@vger.kernel.org>; Sat, 29 Oct 2016 13:50:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1477461362.4059.17.camel@sipsolutions.net>
+References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
+ <1477286912.4085.1.camel@sipsolutions.net> <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com>
+ <1477379678.4390.2.camel@sipsolutions.net> <CAJ-Vmon0RTAXJMuwANCO23cPsFyFZ17sAHoReuGBG1u1Q9kK6w@mail.gmail.com>
+ <1477461362.4059.17.camel@sipsolutions.net>
+From: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjorn@openias.org>
+Date: Sat, 29 Oct 2016 22:50:55 +0200
+Message-ID: <CAGp19xeDOdF+YuZ34sQrFY+NO4kvzAzuFr0+3Ae62v-a-0eUtg@mail.gmail.com> (sfid-20161029_225102_971045_D810C80B)
+Subject: Re: Bayesian rate control
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Adrian Chadd <adrian@freebsd.org>,
+        =?UTF-8?B?VGhvbWFzIEjDvGhu?= <thomas@inet.tu-berlin.de>,
+        Dave Taht <dave.taht@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-arvifs list is traversed within data_lock spin_lock in tasklet
-context to fill channel information from the corresponding vif.
-This means any access to arvifs list for add/del operations
-should also be protected with the same spin_lock to avoid the
-race. Fix this by performing list add/del on arvfis within the
-data_lock. This could fix kernel panic something like the below.
+Thomas, Dave, Adrian, Johannes,
 
- LR is at ath10k_htt_rx_pktlog_completion_handler+0x100/0xb6c [ath10k_core]
- PC is at ath10k_htt_rx_pktlog_completion_handler+0x1c0/0xb6c [ath10k_core]
- Internal error: Oops: 17 [#1] PREEMPT SMP ARM
- [<bf4857f4>] (ath10k_htt_rx_pktlog_completion_handler+0x2f4/0xb6c [ath10k_core])
- [<bf487540>] (ath10k_htt_txrx_compl_task+0x8b4/0x1188 [ath10k_core])
- [<c00312d4>] (tasklet_action+0x8c/0xec)
- [<c00309a8>] (__do_softirq+0xdc/0x208)
- [<c0030d6c>] (irq_exit+0x84/0xe0)
- [<c005db04>] (__handle_domain_irq+0x80/0xa0)
- [<c00085c4>] (gic_handle_irq+0x38/0x5c)
- [<c0009640>] (__irq_svc+0x40/0x74)
+Thanks for comments and encouragement. I bought the TP-Link TL-WA901ND
+access point and TP-Link TL-WDN4800 PCIe card. Had no problem getting
+them talking to each other with ath9k, and the rate table contains 52
+entries, so plenty to start out with.
 
-(gdb) list *(ath10k_htt_rx_pktlog_completion_handler+0x1c0)
-0x136c0 is in ath10k_htt_rx_h_channel (drivers/net/wireless/ath/ath10k/htt_rx.c:769)
-764		struct cfg80211_chan_def def;
-765
-766		lockdep_assert_held(&ar->data_lock);
-767
-768		list_for_each_entry(arvif, &ar->arvifs, list) {
-769			if (arvif->vdev_id == vdev_id &&
-770			    ath10k_mac_vif_chan(arvif->vif, &def) == 0)
-771				return def.chan;
-772		}
-773
+I've written a follow-up post about it if anybody's interested:
+http://www.openias.org/bayesian-wifi-materials-and-methods
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Cheers,
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2e5d2ca..691b7b5 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4931,7 +4931,9 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 	}
- 
- 	ar->free_vdev_map &= ~(1LL << arvif->vdev_id);
-+	spin_lock_bh(&ar->data_lock);
- 	list_add(&arvif->list, &ar->arvifs);
-+	spin_unlock_bh(&ar->data_lock);
- 
- 	/* It makes no sense to have firmware do keepalives. mac80211 already
- 	 * takes care of this with idle connection polling.
-@@ -5082,7 +5084,9 @@ err_peer_delete:
- err_vdev_delete:
- 	ath10k_wmi_vdev_delete(ar, arvif->vdev_id);
- 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
-+	spin_lock_bh(&ar->data_lock);
- 	list_del(&arvif->list);
-+	spin_unlock_bh(&ar->data_lock);
- 
- err:
- 	if (arvif->beacon_buf) {
-@@ -5128,7 +5132,9 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 			    arvif->vdev_id, ret);
- 
- 	ar->free_vdev_map |= 1LL << arvif->vdev_id;
-+	spin_lock_bh(&ar->data_lock);
- 	list_del(&arvif->list);
-+	spin_unlock_bh(&ar->data_lock);
- 
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP ||
- 	    arvif->vdev_type == WMI_VDEV_TYPE_IBSS) {
--- 
-1.9.1
+Bj=C3=B6rn
+
+On Wed, Oct 26, 2016 at 7:56 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+>> The intel 7260 and later parts also allow user controllable rate
+>> control and provide transmit completion feedback, but I don't know
+>> whether it's enough for your needs.
+>
+> Perhaps. However, existing rate control is *very* tightly coupled to
+> the driver, and it'd be fairly pointless to disentangle just for the
+> sake of playing with a rate control algorithm.
+>
+> Also, the device doesn't support per-frame control nor any kind of
+> sampling-with-table-fallback, only the rate table that you give to the
+> device and update.
+>
+> Btw, mac80211_hwsim with wmediumd doing some medium simulation might
+> also be something to look at for just extending to VHT.
+>
+> And come to think of it, there's this new driver Felix et al have been
+> working on, mt7601u, which also should support proper rate control
+> APIs.
+>
+> johannes
