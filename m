@@ -1,87 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35800 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751136AbcJKKva (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35922 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756531AbcJ3N5C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 11 Oct 2016 06:51:30 -0400
-Date: Tue, 11 Oct 2016 13:50:27 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: ido@wizery.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] iwlwifi: mvm: Add mem debugfs entry
-Message-ID: <20161011105027.GA29933@mwanda> (sfid-20161011_125139_004287_A864D8CB)
+        Sun, 30 Oct 2016 09:57:02 -0400
+Received: by mail-wm0-f68.google.com with SMTP id c17so14657346wmc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2016 06:57:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfjpomidp1v.fsf@redhat.com>
+References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube> <wrfjpomidp1v.fsf@redhat.com>
+From: John Heenan <john@zgus.com>
+Date: Sun, 30 Oct 2016 23:56:59 +1000
+Message-ID: <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com> (sfid-20161030_145902_424721_48DF0469)
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine macpower
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Ido Yariv,
+Thanks for your reply.
 
-The patch 2b55f43f8e47: "iwlwifi: mvm: Add mem debugfs entry" from
-Aug 23, 2016, leads to the following static checker warning:
+The code was tested on a Cube i9 which has an internal rtl8723bu.
 
-	drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:1561 iwl_dbgfs_mem_read()
-	warn: unsigned 'len' is never less than zero.
+No other devices were tested.
 
-drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-  1521  static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
-  1522                                    size_t count, loff_t *ppos)
-  1523  {
-  1524          struct iwl_mvm *mvm = file->private_data;
-  1525          struct iwl_dbg_mem_access_cmd cmd = {};
-  1526          struct iwl_dbg_mem_access_rsp *rsp;
-  1527          struct iwl_host_cmd hcmd = {
-  1528                  .flags = CMD_WANT_SKB | CMD_SEND_IN_RFKILL,
-  1529                  .data = { &cmd, },
-  1530                  .len = { sizeof(cmd) },
-  1531          };
-  1532          size_t delta, len;
-                              ^^^
-Unsigned.
+I am happy to accept in an ideal context hard coding macpower is
+undesirable, the comment is undesirable and it is wrong to assume the
+issue is not unique to the rtl8723bu.
 
-  1533          ssize_t ret;
-  1534  
-  1535          hcmd.id = iwl_cmd_id(*ppos >> 24 ? UMAC_RD_WR : LMAC_RD_WR,
-  1536                               DEBUG_GROUP, 0);
-  1537          cmd.op = cpu_to_le32(DEBUG_MEM_OP_READ);
-  1538  
-  1539          /* Take care of alignment of both the position and the length */
-  1540          delta = *ppos & 0x3;
-  1541          cmd.addr = cpu_to_le32(*ppos - delta);
-  1542          cmd.len = cpu_to_le32(min(ALIGN(count + delta, 4) / 4,
-  1543                                    (size_t)DEBUG_MEM_MAX_SIZE_DWORDS));
-  1544  
-  1545          mutex_lock(&mvm->mutex);
-  1546          ret = iwl_mvm_send_cmd(mvm, &hcmd);
-  1547          mutex_unlock(&mvm->mutex);
-  1548  
-  1549          if (ret < 0)
-  1550                  return ret;
-  1551  
-  1552          rsp = (void *)hcmd.resp_pkt->data;
-  1553          if (le32_to_cpu(rsp->status) != DEBUG_MEM_STATUS_SUCCESS) {
-  1554                  ret = -ENXIO;
-  1555                  goto out;
-  1556          }
-  1557  
-  1558          len = min((size_t)le32_to_cpu(rsp->len) << 2,
-  1559                    iwl_rx_packet_payload_len(hcmd.resp_pkt) - sizeof(*rsp));
-  1560          len = min(len - delta, count);
-  1561          if (len < 0) {
-                    ^^^^^^^
-Unpossible.
+Your reply is idealistic. What can I do now?  I should of course have
+factored out other untested devices in my patches. The apparent
+concern you have with process over outcome is a useful lesson.
 
-  1562                  ret = -EFAULT;
-  1563                  goto out;
-  1564          }
-  1565  
-  1566          ret = len - copy_to_user(user_buf, (void *)rsp->data + delta, len);
-  1567          *ppos += ret;
-  1568  
-  1569  out:
-  1570          iwl_free_resp(&hcmd);
-  1571          return ret;
-  1572  }
+We are not in an ideal situation. The comment is of course relevant
+and useful to starting a process to fixing a real bug I do not have
+sufficient information to refine any further for and others do. In the
+circumstances nothing really more can be expected.
 
-regards,
-dan carpenter
+My patch cover letter, [PATCH 0/2] provides evidence of a mess with
+regard to determining macpower for the rtl8723bu and what is
+subsequently required. This is important.
+
+The kernel driver code is very poorly documented and there is not a
+single source reference to device documentation. For example macpower
+is noting more than a setting that is true or false according to
+whether a read of a particular register return 0xef or not. Such value
+was never obtained so a full init sequence was never performed.
+
+It would be helpful if you could provide a link to device references.
+As it is, how am I supposed to revise the patch without relevant
+information?
+
+My patch code works with the Cube i9, as is, despite a lack of
+adequate information. Before it did not. That is a powerful statement
+
+Have a nice day.
+
+John Heenan
+
+
+On 30 October 2016 at 22:00, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> John Heenan <john@zgus.com> writes:
+>> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to set
+>> macpower, is never 0xea. It is only ever 0x01 (first time after modprobe)
+>> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These results
+>> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
+>>
+>> Whatever was returned, code tests always showed that at least
+>> rtl8xxxu_init_queue_reserved_page(priv);
+>> is always required. Not called if macpower set to true.
+>>
+>> Please see cover letter, [PATCH 0/2], for more information from tests.
+>>
+>
+> Sorry but this patch is neither serious nor acceptable. First of all,
+> hardcoding macpower like this right after an if statement is plain
+> wrong, second your comments violate all kernel rules.
+>
+> Second, you argue this was tested using code test - on which device? Did
+> you test it on all rtl8xxxu based devices or just rtl8723bu?
+>
+> NACK
+>
+> Jes
