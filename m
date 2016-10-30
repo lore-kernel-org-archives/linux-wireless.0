@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33606 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750957AbcJOGEz (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34926 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755123AbcJ3KVZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Oct 2016 02:04:55 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Jiri Slaby <jslaby@suse.cz>, linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH] p54: memset(0) whole array
-Date: Sat, 15 Oct 2016 08:04:51 +0200
-Message-ID: <6511335.zy53ITykIM@debian64> (sfid-20161015_080546_609689_69F06D37)
-In-Reply-To: <20161014092309.24113-1-jslaby@suse.cz>
-References: <20161014092309.24113-1-jslaby@suse.cz>
+        Sun, 30 Oct 2016 06:21:25 -0400
+Received: by mail-pf0-f194.google.com with SMTP id s8so5898552pfj.2
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2016 03:21:24 -0700 (PDT)
+Date: Sun, 30 Oct 2016 20:21:12 +1000
+From: John Heenan <john@zgus.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine macpower
+Message-ID: <20161030102112.GA5789@cube> (sfid-20161030_112150_440899_130EF9D4)
+References: <cover.1477769750.git.john@zgus.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1477769750.git.john@zgus.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, October 14, 2016 11:23:09 AM CEST Jiri Slaby wrote:
-> gcc 7 complains:
-> drivers/net/wireless/intersil/p54/fwio.c: In function 'p54_scan':
-> drivers/net/wireless/intersil/p54/fwio.c:491:4: warning: 'memset' used with length equal to number of elements without multiplication by element size [-Wmemset-elt-size]
-> 
-> Fix that by passing the correct size to memset.
-> 
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Christian Lamparter <chunkeey@googlemail.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
->  drivers/net/wireless/intersil/p54/fwio.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intersil/p54/fwio.c b/drivers/net/wireless/intersil/p54/fwio.c
-> index 257a9eadd595..4ac6764f4897 100644
-> --- a/drivers/net/wireless/intersil/p54/fwio.c
-> +++ b/drivers/net/wireless/intersil/p54/fwio.c
-> @@ -488,7 +488,7 @@ int p54_scan(struct p54_common *priv, u16 mode, u16 dwell)
->  
->  			entry += sizeof(__le16);
->  			chan->pa_points_per_curve = 8;
-> -			memset(chan->curve_data, 0, sizeof(*chan->curve_data));
-> +			memset(chan->curve_data, 0, sizeof(chan->curve_data));
->  			memcpy(chan->curve_data, entry,
->  			       sizeof(struct p54_pa_curve_data_sample) *
->  			       min((u8)8, curve_data->points_per_channel));
-> 
+Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to set
+macpower, is never 0xea. It is only ever 0x01 (first time after modprobe)
+using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These results
+occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
+
+Whatever was returned, code tests always showed that at least
+rtl8xxxu_init_queue_reserved_page(priv);
+is always required. Not called if macpower set to true.
+
+Please see cover letter, [PATCH 0/2], for more information from tests.
+
+For rtl8xxxu-devel branch of git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+
+Signed-off-by: John Heenan <john@zgus.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index f25b4df..aae05f3 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -3904,6 +3904,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 		macpower = false;
+ 	else
+ 		macpower = true;
++	macpower = false; // Code testing shows macpower must always be set to false to avoid failure
+ 
+ 	ret = fops->power_on(priv);
+ 	if (ret < 0) {
+-- 
+2.10.1
