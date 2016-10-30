@@ -1,160 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58533 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943119AbcJSPBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 19 Oct 2016 11:01:10 -0400
-From: Tomas Winkler <tomas.winkler@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Wim Van Sebroeck <wim@iguana.be>,
-        Guenter Roeck <linux@roeck-us.net>
-Cc: Alexander Usyskin <alexander.usyskin@intel.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-watchdog@vger.kernel.org,
-        Tomas Winkler <tomas.winkler@intel.com>
-Subject: [char-misc-next 5/5] mei: bus: remove rx callback context
-Date: Wed, 19 Oct 2016 16:33:31 +0300
-Message-Id: <1476884011-20645-6-git-send-email-tomas.winkler@intel.com> (sfid-20161019_170339_588591_99C04C93)
-In-Reply-To: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
-References: <1476884011-20645-1-git-send-email-tomas.winkler@intel.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35953 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751284AbcJ3JII (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 30 Oct 2016 05:08:08 -0400
+Received: by mail-wm0-f50.google.com with SMTP id p190so94251759wmp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 30 Oct 2016 02:08:08 -0700 (PDT)
+Received: from localhost.localdomain (127.7.150.83.ftth.as8758.net. [83.150.7.127])
+        by smtp.gmail.com with ESMTPSA id e5sm18450138wma.10.2016.10.30.02.08.06
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 30 Oct 2016 02:08:06 -0700 (PDT)
+Subject: Re: compex wle900vx (ath10k) problem on 4.4.24 / armv7
+References: <em1c0906d6-d30a-4f2c-bafb-bfec0d18a58d@nb-mak>
+ <386d6f28-9a13-51cc-27ae-0028d517cf27@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Oliver Zemann <oliver.zemann@gmail.com>
+Message-ID: <6445d07d-d935-9671-b4fb-5ca7e2b38724@gmail.com> (sfid-20161030_100830_525803_1C0D7234)
+Date: Sun, 30 Oct 2016 10:08:06 +0100
+MIME-Version: 1.0
+In-Reply-To: <386d6f28-9a13-51cc-27ae-0028d517cf27@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The callback context is redunant as all the information can be
-retrived from the device struture of its private data.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/misc/mei/bus.c     | 6 ++----
- drivers/nfc/mei_phy.c      | 5 ++---
- drivers/watchdog/mei_wdt.c | 6 ++----
- include/linux/mei_cl_bus.h | 6 ++----
- 4 files changed, 8 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
-index 8cac7ef9ad0d..89a694ca624c 100644
---- a/drivers/misc/mei/bus.c
-+++ b/drivers/misc/mei/bus.c
-@@ -228,7 +228,7 @@ static void mei_cl_bus_event_work(struct work_struct *work)
- 	bus = cldev->bus;
- 
- 	if (cldev->event_cb)
--		cldev->event_cb(cldev, cldev->events, cldev->event_context);
-+		cldev->event_cb(cldev, cldev->events);
- 
- 	cldev->events = 0;
- 
-@@ -301,7 +301,6 @@ bool mei_cl_bus_rx_event(struct mei_cl *cl)
-  * @cldev: me client devices
-  * @event_cb: callback function
-  * @events_mask: requested events bitmask
-- * @context: driver context data
-  *
-  * Return: 0 on success
-  *         -EALREADY if an callback is already registered
-@@ -309,7 +308,7 @@ bool mei_cl_bus_rx_event(struct mei_cl *cl)
-  */
- int mei_cldev_register_event_cb(struct mei_cl_device *cldev,
- 				unsigned long events_mask,
--				mei_cldev_event_cb_t event_cb, void *context)
-+				mei_cldev_event_cb_t event_cb)
- {
- 	struct mei_device *bus = cldev->bus;
- 	int ret;
-@@ -320,7 +319,6 @@ int mei_cldev_register_event_cb(struct mei_cl_device *cldev,
- 	cldev->events = 0;
- 	cldev->events_mask = events_mask;
- 	cldev->event_cb = event_cb;
--	cldev->event_context = context;
- 	INIT_WORK(&cldev->event_work, mei_cl_bus_event_work);
- 
- 	if (cldev->events_mask & BIT(MEI_CL_EVENT_RX)) {
-diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
-index 66dfd81ffb18..07b4239585fa 100644
---- a/drivers/nfc/mei_phy.c
-+++ b/drivers/nfc/mei_phy.c
-@@ -297,8 +297,7 @@ static int mei_nfc_recv(struct nfc_mei_phy *phy, u8 *buf, size_t length)
- }
- 
- 
--static void nfc_mei_event_cb(struct mei_cl_device *cldev, u32 events,
--			     void *context)
-+static void nfc_mei_event_cb(struct mei_cl_device *cldev, u32 events)
- {
- 	struct nfc_mei_phy *phy = mei_cldev_get_drvdata(cldev);
- 
-@@ -360,7 +359,7 @@ static int nfc_mei_phy_enable(void *phy_id)
- 	}
- 
- 	r = mei_cldev_register_event_cb(phy->cldev, BIT(MEI_CL_EVENT_RX),
--				     nfc_mei_event_cb, phy);
-+					nfc_mei_event_cb);
- 	if (r) {
- 		pr_err("Event cb registration failed %d\n", r);
- 		goto err;
-diff --git a/drivers/watchdog/mei_wdt.c b/drivers/watchdog/mei_wdt.c
-index 116be477c8fd..e0af52265511 100644
---- a/drivers/watchdog/mei_wdt.c
-+++ b/drivers/watchdog/mei_wdt.c
-@@ -501,10 +501,8 @@ static void mei_wdt_notify_event(struct mei_cl_device *cldev)
-  *
-  * @cldev: bus device
-  * @events: event mask
-- * @context: callback context
-  */
--static void mei_wdt_event(struct mei_cl_device *cldev,
--			  u32 events, void *context)
-+static void mei_wdt_event(struct mei_cl_device *cldev, u32 events)
- {
- 	if (events & BIT(MEI_CL_EVENT_RX))
- 		mei_wdt_event_rx(cldev);
-@@ -626,7 +624,7 @@ static int mei_wdt_probe(struct mei_cl_device *cldev,
- 	ret = mei_cldev_register_event_cb(wdt->cldev,
- 					  BIT(MEI_CL_EVENT_RX) |
- 					  BIT(MEI_CL_EVENT_NOTIF),
--					  mei_wdt_event, NULL);
-+					  mei_wdt_event);
- 
- 	/* on legacy devices notification is not supported
- 	 * this doesn't fail the registration for RX event
-diff --git a/include/linux/mei_cl_bus.h b/include/linux/mei_cl_bus.h
-index e6fbd98ea90e..4adb2e7c9f84 100644
---- a/include/linux/mei_cl_bus.h
-+++ b/include/linux/mei_cl_bus.h
-@@ -9,7 +9,7 @@ struct mei_cl_device;
- struct mei_device;
- 
- typedef void (*mei_cldev_event_cb_t)(struct mei_cl_device *cldev,
--				     u32 events, void *context);
-+				     u32 events);
- 
- /**
-  * struct mei_cl_device - MEI device handle
-@@ -27,7 +27,6 @@ typedef void (*mei_cldev_event_cb_t)(struct mei_cl_device *cldev,
-  * @event_work: async work to execute event callback
-  * @event_cb: Drivers register this callback to get asynchronous ME
-  *	events (e.g. Rx buffer pending) notifications.
-- * @event_context: event callback run context
-  * @events_mask: Events bit mask requested by driver.
-  * @events: Events bitmask sent to the driver.
-  *
-@@ -46,7 +45,6 @@ struct mei_cl_device {
- 
- 	struct work_struct event_work;
- 	mei_cldev_event_cb_t event_cb;
--	void *event_context;
- 	unsigned long events_mask;
- 	unsigned long events;
- 
-@@ -92,7 +90,7 @@ ssize_t  mei_cldev_recv(struct mei_cl_device *cldev, u8 *buf, size_t length);
- 
- int mei_cldev_register_event_cb(struct mei_cl_device *cldev,
- 				unsigned long event_mask,
--				mei_cldev_event_cb_t read_cb, void *context);
-+				mei_cldev_event_cb_t read_cb);
- 
- #define MEI_CL_EVENT_RX 0
- #define MEI_CL_EVENT_TX 1
--- 
-2.7.4
+ >> I (naively) went through pci/pm git log and found the following was
+ >> applied on 4.7-rc2 (i.e. prior to 4.7 release):
+ >>
+ >>  commit 006d44e49a259b39947366728d65a873a19aadc0
+ >>  Author: Mika Westerberg <mika.westerberg@linux.intel.com>
+ >>  Date:   Thu Jun 2 11:17:15 2016 +0300
+ >>
+ >>      PCI: Add runtime PM support for PCIe ports
+ >>
+ >> From reading the commit log it seems to me like it could be it.
+ >>
+ >> ath10k tries to wake up the device during probing before it starts
+ >> talking to it and it does so through MMIO/PCI config space. If it's
+ >> not mapped properly then driver will not be able to wake it up and
+ >> will timeout waiting for it.
+ >>
+ >> Can you try cherry-picking it into your 4.4.24 and see if it helps?
+ >>
+ >>
+ > Thanks for the help!
+ >
+ > Until now I did not compile a kernel for the board.
+ > I will give it a try and come back with the results ...
+ >
+ >
+ > Best regards,
+ > Matthias
+ >
+  good news, just got a message from the support with a quote from one 
+of their developers:
+  Have the customer that needs support for the ath cards to use this 
+branch. https://github.com/SolidRun/linux-stable/tree/linux-4.4.y-marvell
+  note that the device-tree is board specific and for now they should 
+create a symlink from their board file to armada-388-clearfog.dtb
+
+  when i look at the change, 
+https://github.com/SolidRun/linux-stable/commit/e12aa24ca56ca773b5c59a3cc2915b4e82e6be18 
+this looks exactly like the problem we had :)
+
+  I will try this today.
+
+  Regards
+  Oli
