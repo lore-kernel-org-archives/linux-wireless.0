@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4252 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752739AbcJRJ3y (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 18 Oct 2016 05:29:54 -0400
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <akolli@codeaurora.org>
-Subject: [PATCHv2 0/2] ath10k: add support for tx bitrate
-Date: Tue, 18 Oct 2016 14:59:40 +0530
-Message-ID: <1476782982-10683-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161018_112957_940404_2754DA33)
+Received: from mail.osadl.at ([92.243.35.153]:37096 "EHLO mail.osadl.at"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753157AbcJ3LLC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 30 Oct 2016 07:11:02 -0400
+Date: Sun, 30 Oct 2016 11:03:12 +0000
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: RFC if==else in halbtc8723b1ant.c
+Message-ID: <20161030110312.GA26326@osadl.at> (sfid-20161030_121109_724191_F8AADCDF)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@codeaurora.org>
 
-This patch series adds support for tx bitrate using 
-.sta_statistics callback.
+Hi !
 
-tx bitrate tested on QCA4019 using iw.
+ in your commit f5b586909581 ("rtlwifi: btcoexist: Modify driver to support 
+ BT coexistence in rtl8723be") you introduced a if/else where both branches 
+ are the same but the comment in the else branch suggests that this might be
+ unintended.
 
-Anilkumar Kolli (2):
-  ath10k: add per peer htt tx stats support for 10.4
-  ath10k: add support for per sta tx bitrate
+ from code review only I can´t say what the intent is.
 
- drivers/net/wireless/ath/ath10k/core.h        |   17 ++++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++
- drivers/net/wireless/ath/ath10k/htt.c         |    2 +
- drivers/net/wireless/ath/ath10k/htt.h         |   25 +++++
- drivers/net/wireless/ath/ath10k/htt_rx.c      |  125 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h         |   10 +-
- 6 files changed, 191 insertions(+), 1 deletion(-)
+/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b1ant.c:halbtc8723b1ant_action_wifi_connected_bt_acl_busy()
 
--- 
-1.7.9.5
+1838                 if ((bt_rssi_state == BTC_RSSI_STATE_HIGH) ||
+1839                     (bt_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+1840                         halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+1841                                                 true, 14);
+1842                         coex_dm->auto_tdma_adjust = false;
+1843                 } else { /*for low BT RSSI*/
+1844                         halbtc8723b1ant_ps_tdma(btcoexist, NORMAL_EXEC,
+1845                                                 true, 14);
+1846                         coex_dm->auto_tdma_adjust = false;
+1847                 }
+
+  basically the same construct is also in 
+ halbtc8723b1ant_run_coexist_mechanism()
+
+2213                         if ((wifi_rssi_state == BTC_RSSI_STATE_HIGH) ||
+2214                             (wifi_rssi_state == BTC_RSSI_STATE_STAY_HIGH)) {
+2215                                 halbtc8723b1ant_limited_tx(btcoexist,
+2216                                                            NORMAL_EXEC,
+2217                                                            1, 1, 1, 1);
+2218                         } else {
+2219                                 halbtc8723b1ant_limited_tx(btcoexist,
+2220                                                            NORMAL_EXEC,
+2221                                                            1, 1, 1, 1);
+2222                         }
+
+ where the if condition is the same so the else may also only apply to the
+ low BT RSSI - and the if and else are again the same - if this is intended
+ or not is not clear. If this is intended it should have appropriate comments.
+
+thx!
+hofrat
