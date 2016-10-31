@@ -1,62 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38422 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753776AbcJ3MAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 30 Oct 2016 08:00:46 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: John Heenan <john@zgus.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine macpower
-References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
-Date: Sun, 30 Oct 2016 08:00:44 -0400
-In-Reply-To: <20161030102112.GA5789@cube> (John Heenan's message of "Sun, 30
-        Oct 2016 20:21:12 +1000")
-Message-ID: <wrfjpomidp1v.fsf@redhat.com> (sfid-20161030_130050_865129_FF895AF2)
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35242 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S945207AbcJaSfb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Oct 2016 14:35:31 -0400
+Received: by mail-pf0-f195.google.com with SMTP id s8so9356282pfj.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 11:35:31 -0700 (PDT)
+Date: Tue, 1 Nov 2016 04:35:22 +1000
+From: John Heenan <john@zgus.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
+ wireless IC
+Message-ID: <20161031183522.GA13315@cube> (sfid-20161031_193555_671786_3335EF71)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John Heenan <john@zgus.com> writes:
-> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to set
-> macpower, is never 0xea. It is only ever 0x01 (first time after modprobe)
-> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These results
-> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
->
-> Whatever was returned, code tests always showed that at least
-> rtl8xxxu_init_queue_reserved_page(priv);
-> is always required. Not called if macpower set to true.
->
-> Please see cover letter, [PATCH 0/2], for more information from tests.
->
-> For rtl8xxxu-devel branch of git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->
-> Signed-off-by: John Heenan <john@zgus.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> index f25b4df..aae05f3 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> @@ -3904,6 +3904,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->  		macpower = false;
->  	else
->  		macpower = true;
-> +	macpower = false; // Code testing shows macpower must always be set to false to avoid failure
->  
->  	ret = fops->power_on(priv);
->  	if (ret < 0) {
+The rtl8723bu wireless IC shows evidence of a more agressive approach to
+power saving, powering down its RF side when there is no wireless
+interfacing but leaving USB interfacing intact. This makes the wireless
+IC more suitable for use in devices which need to keep their power use
+as low as practical, such as tablets and Surface Pro type devices.
 
-Sorry but this patch is neither serious nor acceptable. First of all,
-hardcoding macpower like this right after an if statement is plain
-wrong, second your comments violate all kernel rules.
+In effect this means that a full initialisation must be performed
+whenever a wireless interface is brought up. It also means that
+interpretations of power status from general wireless registers should
+not be relied on to influence an init sequence.
 
-Second, you argue this was tested using code test - on which device? Did
-you test it on all rtl8xxxu based devices or just rtl8723bu?
+The patch works by forcing a fuller initialisation and forcing it to
+occur more often in code paths (such as occurs during a low level
+authentication that initiates wireless interfacing).
 
-NACK
+The initialisation sequence is now more consistent with code based
+directly on vendor code. For example while the vendor derived code
+interprets a register as indcating a particular powered state, it does
+not use this information to influence its init sequence.
 
-Jes
+The rtl8723bu device has a unique USB VID and PID. This is taken
+advantage of for the patch to ensure only rtl8723bu devices are affected
+by this patch.
+
+With this patch wpa_supplicant reliably and consistently connects with
+an AP. Before a workaround such as executing rmmod and modprobe before
+each call to wpa_supplicant worked with some distributions.
+
+Signed-off-by: John Heenan <john@zgus.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 24 ++++++++++++++++++----
+ 1 file changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 04141e5..f36e674 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -79,6 +79,8 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
+ #define RTL8XXXU_TX_URB_LOW_WATER	25
+ #define RTL8XXXU_TX_URB_HIGH_WATER	32
+ 
++#define USB_PRODUCT_ID_RTL8723BU 0xb720
++
+ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+ 				  struct rtl8xxxu_rx_urb *rx_urb);
+ 
+@@ -3892,6 +3894,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	u8 val8;
+ 	u16 val16;
+ 	u32 val32;
++  struct usb_device_descriptor *udesc = &priv->udev->descriptor;
+ 
+ 	/* Check if MAC is already powered on */
+ 	val8 = rtl8xxxu_read8(priv, REG_CR);
+@@ -3900,7 +3903,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
+ 	 * initialized. First MAC returns 0xea, second MAC returns 0x00
+ 	 */
+-	if (val8 == 0xea)
++	if (val8 == 0xea
++			|| (udesc->idVendor == USB_VENDOR_ID_REALTEK
++			&&  udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
+ 		macpower = false;
+ 	else
+ 		macpower = true;
+@@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	struct rtl8xxxu_tx_urb *tx_urb;
+ 	unsigned long flags;
+ 	int ret, i;
++	struct usb_device_descriptor *udesc = &priv->udev->descriptor;
+ 
+ 	ret = 0;
+ 
++	if(udesc->idVendor == USB_VENDOR_ID_REALTEK
++			&& udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
++		ret = rtl8xxxu_init_device(hw);
++		if (ret)
++			goto error_out;
++	}
++
+ 	init_usb_anchor(&priv->rx_anchor);
+ 	init_usb_anchor(&priv->tx_anchor);
+ 	init_usb_anchor(&priv->int_anchor);
+@@ -6080,9 +6093,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 		goto exit;
+ 	}
+ 
+-	ret = rtl8xxxu_init_device(hw);
+-	if (ret)
++	if(!(id->idVendor == USB_VENDOR_ID_REALTEK
++			&& id->idProduct == USB_PRODUCT_ID_RTL8723BU)) {
++		ret = rtl8xxxu_init_device(hw);
++		if (ret)
+ 		goto exit;
++	}
+ 
+ 	hw->wiphy->max_scan_ssids = 1;
+ 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
+@@ -6191,7 +6207,7 @@ static struct usb_device_id dev_table[] = {
+ /* Tested by Myckel Habets */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192eu_fops},
+-{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0xb720, 0xff, 0xff, 0xff),
++{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, USB_PRODUCT_ID_RTL8723BU, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8723bu_fops},
+ #ifdef CONFIG_RTL8XXXU_UNTESTED
+ /* Still supported by rtlwifi */
+-- 
+2.10.1
