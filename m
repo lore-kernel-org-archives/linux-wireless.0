@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57009 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754300AbcJMNrH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:47:07 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from ore.jhcloos.com ([198.147.22.87]:40906 "EHLO ore.jhcloos.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S946907AbcJaVEk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Oct 2016 17:04:40 -0400
+From: James Cloos <cloos@jhcloos.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Subject: Re: Backwards 11ac
+In-Reply-To: <89dd7bd2-f6de-ea90-79ee-65d73d264522@dd-wrt.com> (Sebastian
+        Gottschall's message of "Mon, 31 Oct 2016 21:13:35 +0100")
+References: <m3oa21ftno.fsf@carbon.jhcloos.org>
+        <f8094de7-1357-a9d0-fee3-b28e06dd3bc7@dd-wrt.com>
+        <m34m3sfjsv.fsf@carbon.jhcloos.org>
+        <89dd7bd2-f6de-ea90-79ee-65d73d264522@dd-wrt.com>
+Date: Mon, 31 Oct 2016 17:02:59 -0400
+Message-ID: <m3y414dyf0.fsf@carbon.jhcloos.org> (sfid-20161031_220443_715269_4DCBB940)
 MIME-Version: 1.0
-Subject: Re: ath10k: fix debug cal data file
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1474341984-19220-1-git-send-email-mar.kolya@gmail.com>
-References: <1474341984-19220-1-git-send-email-mar.kolya@gmail.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-CC: Nikolay Martynov <mar.kolya@gmail.com>,
-        <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Message-ID: <21deaa8b2e7a4765bead3b77da17de49@euamsexm01a.eu.qualcomm.com> (sfid-20161013_154712_118595_7449A1A2)
-Date: Thu, 13 Oct 2016 15:42:32 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nikolay Martynov <mar.kolya@gmail.com> wrote:
-> It got broken by 0b8e3c4ca29fe2c0efd3d41a76e34a657b9f17a4
-> 
-> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+>>>>> "SG" == Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-Actually Marty's patch fixed this in a better way so I actually took that
-instead:
+JC>> Thanks for that info, but there is still the issue that download
+JC>> bandwidth is limited to around 6 Mbps whereas upload bandwidth is around
+JC>> 50 Mbps
 
-f67b107d4ced ath10k: cache calibration data when the core is stopped
+SG> thats unusual. i do not suffer from this issue with the latest driver
+SG> code and also never had it. but as i said. the visual tx rate doesnt
+SG> matter and isnt a reason for any issue here.
+SG> its just a number
 
+Those numbers above are actual throughput, tested via rsync/ssh.  Even
+adding in the rsync, ssh, tcp and ip overheads that is still worse than
+the 11n-40 on the 2.4 band.  And of course backwards.
+
+Does anyone have any explanation for the backwards bandwidth or solution
+for how to fix it?
+
+-JimC
 -- 
-https://patchwork.kernel.org/patch/9340953/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+James Cloos <cloos@jhcloos.com>         OpenPGP: 0x997A9F17ED7DAEA6
