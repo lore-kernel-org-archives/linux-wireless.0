@@ -1,57 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.183]:53188 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933363AbcJYN1k (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33511 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761999AbcJaIDI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 25 Oct 2016 09:27:40 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: Johannes Berg <johannes.berg@intel.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] cw1200: fix bogus maybe-uninitialized warning
-Date: Tue, 25 Oct 2016 13:24:55 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB0209E9A@AcuExch.aculab.com> (sfid-20161025_152759_994234_8C31C71A)
-References: <20161024154215.2863586-1-arnd@arndb.de>
-In-Reply-To: <20161024154215.2863586-1-arnd@arndb.de>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Mon, 31 Oct 2016 04:03:08 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a136so4722953pfa.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:03:07 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 12/12] mwifiex: pcie: stop checking for NULL adapter->card
+Date: Mon, 31 Oct 2016 16:02:20 +0800
+Message-Id: <1477900940-10549-12-git-send-email-huxinming820@marvell.com> (sfid-20161031_092412_324099_62BCFE22)
+In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogT2YgQXJuZCBCZXJnbWFubg0KPiBTZW50OiAyNCBPY3RvYmVyIDIwMTYgMTY6NDINCiAN
-Cj4gT24geDg2LCB0aGUgY3cxMjAwIGRyaXZlciBwcm9kdWNlcyBhIHJhdGhlciBzaWxseSB3YXJu
-aW5nIGFib3V0IHRoZQ0KPiBwb3NzaWJsZSB1c2Ugb2YgdGhlICdyZXQnIHZhcmlhYmxlIHdpdGhv
-dXQgYW4gaW5pdGlhbGl6YXRpb24NCj4gcHJlc3VtYWJseSBhZnRlciBiZWluZyBjb25mdXNlZCBi
-eSB0aGUgYXJjaGl0ZWN0dXJlIHNwZWNpZmljIGRlZmluaXRpb24NCj4gb2YgV0FSTl9PTjoNCj4g
-DQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL3N0L2N3MTIwMC93c20uYzogSW4gZnVuY3Rpb24gd3Nt
-X2hhbmRsZV9yeDoNCj4gZHJpdmVycy9uZXQvd2lyZWxlc3Mvc3QvY3cxMjAwL3dzbS5jOjE0NTc6
-OTogZXJyb3I6IHJldCBtYXkgYmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVuY3Rpb24g
-Wy0NCj4gV2Vycm9yPW1heWJlLXVuaW5pdGlhbGl6ZWRdDQo+IA0KPiBBcyB0aGUgZHJpdmVyIGp1
-c3QgY2hlY2tzIHRoZSBzYW1lIHZhcmlhYmxlIHR3aWNlIGhlcmUsIHdlIGNhbiBzaW1wbGlmeQ0K
-PiBpdCBieSByZW1vdmluZyB0aGUgc2Vjb25kIGNvbmRpdGlvbiwgd2hpY2ggbWFrZXMgaXQgbW9y
-ZSByZWFkYWJsZSBhbmQNCj4gYXZvaWRzIHRoZSB3YXJuaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1i
-eTogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9zdC9jdzEyMDAvd3NtLmMgfCAxNSArKysrKysrLS0tLS0tLS0NCj4gIDEgZmlsZSBj
-aGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDggZGVsZXRpb25zKC0pDQo+IA0KPiBkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mvc3QvY3cxMjAwL3dzbS5jIGIvZHJpdmVycy9uZXQvd2ly
-ZWxlc3Mvc3QvY3cxMjAwL3dzbS5jDQo+IGluZGV4IDY4MGQ2MGVhYmM3NS4uMDk0ZTY2MzdhZGUy
-IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9zdC9jdzEyMDAvd3NtLmMNCj4g
-KysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3Mvc3QvY3cxMjAwL3dzbS5jDQo+IEBAIC0zODUsMTQg
-KzM4NSwxMyBAQCBzdGF0aWMgaW50IHdzbV9tdWx0aV90eF9jb25maXJtKHN0cnVjdCBjdzEyMDBf
-Y29tbW9uICpwcml2LA0KPiAgCWlmIChXQVJOX09OKGNvdW50IDw9IDApKQ0KPiAgCQlyZXR1cm4g
-LUVJTlZBTDsNCj4gDQo+IC0JaWYgKGNvdW50ID4gMSkgew0KPiAtCQkvKiBXZSBhbHJlYWR5IHJl
-bGVhc2VkIG9uZSBidWZmZXIsIG5vdyBmb3IgdGhlIHJlc3QgKi8NCj4gLQkJcmV0ID0gd3NtX3Jl
-bGVhc2VfdHhfYnVmZmVyKHByaXYsIGNvdW50IC0gMSk7DQo+IC0JCWlmIChyZXQgPCAwKQ0KPiAt
-CQkJcmV0dXJuIHJldDsNCj4gLQkJZWxzZSBpZiAocmV0ID4gMCkNCj4gLQkJCWN3MTIwMF9iaF93
-YWtldXAocHJpdik7DQo+IC0JfQ0KPiArCS8qIFdlIGFscmVhZHkgcmVsZWFzZWQgb25lIGJ1ZmZl
-ciwgbm93IGZvciB0aGUgcmVzdCAqLw0KPiArCXJldCA9IHdzbV9yZWxlYXNlX3R4X2J1ZmZlcihw
-cml2LCBjb3VudCAtIDEpOw0KPiArCWlmIChyZXQgPCAwKQ0KPiArCQlyZXR1cm4gcmV0Ow0KPiAr
-DQo+ICsJaWYgKHJldCA+IDApDQo+ICsJCWN3MTIwMF9iaF93YWtldXAocHJpdik7DQoNClRoYXQg
-ZG9lc24ndCBsb29rIGVxdWl2YWxlbnQgdG8gbWUgKHdoZW4gY291bnQgPT0gMSkuDQoNCj4gDQo+
-ICAJY3cxMjAwX2RlYnVnX3R4ZWRfbXVsdGkocHJpdiwgY291bnQpOw0KPiAgCWZvciAoaSA9IDA7
-IGkgPCBjb3VudDsgKytpKSB7DQoNCkNvbnZlcnQgdGhpcyBsb29wIGludG8gYSBkbyAuLi4gd2hp
-bGUgc28gdGhlIGJvZHkgZXhlY3V0ZXMgYXQgbGVhc3Qgb25jZS4NCg0KCURhdmlkDQoNCg==
+From: Brian Norris <briannorris@chromium.org>
+
+It should never be NULL here, and to think otherwise makes things
+confusing.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 55 +++++++++++++----------------
+ 1 file changed, 24 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c061d00..86e8ce6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2990,31 +2990,28 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct pci_dev *pdev;
++	struct pci_dev *pdev = card->dev;
+ 	int i;
+ 
+-	if (card) {
+-		pdev = card->dev;
+-		if (card->msix_enable) {
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				synchronize_irq(card->msix_entries[i].vector);
++	if (card->msix_enable) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			synchronize_irq(card->msix_entries[i].vector);
+ 
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				free_irq(card->msix_entries[i].vector,
+-					 &card->msix_ctx[i]);
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			free_irq(card->msix_entries[i].vector,
++				 &card->msix_ctx[i]);
+ 
+-			card->msix_enable = 0;
+-			pci_disable_msix(pdev);
+-	       } else {
+-			mwifiex_dbg(adapter, INFO,
+-				    "%s(): calling free_irq()\n", __func__);
+-		       free_irq(card->dev->irq, &card->share_irq_ctx);
++		card->msix_enable = 0;
++		pci_disable_msix(pdev);
++       } else {
++		mwifiex_dbg(adapter, INFO,
++			    "%s(): calling free_irq()\n", __func__);
++	       free_irq(card->dev->irq, &card->share_irq_ctx);
+ 
+-			if (card->msi_enable)
+-				pci_disable_msi(pdev);
+-	       }
+-		card->adapter = NULL;
+-	}
++		if (card->msi_enable)
++			pci_disable_msi(pdev);
++       }
++	card->adapter = NULL;
+ }
+ 
+ /* This function initializes the PCI-E host memory space, WCB rings, etc.
+@@ -3097,18 +3094,14 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ 	adapter->seq_num = 0;
+ 	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 
+-	if (card) {
+-		if (reg->sleep_cookie)
+-			mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+-
+-		mwifiex_pcie_delete_cmdrsp_buf(adapter);
+-		mwifiex_pcie_delete_evtbd_ring(adapter);
+-		mwifiex_pcie_delete_rxbd_ring(adapter);
+-		mwifiex_pcie_delete_txbd_ring(adapter);
+-		card->cmdrsp_buf = NULL;
+-	}
++	if (reg->sleep_cookie)
++		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+ 
+-	return;
++	mwifiex_pcie_delete_cmdrsp_buf(adapter);
++	mwifiex_pcie_delete_evtbd_ring(adapter);
++	mwifiex_pcie_delete_rxbd_ring(adapter);
++	mwifiex_pcie_delete_txbd_ring(adapter);
++	card->cmdrsp_buf = NULL;
+ }
+ 
+ static struct mwifiex_if_ops pcie_ops = {
+-- 
+1.8.1.4
