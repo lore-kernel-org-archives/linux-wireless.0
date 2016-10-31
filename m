@@ -1,401 +1,565 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:33429 "EHLO
-        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754051AbcJONR3 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33389 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761978AbcJaICm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 15 Oct 2016 09:17:29 -0400
-Received: by mail-lf0-f50.google.com with SMTP id x79so222222240lff.0
-        for <linux-wireless@vger.kernel.org>; Sat, 15 Oct 2016 06:17:28 -0700 (PDT)
-Subject: Re: BCM43602 firmware reports multiple BRCMF_E_DEAUTH
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-References: <CACna6rzS4nDZ+H5kU71WwTTNLp5uZStpQHv4LLmWBDSdf5jpyw@mail.gmail.com>
- <f97678dc-2869-1b6a-33a3-f829cc30918a@gmail.com>
- <90e69e94-2210-22ec-3aec-67d9605b4b7c@broadcom.com>
- <b395146e-1917-e8d7-04e6-5d544f17531e@gmail.com>
- <CAF7Mx6ocYn21OkP7Tv7tMcuP_LLUQa-oPZigKzQWE1S4q9v=VA@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        brcm80211 development <brcm80211-dev-list@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <5f6563f2-6038-2036-27c9-5811b90df2f1@gmail.com> (sfid-20161015_151736_376648_4F436D2D)
-Date: Sat, 15 Oct 2016 15:17:25 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAF7Mx6ocYn21OkP7Tv7tMcuP_LLUQa-oPZigKzQWE1S4q9v=VA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 31 Oct 2016 04:02:42 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a136so4721965pfa.0
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:41 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 04/12] mwifiex: resolve races between async FW init (failure) and device removal
+Date: Mon, 31 Oct 2016 16:02:12 +0800
+Message-Id: <1477900940-10549-4-git-send-email-huxinming820@marvell.com> (sfid-20161031_090252_993655_9557BC69)
+In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/14/2016 12:13 PM, Arend Van Spriel wrote:
-> Ok. Did you also try the firmware I sent you?
+From: Brian Norris <briannorris@chromium.org>
 
-Hey again. Since you asked in public, I hope you don't mind me answering so.
+It's possible for the FW init sequence to fail, which will trigger a
+device cleanup sequence in mwifiex_fw_dpc(). This sequence can race with
+device suspend() or remove() (e.g., reboot or unbind), and can trigger
+use-after-free issues. Currently, this driver attempts (poorly) to
+synchronize remove() using a semaphore, but it doesn't protect some of
+the critical sections properly. Particularly, we grab a pointer to the
+adapter struct (card->adapter) without checking if it's being freed or
+not. We later do a NULL check on the adapter, but that doesn't work if
+the adapter was freed.
 
-So I tested experimental firmware I got from Arend (thank you!). It seems to
-behave slightly differently but I still observe timeouts in
-brcmf_netdev_wait_pend8021x.
+Also note that the PCIe interface driver doesn't ever set card->adapter
+to NULL, so even if we get the synchronization right, we still might try
+to redo the cleanup in ->remove(), even if the FW init failure sequence
+already did it.
 
-Please note I modified brcmfmac to call brcmf_netdev_wait_pend8021x
-continuously. This way it's not a matter of when send_key_to_dongle gets called.
+This patch replaces the static semaphore with a per-device completion
+struct, and uses that completion to synchronize the remove() thread with
+the mwifiex_fw_dpc(). A future patch will utilize this completion to
+synchronize the suspend() thread as well.
 
-I'll attach log of 11 cases where I saw wlc_ampdu_watchdog kicking in or just
-a warning from brcmf_netdev_wait_pend8021x.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 46 ++++++++++-------------------
+ drivers/net/wireless/marvell/mwifiex/main.h | 10 +++++--
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
+ drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 23 +++++++--------
+ drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
+ 8 files changed, 53 insertions(+), 68 deletions(-)
 
-1st case: timeouts started occuring 16 seconds after wlc_ampdu_watchdog
-2nd case: wlc_ampdu_tx_send_delba + timeout but without wlc_ampdu_watchdog
-3rd case: timeouts 6 seconds after wlc_ampdu_watchdog
-4th case: wlc_ampdu_watchdog without any timeout!
-5th case: just one timeout
-6th case: timeout between 2 wlc_ampdu_tx_send_delba + without any wlc_ampdu_watchdog
-7th case: no timeout in brcmf_netdev_wait_pend8021x at all
-8th case: it seems I can now see timeouts also before wlc_ampdu_watchdog + ampdu_dbg
-9th case: similar to above
-10th case: just 1 timeout *before* wlc_ampdu_watchdog + ampdu_dbg
-11th case: wlc_ampdu_watchdog + ampdu_dbg without timeout at all
-
-It's hard for me to say if it's much better. In some cases I didn't get timeouts
-in brcmf_netdev_wait_pend8021x at all which is nice. In other ones timeouts were
-occuring *before* wlc_ampdu_watchdog or *after* with some extra delay.
-
-So something has changed, but some problem seems to remain.
-
-#1
-Sat Oct 15 10:40:34 2016 kern.debug kernel: [ 3444.338326] brcmfmac: CONSOLE: 030176.154 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0x6a8 for 1000 ms
-Sat Oct 15 10:40:35 2016 kern.debug kernel: [ 3445.437653] brcmfmac: CONSOLE: 030177.254 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0x6af for 1000 ms
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659505] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659628] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659684] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109728
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659726] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659792] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: txall 1 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659860] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 14 0 0 0 0 ifs_boff 0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659909] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.659960] brcmfmac: CONSOLE: 030178.476 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.660051] brcmfmac: CONSOLE: 030178.476 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 10:40:36 2016 kern.debug kernel: [ 3446.660113] brcmfmac: CONSOLE: 030178.476 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 10:40:39 2016 kern.debug kernel: [ 3449.657853] brcmfmac: CONSOLE: 030181.476 wl0: wlc_ampdu_watchdog: cleaning up tid 0 from poff
-Sat Oct 15 10:40:54 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 10:40:55 2016 kern.err kernel: [ 3465.498648] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:40:56 2016 kern.err kernel: [ 3466.458647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:40:57 2016 kern.err kernel: [ 3467.409203] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:40:58 2016 kern.err kernel: [ 3468.368645] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:40:59 2016 kern.err kernel: [ 3469.319204] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:41:00 2016 kern.err kernel: [ 3470.278645] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:41:01 2016 kern.err kernel: [ 3471.229204] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:41:02 2016 kern.err kernel: [ 3472.188647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:41:03 2016 kern.err kernel: [ 3473.139229] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 10:41:03 2016 kern.debug kernel: [ 3473.657094] brcmfmac: CONSOLE: 030205.478 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 10:41:03 2016 kern.err kernel: [ 3473.657142] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 10:41:03 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#2
-Sat Oct 15 11:36:56 2016 kern.debug kernel: [ 6826.183551] brcmfmac: CONSOLE: 033560.307 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 11:36:57 2016 kern.err kernel: [ 6827.368648] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:36:58 2016 kern.err kernel: [ 6828.328646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:36:59 2016 kern.err kernel: [ 6829.288646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:36:59 2016 kern.debug kernel: [ 6829.914889] brcmfmac: CONSOLE: 033564.041 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 11:36:59 2016 kern.err kernel: [ 6829.914961] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 11:36:59 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:36:59 2016 kern.err kernel: [ 6829.915141] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:36:59 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:36:59 2016 kern.err kernel: [ 6829.928441] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:36:59 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.095039] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.098203] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.311874] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.322031] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.324444] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.532318] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.547082] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.668501] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:00 2016 kern.err kernel: [ 6830.668911] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:00 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.123344] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.123725] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.124429] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.124724] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.125274] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.183095] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.183719] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.184148] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.184548] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.185028] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.185436] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.186032] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.186372] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.186842] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.187222] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.187749] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.188173] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.188523] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.188916] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.189432] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.189782] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.193480] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.193534] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.193558] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 11:37:01 2016 kern.err kernel: [ 6831.193580] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 11:37:01 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#3
-Sat Oct 15 11:48:12 2016 kern.debug kernel: [ 7502.517302] brcmfmac: CONSOLE: 034236.934 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 11:48:13 2016 kern.debug kernel: [ 7503.866098] brcmfmac: CONSOLE: 034238.285 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0xd84 for 1000 ms
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528279] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: wl0.2 scb:00346afc tid:0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528404] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528460] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109640
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528503] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528569] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: txall 5 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528699] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 14 0 0 0 0 ifs_boff 0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528752] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528802] brcmfmac: CONSOLE: 034243.949 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528893] brcmfmac: CONSOLE: 034243.949 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 11:48:19 2016 kern.debug kernel: [ 7509.528955] brcmfmac: CONSOLE: 034243.949 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 11:48:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 11:48:25 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 11:48:25 2016 kern.err kernel: [ 7516.038647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:26 2016 kern.err kernel: [ 7516.998666] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:27 2016 kern.err kernel: [ 7517.949204] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:28 2016 kern.err kernel: [ 7518.908647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:29 2016 kern.err kernel: [ 7519.868646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:30 2016 kern.err kernel: [ 7520.828649] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:31 2016 kern.err kernel: [ 7521.788645] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:32 2016 kern.err kernel: [ 7522.748646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:33 2016 kern.err kernel: [ 7523.699209] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 11:48:34 2016 kern.debug kernel: [ 7524.545280] brcmfmac: CONSOLE: 034258.961 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 11:48:34 2016 kern.err kernel: [ 7524.545327] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 11:48:34 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#4
-Sat Oct 15 11:53:42 2016 kern.debug kernel: [ 7832.709896] brcmfmac: CONSOLE: 034567.239 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 11:53:43 2016 kern.debug kernel: [ 7833.155136] brcmfmac: CONSOLE: 034567.686 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0xe6e for 1000 ms
-Sat Oct 15 11:53:55 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.724898] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725022] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725078] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109071
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725120] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725187] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: txall 28 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725254] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 2 0 2 0 0 ifs_boff 0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725304] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725356] brcmfmac: CONSOLE: 034580.251 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725447] brcmfmac: CONSOLE: 034580.251 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 11:53:55 2016 kern.debug kernel: [ 7845.725510] brcmfmac: CONSOLE: 034580.251 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 11:53:55 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 11:53:58 2016 kern.debug kernel: [ 7848.754986] brcmfmac: CONSOLE: 034583.290 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 11:53:58 2016 kern.err kernel: [ 7848.755041] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 11:53:58 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#5
-Sat Oct 15 12:01:24 2016 kern.debug kernel: [ 8294.512509] brcmfmac: CONSOLE: 035029.214 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:01:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:01:26 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:01:27 2016 kern.debug kernel: [ 8297.522873] brcmfmac: CONSOLE: 035032.228 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0xcd8 for 1000 ms
-Sat Oct 15 12:01:27 2016 kern.err kernel: [ 8297.809204] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:01:28 2016 kern.err kernel: [ 8298.759205] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:01:29 2016 kern.err kernel: [ 8299.709203] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709455] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: wl0.2 scb:00346afc tid:0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709575] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709632] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109600
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709676] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709742] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: txall 8 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709810] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 12 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709860] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.709911] brcmfmac: CONSOLE: 035034.226 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.710002] brcmfmac: CONSOLE: 035034.226 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:01:29 2016 kern.debug kernel: [ 8299.710063] brcmfmac: CONSOLE: 035034.226 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.668646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.845503] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.846117] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.846234] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.846848] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:01:30 2016 kern.debug kernel: [ 8300.845457] brcmfmac: CONSOLE: 035035.551 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.847118] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:01:30 2016 kern.err kernel: [ 8300.876364] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:01:30 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#6
-Sat Oct 15 12:08:54 2016 kern.debug kernel: [ 8744.163589] brcmfmac: CONSOLE: 035479.101 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:08:55 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:08:55 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:08:57 2016 kern.err kernel: [ 8747.968646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:08:57 2016 kern.debug kernel: [ 8747.968977] brcmfmac: CONSOLE: 035482.107 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:08:59 2016 kern.debug kernel: [ 8749.033058] brcmfmac: CONSOLE: 035483.975 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 12:08:59 2016 kern.err kernel: [ 8749.033112] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 12:08:59 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.785827] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.786446] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.787826] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.788462] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.832697] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.832956] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.833657] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.833711] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.834027] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.834453] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.834591] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.835375] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.835583] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.836126] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.836518] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.836889] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.837295] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.837686] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.838107] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.838513] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.838884] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.839350] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.839733] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-Sat Oct 15 12:09:02 2016 kern.err kernel: [ 8752.840185] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 7
-Sat Oct 15 12:09:02 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#7
-Sat Oct 15 12:11:20 2016 kern.debug kernel: [ 8890.348071] brcmfmac: CONSOLE: 035625.342 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:11:21 2016 kern.debug kernel: [ 8891.391863] brcmfmac: CONSOLE: 035626.393 wl0: wlc_ampdu_resp_timeout: cleaning up resp tid 0 waiting forseq 0xeba for 1000 ms
-Sat Oct 15 12:11:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:11:26 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:11:29 2016 kern.debug kernel: [ 8899.083518] brcmfmac: CONSOLE: 035634.087 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 12:11:29 2016 kern.err kernel: [ 8899.083568] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 12:11:29 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#8
-Sat Oct 15 12:22:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:22:25 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:22:27 2016 kern.err kernel: [ 9557.228645] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:28 2016 kern.err kernel: [ 9558.188646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451027] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: wl0.2 scb:0034777c tid:0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451150] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451206] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109206
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451249] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451317] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: txall 33 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451383] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 4 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451433] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451484] brcmfmac: CONSOLE: 036293.506 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451575] brcmfmac: CONSOLE: 036293.506 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:22:28 2016 kern.debug kernel: [ 9558.451636] brcmfmac: CONSOLE: 036293.506 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:22:29 2016 kern.err kernel: [ 9559.148655] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:30 2016 kern.err kernel: [ 9560.108648] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:31 2016 kern.err kernel: [ 9561.068647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:31 2016 kern.debug kernel: [ 9561.253087] brcmfmac: CONSOLE: 036296.512 wl0: wlc_ampdu_watchdog: cleaning up tid 0 from poff
-Sat Oct 15 12:22:32 2016 kern.err kernel: [ 9562.028646] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:32 2016 kern.err kernel: [ 9562.988647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:33 2016 kern.debug kernel: [ 9563.258653] brcmfmac: CONSOLE: 036298.516 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 12:22:33 2016 kern.err kernel: [ 9563.258699] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 12:22:33 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#9
-Sat Oct 15 12:22:55 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:22:56 2016 kern.err kernel: [ 9586.728647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:22:57 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280576] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280701] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280756] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109237
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280798] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280865] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: txall 47 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280933] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 7 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.280982] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.281033] brcmfmac: CONSOLE: 036337.561 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.281124] brcmfmac: CONSOLE: 036337.561 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:23:12 2016 kern.debug kernel: [ 9602.281185] brcmfmac: CONSOLE: 036337.561 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283602] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283727] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283781] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109686
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283824] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283890] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: txall 1 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.283957] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 3 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.284008] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.284058] brcmfmac: CONSOLE: 036347.569 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.284150] brcmfmac: CONSOLE: 036347.569 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:23:22 2016 kern.debug kernel: [ 9612.284212] brcmfmac: CONSOLE: 036347.569 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-Sat Oct 15 12:23:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:23:26 2016 kern.err kernel: [ 9616.738647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:23:27 2016 kern.err kernel: [ 9617.698647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:23:28 2016 kern.err kernel: [ 9618.649206] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:23:28 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:23:29 2016 kern.err kernel: [ 9619.606333] brcmfmac: brcmf_notify_connect_status_ap: event ASSOC_IND (8), reason 0
-Sat Oct 15 12:23:29 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: associated
-Sat Oct 15 12:23:32 2016 kern.debug kernel: [ 9622.781918] brcmfmac: CONSOLE: 036358.071 wl0: Proxy STA 78:d6:f0:9b:ba:bc link is already gone !!??
-Sat Oct 15 12:23:32 2016 kern.err kernel: [ 9622.781972] brcmfmac: brcmf_notify_connect_status_ap: event DEAUTH (5), reason 3
-Sat Oct 15 12:23:32 2016 daemon.info hostapd: wlan1-1: STA 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
-
-#10
-Sat Oct 15 12:27:25 2016 daemon.info hostapd: wlan1-1: STA 88:53:2e:50:50:00 WPA: group key handshake completed (RSN)
-Sat Oct 15 12:27:28 2016 kern.err kernel: [ 9858.338647] brcmfmac: brcmf_netdev_wait_pend8021x: Timed out waiting for no pending 802.1x packets
-Sat Oct 15 12:27:28 2016 daemon.info hostapd: wlan1-1: STA 84:38:38:e4:b5:ea WPA: group key handshake completed (RSN)
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.429832] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.429956] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430011] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 109632
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430054] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430121] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: txall 4 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430187] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 4 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430238] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430289] brcmfmac: CONSOLE: 036596.854 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430380] brcmfmac: CONSOLE: 036596.854 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:27:31 2016 kern.debug kernel: [ 9861.430441] brcmfmac: CONSOLE: 036596.854 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
-
-#11
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438336] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: wl0.2 scb:0034946c tid:0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438461] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: wl0.2 dead_cnt 2 tx_in_transit 1 psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0 cpbusy 0x0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438516] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 107539
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438559] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438705] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: txall 13 txbcn 0 txrts 0 rxcts 0 rsptmout 0 rxstrt 0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438782] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 11 0 0 0 0 ifs_boff 0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438833] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438883] brcmfmac: CONSOLE: 036603.864 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.438975] brcmfmac: CONSOLE: 036603.864 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due to no progress for 2 secs tx_in_transit 1
-Sat Oct 15 12:27:38 2016 kern.debug kernel: [ 9868.439037] brcmfmac: CONSOLE: 036603.864 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1 reason 39
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index f559ead..206be45 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -525,7 +525,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	struct mwifiex_private *priv;
+ 	struct mwifiex_adapter *adapter = context;
+ 	struct mwifiex_fw_image fw;
+-	struct semaphore *sem = adapter->card_sem;
+ 	bool init_failed = false;
+ 	struct wireless_dev *wdev;
+ 
+@@ -674,7 +673,8 @@ done:
+ 	}
+ 	if (init_failed)
+ 		mwifiex_free_adapter(adapter);
+-	up(sem);
++	/* Tell all current and future waiters we're finished */
++	complete_all(adapter->fw_done);
+ 	return;
+ }
+ 
+@@ -1369,7 +1369,7 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+  * code is extracted from mwifiex_remove_card()
+  */
+ static int
+-mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
++mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv;
+ 	int i;
+@@ -1377,8 +1377,9 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	if (!adapter)
+ 		goto exit_return;
+ 
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
++	wait_for_completion(adapter->fw_done);
++	/* Caller should ensure we aren't suspending while this happens */
++	reinit_completion(adapter->fw_done);
+ 
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 	mwifiex_deauthenticate(priv, NULL);
+@@ -1435,8 +1436,6 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 		rtnl_unlock();
+ 	}
+ 
+-	up(sem);
+-exit_sem_err:
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+ exit_return:
+ 	return 0;
+@@ -1446,21 +1445,18 @@ exit_return:
+  * code is extracted from mwifiex_add_card()
+  */
+ static int
+-mwifiex_reinit_sw(struct mwifiex_adapter *adapter, struct semaphore *sem,
++mwifiex_reinit_sw(struct mwifiex_adapter *adapter, struct completion *fw_done,
+ 		  struct mwifiex_if_ops *if_ops, u8 iface_type)
+ {
+ 	char fw_name[32];
+ 	struct pcie_service_card *card = adapter->card;
+ 
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
+-
+ 	mwifiex_init_lock_list(adapter);
+ 	if (adapter->if_ops.up_dev)
+ 		adapter->if_ops.up_dev(adapter);
+ 
+ 	adapter->iface_type = iface_type;
+-	adapter->card_sem = sem;
++	adapter->fw_done = fw_done;
+ 
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
+ 	adapter->surprise_removed = false;
+@@ -1511,7 +1507,8 @@ mwifiex_reinit_sw(struct mwifiex_adapter *adapter, struct semaphore *sem,
+ 	}
+ 	strcpy(adapter->fw_name, fw_name);
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+-	up(sem);
++
++	complete_all(adapter->fw_done);
+ 	return 0;
+ 
+ err_init_fw:
+@@ -1531,8 +1528,7 @@ err_init_fw:
+ err_kmalloc:
+ 	mwifiex_terminate_workqueue(adapter);
+ 	adapter->surprise_removed = true;
+-	up(sem);
+-exit_sem_err:
++	complete_all(adapter->fw_done);
+ 	mwifiex_dbg(adapter, INFO, "%s, error\n", __func__);
+ 
+ 	return -1;
+@@ -1547,12 +1543,12 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
+ 	struct mwifiex_if_ops if_ops;
+ 
+ 	if (!prepare) {
+-		mwifiex_reinit_sw(adapter, adapter->card_sem, &if_ops,
++		mwifiex_reinit_sw(adapter, adapter->fw_done, &if_ops,
+ 				  adapter->iface_type);
+ 	} else {
+ 		memcpy(&if_ops, &adapter->if_ops,
+ 		       sizeof(struct mwifiex_if_ops));
+-		mwifiex_shutdown_sw(adapter, adapter->card_sem);
++		mwifiex_shutdown_sw(adapter);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_do_flr);
+@@ -1571,21 +1567,18 @@ EXPORT_SYMBOL_GPL(mwifiex_do_flr);
+  *      - Add logical interfaces
+  */
+ int
+-mwifiex_add_card(void *card, struct semaphore *sem,
++mwifiex_add_card(void *card, struct completion *fw_done,
+ 		 struct mwifiex_if_ops *if_ops, u8 iface_type)
+ {
+ 	struct mwifiex_adapter *adapter;
+ 
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
+-
+ 	if (mwifiex_register(card, if_ops, (void **)&adapter)) {
+ 		pr_err("%s: software init failed\n", __func__);
+ 		goto err_init_sw;
+ 	}
+ 
+ 	adapter->iface_type = iface_type;
+-	adapter->card_sem = sem;
++	adapter->fw_done = fw_done;
+ 
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
+ 	adapter->surprise_removed = false;
+@@ -1654,9 +1647,7 @@ err_kmalloc:
+ 	mwifiex_free_adapter(adapter);
+ 
+ err_init_sw:
+-	up(sem);
+ 
+-exit_sem_err:
+ 	return -1;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_card);
+@@ -1672,14 +1663,11 @@ EXPORT_SYMBOL_GPL(mwifiex_add_card);
+  *      - Unregister the device
+  *      - Free the adapter structure
+  */
+-int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
++int mwifiex_remove_card(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv = NULL;
+ 	int i;
+ 
+-	if (down_trylock(sem))
+-		goto exit_sem_err;
+-
+ 	if (!adapter)
+ 		goto exit_remove;
+ 
+@@ -1749,8 +1737,6 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	mwifiex_free_adapter(adapter);
+ 
+ exit_remove:
+-	up(sem);
+-exit_sem_err:
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_remove_card);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 7f67f23..bbd8d63 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -20,6 +20,7 @@
+ #ifndef _MWIFIEX_MAIN_H_
+ #define _MWIFIEX_MAIN_H_
+ 
++#include <linux/completion.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/sched.h>
+@@ -985,7 +986,10 @@ struct mwifiex_adapter {
+ 	u32 usr_dot_11ac_mcs_support;
+ 
+ 	atomic_t pending_bridged_pkts;
+-	struct semaphore *card_sem;
++
++	/* For synchronizing FW initialization with device lifecycle. */
++	struct completion *fw_done;
++
+ 	bool ext_scan;
+ 	u8 fw_api_ver;
+ 	u8 key_api_major_ver, key_api_minor_ver;
+@@ -1413,8 +1417,8 @@ static inline u8 mwifiex_is_tdls_link_setup(u8 status)
+ 
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 			     u32 func_init_shutdown);
+-int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8);
+-int mwifiex_remove_card(struct mwifiex_adapter *, struct semaphore *);
++int mwifiex_add_card(void *, struct completion *, struct mwifiex_if_ops *, u8);
++int mwifiex_remove_card(struct mwifiex_adapter *);
+ 
+ void mwifiex_get_version(struct mwifiex_adapter *adapter, char *version,
+ 			 int maxlen);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index e6bea02..5507c89 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -35,8 +35,6 @@ static u8 user_rmmod;
+ 
+ static struct mwifiex_if_ops pcie_ops;
+ 
+-static struct semaphore add_remove_card_sem;
+-
+ static int
+ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 		       size_t size, int flags)
+@@ -193,6 +191,8 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
++
+ 	card->dev = pdev;
+ 
+ 	if (ent->driver_data) {
+@@ -206,7 +206,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 		card->pcie.can_ext_scan = data->can_ext_scan;
+ 	}
+ 
+-	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
++	if (mwifiex_add_card(card, &card->fw_done, &pcie_ops,
+ 			     MWIFIEX_PCIE)) {
+ 		pr_err("%s failed\n", __func__);
+ 		return -1;
+@@ -228,6 +228,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	if (!card)
+ 		return;
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+@@ -247,7 +249,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+-	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
+ }
+ 
+ static void mwifiex_pcie_shutdown(struct pci_dev *pdev)
+@@ -3151,8 +3153,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ /*
+  * This function initializes the PCIE driver module.
+  *
+- * This initiates the semaphore and registers the device with
+- * PCIE bus.
++ * This registers the device with PCIE bus.
+  */
+ static int mwifiex_pcie_init_module(void)
+ {
+@@ -3160,8 +3161,6 @@ static int mwifiex_pcie_init_module(void)
+ 
+ 	pr_debug("Marvell PCIe Driver\n");
+ 
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	/* Clear the flag in case user removes the card. */
+ 	user_rmmod = 0;
+ 
+@@ -3185,9 +3184,6 @@ static int mwifiex_pcie_init_module(void)
+  */
+ static void mwifiex_pcie_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* Set the flag as user is removing this module. */
+ 	user_rmmod = 1;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 46f99ca..ae3365d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -22,6 +22,7 @@
+ #ifndef	_MWIFIEX_PCIE_H
+ #define	_MWIFIEX_PCIE_H
+ 
++#include    <linux/completion.h>
+ #include    <linux/pci.h>
+ #include    <linux/interrupt.h>
+ 
+@@ -345,6 +346,7 @@ struct pcie_service_card {
+ 	struct pci_dev *dev;
+ 	struct mwifiex_adapter *adapter;
+ 	struct mwifiex_pcie_device pcie;
++	struct completion fw_done;
+ 
+ 	u8 txbd_flush;
+ 	u32 txbd_wrptr;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index f04cf5a..1f6ebde 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -49,8 +49,6 @@ static u8 user_rmmod;
+ static struct mwifiex_if_ops sdio_ops;
+ static unsigned long iface_work_flags;
+ 
+-static struct semaphore add_remove_card_sem;
+-
+ static struct memory_type_mapping generic_mem_type_map[] = {
+ 	{"DUMP", NULL, 0, 0xDD},
+ };
+@@ -156,6 +154,8 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
++
+ 	card->func = func;
+ 	card->device_id = id;
+ 
+@@ -197,7 +197,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 		}
+ 	}
+ 
+-	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
++	ret = mwifiex_add_card(card, &card->fw_done, &sdio_ops,
+ 			       MWIFIEX_SDIO);
+ 	if (ret) {
+ 		dev_err(&func->dev, "add card failed\n");
+@@ -283,6 +283,8 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 	if (!card)
+ 		return;
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+@@ -300,7 +302,7 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+-	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
+ }
+ 
+ /*
+@@ -2771,14 +2773,11 @@ static struct mwifiex_if_ops sdio_ops = {
+ /*
+  * This function initializes the SDIO driver.
+  *
+- * This initiates the semaphore and registers the device with
+- * SDIO bus.
++ * This registers the device with SDIO bus.
+  */
+ static int
+ mwifiex_sdio_init_module(void)
+ {
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	/* Clear the flag in case user removes the card. */
+ 	user_rmmod = 0;
+ 
+@@ -2797,9 +2796,6 @@ mwifiex_sdio_init_module(void)
+ static void
+ mwifiex_sdio_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* Set the flag as user is removing this module. */
+ 	user_rmmod = 1;
+ 	cancel_work_sync(&sdio_work);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+index db837f1..cc0aac8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.h
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+@@ -21,6 +21,7 @@
+ #define	_MWIFIEX_SDIO_H
+ 
+ 
++#include <linux/completion.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio_func.h>
+@@ -244,6 +245,7 @@ struct sdio_mmc_card {
+ 	struct mwifiex_adapter *adapter;
+ 	struct device_node *plt_of_node;
+ 	struct mwifiex_plt_wake_cfg *plt_wake_cfg;
++	struct completion fw_done;
+ 
+ 	const char *firmware;
+ 	const struct mwifiex_sdio_card_reg *reg;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 57ed834..c20ff2f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -24,7 +24,6 @@
+ 
+ static u8 user_rmmod;
+ static struct mwifiex_if_ops usb_ops;
+-static struct semaphore add_remove_card_sem;
+ 
+ static struct usb_device_id mwifiex_usb_table[] = {
+ 	/* 8766 */
+@@ -386,6 +385,8 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
++
+ 	id_vendor = le16_to_cpu(udev->descriptor.idVendor);
+ 	id_product = le16_to_cpu(udev->descriptor.idProduct);
+ 	bcd_device = le16_to_cpu(udev->descriptor.bcdDevice);
+@@ -475,7 +476,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 
+ 	usb_set_intfdata(intf, card);
+ 
+-	ret = mwifiex_add_card(card, &add_remove_card_sem, &usb_ops,
++	ret = mwifiex_add_card(card, &card->fw_done, &usb_ops,
+ 			       MWIFIEX_USB);
+ 	if (ret) {
+ 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
+@@ -601,13 +602,15 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	struct usb_card_rec *card = usb_get_intfdata(intf);
+ 	struct mwifiex_adapter *adapter;
+ 
+-	if (!card || !card->adapter) {
+-		pr_err("%s: card or card->adapter is NULL\n", __func__);
++	if (!card) {
++		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+ 		return;
+ 	}
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+-	if (!adapter->priv_num)
++	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+@@ -627,7 +630,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 
+ 	mwifiex_dbg(adapter, FATAL,
+ 		    "%s: removing card\n", __func__);
+-	mwifiex_remove_card(adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
+ 
+ 	usb_put_dev(interface_to_usbdev(intf));
+ }
+@@ -1201,8 +1204,7 @@ static struct mwifiex_if_ops usb_ops = {
+ 
+ /* This function initializes the USB driver module.
+  *
+- * This initiates the semaphore and registers the device with
+- * USB bus.
++ * This registers the device with USB bus.
+  */
+ static int mwifiex_usb_init_module(void)
+ {
+@@ -1210,8 +1212,6 @@ static int mwifiex_usb_init_module(void)
+ 
+ 	pr_debug("Marvell USB8797 Driver\n");
+ 
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	ret = usb_register(&mwifiex_usb_driver);
+ 	if (ret)
+ 		pr_err("Driver register failed!\n");
+@@ -1231,9 +1231,6 @@ static int mwifiex_usb_init_module(void)
+  */
+ static void mwifiex_usb_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* set the flag as user is removing this module */
+ 	user_rmmod = 1;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
+index 30e8eb8..e5f204e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.h
++++ b/drivers/net/wireless/marvell/mwifiex/usb.h
+@@ -20,6 +20,7 @@
+ #ifndef _MWIFIEX_USB_H
+ #define _MWIFIEX_USB_H
+ 
++#include <linux/completion.h>
+ #include <linux/usb.h>
+ 
+ #define USB8XXX_VID		0x1286
+@@ -75,6 +76,7 @@ struct usb_card_rec {
+ 	struct mwifiex_adapter *adapter;
+ 	struct usb_device *udev;
+ 	struct usb_interface *intf;
++	struct completion fw_done;
+ 	u8 rx_cmd_ep;
+ 	struct urb_context rx_cmd;
+ 	atomic_t rx_cmd_urb_pending;
+-- 
+1.8.1.4
