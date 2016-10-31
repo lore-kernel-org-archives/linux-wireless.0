@@ -1,55 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:36111 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756944AbcKDCCL (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36360 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S948002AbcJaX5Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 22:02:11 -0400
-Received: by mail-oi0-f47.google.com with SMTP id v84so127260704oie.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 19:02:11 -0700 (PDT)
+        Mon, 31 Oct 2016 19:57:16 -0400
+Received: by mail-pf0-f175.google.com with SMTP id 189so31071777pfz.3
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 16:57:16 -0700 (PDT)
+Date: Mon, 31 Oct 2016 16:57:12 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
+Subject: Re: [PATCH 01/12] mwifiex: fix power save issue when suspend
+Message-ID: <20161031235712.GA101079@google.com> (sfid-20161101_005720_477205_9E7CF9B5)
+References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com>
-References: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
- <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Thu, 3 Nov 2016 22:01:50 -0400
-Message-ID: <CAHqTa-3s_Z7+vFM=-G4CKP5ff3zukB=wZJavPX83jnyO6QZzVQ@mail.gmail.com> (sfid-20161104_030215_400670_968E84AC)
-Subject: Re: Avery's notes from LPC2016 wireless track (Santa Fe)
-To: Kathy Giori <kathy.giori@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 3, 2016 at 7:55 PM, Kathy Giori <kathy.giori@gmail.com> wrote:
-> On Thu, Nov 3, 2016 at 1:43 PM, Avery Pennarun <apenwarr@gmail.com> wrote:
->> We talked about many topics at the Linux Plumbers' Conference in Santa
->> Fe on Tuesday.  I took fairly detailed notes, which you can find at
->> the links below.
->
-> Great notes Avery. Did you happen to take note of how many
-> participants there were? Or was the attendee list posted on the wiki
-> beforehand fairly accurate?
-> https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
+Hi,
 
-There were quite a few people not on the list.  Google sent an
-extra-large contingent last year.  People estimated about 50% of the
-wireless meeting were Googlers, which comes to maybe 15 out of around
-30-ish.  Google is doing a lot of (sometimes redundant :)) wireless
-work lately.
+On Mon, Oct 31, 2016 at 04:02:09PM +0800, Xinming Hu wrote:
+> From: Shengzhen Li <szli@marvell.com>
+> 
+> This patch fixes a corner case for "FROMLIST: mwifiex: fix corner case
 
-> Was there any talk about having more frequent "live" discussions of
-> these topics (via video conf or conf call or scheduled IRC), to help
-> overall collaboration without having to wait for the next f2f summit?
-> Mailing list interaction doesn't seem to elicit the same energy as
-> occurs over live dialog. Quarterly?
+Upstream patches don't normally get a 'FROMLIST' tag while you're
+sending them to the mailing list :) That designation is used for Chrome
+OS trees, so we know where to find the patch source. But the upstream
+mailing list *is* the source.
 
-It didn't come up.  Honestly, it feels to me like 6 months is the
-right cadence.  A lot of work does happen in the background, such as
-the fq_codel work (yay!) which was definitely launched by one or two
-of these, but proceeded well afterwards.
+> power save issue", main process will check the power save condition in
+> PS_PRE_SLEEP status so the sleep handshake could continue.
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> BUG=chrome-os-partner:58164
+> TEST=stress Wifi w/ power_save enabled
+> 
+> Change-Id: I5a36d9eaeb7fe5faaccc533e0d1ba1f3253666dc
 
-Hope you're doing well at whatever you're doing now!
+In the same vein: while I'm happy to have the BUG=, TEST=, and Gerrit
+Change-ID for our Chrome OS tree, I don't think upstream reviewers
+typically care about those. Please remove those from upstream
+submissions like this.
 
-Have fun,
+(Same applies to the rest of this series. Also, consider running
+scripts/checkpatch.pl. It will at least remind you about removing the
+Gerrit Change-ID.)
 
-Avery
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 ++-
+>  drivers/net/wireless/marvell/mwifiex/main.c   | 5 +++++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> index 5347728..9075be5 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> @@ -1123,8 +1123,9 @@ mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
+>  		mwifiex_dnld_sleep_confirm_cmd(adapter);
+>  	else
+>  		mwifiex_dbg(adapter, CMD,
+> -			    "cmd: Delay Sleep Confirm (%s%s%s)\n",
+> +			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
+>  			    (adapter->cmd_sent) ? "D" : "",
+> +			    (adapter->data_sent) ? "T" : "",
+>  			    (adapter->curr_cmd) ? "C" : "",
+>  			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
+>  }
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index 2478ccd..f559ead 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -308,6 +308,11 @@ process_start:
+>  			/* We have tried to wakeup the card already */
+>  			if (adapter->pm_wakeup_fw_try)
+>  				break;
+> +			if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+> +				if (!adapter->cmd_sent && !adapter->curr_cmd)
+
+The entire 'if' condition is unnecessary. That's all checked already
+within mwifiex_check_ps_cond().
+
+Brian
+
+> +					mwifiex_check_ps_cond(adapter);
+> +			}
+> +
+>  			if (adapter->ps_state != PS_STATE_AWAKE)
+>  				break;
+>  			if (adapter->tx_lock_flag) {
+> -- 
+> 1.8.1.4
+> 
