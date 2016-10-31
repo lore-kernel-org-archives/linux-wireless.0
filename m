@@ -1,80 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:43504 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755004AbcJLOMq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 10:12:46 -0400
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        David Hutchison <dhutchison@bluemesh.net>
-References: <CA+i30h8YsG7mce5FMwGw2fRNAn3USYV6K==QMjMQVeSGB0dj=w@mail.gmail.com>
- <8760oxfzg4.fsf@kamboji.qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <040abb8b-d57b-63f9-43ec-da7e12b87bc6@dd-wrt.com> (sfid-20161012_161250_410997_782B40F7)
-Date: Wed, 12 Oct 2016 16:12:39 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:57082 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933673AbcJaVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 31 Oct 2016 17:25:15 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: John Heenan <john@zgus.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu wireless IC
+References: <20161031183522.GA13315@cube>
+Date: Mon, 31 Oct 2016 17:25:12 -0400
+In-Reply-To: <20161031183522.GA13315@cube> (John Heenan's message of "Tue, 1
+        Nov 2016 04:35:22 +1000")
+Message-ID: <wrfj1sywrz2f.fsf@redhat.com> (sfid-20161031_222540_598474_6FDE40AD)
 MIME-Version: 1.0
-In-Reply-To: <8760oxfzg4.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Subject: Re: QCA9887 Firmware Memory Usage
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 12.10.2016 um 15:51 schrieb Valo, Kalle:
-> David Hutchison <dhutchison@bluemesh.net> writes:
+John Heenan <john@zgus.com> writes:
+> The rtl8723bu wireless IC shows evidence of a more agressive approach to
+> power saving, powering down its RF side when there is no wireless
+> interfacing but leaving USB interfacing intact. This makes the wireless
+> IC more suitable for use in devices which need to keep their power use
+> as low as practical, such as tablets and Surface Pro type devices.
 >
->> I am using a Mikrotik hAP AC Lite which has a QCA9887 radio. It
->> appears to be working; however ath10k ( or the qca9887 firmware ) is
->> utilizing 15 - 20mb of memory. I applied the kfree(caldata) patch, to
->> insure there is no memory leak.
->>
->> It doesn't appear to be leaking, and it will run Ok with the high
->> memory footprint. However the Mikrotik hAP AC Lite is only a 64mb
->> platform; so when I initialize the 2nd radio with ath9k I get OOMs.
->>
->> It just doesn't seem right that when ath10k + qca9887 is in AP mode
->> that it's utilizing as much memory as it is. I don't think the issue
->> is with ath10k, I think it's the qca9887 firmware (
->> firmware-5.bin_10.2.4-1.0-00013 ).
->>
->> Is there a newer build available that may potentially fix these memory
->> issues? The latest one available on
->> https://github.com/kvalo/ath10k-firmware/blob/master/QCA9887/hw1.0/firmware-5.bin_10.2.4-1.0-00013
->> is 2 months old. Perhaps there is a newer build to test that may have
->> the fix?
->>
->> Any thoughts as to what it could be? I can provide more information if needed.
-> 64MB of RAM nowadays is not much and ath10k is not really tested in such
-> setups AFAIK. I guess you could try if reducing TARGET_10X_NUM_MSDU_DESC
-> helps with the memory consumption, but no idea if that would even work
-> without further modifications to ath10k.
+> In effect this means that a full initialisation must be performed
+> whenever a wireless interface is brought up. It also means that
+> interpretations of power status from general wireless registers should
+> not be relied on to influence an init sequence.
 >
-> Also if you have fq-codel&co enabled that might increase memory
-> consumption. Adding linux-wireless as people there might have better
-the high memory consumption is a very common old problem. and no, 64 mb 
-might not by much. but consider that qca9880 cards for instance are only 
-used on embedded devices.
-there is not even a windows driver available for it. its mainly used in 
-routers and 64 mb ram is not uncommon here.
-the problem with qca9887 sounds similar here. and the best. it only 
-occures on ath10k. with the closed source qca driver it will work on 
-embedded platforms. since
-it was mentioned that this problem is caused by the firmware itself. so 
-there wont be a solution until qca is finally getting in touch with this 
-problem
-> ideas.
+> The patch works by forcing a fuller initialisation and forcing it to
+> occur more often in code paths (such as occurs during a low level
+> authentication that initiates wireless interfacing).
 >
+> The initialisation sequence is now more consistent with code based
+> directly on vendor code. For example while the vendor derived code
+> interprets a register as indcating a particular powered state, it does
+> not use this information to influence its init sequence.
+>
+> The rtl8723bu device has a unique USB VID and PID. This is taken
+> advantage of for the patch to ensure only rtl8723bu devices are affected
+> by this patch.
+>
+> With this patch wpa_supplicant reliably and consistently connects with
+> an AP. Before a workaround such as executing rmmod and modprobe before
+> each call to wpa_supplicant worked with some distributions.
+>
+> Signed-off-by: John Heenan <john@zgus.com>
+> ---
+>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 24 ++++++++++++++++++----
+>  1 file changed, 20 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> index 04141e5..f36e674 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> @@ -79,6 +79,8 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
+>  #define RTL8XXXU_TX_URB_LOW_WATER	25
+>  #define RTL8XXXU_TX_URB_HIGH_WATER	32
+>  
+> +#define USB_PRODUCT_ID_RTL8723BU 0xb720
+> +
 
+Absolutely not! You have no guarantee that this is the only id used for
+8723bu devices, and adding a #define for each is not going to happen.
 
--- 
-Mit freundlichen Grüssen / Regards
+>  static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+>  				  struct rtl8xxxu_rx_urb *rx_urb);
+>  
+> @@ -3892,6 +3894,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+>  	u8 val8;
+>  	u16 val16;
+>  	u32 val32;
+> +  struct usb_device_descriptor *udesc = &priv->udev->descriptor;
 
-Sebastian Gottschall / CTO
+Indentaiton
+  
+>  	/* Check if MAC is already powered on */
+>  	val8 = rtl8xxxu_read8(priv, REG_CR);
+> @@ -3900,7 +3903,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+>  	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
+>  	 * initialized. First MAC returns 0xea, second MAC returns 0x00
+>  	 */
+> -	if (val8 == 0xea)
+> +	if (val8 == 0xea
+> +			|| (udesc->idVendor == USB_VENDOR_ID_REALTEK
+> +			&&  udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
+>  		macpower = false;
+>  	else
+>  		macpower = true;
 
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+Please respect proper kernel coding style!
+
+> @@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+>  	struct rtl8xxxu_tx_urb *tx_urb;
+>  	unsigned long flags;
+>  	int ret, i;
+> +	struct usb_device_descriptor *udesc = &priv->udev->descriptor;
+>  
+>  	ret = 0;
+>  
+> +	if(udesc->idVendor == USB_VENDOR_ID_REALTEK
+> +			&& udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
+> +		ret = rtl8xxxu_init_device(hw);
+> +		if (ret)
+> +			goto error_out;
+> +	}
+> +
+
+As mentioned previously, if this is to be changed here, it has to be
+matched in the _stop section too. It also has to be investigated exactly
+why this matters for 8723bu. It is possible this matters for other
+devices, but we need to find out exactly what causes this not moving a
+major block of init code around like this.
+
+>  	init_usb_anchor(&priv->rx_anchor);
+>  	init_usb_anchor(&priv->tx_anchor);
+>  	init_usb_anchor(&priv->int_anchor);
+> @@ -6080,9 +6093,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+>  		goto exit;
+>  	}
+>  
+> -	ret = rtl8xxxu_init_device(hw);
+> -	if (ret)
+> +	if(!(id->idVendor == USB_VENDOR_ID_REALTEK
+> +			&& id->idProduct == USB_PRODUCT_ID_RTL8723BU)) {
+> +		ret = rtl8xxxu_init_device(hw);
+> +		if (ret)
+>  		goto exit;
+> +	}
+
+Again, this coding style abuse will never go into this driver,
+
+Jes
