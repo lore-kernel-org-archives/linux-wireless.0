@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.160]:30892 "EHLO
-        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932125AbcJFLx3 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34879 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761936AbcJaIC6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 6 Oct 2016 07:53:29 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 06 Oct 2016 13:53:08 +0200
-From: michael-dev <michael-dev@fami-braun.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH 3/3] mac80211: multicast to unicast conversion
-In-Reply-To: <1475668688.4994.46.camel@sipsolutions.net>
-References: <1475643324-2845-1-git-send-email-michael-dev@fami-braun.de>
- <1475643324-2845-3-git-send-email-michael-dev@fami-braun.de>
- <1475662791.4994.39.camel@sipsolutions.net>
- <1690671fb30f19c53c7883a5207c5721@fami-braun.de>
- <1475668688.4994.46.camel@sipsolutions.net>
-Message-ID: <199ae52e4e3000456d8d65b81500d874@fami-braun.de> (sfid-20161006_135335_352437_50C0DC22)
+        Mon, 31 Oct 2016 04:02:58 -0400
+Received: by mail-pf0-f195.google.com with SMTP id s8so8097819pfj.2
+        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 01:02:57 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 09/12] mwifiex: usb: handle HS failures
+Date: Mon, 31 Oct 2016 16:02:17 +0800
+Message-Id: <1477900940-10549-9-git-send-email-huxinming820@marvell.com> (sfid-20161031_090306_217994_EFF26D68)
+In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 05.10.2016 13:58, schrieb Johannes Berg:
-> 
-> Anyway, perhaps this needs to change to take DMS/per-station into
-> account?
-> 
-> Then again, this kind of setting - global multicast-to-unicast -
-> fundamentally *cannot* be done on a per-station basis, since if you
-> enable it for one station and not for another, the first station that
-> has it enabled would get the packets twice...
+From: Brian Norris <briannorris@chromium.org>
 
-as I see it, that is exactly how DMS is standarized.
+SDIO and PCIe drivers handle this. Let's imitate it.
 
-IEEE 802.11-2012 section 10.23.15 DMS procedures:
+Not tested.
 
-"If the requested DMS is accepted by the AP, the AP shall send 
-subsequent group addressed MSDUs that
-match the frame classifier specified in the DMS Descriptors to the 
-requesting STA as A-MSDU subframes
-within an individually addressed A-MSDU frame (see 8.3.2.2 and 9.11)."
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-  -> so the multicast packets shall go out as unicast A-MSDU frames to 
-stations that requested this
-
-"The AP shall continue to transmit the matching frames as group 
-addressed frames (see 9.3.6, and 10.2.1.16) if at least one associated 
-STA has not requested DMS for these frames."
-
-  -> so it will continue to send it as multicast frames as well.
-
-As with DMS the station requested DMS for a specific multicast address, 
-it could then drop multicast frames addressed to the multicast address 
-it registered for DMS.
-
-Regards,
-M. Braun
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 70126c3..c26daf4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -521,7 +521,14 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 		mwifiex_dbg(adapter, WARN,
+ 			    "Device already suspended\n");
+ 
+-	mwifiex_enable_hs(adapter);
++	/* Enable the Host Sleep */
++	if (!mwifiex_enable_hs(adapter)) {
++		mwifiex_dbg(adapter, ERROR,
++			    "cmd: failed to suspend\n");
++		adapter->hs_enabling = false;
++		return -EFAULT;
++	}
++
+ 
+ 	/* 'is_suspended' flag indicates device is suspended.
+ 	 * It must be set here before the usb_kill_urb() calls. Reason
+-- 
+1.8.1.4
