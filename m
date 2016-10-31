@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:33483 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932694AbcJLVpZ (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:56758 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S946061AbcJaTiL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 12 Oct 2016 17:45:25 -0400
-Received: by mail-yw0-f196.google.com with SMTP id w3so2331615ywg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 12 Oct 2016 14:45:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
-References: <147629570687.26062.4786752681864367162.stgit@localhost.localdomain>
-From: Steve deRosier <derosier@gmail.com>
-Date: Wed, 12 Oct 2016 14:32:18 -0700
-Message-ID: <CALupW3D2dsTeixs3z+e9JC_D2D_Bd_AHquHKttCf17OhMqEFUg@mail.gmail.com> (sfid-20161012_234529_671888_1164D570)
-Subject: Re: [PATCH] ath6k1: add Dell OEM SDIO I/O for the Venue 8 Pro
-To: Alan <alan@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 31 Oct 2016 15:38:11 -0400
+Date: Mon, 31 Oct 2016 15:38:09 -0400 (EDT)
+Message-Id: <20161031.153809.270896325416087100.davem@davemloft.net> (sfid-20161031_203853_909507_4908F5C3)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-10-30
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87insaw5u9.fsf@kamboji.qca.qualcomm.com>
+References: <87insaw5u9.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alan,
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Sun, 30 Oct 2016 11:20:46 +0200
 
-Sorry to quibble, but the subsystem label on the commit subject line
-should be "ath6kl:"  it's a lower-case "L", not a one.
+> few fixes for 4.9. I tagged this on the plane over a slow mosh
+> connection while travelling to Plumbers so I might have done something
+> wrong, please check more carefully than usually. For example I had to
+> redo the signed tag because of some whitespace damage.
+> 
+> Please let me know if there are any problems.
 
+Your subject line says "-next" but clearly these are bug fixes for 'net'
+so that's where I pulled this into.
 
-On Wed, Oct 12, 2016 at 11:08 AM, Alan <alan@linux.intel.com> wrote:
-> From: Adam Williamson <adamw@happyassassin.net>
->
-> SDIO ID 0271:0418
->
-> Signed-off-by: Alan Cox <alan@linux.intel.com>
-> Bugzilla-ID: https://bugzilla.kernel.org/show_bug.cgi?id=67921
->
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index eab0ab9..76eb336 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -1401,6 +1401,7 @@ static const struct sdio_device_id ath6kl_sdio_devices[] = {
->         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x0))},
->         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x1))},
->         {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x2))},
-> +       {SDIO_DEVICE(MANUFACTURER_CODE, (MANUFACTURER_ID_AR6004_BASE | 0x18))},
->         {},
->  };
->
->
-
-I see nothing wrong with this if the chip does indeed identify itself
-this way.  So please fix the subject and you can add:
-
-Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
-
-- Steve
+Thanks.
