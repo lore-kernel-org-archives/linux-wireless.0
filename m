@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47190 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751152AbcKSHTp (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36008 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034678AbcKAHb7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Nov 2016 02:19:45 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 1 Nov 2016 03:31:59 -0400
 MIME-Version: 1.0
-Subject: Re: [v4,
- 01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Shengzhen Li <szli@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20161119071944.C049C614C3@smtp.codeaurora.org> (sfid-20161119_081949_456949_C37A7322)
-Date: Sat, 19 Nov 2016 07:19:44 +0000 (UTC)
+In-Reply-To: <20161101072447.GA21575@cube>
+References: <20161101072447.GA21575@cube>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 1 Nov 2016 08:31:58 +0100
+Message-ID: <CACna6rx3yxkM8g7_cbuRg_LgH5BNN=cJKHsJ+gKD6+hX57_8-Q@mail.gmail.com> (sfid-20161101_083219_873251_A34EAA94)
+Subject: Re: [PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu
+ wireless IC
+To: John Heenan <john@zgus.com>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Shengzhen Li <szli@marvell.com>
-> 
-> We may get SLEEP event from firmware even if TXDone interrupt
-> for last Tx packet is still pending. In this case, we may
-> end up accessing PCIe memory for handling TXDone after power
-> save handshake is completed. This causes kernel crash with
-> external abort.
-> 
-> This patch will only allow downloading sleep confirm
-> when no tx done interrupt is pending in the hardware.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Tested-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+On 1 November 2016 at 08:24, John Heenan <john@zgus.com> wrote:
+> @@ -5779,6 +5779,12 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+>
+>         ret =3D 0;
+>
+> +       if(priv->fops =3D=3D &rtl8723bu_fops) {
 
-11 patches applied to wireless-drivers-next.git, thanks.
+OK, let me be the first. Documentation/CodingStyle also says to use
+space between "if" and "(" ;)
 
-eb2428fb1a21 mwifiex: check tx_hw_pending before downloading sleep confirm
-6712076883ca mwifiex: complete blocked power save handshake in main process
-4a79aa17d53e mwifiex: resolve races between async FW init (failure) and device removal
-a1beec4b2c6f mwifiex: remove redundant pdev check in suspend/resume handlers
-7ccdf72f9128 mwifiex: don't pretend to resume while remove()'ing
-b42dbb27e326 mwifiex: resolve suspend() race with async FW init failure
-bcf28a2f2846 mwifiex: reset card->adapter during device unregister
-58b7033551cd mwifiex: usb: handle HS failures
-6caf34cb3a92 mwifiex: sdio: don't check for NULL sdio_func
-e98fb11ffa0a mwifiex: stop checking for NULL drvata/intfdata
-97489c284d9f mwifiex: pcie: stop checking for NULL adapter->card
 
--- 
-https://patchwork.kernel.org/patch/9436513/
+> @@ -6080,9 +6086,11 @@ static int rtl8xxxu_probe(struct usb_interface *in=
+terface,
+>                 goto exit;
+>         }
+>
+> -       ret =3D rtl8xxxu_init_device(hw);
+> -       if (ret)
+> -               goto exit;
+> +       if(priv->fops !=3D &rtl8723bu_fops) {
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+Same here.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I reviewed style only.
+
+--=20
+Rafa=C5=82
