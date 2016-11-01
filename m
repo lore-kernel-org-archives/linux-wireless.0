@@ -1,81 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:35431 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754360AbcK1KUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 05:20:37 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH] ath9k: Turn ath_txq_lock/unlock() into static inlines.
-Date: Mon, 28 Nov 2016 11:20:24 +0100
-Message-Id: <20161128102024.14925-1-toke@toke.dk> (sfid-20161128_112200_052340_9C1A9D85)
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:33530 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1168226AbcKAJdg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Nov 2016 05:33:36 -0400
+Received: by mail-ua0-f181.google.com with SMTP id 20so108398813uak.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 02:33:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Jonas Gorski <jonas.gorski@gmail.com>
+Date: Tue, 1 Nov 2016 10:33:14 +0100
+Message-ID: <CAOiHx=nbLZHW94MF+ki8CXO9n_S5b26t1O9p_pFPu6Z1mZmOtw@mail.gmail.com> (sfid-20161101_103341_191181_D74B0514)
+Subject: "silent" TL-WDN4200 (RT593 usb) devices
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Gabor Juhos <juhosg@openwrt.org>
+Content-Type: multipart/mixed; boundary=94eb2c190cb0bce2bb05403a0492
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are one-line functions that just call spin_lock/unlock_bh(); turn
-them into static inlines to avoid the function call overhead.
+--94eb2c190cb0bce2bb05403a0492
+Content-Type: text/plain; charset=UTF-8
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- drivers/net/wireless/ath/ath9k/ath9k.h | 11 +++++++++--
- drivers/net/wireless/ath/ath9k/xmit.c  | 12 ------------
- 2 files changed, 9 insertions(+), 14 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 378d345..dca4aaa3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -555,6 +555,15 @@ static inline void ath_chanctx_check_active(struct ath_softc *sc,
- 
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
- 
-+static inline void ath_txq_lock(struct ath_softc *sc, struct ath_txq *txq)
-+{
-+	spin_lock_bh(&txq->axq_lock);
-+}
-+static inline void ath_txq_unlock(struct ath_softc *sc, struct ath_txq *txq)
-+{
-+	spin_unlock_bh(&txq->axq_lock);
-+}
-+
- void ath_startrecv(struct ath_softc *sc);
- bool ath_stoprecv(struct ath_softc *sc);
- u32 ath_calcrxfilter(struct ath_softc *sc);
-@@ -562,8 +571,6 @@ int ath_rx_init(struct ath_softc *sc, int nbufs);
- void ath_rx_cleanup(struct ath_softc *sc);
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp);
- struct ath_txq *ath_txq_setup(struct ath_softc *sc, int qtype, int subtype);
--void ath_txq_lock(struct ath_softc *sc, struct ath_txq *txq);
--void ath_txq_unlock(struct ath_softc *sc, struct ath_txq *txq);
- void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq);
- void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq);
- bool ath_drain_all_txq(struct ath_softc *sc);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 486afa9..e5c0829 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -97,18 +97,6 @@ static void ath_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	dev_kfree_skb(skb);
- }
- 
--void ath_txq_lock(struct ath_softc *sc, struct ath_txq *txq)
--	__acquires(&txq->axq_lock)
--{
--	spin_lock_bh(&txq->axq_lock);
--}
--
--void ath_txq_unlock(struct ath_softc *sc, struct ath_txq *txq)
--	__releases(&txq->axq_lock)
--{
--	spin_unlock_bh(&txq->axq_lock);
--}
--
- void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq)
- 	__releases(&txq->axq_lock)
- {
+I have a bunch of rt5393 based TL-WDN4200 devices of which only one is
+working as expected, and the rest fail to tx with rt2800-usb, using
+latest master of lede (but also older verions). They are working fine
+with the windows drivers.
 
-base-commit: 705d7aa062203226c8df73f18622664e30bd8a61
--- 
-2.10.2
+Symptoms are:
+1. Scanning works fine (so RX seems to work)
+2. Trying to assoc in STA mode will time out
+3. In AP mode it won't show up on scan by other devices
+
+I tried listening with tcpdump (from an ath9k card, with encryption
+disabled), but didn't see anything on the air from the non-working
+sticks.
+
+I also tried comparing the rt3593 ralink driver with rt2x00, and
+couldn't find any differences on a first glance, so I'm a bit stumped.
+Any pointers what else I can try/test would be good.
+
+For comparison, I attached the eeprom contents from a working and a
+non working stick, in hope it will help. If needed, I can try to
+create a usb trace on windows.
+
+
+Regards
+Jonas
+
+--94eb2c190cb0bce2bb05403a0492
+Content-Type: text/plain; charset=US-ASCII; name="nonworking.txt"
+Content-Disposition: attachment; filename="nonworking.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iufakcwg0
+
+MDogICAgICAweDM1NzMgMHgwMTAwIDB4ZGVlOCAweDIwMjcKNDogICAgICAweGFmZDQgMHgwMDAw
+IDB4MDAwMCAweDAwMDAKODogICAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMTI6ICAg
+ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweDAwMDAKMTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
+MCAweDAwMDAKMjA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMjQ6ICAgICAweDAw
+MDAgMHgwMDAwIDB4MGQzMyAweDAwOGUKMjg6ICAgICAweDAwMzMgMHgwMDAwIDB4MDAwMCAweDA2
+MDEKMzI6ICAgICAweGZmZmYgMHgwMTE2IDB4MDEyNCAweDU1NTUKMzY6ICAgICAweGJiZDkgMHhm
+ZmJiIDB4MGEwYSAweDA4MDgKNDA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDQ6
+ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDg6ICAgICAweDBkMGQgMHgwZTBkIDB4
+MGUwZSAweDBmMGUKNTI6ICAgICAweDEwMGYgMHgxMDEwIDB4MTAxMCAweDBkMGQKNTY6ICAgICAw
+eDBlMGQgMHgwZTBlIDB4MGUwZSAweDBmMGYKNjA6ICAgICAweDBmMGYgMHgwZTBlIDB4MGQwZCAw
+eDBlMGUKNjQ6ICAgICAweDBmMGYgMHgxMDEwIDB4MTExMSAweDEyMTIKNjg6ICAgICAweDExMTEg
+MHhiOGM5IDB4ODhhMSAweDY4NzEKNzI6ICAgICAweDQ1NTUgMHgwMTMwIDB4MDUwMCAweDBkMGQK
+NzY6ICAgICAweDBjMGQgMHgwYzBjIDB4MGIwYiAweDBiMGIKODA6ICAgICAweDBhMGEgMHgwNjA3
+IDB4MDYwNiAweDA1MDYKODQ6ICAgICAweDA1MDUgMHgwNDA1IDB4MDQwNCAweDAzMDMKODg6ICAg
+ICAweDAzMDMgMHgwMjAyIDB4MDEwMSAweDAxMDEKOTI6ICAgICAweDAwMDEgMHgwMDAwIDB4MDAw
+MCAweDAwMDAKOTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTAwOiAgICAweDAw
+MDAgMHgwNzA3IDB4MDcwNyAweDA3MDcKMTA0OiAgICAweDA3MDcgMHgwNzA3IDB4MDcwNyAweDA2
+MDYKMTA4OiAgICAweDA2MDYgMHgwNjA2IDB4MDYwNiAweDA2MDYKMTEyOiAgICAweDA1MDYgMHgw
+NTA1IDB4MDUwNSAweDA1MDUKMTE2OiAgICAweDA1MDUgMHgwNTA1IDB4MDAwNSAweDAwMDAKMTIw
+OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTI0OiAgICAweDAwMDAgMHgwMDAwIDB4
+MDAwMCAweDA4MDgKMTI4OiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTMyOiAgICAw
+eDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTM2OiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAw
+eDA4MDgKMTQwOiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTQ0OiAgICAweDAwMDgg
+MHgwMDAwIDB4MDAwMCAweDAwMDAKMTQ4OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAK
+MTUyOiAgICAweDAwMDAgMHgwMDAwIDB4YjhjOSAweDg4YTIKMTU2OiAgICAweDY1NzEgMHg0MzU1
+IDB4MDEzNSAweDAwMDAKMTYwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTY0OiAg
+ICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTY4OiAgICAweGFjMDAgMHgwNjY4IDB4Njhh
+YyAweDhhYzYKMTcyOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTc2OiAgICAweGFj
+MDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTgwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAw
+MDYKMTg0OiAgICAweGFjMDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTg4OiAgICAweGFjNjYgMHgw
+NjY4IDB4NjhhYyAweDAwMDYKMTkyOiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTk2
+OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweGZmZmYKMjAwOiAgICAweGZmZmYgMHhmZmZmIDB4
+ZmZmZiAweGZmZmYKMjA0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjA4OiAgICAw
+eGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjEyOiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAw
+eGZmZmYKMjE2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjIwOiAgICAweGZmZmYg
+MHhmZmZmIDB4ZmZmZiAweGZmZmYKMjI0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
+MjI4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjMyOiAgICAweGZmZmYgMHhmZmZm
+IDB4ZmZmZiAweGZmZmYKMjM2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQwOiAg
+ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQ0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZm
+ZiAweGZmZmYKMjQ4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjUyOiAgICAweGZm
+ZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
+--94eb2c190cb0bce2bb05403a0492
+Content-Type: text/plain; charset=US-ASCII; name="working.txt"
+Content-Disposition: attachment; filename="working.txt"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iufakd3d1
+
+MDogICAgICAweDM1NzMgMHgwMTAwIDB4ZGVlOCAweDFkMjcKNDogICAgICAweDExMzcgMHgwMDAw
+IDB4MDAwMCAweDAwMDAKODogICAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMTI6ICAg
+ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweDAwMDAKMTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
+MCAweDAwMDAKMjA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMjQ6ICAgICAweDAw
+MDAgMHgwMDAwIDB4MGQzMyAweDAwOGUKMjg6ICAgICAweDAwMzMgMHgwMDAwIDB4MDAwMCAweDA2
+MDEKMzI6ICAgICAweGZmZmYgMHgwMTE2IDB4MDEyOCAweDU1NTUKMzY6ICAgICAweGJiZDkgMHhm
+ZmJiIDB4MGEwYSAweDA4MDgKNDA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDQ6
+ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDg6ICAgICAweDBjMGMgMHgwZDBjIDB4
+MGQwZCAweDBlMGQKNTI6ICAgICAweDBmMGUgMHgwZjBmIDB4MGYwZiAweDBkMGQKNTY6ICAgICAw
+eDBlMGUgMHgwZjBmIDB4MGYwZiAweDEwMTAKNjA6ICAgICAweDEwMTAgMHgwZjBmIDB4MGYwZiAw
+eDEwMTAKNjQ6ICAgICAweDExMTEgMHgxMjEyIDB4MTMxMyAweDEzMTQKNjg6ICAgICAweDEyMTMg
+MHhiOGM5IDB4ODhhMSAweDY4NzEKNzI6ICAgICAweDQ1NTUgMHgwMTMwIDB4MDUwMCAweDBkMGQK
+NzY6ICAgICAweDBjMGQgMHgwYzBjIDB4MGIwYiAweDBhMGIKODA6ICAgICAweDBhMGEgMHgwNjA2
+IDB4MDUwNiAweDA1MDUKODQ6ICAgICAweDA0MDQgMHgwNDA0IDB4MDMwMyAweDAyMDMKODg6ICAg
+ICAweDAyMDIgMHgwMTAxIDB4MDAwMCAweDAwMDAKOTI6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
+MCAweDAwMDAKOTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTAwOiAgICAweDAw
+MDAgMHgwNDA0IDB4MDQwNCAweDA0MDQKMTA0OiAgICAweDA0MDQgMHgwNDA0IDB4MDQwNCAweDAz
+MDMKMTA4OiAgICAweDAzMDMgMHgwMzAzIDB4MDMwMyAweDAzMDMKMTEyOiAgICAweDAzMDMgMHgw
+MzAzIDB4MDMwMyAweDAzMDMKMTE2OiAgICAweDAzMDMgMHgwMzAzIDB4MDAwMyAweDAwMDAKMTIw
+OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTI0OiAgICAweDAwMDAgMHgwMDAwIDB4
+MDAwMCAweDA1MDUKMTI4OiAgICAweDA1MDUgMHgwNTA1IDB4MDUwNSAweDA1MDUKMTMyOiAgICAw
+eDA1MDUgMHgwNjA2IDB4MDYwNiAweDA2MDYKMTM2OiAgICAweDA2MDYgMHgwNjA2IDB4MDcwNiAw
+eDA3MDcKMTQwOiAgICAweDA3MDcgMHgwNzA3IDB4MDcwNyAweDA3MDcKMTQ0OiAgICAweDAwMDcg
+MHgwMDAwIDB4MDAwMCAweDAwMDAKMTQ4OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAK
+MTUyOiAgICAweDAwMDAgMHgwMDAwIDB4YjhjOSAweDg4YTIKMTU2OiAgICAweDY1NzEgMHg0MzU1
+IDB4MDEzNSAweDAwMDAKMTYwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTY0OiAg
+ICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTY4OiAgICAweGFjMDAgMHgwNjY4IDB4Njhh
+YyAweDhhYzYKMTcyOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTc2OiAgICAweGFj
+MDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTgwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAw
+MDYKMTg0OiAgICAweGFjMDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTg4OiAgICAweGFjNjYgMHgw
+NjY4IDB4NjhhYyAweDAwMDYKMTkyOiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTk2
+OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweGZmZmYKMjAwOiAgICAweGZmZmYgMHhmZmZmIDB4
+ZmZmZiAweGZmZmYKMjA0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjA4OiAgICAw
+eGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjEyOiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAw
+eGZmZmYKMjE2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjIwOiAgICAweGZmZmYg
+MHhmZmZmIDB4ZmZmZiAweGZmZmYKMjI0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
+MjI4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjMyOiAgICAweGZmZmYgMHhmZmZm
+IDB4ZmZmZiAweGZmZmYKMjM2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQwOiAg
+ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQ0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZm
+ZiAweGZmZmYKMjQ4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjUyOiAgICAweGZm
+ZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
+--94eb2c190cb0bce2bb05403a0492--
