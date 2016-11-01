@@ -1,64 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35898 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753580AbcKROoJ (ORCPT
+Received: from outils.crapouillou.net ([89.234.176.41]:33854 "EHLO
+        outils.crapouillou.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1168811AbcKALEX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:44:09 -0500
-Date: Fri, 18 Nov 2016 08:44:06 -0600
-From: Rob Herring <robh@kernel.org>
-To: c_traja@qti.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        tamizhchelvam@codeaurora.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCHv2 3/4] dt: bindings: add new dt entry for BTCOEX feature
- in qcom,ath10k.txt
-Message-ID: <20161118144406.3se7gnckhcmwqytp@rob-hp-laptop> (sfid-20161118_154446_214107_6749258D)
-References: <1479383064-25718-1-git-send-email-c_traja@qti.qualcomm.com>
- <1479383064-25718-4-git-send-email-c_traja@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479383064-25718-4-git-send-email-c_traja@qti.qualcomm.com>
+        Tue, 1 Nov 2016 07:04:23 -0400
+From: Paul Cercueil <paul@crapouillou.net>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Cc: Maarten ter Huurne <maarten@treewalker.org>,
+        Paul Cercueil <paul@crapouillou.net>
+Subject: [PATCH 2/2] net: rfkill-regulator: Add devicetree support
+Date: Tue,  1 Nov 2016 11:58:40 +0100
+Message-Id: <20161101105840.24313-2-paul@crapouillou.net> (sfid-20161101_120436_712656_FDC29F01)
+In-Reply-To: <20161101105840.24313-1-paul@crapouillou.net>
+References: <20161101105840.24313-1-paul@crapouillou.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 05:14:23PM +0530, c_traja@qti.qualcomm.com wrote:
-> From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-> 
-> There two things done in this patch.
-> 
-> 1) 'btcoex_support' flag for BTCOEX feature support by the hardware.
-> 2) 'wlan_btcoex_gpio' is used to fill wlan priority pin number for
->    BTCOEX priority feature support.
-> 
-> Signed-off-by: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-> ---
->  .../bindings/net/wireless/qcom,ath10k.txt          |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index 74d7f0a..08150e2d 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -46,6 +46,10 @@ Optional properties:
->  				 hw versions.
->  - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
->  				     the length can vary between hw versions.
-> +- btcoex_support  : should contain eithr "0" or "1" to indicate btcoex
-> +		    support by the hardware.
+This commit adds the support for probing the rfkill-regulator
+from devicetree.
 
-This is BT coexistence? Make this boolean and n
+Information about the devicetree bindings can be found here:
+Documentation/devicetree/bindings/net/rfkill-regulator.txt
 
-> +- btcoex_gpio_pin :  btcoex gpio pin number for the device which
-> +		     supports BTCOEX.
+Signed-off-by: Paul Cercueil <paul@crapouillou.net>
+---
+ net/rfkill/rfkill-regulator.c | 43 ++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 32 insertions(+), 11 deletions(-)
 
-This is a pin number on the chip, not any pin number Linux GPIO subsys 
-cares about, right? Is there a connection to the host too, or this is 
-internal between BT and WiFi?
-
-Do you really need 2 properties? Does supporting this feature require 
-the GPIO? If so, then the first property is redundant.
-
-Needs vendor prefix and don't use '_'. Should be something like 
-'qcom,bt-coexist-gpio-pin'.
-
-Rob
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+index 50cd26a..29ded4c 100644
+--- a/net/rfkill/rfkill-regulator.c
++++ b/net/rfkill/rfkill-regulator.c
+@@ -13,6 +13,7 @@
+  */
+ 
+ #include <linux/module.h>
++#include <linux/of.h>
+ #include <linux/err.h>
+ #include <linux/slab.h>
+ #include <linux/platform_device.h>
+@@ -60,24 +61,38 @@ static struct rfkill_ops rfkill_regulator_ops = {
+ static int rfkill_regulator_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
++	struct device_node *node = pdev->dev.of_node;
+ 	struct rfkill_regulator_data *rfkill_data;
+ 	struct regulator *vcc;
+ 	struct rfkill *rf_kill;
++	const char *name;
++	u32 type;
+ 	int ret = 0;
+ 
+-	if (pdata == NULL) {
++	if (pdata) {
++		if (!pdata->name || !pdata->type) {
++			dev_err(&pdev->dev, "invalid name or type in platform data\n");
++			return -EINVAL;
++		}
++
++		name = pdata->name;
++		type = pdata->type;
++	} else if (node) {
++		ret = of_property_read_u32(node, "rfkill-type", &type);
++		if (ret < 0)
++			return ret;
++
++		ret = of_property_read_string(node, "rfkill-name", &name);
++		if (ret < 0)
++			return ret;
++	} else {
+ 		dev_err(&pdev->dev, "no platform data\n");
+ 		return -ENODEV;
+ 	}
+ 
+-	if (pdata->name == NULL || pdata->type == 0) {
+-		dev_err(&pdev->dev, "invalid name or type in platform data\n");
+-		return -EINVAL;
+-	}
+-
+ 	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
+ 	if (IS_ERR(vcc)) {
+-		dev_err(&pdev->dev, "Cannot get vcc for %s\n", pdata->name);
++		dev_err(&pdev->dev, "Cannot get vcc for %s\n", name);
+ 		ret = PTR_ERR(vcc);
+ 		goto out;
+ 	}
+@@ -88,9 +103,8 @@ static int rfkill_regulator_probe(struct platform_device *pdev)
+ 		goto err_data_alloc;
+ 	}
+ 
+-	rf_kill = rfkill_alloc(pdata->name, &pdev->dev,
+-				pdata->type,
+-				&rfkill_regulator_ops, rfkill_data);
++	rf_kill = rfkill_alloc(name, &pdev->dev, type,
++			       &rfkill_regulator_ops, rfkill_data);
+ 	if (rf_kill == NULL) {
+ 		ret = -ENOMEM;
+ 		goto err_rfkill_alloc;
+@@ -110,7 +124,7 @@ static int rfkill_regulator_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	platform_set_drvdata(pdev, rfkill_data);
+-	dev_info(&pdev->dev, "%s initialized\n", pdata->name);
++	dev_info(&pdev->dev, "%s initialized\n", name);
+ 
+ 	return 0;
+ 
+@@ -137,11 +151,18 @@ static int rfkill_regulator_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++static const struct of_device_id rfkill_regulator_of_match[] = {
++	{ .compatible = "rfkill-regulator" },
++	{},
++};
++MODULE_DEVICE_TABLE(of, rfkill_regulator_of_match);
++
+ static struct platform_driver rfkill_regulator_driver = {
+ 	.probe = rfkill_regulator_probe,
+ 	.remove = rfkill_regulator_remove,
+ 	.driver = {
+ 		.name = "rfkill-regulator",
++		.of_match_table = of_match_ptr(rfkill_regulator_of_match),
+ 	},
+ };
+ 
+-- 
+2.9.3
