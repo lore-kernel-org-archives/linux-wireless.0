@@ -1,46 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42240 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933063AbcK1OeO (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36539 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034651AbcKAHYg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 09:34:14 -0500
-Message-ID: <1480343646.29540.20.camel@coelho.fi> (sfid-20161128_153433_680136_480B27DB)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        vamsi krishna <vamsin@qti.qualcomm.com>
-Date: Mon, 28 Nov 2016 16:34:06 +0200
-In-Reply-To: <1480342821.8107.44.camel@sipsolutions.net>
-References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
-         <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
-         <ee0072cd-83b8-1264-d792-bcf4ce1a8940@broadcom.com>
-         (sfid-20161127_215109_122180_ADB0DD12) <1480342821.8107.44.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 2/2] cfg80211: Add support to sched scan to report
- better BSSs
+        Tue, 1 Nov 2016 03:24:36 -0400
+Received: by mail-wm0-f68.google.com with SMTP id c17so21445418wmc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 00:24:35 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
+References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com> <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
+From: John Heenan <john@zgus.com>
+Date: Tue, 1 Nov 2016 17:24:33 +1000
+Message-ID: <CAAye0QNjYY5gBzSdc+0_rhy1OHk7iQ-CVp0Svph1DR7+mgVWGg@mail.gmail.com> (sfid-20161101_082502_916256_D1EE979C)
+Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
+ wireless IC
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-11-28 at 15:20 +0100, Johannes Berg wrote:
-> > It seems there has already
-> > been taken a shot at this which may be used/extended [1].
-> > 
-> 
-> That's a good point - it's somewhat similar.
-> 
-> This is obviously a different context - offloaded BSS selection vs.
-> scheduled scan (for host BSS selection), but perhaps the attribute &
-> definitions could be reused?
+I have a prepared another patch that is not USB VID/PID dependent for
+rtl8723bu devices. It is more elegant. I will send it after this
+email.
 
-Yes, similar but not quite the same.  The existing case is for finding
-BSSs that are worth waking the host up for (while disconnected), so it
-needs to be better than the RSSI passed (absolute number).  Now this is
-about relative RSSI as compared to the current connection, so
-RELATIVE_RSSI is different than RSSI and I think the same attribute
-should not be used, to avoid confusion.
+If I have more patches is it preferable I just put them on github only
+and notify a link address until there might be some resolution?
 
---
-Luca.
+What I meant below about not finding a matching function is that I
+cannot find matching actions to take on any function calls in
+rtl8xxxu_stop as for rtl8xxxu_start.
+
+The function that is called later and potentially more than once for
+rtl8723bu devices is rtl8xxxu_init_device. There is no corresponding
+rtl8xxxu_deinit_device function.
+
+enable_rf is called in rtl8xxxu_start, not in the delayed call to
+rtl8xxxu_init_device. The corresponding disable_rf is called in
+rtl8xxxu_stop. So no matching issue here. However please see below for
+another potential issue.
+
+power_on is called in rtl8xxxu_init_device. power_off is called in
+rtl8xxxu_disconnect. Does not appear to be an issue if calling
+power_on has no real effect if already on.
+
+The following should be looked at though. For all devices enable_rf is
+only called once. For the proposed patch the first call to
+rtl8xxxu_init_device is called after the single call to enable_rf for
+rtl8723bu devices. Without the patch enable_rf is called after
+rtl8xxxu_init_device for all devices
+
+Perhaps enable_rf just configures RF modes to start up when RF is
+powered on or if called after power_on then enters requested RF modes.
+
+So I cannot see appropriate additional matching action to take.
+
+Below is some background for anyone interested
+
+rtl8xxxu_start and rtl8xxxu_stop are assigned to rtl8xxxu_ops.
+
+rtl8xxxu_probe assigns rtl8xxxu_ops to its driver layer with
+ieee80211_register_hw.
+
+rtl8xxxu_disconnect unassigns rtl8xxxu_ops from its driver layer with
+ieee80211_unregister_hw.
+
+rtl8xxxu_probe and rtl8xxxu_disconnect are USB driver functions
+
+John Heenan
+
+
+On 1 November 2016 at 08:15, John Heenan <john@zgus.com> wrote:
+> On 1 November 2016 at 07:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+>> John Heenan <john@zgus.com> writes:
+>
+>>
+>>> @@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+>>>       struct rtl8xxxu_tx_urb *tx_urb;
+>>>       unsigned long flags;
+>>>       int ret, i;
+>>> +     struct usb_device_descriptor *udesc = &priv->udev->descriptor;
+>>>
+>>>       ret = 0;
+>>>
+>>> +     if(udesc->idVendor == USB_VENDOR_ID_REALTEK
+>>> +                     && udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
+>>> +             ret = rtl8xxxu_init_device(hw);
+>>> +             if (ret)
+>>> +                     goto error_out;
+>>> +     }
+>>> +
+>>
+>> As mentioned previously, if this is to be changed here, it has to be
+>> matched in the _stop section too.
+>
+> I looked at this and could not find a matching function. I will have a
+> look again.
+>
