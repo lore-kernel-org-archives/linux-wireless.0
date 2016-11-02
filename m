@@ -1,93 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm.newmedia-net.de ([217.113.179.122]:50897 "EHLO
-        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754524AbcKBOd6 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35463 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755059AbcKBCZu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 10:33:58 -0400
-To: Matteo Grandi <iu5bdp@gmail.com>,
-        LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-References: <CAHdg3xa1uOuBoncz5YwLRmC-HWMsuVmNkWoPB=0tWavcpWNkgQ@mail.gmail.com>
-From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Message-ID: <aaf49f21-cd87-fb66-3fca-83114819368b@dd-wrt.com> (sfid-20161102_153403_474458_C6367370)
-Date: Wed, 2 Nov 2016 15:33:54 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAHdg3xa1uOuBoncz5YwLRmC-HWMsuVmNkWoPB=0tWavcpWNkgQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: ath10k and compex WLE600V5-27
+        Tue, 1 Nov 2016 22:25:50 -0400
+Received: by mail-pf0-f196.google.com with SMTP id i88so269513pfk.2
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:25:50 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 06/12] mwifiex: don't pretend to resume while remove()'ing
+Date: Wed,  2 Nov 2016 10:24:42 +0800
+Message-Id: <1478053488-16042-4-git-send-email-huxinming820@marvell.com> (sfid-20161102_032553_873979_40472D25)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-depends how you test. the antennas need to have the right distance from 
-each other (portion of lampda)
-and mimo also doesnt work well at too short distances. so place them at 
-10 meters distance minimum
+From: Brian Norris <briannorris@chromium.org>
 
-Am 02.11.2016 um 15:27 schrieb Matteo Grandi:
-> Hello all,
-> I'm using two WiFi module Compex WLE600V5-27
-> http://www.compex.com.sg/product/wle600v5-27/
-> capable of 2x2 MIMO on two boards (Gateworks ventana 5410) using ath10k drivers.
-> The chipset is the Qualcomm-Atheros QCA9882 but I didn't find a
-> firmware for this chipset, so I'm using the QCA988X.
-> Everithing worked fine until I tried to plug 2 antennas in both cards
-> in order to make some data-rate tests. Even if there are two antennas
-> plugged in, there aren't any changes in the data-rate measured between
-> using one or two antennas. Sniffing the channel I sow that the Number
-> of STBC streams is 1 and iw list shows that only 1 spatial stream is
-> supported (but the card is capable of managing 2 spatial streams):
->
-> Wiphy phy0
->      Band 1:
->          Capabilities: 0x19e3
->              RX LDPC
->              HT20/HT40
->              Static SM Power Save
->              RX HT20 SGI
->              RX HT40 SGI
->              TX STBC
->              RX STBC 1-stream
->              Max AMSDU length: 7935 bytes
->              DSSS/CCK HT40
->          Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
->          Minimum RX AMPDU time spacing: 8 usec (0x06)
->          HT TX/RX MCS rate indexes supported: 0-15
->          Frequencies:
->              * 5180 MHz [36] (17.0 dBm)
->              * 5200 MHz [40] (17.0 dBm)
-> ...
->
->      Available Antennas: TX 0x3 RX 0x3
->      Configured Antennas: TX 0x3 RX 0x3
->      Supported interface modes:
->           * managed
->           * AP
->           * AP/VLAN
->           * monitor
->           * mesh point
->
->
-> I tried the tests both on channel 48 HT40- and 149 HT40+.
-> The RSSI measured with iw station dump lays around -40dBm
->
-> Is it an issue related to the firmware in use?
-> Or maybe there aren't the right conditions to have MIMO working?
->
-> Thanks in advence
-> All the best
->
-> Matteo
->
+The device core will not allow suspend() to race with remove().
 
+---
+v2: Same as v1
+---
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 5 -----
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ---
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 5 -----
+ 3 files changed, 13 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index fb34b99..32fbb91 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -225,11 +225,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-#ifdef CONFIG_PM_SLEEP
+-		if (adapter->is_suspended)
+-			mwifiex_pcie_resume(&pdev->dev);
+-#endif
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 1f6ebde..a750edb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -292,9 +292,6 @@ mwifiex_sdio_remove(struct sdio_func *func)
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-		if (adapter->is_suspended)
+-			mwifiex_sdio_resume(adapter->dev);
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index c20ff2f..a61455c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -614,11 +614,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-#ifdef CONFIG_PM
+-		if (adapter->is_suspended)
+-			mwifiex_usb_resume(intf);
+-#endif
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
 -- 
-Mit freundlichen Grüssen / Regards
-
-Sebastian Gottschall / CTO
-
-NewMedia-NET GmbH - DD-WRT
-Firmensitz:  Berliner Ring 101, 64625 Bensheim
-Registergericht: Amtsgericht Darmstadt, HRB 25473
-Geschäftsführer: Peter Steinhäuser, Christian Scheele
-http://www.dd-wrt.com
-email: s.gottschall@dd-wrt.com
-Tel.: +496251-582650 / Fax: +496251-5826565
+1.8.1.4
