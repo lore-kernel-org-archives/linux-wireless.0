@@ -1,149 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33596 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932559AbcKVSDj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 13:03:39 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: wl1251 & mac address & calibration data
-Date: Tue, 22 Nov 2016 18:05:13 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-References: <201611111820.52072@pali> <20161122153141.GT13735@pali> <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com>
-In-Reply-To: <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart10355501.CvPRMbuW7A";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201611221805.13606@pali> (sfid-20161122_190401_151925_C2892D26)
+Received: from mx1.redhat.com ([209.132.183.28]:57872 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754872AbcKBOMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 2 Nov 2016 10:12:33 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 08/10] rt2800: use RTS/CTS protection instead of CTS-to-self
+Date: Wed,  2 Nov 2016 15:11:03 +0100
+Message-Id: <1478095865-8651-9-git-send-email-sgruszka@redhat.com> (sfid-20161102_151237_253006_B5998830)
+In-Reply-To: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart10355501.CvPRMbuW7A
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Change default to RTS/CTS protection. This has a cost of transmitting
+one more control frame (RTS) however protect us from traffic from
+hidden node.
 
-On Tuesday 22 November 2016 17:14:28 Michal Kazior wrote:
-> On 22 November 2016 at 16:31, Pali Roh=C3=A1r <pali.rohar@gmail.com> wrot=
-e:
-> > On Tuesday 22 November 2016 16:22:57 Michal Kazior wrote:
-> >> On 21 November 2016 at 16:51, Pali Roh=C3=A1r <pali.rohar@gmail.com>
-> >> wrote:
-> >> > On Friday 11 November 2016 18:20:50 Pali Roh=C3=A1r wrote:
-> >> >> Hi! I will open discussion about mac address and calibration
-> >> >> data for wl1251 wireless chip again...
-> >> >>=20
-> >> >> Problem: Mac address & calibration data for wl1251 chip on
-> >> >> Nokia N900 are stored on second nand partition (mtd1) in
-> >> >> special proprietary format which is used only for Nokia N900
-> >> >> (probably on N8x0 and N9 too). Wireless driver wl1251.ko
-> >> >> cannot work without mac address and calibration data.
-> >>=20
-> >> Same problem applies to some ath9k/ath10k supported routers. Some
-> >> even carry mac address as implicit offset from ethernet mac
-> >> address. As far as I understand OpenWRT cooks cal blobs on first
-> >> boot prior to loading modules.
-> >=20
-> > So... wl1251 on Nokia N900 is not alone and this problem is there
-> > for more drivers and devices. Which means we should come up with
-> > some generic solution.
->=20
-> This isn't particularly a problem for ath9k/ath10k.
->=20
-> Let me give you more background on ath10k.
->=20
-> ath10k devices can come with caldata and macaddr stored in their
-> OTP/EEPROM. In that case a generic "template" board file is used.
-> Userspace doesn't need to do anything special.
->=20
-> Some vendors however decide to use flash partition to store caldata.
-> In that case ath10k expects userspace to prepare
-> cal-$bus-$devname.bin files, each for a different radio (you can
-> have multiple radios on a system).
->=20
-> Now translating this for wl1251 I would expect it should also use
-> something like wl1251-nvs-sdio-0x0001.bin for devices like N900 that
-> have caldata on flash partition (instead of the generic
-> wl1251-nvs.bin). I'm not sure if wl1251-nvs.bin is something
-> comparable to (the generic) board.bin ath10k has though. Maybe the
-> entire idea behind wl1251-nvs.bin is flawed as it's supposed to be
-> device specific and is oblivious to possibility of having multiple
-> wl1251 radios on one system (probably sane assumption from practical
-> standpoint but still).
+On station mode will use CTS-to-self if AP will configure that
+for the network.
 
-Basically nvs data are device specific, in ideal case they should be=20
-generated in factory by some calibration process (or so).
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-> >> >> Absence of mac address cause that driver generates random mac
-> >> >> address at every kernel boot which has couple of problems
-> >> >> (unstable identifier of wireless device due to udev permanent
-> >> >> storage rules; unpredictable behaviour for dhcp mac address
-> >> >> assignment, mac address filtering, ...).
-> >> >>=20
-> >> >> Currently there is no way to set (permanent) mac address for
-> >> >> network interface from userspace. And it does not make sense
-> >> >> to implement in linux kernel large parser for proprietary
-> >> >> format of second nand partition where is mac address stored
-> >> >> only for one device -- Nokia N900.
-> >> >>=20
-> >> >> Driver wl1251.ko loads calibration data via request_firmware()
-> >> >> for file wl1251-nvs.bin. There are some "example" calibration
-> >> >> file in linux- firmware repository, but it is not suitable for
-> >> >> normal usage as real calibration data are per-device specific.
-> >>=20
-> >> You could hook up a script that cooks up the cal/mac file via
-> >> modprobe's install hook, no?
-> >=20
-> > Via modprobe hook I can either pass custom module parameter or call
-> > any other system (shell) commands.
-> >=20
-> > As wl1251.ko does not accept mac_address as module parameter, such
-> > modprobe hook does not help -- as there is absolutely no way from
-> > userspace to set or change (permanent) mac address.
->=20
-> Quoting modprobe.d manual:
-> >       install modulename command...
-> >      =20
-> >           This command instructs modprobe to run your
-> >           command instead of inserting the module in the
-> >           kernel as normal. The command can be any shell
-> >           command: this allows you to do any kind of
-> >           complex processing you might wish. [...]
-
-I know. But this do not allow me to send mac address to kernel -- as=20
-kernel does not support such command yet (reason for my first question).
-
-> You can hook up a script that cooks up wl1251-nvs.bin (caldata,
-> macaddr) and then insmod the actual wl1251.ko module. Or you can just
-> cook up the nvs on first device boot and store it in /lib/firmware
-> (possibly overwriting the "generic" wl1251 from linux-firmware).
-
-This is what I would like to prevent -- overwriting (possible readonly)=20
-system files with some device specific. It is really bad idea!
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart10355501.CvPRMbuW7A
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlg0eskACgkQi/DJPQPkQ1KpUgCdEhjP8T0b0vZ00AxX6CeDL/Wy
-UiMAn3ynIB+PnRJkxwsiZ27rgggBA1vt
-=mEYs
------END PGP SIGNATURE-----
-
---nextPart10355501.CvPRMbuW7A--
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 812f8e7..57bfec4 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1621,7 +1621,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
+ 		 * => Protect all HT40 transmissions.
+ 		 */
+ 		mm20_mode = gf20_mode = 0;
+-		mm40_mode = gf40_mode = 2;
++		mm40_mode = gf40_mode = 1;
+ 
+ 		break;
+ 	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
+@@ -1644,7 +1644,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
+ 		 * Legacy STAs are present
+ 		 * => Protect all HT transmissions.
+ 		 */
+-		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 2;
++		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 1;
+ 
+ 		/*
+ 		 * If erp protection is needed we have to protect HT
+@@ -1660,7 +1660,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
+ 
+ 	/* check for STAs not supporting greenfield mode */
+ 	if (any_sta_nongf)
+-		gf20_mode = gf40_mode = 2;
++		gf20_mode = gf40_mode = 1;
+ 
+ 	/* Update HT protection config */
+ 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
+-- 
+1.7.1
