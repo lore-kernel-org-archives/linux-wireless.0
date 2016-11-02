@@ -1,69 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34216 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752419AbcKSCqp (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33453 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755278AbcKBC0H (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 21:46:45 -0500
-Received: by mail-pg0-f65.google.com with SMTP id e9so21829943pgc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 18:46:44 -0800 (PST)
-Date: Sat, 19 Nov 2016 12:38:31 +1000
-From: Barry Day <briselec@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 0/7] rtl8xxxu: Pending patches
-Message-ID: <20161119023830.GA7324@testbox> (sfid-20161119_034723_003574_A04EA1D2)
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
- <20161119014648.GA7140@testbox>
- <wrfjbmxcb55h.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfjbmxcb55h.fsf@redhat.com>
+        Tue, 1 Nov 2016 22:26:07 -0400
+Received: by mail-pf0-f193.google.com with SMTP id a136so277259pfa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:26:07 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 09/12] mwifiex: usb: handle HS failures
+Date: Wed,  2 Nov 2016 10:24:45 +0800
+Message-Id: <1478053488-16042-7-git-send-email-huxinming820@marvell.com> (sfid-20161102_032617_078725_E6121CCA)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 09:00:10PM -0500, Jes Sorensen wrote:
-> Barry Day <briselec@gmail.com> writes:
-> > On Fri, Nov 18, 2016 at 04:44:21PM -0500, Jes.Sorensen@redhat.com wrote:
-> >> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> >> 
-> >> Kalle,
-> >> 
-> >> Please find attached a number of patches for the rtl8xxxu
-> >> driver.
-> >> 
-> >> The issues reported with wpa_supplicant on 8723bu still needs further
-> >> investigation.
-> >> 
-> >
-> > The patch I posted that you want tested more will also fix the
-> > wpa_supplicant issue.  Currently I'm looking at why the tx rate is not
-> > what it should be. I feel fixing that first will be beneficial for
-> > fixing any other issues.
-> 
-> Interesting, I was thinking that might be the case. I do want to dig
-> into this further to understand it better. If we use your solution I
-> will want to make sure we cover both gen1 and gen2 parts.
-> 
-> > The recent merge has made my local branch of rtl8xxxu-devel 14 commits ahead.
-> > Do I need to do a reset and submit a new patch for the DWA-131 dongle?
-> 
-> In general you need to use 'git pull --rebase' on my tree. I rebase it
-> to stay in sync with Kalle's tree.
-> 
-> The DWA-131 is the 8192eu? Sorry a bit behind and my mind is losing
-> bits. If it's the patch you posted earlier I can dig it out and play
-> with it - I am still catching up though, so please be patient.
-> 
-> Cheers,
-> Jes
-> 
-> 
+From: Brian Norris <briannorris@chromium.org>
 
-yes it's an 8192eu.
+SDIO and PCIe drivers handle this. Let's imitate it.
 
-Would you accept a patch that adds a struct device pointer to rtl8xxxu_priv
-and used as the device pointer in the logging functions? Then all the messages
-will start with the driver name making them easier to find.
+Not tested.
 
-Barry
+---
+v2: Same as v1
+---
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 70126c3..c26daf4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -521,7 +521,14 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 		mwifiex_dbg(adapter, WARN,
+ 			    "Device already suspended\n");
+ 
+-	mwifiex_enable_hs(adapter);
++	/* Enable the Host Sleep */
++	if (!mwifiex_enable_hs(adapter)) {
++		mwifiex_dbg(adapter, ERROR,
++			    "cmd: failed to suspend\n");
++		adapter->hs_enabling = false;
++		return -EFAULT;
++	}
++
+ 
+ 	/* 'is_suspended' flag indicates device is suspended.
+ 	 * It must be set here before the usb_kill_urb() calls. Reason
+-- 
+1.8.1.4
