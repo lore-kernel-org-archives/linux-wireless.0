@@ -1,91 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49270 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S934375AbcKKTBM (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:50897 "EHLO
+        webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754524AbcKBOd6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 14:01:12 -0500
-Message-ID: <1478890861.15030.31.camel@coelho.fi> (sfid-20161111_200116_825963_D268B318)
-From: Luca Coelho <luca@coelho.fi>
-To: Tj <linux@iam.tj>,
-        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
-        <linux-wireless@vger.kernel.org>
-Cc: "Intel Linux Wireless (supporter:INTEL WIRELESS WIFI LINK (iwlwifi))"
-        <linuxwifi@intel.com>
-Date: Fri, 11 Nov 2016 21:01:01 +0200
-In-Reply-To: <87adaa7e-3e64-51eb-f250-bf4f1c025b66@iam.tj>
-References: <78f29b89-eb19-920f-f576-5009383c55e1@iam.tj>
-         <1478853340.15030.21.camel@coelho.fi>
-         <87adaa7e-3e64-51eb-f250-bf4f1c025b66@iam.tj>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] iwlwifi: fix undefined 6000G2B firmware MAX API version
+        Wed, 2 Nov 2016 10:33:58 -0400
+To: Matteo Grandi <iu5bdp@gmail.com>,
+        LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
+References: <CAHdg3xa1uOuBoncz5YwLRmC-HWMsuVmNkWoPB=0tWavcpWNkgQ@mail.gmail.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <aaf49f21-cd87-fb66-3fca-83114819368b@dd-wrt.com> (sfid-20161102_153403_474458_C6367370)
+Date: Wed, 2 Nov 2016 15:33:54 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAHdg3xa1uOuBoncz5YwLRmC-HWMsuVmNkWoPB=0tWavcpWNkgQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: ath10k and compex WLE600V5-27
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-11-11 at 17:47 +0000, Tj wrote:
-> On 11/11/16 08:35, Luca Coelho wrote:
-> > Hi,
-> > On Thu, 2016-11-10 at 22:04 +0000, Tj wrote:
-> > >   $ modinfo -F firmware iwlwifi | grep API
-> > >   iwlwifi-6000g2b-IWL6000G2B_UCODE_API_MAX.ucode
-> > >   $ modinfo -F vermagic iwlwifi
-> > >   4.9.0-040900rc4-lowlatency SMP preempt mod_unload modversions
-> > > 
-> > > Change-Id: Ie21a4be0b12b520844c1da4a8bef9e8a0097d919
-> > > Signed-off-by: TJ <linux@iam.tj>
-> > > ---
-> > >  drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > > 
-> > > diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > > b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > > index 0b9f6a7..19b85e8 100644
-> > > --- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > > @@ -34,6 +34,7 @@
-> > >  #define IWL6000_UCODE_API_MAX 6
-> > >  #define IWL6050_UCODE_API_MAX 5
-> > >  #define IWL6000G2_UCODE_API_MAX 6
-> > > +#define IWL6000G2B_UCODE_API_MAX 6
-> > >  #define IWL6035_UCODE_API_MAX 6
-> > >   /* Lowest firmware API version supported */
-> > 
-> > Thanks for your patch! But the correct thing to do would be to change
-> > the MODULE_FIRMWARE line instead of adding this define here.  The 6030
-> > NIC uses IWL6000G2_UCODE_API_MAX in the config structure, so the
-> > MODULE_FIRMWARE macro should use that too.
-> > 
-> > diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > index 0b9f6a7..39335b7 100644
-> > --- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > +++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> > @@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
-> >  MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
-> >  MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
-> >  MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-> > -MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
-> > +MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-> 
-> I don't think this is correct. There are different firmware files for
-> the 'g2a' (6005) and 'g2b' (6030) and as such the revisions for each
-> could be different, so setting the 6030 to use the same API_MAX as the
-> 6005 looks wrong to me.
-> 
-> $ ls -1 /lib/firmware/iwlwifi-*6000g*
-> /lib/firmware/iwlwifi-6000g2a-5.ucode
-> /lib/firmware/iwlwifi-6000g2a-6.ucode
-> /lib/firmware/iwlwifi-6000g2b-6.ucode
+depends how you test. the antennas need to have the right distance from 
+each other (portion of lampda)
+and mimo also doesnt work well at too short distances. so place them at 
+10 meters distance minimum
 
-Maybe you're right, but still, just changing the firmware name is not
-enough.  If that is really supposed to be the case (and TBH I really
-don't know these old NICs), then the config structs should be changed
-as well.
+Am 02.11.2016 um 15:27 schrieb Matteo Grandi:
+> Hello all,
+> I'm using two WiFi module Compex WLE600V5-27
+> http://www.compex.com.sg/product/wle600v5-27/
+> capable of 2x2 MIMO on two boards (Gateworks ventana 5410) using ath10k drivers.
+> The chipset is the Qualcomm-Atheros QCA9882 but I didn't find a
+> firmware for this chipset, so I'm using the QCA988X.
+> Everithing worked fine until I tried to plug 2 antennas in both cards
+> in order to make some data-rate tests. Even if there are two antennas
+> plugged in, there aren't any changes in the data-rate measured between
+> using one or two antennas. Sniffing the channel I sow that the Number
+> of STBC streams is 1 and iw list shows that only 1 spatial stream is
+> supported (but the card is capable of managing 2 spatial streams):
+>
+> Wiphy phy0
+>      Band 1:
+>          Capabilities: 0x19e3
+>              RX LDPC
+>              HT20/HT40
+>              Static SM Power Save
+>              RX HT20 SGI
+>              RX HT40 SGI
+>              TX STBC
+>              RX STBC 1-stream
+>              Max AMSDU length: 7935 bytes
+>              DSSS/CCK HT40
+>          Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+>          Minimum RX AMPDU time spacing: 8 usec (0x06)
+>          HT TX/RX MCS rate indexes supported: 0-15
+>          Frequencies:
+>              * 5180 MHz [36] (17.0 dBm)
+>              * 5200 MHz [40] (17.0 dBm)
+> ...
+>
+>      Available Antennas: TX 0x3 RX 0x3
+>      Configured Antennas: TX 0x3 RX 0x3
+>      Supported interface modes:
+>           * managed
+>           * AP
+>           * AP/VLAN
+>           * monitor
+>           * mesh point
+>
+>
+> I tried the tests both on channel 48 HT40- and 149 HT40+.
+> The RSSI measured with iw station dump lays around -40dBm
+>
+> Is it an issue related to the firmware in use?
+> Or maybe there aren't the right conditions to have MIMO working?
+>
+> Thanks in advence
+> All the best
+>
+> Matteo
+>
 
-In any case, I've applied (internally, for now) the patches that Jürg
-sent a while ago.  One of them does pretty much the same thing I
-suggested her.
 
---
-Cheers,
-Luca.
+-- 
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
