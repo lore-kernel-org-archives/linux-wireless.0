@@ -1,208 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:36738 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932807AbcKVKaP (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35936 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754524AbcKBTmF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 05:30:15 -0500
-Received: by mail-wj0-f195.google.com with SMTP id jb2so5936480wjb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 02:30:14 -0800 (PST)
-Received: from localhost.localdomain (199.red-88-21-51.staticip.rima-tde.net. [88.21.51.199])
-        by smtp.gmail.com with ESMTPSA id d8sm2148772wmi.21.2016.11.22.02.30.12
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Tue, 22 Nov 2016 02:30:12 -0800 (PST)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/3][RESEND] mac80211: Pass new RSSI level in CQM RSSI notification
-Date: Tue, 22 Nov 2016 11:29:50 +0100
-Message-Id: <1479810592-2474-2-git-send-email-andrew.zaborowski@intel.com> (sfid-20161122_113018_983914_85D6012E)
-In-Reply-To: <1479810592-2474-1-git-send-email-andrew.zaborowski@intel.com>
-References: <1479810592-2474-1-git-send-email-andrew.zaborowski@intel.com>
+        Wed, 2 Nov 2016 15:42:05 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 189so16994421pfz.3
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2016 12:42:05 -0700 (PDT)
+Subject: Re: BCM43602 firmware reports multiple BRCMF_E_DEAUTH
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+References: <CACna6rzS4nDZ+H5kU71WwTTNLp5uZStpQHv4LLmWBDSdf5jpyw@mail.gmail.com>
+ <f97678dc-2869-1b6a-33a3-f829cc30918a@gmail.com>
+ <befa10f7-265e-3f4e-dd0c-ebcd0b32f3e2@gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1263a154-9a9d-13fa-f657-b4f99f3897ee@broadcom.com> (sfid-20161102_204210_661979_CF65B616)
+Date: Wed, 2 Nov 2016 20:42:00 +0100
+MIME-Version: 1.0
+In-Reply-To: <befa10f7-265e-3f4e-dd0c-ebcd0b32f3e2@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
- drivers/net/wireless/st/cw1200/sta.c        |  2 +-
- drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
- drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
- include/net/mac80211.h                      |  2 ++
- net/mac80211/mlme.c                         |  7 ++++---
- net/mac80211/trace.h                        | 11 +++++++----
- 8 files changed, 21 insertions(+), 12 deletions(-)
+On 19-10-2016 14:34, Rafał Miłecki wrote:
+> On 10/04/2016 08:15 PM, Rafał Miłecki wrote:
+>> # My smartphone remains in the same place (1 m from the AP) but there
+>> is some
+>> # connection/A-MPDU problem.
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509120] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: wl0.0 scb:0035ee78 tid:0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509250] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: wl0.0 dead_cnt 2 tx_in_transit 1
+>> psm_mux 0xfff0 aqmqmap 0x0x101 aqmfifo_status 0x0x4000 fifordy 0x0
+>> cpbusy 0x0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509304] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: ifsstat 0xaf nav_stat 0x0 txop 110486
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509346] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: pktpend: 0 0 0 0 0 ap 1
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509411] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: txall 4 txbcn 0 txrts 0 rxcts 0
+>> rsptmout 0 rxstrt 0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509477] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: cwcur0-3 f f 7 3 bslots cur/0-3 4 0 0 0
+>> 0 ifs_boff 0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509527] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: again1 ifsstat 0xaf nav_stat 0x0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509576] brcmfmac:
+>> CONSOLE: 026970.308 ampdu_dbg: again2 ifsstat 0xaf nav_stat 0x0
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509665] brcmfmac:
+>> CONSOLE: 026970.308 wl0: wlc_ampdu_watchdog: cleaning up ini tid 0 due
+>> to no progress for 2 secs tx_in_transit 1
+>> Tue Oct  4 17:22:22 2016 kern.debug kernel: [  247.509726] brcmfmac:
+>> CONSOLE: 026970.308 wl0: wlc_ampdu_tx_send_delba: tid 0 initiator 1
+>> reason 39
+>> Tue Oct  4 17:22:41 2016 kern.debug kernel: [  266.456860] brcmfmac:
+>> CONSOLE: 026990.068 wl0.0: wlc_send_bar: seq 0x7c tid 0
+>> Tue Oct  4 17:22:43 2016 kern.debug kernel: [  268.178234] brcmfmac:
+>> CONSOLE: 026991.783 pktid is NULL
+>>
+>> # After recovering from A-MPDU thing firmware sends BRCMF_E_DEAUTH and
+>> # BRCMF_E_DISASSOC_IND events.
+>> # My smartphone never receives deauth/disassoc and it believes it's still
+>> # connected to the AP.
+>> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275305] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 4
+>> Tue Oct  4 17:23:24 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275354] brcmfmac:
+>> brcmf_notify_connect_status_ap event 12, reason 8
+>> Tue Oct  4 17:23:24 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.275865] brcmfmac:
+>> brcmf_cfg80211_del_key key index (0)
+>> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.276177] brcmfmac:
+>> brcmf_cfg80211_del_key key index (0)
+>> Tue Oct  4 17:23:24 2016 kern.debug kernel: [  309.276188] brcmfmac:
+>> brcmf_cfg80211_del_key Ignore clearing of (never configured) key
+>>
+>> # My smartphone starts sending packets. It seems brcmfmac refuses them
+>> due to
+>> # STA not being connected and for each packet it reports
+>> BRCMF_E_DEAUTH to the
+>> # driver.
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.000406] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.001227] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.001894] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.002594] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.003741] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004096] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004490] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+>> Tue Oct  4 17:23:58 2016 kern.debug kernel: [  343.004936] brcmfmac:
+>> brcmf_notify_connect_status_ap event 5, reason 7
+>> Tue Oct  4 17:23:58 2016 daemon.info hostapd: wlan1: STA
+>> 78:d6:f0:9b:ba:bc IEEE 802.11: disassociated
+> 
+> I just got 400+ messages like this:
+> wlan1: STA 84:38:38:e4:b5:ea IEEE 802.11: disassociated
+> this time I was lucky enough to have monitor mode running on some
+> independent
+> notebook and I got it recorded.
+> 
+> I'm attaching pcapng (Wireshark dump) file. You can see a lot of
+> Deauthentication frames flying both ways with a reason code 0x0006 (Class 2
+> frame received from nonauthenticated STA).
+> 
+> I think this reason code seems to match my suspicions: STA didn't
+> realize it was
+> disconnected and it kept sending packets. Firmware reacted sending
+> Deauth frames
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 0e60e38..e06a2e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+			sig,
- 			GFP_KERNEL);
- 	} else if (sig > thold &&
- 		   (last_event == 0 || sig > last_event + hyst)) {
-@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+			sig,
- 			GFP_KERNEL);
- 	}
- }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..3e260b4 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -818,7 +818,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
- 
- 	common->cqm_info.last_cqm_event_rssi = rssi;
- 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
--	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
-+	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
- 
- 	return;
- }
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index daf06a4..a522248 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
- 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
--			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
-+			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
- 						  GFP_KERNEL);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index d0593bc..f5acd24 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 
- 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
-@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 4b59f67..f2e90d2 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
- 
- 		vif = wl12xx_wlvif_to_vif(wlvif);
- 		if (event != wlvif->last_rssi_event)
--			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
-+			ieee80211_cqm_rssi_notify(vif, event, metric,
-+						  GFP_KERNEL);
- 		wlvif->last_rssi_event = event;
- 	}
- }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a810dfc..33026e1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5244,6 +5244,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @rssi_event: the RSSI trigger event type
-+ * @rssi_level: new RSSI level value or 0 if not available
-  * @gfp: context flags
-  *
-  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
-@@ -5252,6 +5253,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  */
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp);
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7486f2d..a55cdd7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3405,14 +3405,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		} else if (sig > thold &&
- 			   (last_event == 0 || sig > last_event + hyst)) {
- 			ifmgd->last_cqm_event_signal = sig;
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		}
- 	}
- 
-@@ -5000,11 +5000,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 
--	trace_api_cqm_rssi_notify(sdata, rssi_event);
-+	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
- 
- 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
- }
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 92a47af..f78d9f4 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
- 
- TRACE_EVENT(api_cqm_rssi_notify,
- 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
--		 enum nl80211_cqm_rssi_threshold_event rssi_event),
-+		 enum nl80211_cqm_rssi_threshold_event rssi_event,
-+		 s32 rssi_level),
- 
--	TP_ARGS(sdata, rssi_event),
-+	TP_ARGS(sdata, rssi_event, rssi_level),
- 
- 	TP_STRUCT__entry(
- 		VIF_ENTRY
- 		__field(u32, rssi_event)
-+		__field(s32, rssi_level)
- 	),
- 
- 	TP_fast_assign(
- 		VIF_ASSIGN;
- 		__entry->rssi_event = rssi_event;
-+		__entry->rssi_level = rssi_level;
- 	),
- 
- 	TP_printk(
--		VIF_PR_FMT " event:%d",
--		VIF_PR_ARG, __entry->rssi_event
-+		VIF_PR_FMT " event:%d rssi:%d",
-+		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
- 	)
- );
- 
--- 
-2.7.4
+Hi Rafał,
+
+Staring at the wireshark dump I can not follow your suspicion above.
+Where are the packets that STA was sending. The 802.11 spec mentions
+there can be more deauth frames being transmitted during the deauth
+procedure. So it seems they get stuck in the deauth procedure for some
+reason.
+
+Regards,
+Arend
