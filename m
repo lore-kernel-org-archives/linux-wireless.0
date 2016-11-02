@@ -1,275 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47707 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752263AbcKPNJr (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33987 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755278AbcKBC0Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 08:09:47 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 1/5] mwifiex: don't wait for main_process in shutdown_drv
-Date: Wed, 16 Nov 2016 18:39:05 +0530
-Message-ID: <1479301749-14803-1-git-send-email-akarwar@marvell.com> (sfid-20161116_140951_831508_20F2FDD4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 1 Nov 2016 22:26:16 -0400
+Received: by mail-pf0-f195.google.com with SMTP id y68so273637pfb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:26:16 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 11/12] mwifiex: stop checking for NULL drvata/intfdata
+Date: Wed,  2 Nov 2016 10:24:47 +0800
+Message-Id: <1478053488-16042-9-git-send-email-huxinming820@marvell.com> (sfid-20161102_032620_916997_EEF0D6E9)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Brian Norris <briannorris@chromium.org>
 
-main_process is not expected to be running when shutdown_drv function
-is called. currently we wait for main_process completion in the
-function.
+These are never NULL, so stop making people think they might be.
 
-Actually the caller has already made sure main_process is completed by
-performing below actions.
-(1) disable interrupts in if_ops->disable_int.
-(2) set adapter->surprise_removed = true, main_process wont be queued.
-(3) mwifiex_terminate_workqueue(adapter), wait for workqueue to be
-completed.
+I don't change this for SDIO because SDIO has a racy card-reset handler
+that reallocates this struct. I'd rather not touch that mess right now.
 
-This patch removes redundant wait code and takes care of related
-cleanup.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
-v3: a) This patch is introduced in v3. It replaces "[v2,2/5] mwifiex: use spinlock for
-    'mwifiex_processing' in shutdown_drv" patch.
-    b) "[v2,1/5] mwifiex: remove redundant condition in main process" is dropped in
-    this patch series.
+v2: Same as v1
 ---
- drivers/net/wireless/marvell/mwifiex/init.c | 19 ++--------
- drivers/net/wireless/marvell/mwifiex/main.c | 55 ++++++++++-------------------
- drivers/net/wireless/marvell/mwifiex/main.h |  5 +--
- drivers/net/wireless/marvell/mwifiex/util.c | 15 --------
- 4 files changed, 22 insertions(+), 72 deletions(-)
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 14 +++++---------
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 15 +++------------
+ 2 files changed, 8 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index b36cb3f..f581a15 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -656,10 +656,9 @@ void mwifiex_free_priv(struct mwifiex_private *priv)
-  *      - Free the adapter
-  *      - Notify completion
-  */
--int
-+void
- mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- {
--	int ret = -EINPROGRESS;
- 	struct mwifiex_private *priv;
- 	s32 i;
- 	unsigned long flags;
-@@ -667,15 +666,7 @@ void mwifiex_free_priv(struct mwifiex_private *priv)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 04b9961..c061d00 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -102,10 +102,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	/* mwifiex already shutdown */
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY)
+ 	card = pci_get_drvdata(pdev);
+-	if (!card) {
+-		dev_err(dev, "adapter structure is not valid\n");
 -		return 0;
--
--	adapter->hw_status = MWIFIEX_HW_STATUS_CLOSING;
--	/* wait for mwifiex_process to complete */
--	if (adapter->mwifiex_processing) {
--		mwifiex_dbg(adapter, WARN,
--			    "main process is still running\n");
--		return ret;
 -	}
-+		return;
  
- 	/* cancel current command */
- 	if (adapter->curr_cmd) {
-@@ -726,11 +717,7 @@ void mwifiex_free_priv(struct mwifiex_private *priv)
- 	mwifiex_adapter_cleanup(adapter);
+ 	/* Might still be loading firmware */
+ 	wait_for_completion(&card->fw_done);
+@@ -148,8 +144,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	spin_unlock(&adapter->mwifiex_lock);
--
--	/* Notify completion */
--	ret = mwifiex_shutdown_fw_complete(adapter);
--
--	return ret;
-+	adapter->hw_status = MWIFIEX_HW_STATUS_NOT_READY;
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index eac44fe..379e084 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -248,15 +248,14 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 	if (adapter->mwifiex_processing || adapter->main_locked) {
- 		adapter->more_task_flag = true;
- 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
--		goto exit_main_proc;
-+		return 0;
- 	} else {
- 		adapter->mwifiex_processing = true;
- 		spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 	}
- process_start:
- 	do {
--		if ((adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING) ||
--		    (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY))
-+		if (adapter->hw_status == MWIFIEX_HW_STATUS_NOT_READY)
- 			break;
- 
- 		/* For non-USB interfaces, If we process interrupts first, it
-@@ -464,9 +463,6 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 	adapter->mwifiex_processing = false;
- 	spin_unlock_irqrestore(&adapter->main_proc_lock, flags);
- 
--exit_main_proc:
--	if (adapter->hw_status == MWIFIEX_HW_STATUS_CLOSING)
--		mwifiex_shutdown_drv(adapter);
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(mwifiex_main_process);
-@@ -648,16 +644,14 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
- 
-+	adapter->surprise_removed = true;
-+	mwifiex_terminate_workqueue(adapter);
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		dev_err(dev, "Card or adapter structure is not valid\n");
 +
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		pr_debug("info: %s: shutdown mwifiex\n", __func__);
--		adapter->init_wait_q_woken = false;
--
--		if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
--			wait_event_interruptible(adapter->init_wait_q,
--						 adapter->init_wait_q_woken);
-+		mwifiex_shutdown_drv(adapter);
++	if (!card->adapter) {
++		dev_err(dev, "adapter structure is not valid\n");
+ 		return 0;
  	}
--	adapter->surprise_removed = true;
--	mwifiex_terminate_workqueue(adapter);
+ 
+@@ -222,8 +219,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	struct mwifiex_private *priv;
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card)
+-		return;
+ 
+ 	wait_for_completion(&card->fw_done);
+ 
+@@ -2216,7 +2211,8 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 	}
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
 +
- 	init_failed = true;
- done:
- 	if (adapter->cal_data) {
-@@ -1402,11 +1396,8 @@ static void mwifiex_main_work_queue(struct work_struct *work)
- 	}
++	if (!card->adapter) {
+ 		pr_err("info: %s: card=%p adapter=%p\n", __func__, card,
+ 		       card ? card->adapter : NULL);
+ 		goto exit;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index c26daf4..78b46fa 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -503,11 +503,6 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 	struct usb_tx_data_port *port;
+ 	int i, j;
  
- 	mwifiex_dbg(adapter, CMD, "cmd: calling mwifiex_shutdown_drv...\n");
--	adapter->init_wait_q_woken = false;
- 
--	if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
--		wait_event_interruptible(adapter->init_wait_q,
--					 adapter->init_wait_q_woken);
-+	mwifiex_shutdown_drv(adapter);
- 	if (adapter->if_ops.down_dev)
- 		adapter->if_ops.down_dev(adapter);
- 
-@@ -1512,19 +1503,16 @@ static void mwifiex_main_work_queue(struct work_struct *work)
- 	mwifiex_dbg(adapter, ERROR, "info: %s: unregister device\n", __func__);
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
-+
-+err_kmalloc:
-+	adapter->surprise_removed = true;
-+	mwifiex_terminate_workqueue(adapter);
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "info: %s: shutdown mwifiex\n", __func__);
--		adapter->init_wait_q_woken = false;
--
--		if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
--			wait_event_interruptible(adapter->init_wait_q,
--						 adapter->init_wait_q_woken);
-+		mwifiex_shutdown_drv(adapter);
- 	}
- 
--err_kmalloc:
--	mwifiex_terminate_workqueue(adapter);
--	adapter->surprise_removed = true;
- 	complete_all(adapter->fw_done);
- 	mwifiex_dbg(adapter, INFO, "%s, error\n", __func__);
- 
-@@ -1684,17 +1672,13 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
- 	pr_debug("info: %s: unregister device\n", __func__);
- 	if (adapter->if_ops.unregister_dev)
- 		adapter->if_ops.unregister_dev(adapter);
--	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
--		pr_debug("info: %s: shutdown mwifiex\n", __func__);
--		adapter->init_wait_q_woken = false;
--
--		if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
--			wait_event_interruptible(adapter->init_wait_q,
--						 adapter->init_wait_q_woken);
+-	if (!card) {
+-		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+-		return 0;
 -	}
- err_registerdev:
- 	adapter->surprise_removed = true;
- 	mwifiex_terminate_workqueue(adapter);
-+	if (adapter->hw_status == MWIFIEX_HW_STATUS_READY) {
-+		pr_debug("info: %s: shutdown mwifiex\n", __func__);
-+		mwifiex_shutdown_drv(adapter);
-+	}
- err_kmalloc:
- 	mwifiex_free_adapter(adapter);
- 
-@@ -1744,11 +1728,8 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter)
- 
- 	mwifiex_dbg(adapter, CMD,
- 		    "cmd: calling mwifiex_shutdown_drv...\n");
--	adapter->init_wait_q_woken = false;
- 
--	if (mwifiex_shutdown_drv(adapter) == -EINPROGRESS)
--		wait_event_interruptible(adapter->init_wait_q,
--					 adapter->init_wait_q_woken);
-+	mwifiex_shutdown_drv(adapter);
- 	mwifiex_dbg(adapter, CMD,
- 		    "cmd: mwifiex_shutdown_drv done\n");
- 	if (atomic_read(&adapter->rx_pending) ||
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 5c9bd94..fd56b5d 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -248,7 +248,6 @@ enum MWIFIEX_HARDWARE_STATUS {
- 	MWIFIEX_HW_STATUS_INITIALIZING,
- 	MWIFIEX_HW_STATUS_INIT_DONE,
- 	MWIFIEX_HW_STATUS_RESET,
--	MWIFIEX_HW_STATUS_CLOSING,
- 	MWIFIEX_HW_STATUS_NOT_READY
- };
- 
-@@ -1041,9 +1040,7 @@ void mwifiex_wake_up_net_dev_queue(struct net_device *netdev,
- 
- int mwifiex_init_fw_complete(struct mwifiex_adapter *adapter);
- 
--int mwifiex_shutdown_drv(struct mwifiex_adapter *adapter);
 -
--int mwifiex_shutdown_fw_complete(struct mwifiex_adapter *adapter);
-+void mwifiex_shutdown_drv(struct mwifiex_adapter *adapter);
+ 	/* Might still be loading firmware */
+ 	wait_for_completion(&card->fw_done);
  
- int mwifiex_dnld_fw(struct mwifiex_adapter *, struct mwifiex_fw_image *);
+@@ -574,8 +569,9 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
+ 	struct mwifiex_adapter *adapter;
+ 	int i;
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-index 18fbb96..b1ab8da 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -146,21 +146,6 @@ int mwifiex_init_fw_complete(struct mwifiex_adapter *adapter)
- }
+-	if (!card || !card->adapter) {
+-		pr_err("%s: card or card->adapter is NULL\n", __func__);
++	if (!card->adapter) {
++		dev_err(&intf->dev, "%s: card->adapter is NULL\n",
++			__func__);
+ 		return 0;
+ 	}
+ 	adapter = card->adapter;
+@@ -617,11 +613,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	struct usb_card_rec *card = usb_get_intfdata(intf);
+ 	struct mwifiex_adapter *adapter;
  
- /*
-- * Firmware shutdown complete callback handler.
-- *
-- * This function sets the hardware status to not ready and wakes up
-- * the function waiting on the init wait queue for the firmware
-- * shutdown to complete.
-- */
--int mwifiex_shutdown_fw_complete(struct mwifiex_adapter *adapter)
--{
--	adapter->hw_status = MWIFIEX_HW_STATUS_NOT_READY;
--	adapter->init_wait_q_woken = true;
--	wake_up_interruptible(&adapter->init_wait_q);
--	return 0;
--}
+-	if (!card) {
+-		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+-		return;
+-	}
 -
--/*
-  * This function sends init/shutdown command
-  * to firmware.
-  */
+ 	wait_for_completion(&card->fw_done);
+ 
+ 	adapter = card->adapter;
 -- 
-1.9.1
+1.8.1.4
