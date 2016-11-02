@@ -1,129 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44543 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750714AbcKKNGn (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34567 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754434AbcKBBNg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:06:43 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>, Cathy Luo <cluo@marvell.com>
-Subject: RE: [PATCH RESEND v2 03/11] mwifiex: resolve races between async FW
- init (failure) and device removal
-Date: Fri, 11 Nov 2016 13:06:36 +0000
-Message-ID: <e7a4031e5bcd4f72be211524e7c298a5@SC-EXCH04.marvell.com> (sfid-20161111_140647_345928_02997D1D)
-References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
- <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
- <20161110183723.GA134624@google.com>
-In-Reply-To: <20161110183723.GA134624@google.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 1 Nov 2016 21:13:36 -0400
+Received: by mail-wm0-f68.google.com with SMTP id p190so511733wmp.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 18:13:36 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAAye0QNjYY5gBzSdc+0_rhy1OHk7iQ-CVp0Svph1DR7+mgVWGg@mail.gmail.com>
+References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com>
+ <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com> <CAAye0QNjYY5gBzSdc+0_rhy1OHk7iQ-CVp0Svph1DR7+mgVWGg@mail.gmail.com>
+From: John Heenan <john@zgus.com>
+Date: Wed, 2 Nov 2016 11:13:34 +1000
+Message-ID: <CAAye0QP0FQetaaa-RE23teVgZ335ELE8O5qnzMA7CwQ4T8wc_Q@mail.gmail.com> (sfid-20161102_021401_507533_EDF5319B)
+Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
+ wireless IC
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Barry Day <briselec@gmail.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Friday, November 11, 2016 12:07 AM
-> To: Xinming Hu
-> Cc: Linux Wireless; Kalle Valo; Dmitry Torokhov; Amitkumar Karwar;
-> Cathy Luo
-> Subject: Re: [PATCH RESEND v2 03/11] mwifiex: resolve races between
-> async FW init (failure) and device removal
-> 
-> Hi,
-> 
-> On Thu, Nov 10, 2016 at 07:57:04PM +0800, Xinming Hu wrote:
-> > From: Brian Norris <briannorris@chromium.org>
-> >
-> > It's possible for the FW init sequence to fail, which will trigger a
-> > device cleanup sequence in mwifiex_fw_dpc(). This sequence can race
-> > with device suspend() or remove() (e.g., reboot or unbind), and can
-> > trigger use-after-free issues. Currently, this driver attempts
-> > (poorly) to synchronize remove() using a semaphore, but it doesn't
-> > protect some of the critical sections properly. Particularly, we grab
-> > a pointer to the adapter struct (card->adapter) without checking if
-> > it's being freed or not. We later do a NULL check on the adapter, but
-> > that doesn't work if the adapter was freed.
-> >
-> > Also note that the PCIe interface driver doesn't ever set
-> > card->adapter to NULL, so even if we get the synchronization right,
-> we
-> > still might try to redo the cleanup in ->remove(), even if the FW
-> init
-> > failure sequence already did it.
-> >
-> > This patch replaces the static semaphore with a per-device completion
-> > struct, and uses that completion to synchronize the remove() thread
-> > with the mwifiex_fw_dpc(). A future patch will utilize this
-> completion
-> > to synchronize the suspend() thread as well.
-> >
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > ---
-> > v2: Same as v1
-> > ---
-> >  drivers/net/wireless/marvell/mwifiex/main.c | 46
-> > ++++++++++-------------------
-> > drivers/net/wireless/marvell/mwifiex/main.h | 13 +++++---
-> > drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
-> > drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
-> > drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
-> > drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
-> > drivers/net/wireless/marvell/mwifiex/usb.c  | 23 +++++++--------
-> > drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
-> >  8 files changed, 55 insertions(+), 69 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/main.c
-> > b/drivers/net/wireless/marvell/mwifiex/main.c
-> > index c710d5e..09d46d6 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> > @@ -521,7 +521,6 @@ static void mwifiex_fw_dpc(const struct firmware
-> *firmware, void *context)
-> >  	struct mwifiex_private *priv;
-> >  	struct mwifiex_adapter *adapter = context;
-> >  	struct mwifiex_fw_image fw;
-> > -	struct semaphore *sem = adapter->card_sem;
-> >  	bool init_failed = false;
-> >  	struct wireless_dev *wdev;
-> >
-> > @@ -670,7 +669,8 @@ static void mwifiex_fw_dpc(const struct firmware
-> *firmware, void *context)
-> >  	}
-> >  	if (init_failed)
-> >  		mwifiex_free_adapter(adapter);
-> > -	up(sem);
-> > +	/* Tell all current and future waiters we're finished */
-> > +	complete_all(adapter->fw_done);
-> 
-> This part introduces a new use-after-free. We need to dereference
-> adapter->fw_done *before* we free the adapter in
-> mwifiex_free_adapter().
-> So you need a diff that looks something like this:
-> 
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -514,6 +514,7 @@ static void mwifiex_fw_dpc(const struct firmware
-> *firmware, void *context)
->  	struct mwifiex_fw_image fw;
->  	bool init_failed = false;
->  	struct wireless_dev *wdev;
-> +	struct completion *fw_done = adapter->fw_done;
-> 
->  	if (!firmware) {
->  		mwifiex_dbg(adapter, ERROR,
-> @@ -654,7 +655,7 @@ done:
->  	if (init_failed)
->  		mwifiex_free_adapter(adapter);
->  	/* Tell all current and future waiters we're finished */
-> -	complete_all(adapter->fw_done);
-> +	complete_all(fw_done);
->  	return;
->  }
-> 
+Barry Day has submitted real world reports for the 8192eu and 8192cu.
+This needs to be acknowledged. I have submitted real world reports for
+the 8723bu.
 
-Thanks. I will include this change in v3.
+When it comes down to it, it looks like the kernel code changes are
+really going to be very trivial to fix this problem and we need to
+take the focus off dramatic outbursts over style issues to a strategy
+for getting usable results from real world testing.
 
-Regards,
-Amitkumar
+Addressing style issues in a dramatic manner to me looks like a mean
+sport for maintainers who line up to easy target first time
+contributors. This mean attitude comes from the top with a well known
+comment about "publicly making fun of people". The polite comments
+over style from Joe Perches and Rafa=C5=82 Mi=C5=82ecki are welcomed.
+
+An effective strategy would be to insert some printk statements to
+trace what init steps vendor derived drivers do each time
+wpa_supplicant is called and ask real world testers to report their
+results. This is a lot more productive and less error prone than
+laboriously pouring over vendor source code. Alternative drivers that
+use vendor code from Realtek is enormously complicated and a huge pain
+to make sense of.
+
+Joe Sorensen's driver code is far easier to make sense of and it is a
+shame Realtek don't come to the party. Joe Sorensens's code take takes
+advantage of the excellent work of kernel contributors to the mac80211
+driver.
+
+Previous comments I made about enable_rf, rtl8xxxu_start,
+rtl8xxxu_init_device etc should be clarified. I will leave it for the
+moment as it currently serves no direct useful purpose.
+
+
+John Heenan
+
+On 1 November 2016 at 17:24, John Heenan <john@zgus.com> wrote:
+> I have a prepared another patch that is not USB VID/PID dependent for
+> rtl8723bu devices. It is more elegant. I will send it after this
+> email.
+>
+> If I have more patches is it preferable I just put them on github only
+> and notify a link address until there might be some resolution?
+>
+> What I meant below about not finding a matching function is that I
+> cannot find matching actions to take on any function calls in
+> rtl8xxxu_stop as for rtl8xxxu_start.
+>
+> The function that is called later and potentially more than once for
+> rtl8723bu devices is rtl8xxxu_init_device. There is no corresponding
+> rtl8xxxu_deinit_device function.
+>
+> enable_rf is called in rtl8xxxu_start, not in the delayed call to
+> rtl8xxxu_init_device. The corresponding disable_rf is called in
+> rtl8xxxu_stop. So no matching issue here. However please see below for
+> another potential issue.
+>
+> power_on is called in rtl8xxxu_init_device. power_off is called in
+> rtl8xxxu_disconnect. Does not appear to be an issue if calling
+> power_on has no real effect if already on.
+>
+> The following should be looked at though. For all devices enable_rf is
+> only called once. For the proposed patch the first call to
+> rtl8xxxu_init_device is called after the single call to enable_rf for
+> rtl8723bu devices. Without the patch enable_rf is called after
+> rtl8xxxu_init_device for all devices
+>
+> Perhaps enable_rf just configures RF modes to start up when RF is
+> powered on or if called after power_on then enters requested RF modes.
+>
+> So I cannot see appropriate additional matching action to take.
+>
+> Below is some background for anyone interested
+>
+> rtl8xxxu_start and rtl8xxxu_stop are assigned to rtl8xxxu_ops.
+>
+> rtl8xxxu_probe assigns rtl8xxxu_ops to its driver layer with
+> ieee80211_register_hw.
+>
+> rtl8xxxu_disconnect unassigns rtl8xxxu_ops from its driver layer with
+> ieee80211_unregister_hw.
+>
+> rtl8xxxu_probe and rtl8xxxu_disconnect are USB driver functions
+>
+> John Heenan
+>
+>
+> On 1 November 2016 at 08:15, John Heenan <john@zgus.com> wrote:
+>> On 1 November 2016 at 07:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrot=
+e:
+>>> John Heenan <john@zgus.com> writes:
+>>
+>>>
+>>>> @@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *=
+hw)
+>>>>       struct rtl8xxxu_tx_urb *tx_urb;
+>>>>       unsigned long flags;
+>>>>       int ret, i;
+>>>> +     struct usb_device_descriptor *udesc =3D &priv->udev->descriptor;
+>>>>
+>>>>       ret =3D 0;
+>>>>
+>>>> +     if(udesc->idVendor =3D=3D USB_VENDOR_ID_REALTEK
+>>>> +                     && udesc->idProduct =3D=3D USB_PRODUCT_ID_RTL872=
+3BU) {
+>>>> +             ret =3D rtl8xxxu_init_device(hw);
+>>>> +             if (ret)
+>>>> +                     goto error_out;
+>>>> +     }
+>>>> +
+>>>
+>>> As mentioned previously, if this is to be changed here, it has to be
+>>> matched in the _stop section too.
+>>
+>> I looked at this and could not find a matching function. I will have a
+>> look again.
+>>
