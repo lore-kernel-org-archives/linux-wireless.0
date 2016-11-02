@@ -1,96 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32974 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754968AbcKAHY6 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35940 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755059AbcKBCZq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 03:24:58 -0400
-Received: by mail-pf0-f193.google.com with SMTP id a136so7538103pfa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 00:24:58 -0700 (PDT)
-Date: Tue, 1 Nov 2016 17:24:47 +1000
-From: John Heenan <john@zgus.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-Message-ID: <20161101072447.GA21575@cube> (sfid-20161101_082503_478017_59E64A52)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 1 Nov 2016 22:25:46 -0400
+Received: by mail-pf0-f195.google.com with SMTP id n85so262184pfi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:25:46 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 05/12] mwifiex: remove redundant pdev check in suspend/resume handlers
+Date: Wed,  2 Nov 2016 10:24:41 +0800
+Message-Id: <1478053488-16042-3-git-send-email-huxinming820@marvell.com> (sfid-20161102_032549_396278_127B15B1)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl8723bu wireless IC shows evidence of a more agressive approach to
-power saving, powering down its RF side when there is no wireless
-interfacing but leaving USB interfacing intact. This makes the wireless
-IC more suitable for use in devices which need to keep their power use
-as low as practical, such as tablets and Surface Pro type devices.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-In effect this means that a full initialisation must be performed
-whenever a wireless interface is brought up. It also means that
-interpretations of power status from general wireless registers should
-not be relied on to influence an init sequence.
+to_pci_dev() would just do struct offset arithmetic on struct
+device to get 'pdev' pointer. We never get NULL pdev pointer.
 
-The patch works by forcing a fuller initialisation and forcing it to
-occur more often in code paths (such as occurs during a low level
-authentication that initiates wireless interfacing).
-
-The initialisation sequence is now more consistent with code based
-directly on vendor code. For example while the vendor derived code
-interprets a register as indcating a particular powered state, it does
-not use this information to influence its init sequence.
-
-Only devices that use the rtl8723bu driver are affected by this patch.
-
-With this patch wpa_supplicant reliably and consistently connects with
-an AP. Before a workaround such as executing rmmod and modprobe before
-each call to wpa_supplicant worked with some distributions.
-
-Signed-off-by: John Heenan <john@zgus.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+v2: Same as v1
+---
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 04141e5..ab2f2ef 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3900,7 +3900,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
- 	 * initialized. First MAC returns 0xea, second MAC returns 0x00
- 	 */
--	if (val8 == 0xea)
-+	if (val8 == 0xea || priv->fops == &rtl8723bu_fops)
- 		macpower = false;
- 	else
- 		macpower = true;
-@@ -5779,6 +5779,12 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 5507c89..fb34b99 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -101,14 +101,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	ret = 0;
- 
-+	if(priv->fops == &rtl8723bu_fops) {
-+		ret = rtl8xxxu_init_device(hw);
-+		if (ret)
-+			goto error_out;
-+	}
-+
- 	init_usb_anchor(&priv->rx_anchor);
- 	init_usb_anchor(&priv->tx_anchor);
- 	init_usb_anchor(&priv->int_anchor);
-@@ -6080,9 +6086,11 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 		goto exit;
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
  	}
  
--	ret = rtl8xxxu_init_device(hw);
--	if (ret)
--		goto exit;
-+	if(priv->fops != &rtl8723bu_fops) {
-+		ret = rtl8xxxu_init_device(hw);
-+		if (ret)
-+			goto exit;
-+	}
+@@ -145,14 +140,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- 	hw->wiphy->max_scan_ssids = 1;
- 	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		dev_err(dev, "Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
 -- 
-2.10.1
+1.8.1.4
