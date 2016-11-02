@@ -1,43 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41400 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938318AbcKQGjM (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35622 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755278AbcKBC0V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 01:39:12 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [2/3,v2] wlcore: Pass win_size taken from ieee80211_sta to FW
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160821112425.11302-2-maxim.altshul@ti.com>
-References: <20160821112425.11302-2-maxim.altshul@ti.com>
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Message-Id: <20161117063911.A1209615C4@smtp.codeaurora.org> (sfid-20161117_073915_858398_4F70D6E0)
-Date: Thu, 17 Nov 2016 06:39:11 +0000 (UTC)
+        Tue, 1 Nov 2016 22:26:21 -0400
+Received: by mail-pf0-f196.google.com with SMTP id i88so270613pfk.2
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:26:21 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 12/12] mwifiex: pcie: stop checking for NULL adapter->card
+Date: Wed,  2 Nov 2016 10:24:48 +0800
+Message-Id: <1478053488-16042-10-git-send-email-huxinming820@marvell.com> (sfid-20161102_032624_372580_88ACE968)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Altshul <maxim.altshul@ti.com> wrote:
-> When starting a new BA session, we must pass the win_size to the FW.
-> 
-> To do this we take max_rx_aggregation_subframes (BA RX win size)
-> which is stored in ieee80211_sta structure (e.g per link and not per HW)
-> 
-> We will use the value stored per link when passing the win_size to
-> firmware through the ACX_BA_SESSION_RX_SETUP command.
-> 
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+From: Brian Norris <briannorris@chromium.org>
 
-2 patches applied to wireless-drivers-next.git, thanks.
+It should never be NULL here, and to think otherwise makes things
+confusing.
 
-42c7372a1116 wlcore: Pass win_size taken from ieee80211_sta to FW
-e7ee74b56f23 wlcore: Add RX_BA_WIN_SIZE_CHANGE_EVENT event
+---
+v2: Same as v1
+---
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 55 +++++++++++++----------------
+ 1 file changed, 24 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c061d00..86e8ce6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2990,31 +2990,28 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+-	struct pci_dev *pdev;
++	struct pci_dev *pdev = card->dev;
+ 	int i;
+ 
+-	if (card) {
+-		pdev = card->dev;
+-		if (card->msix_enable) {
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				synchronize_irq(card->msix_entries[i].vector);
++	if (card->msix_enable) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			synchronize_irq(card->msix_entries[i].vector);
+ 
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				free_irq(card->msix_entries[i].vector,
+-					 &card->msix_ctx[i]);
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			free_irq(card->msix_entries[i].vector,
++				 &card->msix_ctx[i]);
+ 
+-			card->msix_enable = 0;
+-			pci_disable_msix(pdev);
+-	       } else {
+-			mwifiex_dbg(adapter, INFO,
+-				    "%s(): calling free_irq()\n", __func__);
+-		       free_irq(card->dev->irq, &card->share_irq_ctx);
++		card->msix_enable = 0;
++		pci_disable_msix(pdev);
++       } else {
++		mwifiex_dbg(adapter, INFO,
++			    "%s(): calling free_irq()\n", __func__);
++	       free_irq(card->dev->irq, &card->share_irq_ctx);
+ 
+-			if (card->msi_enable)
+-				pci_disable_msi(pdev);
+-	       }
+-		card->adapter = NULL;
+-	}
++		if (card->msi_enable)
++			pci_disable_msi(pdev);
++       }
++	card->adapter = NULL;
+ }
+ 
+ /* This function initializes the PCI-E host memory space, WCB rings, etc.
+@@ -3097,18 +3094,14 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ 	adapter->seq_num = 0;
+ 	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 
+-	if (card) {
+-		if (reg->sleep_cookie)
+-			mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+-
+-		mwifiex_pcie_delete_cmdrsp_buf(adapter);
+-		mwifiex_pcie_delete_evtbd_ring(adapter);
+-		mwifiex_pcie_delete_rxbd_ring(adapter);
+-		mwifiex_pcie_delete_txbd_ring(adapter);
+-		card->cmdrsp_buf = NULL;
+-	}
++	if (reg->sleep_cookie)
++		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+ 
+-	return;
++	mwifiex_pcie_delete_cmdrsp_buf(adapter);
++	mwifiex_pcie_delete_evtbd_ring(adapter);
++	mwifiex_pcie_delete_rxbd_ring(adapter);
++	mwifiex_pcie_delete_txbd_ring(adapter);
++	card->cmdrsp_buf = NULL;
+ }
+ 
+ static struct mwifiex_if_ops pcie_ops = {
 -- 
-https://patchwork.kernel.org/patch/9292121/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.1.4
