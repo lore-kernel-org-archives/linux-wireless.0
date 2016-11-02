@@ -1,92 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39934 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751566AbcK3GKr (ORCPT
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34816 "EHLO
+        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754499AbcKBJEj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 01:10:47 -0500
-Date: Wed, 30 Nov 2016 11:40:36 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: ath10k: Fix soft lockup during firmware crash/hw-restart
-Message-ID: <20161130053610.GA3044@atheros-ThinkPad-T61> (sfid-20161130_071051_129212_DA1E2D15)
-References: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
- <ecb7e9d7-34c5-4ea8-62a9-b5b96409bb0b@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ecb7e9d7-34c5-4ea8-62a9-b5b96409bb0b@candelatech.com>
+        Wed, 2 Nov 2016 05:04:39 -0400
+Received: by mail-lf0-f47.google.com with SMTP id b14so6923345lfg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2016 02:04:38 -0700 (PDT)
+From: Filip Matusiak <filip.matusiak@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: filip.matusiak@tieto.com, marek.kwaczynski@tieto.com,
+        johannes@sipsolutions.net, davem@davemloft.net,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2] mac80211: Ignore VHT IE from peer with wrong rx_mcs_map
+Date: Wed,  2 Nov 2016 10:04:26 +0100
+Message-Id: <1478077466-4308-1-git-send-email-filip.matusiak@tieto.com> (sfid-20161102_100459_871063_86056CB7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 29, 2016 at 04:43:48PM -0800, Ben Greear wrote:
-> I have not seen this hang since adding this patch, so
-> hopefully it has resolved the problem.
+This is a workaround for VHT-enabled STAs which break the spec
+and have the VHT-MCS Rx map filled in with value 3 for all eight
+spacial streams, an example is AR9462 in AP mode.
 
-thanks Ben ! I had updated the commit log with Fixes tag
-https://patchwork.kernel.org/patch/9453609/
+As per spec, in section 22.1.1 Introduction to the VHT PHY
+A VHT STA shall support at least single spactial stream VHT-MCSs
+0 to 7 (transmit and receive) in all supported channel widths.
 
-> 
-> On 11/29/2016 06:46 AM, Mohammed Shafi Shajakhan wrote:
-> >From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >
-> >During firmware crash (or) user requested manual restart
-> >the system gets into a soft lock up state because of the
-> >below root cause.
-> >
-> >During user requested hardware restart / firmware crash
-> >the system goes into a soft lockup state as 'napi_synchronize'
-> >is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-> >bit) and it sleeps into infinite loop as it waits for
-> >'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-> >'ath10k_hif_stop' is called twice as below (resulting in calling
-> >'napi_synchronize' after 'napi_disable')
-> >
-> >'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
-> >-> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-> >'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
-> >
-> >Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-> >as it makes more sense before informing mac80211 to restart h/w
-> >Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
-> >
-> >Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >---
-> >[thanks to Kalle and Michal for their inputs]
-> >
-> > drivers/net/wireless/ath/ath10k/core.c | 2 +-
-> > drivers/net/wireless/ath/ath10k/mac.c  | 1 -
-> > 2 files changed, 1 insertion(+), 2 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> >index 7005e2a..5bc6847 100644
-> >--- a/drivers/net/wireless/ath/ath10k/core.c
-> >+++ b/drivers/net/wireless/ath/ath10k/core.c
-> >@@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
-> > 	switch (ar->state) {
-> > 	case ATH10K_STATE_ON:
-> > 		ar->state = ATH10K_STATE_RESTARTING;
-> >-		ath10k_hif_stop(ar);
-> >+		ath10k_halt(ar);
-> > 		ath10k_scan_finish(ar);
-> > 		ieee80211_restart_hw(ar->hw);
-> > 		break;
-> >diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> >index 717b2fa..481842b 100644
-> >--- a/drivers/net/wireless/ath/ath10k/mac.c
-> >+++ b/drivers/net/wireless/ath/ath10k/mac.c
-> >@@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
-> > 		ar->state = ATH10K_STATE_ON;
-> > 		break;
-> > 	case ATH10K_STATE_RESTARTING:
-> >-		ath10k_halt(ar);
-> > 		ar->state = ATH10K_STATE_RESTARTED;
-> > 		break;
-> > 	case ATH10K_STATE_ON:
-> >
-> 
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
+Some devices in STA mode will get firmware assert when trying to
+associate, examples are QCA9377 & QCA6174.
+
+Packet example of broken VHT Cap IE of AR9462:
+
+Tag: VHT Capabilities (IEEE Std 802.11ac/D3.1)
+    Tag Number: VHT Capabilities (IEEE Std 802.11ac/D3.1) (191)
+    Tag length: 12
+    VHT Capabilities Info: 0x00000000
+    VHT Supported MCS Set
+        Rx MCS Map: 0xffff
+            .... .... .... ..11 = Rx 1 SS: Not Supported (0x0003)
+            .... .... .... 11.. = Rx 2 SS: Not Supported (0x0003)
+            .... .... ..11 .... = Rx 3 SS: Not Supported (0x0003)
+            .... .... 11.. .... = Rx 4 SS: Not Supported (0x0003)
+            .... ..11 .... .... = Rx 5 SS: Not Supported (0x0003)
+            .... 11.. .... .... = Rx 6 SS: Not Supported (0x0003)
+            ..11 .... .... .... = Rx 7 SS: Not Supported (0x0003)
+            11.. .... .... .... = Rx 8 SS: Not Supported (0x0003)
+        ...0 0000 0000 0000 = Rx Highest Long GI Data Rate (in Mb/s, 0 = subfield not in use): 0x0000
+        Tx MCS Map: 0xffff
+        ...0 0000 0000 0000 = Tx Highest Long GI Data Rate  (in Mb/s, 0 = subfield not in use): 0x0000
+
+Signed-off-by: Filip Matusiak <filip.matusiak@tieto.com>
+---
+ net/mac80211/vht.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index ee71576..6832bf6 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -270,6 +270,22 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 		vht_cap->vht_mcs.tx_mcs_map |= cpu_to_le16(peer_tx << i * 2);
+ 	}
+ 
++	/*
++	 * This is a workaround for VHT-enabled STAs which break the spec
++	 * and have the VHT-MCS Rx map filled in with value 3 for all eight
++	 * spacial streams, an example is AR9462.
++	 *
++	 * As per spec, in section 22.1.1 Introduction to the VHT PHY
++	 * A VHT STA shall support at least single spactial stream VHT-MCSs
++	 * 0 to 7 (transmit and receive) in all supported channel widths.
++	 */
++	if (vht_cap->vht_mcs.rx_mcs_map == cpu_to_le16(0xFFFF)) {
++		vht_cap->vht_supported = false;
++		sdata_info(sdata, "Ignoring VHT IE from %pM due to invalid rx_mcs_map\n",
++			   sta->addr);
++		return;
++	}
++
+ 	/* finally set up the bandwidth */
+ 	switch (vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
+ 	case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
+-- 
+2.7.4
