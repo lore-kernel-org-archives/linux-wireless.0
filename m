@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37813 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751058AbcKFCIt (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34453 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752710AbcKBUpl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Nov 2016 22:08:49 -0400
-Received: by mail-wm0-f41.google.com with SMTP id t79so116287227wmt.0
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Nov 2016 19:08:48 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 0/3][RFC] CQM RSSI event with many thresholds
-Date: Sun,  6 Nov 2016 03:08:30 +0100
-Message-Id: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com> (sfid-20161106_030854_800845_F650BCF9)
+        Wed, 2 Nov 2016 16:45:41 -0400
+Received: by mail-pf0-f182.google.com with SMTP id n85so17767943pfi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2016 13:45:41 -0700 (PDT)
+Date: Wed, 2 Nov 2016 13:45:38 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+ remove_card
+Message-ID: <20161102204537.GA27786@google.com> (sfid-20161102_214546_426275_0E970D86)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-5-git-send-email-akarwar@marvell.com>
+ <20161025001405.GE15034@dtor-ws>
+ <87d1imudwm.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87d1imudwm.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrew Zaborowski <balrogg@gmail.com>
+On Thu, Oct 27, 2016 at 04:20:25PM +0300, Kalle Valo wrote:
+> Dmitry Torokhov <dmitry.torokhov@gmail.com> writes:
+> 
+> >> +/* reset_trigger variable is used to identify if mwifiex_sdio_remove()
+> >> + * is called by sdio_work during reset or the call is from sdio subsystem.
+> >> + * We will cancel sdio_work only if the call is from sdio subsystem.
+> >> + */
+> >> +static u8 reset_triggered;
+> >
+> > It would be really great if the driver supported multiple devices. IOW
+> > please avoid module-globals.
+> 
+> Good catch, it's a hard requirement to support multiple devices at the
+> same time.
 
-This is a first stab at a nl80211 API using multiple RSSI thresholds
-discussed previously.  It is similar to the current CQM RSSI event with
-one threshold and a hysteresis parameter.  I tried to avoid creating
-new nl80211 commands and events so I extended the existing command.
-There's still a NL80211_ATTR_CQM_RSSI_THOLD attribute and a hysteresis
-attribute but multiple thresholds can be supplied as an array.
+BTW, this problem is repeated in several places throughout this driver.
+For instance, look for 'user_rmmod' (why? you shouldn't need to treat
+module unload differently...) and the work structs (and corresponding
+'saved_adapter' and 'iface_flags') used for PCIe function-level reset
+and SDIO reset.
 
-All this is a proposal and open to changes.
+Hopefully either Marvell's or my cleanups can move to get rid of these
+anti-patterns soon...
 
-There are two different mechanisms for compatibility with the current
-behavior in which events are generated every time the RSSI value is
-more than $hysteresis dBm away from the last event's level, even if
-$threshold wasn't crossed.  For example with the rssi going up from 20dBm
-and the threshold set at 40 and hysteresis at 5, there'll be events at
-40, 45, 50 and so on.  I assume this is intentional because most
-drivers replicate this behavior.  If 2 or more thresholds are supplied
-in NL80211_ATTR_CQM_RSSI_THOLD (i.e. it is not 4 byte long) this will
-enable the new mechanism and events are only generated when a threshold
-is crossed.
-
-My opinion is that the new mechanism is similar enough to the current
-one that it would be best if each driver didn't have to implement both
-mechanisms, and one could be a special case of the other.  However I
-can't update all drivers because I can't test them.  So at the driver
-level there have to be two methods until all drivers implement the
-new method (set_cqm_rssi_range_config, which uses a low and a high
-threshold) and the current behavior can be implemented on to of it.
-So the next best thing is that at least the netlink API can present it
-as a single interface.  Also both mechanisms never have to be enabled
-simultaneously, the driver doesn't have to support them both at the
-same time.
-
-Also it seems that the wl1271 (wlcore) driver can offload RSSI
-monitoring to hardware using exactly the two parameters used today:
-one threshold and a hysteresis value, and no other mechanism is
-supported by the hardware, so it wouldn't make sense for it to drop
-the current method.
-
-Andrew Zaborowski (3):
-  mac80211: Pass new RSSI level in CQM RSSI notification
-  cfg80211: Pass new RSSI level in CQM RSSI notification
-  nl80211/mac80211: Accept multiple RSSI thresholds for CQM
-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c      |   2 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c |   4 +-
- drivers/net/wireless/rndis_wlan.c                |   2 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c      |   2 +-
- drivers/net/wireless/st/cw1200/sta.c             |   2 +-
- drivers/net/wireless/ti/wl1251/event.c           |   4 +-
- drivers/net/wireless/ti/wlcore/event.c           |   3 +-
- include/net/cfg80211.h                           |  15 ++-
- include/net/mac80211.h                           |   8 ++
- include/uapi/linux/nl80211.h                     |   7 +-
- net/mac80211/cfg.c                               |  28 +++++
- net/mac80211/mlme.c                              |  33 ++++-
- net/mac80211/trace.h                             |  11 +-
- net/wireless/core.c                              |  13 ++
- net/wireless/core.h                              |   9 ++
- net/wireless/nl80211.c                           | 146 +++++++++++++++++++++--
- net/wireless/rdev-ops.h                          |  12 ++
- net/wireless/trace.h                             |  33 ++++-
- 18 files changed, 299 insertions(+), 35 deletions(-)
-
--- 
-2.7.4
+Brian
