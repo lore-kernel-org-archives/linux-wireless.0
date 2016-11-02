@@ -1,68 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45570 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757357AbcK2OwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 09:52:04 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAPDyKFr=TE+EuZ9rZV3ygsjBFN_mRrE2imkFa-wQs_ykM5d+cQ@mail.gmail.com>
-References: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
- <20161128141513.agnkyz6ronigbukn@rob-hp-laptop> <CAPDyKFr=TE+EuZ9rZV3ygsjBFN_mRrE2imkFa-wQs_ykM5d+cQ@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 29 Nov 2016 08:51:22 -0600
-Message-ID: <CAL_Jsq+80LAkCGEdP5T0AWFV2nRtZ8nrkBoNRB47CR9JN=9dog@mail.gmail.com> (sfid-20161129_155305_281331_A0DBD693)
-Subject: Re: [PATCH] mmc: pwrseq: add support for Marvell SD8787 chip
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Matt Ranostay <matt@ranostay.consulting>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33880 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755059AbcKBCZz (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 1 Nov 2016 22:25:55 -0400
+Received: by mail-pf0-f194.google.com with SMTP id y68so272837pfb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:25:55 -0700 (PDT)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 07/12] mwifiex: resolve suspend() race with async FW init failure
+Date: Wed,  2 Nov 2016 10:24:43 +0800
+Message-Id: <1478053488-16042-5-git-send-email-huxinming820@marvell.com> (sfid-20161102_032615_946598_02ACEC5A)
+In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 28, 2016 at 9:54 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
-> [...]
->
->>> +
->>> +Example:
->>> +
->>> +     wifi_pwrseq: wifi_pwrseq {
->>> +             compatible = "mmc-pwrseq-sd8787";
->>> +             pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
->>> +             reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
->>> +     }
->>> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
->>> index c421aba0a5bc..08fd65d35725 100644
->>> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
->>> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
->>> @@ -32,6 +32,9 @@ Optional properties:
->>>                so that the wifi chip can wakeup host platform under certain condition.
->>>                during system resume, the irq will be disabled to make sure
->>>                unnecessary interrupt is not received.
->>> +  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
->>
->> This is why pwrseq is wrong. You have some properties in the card node
->> and some in pwrseq node. Everything should be in the card node.
->
-> Put "all" in the card node, just doesn't work for MMC. Particular in
-> cases when we have removable cards, as then it would be wrong to have
-> a card node.
+From: Brian Norris <briannorris@chromium.org>
 
-When is there a problem with removable cards? The connector is
-standard and everything needed (CD, VMMC, VDDIO, etc.) is defined in
-the host controller node. If that isn't sufficient, then we should
-start defining a connector node.
+---
+v2: Same as v1
+---
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 11 +++++++++--
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 11 +++++++++--
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 12 ++++++++++--
+ 3 files changed, 28 insertions(+), 6 deletions(-)
 
-> The mmc pwrseq DT bindings just follows the legacy approach for MMC
-> and that's why the pwrseq handle is at the controller node. Yes, would
-> could have done it differently, but this is the case now, so we will
-> have to accept that.
-
-We're stuck with supporting the existing cases. That doesn't mean
-we're stuck with the same thing for new cases.
-
-Rob
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 32fbb91..b635563 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -102,12 +102,19 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		pr_err("Card or adapter structure is not valid\n");
++	if (!card) {
++		dev_err(dev, "adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
++	/* Might still be loading firmware */
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
++	if (!adapter) {
++		dev_err(dev, "card is not valid\n");
++		return 0;
++	}
+ 
+ 	/* Enable the Host Sleep */
+ 	if (!mwifiex_enable_hs(adapter)) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index a750edb..4d314c1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -331,8 +331,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 		}
+ 
+ 		card = sdio_get_drvdata(func);
+-		if (!card || !card->adapter) {
+-			pr_err("suspend: invalid card or adapter\n");
++		if (!card) {
++			dev_err(dev, "suspend: invalid card\n");
+ 			return 0;
+ 		}
+ 	} else {
+@@ -340,7 +340,14 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 		return 0;
+ 	}
+ 
++	/* Might still be loading firmware */
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
++	if (!adapter) {
++		dev_err(dev, "card is not valid\n");
++		return 0;
++	}
+ 
+ 	/* Enable platform specific wakeup interrupt */
+ 	if (card->plt_wake_cfg && card->plt_wake_cfg->irq_wifi >= 0) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index a61455c..70126c3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -503,11 +503,19 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 	struct usb_tx_data_port *port;
+ 	int i, j;
+ 
+-	if (!card || !card->adapter) {
+-		pr_err("%s: card or card->adapter is NULL\n", __func__);
++	if (!card) {
++		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+ 		return 0;
+ 	}
++
++	/* Might still be loading firmware */
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
++	if (!adapter) {
++		dev_err(&intf->dev, "card is not valid\n");
++		return 0;
++	}
+ 
+ 	if (unlikely(adapter->is_suspended))
+ 		mwifiex_dbg(adapter, WARN,
+-- 
+1.8.1.4
