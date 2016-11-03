@@ -1,177 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36804 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753888AbcKBCZM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 22:25:12 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n85so261032pfi.3
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:25:11 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 03/12] mwifiex: don't do unbalanced free()'ing in cleanup_if()
-Date: Wed,  2 Nov 2016 10:24:39 +0800
-Message-Id: <1478053488-16042-1-git-send-email-huxinming820@marvell.com> (sfid-20161102_032517_152752_96A64594)
+Received: from mx1.redhat.com ([209.132.183.28]:54814 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756558AbcKCQVG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 12:21:06 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: John Heenan <john@zgus.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu wireless IC
+References: <20161101072447.GA21575@cube>
+Date: Thu, 03 Nov 2016 12:21:03 -0400
+In-Reply-To: <20161101072447.GA21575@cube> (John Heenan's message of "Tue, 1
+        Nov 2016 17:24:47 +1000")
+Message-ID: <wrfj1syso7ps.fsf@redhat.com> (sfid-20161103_172109_655711_E006D286)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+John Heenan <john@zgus.com> writes:
+> The rtl8723bu wireless IC shows evidence of a more agressive approach to
+> power saving, powering down its RF side when there is no wireless
+> interfacing but leaving USB interfacing intact. This makes the wireless
+> IC more suitable for use in devices which need to keep their power use
+> as low as practical, such as tablets and Surface Pro type devices.
+>
+> In effect this means that a full initialisation must be performed
+> whenever a wireless interface is brought up. It also means that
+> interpretations of power status from general wireless registers should
+> not be relied on to influence an init sequence.
+>
+> The patch works by forcing a fuller initialisation and forcing it to
+> occur more often in code paths (such as occurs during a low level
+> authentication that initiates wireless interfacing).
+>
+> The initialisation sequence is now more consistent with code based
+> directly on vendor code. For example while the vendor derived code
+> interprets a register as indcating a particular powered state, it does
+> not use this information to influence its init sequence.
+>
+> Only devices that use the rtl8723bu driver are affected by this patch.
+>
+> With this patch wpa_supplicant reliably and consistently connects with
+> an AP. Before a workaround such as executing rmmod and modprobe before
+> each call to wpa_supplicant worked with some distributions.
+>
+> Signed-off-by: John Heenan <john@zgus.com>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 16 ++++++++++++----
+>  1 file changed, 12 insertions(+), 4 deletions(-)
+>
 
-The cleanup_if() callback is the inverse of init_if(). We allocate our
-'card' interface structure in the probe() function, but we free it in
-cleanup_if(). That gives a few problems:
-(a) we leak this memory if probe() fails before we reach init_if()
-(b) we can't safely utilize 'card' after cleanup_if() -- namely, in
-    remove() or suspend(), both of which might race with the cleanup
-    paths in our asynchronous FW initialization path
+I am at Linux Plumbers this week, so my response time is slow. Next week
+I am on PTO, so I will not respond.
 
-Solution: just use devm_kzalloc(), which will free this structure
-properly when the device is removed -- and drop the set_drvdata(...,
-NULL), since the driver core does this for us. This also removes the
-temptation to use drvdata == NULL as a hack for checking if the device
-has been "cleaned up."
+First of all, why do you keep CC'ing multiple mailing lists that do not
+matter? This discussion belongs on linux-wireless not on netdev or lkml.
+CC'ing Kalle directly is not going to get him to apply this broken patch
+for you.
 
-This is a preparatory step for adding a card-level completion structure
-to handle our FW init vs. remove/suspend races, in addition to fixing
-memory leaks.
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> index 04141e5..ab2f2ef 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> @@ -3900,7 +3900,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+>  	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
+>  	 * initialized. First MAC returns 0xea, second MAC returns 0x00
+>  	 */
+> -	if (val8 == 0xea)
+> +	if (val8 == 0xea || priv->fops == &rtl8723bu_fops)
+>  		macpower = false;
+>  	else
+>  		macpower = true;
 
-I *do* leave the set_drvdata(..., NULL) for the hacky SDIO
-mwifiex_recreate_adapter(), since the device core won't be able to clear
-that one for us.
+Why oh why do you insist on not using the *standard* way of coping with
+this? 'priv-rtl_chip' is used everywhere else, but you just have to do
+something awful like this?
 
----
-v2: Same as v1
----
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  5 +----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 16 ++++++++++------
- drivers/net/wireless/marvell/mwifiex/usb.c  |  7 +------
- 3 files changed, 12 insertions(+), 16 deletions(-)
+> @@ -5779,6 +5779,12 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+>  
+>  	ret = 0;
+>  
+> +	if(priv->fops == &rtl8723bu_fops) {
+> +		ret = rtl8xxxu_init_device(hw);
+> +		if (ret)
+> +			goto error_out;
+> +	}
+> +
+>  	init_usb_anchor(&priv->rx_anchor);
+>  	init_usb_anchor(&priv->tx_anchor);
+>  	init_usb_anchor(&priv->int_anchor);
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 4aa5d91..e6bea02 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -189,7 +189,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
- 		 pdev->vendor, pdev->device, pdev->revision);
- 
--	card = kzalloc(sizeof(struct pcie_service_card), GFP_KERNEL);
-+	card = devm_kzalloc(&pdev->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -2820,7 +2820,6 @@ err_req_region0:
- err_set_dma_mask:
- 	pci_disable_device(pdev);
- err_enable_dev:
--	pci_set_drvdata(pdev, NULL);
- 	return ret;
- }
- 
-@@ -2854,9 +2853,7 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
- 		pci_disable_device(pdev);
- 		pci_release_region(pdev, 2);
- 		pci_release_region(pdev, 0);
--		pci_set_drvdata(pdev, NULL);
- 	}
--	kfree(card);
- }
- 
- static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 8718950..f04cf5a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -152,7 +152,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X class=%d function=%d\n",
- 		 func->vendor, func->device, func->class, func->num);
- 
--	card = kzalloc(sizeof(struct sdio_mmc_card), GFP_KERNEL);
-+	card = devm_kzalloc(&func->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -185,7 +185,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 
- 	if (ret) {
- 		dev_err(&func->dev, "failed to enable function\n");
--		goto err_free;
-+		return ret;
- 	}
- 
- 	/* device tree node parsing and platform specific configuration*/
-@@ -210,8 +210,6 @@ err_disable:
- 	sdio_claim_host(func);
- 	sdio_disable_func(func);
- 	sdio_release_host(func);
--err_free:
--	kfree(card);
- 
- 	return ret;
- }
-@@ -2240,8 +2238,6 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
- 	kfree(card->mpa_rx.len_arr);
- 	kfree(card->mpa_tx.buf);
- 	kfree(card->mpa_rx.buf);
--	sdio_set_drvdata(card->func, NULL);
--	kfree(card);
- }
- 
- /*
-@@ -2291,6 +2287,14 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 
- 	mwifiex_sdio_remove(func);
- 
-+	/*
-+	 * Normally, we would let the driver core take care of releasing these.
-+	 * But we're not letting the driver core handle this one. See above
-+	 * TODO.
-+	 */
-+	sdio_set_drvdata(func, NULL);
-+	devm_kfree(&func->dev, card);
-+
- 	/* power cycle the adapter */
- 	sdio_claim_host(func);
- 	mmc_hw_reset(func->card->host);
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 73eb084..57ed834 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -382,7 +382,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 	struct usb_card_rec *card;
- 	u16 id_vendor, id_product, bcd_device, bcd_usb;
- 
--	card = kzalloc(sizeof(struct usb_card_rec), GFP_KERNEL);
-+	card = devm_kzalloc(&intf->dev, sizeof(*card), GFP_KERNEL);
- 	if (!card)
- 		return -ENOMEM;
- 
-@@ -480,7 +480,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 	if (ret) {
- 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
- 		usb_reset_device(udev);
--		kfree(card);
- 		return ret;
- 	}
- 
-@@ -630,11 +629,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 		    "%s: removing card\n", __func__);
- 	mwifiex_remove_card(adapter, &add_remove_card_sem);
- 
--	usb_set_intfdata(intf, NULL);
- 	usb_put_dev(interface_to_usbdev(intf));
--	kfree(card);
--
--	return;
- }
- 
- static struct usb_driver mwifiex_usb_driver = {
--- 
-1.8.1.4
+Read Documentation/CodingStyle - as others already pointed you at.
+
+> @@ -6080,9 +6086,11 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+>  		goto exit;
+>  	}
+>  
+> -	ret = rtl8xxxu_init_device(hw);
+> -	if (ret)
+> -		goto exit;
+> +	if(priv->fops != &rtl8723bu_fops) {
+> +		ret = rtl8xxxu_init_device(hw);
+> +		if (ret)
+> +			goto exit;
+> +	}
+>  
+>  	hw->wiphy->max_scan_ssids = 1;
+>  	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
+
+Again coding style violation.
+
+Second, I am NOT going to accept any patches that fundamentally changes
+the init sequence of the code for just one device.
+
+I already told you I want to find out *why* this matters, and what part
+of rtl8xxxu_init_device() is the culprit. I want to understand the
+actual problem, not just blindly move stuff around.
+
+Jes
