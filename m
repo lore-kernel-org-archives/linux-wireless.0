@@ -1,100 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36539 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034651AbcKAHYg (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34105 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751135AbcKCBAG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 03:24:36 -0400
-Received: by mail-wm0-f68.google.com with SMTP id c17so21445418wmc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 00:24:35 -0700 (PDT)
+        Wed, 2 Nov 2016 21:00:06 -0400
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
+ macpower
+To: John Heenan <john@zgus.com>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
+Cc: linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net> (sfid-20161103_020045_490919_CB940A2F)
+Date: Wed, 2 Nov 2016 20:00:03 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
-References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com> <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
-From: John Heenan <john@zgus.com>
-Date: Tue, 1 Nov 2016 17:24:33 +1000
-Message-ID: <CAAye0QNjYY5gBzSdc+0_rhy1OHk7iQ-CVp0Svph1DR7+mgVWGg@mail.gmail.com> (sfid-20161101_082502_916256_D1EE979C)
-Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20161030102112.GA5789@cube>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a prepared another patch that is not USB VID/PID dependent for
-rtl8723bu devices. It is more elegant. I will send it after this
-email.
-
-If I have more patches is it preferable I just put them on github only
-and notify a link address until there might be some resolution?
-
-What I meant below about not finding a matching function is that I
-cannot find matching actions to take on any function calls in
-rtl8xxxu_stop as for rtl8xxxu_start.
-
-The function that is called later and potentially more than once for
-rtl8723bu devices is rtl8xxxu_init_device. There is no corresponding
-rtl8xxxu_deinit_device function.
-
-enable_rf is called in rtl8xxxu_start, not in the delayed call to
-rtl8xxxu_init_device. The corresponding disable_rf is called in
-rtl8xxxu_stop. So no matching issue here. However please see below for
-another potential issue.
-
-power_on is called in rtl8xxxu_init_device. power_off is called in
-rtl8xxxu_disconnect. Does not appear to be an issue if calling
-power_on has no real effect if already on.
-
-The following should be looked at though. For all devices enable_rf is
-only called once. For the proposed patch the first call to
-rtl8xxxu_init_device is called after the single call to enable_rf for
-rtl8723bu devices. Without the patch enable_rf is called after
-rtl8xxxu_init_device for all devices
-
-Perhaps enable_rf just configures RF modes to start up when RF is
-powered on or if called after power_on then enters requested RF modes.
-
-So I cannot see appropriate additional matching action to take.
-
-Below is some background for anyone interested
-
-rtl8xxxu_start and rtl8xxxu_stop are assigned to rtl8xxxu_ops.
-
-rtl8xxxu_probe assigns rtl8xxxu_ops to its driver layer with
-ieee80211_register_hw.
-
-rtl8xxxu_disconnect unassigns rtl8xxxu_ops from its driver layer with
-ieee80211_unregister_hw.
-
-rtl8xxxu_probe and rtl8xxxu_disconnect are USB driver functions
-
-John Heenan
-
-
-On 1 November 2016 at 08:15, John Heenan <john@zgus.com> wrote:
-> On 1 November 2016 at 07:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->> John Heenan <john@zgus.com> writes:
+On 10/30/2016 05:21 AM, John Heenan wrote:
+> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to set
+> macpower, is never 0xea. It is only ever 0x01 (first time after modprobe)
+> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These results
+> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
 >
->>
->>> @@ -5776,9 +5781,17 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
->>>       struct rtl8xxxu_tx_urb *tx_urb;
->>>       unsigned long flags;
->>>       int ret, i;
->>> +     struct usb_device_descriptor *udesc = &priv->udev->descriptor;
->>>
->>>       ret = 0;
->>>
->>> +     if(udesc->idVendor == USB_VENDOR_ID_REALTEK
->>> +                     && udesc->idProduct == USB_PRODUCT_ID_RTL8723BU) {
->>> +             ret = rtl8xxxu_init_device(hw);
->>> +             if (ret)
->>> +                     goto error_out;
->>> +     }
->>> +
->>
->> As mentioned previously, if this is to be changed here, it has to be
->> matched in the _stop section too.
+> Whatever was returned, code tests always showed that at least
+> rtl8xxxu_init_queue_reserved_page(priv);
+> is always required. Not called if macpower set to true.
 >
-> I looked at this and could not find a matching function. I will have a
-> look again.
+> Please see cover letter, [PATCH 0/2], for more information from tests.
+
+That cover letter will NOT be included in the commit message, thus referring to 
+it here is totally pointless.
+
 >
+> For rtl8xxxu-devel branch of git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+
+Same comment as for the previous patch.
+
+Again I leave the review of the code changes to Jes.
+
+Larry
