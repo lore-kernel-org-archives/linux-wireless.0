@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53275 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751559AbcKDJ17 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 05:27:59 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: toke@toke.dk, johannes@sipsolutions.net
-Subject: [PATCH 3/3] mac80211: fix A-MSDU aggregation with fast-xmit + txq
-Date: Fri,  4 Nov 2016 10:27:54 +0100
-Message-Id: <20161104092754.91649-3-nbd@nbd.name> (sfid-20161104_102808_742348_9C27E631)
-In-Reply-To: <20161104092754.91649-1-nbd@nbd.name>
-References: <20161104092754.91649-1-nbd@nbd.name>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33226 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758401AbcKCPn3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 11:43:29 -0400
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
+ macpower
+To: Joe Perches <joe@perches.com>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        John Heenan <john@zgus.com>
+References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
+ <wrfjpomidp1v.fsf@redhat.com>
+ <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
+ <wrfjzillsan3.fsf@redhat.com> <1478162497.1924.16.camel@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <73535909-c15e-a8c1-00e3-02b490ab2b1a@lwfinger.net> (sfid-20161103_164353_273994_8FEBE7DF)
+Date: Thu, 3 Nov 2016 10:43:27 -0500
+MIME-Version: 1.0
+In-Reply-To: <1478162497.1924.16.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A-MSDU aggregation alters the QoS header after a frame has been
-enqueued, so it needs to be ready before enqueue and not overwritten
-again afterwards
+On 11/03/2016 03:41 AM, Joe Perches wrote:
+> On Sun, 2016-10-30 at 19:02 -0400, Jes Sorensen wrote:
+>> Code is 80 characters wide, and comments are /* */ never the ugly C++
+>> crap.
+>
+> You might look at the recent Linus Torvalds authored commit
+> 5e467652ffef (?printk: re-organize log_output() to be more legible")
+> which does both of those: c99 // comments and > 80 columns.
+>
+> Absolutes are for zealots.
 
-Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/tx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+Of course, but who is going to criticize Linus? I have gently chided him when an 
+untested patch of his was inserted just before the final release, and broke my 
+laptop. At least the bisection was pretty quick. :)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 390b425..2c21b70 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -3235,7 +3235,6 @@ static void ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
- 
- 	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
- 		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
--		*ieee80211_get_qos_ctl(hdr) = tid;
- 		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, tid);
- 	} else {
- 		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-@@ -3360,6 +3359,11 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
- 		      (tid_tx ? IEEE80211_TX_CTL_AMPDU : 0);
- 	info->control.flags = IEEE80211_TX_CTRL_FAST_XMIT;
- 
-+	if (hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) {
-+		tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-+		*ieee80211_get_qos_ctl(hdr) = tid;
-+	}
-+
- 	__skb_queue_head_init(&tx.skbs);
- 
- 	tx.flags = IEEE80211_TX_UNICAST;
--- 
-2.10.1
+Larry
