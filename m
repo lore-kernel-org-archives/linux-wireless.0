@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52932 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965842AbcKXPMV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 10:12:21 -0500
-Message-ID: <1480000334.4388.2.camel@sipsolutions.net> (sfid-20161124_161237_579769_23AE43E1)
-Subject: Re: many "changed bandwidth, new config is" messages in the log
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Hocko <mhocko@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 24 Nov 2016 16:12:14 +0100
-In-Reply-To: <20161124150723.GA4776@dhcp22.suse.cz>
-References: <20161124150723.GA4776@dhcp22.suse.cz>
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:53854 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755857AbcKCIlm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 04:41:42 -0400
+Message-ID: <1478162497.1924.16.camel@perches.com> (sfid-20161103_094210_313464_C837DE34)
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
+ macpower
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>, John Heenan <john@zgus.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 03 Nov 2016 01:41:37 -0700
+In-Reply-To: <wrfjzillsan3.fsf@redhat.com>
+References: <cover.1477769750.git.john@zgus.com>
+         <20161030102112.GA5789@cube> <wrfjpomidp1v.fsf@redhat.com>
+         <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
+         <wrfjzillsan3.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-11-24 at 15:07 +0000, Michal Hocko wrote:
+On Sun, 2016-10-30 at 19:02 -0400, Jes Sorensen wrote:
+> Code is 80 characters wide, and comments are /* */ never the ugly C++
+> crap.
 
-> I have only now managed to move to 4.9-rc5 (from 4.8) and started
-> seeing quite a lot of following messages
-> "
-> [  346.612211] wlan0: AP c0:4a:00:f1:48:f2 changed bandwidth, new
-> config is 2472 MHz, width 1 (2472/0 MHz)
-> [  352.655929] wlan0: AP c0:4a:00:f1:48:f2 changed bandwidth, new
-> config is 2472 MHz, width 2 (2462/0 MHz)
-> "
+You might look at the recent Linus Torvalds authored commit
+5e467652ffef (?printk: re-organize log_output() to be more legible")
+which does both of those: c99 // comments and > 80 columns.
 
-I don't think these messages are new in any way. checking ... nope,
-it's been around that way since 3.9 :-)
-
-> It always seems to be changing width from 1 -> 2 and back
-
-Makes sense, that's 20 MHz <-> 40 MHz.
-
-Did you buy a new device that says it's 40 MHz incompatible or
-something? Or perhaps one of your neighbors did ... Or something is
-causing interference that makes the AP switch around.
-
-> $ dmesg | grep "changed bandwidth" | wc -l
-> 42
-> in 13 minutes of uptime. I have noticed this came in via 30eb1dc2c430
-> ("mac80211: properly track HT/VHT operation changes").
-
-Right, but that went into 3.9 :-)
-
-> Is this something to be worried about?
-
-Not at all. I suppose we could make this a debug message though, it's
-not super useful when it happens OK (sometimes it causes disconnections
-when we can't support the new mode, which is more relevant).
-
-johannes
+Absolutes are for zealots.
