@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37342 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750971AbcK1TCY (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43529 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752858AbcKCIeK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 14:02:24 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de,
-        prameela.garnepudi@redpinesignals.com
-Subject: Re: [PATCH 1/2] rsi: New firware loading method for RSI 91X devices
-References: <1477044595-10348-1-git-send-email-prameela.j04cs@gmail.com>
-Date: Mon, 28 Nov 2016 21:02:19 +0200
-In-Reply-To: <1477044595-10348-1-git-send-email-prameela.j04cs@gmail.com>
-        (Prameela Rani Garnepudi's message of "Fri, 21 Oct 2016 15:39:55
-        +0530")
-Message-ID: <87r35vmnr8.fsf@purkki.adurom.net> (sfid-20161128_200227_581873_0F7D9186)
+        Thu, 3 Nov 2016 04:34:10 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "briannorris@google.com" <briannorris@google.com>
+Subject: RE: [PATCH v2 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Date: Thu, 3 Nov 2016 08:34:06 +0000
+Message-ID: <b9fed0716cfb46818b0a93a925e5d37a@SC-EXCH02.marvell.com> (sfid-20161103_093417_237206_EE0762B5)
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+ <1477559563-18328-2-git-send-email-akarwar@marvell.com>
+ <20161027174422.GA509@dtor-ws>
+In-Reply-To: <20161027174422.GA509@dtor-ws>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
-
-> RSI deprecated the old firmware loading method and introduced
-> new method using soft boot loader for 9113 chipsets.
-> Current driver only supports 9113 device model hence firmware
-> loading method has been changed.
->
-> In the new method, complete RAM image and flash image are present
-> in the flash. Two firmwares present in the device, Boot loader firmware
-> and functional firmware. Boot loader firmware is fixed but functional
-> firmware can be changed. Before loading the functional firmware, host
-> issues commands to check whether existing firmware in the chip and the
-> firmware file content to load are same or not. If not, host issues
-> commands to load the RAM image and then boot loaded switches to the
-> functioanl firmware.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-
-Forgot this:
-
-
-[...]
-
-> +#define FIRMWARE_RSI9113		"rsi_91x.fw"
-
-I see that you add the define here but I don't see you anywhere removing
-the old one. I assume you were planning just to move it.
-
--- 
-Kalle Valo
+SGkgRG1pdHJ5LA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4
+LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZw0KPiBbbWFpbHRvOmxpbnV4LXdpcmVsZXNz
+LW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIERtaXRyeSBUb3Jva2hvdg0KPiBT
+ZW50OiAyMDE2xOoxMNTCMjjI1SAxOjQ0DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IENhdGh5IEx1bzsgTmlzaGFudCBTYXJtdWth
+ZGFtOw0KPiByYWphdGphQGdvb2dsZS5jb207IGJyaWFubm9ycmlzQGdvb2dsZS5jb20NCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSCB2MiAyLzVdIG13aWZpZXg6IHVzZSBzcGlubG9jayBmb3IgJ213aWZp
+ZXhfcHJvY2Vzc2luZycgaW4NCj4gc2h1dGRvd25fZHJ2DQo+IA0KPiBIaSBBbWl0LA0KPiANCj4g
+T24gVGh1LCBPY3QgMjcsIDIwMTYgYXQgMDI6NDI6NDBQTSArMDUzMCwgQW1pdGt1bWFyIEthcndh
+ciB3cm90ZToNCj4gPiBUaGlzIHZhcmlhYmxlIGlzIGd1YXJkZWQgYnkgc3BpbmxvY2sgYXQgYWxs
+IG90aGVyIHBsYWNlcy4gVGhpcyBwYXRjaA0KPiA+IHRha2VzIGNhcmUgb2YgbWlzc2luZyBzcGlu
+bG9jayB1c2FnZSBpbiBtd2lmaWV4X3NodXRkb3duX2RydigpLg0KPiANCj4gU2luY2UgaW4gdGhl
+IHByZXZpb3VzIGRpc2N1c3Npb24geW91IHN0YXRlZCB0aGF0IHdlIGluaGliaXQgaW50ZXJydXB0
+cyBhbmQgZmx1c2gNCj4gdGhlIHdvcmtxdWV1ZSBzbyB0aGF0IG13aWZpZXhfc2h1dGRvd25fZHJ2
+KCkgY2FuJ3QgcnVuIHNpbXVsdGFuZW91c2x5IHdpdGgNCj4gdGhlIG1haW4gcHJvY2Vzc2luZyBy
+b3V0aW5lLCB3aHkgZG8gd2UgbmVlZCB0aGlzPw0KPiANCj4gSW5zdGVhZCBwbGVhc2UgcmVtb3Zl
+IGNhbGwgdG8gbXdpZmlleF9zaHV0ZG93bl9kcnYoKSBpbiB0aGUgbWFpbiByb3V0aW5lDQo+IGFu
+ZCAiaWYgKGFkYXB0ZXItPm13aWZpZXhfcHJvY2Vzc2luZykiIGNoZWNrIGhlcmUuDQo+IA0KDQpt
+d2lmaWV4X21haW5fcHJvY2VzcyB3aWxsIGJlIHVzZWQgZnJvbSBpbnRlcnJ1cHQgb3Igd29ya3F1
+ZXVlLg0KTm93IHdlIGhhdmUgZGlzYWJsZWQgaW50ZXJydXB0IGFuZCBmbHVzaCB3b3JrcXVldWUs
+IHNvIG13aWZpZXhfbWFpbl9wcm9jZXNzIHdvbid0IGJlIHNjaGVkdWxlZCBpbiB0aGUgZnV0dXJl
+Lg0KQnV0IG13aWZpZXhfbWFpbl9wcm9jZXNzIG1pZ2h0IGp1c3QgcnVubmluZyBpbiBjb250ZXh0
+IG9mIGxhc3QgaW50ZXJydXB0LCBzbyB3ZSBuZWVkIHdhaXQgY3VycmVudCBtYWluX3Byb2Nlc3Mg
+Y29tcGxldGUgaW4gbXdpZmlleF9zaHV0ZG93bl9kcnYuDQoNCg0KPiBUaGFua3MuDQo+IA0KPiA+
+DQo+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNv
+bT4NCj4gPiAtLS0NCj4gPiB2MjogU2FtZSBhcyB2MQ0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL25l
+dC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvaW5pdC5jIHwgMyArKysNCj4gPiAgMSBmaWxlIGNo
+YW5nZWQsIDMgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVs
+ZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gPiBpbmRleCA4MjgzOWQ5Li44ZTVlNDI0IDEw
+MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0
+LmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvaW5pdC5j
+DQo+ID4gQEAgLTY3MCwxMSArNjcwLDE0IEBAIG13aWZpZXhfc2h1dGRvd25fZHJ2KHN0cnVjdCBt
+d2lmaWV4X2FkYXB0ZXINCj4gPiAqYWRhcHRlcikNCj4gPg0KPiA+ICAJYWRhcHRlci0+aHdfc3Rh
+dHVzID0gTVdJRklFWF9IV19TVEFUVVNfQ0xPU0lORzsNCj4gPiAgCS8qIHdhaXQgZm9yIG13aWZp
+ZXhfcHJvY2VzcyB0byBjb21wbGV0ZSAqLw0KPiA+ICsJc3Bpbl9sb2NrX2lycXNhdmUoJmFkYXB0
+ZXItPm1haW5fcHJvY19sb2NrLCBmbGFncyk7DQo+ID4gIAlpZiAoYWRhcHRlci0+bXdpZmlleF9w
+cm9jZXNzaW5nKSB7DQo+ID4gKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYWRhcHRlci0+bWFp
+bl9wcm9jX2xvY2ssIGZsYWdzKTsNCj4gPiAgCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBXQVJOLA0K
+PiA+ICAJCQkgICAgIm1haW4gcHJvY2VzcyBpcyBzdGlsbCBydW5uaW5nXG4iKTsNCj4gPiAgCQly
+ZXR1cm4gcmV0Ow0KPiA+ICAJfQ0KPiA+ICsJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYWRhcHRl
+ci0+bWFpbl9wcm9jX2xvY2ssIGZsYWdzKTsNCj4gPg0KPiA+ICAJLyogY2FuY2VsIGN1cnJlbnQg
+Y29tbWFuZCAqLw0KPiA+ICAJaWYgKGFkYXB0ZXItPmN1cnJfY21kKSB7DQo+ID4gLS0NCj4gPiAx
+LjkuMQ0KPiA+DQo+IA0KPiAtLQ0KPiBEbWl0cnkNCg==
