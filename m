@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34991 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759834AbcKDIiu (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34697 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753398AbcKCPjR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 04:38:50 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix crash during rmmod when probe firmware fails
-Date: Fri, 4 Nov 2016 14:08:44 +0530
-Message-ID: <1478248724-12773-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161104_093857_681354_1FF03882)
+        Thu, 3 Nov 2016 11:39:17 -0400
+Subject: Re: [PATCH 1/2] rtl8xxxu: Fix for authentication failure
+To: John Heenan <john@zgus.com>
+References: <cover.1477769750.git.john@zgus.com> <20161030102046.GA5784@cube>
+ <8dba6346-332e-84e6-89b2-02033a449f25@lwfinger.net>
+ <CAAye0QNZYjg1NDmXmjMXNJqa7nsbvfgoX8et1g1+HT2S2O=L1w@mail.gmail.com>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <6879f303-7cdc-6e0a-3943-44b541971b7d@lwfinger.net> (sfid-20161103_163939_513232_1C92CE4E)
+Date: Thu, 3 Nov 2016 10:39:14 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAAye0QNZYjg1NDmXmjMXNJqa7nsbvfgoX8et1g1+HT2S2O=L1w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On 11/03/2016 02:10 AM, John Heenan wrote:
+> On 3 November 2016 at 11:00, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 10/30/2016 05:20 AM, John Heenan wrote:
+>>>
+>>> This fix enables the same sequence of init behaviour as the alternative
+>>> working driver for the wireless rtl8723bu IC at
+>>> https://github.com/lwfinger/rtl8723bu
+>>>
+>>> For exampe rtl8xxxu_init_device is now called each time
+>>> userspace wpa_supplicant is executed instead of just once when
+>>> modprobe is executed.
+>>
+>>
+>> After all the trouble you have had with your patches, I would expect you to
+>> use more care when composing the commit message. Note the typo in the
+>> paragraph above.
+>>
+>
+> OK, the nasty games continue and the message is not getting through.
+>
+> An appropriate response by a maintainer would have been to request I
+> revise the code according to the way it has currently and elegantly
+> revised in.
 
-This fixes the below crash when ath10k probe firmware fails,
-NAPI polling tries to access a rx ring resource which was never
-allocated, fix this by disabling NAPI right away once the probe
-firmware fails
+I am NOT a maintainer for this driver. I do have an interest in it, but not in 
+any official capacity.
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-__ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+If you cannot accept constructive criticism, you are in the wrong activity. 
+Please grow up!
 
-Call Trace:
-
-[<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
-[ath10k_core]
-[<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
-[ath10k_core]
-[<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
-[<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
-[<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
-[<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
-[<ffffffff817863af>] net_rx_action+0x20f/0x370
-
-Reported-by: Ben Greear <greearb@candelatech.com>
-Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7005e2a..8187eb2 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2165,6 +2165,8 @@ err_free_firmware_files:
- 
- err_power_down:
- 	ath10k_hif_power_down(ar);
-+	napi_synchronize(&ar->napi);
-+	napi_disable(&ar->napi);
- 
- 	return ret;
- }
--- 
-1.9.1
+Larry
