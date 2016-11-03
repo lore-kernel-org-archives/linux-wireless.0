@@ -1,125 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36458 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751311AbcKVUlc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 15:41:32 -0500
-Received: by mail-wm0-f46.google.com with SMTP id g23so45629738wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 12:41:31 -0800 (PST)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Dmitry Shmidt <dimitrysh@google.com>, Luca Coelho <luca@coelho.fi>
-References: <94eb2c110db85c2379054172dad0@google.com>
- <1479799452.2517.39.camel@coelho.fi>
- <CAH7ZN-z+QytCTHDs3dkU172hMio=T2Mhr8y=mXKXu=DRA1vA3A@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <b81eaa82-8b03-1ac7-0130-e617c5a0904e@broadcom.com> (sfid-20161122_214136_444079_82EDBEBE)
-Date: Tue, 22 Nov 2016 21:41:28 +0100
+Received: from nbd.name ([46.4.11.11]:50017 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752172AbcKCLIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 07:08:32 -0400
+Subject: Re: [PATCH] mac80211: fix broken AP mode handling of powersave
+ clients
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <20161103095938.84054-1-nbd@nbd.name>
+ <CANUX_P0xv4a1O7tqBYABsXbRvRQm_3Va888EopKDz433cwjXew@mail.gmail.com>
+ <CANUX_P1vktccTAQZOFRdVS9ndg4XEZNw0Ec=0sFL+n7SL2g+dQ@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <29865def-991d-9e0c-131b-430a9c0a694f@nbd.name> (sfid-20161103_120836_528755_3018BDAC)
+Date: Thu, 3 Nov 2016 12:08:28 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAH7ZN-z+QytCTHDs3dkU172hMio=T2Mhr8y=mXKXu=DRA1vA3A@mail.gmail.com>
+In-Reply-To: <CANUX_P1vktccTAQZOFRdVS9ndg4XEZNw0Ec=0sFL+n7SL2g+dQ@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-11-2016 18:29, Dmitry Shmidt wrote:
-> Hi Luca,
-> 
-> On Mon, Nov 21, 2016 at 11:24 PM, Luca Coelho <luca@coelho.fi> wrote:
->> Hi Dmitry,
->> On Wed, 2016-11-16 at 22:47 +0000, dimitrysh@google.com wrote:
->>>  From 68a9d37a4c7e9dc7a90a6e922cdea52737a98d66 Mon Sep 17 00:00:00 2001
->>> From: Dmitry Shmidt <dimitrysh@google.com>
->>> Date: Wed, 16 Nov 2016 14:27:26 -0800
->>> Subject: [PATCH] RFC: Universal scan proposal
+On 2016-11-03 11:51, Emmanuel Grumbach wrote:
+> On Thu, Nov 3, 2016 at 12:51 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Thu, Nov 3, 2016 at 11:59 AM, Felix Fietkau <nbd@nbd.name> wrote:
+>>> Commit c68df2e7be0c ("mac80211: allow using AP_LINK_PS with
+>>> mac80211-generated TIM IE") introduced a logic error, where
+>>> __sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
+>>> set. This prevents the beacon TIM bit from being set for all drivers
+>>> that do not implement this op (almost all of them), thus thoroughly
+>>> essential AP mode powersave functionality.
 >>>
->>>    Currently we have sched scan with possibility of various
->>> intervals. We would like to extend it to support also
->>> different types of scan.
->>>    In case of powerful wlan CPU, all this functionality
->>> can be offloaded.
->>>    In general case FW processes additional scan requests
->>> and puts them into queue based on start time and interval.
->>> Once current request is fulfilled, FW adds it (if interval != 0)
->>> again to the queue with proper interval. If requests are
->>> overlapping, new request can be combined with either one before,
->>> or one after, assuming that requests are not mutually exclusive.
->>>    Combining requests is done by combining scan channels, ssids,
->>> bssids and types of scan result. Once combined request was fulfilled
->>> it will be reinserted as two (or three) different requests based on
->>> their type and interval.
->>>    Each request has attribute:
->>> Type: connectivity / location
->>> Report: none / batch / immediate
->>>    Request may have priority and can be inserted into
->>> the head of the queue.
->>>    Types of scans:
->>> - Normal scan
->>> - Scheduled scan
->>> - Hotlist (BSSID scan)
->>> - Roaming
->>> - AutoJoin
->>>
->>> Change-Id: I9f3e4c975784f1c1c5156887144d80fc5a26bffa
->>> Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+>>> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>>> Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
+>>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 >>> ---
+>>>  net/mac80211/sta_info.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+>>> index 236d47e..621734e 100644
+>>> --- a/net/mac80211/sta_info.c
+>>> +++ b/net/mac80211/sta_info.c
+>>> @@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
+>>>         }
+>>>
+>>>         /* No need to do anything if the driver does all */
+>>> -       if (!local->ops->set_tim)
+>>> +       if (local->ops->set_tim)
+>>>                 return;
 >>
->> I like the initiative and I think this is definitely something that can
->> improve concurrent scanning instances.  But IMHO the most important is
->> to discuss the semantics of this change, such as which scans can be
->> combined, who makes the decisions of combining them, how priorities are
->> sorted out etc.  I think the types of scan are not relevant in the
->> nl80211 API, but the characteristics of the scans are.  For instance,
->> "urgent scan" (for initial connection), best-effort scan for roaming...
->> and latency requirements, such as low-latency for location and initial
->> connection and high-latency for scheduled scan.  Then we decided, in
->> the kernel, how to combine and prioritize them according to their
->> characteristics, instead of having to map scan types to these
->> characteristics.
->>
->> What do you think?
+>> but ... then, you'll need call to drv_set_tim below...
 > 
-> 1. Combining scans.
-> There are two scenarios in general: combine scans that can be offload
-> and scans that can not be offload due to "weak" FW / wlan SoC. In last
-> case this approach maybe not attractive at all - non-mobile device
-> may not need all these different types of scan.
-> In case of offload - it will be FW code decision - I just wanted to propose
-> the way how to do this efficiently.
+> s/need/never/
+> 
+>> Apparently, we can't rely on the ops pointer to enter or not enter this flow.
+Are you going to submit a fix, or should I just send a revert of your
+commit?
 
-I think Luca is looking at it as a way to deal with multiple user-space
-entities request the device to perform a scan. Ignoring the scan types
-on android it can be wifi-hal and wpa_supplicant.
-
-> 2. Priority - very good point, we need to have it. I am just not sure
-> that we need like scale priority - maybe just flag - urgent / not urgent.
-> Urgent one will be inserted in queue as is and conflicting request
-> should be postponed or combined.
-
-What if we get another urgent one?
-
-> 3. Scan types - I am not sure I fully understood your question, but
-> if the idea is for kernel to decide about type of scan based on its
-> characteristics instead of specific type request performance may
-> cause confusion to wifi manager.
-> However, it would definitely simplify kernel API. Still I am not sure
-> if userspace wifi manager will "like" it.
-
-Actually the idea is to hide the notion of scan type entirely from the
-API and kernel code. If you add the scan type as an attribute in the
-API, you still need to provide additional attributes for that scan type
-so the question is what the scan type itself provides, ie. how does it
-affect the scan itself.
-
-> 4. There is an interesting question: to separate scan results for
-> connection and location or not? The problem is how to "trust" them.
-> I mean scan results are scan results, but for location we may decide
-> to look for fewer channels and even maybe specific BSSIDs, i.e. not
-> full scan results, and we may need to indicate that right now
-> scan results are not full in order not to confuse wifi manager.
-
-Regards,
-Arend
-
->> --
->> Cheers,
->> Luca.
+- Felix
