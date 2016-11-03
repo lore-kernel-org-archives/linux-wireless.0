@@ -1,60 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:36028 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753933AbcKUM6j (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 07:58:39 -0500
-Received: by mail-pf0-f170.google.com with SMTP id 189so64656284pfz.3
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:58:39 -0800 (PST)
-Subject: Re: [PATCH] nl80211: fix logic inversion in start_nan()
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20161121125548.4730-1-johannes@sipsolutions.net>
- <576a08f1-3246-4e59-57a1-704e429674bd@broadcom.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <3abd1827-62aa-b274-ace1-859a9a225127@broadcom.com> (sfid-20161121_135843_330854_500354E4)
-Date: Mon, 21 Nov 2016 13:58:35 +0100
-MIME-Version: 1.0
-In-Reply-To: <576a08f1-3246-4e59-57a1-704e429674bd@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from nbd.name ([46.4.11.11]:50187 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757237AbcKCLMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 07:12:50 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, emmanuel.grumbach@intel.com
+Subject: [PATCH] Revert "mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE"
+Date: Thu,  3 Nov 2016 12:12:47 +0100
+Message-Id: <20161103111247.18086-1-nbd@nbd.name> (sfid-20161103_121300_805741_0A656BBC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21-11-2016 13:57, Arend Van Spriel wrote:
-> On 21-11-2016 13:55, Johannes Berg wrote:
->> From: Johannes Berg <johannes.berg@intel.com>
->>
->> Arend inadvertedly inverted the logic while converting to
->> wdev_running(), fix that.
-> 
-> It was indeed inadvertedly.
+This reverts commit c68df2e7be0c1238ea3c281fd744a204ef3b15a0.
 
-Actually spelling checker complains. Should be 'inadvertently'.
+__sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
+set. This prevents the beacon TIM bit from being set for all drivers
+that do not implement this op (almost all of them), thus thoroughly
+essential AP mode powersave functionality.
 
-Regards,
-Arend
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/sta_info.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Thanks,
-> Arend
-> 
->> Fixes: 73c7da3dae1e ("cfg80211: add generic helper to check interface is running")
->> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->> ---
->>  net/wireless/nl80211.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index 4e9bda49e957..e4f718e956d7 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -10625,7 +10625,7 @@ static int nl80211_start_nan(struct sk_buff *skb, struct genl_info *info)
->>  	if (wdev->iftype != NL80211_IFTYPE_NAN)
->>  		return -EOPNOTSUPP;
->>  
->> -	if (!wdev_running(wdev))
->> +	if (wdev_running(wdev))
->>  		return -EEXIST;
->>  
->>  	if (rfkill_blocked(rdev->rfkill))
->>
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 236d47e..1711bae 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
+ 	}
+ 
+ 	/* No need to do anything if the driver does all */
+-	if (!local->ops->set_tim)
++	if (ieee80211_hw_check(&local->hw, AP_LINK_PS))
+ 		return;
+ 
+ 	if (sta->dead)
+-- 
+2.10.1
