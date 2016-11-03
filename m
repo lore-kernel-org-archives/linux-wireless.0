@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48240 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbcKSHYr (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:53216 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751474AbcKCC6t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Nov 2016 02:24:47 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl8723be: Fix bug in ant_sel code from commit
- c18d8f509571
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161117180533.16136-1-Larry.Finger@lwfinger.net>
-References: <20161117180533.16136-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
-Message-Id: <20161119072446.DDD3E6120F@smtp.codeaurora.org> (sfid-20161119_082451_880469_565D22BF)
-Date: Sat, 19 Nov 2016 07:24:46 +0000 (UTC)
+        Wed, 2 Nov 2016 22:58:49 -0400
+Date: Wed, 02 Nov 2016 22:58:42 -0400 (EDT)
+Message-Id: <20161102.225842.248777008402902889.davem@davemloft.net> (sfid-20161103_035921_886354_56FD81D8)
+To: Larry.Finger@lwfinger.net
+Cc: john@zgus.com, Jes.Sorensen@redhat.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
+ macpower
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net>
+References: <cover.1477769750.git.john@zgus.com>
+        <20161030102112.GA5789@cube>
+        <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Wed, 2 Nov 2016 20:00:03 -0500
+
+> On 10/30/2016 05:21 AM, John Heenan wrote:
+>> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to
+>> set
+>> macpower, is never 0xea. It is only ever 0x01 (first time after
+>> modprobe)
+>> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These
+>> results
+>> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
+>>
+>> Whatever was returned, code tests always showed that at least
+>> rtl8xxxu_init_queue_reserved_page(priv);
+>> is always required. Not called if macpower set to true.
+>>
+>> Please see cover letter, [PATCH 0/2], for more information from tests.
 > 
-> In commit c18d8f509571 ("rtlwifi: rtl8723be: Add antenna select module
-> parameter"), wifi was fixed for those laptops that have only a single
-> antenna but have an incorrectly coded EEPROM. This error causes the
-> driver to select the wrong antenna. In that commit, one necessary change
-> that affects Bluetooth operation was missed.
-> 
-> Fixes: c18d8f509571 ("rtlwifi: rtl8723be: Add antenna select module parameter")
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
+> That cover letter will NOT be included in the commit message, thus
+> referring to it here is totally pointless.
 
-Requested by Larry
+This is why when a patch series is added to GIT, the cover letter
+must be added to the merge commit that adds that series.
 
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/9434985/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+It is therefore perfectly valid to refer to such text from a
+commit contained by that merge commit.
