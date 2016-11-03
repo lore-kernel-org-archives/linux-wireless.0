@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:35804 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752523AbcKEFJV (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:35038 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758258AbcKCXzi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Nov 2016 01:09:21 -0400
-Received: by mail-it0-f47.google.com with SMTP id e187so17133970itc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 22:09:20 -0700 (PDT)
+        Thu, 3 Nov 2016 19:55:38 -0400
+Received: by mail-oi0-f41.google.com with SMTP id x4so119465147oix.2
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 16:55:38 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1477461362.4059.17.camel@sipsolutions.net>
-References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
- <1477286912.4085.1.camel@sipsolutions.net> <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com>
- <1477379678.4390.2.camel@sipsolutions.net> <CAJ-Vmon0RTAXJMuwANCO23cPsFyFZ17sAHoReuGBG1u1Q9kK6w@mail.gmail.com>
- <1477461362.4059.17.camel@sipsolutions.net>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Fri, 4 Nov 2016 22:09:19 -0700
-Message-ID: <CAJ-Vmo=OM=rx-RM0fg=0dY9Jy_9njsFCnuXEPEngrFDj40-mBg@mail.gmail.com> (sfid-20161105_060945_000919_78AFF7EE)
-Subject: Re: Bayesian rate control
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjornsmedman@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        ath9k-devel <ath9k-devel@lists.ath9k.org>
+In-Reply-To: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
+References: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
+From: Kathy Giori <kathy.giori@gmail.com>
+Date: Thu, 3 Nov 2016 16:55:36 -0700
+Message-ID: <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com> (sfid-20161104_005542_986673_18C87661)
+Subject: Re: Avery's notes from LPC2016 wireless track (Santa Fe)
+To: Avery Pennarun <apenwarr@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On 25 October 2016 at 22:56, Johannes Berg <johannes@sipsolutions.net> wrote:
+On Thu, Nov 3, 2016 at 1:43 PM, Avery Pennarun <apenwarr@gmail.com> wrote:
+> Hi all,
 >
->> The intel 7260 and later parts also allow user controllable rate
->> control and provide transmit completion feedback, but I don't know
->> whether it's enough for your needs.
->
-> Perhaps. However, existing rate control is *very* tightly coupled to
-> the driver, and it'd be fairly pointless to disentangle just for the
-> sake of playing with a rate control algorithm.
->
-> Also, the device doesn't support per-frame control nor any kind of
-> sampling-with-table-fallback, only the rate table that you give to the
-> device and update.
+> We talked about many topics at the Linux Plumbers' Conference in Santa
+> Fe on Tuesday.  I took fairly detailed notes, which you can find at
+> the links below.
 
-Hi,
+Great notes Avery. Did you happen to take note of how many
+participants there were? Or was the attendee list posted on the wiki
+beforehand fairly accurate?
+https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
 
-But there is a per-descriptor TX rate table entry in the driver.
-FreeBSD uses it to implement its rate control for the intel drivers.
+Was there any talk about having more frequent "live" discussions of
+these topics (via video conf or conf call or scheduled IRC), to help
+overall collaboration without having to wait for the next f2f summit?
+Mailing list interaction doesn't seem to elicit the same energy as
+occurs over live dialog. Quarterly?
 
-What am I missing? :)
-
->
-> Btw, mac80211_hwsim with wmediumd doing some medium simulation might
-> also be something to look at for just extending to VHT.
->
-> And come to think of it, there's this new driver Felix et al have been
-> working on, mt7601u, which also should support proper rate control
-> APIs.
-
-
-
--adrian
+kathy
