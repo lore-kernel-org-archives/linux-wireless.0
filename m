@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22747 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932949AbcKVOzL (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48105 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754272AbcKCIEP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 09:55:11 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-CC: "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: Re: [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
-Date: Tue, 22 Nov 2016 14:55:04 +0000
-Message-ID: <877f7vimyg.fsf@kamboji.qca.qualcomm.com> (sfid-20161122_155534_261557_A0D99FC6)
-References: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
-        <a4095c49fe5a42c4a405b1faf6c0f3b7@euamsexm01a.eu.qualcomm.com>
-        <20161118183541.GI28340@tuxbot>
-In-Reply-To: <20161118183541.GI28340@tuxbot> (Bjorn Andersson's message of
-        "Fri, 18 Nov 2016 10:35:41 -0800")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 3 Nov 2016 04:04:15 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "briannorris@google.com" <briannorris@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>
+Subject: RE: [PATCH v2 1/5] mwifiex: remove redundant condition in main
+ process
+Date: Thu, 3 Nov 2016 08:04:09 +0000
+Message-ID: <eda7a256a6574baeb8e1a12c15c2e6b0@SC-EXCH02.marvell.com> (sfid-20161103_090423_315933_915D0A54)
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+ <20161027183536.GA28717@localhost>
+In-Reply-To: <20161027183536.GA28717@localhost>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
-
-> On Wed 16 Nov 10:49 PST 2016, Kalle Valo wrote:
->
->> Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
->> > The correct include file for getting errno constants and ERR_PTR() is
->> > linux/err.h, rather than linux/errno.h, so fix the include.
->> >=20
->> > Fixes: e8b123e60084 ("soc: qcom: smem_state: Add stubs for disabled sm=
-em_state")
->> > Acked-by: Andy Gross <andy.gross@linaro.org>
->> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>=20
->> For some reason this fails to compile now. Can you take a look, please?
->>=20
->> ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn36=
-xx.ko] undefined!
->> make[1]: *** [__modpost] Error 1
->> make: *** [modules] Error 2
->>=20
->> 5 patches set to Changes Requested.
->>=20
->> 9429045 [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
->> 9429047 [v5,2/5] wcn36xx: Transition driver to SMD client
->
-> This patch was updated with the necessary depends in Kconfig to catch
-> this exact issue and when I pull in your .config (which has QCOM_SMD=3Dn,
-> QCOM_WCNSS_CTRL=3Dn and WCN36XX=3Dy) I can build this just fine.
->
-> I've tested the various combinations and it seems to work fine. Do you
-> have any other patches in your tree?
-
-This was with the pending branch of my ath.git tree. There are other
-wireless patches (ath10k etc) but I would guess they don't affect here.
-
-> Any stale objects?
-
-Not sure what you mean with this question, but I didn't run 'make clean'
-if that's what you are asking.
-
-> Would you mind retesting this, before I invest more time in trying to
-> reproduce the issue you're seeing?
-
-Sure, I'll take a look but that might take few days.
-
---=20
-Kalle Valo=
+SGksDQoNCldlIGhhdmUgaW5jbHVkZSBiZWxvdyBjaGFuZ2UgaW4gbGF0ZXN0IHN1Ym1pdCBodHRw
+czovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzk0MDcyODMvDQpQbGVhc2UgZHJvcCB0aGlz
+IHBhdGNoLg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXdp
+cmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZw0KPiBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLW93
+bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEJyaWFuIE5vcnJpcw0KPiBTZW50OiAy
+MDE2xOoxMNTCMjjI1SAyOjM2DQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13
+aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IENhdGh5IEx1bzsgTmlzaGFudCBTYXJtdWthZGFtOw0K
+PiByYWphdGphQGdvb2dsZS5jb207IGJyaWFubm9ycmlzQGdvb2dsZS5jb207IGRtaXRyeS50b3Jv
+a2hvdkBnbWFpbC5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MiAxLzVdIG13aWZpZXg6IHJl
+bW92ZSByZWR1bmRhbnQgY29uZGl0aW9uIGluIG1haW4NCj4gcHJvY2Vzcw0KPiANCj4gT24gVGh1
+LCBPY3QgMjcsIDIwMTYgYXQgMDI6NDI6MzlQTSArMDUzMCwgQW1pdGt1bWFyIEthcndhciB3cm90
+ZToNCj4gPiBUaGlzIGNvbmRpdGlvbiB3aGlsZSBjYWxsaW5nIG13aWZpZXhfY2hlY2tfcHNfY29u
+ZCgpIGlzIHJlZHVuZGFudC4NCj4gPiBUaGUgZnVuY3Rpb24gaW50ZXJuYWxseSBhbHJlYWR5IHRh
+a2VzIGNhcmUgb2YgaXQuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fyd2Fy
+IDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiA+IC0tLQ0KPiA+IHYyOiBTYW1lIGFzIHYxDQo+IA0K
+PiBZb3UndmUgb21pdHRlZCB0aGUgUmV2aWV3ZWQtYnkgdGFncyBmcm9tIHYxOg0KPiANCj4gUmV2
+aWV3ZWQtYnk6IEJyaWFuIE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnPg0K
