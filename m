@@ -1,55 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42004 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752249AbcKNIoZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 03:44:25 -0500
-Date: Mon, 14 Nov 2016 09:42:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Mathias Kresin <dev@kresin.me>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [PATCH 04/10] rt2800: do not overwrite
- WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
-Message-ID: <20161114084238.GA12372@redhat.com> (sfid-20161114_094429_231059_FB7C3EAB)
-References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
- <1478095865-8651-5-git-send-email-sgruszka@redhat.com>
- <48e4790b-7cb3-170e-eda1-11bce9934141@kresin.me>
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:36111 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756944AbcKDCCL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 22:02:11 -0400
+Received: by mail-oi0-f47.google.com with SMTP id v84so127260704oie.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 19:02:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <48e4790b-7cb3-170e-eda1-11bce9934141@kresin.me>
+In-Reply-To: <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com>
+References: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
+ <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com>
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Thu, 3 Nov 2016 22:01:50 -0400
+Message-ID: <CAHqTa-3s_Z7+vFM=-G4CKP5ff3zukB=wZJavPX83jnyO6QZzVQ@mail.gmail.com> (sfid-20161104_030215_400670_968E84AC)
+Subject: Re: Avery's notes from LPC2016 wireless track (Santa Fe)
+To: Kathy Giori <kathy.giori@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Nov 05, 2016 at 01:55:14PM +0100, Mathias Kresin wrote:
-> 02.11.2016 15:10, Stanislaw Gruszka:
-> >We already initlized WPDMA_GLO_CFG_WP_DMA_BURST_SIZE to 3 on
-> >rt2800_init_registers().
-> >
-> >Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> >---
-> > drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    1 -
-> > 1 files changed, 0 insertions(+), 1 deletions(-)
-> >
-> >diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >index feceb13..9ecdc4c 100644
-> >--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> >@@ -6756,7 +6756,6 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
-> > 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-> > 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 1);
-> > 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 1);
-> >-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_WP_DMA_BURST_SIZE, 2);
-> 
-> More a notice than a potential issue since I don't have much
-> knowledge about the driver/chip internals.
-> 
-> But WPDMA_GLO_CFG_WP_DMA_BURST_SIZE in rt2800_init_registers() is
-> set conditionally for rt2x00_is_usb(rt2x00dev), where this one is
-> set unconditionally. Not sure if this change has side effects.
+On Thu, Nov 3, 2016 at 7:55 PM, Kathy Giori <kathy.giori@gmail.com> wrote:
+> On Thu, Nov 3, 2016 at 1:43 PM, Avery Pennarun <apenwarr@gmail.com> wrote:
+>> We talked about many topics at the Linux Plumbers' Conference in Santa
+>> Fe on Tuesday.  I took fairly detailed notes, which you can find at
+>> the links below.
+>
+> Great notes Avery. Did you happen to take note of how many
+> participants there were? Or was the attendee list posted on the wiki
+> beforehand fairly accurate?
+> https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
 
-Default HW setting of WP_DMA_BURTS_SIZE is 2, hence patch does not
-change behaviour on PCI devices. However I looked at RT3290 and
-RT5592 PCI vendor drivers and there this value is initialized to 3.
-So I think we can remove is_usb condition in rt2800_init_registers().
+There were quite a few people not on the list.  Google sent an
+extra-large contingent last year.  People estimated about 50% of the
+wireless meeting were Googlers, which comes to maybe 15 out of around
+30-ish.  Google is doing a lot of (sometimes redundant :)) wireless
+work lately.
 
-Stanislaw
+> Was there any talk about having more frequent "live" discussions of
+> these topics (via video conf or conf call or scheduled IRC), to help
+> overall collaboration without having to wait for the next f2f summit?
+> Mailing list interaction doesn't seem to elicit the same energy as
+> occurs over live dialog. Quarterly?
+
+It didn't come up.  Honestly, it feels to me like 6 months is the
+right cadence.  A lot of work does happen in the background, such as
+the fq_codel work (yay!) which was definitely launched by one or two
+of these, but proceeded well afterwards.
+
+Hope you're doing well at whatever you're doing now!
+
+Have fun,
+
+Avery
