@@ -1,61 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46002 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757731AbcK2PcG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 10:32:06 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:34757 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934108AbcKDLwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Nov 2016 07:52:46 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Subject: Re: [PATCH 2/3] mac80211: remove bogus skb vif assignment
+References: <20161104092754.91649-1-nbd@nbd.name>
+        <20161104092754.91649-2-nbd@nbd.name>
+Date: Fri, 04 Nov 2016 12:47:32 +0100
+In-Reply-To: <20161104092754.91649-2-nbd@nbd.name> (Felix Fietkau's message of
+        "Fri, 4 Nov 2016 10:27:53 +0100")
+Message-ID: <871syreaaz.fsf@toke.dk> (sfid-20161104_125252_252546_4AB1D662)
 MIME-Version: 1.0
-Subject: Re: adm80211: Removed unused 'io_addr' 'mem_addr' variables
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161124064045.GA8836@google.com>
-References: <20161124064045.GA8836@google.com>
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Message-Id: <20161129153206.0E7EF611A6@smtp.codeaurora.org> (sfid-20161129_163213_362521_5F725EC8)
-Date: Tue, 29 Nov 2016 15:32:06 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kirtika Ruchandani <kirtika.ruchandani@gmail.com> wrote:
-> Initial commit cc0b88cf5ecf ([PATCH] Add adm8211 802.11b wireless driver)
-> introduced variables mem_addr and io_addr in adm80211_probe() that are
-> set but not used. Compiling with W=1 gives the following warnings,
-> fix them.
-> 
-> drivers/net/wireless/admtek/adm8211.c: In function ‘adm8211_probe’:
-> drivers/net/wireless/admtek/adm8211.c:1769:15: warning: variable ‘io_addr’ set but not used [-Wunused-but-set-variable]
->   unsigned int io_addr, io_len;
->                ^
-> drivers/net/wireless/admtek/adm8211.c:1768:16: warning: variable ‘mem_addr’ set but not used [-Wunused-but-set-variable]
->   unsigned long mem_addr, mem_len;
->                 ^
-> 
-> These are harmless warnings and are only being fixed to reduce the
-> noise with W=1 in the kernel. The calls to pci_resource_start do not
-> have any side-effects and are safe to remove.
-> 
-> Fixes: cc0b88cf5ecf ("[PATCH] Add adm8211 802.11b wireless driver")
-> Cc: Michael Wu <flamingice@sourmilk.net>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
+Felix Fietkau <nbd@nbd.name> writes:
 
-The patch failed to apply:
+> The call to ieee80211_txq_enqueue overwrites the vif pointer with the
+> codel enqueue time, so setting it just before that call makes no
+> sense.
 
-fatal: corrupt patch at line 14
-Applying: adm80211: Removed unused 'io_addr' 'mem_addr' variables
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0001 adm80211: Removed unused 'io_addr' 'mem_addr' variables
+Yeah, I think this was leftover from earlier version when the flow was
+different. Or maybe I just missed it...
 
-Patch set to Changes Requested.
+Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
 
--- 
-https://patchwork.kernel.org/patch/9444901/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
