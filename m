@@ -1,27 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:52727 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755174AbcKDL5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 07:57:49 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Subject: Re: [PATCH 3/3] mac80211: fix A-MSDU aggregation with fast-xmit + txq
-References: <20161104092754.91649-1-nbd@nbd.name>
-        <20161104092754.91649-3-nbd@nbd.name>
-Date: Fri, 04 Nov 2016 12:49:16 +0100
-In-Reply-To: <20161104092754.91649-3-nbd@nbd.name> (Felix Fietkau's message of
-        "Fri, 4 Nov 2016 10:27:54 +0100")
-Message-ID: <87wpgjcvnn.fsf@toke.dk> (sfid-20161104_125754_337433_F1E278F9)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59944 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932486AbcKDDOr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 3 Nov 2016 23:14:47 -0400
+From: Xinming Hu <huxm@marvell.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        "Nishant Sarmukadam" <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>
+Subject: RE: [PATCH v2 2/5] mwifiex: use spinlock for 'mwifiex_processing' in
+ shutdown_drv
+Date: Fri, 4 Nov 2016 03:02:17 +0000
+Message-ID: <751e73d81772495786cad614e11f32bc@SC-EXCH02.marvell.com> (sfid-20161104_041504_925514_B68DBBDF)
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+ <1477559563-18328-2-git-send-email-akarwar@marvell.com>
+ <20161027174422.GA509@dtor-ws>
+ <b9fed0716cfb46818b0a93a925e5d37a@SC-EXCH02.marvell.com>
+ <20161103161504.GA15366@dtor-ws> <20161103182705.GA1153@google.com>
+ <CAKdAkRQb-rnEqOxG6MLkvM068Up-+jvYqxKCNXM+OvPgn3kdwA@mail.gmail.com>
+In-Reply-To: <CAKdAkRQb-rnEqOxG6MLkvM068Up-+jvYqxKCNXM+OvPgn3kdwA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
-
-> A-MSDU aggregation alters the QoS header after a frame has been
-> enqueued, so it needs to be ready before enqueue and not overwritten
-> again afterwards
-
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogRG1pdHJ5IFRvcm9raG92
+IFttYWlsdG86ZG1pdHJ5LnRvcm9raG92QGdtYWlsLmNvbV0NCj4gU2VudDogMjAxNuW5tDEx5pyI
+NOaXpSAyOjQ5DQo+IFRvOiBCcmlhbiBOb3JyaXMNCj4gQ2M6IFhpbm1pbmcgSHU7IEFtaXRrdW1h
+ciBLYXJ3YXI7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgQ2F0aHkgTHVvOw0KPiBO
+aXNoYW50IFNhcm11a2FkYW07IHJhamF0amFAZ29vZ2xlLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BB
+VENIIHYyIDIvNV0gbXdpZmlleDogdXNlIHNwaW5sb2NrIGZvciAnbXdpZmlleF9wcm9jZXNzaW5n
+JyBpbg0KPiBzaHV0ZG93bl9kcnYNCj4gDQo+IE9uIFRodSwgTm92IDMsIDIwMTYgYXQgMTI6Mjcg
+UE0sIEJyaWFuIE5vcnJpcyA8YnJpYW5ub3JyaXNAY2hyb21pdW0ub3JnPg0KPiB3cm90ZToNCj4g
+PiBPbiBUaHUsIE5vdiAwMywgMjAxNiBhdCAwOToxNTowNEFNIC0wNzAwLCBEbWl0cnkgVG9yb2to
+b3Ygd3JvdGU6DQo+ID4+IE9uIFRodSwgTm92IDAzLCAyMDE2IGF0IDA4OjM0OjA2QU0gKzAwMDAs
+IFhpbm1pbmcgSHUgd3JvdGU6DQo+ID4+ID4gPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
+PiA+PiA+ID4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnDQo+ID4+
+ID4gPiBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIERtaXRyeQ0KPiA+PiA+ID4gVG9yb2tob3YNCj4gPj4gPiA+DQo+ID4+ID4gPiBJbnN0
+ZWFkIHBsZWFzZSByZW1vdmUgY2FsbCB0byBtd2lmaWV4X3NodXRkb3duX2RydigpIGluIHRoZSBt
+YWluDQo+ID4+ID4gPiByb3V0aW5lIGFuZCAiaWYgKGFkYXB0ZXItPm13aWZpZXhfcHJvY2Vzc2lu
+ZykiIGNoZWNrIGhlcmUuDQo+ID4+ID4gPg0KPiA+PiA+DQo+ID4+ID4gbXdpZmlleF9tYWluX3By
+b2Nlc3Mgd2lsbCBiZSB1c2VkIGZyb20gaW50ZXJydXB0IG9yIHdvcmtxdWV1ZS4NCj4gPj4gPiBO
+b3cgd2UgaGF2ZSBkaXNhYmxlZCBpbnRlcnJ1cHQgYW5kIGZsdXNoIHdvcmtxdWV1ZSwgc28NCj4g
+Pj4gPiBtd2lmaWV4X21haW5fcHJvY2VzcyB3b24ndCBiZSBzY2hlZHVsZWQgaW4gdGhlIGZ1dHVy
+ZS4NCj4gPj4gPiBCdXQgbXdpZmlleF9tYWluX3Byb2Nlc3MgbWlnaHQganVzdCBydW5uaW5nIGlu
+IGNvbnRleHQgb2YgbGFzdA0KPiA+PiA+IGludGVycnVwdCwgc28gd2UgbmVlZCB3YWl0IGN1cnJl
+bnQgbWFpbl9wcm9jZXNzIGNvbXBsZXRlIGluDQo+ID4+ID4gbXdpZmlleF9zaHV0ZG93bl9kcnYu
+DQo+ID4+DQo+ID4+IHN5bmNocm9uaXplX2lycSgpIGlzIHlvdXIgZnJpZW5kIHRoZW4uDQo+ID4N
+Cj4gPiBIbW0sIHRoYXQgc291bmRzIHJpZ2h0LCBidXQgSUlVQywgdGhlICJpbnRlcnJ1cHQgY29u
+dGV4dCIgaXMgYWN0dWFsbHkNCj4gPiBvbmx5IHVzZWQgZm9yIFNESU8sIGFuZCBmb3IgU0RJTywg
+dGhlIGRyaXZlciBkb2Vzbid0IGFjdHVhbGx5IGhhdmUNCj4gPiBhY2Nlc3MgdG8gdGhlIElSUSBu
+dW1iZXIuIFRoZSBNTUMvU0RJTyBsYXllciBoYXMgc29tZSBleHRyYQ0KPiA+IGFic3RyYWN0aW9u
+IGFyb3VuZCB0aGUgSVJRLiBTbyB0aGlzIG1heSBiZSBtb3JlIGRpZmZpY3VsdCB0aGFuIGl0IGFw
+cGVhcnMuDQo+ID4NCj4gPiBEbyB3ZSBuZWVkIGEgc2Rpb19zeW5jaHJvbml6ZV9pcnEoKSBBUEk/
+DQo+IA0KPiBBY3R1YWxseSB0aGUgLT5kaXNhYmxlX2lycSgpIG1ldGhvZCBzaG91bGQgYmUgcmVz
+cG9uc2libGUgZm9yIG1ha2luZyBzdXJlIGl0DQo+IGRvZXMgbm90IGNvbXBsZXRlIHdoaWxlIGlu
+dGVycnVwdCBoYW5kbGVyIGlzIHJ1bm5pbmcuIEFzIGZhciBhcyBJIGNhbiBzZWUsIGZvcg0KPiBT
+RElPIGNhc2UsIHdlIGVuZCB1cCBjYWxsaW5nIHNkaW9fY2FyZF9pcnFfcHV0KCkgd2hpY2ggc3Rv
+cHMga2VybmVsIHRocmVhZA0KPiBhbmQgd29uJ3QgcmV0dXJuIHdoaWxlIHRoZSB0aHJlYWQgaXMg
+cnVubmluZy4gRm9yIG90aGVyIGludGVyZmFjZXMgd2UgbmVlZCB0bw0KPiBjaGVjay4gSUlSQyBV
+U0IgbGFja3MNCj4gLT5kaXNhYmxlX2lycSgpIGFsdG9nZXRoZXIgYW5kIHRoaXMgaXMgc29tZXRo
+aW5nIHRoYXQgc2hvdWRsIGJlIGZpeGVkDQo+IChieSBkb2luZyB1c2Jfa2lsbF91cmIoKSBhdCB0
+aGUgbWluaW11bSkuDQo+IA0KDQpUaGFua3MgZm9yIHRoZSBleHBsYWluLCB3aWxsIGtlZXAgdGhp
+cyBjbGVhbnVwIHdvcmsuDQoNCj4gVGhhbmtzLg0KPiANCj4gLS0NCj4gRG1pdHJ5DQoNClJlZ2Fy
+ZHMsDQpYaW5taW5nDQo=
