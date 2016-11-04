@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45232 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757116AbcK2P25 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 10:28:57 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: pcie: implement timeout loop for FW programming doorbell
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
-References: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20161129152856.ECB9A612BA@smtp.codeaurora.org> (sfid-20161129_162901_056780_6CA374FD)
-Date: Tue, 29 Nov 2016 15:28:56 +0000 (UTC)
+Received: from nbd.name ([46.4.11.11]:53279 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751382AbcKDJ2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 4 Nov 2016 05:28:00 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: toke@toke.dk, johannes@sipsolutions.net
+Subject: [PATCH 1/3] mac80211: update A-MPDU flag on tx dequeue
+Date: Fri,  4 Nov 2016 10:27:52 +0100
+Message-Id: <20161104092754.91649-1-nbd@nbd.name> (sfid-20161104_102809_852793_6F5C131A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> Marvell Wifi PCIe modules don't always behave nicely for PCIe power
-> management when their firmware hasn't been loaded, particularly after
-> suspending the PCIe link one or more times. When this happens, we might
-> end up spinning forever in this status-polling tight loop. Let's make
-> this less tight by adding a timeout and by sleeping a bit in between
-> reads, as we do with the other similar loops.
-> 
-> This prevents us from hogging a CPU even in such pathological cases, and
-> allows the FW initialization to just fail gracefully instead.
-> 
-> I chose the same polling parameters as the earlier loop in this
-> function, and empirically, I found that this loop never makes it more
-> than about 12 cycles in a sane FW init sequence. I had no official
-> information on the actual intended latency for this portion of the
-> download.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+The sequence number counter is used to derive the starting sequence
+number. Since that counter is updated on tx dequeue, the A-MPDU flag
+needs to be up to date at the tme of dequeue as well.
 
-Patch applied to wireless-drivers-next.git, thanks.
+This patch prevents sending more A-MPDU frames after the session has
+been terminated and also ensures that aggregation starts right after the
+session has been established
 
-22dde1ed5a48 mwifiex: pcie: implement timeout loop for FW programming doorbell
+Fixes: bb42f2d13ffc ("mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/tx.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 62ccaf6..c380e85 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -3451,6 +3451,11 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 		goto begin;
+ 	}
+ 
++	if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
++		info->flags |= IEEE80211_TX_CTL_AMPDU;
++	else
++		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
++
+ 	if (info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
+ 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
+ 						    sta);
 -- 
-https://patchwork.kernel.org/patch/9442499/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.10.1
