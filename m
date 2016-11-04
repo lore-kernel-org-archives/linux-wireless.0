@@ -1,98 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34123 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932992AbcK1OPa (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:35549 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934494AbcKDOlg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 09:15:30 -0500
-Date: Mon, 28 Nov 2016 08:15:13 -0600
-From: Rob Herring <robh@kernel.org>
-To: Matt Ranostay <matt@ranostay.consulting>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-mmc@vger.kernel.org,
-        Tony Lindgren <tony@atomide.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [PATCH] mmc: pwrseq: add support for Marvell SD8787 chip
-Message-ID: <20161128141513.agnkyz6ronigbukn@rob-hp-laptop> (sfid-20161128_151559_019107_631E4D0B)
-References: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
+        Fri, 4 Nov 2016 10:41:36 -0400
+Received: by mail-qt0-f173.google.com with SMTP id c47so49229745qtc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 07:41:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
+In-Reply-To: <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
+ <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
+ <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com> <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net>
+From: Bruno Antunes <baantunes@gmail.com>
+Date: Fri, 4 Nov 2016 14:41:14 +0000
+Message-ID: <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com> (sfid-20161104_154139_642811_407F836A)
+Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
+To: Mauro Mozzarelli <openwrt@ezplanet.net>
+Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 05:55:09PM -0800, Matt Ranostay wrote:
-> Allow power sequencing for the Marvell SD8787 Wifi/BT chip.
-> This can be abstracted to other chipsets if needed in the future.
+On 4 November 2016 at 14:18, Mauro Mozzarelli <openwrt@ezplanet.net> wrote:
+> Since the capability is implemented in software you might be testing the
+> limit of your router's CPU i/o speed.
 
-I don't like the MMC pwrseq bindings, so I won't be acking any. Look at 
-the USB pwrseq for why.
+By loading the module in rawmode?
 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
-> ---
->  .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt  |  14 +++
->  .../bindings/net/wireless/marvell-sd8xxx.txt       |   4 +
->  drivers/mmc/core/Kconfig                           |  10 ++
->  drivers/mmc/core/Makefile                          |   1 +
->  drivers/mmc/core/pwrseq_sd8787.c                   | 117 +++++++++++++++++++++
->  5 files changed, 146 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
->  create mode 100644 drivers/mmc/core/pwrseq_sd8787.c
-> 
-> diff --git a/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-> new file mode 100644
-> index 000000000000..1b658351629b
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-> @@ -0,0 +1,14 @@
-> +* Marvell SD8787 power sequence provider
-> +
-> +Required properties:
-> +- compatible: must be "mmc-pwrseq-sd8787".
-> +- pwndn-gpio: contains a power down GPIO specifier.
+The AP is an APU and Sta is an APU2.
 
-powerdown-gpios
-
-> +- reset-gpio: contains a reset GPIO specifier.
-
-reset-gpios
-
-> +
-> +Example:
-> +
-> +	wifi_pwrseq: wifi_pwrseq {
-> +		compatible = "mmc-pwrseq-sd8787";
-> +		pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
-> +		reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
-> +	}
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> index c421aba0a5bc..08fd65d35725 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> @@ -32,6 +32,9 @@ Optional properties:
->  		 so that the wifi chip can wakeup host platform under certain condition.
->  		 during system resume, the irq will be disabled to make sure
->  		 unnecessary interrupt is not received.
-> +  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
-
-This is why pwrseq is wrong. You have some properties in the card node 
-and some in pwrseq node. Everything should be in the card node.
-
-> +  - mmc-pwrseq:  phandle to the MMC power sequence node. See "mmc-pwrseq-*"
-> +		 for documentation of MMC power sequence bindings.
->  
->  Example:
->  
-> @@ -44,6 +47,7 @@ so that firmware can wakeup host using this device side pin.
->  &mmc3 {
->  	status = "okay";
->  	vmmc-supply = <&wlan_en_reg>;
-> +	mmc-pwrseq = <&wifi_pwrseq>;
->  	bus-width = <4>;
->  	cap-power-off-card;
->  	keep-power-in-suspend;
+>
+>
+>
+> On 04/11/16 14:13, Bruno Antunes wrote:
+>>
+>> Hi all,
+>>
+>> Old thread but I think the issue is still present.
+>>
+>> I'm running a setup with VLANs with WDS and ath10k cards.
+>>
+>> To make it work both cards must be loaded in rawmode, AP
+>> and Sta, and with no security.
+>>
+>> I'm using a OpenWrt trunk r49941 and the most recent firmware,
+>> 10.2.4.70.58, from Kalle ath10k firmware tree.
+>>
+>> Although it works the throughput is very bad.
+>> Are there any alternatives to improve the throughput.
+>>
+>> Best Regards,
+>> Bruno
+>>
+>> On 9 December 2015 at 17:24, voncken <cedric.voncken@acksys.fr> wrote:
+>>>
+>>>
+>>>> -----Message d'origine-----
+>>>> De : Ben Greear [mailto:greearb@candelatech.com]
+>>>> Envoy=C3=A9 : mercredi 9 d=C3=A9cembre 2015 16:34
+>>>> =C3=80 : Cedric VONCKEN; ath10k@lists.infradead.org; linux-wireless
+>>>> Objet : Re: ATH10K VLAN firmware issue
+>>>>
+>>>> This only happens when you use STA  + WDS, or is .1q broken for you in
+>>>> other cases as well?
+>>>
+>>> No, this issue occurs in all modes (STA, STA + WDS, AP).
+>>>
+>>> Thanks
+>>>
+>>> Cedric.
+>>>
+>>>> Thanks,
+>>>> Ben
+>>>>
+>>>> On 12/08/2015 06:29 AM, Cedric VONCKEN wrote:
+>>>>>
+>>>>>      I'm testing to transmit frame with 802.1q tag (VLAN).
+>>>>>
+>>>>>      My client is set in STA + WDS and the netdev is bridged with eth=
+0.
+>>>>>      I have a computer with vlan configuration set connected to the S=
+TA
+>>>>> eth0.
+>>>>>
+>>>>>      If I try to transmit frames with 802.1q tag, the frames are not
+>>>
+>>> sent.
+>>>>>
+>>>>>      I checked with wireless sniffer, and I don't see the frame with
+>>>>> VLAN
+>>>>> tag (the frames without VLAN tag are sent).
+>>>>>
+>>>>>      I tested with firmware 10.2.4.70.14-2 from kale github,
+>>>>> 10.1.467-ct-com-full-015 from candelatech and 10.2.4.70-2 from
+>>>>> openwrt, and in all cases I have the same issue.
+>>>>>
+>>>>>      Thanks for your help.
+>>>>>
+>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>> linux-wireless" in the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>> --
+>>>> Ben Greear <greearb@candelatech.com>
+>>>> Candela Technologies Inc  http://www.candelatech.com
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireles=
+s"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> _______________________________________________
+>> openwrt-devel mailing list
+>> openwrt-devel@lists.openwrt.org
+>> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
+>
+> _______________________________________________
+> openwrt-devel mailing list
+> openwrt-devel@lists.openwrt.org
+> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
