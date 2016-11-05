@@ -1,58 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46350 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754171AbcK3R3B (ORCPT
+Received: from mail-it0-f47.google.com ([209.85.214.47]:35804 "EHLO
+        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752523AbcKEFJV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 12:29:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        briselec@gmail.com
-Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not reconnecting
-References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
-        <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
-        <1480514067.29540.54.camel@coelho.fi> <wrfja8ch6l1o.fsf@redhat.com>
-Date: Wed, 30 Nov 2016 19:27:57 +0200
-In-Reply-To: <wrfja8ch6l1o.fsf@redhat.com> (Jes Sorensen's message of "Wed, 30
-        Nov 2016 10:32:03 -0500")
-Message-ID: <87inr4ubc2.fsf@kamboji.qca.qualcomm.com> (sfid-20161130_182905_669651_C95688A1)
+        Sat, 5 Nov 2016 01:09:21 -0400
+Received: by mail-it0-f47.google.com with SMTP id e187so17133970itc.0
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 22:09:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1477461362.4059.17.camel@sipsolutions.net>
+References: <CAGp19xcg1qCP3+JNbuiB7Hx=UjLN7KP55wVJT0sKV-iE12501A@mail.gmail.com>
+ <1477286912.4085.1.camel@sipsolutions.net> <CAGp19xdgsoyx9Sa=uas1OEiFoJdzFChmt20++9e7fJK=Z1ujWQ@mail.gmail.com>
+ <1477379678.4390.2.camel@sipsolutions.net> <CAJ-Vmon0RTAXJMuwANCO23cPsFyFZ17sAHoReuGBG1u1Q9kK6w@mail.gmail.com>
+ <1477461362.4059.17.camel@sipsolutions.net>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Fri, 4 Nov 2016 22:09:19 -0700
+Message-ID: <CAJ-Vmo=OM=rx-RM0fg=0dY9Jy_9njsFCnuXEPEngrFDj40-mBg@mail.gmail.com> (sfid-20161105_060945_000919_78AFF7EE)
+Subject: Re: Bayesian rate control
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Bj=C3=B6rn_Smedman?= <bjornsmedman@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+Hi,
 
-> Luca Coelho <luca@coelho.fi> writes:
->> On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
->>> Jes.Sorensen@redhat.com writes:
->>> 
->>> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>> > 
->>> > Hi,
->>> > 
->>> > This patch works around the issue with 8192eu and 8723bu devices not
->>> > being able to reconnect. It is still not clear why this fails, and
->>> > looking at rtlwifi it does issue the command for 8192ee and 8723be
->>> > devices.
->>> > 
->>> > Until we have a better idea of what is going on, I have commented out
->>> > the offending code. I prefer not deleting it until we have a better
->>> > understanding of why this is causing issues.
->>> > 
->>> > Credits to Barry Day for tracking down and isolating the issue.
->>> > 
->>> > Kalle, not sure if this can make it to 4.9, but if it's possible it
->>> > would be ideal since this is causing real issues in the field.
->>> 
->>> For 4.9 this is too late, sorry. I'll queue this to 4.10.
->>
->> You should then CC stable so it gets into 4.9.x when it reaches 4.10.
+On 25 October 2016 at 22:56, Johannes Berg <johannes@sipsolutions.net> wrote:
 >
-> Yeah good idea - Kalle do you want me to repost it with the CC line or
-> are you happy to add it?
+>> The intel 7260 and later parts also allow user controllable rate
+>> control and provide transmit completion feedback, but I don't know
+>> whether it's enough for your needs.
+>
+> Perhaps. However, existing rate control is *very* tightly coupled to
+> the driver, and it'd be fairly pointless to disentangle just for the
+> sake of playing with a rate control algorithm.
+>
+> Also, the device doesn't support per-frame control nor any kind of
+> sampling-with-table-fallback, only the rate table that you give to the
+> device and update.
 
-I can add it. To which stable releases should this go to?
+Hi,
 
--- 
-Kalle Valo
+But there is a per-descriptor TX rate table entry in the driver.
+FreeBSD uses it to implement its rate control for the intel drivers.
+
+What am I missing? :)
+
+>
+> Btw, mac80211_hwsim with wmediumd doing some medium simulation might
+> also be something to look at for just extending to VHT.
+>
+> And come to think of it, there's this new driver Felix et al have been
+> working on, mt7601u, which also should support proper rate control
+> APIs.
+
+
+
+-adrian
