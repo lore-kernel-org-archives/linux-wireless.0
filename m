@@ -1,133 +1,311 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43754 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1168417AbcKAKYm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 06:24:42 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: RE: [PATCH 02/12] mwifiex: check tx_hw_pending before downloading
- sleep confirm
-Date: Tue, 1 Nov 2016 10:24:35 +0000
-Message-ID: <466df51c1b9a4869b42f204df5f76f6a@SC-EXCH02.marvell.com> (sfid-20161101_112446_366277_2E4ED3CD)
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
- <1477900940-10549-2-git-send-email-huxinming820@marvell.com>
- <20161101001437.GB101079@google.com>
-In-Reply-To: <20161101001437.GB101079@google.com>
-Content-Type: text/plain; charset="gb2312"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:36786 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753184AbcKGO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Nov 2016 09:59:55 -0500
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 1/8] util: Add generic frequency/channel command line handler
+Date: Mon,  7 Nov 2016 15:59:36 +0100
+Message-Id: <20161107145943.16761-2-benjamin@sipsolutions.net> (sfid-20161107_160010_350072_834277BB)
+In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
+References: <20161107145943.16761-1-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJhaW4sDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
-d2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnDQo+IFttYWlsdG86bGludXgtd2lyZWxlc3Mt
-b3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQnJpYW4gTm9ycmlzDQo+IFNlbnQ6
-IDIwMTbE6jEx1MIxyNUgODoxNQ0KPiBUbzogWGlubWluZyBIdQ0KPiBDYzogTGludXggV2lyZWxl
-c3M7IEthbGxlIFZhbG87IERtaXRyeSBUb3Jva2hvdjsgQW1pdGt1bWFyIEthcndhcjsgQ2F0aHkg
-THVvOw0KPiBTaGVuZ3poZW4gTGkNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMi8xMl0gbXdpZmll
-eDogY2hlY2sgdHhfaHdfcGVuZGluZyBiZWZvcmUgZG93bmxvYWRpbmcNCj4gc2xlZXAgY29uZmly
-bQ0KPiANCj4gT24gTW9uLCBPY3QgMzEsIDIwMTYgYXQgMDQ6MDI6MTBQTSArMDgwMCwgWGlubWlu
-ZyBIdSB3cm90ZToNCj4gPiBGcm9tOiBTaGVuZ3poZW4gTGkgPHN6bGlAbWFydmVsbC5jb20+DQo+
-ID4NCj4gPiBUaGlzIHBhdGNoIHdpbGwgb25seSBhbGxvdyBkb3dubG9hZGluZyBzbGVlcCBjb25m
-aXJtIHdoZW4gbm8gdHggZG9uZQ0KPiA+IGludGVycnVwdCBpcyBwZW5kaW5nIGluIHRoZSBoYXJk
-d2FyZS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IENhdGh5IEx1byA8Y2x1b0BtYXJ2ZWxsLmNv
-bT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBTaGVuZ3poZW4gTGkgPHN6bGlAbWFydmVsbC5jb20+DQo+
-ID4NCj4gPiBDaGFuZ2UtSWQ6IEk2ZDY5NTViNGEyZGUwYWQ3OTFjYTI4ZjBmNjM1ZDYzNmEyYzdl
-NDA2DQo+IA0KPiANCj4gXl4gUmVtb3ZlIHRoaXMNCj4gDQoNCk9rLCB3aWxsIHJlbW92ZSBpbiB1
-cGRhdGVkIHZlcnNpb24hDQoNCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2NtZGV2dC5jIHwgNCArKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNz
-L21hcnZlbGwvbXdpZmlleC9pbml0LmMgICB8IDEgKw0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVz
-cy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oICAgfCAxICsNCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYyAgIHwgNSArKysrKw0KPiA+ICA0IGZpbGVzIGNoYW5n
-ZWQsIDkgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY21kZXZ0LmMNCj4gPiBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9jbWRldnQuYw0KPiA+IGluZGV4IDkw
-NzViZTUuLjI1YTc0NzUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2NtZGV2dC5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2NtZGV2dC5jDQo+ID4gQEAgLTExMTgsMTQgKzExMTgsMTQgQEAgbXdpZmll
-eF9jYW5jZWxfcGVuZGluZ19pb2N0bChzdHJ1Y3QNCj4gPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0
-ZXIpICB2b2lkICBtd2lmaWV4X2NoZWNrX3BzX2NvbmQoc3RydWN0DQo+ID4gbXdpZmlleF9hZGFw
-dGVyICphZGFwdGVyKSAgew0KPiA+IC0JaWYgKCFhZGFwdGVyLT5jbWRfc2VudCAmJg0KPiA+ICsJ
-aWYgKCFhZGFwdGVyLT5jbWRfc2VudCAmJiAhYXRvbWljX3JlYWQoJmFkYXB0ZXItPnR4X2h3X3Bl
-bmRpbmcpICYmDQo+IA0KPiBIb3cgaXMgdGhpcyBkaWZmZXJlbnQgZnJvbSB0aGUgZm9sbG93aW5n
-Pw0KPiANCj4gaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85Mzg5NDg1Lw0KPiAN
-Cj4gQW5kIHBhcml0dWNsYXJseSwgdGhleSBjb25mbGljdCBvbiB0aGlzIGxpbmUsIHNvIHlvdSBu
-ZWVkIHRvIHJlc29sdmUgdGhhdA0KPiBzb21laG93Li4uDQo+IA0KPiBBbmQgaWYgdGhlIGxpbmtl
-ZCBwYXRjaCBzZXJ2ZXMgdGhlIHNhbWUgcHVycG9zZSwgdGhlbiBJJ2QgcmF0aGVyIHRha2UgaXQs
-IHNpbmNlDQo+IGl0J3MgbXVjaCBzaW1wbGVyLg0KPiANCj4gQnJpYW4NCj4gDQoNClRoaXMgcGF0
-Y2ggaXMgYW4gZW5oYW5jZWQgdmVyc2lvbiBjb21wYXJlZCB3aXRoIGh0dHBzOi8vcGF0Y2h3b3Jr
-Lmtlcm5lbC5vcmcvcGF0Y2gvOTM4OTQ4NS8gLCANCk13aWZpZXggcGNpZSB0cnkgdG8gImFnZ3Jl
-Z2F0ZSIgdHggcmluZyBidWZmZXJzLCBiZWZvcmUgbm90aWZ5IGZpcm13YXJlIGRhdGEgcmVhZHku
-DQpkYXRhX3NlbnQgd2lsbCBvbmx5IGJlIHNldCB0cnVlIHdoZW4gcGNpZSBhZ2dyZWdhdGlvbiBp
-cyBkb25lLg0KRHVyaW5nIHRoZSAicGNpZSBhZ2dyZWdhdGlvbiIgc3RhZ2UsIGRhdGFfc2VudCBp
-cyBub3Qgc2V0LCBkcml2ZXIgc3RpbGwgYmUgYWJsZSB0byBkb3dubG9hZCBzbGVlcCBjb25maXJt
-IGluIGFub3RoZXIgdGhyZWFkLCANCkluIHRoaXMgY2FzZSwgd2Ugd2lsbCBzdGlsbCBtZWV0IGtl
-cm5lbCBjcmFzaCBjYXVzZWQgYnkgY29uY3VycmVudCBleGVjdXRpb24gYmV0d2VlbiBQTSBoYW5k
-c2hha2UgYW5kIHByb2Nlc3NpbmcgdHggZG9uZSBpbnRlcnJ1cHQuIA0KdHhfaHdfcGVuZGluZyB3
-aWxsIGJlIGEgYmV0dGVyIHNvbHV0aW9uIHRvIG1hdGNoIHRoaXMgY2FzZS4gDQoNCj4gPiAgCSAg
-ICAhYWRhcHRlci0+Y3Vycl9jbWQgJiYgIUlTX0NBUkRfUlhfUkNWRChhZGFwdGVyKSkNCj4gPiAg
-CQltd2lmaWV4X2RubGRfc2xlZXBfY29uZmlybV9jbWQoYWRhcHRlcik7DQo+ID4gIAllbHNlDQo+
-ID4gIAkJbXdpZmlleF9kYmcoYWRhcHRlciwgQ01ELA0KPiA+ICAJCQkgICAgImNtZDogRGVsYXkg
-U2xlZXAgQ29uZmlybSAoJXMlcyVzJXMpXG4iLA0KPiA+ICAJCQkgICAgKGFkYXB0ZXItPmNtZF9z
-ZW50KSA/ICJEIiA6ICIiLA0KPiA+IC0JCQkgICAgKGFkYXB0ZXItPmRhdGFfc2VudCkgPyAiVCIg
-OiAiIiwNCj4gPiArCQkJICAgIGF0b21pY19yZWFkKCZhZGFwdGVyLT50eF9od19wZW5kaW5nKSA/
-ICJUIiA6ICIiLA0KPiA+ICAJCQkgICAgKGFkYXB0ZXItPmN1cnJfY21kKSA/ICJDIiA6ICIiLA0K
-PiA+ICAJCQkgICAgKElTX0NBUkRfUlhfUkNWRChhZGFwdGVyKSkgPyAiUiIgOiAiIik7ICB9IGRp
-ZmYgLS1naXQNCj4gPiBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0
-LmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4g
-PiBpbmRleCA4MjgzOWQ5Li5iMzZjYjNmIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL21hcnZlbGwvbXdpZmlleC9pbml0LmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9tYXJ2ZWxsL213aWZpZXgvaW5pdC5jDQo+ID4gQEAgLTI3MCw2ICsyNzAsNyBAQCBzdGF0
-aWMgdm9pZCBtd2lmaWV4X2luaXRfYWRhcHRlcihzdHJ1Y3QNCj4gbXdpZmlleF9hZGFwdGVyICph
-ZGFwdGVyKQ0KPiA+ICAJYWRhcHRlci0+YWRob2NfMTFuX2VuYWJsZWQgPSBmYWxzZTsNCj4gPg0K
-PiA+ICAJbXdpZmlleF93bW1faW5pdChhZGFwdGVyKTsNCj4gPiArCWF0b21pY19zZXQoJmFkYXB0
-ZXItPnR4X2h3X3BlbmRpbmcsIDApOw0KPiA+DQo+ID4gIAlzbGVlcF9jZm1fYnVmID0gKHN0cnVj
-dCBtd2lmaWV4X29wdF9zbGVlcF9jb25maXJtICopDQo+ID4gIAkJCQkJYWRhcHRlci0+c2xlZXBf
-Y2ZtLT5kYXRhOw0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvbWFpbi5oDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZp
-ZXgvbWFpbi5oDQo+ID4gaW5kZXggZDYxZmUzYS4uN2Y2N2YyMyAxMDA2NDQNCj4gPiAtLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5oDQo+ID4gKysrIGIvZHJp
-dmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L21haW4uaA0KPiA+IEBAIC04NTcsNiAr
-ODU3LDcgQEAgc3RydWN0IG13aWZpZXhfYWRhcHRlciB7DQo+ID4gIAlhdG9taWNfdCByeF9wZW5k
-aW5nOw0KPiA+ICAJYXRvbWljX3QgdHhfcGVuZGluZzsNCj4gPiAgCWF0b21pY190IGNtZF9wZW5k
-aW5nOw0KPiA+ICsJYXRvbWljX3QgdHhfaHdfcGVuZGluZzsNCj4gPiAgCXN0cnVjdCB3b3JrcXVl
-dWVfc3RydWN0ICp3b3JrcXVldWU7DQo+ID4gIAlzdHJ1Y3Qgd29ya19zdHJ1Y3QgbWFpbl93b3Jr
-Ow0KPiA+ICAJc3RydWN0IHdvcmtxdWV1ZV9zdHJ1Y3QgKnJ4X3dvcmtxdWV1ZTsgZGlmZiAtLWdp
-dA0KPiA+IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+IGluZGV4
-IDA2M2M3MDcuLjRhYTVkOTEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-bWFydmVsbC9td2lmaWV4L3BjaWUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21h
-cnZlbGwvbXdpZmlleC9wY2llLmMNCj4gPiBAQCAtNTE2LDYgKzUxNiw3IEBAIHN0YXRpYyBpbnQg
-bXdpZmlleF9wY2llX2VuYWJsZV9ob3N0X2ludChzdHJ1Y3QNCj4gbXdpZmlleF9hZGFwdGVyICph
-ZGFwdGVyKQ0KPiA+ICAJCX0NCj4gPiAgCX0NCj4gPg0KPiA+ICsJYXRvbWljX3NldCgmYWRhcHRl
-ci0+dHhfaHdfcGVuZGluZywgMCk7DQo+ID4gIAlyZXR1cm4gMDsNCj4gPiAgfQ0KPiA+DQo+ID4g
-QEAgLTY4OSw2ICs2OTAsNyBAQCBzdGF0aWMgdm9pZCBtd2lmaWV4X2NsZWFudXBfdHhxX3Jpbmco
-c3RydWN0DQo+IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlcikNCj4gPiAgCQljYXJkLT50eF9idWZf
-bGlzdFtpXSA9IE5VTEw7DQo+ID4gIAl9DQo+ID4NCj4gPiArCWF0b21pY19zZXQoJmFkYXB0ZXIt
-PnR4X2h3X3BlbmRpbmcsIDApOw0KPiA+ICAJcmV0dXJuOw0KPiA+ICB9DQo+ID4NCj4gPiBAQCAt
-MTEyNiw2ICsxMTI4LDcgQEAgc3RhdGljIGludCBtd2lmaWV4X3BjaWVfc2VuZF9kYXRhX2NvbXBs
-ZXRlKHN0cnVjdA0KPiBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpDQo+ID4gIAkJCQkJCQkgICAg
-LTEpOw0KPiA+ICAJCQllbHNlDQo+ID4gIAkJCQltd2lmaWV4X3dyaXRlX2RhdGFfY29tcGxldGUo
-YWRhcHRlciwgc2tiLCAwLCAwKTsNCj4gPiArCQkJYXRvbWljX2RlYygmYWRhcHRlci0+dHhfaHdf
-cGVuZGluZyk7DQo+ID4gIAkJfQ0KPiA+DQo+ID4gIAkJY2FyZC0+dHhfYnVmX2xpc3Rbd3Jkb25l
-aWR4XSA9IE5VTEw7IEBAIC0xMjE4LDYgKzEyMjEsNyBAQA0KPiA+IG13aWZpZXhfcGNpZV9zZW5k
-X2RhdGEoc3RydWN0IG13aWZpZXhfYWRhcHRlciAqYWRhcHRlciwgc3RydWN0IHNrX2J1ZmYNCj4g
-KnNrYiwNCj4gPiAgCQl3cmluZHggPSAoY2FyZC0+dHhiZF93cnB0ciAmIHJlZy0+dHhfbWFzaykg
-Pj4gcmVnLT50eF9zdGFydF9wdHI7DQo+ID4gIAkJYnVmX3BhID0gTVdJRklFWF9TS0JfRE1BX0FE
-RFIoc2tiKTsNCj4gPiAgCQljYXJkLT50eF9idWZfbGlzdFt3cmluZHhdID0gc2tiOw0KPiA+ICsJ
-CWF0b21pY19pbmMoJmFkYXB0ZXItPnR4X2h3X3BlbmRpbmcpOw0KPiA+DQo+ID4gIAkJaWYgKHJl
-Zy0+cGZ1X2VuYWJsZWQpIHsNCj4gPiAgCQkJZGVzYzIgPSBjYXJkLT50eGJkX3Jpbmdbd3JpbmR4
-XTsNCj4gPiBAQCAtMTI5NSw2ICsxMjk5LDcgQEAgbXdpZmlleF9wY2llX3NlbmRfZGF0YShzdHJ1
-Y3QgbXdpZmlleF9hZGFwdGVyDQo+ID4gKmFkYXB0ZXIsIHN0cnVjdCBza19idWZmICpza2IsDQo+
-ID4gIGRvbmVfdW5tYXA6DQo+ID4gIAltd2lmaWV4X3VubWFwX3BjaV9tZW1vcnkoYWRhcHRlciwg
-c2tiLCBQQ0lfRE1BX1RPREVWSUNFKTsNCj4gPiAgCWNhcmQtPnR4X2J1Zl9saXN0W3dyaW5keF0g
-PSBOVUxMOw0KPiA+ICsJYXRvbWljX2RlYygmYWRhcHRlci0+dHhfaHdfcGVuZGluZyk7DQo+ID4g
-IAlpZiAocmVnLT5wZnVfZW5hYmxlZCkNCj4gPiAgCQltZW1zZXQoZGVzYzIsIDAsIHNpemVvZigq
-ZGVzYzIpKTsNCj4gPiAgCWVsc2UNCj4gPiAtLQ0KPiA+IDEuOC4xLjQNCj4gPg0KDQpCZXN0IFJl
-Z2FyZHMsDQpYaW5taW5nDQoNCg==
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
+
+The ability to parse channel definitions is required in a lot of places
+inside iw. However, right now each of these duplicates a lot of code to
+handle it.
+
+So add a new helper which can be used everywhere.
+
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+---
+ iw.h   |  10 +++
+ util.c | 239 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 249 insertions(+)
+
+diff --git a/iw.h b/iw.h
+index 2837bd3..7d56391 100644
+--- a/iw.h
++++ b/iw.h
+@@ -70,6 +70,14 @@ struct chanmode {
+ 	int chantype; /* for older kernel */
+ };
+ 
++struct chandef {
++	enum nl80211_chan_width width;
++
++	unsigned int control_freq;
++	unsigned int center_freq1;
++	unsigned int center_freq2;
++};
++
+ #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
+ #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
+ 
+@@ -150,6 +158,8 @@ int parse_hex_mask(char *hexmask, unsigned char **result, size_t *result_len,
+ unsigned char *parse_hex(char *hex, size_t *outlen);
+ 
+ int parse_keys(struct nl_msg *msg, char **argv, int argc);
++int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv, int *parsed);
++int put_chandef(struct nl_msg *msg, struct chandef *chandef);
+ 
+ void print_ht_mcs(const __u8 *mcs);
+ void print_ampdu_length(__u8 exponent);
+diff --git a/util.c b/util.c
+index a338464..833b1ce 100644
+--- a/util.c
++++ b/util.c
+@@ -469,6 +469,245 @@ int parse_keys(struct nl_msg *msg, char **argv, int argc)
+ 	return 2;
+ }
+ 
++static int parse_freqs(struct chandef *chandef, int argc, char **argv,
++		       int *parsed)
++{
++	static const struct {
++		const char *name;
++		unsigned int val;
++	} bwmap[] = {
++		{ .name = "5", .val = NL80211_CHAN_WIDTH_5, },
++		{ .name = "10", .val = NL80211_CHAN_WIDTH_10, },
++		{ .name = "20", .val = NL80211_CHAN_WIDTH_20, },
++		{ .name = "40", .val = NL80211_CHAN_WIDTH_40, },
++		{ .name = "80", .val = NL80211_CHAN_WIDTH_80, },
++		{ .name = "80+80", .val = NL80211_CHAN_WIDTH_80P80, },
++		{ .name = "160", .val = NL80211_CHAN_WIDTH_160, },
++	};
++	uint32_t freq;
++	unsigned int i, bwval = NL80211_CHAN_WIDTH_20_NOHT;
++	char *end;
++
++	if (argc < 1)
++		return 0;
++
++	for (i = 0; i < ARRAY_SIZE(bwmap); i++) {
++		if (strcasecmp(bwmap[i].name, argv[0]) == 0) {
++			bwval = bwmap[i].val;
++			*parsed += 1;
++			break;
++		}
++	}
++	chandef->width = bwval;
++
++	/* First argument was not understood, give up gracefully. */
++	if (bwval == NL80211_CHAN_WIDTH_20_NOHT)
++		return 0;
++
++	if (argc < 2)
++		return 0;
++
++	/* center freq 1 */
++	if (!*argv[1])
++		return 0;
++	freq = strtoul(argv[1], &end, 10);
++	if (*end)
++		return 0;
++	*parsed += 1;
++
++	chandef->center_freq1 = freq;
++
++	if (argc < 3)
++		return 0;
++
++	/* center freq 2 */
++	if (!*argv[2])
++		return 0;
++	freq = strtoul(argv[2], &end, 10);
++	if (*end)
++		return 0;
++	chandef->center_freq2 = freq;
++
++	*parsed += 1;
++
++	return 0;
++}
++
++
++/**
++ * parse_freqchan - Parse frequency or channel definition
++ *
++ * @chandef: chandef structure to be filled in
++ * @chan: Boolean whether to parse a channel or frequency based specifier
++ * @argc: Number of arguments
++ * @argv: Array of string arguments
++ * @parsed: Pointer to return the number of used arguments, or NULL to error
++ *          out if any argument is left unused.
++ *
++ * The given chandef structure will be filled in from the command line
++ * arguments. argc/argv will be updated so that further arguments from the
++ * command line can be parsed.
++ *
++ * Note that no integer argument may follow a frequency definition to allow the
++ * user to skip the center frequency definition(s).
++ *
++ * The working specifier if chan is set are:
++ *   <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]
++ *
++ * And if frequency is set:
++ *   <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]
++ *   <control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]
++ *
++ * If the mode/channel width is not given the NOHT is assumed.
++ *
++ * Return: Number of used arguments, zero or negative error number otherwise
++ */
++int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv,
++		   int *parsed)
++{
++	char *end;
++	static const struct chanmode chanmode[] = {
++		{ .name = "HT20",
++		  .width = NL80211_CHAN_WIDTH_20,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_HT20 },
++		{ .name = "HT40+",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = 10,
++		  .chantype = NL80211_CHAN_HT40PLUS },
++		{ .name = "HT40-",
++		  .width = NL80211_CHAN_WIDTH_40,
++		  .freq1_diff = -10,
++		  .chantype = NL80211_CHAN_HT40MINUS },
++		{ .name = "NOHT",
++		  .width = NL80211_CHAN_WIDTH_20_NOHT,
++		  .freq1_diff = 0,
++		  .chantype = NL80211_CHAN_NO_HT },
++		{ .name = "5MHz",
++		  .width = NL80211_CHAN_WIDTH_5,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
++		{ .name = "10MHz",
++		  .width = NL80211_CHAN_WIDTH_10,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
++		{ .name = "80MHz",
++		  .width = NL80211_CHAN_WIDTH_80,
++		  .freq1_diff = 0,
++		  .chantype = -1 },
++	};
++	const struct chanmode *chanmode_selected = NULL;
++	unsigned int freq;
++	unsigned int i;
++	int _parsed = 0;
++	int res = 0;
++
++	if (argc < 1)
++		return 1;
++
++	if (!argv[0])
++		goto out;
++	freq = strtoul(argv[0], &end, 10);
++	if (*end) {
++		res = 1;
++		goto out;
++	}
++
++	_parsed += 1;
++
++	memset(chandef, 0, sizeof(struct chandef));
++
++	if (chan) {
++		enum nl80211_band band;
++
++		band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
++		freq = ieee80211_channel_to_frequency(freq, band);
++	}
++	chandef->control_freq = freq;
++	/* Assume 20MHz NOHT channel for now. */
++	chandef->center_freq1 = freq;
++
++	/* Try to parse HT mode definitions */
++	if (argc > 1) {
++		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
++			if (strcasecmp(chanmode[i].name, argv[1]) == 0) {
++				chanmode_selected = &chanmode[i];
++				_parsed += 1;
++				break;
++			}
++		}
++	}
++
++	/* channel mode given, use it and return. */
++	if (chanmode_selected) {
++		chandef->center_freq1 = get_cf1(chanmode_selected, freq);
++		chandef->width = chanmode_selected->width;
++		goto out;
++	}
++
++	/* This was a only a channel definition, nothing further may follow. */
++	if (chan)
++		goto out;
++
++	res = parse_freqs(chandef, argc - 1, argv + 1, &_parsed);
++
++ out:
++	/* Error out if parsed is NULL. */
++	if (!parsed && _parsed != argc)
++		return 1;
++
++	if (parsed)
++		*parsed = _parsed;
++
++	return res;
++}
++
++int put_chandef(struct nl_msg *msg, struct chandef *chandef)
++{
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, chandef->control_freq);
++	NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH, chandef->width);
++
++	switch (chandef->width) {
++	case NL80211_CHAN_WIDTH_20_NOHT:
++		NLA_PUT_U32(msg,
++			    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++			    NL80211_CHAN_NO_HT);
++		break;
++	case NL80211_CHAN_WIDTH_20:
++		NLA_PUT_U32(msg,
++			    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++			    NL80211_CHAN_HT20);
++		break;
++	case NL80211_CHAN_WIDTH_40:
++		if (chandef->control_freq > chandef->center_freq1)
++			NLA_PUT_U32(msg,
++				    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++				    NL80211_CHAN_HT40MINUS);
++		else
++			NLA_PUT_U32(msg,
++				    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
++				    NL80211_CHAN_HT40PLUS);
++		break;
++	default:
++		break;
++	}
++
++	if (chandef->center_freq1)
++		NLA_PUT_U32(msg,
++			    NL80211_ATTR_CENTER_FREQ1,
++			    chandef->center_freq1);
++
++	if (chandef->center_freq2)
++		NLA_PUT_U32(msg,
++			    NL80211_ATTR_CENTER_FREQ2,
++			    chandef->center_freq2);
++
++	return 0;
++
++ nla_put_failure:
++	return -ENOBUFS;
++}
++
+ static void print_mcs_index(const __u8 *mcs)
+ {
+ 	int mcs_bit, prev_bit = -2, prev_cont = 0;
+-- 
+2.10.2
