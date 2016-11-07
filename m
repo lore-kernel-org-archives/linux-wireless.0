@@ -1,68 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27174 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756294AbcKWOAL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 09:00:11 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k: fix NULL pointer dereference
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1479288188-3793-1-git-send-email-miaoqing@codeaurora.org>
-References: <1479288188-3793-1-git-send-email-miaoqing@codeaurora.org>
-To: miaoqing pan <miaoqing@codeaurora.org>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <devin.tuchsen@gmail.com>, Miaoqing Pan <miaoqing@codeaurora.org>
-Message-ID: <a66eafb59c62495c8e1fc7d04f1eca35@euamsexm01a.eu.qualcomm.com> (sfid-20161123_150014_666701_E1F3A6AF)
-Date: Wed, 23 Nov 2016 14:59:56 +0100
+Received: from s3.sipsolutions.net ([5.9.151.49]:36810 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932280AbcKGO74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Nov 2016 09:59:56 -0500
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 5/8] Add cac command to allow clearing channels
+Date: Mon,  7 Nov 2016 15:59:40 +0100
+Message-Id: <20161107145943.16761-6-benjamin@sipsolutions.net> (sfid-20161107_160011_979101_D69B623F)
+In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
+References: <20161107145943.16761-1-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-miaoqing pan <miaoqing@codeaurora.org> wrote:
-> From: Miaoqing Pan <miaoqing@codeaurora.org>
-> 
-> relay_open() may return NULL, check the return value to avoid the crash.
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000040
-> IP: [<ffffffffa01a95c5>] ath_cmn_process_fft+0xd5/0x700 [ath9k_common]
-> PGD 41cf28067 PUD 41be92067 PMD 0
-> Oops: 0000 [#1] SMP
-> CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.6+ #35
-> Hardware name: Hewlett-Packard h8-1080t/2A86, BIOS 6.15    07/04/2011
-> task: ffffffff81e0c4c0 task.stack: ffffffff81e00000
-> RIP: 0010:[<ffffffffa01a95c5>] [<ffffffffa01a95c5>] ath_cmn_process_fft+0xd5/0x700 [ath9k_common]
-> RSP: 0018:ffff88041f203ca0 EFLAGS: 00010293
-> RAX: 0000000000000000 RBX: 000000000000059f RCX: 0000000000000000
-> RDX: 0000000000000000 RSI: 0000000000000040 RDI: ffffffff81f0ca98
-> RBP: ffff88041f203dc8 R08: ffffffffffffffff R09: 00000000000000ff
-> R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
-> R13: ffffffff81f0ca98 R14: 0000000000000000 R15: 0000000000000000
-> FS:  0000000000000000(0000) GS:ffff88041f200000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000040 CR3: 000000041b6ec000 CR4: 00000000000006f0
-> Stack:
-> 0000000000000363 00000000000003f3 00000000000003f3 00000000000001f9
-> 000000000000049a 0000000001252c04 ffff88041f203e44 ffff880417b4bfd0
-> 0000000000000008 ffff88041785b9c0 0000000000000002 ffff88041613dc60
-> 
-> Call Trace:
-> <IRQ>
-> [<ffffffffa01b6441>] ath9k_tasklet+0x1b1/0x220 [ath9k]
-> [<ffffffff8105d8dd>] tasklet_action+0x4d/0xf0
-> [<ffffffff8105dde2>] __do_softirq+0x92/0x2a0
-> 
-> Reported-by: Devin Tuchsen <devin.tuchsen@gmail.com>
-> Tested-by: Devin Tuchsen <devin.tuchsen@gmail.com>
-> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Allow the user to start a CAC for clearing DFS channels.
 
-40bea976c72b ath9k: fix NULL pointer dereference
+Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+---
+ phy.c | 145 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 145 insertions(+)
 
+diff --git a/phy.c b/phy.c
+index 266de4d..be31820 100644
+--- a/phy.c
++++ b/phy.c
+@@ -226,6 +226,151 @@ COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
+ COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan, NULL);
+ 
++
++struct cac_event {
++	int ret;
++	uint32_t freq;
++};
++
++static int print_cac_event(struct nl_msg *msg, void *arg)
++{
++	struct nlattr *tb[NL80211_ATTR_MAX + 1];
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	enum nl80211_radar_event event_type;
++	struct cac_event *cac_event = arg;
++	uint32_t freq;
++
++	if (gnlh->cmd != NL80211_CMD_RADAR_DETECT)
++		return NL_SKIP;
++
++	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
++		  genlmsg_attrlen(gnlh, 0), NULL);
++
++	if (!tb[NL80211_ATTR_RADAR_EVENT] || !tb[NL80211_ATTR_WIPHY_FREQ])
++		return NL_SKIP;
++
++	freq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
++	event_type = nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT]);
++	if (freq != cac_event->freq)
++		return NL_SKIP;
++
++	switch (event_type) {
++	case NL80211_RADAR_DETECTED:
++		printf("%d MHz: radar detected\n", freq);
++		break;
++	case NL80211_RADAR_CAC_FINISHED:
++		printf("%d MHz: CAC finished\n", freq);
++		break;
++	case NL80211_RADAR_CAC_ABORTED:
++		printf("%d MHz: CAC was aborted\n", freq);
++		break;
++	case NL80211_RADAR_NOP_FINISHED:
++		printf("%d MHz: NOP finished\n", freq);
++		break;
++	default:
++		printf("%d MHz: unknown radar event\n", freq);
++	}
++	cac_event->ret = 0;
++
++	return NL_SKIP;
++}
++
++static int handle_cac_trigger(struct nl80211_state *state,
++			    struct nl_msg *msg,
++			    int argc, char **argv,
++			    enum id_input id)
++{
++	struct chandef chandef;
++	int res;
++
++	if (argc < 2)
++		return 1;
++
++	if (strcmp(argv[0], "channel") == 0) {
++		res = parse_freqchan(&chandef, true, argc - 1, argv + 1, NULL);
++	} else if (strcmp(argv[0], "freq") == 0) {
++		res = parse_freqchan(&chandef, false, argc - 1, argv + 1, NULL);
++	} else {
++		return 1;
++	}
++
++	if (res)
++		return res;
++
++	return put_chandef(msg, &chandef);
++}
++
++static int no_seq_check(struct nl_msg *msg, void *arg)
++{
++	return NL_OK;
++}
++
++static int handle_cac(struct nl80211_state *state,
++		      struct nl_msg *msg,
++		      int argc, char **argv,
++		      enum id_input id)
++{
++	int err;
++	struct nl_cb *radar_cb;
++	struct chandef chandef;
++	struct cac_event cac_event;
++	char **cac_trigger_argv = NULL;
++
++	radar_cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
++	if (!radar_cb)
++		return 1;
++
++	if (argc < 3)
++		return 1;
++
++	if (strcmp(argv[2], "channel") == 0) {
++		err = parse_freqchan(&chandef, true, argc - 3, argv + 3, NULL);
++	} else if (strcmp(argv[2], "freq") == 0) {
++		err = parse_freqchan(&chandef, false, argc - 3, argv + 3, NULL);
++	} else {
++		return 1;
++	}
++
++	cac_trigger_argv = calloc(argc + 1, sizeof(char*));
++	if (!cac_trigger_argv)
++		return -ENOMEM;
++
++	cac_trigger_argv[0] = argv[0];
++	cac_trigger_argv[1] = "cac";
++	cac_trigger_argv[2] = "trigger";
++	memcpy(&cac_trigger_argv[3], &argv[2], (argc - 2) * sizeof(char*));
++
++	err = handle_cmd(state, id, argc + 1, cac_trigger_argv);
++	free(cac_trigger_argv);
++	if (err)
++		return err;
++
++	cac_event.ret = 1;
++	cac_event.freq = chandef.control_freq;
++
++	__prepare_listen_events(state);
++	nl_socket_set_cb(state->nl_sock, radar_cb);
++
++	/* need to turn off sequence number checking */
++	nl_cb_set(radar_cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
++	nl_cb_set(radar_cb, NL_CB_VALID, NL_CB_CUSTOM, print_cac_event, &cac_event);
++	while (cac_event.ret > 0)
++		nl_recvmsgs(state->nl_sock, radar_cb);
++
++	return 0;
++}
++TOPLEVEL(cac, "channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	      "freq <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	      "freq <control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
++	 0, 0, CIB_NETDEV, handle_cac, NULL);
++COMMAND(cac, trigger,
++	"channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	"freq <frequency> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	"freq <frequency> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
++	NL80211_CMD_RADAR_DETECT, 0, CIB_NETDEV, handle_cac_trigger,
++	"Start or trigger a channel availability check (CAC) looking to look for\n"
++	"radars on the given channel.");
++
+ static int handle_fragmentation(struct nl80211_state *state,
+ 				struct nl_msg *msg,
+ 				int argc, char **argv,
 -- 
-https://patchwork.kernel.org/patch/9431163/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.10.2
