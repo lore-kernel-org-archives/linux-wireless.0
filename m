@@ -1,103 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36360 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S948002AbcJaX5Q (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 19:57:16 -0400
-Received: by mail-pf0-f175.google.com with SMTP id 189so31071777pfz.3
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 16:57:16 -0700 (PDT)
-Date: Mon, 31 Oct 2016 16:57:12 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: Re: [PATCH 01/12] mwifiex: fix power save issue when suspend
-Message-ID: <20161031235712.GA101079@google.com> (sfid-20161101_005720_477205_9E7CF9B5)
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36782 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753107AbcKGO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Nov 2016 09:59:55 -0500
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 0/8] iw: Add common chandef parser and new DFS related commands
+Date: Mon,  7 Nov 2016 15:59:35 +0100
+Message-Id: <20161107145943.16761-1-benjamin@sipsolutions.net> (sfid-20161107_155958_993797_5BD7359F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
+
 Hi,
 
-On Mon, Oct 31, 2016 at 04:02:09PM +0800, Xinming Hu wrote:
-> From: Shengzhen Li <szli@marvell.com>
-> 
-> This patch fixes a corner case for "FROMLIST: mwifiex: fix corner case
+This patchset adds commands for doing a CAC and sending CSA.
 
-Upstream patches don't normally get a 'FROMLIST' tag while you're
-sending them to the mailing list :) That designation is used for Chrome
-OS trees, so we know where to find the patch source. But the upstream
-mailing list *is* the source.
+Another change is that parsing of command line frequency and channel
+definitions is split out so that it can be shared between the different
+users.
 
-> power save issue", main process will check the power save condition in
-> PS_PRE_SLEEP status so the sleep handshake could continue.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> BUG=chrome-os-partner:58164
-> TEST=stress Wifi w/ power_save enabled
-> 
-> Change-Id: I5a36d9eaeb7fe5faaccc533e0d1ba1f3253666dc
+Benjamin
 
-In the same vein: while I'm happy to have the BUG=, TEST=, and Gerrit
-Change-ID for our Chrome OS tree, I don't think upstream reviewers
-typically care about those. Please remove those from upstream
-submissions like this.
+Benjamin Berg (7):
+  util: Add generic frequency/channel command line handler
+  phy: Use common freqchan helper for setting the operating channel
+  ibss: Use common freqchan helper for joining an ibss
+  mesh: Use common freqchan helper for joining a mesh
+  Add cac command to allow clearing channels
+  Add commands to send CSA
+  Print frequency of radar events.
 
-(Same applies to the rest of this series. Also, consider running
-scripts/checkpatch.pl. It will at least remind you about removing the
-Gerrit Change-ID.)
+Simon Wunderlich (1):
+  Add flag for DFS handling in IBSS
 
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 3 ++-
->  drivers/net/wireless/marvell/mwifiex/main.c   | 5 +++++
->  2 files changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> index 5347728..9075be5 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> @@ -1123,8 +1123,9 @@ mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
->  		mwifiex_dnld_sleep_confirm_cmd(adapter);
->  	else
->  		mwifiex_dbg(adapter, CMD,
-> -			    "cmd: Delay Sleep Confirm (%s%s%s)\n",
-> +			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
->  			    (adapter->cmd_sent) ? "D" : "",
-> +			    (adapter->data_sent) ? "T" : "",
->  			    (adapter->curr_cmd) ? "C" : "",
->  			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
->  }
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index 2478ccd..f559ead 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -308,6 +308,11 @@ process_start:
->  			/* We have tried to wakeup the card already */
->  			if (adapter->pm_wakeup_fw_try)
->  				break;
-> +			if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
-> +				if (!adapter->cmd_sent && !adapter->curr_cmd)
+ event.c     |  48 +++++------
+ ibss.c      |  78 ++++--------------
+ interface.c |  72 ++++++++++++++++
+ iw.h        |  11 +++
+ mesh.c      |  67 +++------------
+ phy.c       | 266 ++++++++++++++++++++++++++++++++++++------------------------
+ util.c      | 239 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 533 insertions(+), 248 deletions(-)
 
-The entire 'if' condition is unnecessary. That's all checked already
-within mwifiex_check_ps_cond().
-
-Brian
-
-> +					mwifiex_check_ps_cond(adapter);
-> +			}
-> +
->  			if (adapter->ps_state != PS_STATE_AWAKE)
->  				break;
->  			if (adapter->tx_lock_flag) {
-> -- 
-> 1.8.1.4
-> 
+-- 
+2.10.2
