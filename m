@@ -1,52 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33510 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753881AbcKCKvM (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38246 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752729AbcKGOGh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 06:51:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id x4so5939097oix.0
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 03:51:12 -0700 (PDT)
+        Mon, 7 Nov 2016 09:06:37 -0500
+Message-ID: <58208A6A.5040307@candelatech.com> (sfid-20161107_150640_744640_9403083B)
+Date: Mon, 07 Nov 2016 06:06:34 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <20161103095938.84054-1-nbd@nbd.name>
-References: <20161103095938.84054-1-nbd@nbd.name>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 3 Nov 2016 12:51:11 +0200
-Message-ID: <CANUX_P0xv4a1O7tqBYABsXbRvRQm_3Va888EopKDz433cwjXew@mail.gmail.com> (sfid-20161103_115117_294061_79C4A645)
-Subject: Re: [PATCH] mac80211: fix broken AP mode handling of powersave clients
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+To: Bruno Antunes <baantunes@gmail.com>
+CC: yu-chieh kung <jay0607@gmail.com>,
+        Mauro Mozzarelli <openwrt@ezplanet.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
+References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local> <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr> <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com> <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net> <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com> <CAGJdtRCKidEfDF7sc4BRGSfOTmcGJUJ4KZt0xU1vj4bGAnuu1Q@mail.gmail.com> <c58ffbe0-c305-3282-34e9-98814c6f0d14@candelatech.com> <68bd7ebd-b12a-5dbf-a267-5913127718a1@candelatech.com> <CABUTiXXvqQ=yrrK3wp0fck=Mcb0LSrE7_Jw6KisYOuADvo3sdQ@mail.gmail.com>
+In-Reply-To: <CABUTiXXvqQ=yrrK3wp0fck=Mcb0LSrE7_Jw6KisYOuADvo3sdQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 3, 2016 at 11:59 AM, Felix Fietkau <nbd@nbd.name> wrote:
-> Commit c68df2e7be0c ("mac80211: allow using AP_LINK_PS with
-> mac80211-generated TIM IE") introduced a logic error, where
-> __sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
-> set. This prevents the beacon TIM bit from being set for all drivers
-> that do not implement this op (almost all of them), thus thoroughly
-> essential AP mode powersave functionality.
+On 11/07/2016 03:54 AM, Bruno Antunes wrote:
+> On 4 November 2016 at 22:23, Ben Greear <greearb@candelatech.com> wrote:
+>> The bug appears that vlan-tx-stripping is unconditionally enabled in
+>> at least my firmware.  I have re-compiled w/out that flag set, and it
+>> appears
+>> to work for me.
+>>
+>> Please download this firmware, rename it firmware-2.bin, make sure you
+>> remove/rename
+>> any firmware-5.bin (etc) so mine will load, and see if that fixes your
+>> problem.
 >
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  net/mac80211/sta_info.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> Thanks for the fast reply but it only solves "half"  the problem.
 >
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index 236d47e..621734e 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
->         }
+> Now the connection between the AP and the Sta can be secure and the
+> driver doesn't need to be loaded in rawmode.
 >
->         /* No need to do anything if the driver does all */
-> -       if (!local->ops->set_tim)
-> +       if (local->ops->set_tim)
->                 return;
+> Unfortunatly the the throughput is still bad.
+>
+> iperf3 -c 10.10.4.15
+> Connecting to host 10.10.4.15, port 5201
+> [  4] local 10.10.4.16 port 44893 connected to 10.10.4.15 port 5201
+> [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+> [  4]   0.00-1.01   sec  42.4 KBytes   345 Kbits/sec    6   1.41 KBytes
+> [  4]   1.01-2.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
+> [  4]   2.01-3.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
+> [  4]   3.01-4.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> [  4]   4.01-5.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> [  4]   5.01-6.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> [  4]   6.01-7.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
+> [  4]   7.01-8.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> [  4]   8.01-9.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> [  4]   9.01-10.01  sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
+> - - - - - - - - - - - - - - - - - - - - - - - - -
+> [ ID] Interval           Transfer     Bandwidth       Retr
+> [  4]   0.00-10.01  sec  42.4 KBytes  34.7 Kbits/sec    9             sender
+> [  4]   0.00-10.01  sec  0.00 Bytes  0.00 bits/sec                  receiver
 
-but ... then, you'll need call to drv_set_tim below...
-Apparently, we can't rely on the ops pointer to enter or not enter this flow.
+You have a complex setup, so I think it would be best if you could break it into
+simpler parts to test.
+
+First, try just STA to AP, no vlans, and see if you get useful throughput.
+
+Then try with VLANs
+
+Then, try with WDS.
+
+Then try with WDS and vlans.
+
+In STA to AP mode with VLANs, it performed well for me.
+
+Thanks,
+Ben
+
+
+>
+> iperf Done.
+>
+>>
+>> Please note that it is very likely you will have to use same MAC address
+>> for the VLAN devices that the underlying station uses in order for this to
+>> work.
+>
+> Can you please elaborate more?
+> My setup  is the folowing.
+> The connection between the AP and Sta is in WDS
+> For the moment all devices are in the same VLAN.
+>
+> client1 --- SW1 ---- AP ...... Sta ---- SW2 --- client2
+>
+>
+> Thanks,
+> Bruno
+>
+>>
+>> https://www.candelatech.com/downloads/tmp/firmware-2-full-community.bin
+>>
+>>
+>> Thanks,
+>> Ben
+>>
+>>
+>>
+>
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
