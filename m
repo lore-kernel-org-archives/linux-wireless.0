@@ -1,56 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0064.outbound.protection.outlook.com ([104.47.36.64]:60400
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752046AbcK2CGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 21:06:34 -0500
-From: "Schaefer, Brandon" <brandon.schaefer@flukenetworks.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: CRDA/wireless-regdb to limit communication to certified countries
-Date: Tue, 29 Nov 2016 00:32:25 +0000
-Message-ID: <BN6PR12MB1442F053ADBC73A276F2C9F3908D0@BN6PR12MB1442.namprd12.prod.outlook.com> (sfid-20161129_030638_914014_EFA3C08E)
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:40474 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752648AbcKGOKZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Nov 2016 09:10:25 -0500
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 07 Nov 2016 19:40:24 +0530
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
+ associated
+In-Reply-To: <579F4E4E.80103@candelatech.com>
+References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1467110918.2493.9.camel@sipsolutions.net>
+ <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org>
+ <1470043740.3389.10.camel@sipsolutions.net> <579F4E4E.80103@candelatech.com>
+Message-ID: <8908f6e7bb8ca043fbeb07ee8b004e8f@codeaurora.org> (sfid-20161107_151029_473897_72389CFF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 2016-08-01 18:57, Ben Greear wrote:
+> On 08/01/2016 02:29 AM, Johannes Berg wrote:
+>> 
+>>> Sure.. First use case will be to help with the problem of legacy
+>>> client devices that roam across multiple APs. It is a classic
+>>> enterprise Wi-Fi AP problem,  often managed by a "network controller"
+>>> unit that is connected to all the APs.
+>>> The problem is how to handle seamless handoff of clients between
+>>> multiple  APs while maximizing the client throughput and minimizing
+>>> disruption of IP application services like VoIP calls and video
+>>> streaming. A legacy client will often  hold onto an AP association,
+>>> even down to 1 Mbps as it roams away. Instead,  if the AP can
+>>> recognise that the client RSSI (and therefore throughput) is poor, it
+>>> can "drop" the Tx power significantly (just to that client) such that
+>>> it forcesthe client to look for a better, closer, and therefore
+>>> higher-throughputassociation. It would "give it a kick" without
+>>> blacklisting it. It just needsto hold the power low for the small
+>>> amount of time it takes to convince it to go away.
+>> 
+>> Not sure that *works* since implementations may just compare beacon
+>> signal strength and hold on to the AP based on that, but it does seem
+>> like a reasonable use case.
+> 
+> How is that better than just kicking the station deliberately and/or
+> refusing to send frames to it at all?
+> 
 
-I'm in need of a way to meet various levels of certification based on the c=
-ountry the device is operating in. For example, let's say the device will b=
-e certified for 2.4 GHz and 5GHz in the US but in Japan it will be limited =
-to 2.4GHz. In order to do so, I've modified wireless-regdb used by CRDA and=
- it seems to work okay by country once associated with an AP, but I still h=
-ave a few questions (mostly related to clarification of information from ht=
-tps://wireless.wiki.kernel.org/en/developers/regulatory/processing_rules).
+Ben, deliberately kicking out the station can potentially cause the 
+black
+listing behaviour on the client side and results in connection failures. 
+Each
+client handles the kickout logic differently. Reducing the tx power, 
+causes the
+station to trigger its roaming algorithm.
 
-1)  The NO-IR flag prevents a device from initiating radiation on a channel=
-, but supposedly it can be lifted while world roaming if an AP is broadcast=
-ing on that channel. Suppose my device is world roaming (country code 00) a=
-nd all channels in country 00 are set to NO-IR.
-What happens if my device notices an AP beaconing with country IE of Japan =
-on a channel that was originally NO-IR?
-A country IE is said to be ignored until we try to associate with it, will =
-the device now allow initiation of radiation on the channels which the AP w=
-as beaconing on?
+>> 
+>> How would this interact with automatic adjustment though?
+>> 
 
-2) I noticed in country 00 that the power of 60GHz channels were set to 0. =
-Is this a better way of truly disabling transmission on certain frequencies=
- until a Country Information Element is received from an AP? The main goal =
-is to follow our certification by country correctly, and allow no transmiss=
-ions that would violate certifications.
+Johannes,
 
-Thanks for any and all input!
+In the case of manual intervention by user, the firmware will check 
+three
+values - regulatory domain, automatic tx power and user entered value. 
+System
+will always cap to the minimum of these values and see to that we do not 
+exceed
+the regulatory power limits.
 
-Brandon
-________________________________
-________________________________
+If there are no more comments I will resent this patch series after 
+rebase.
 
+Thanks,
+Ashok
 
-Please be advised that this email may contain confidential information. If =
-you are not the intended recipient, please notify us by email by replying t=
-o the sender and delete this message. The sender disclaims that the content=
- of this email constitutes an offer to enter into, or the acceptance of, an=
-y agreement; provided that the foregoing does not invalidate the binding ef=
-fect of any digital or other electronic reproduction of a manual signature =
-that is included in any attachment.
+>> johannes
+>> 
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> 
