@@ -1,66 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41947 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751243AbcKRLe2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 06:34:28 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [v7] mwifiex: parse device tree node for PCIe
-Date: Fri, 18 Nov 2016 11:34:22 +0000
-Message-ID: <4d83382c9a534e50b50d8a7dbff3ec1d@SC-EXCH04.marvell.com> (sfid-20161118_123432_399676_413FD0E5)
-References: <1479215662-631-1-git-send-email-akarwar@marvell.com>
-        <20161117123920.E159F6162A@smtp.codeaurora.org>
-        <20161117173824.GA129893@google.com>
- <87y40hkpvo.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87y40hkpvo.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:36794 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753178AbcKGO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 7 Nov 2016 09:59:55 -0500
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 2/8] phy: Use common freqchan helper for setting the operating channel
+Date: Mon,  7 Nov 2016 15:59:37 +0100
+Message-Id: <20161107145943.16761-3-benjamin@sipsolutions.net> (sfid-20161107_155959_564707_4FDA24B9)
+In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
+References: <20161107145943.16761-1-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Friday, November 18, 2016 4:38 PM
-> To: Brian Norris
-> Cc: Amitkumar Karwar; linux-wireless@vger.kernel.org; Cathy Luo;
-> Nishant Sarmukadam; rajatja@google.com; dmitry.torokhov@gmail.com;
-> Xinming Hu
-> Subject: Re: [v7] mwifiex: parse device tree node for PCIe
-> 
-> Brian Norris <briannorris@chromium.org> writes:
-> 
-> > On Thu, Nov 17, 2016 at 12:39:20PM +0000, Kalle Valo wrote:
-> >> Amitkumar Karwar <akarwar@marvell.com> wrote:
-> >> > From: Xinming Hu <huxm@marvell.com>
-> >> >
-> >> > This patch derives device tree node from pcie bus layer framework.
-> >> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> >> > marvell-8xxx.txt) to accommodate PCIe changes.
-> >> >
-> >> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> >> > Signed-off-by: Rajat Jain <rajatja@google.com>
-> >> > Reviewed-by: Brian Norris <briannorris@chromium.org>
-> >> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> >>
-> >> You should CC the device tree list when making changes to the
-> bindings.
-> >
-> > FWIW, Rajat had that right on v6...
-> 
-> Indeed. But please submit now v8 and also CC devicetree list. I need an
-> ack from them before I can apply this.
-> 
+Simplify code by using the helper which has been introduced earlier.
 
-I will send v8 CCing devicetree list
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+---
+ phy.c | 143 ++++++++++++------------------------------------------------------
+ 1 file changed, 25 insertions(+), 118 deletions(-)
 
-Regards,
-Amitkumar
+diff --git a/phy.c b/phy.c
+index c57a71f..266de4d 100644
+--- a/phy.c
++++ b/phy.c
+@@ -183,140 +183,47 @@ static int handle_name(struct nl80211_state *state,
+ COMMAND(set, name, "<new name>", NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_name,
+ 	"Rename this wireless device.");
+ 
+-static int handle_freqs(struct nl_msg *msg, int argc, char **argv)
+-{
+-	static const struct {
+-		const char *name;
+-		unsigned int val;
+-	} bwmap[] = {
+-		{ .name = "20", .val = NL80211_CHAN_WIDTH_20, },
+-		{ .name = "40", .val = NL80211_CHAN_WIDTH_40, },
+-		{ .name = "80", .val = NL80211_CHAN_WIDTH_80, },
+-		{ .name = "80+80", .val = NL80211_CHAN_WIDTH_80P80, },
+-		{ .name = "160", .val = NL80211_CHAN_WIDTH_160, },
+-	};
+-	uint32_t freq;
+-	unsigned int i, bwval = NL80211_CHAN_WIDTH_20_NOHT;
+-	char *end;
+-
+-	if (argc < 1)
+-		return 1;
+-
+-	for (i = 0; i < ARRAY_SIZE(bwmap); i++) {
+-		if (strcasecmp(bwmap[i].name, argv[0]) == 0) {
+-			bwval = bwmap[i].val;
+-			break;
+-		}
+-	}
+-
+-	if (bwval == NL80211_CHAN_WIDTH_20_NOHT)
+-		return 1;
+-
+-	NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH, bwval);
+-
+-	if (argc == 1)
+-		return 0;
+-
+-	/* center freq 1 */
+-	if (!*argv[1])
+-		return 1;
+-	freq = strtoul(argv[1], &end, 10);
+-	if (*end)
+-		return 1;
+-	NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1, freq);
+-
+-	if (argc == 2)
+-		return 0;
+-
+-	/* center freq 2 */
+-	if (!*argv[2])
+-		return 1;
+-	freq = strtoul(argv[2], &end, 10);
+-	if (*end)
+-		return 1;
+-	NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ2, freq);
+-
+-	return 0;
+- nla_put_failure:
+-	return -ENOBUFS;
+-}
+-
+-static int handle_freqchan(struct nl_msg *msg, bool chan,
+-			   int argc, char **argv)
+-{
+-	char *end;
+-	static const struct {
+-		const char *name;
+-		unsigned int val;
+-	} htmap[] = {
+-		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
+-		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
+-		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
+-	};
+-	unsigned int htval = NL80211_CHAN_NO_HT;
+-	unsigned int freq;
+-	unsigned int i;
+-
+-	if (!argc || argc > 4)
+-		return 1;
+-
+-	if (!*argv[0])
+-		return 1;
+-	freq = strtoul(argv[0], &end, 10);
+-	if (*end)
+-		return 1;
+-
+-	if (chan) {
+-		enum nl80211_band band;
+-		band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
+-		freq = ieee80211_channel_to_frequency(freq, band);
+-	}
+-
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
+-
+-	if (argc > 2) {
+-		return handle_freqs(msg, argc - 1, argv + 1);
+-	} else if (argc == 2) {
+-		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
+-			if (strcasecmp(htmap[i].name, argv[1]) == 0) {
+-				htval = htmap[i].val;
+-				break;
+-			}
+-		}
+-		if (htval == NL80211_CHAN_NO_HT)
+-			return handle_freqs(msg, argc - 1, argv + 1);
+-	}
+-
+-	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE, htval);
+-
+-	return 0;
+- nla_put_failure:
+-	return -ENOBUFS;
+-}
+-
+ static int handle_freq(struct nl80211_state *state, struct nl_msg *msg,
+ 		       int argc, char **argv,
+ 		       enum id_input id)
+ {
+-	return handle_freqchan(msg, false, argc, argv);
++	struct chandef chandef;
++	int res;
++
++	res = parse_freqchan(&chandef, false, argc, argv, NULL);
++	if (res)
++		return res;
++
++	return put_chandef(msg, &chandef);
+ }
+-COMMAND(set, freq, "<freq> [HT20|HT40+|HT40-]",
++
++COMMAND(set, freq,
++	"<freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	"<control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_freq,
+ 	"Set frequency/channel the hardware is using, including HT\n"
+ 	"configuration.");
+-COMMAND(set, freq, "<freq> [HT20|HT40+|HT40-]\n"
+-		   "<control freq> [20|40|80|80+80|160] [<center freq 1>] [<center freq 2>]",
++COMMAND(set, freq,
++	"<freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
++	"<control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_freq, NULL);
+ 
+ static int handle_chan(struct nl80211_state *state, struct nl_msg *msg,
+ 		       int argc, char **argv,
+ 		       enum id_input id)
+ {
+-	return handle_freqchan(msg, true, argc, argv);
++	struct chandef chandef;
++	int res;
++
++	res = parse_freqchan(&chandef, true, argc, argv, NULL);
++	if (res)
++		return res;
++
++	return put_chandef(msg, &chandef);
+ }
+-COMMAND(set, channel, "<channel> [HT20|HT40+|HT40-]",
++COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_chan, NULL);
+-COMMAND(set, channel, "<channel> [HT20|HT40+|HT40-]",
++COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
+ 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan, NULL);
+ 
+ static int handle_fragmentation(struct nl80211_state *state,
+-- 
+2.10.2
