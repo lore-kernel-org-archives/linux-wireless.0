@@ -1,144 +1,294 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:10941
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932792AbcKWQqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 11:46:18 -0500
-From: <igor.mitsyanko.os@quantenna.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <btherthala@quantenna.com>,
-        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
-        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-Date: Wed, 23 Nov 2016 19:45:47 +0300
-Message-ID: <1479919547-26628-1-git-send-email-igor.mitsyanko.os@quantenna.com> (sfid-20161123_174628_255598_404C7DB2)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60090 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752348AbcKHPDQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Nov 2016 10:03:16 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
+        "Tamizh chelvam" <c_traja@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: Add support to update btcoex priority value via nl80211
+Date: Tue, 8 Nov 2016 20:32:32 +0530
+Message-ID: <1478617354-28146-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_160321_968851_51FBDD54)
+In-Reply-To: <1478617354-28146-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1478617354-28146-1-git-send-email-c_traja@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <87d1hmnrqj.fsf@purkki.adurom.net>
-References: <87d1hmnrqj.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <imitsyanko@quantenna.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-QSR10G is Quantenna's 8x8, 160M, 11ac WiFi card.
+This patch adds support to update btcoex priority value via nl80211.
+Here driver will be exposing the supported frame format for this
+feature via btcoex_support_flags which is a member of
+wiphy structure. 10.4 based firmware support this feature.
+WMI service WMI_SERVICE_BTCOEX is used to identify the firmware support
+of this feature. BTCOEX needs to enable to modify this value.
 
-Signed-off-by: Kamlesh Rath <krath@quantenna.com>
-Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+This patch has dependency of
+"cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to support BTCOEX"
+patch.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- LICENCE.Quantenna_fmac |  74 +++++++++++++++++++++++++++++++++++++++++++++++++
- WHENCE                 |   9 ++++++
- qtn/fmac_qsr10g.img    | Bin 0 -> 9559676 bytes
- 3 files changed, 83 insertions(+)
- create mode 100644 LICENCE.Quantenna_fmac
- create mode 100644 qtn/fmac_qsr10g.img
+ drivers/net/wireless/ath/ath10k/mac.c     |   76 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   19 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   19 ++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h     |   18 +++++++
+ 4 files changed, 132 insertions(+)
 
-diff --git a/LICENCE.Quantenna_fmac b/LICENCE.Quantenna_fmac
-new file mode 100644
-index 0000000..e6f9f72
---- /dev/null
-+++ b/LICENCE.Quantenna_fmac
-@@ -0,0 +1,74 @@
-+Copyright (c) 2016, Quantenna, Inc.
-+All rights reserved.
-+
-+Redistribution. Reproduction and redistribution in binary form, without
-+modification, for use solely in conjunction with a Quantenna, Inc. chipset, is
-+permitted provided that the following conditions are met:
-+
-+  - Redistributions must reproduce the above copyright notice and the
-+    following disclaimer in the documentation and/or other materials provided
-+    with the distribution.
-+
-+  - Neither the name of Quantenna, Inc. nor the names of its suppliers may be
-+    used to endorse or promote products derived from this Software without
-+    specific prior written permission.
-+
-+  - No reverse engineering, decompilation, or disassembly of this Software is
-+    permitted, except and solely to the extent that such a restriction is
-+    impermissible pursuant to applicable law or third party license.
-+
-+  - Your reproduction and distribution must comply with all applicable laws,
-+    including without limitation all applicable U.S., European, and other
-+    export laws.
-+
-+Limited Patent License. Subject to your compliance with all terms of this
-+license, Quantenna, Inc. (“Licensor”) grants you (“Licensee”) a limited,
-+worldwide, royalty-free, non-exclusive license under the Licensed Patents to
-+make, have made, use, import, offer to sell and sell the Software solely in
-+conjunction with a validly purchased Quantenna, Inc. chipset. No hardware
-+per se is licensed hereunder.
-+
-+The term “Licensed Patents” as used in this agreement means only those patents
-+or patent applications owned solely and exclusively by Licensor as of the date
-+of Licensor’s submission of the Software that would necessarily be infringed by
-+the operation of the Software, alone, or in combination with a supported
-+version of the Linux operating system. The patent license shall not apply to
-+any other combinations which include the Software. The term “Licensed Patents”
-+expressly excludes any patent or patent application owned by any current or
-+future affiliate of Quantenna, Inc. The term “Software” as used in this
-+agreement means the unmodified firmware image submitted by Licensor, under the
-+terms of this license, to
-+git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git.
-+
-+Notwithstanding anything to the contrary herein, Licensor does not grant and
-+Licensee does not receive, by virtue of this agreement or the Licensor’s
-+submission of any Software, any license or other rights under any patent or
-+patent application owned by any current or future affiliate of Licensor or any
-+other entity (other than Licensor), whether expressly, impliedly, by virtue of
-+estoppel or exhaustion, or otherwise. If Licensee has a separate agreement with
-+Licensor covering use of the Software, then that separate agreement shall
-+control.
-+
-+Open Source Software. The Software may include components that are licensed
-+pursuant to open source software (“Open Source Components”). Information
-+regarding the Open Source Components included with the Software is available
-+upon request to oslegal@quantenna.com. To the extent such Open Source
-+Components are required to be licensed to you under the terms of a separate
-+license (such as an open source license) then such other terms shall apply, and
-+nothing herein shall be deemed or interpreted to limit any rights you may have
-+under any such applicable license.
-+
-+DISCLAIMER. THIS SOFTWARE (INCLUDING ANY APPLICABLE OPEN SOURCE COMPONENTS) IS
-+PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND  ANY EXPRESS OR
-+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFREINGEMENT ARE
-+EXPRESSLY DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNERS, AUTHORS, OR
-+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-+IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-+OF SUCH DAMAGE, AND REGARDLESS OF ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
-+LIMITED REMEDY PROVIDED HEREIN.
-+
-diff --git a/WHENCE b/WHENCE
-index 534c2da..78f6b73 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -3347,3 +3347,12 @@ File: rockchip/dptx.bin
- Version: 2.9
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index f276391..6b0f1ea 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7504,6 +7504,69 @@ static int ath10k_mac_op_set_btcoex(struct ieee80211_hw *hw, bool enabled)
+ 	return ret;
+ }
  
- Licence: Redistributable. See LICENCE.rockchip for details.
++u32
++ath10k_mac_get_btcoex_prio(struct cfg80211_btcoex_priority *btcoex_priority)
++{
++	u32 btcoex_prio = 0;
 +
-+--------------------------------------------------------------------------
++	if (btcoex_priority->wlan_be_preferred)
++		btcoex_prio |= WIPHY_WLAN_BE_PREFERRED;
 +
-+Driver: qtnfmac - FullMAC driver for Quantenna QSR10G wireless card
++	if (btcoex_priority->wlan_bk_preferred)
++		btcoex_prio |= WIPHY_WLAN_BK_PREFERRED;
 +
-+File: qtn/fmac_qsr10g.img
++	if (btcoex_priority->wlan_vi_preferred)
++		btcoex_prio |= WIPHY_WLAN_VI_PREFERRED;
 +
-+Licence: Redistributable. See LICENCE.Quantenna_fmac for details.
++	if (btcoex_priority->wlan_vo_preferred)
++		btcoex_prio |= WIPHY_WLAN_VO_PREFERRED;
 +
-diff --git a/qtn/fmac_qsr10g.img b/qtn/fmac_qsr10g.img
-new file mode 100644
-index 0000000..a65e6ec
-Binary files /dev/null and b/qtn/fmac_qsr10g.img differ
++	if (btcoex_priority->wlan_beacon_preferred)
++		btcoex_prio |= WIPHY_WLAN_BEACON_PREFERRED;
++
++	if (btcoex_priority->wlan_mgmt_preferred)
++		btcoex_prio |= WIPHY_WLAN_MGMT_PREFERRED;
++
++	return btcoex_prio;
++}
++
++static int ath10k_mac_op_set_btcoex_priority(struct ieee80211_hw *hw,
++			struct cfg80211_btcoex_priority *btcoex_priority)
++{
++	u32 btcoex_prio;
++	struct ath10k *ar = hw->priv;
++	int ret;
++
++	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags))) {
++		ret = -EINVAL;
++		goto exit;
++	}
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_RESTARTED) {
++		ret = -ENETDOWN;
++		goto exit;
++	}
++
++	btcoex_prio = ath10k_mac_get_btcoex_prio(btcoex_priority);
++
++	if (btcoex_prio > 0x3f)
++		return -E2BIG;
++
++	ret = ath10k_wmi_set_coex_param(ar, btcoex_prio);
++
++	if (ret) {
++		ath10k_warn(ar, "failed to set btcoex priority: %d\n", ret);
++		goto exit;
++	}
++
++exit:
++	mutex_unlock(&ar->conf_mutex);
++	return ret;
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_mac_op_tx,
+ 	.wake_tx_queue			= ath10k_mac_op_wake_tx_queue,
+@@ -7546,6 +7609,7 @@ static int ath10k_mac_op_set_btcoex(struct ieee80211_hw *hw, bool enabled)
+ 	.unassign_vif_chanctx		= ath10k_mac_op_unassign_vif_chanctx,
+ 	.switch_vif_chanctx		= ath10k_mac_op_switch_vif_chanctx,
+ 	.set_btcoex                     = ath10k_mac_op_set_btcoex,
++	.set_btcoex_priority		= ath10k_mac_op_set_btcoex_priority,
+ 
+ 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
+ 
+@@ -8136,6 +8200,18 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	 */
+ 	ar->hw->offchannel_tx_hw_queue = IEEE80211_MAX_QUEUES - 1;
+ 
++	if (test_bit(WMI_SERVICE_BTCOEX, ar->wmi.svc_map)) {
++		ar->hw->wiphy->btcoex_support_flags =
++			WIPHY_WLAN_BE_PREFERRED |
++			WIPHY_WLAN_BK_PREFERRED |
++			WIPHY_WLAN_VI_PREFERRED |
++			WIPHY_WLAN_VO_PREFERRED |
++			WIPHY_WLAN_BEACON_PREFERRED |
++			WIPHY_WLAN_MGMT_PREFERRED;
++		ath10k_dbg(ar, ATH10K_DBG_BOOT, "btcoex supported mask :%u\n",
++			   ar->hw->wiphy->btcoex_support_flags);
++	}
++
+ 	switch (ar->running_fw->fw_file.wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index c9a8bb1..90c8390 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -197,6 +197,8 @@ struct wmi_ops {
+ 					(struct ath10k *ar,
+ 					 enum wmi_bss_survey_req_type type);
+ 	struct sk_buff *(*gen_echo)(struct ath10k *ar, u32 value);
++	struct sk_buff *(*gen_set_coex_param)(struct ath10k *ar,
++					      u32 btcoex_prio);
+ };
+ 
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -1411,4 +1413,21 @@ struct wmi_ops {
+ 	return ath10k_wmi_cmd_send(ar, skb, wmi->cmd->echo_cmdid);
+ }
+ 
++static inline int
++ath10k_wmi_set_coex_param(struct ath10k *ar, u32 btcoex_prio)
++{
++	struct sk_buff *skb;
++
++	if (!ar->wmi.ops->gen_set_coex_param)
++		return -EOPNOTSUPP;
++
++	skb = ar->wmi.ops->gen_set_coex_param(ar, btcoex_prio);
++
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   ar->wmi.cmd->set_coex_param_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 387c4ee..de35c17 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -710,6 +710,7 @@
+ 	.pdev_bss_chan_info_request_cmdid =
+ 			WMI_10_4_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
+ 	.ext_resource_cfg_cmdid = WMI_10_4_EXT_RESOURCE_CFG_CMDID,
++	.set_coex_param_cmdid = WMI_10_4_BTCOEX_CFG_CMDID,
+ };
+ 
+ /* MAIN WMI VDEV param map */
+@@ -7859,6 +7860,23 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ 	return 0;
+ }
+ 
++static struct sk_buff *
++ath10k_wmi_10_4_op_gen_set_coex_param(struct ath10k *ar,
++				      u32 btcoex_prio)
++{
++	struct wmi_set_coex_param_10_4_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_set_coex_param_10_4_cmd *)skb->data;
++	cmd->btcoex_prio = __cpu_to_le32(btcoex_prio);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI, "BTCOEX priority :%u\n", btcoex_prio);
++	return skb;
++}
+ static const struct wmi_ops wmi_ops = {
+ 	.rx = ath10k_wmi_op_rx,
+ 	.map_svc = wmi_main_svc_map,
+@@ -8205,6 +8223,7 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ 	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
+ 	.gen_echo = ath10k_wmi_op_gen_echo,
+ 	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
++	.gen_set_coex_param = ath10k_wmi_10_4_op_gen_set_coex_param,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 1b243c8..3a739e3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -184,6 +184,8 @@ enum wmi_service {
+ 	WMI_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_SERVICE_TX_MODE_DYNAMIC,
++	WMI_SERVICE_VDEV_RX_FILTER,
++	WMI_SERVICE_BTCOEX,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -310,6 +312,8 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
++	WMI_10_4_SERVICE_VDEV_RX_FILTER,
++	WMI_10_4_SERVICE_BTCOEX,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -408,6 +412,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
++	SVCSTR(WMI_SERVICE_BTCOEX);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -663,6 +668,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_TX_MODE_PUSH_PULL, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
+ 	       WMI_SERVICE_TX_MODE_DYNAMIC, len);
++	SVCMAP(WMI_10_4_SERVICE_BTCOEX,
++	       WMI_SERVICE_BTCOEX, len);
+ }
+ 
+ #undef SVCMAP
+@@ -837,6 +844,7 @@ struct wmi_cmd_map {
+ 	u32 pdev_bss_chan_info_request_cmdid;
+ 	u32 pdev_enable_adaptive_cca_cmdid;
+ 	u32 ext_resource_cfg_cmdid;
++	u32 set_coex_param_cmdid;
+ };
+ 
+ /*
+@@ -1646,6 +1654,11 @@ enum wmi_10_4_cmd_id {
+ 	WMI_10_4_EXT_RESOURCE_CFG_CMDID,
+ 	WMI_10_4_VDEV_SET_IE_CMDID,
+ 	WMI_10_4_SET_LTEU_CONFIG_CMDID,
++	WMI_10_4_ATF_SSID_GROUPING_REQUEST_CMDID,
++	WMI_10_4_PEER_ATF_EXT_REQUEST_CMDID,
++	WMI_10_4_SET_PERIODIC_CHANNEL_STATS_CONFIG,
++	WMI_10_4_PEER_BWF_REQUEST_CMDID,
++	WMI_10_4_BTCOEX_CFG_CMDID,
+ 	WMI_10_4_PDEV_UTF_CMDID = WMI_10_4_END_CMDID - 1,
+ };
+ 
+@@ -2723,6 +2736,11 @@ struct wmi_ext_resource_config_10_4_cmd {
+ 	__le32 fw_feature_bitmap;
+ };
+ 
++struct wmi_set_coex_param_10_4_cmd {
++	/* contains wlan priority frame type value preferred over bt */
++	__le32 btcoex_prio;
++};
++
+ /* strucutre describing host memory chunk. */
+ struct host_memory_chunk {
+ 	/* id of the request that is passed up in service ready */
 -- 
-2.7.4
+1.7.9.5
