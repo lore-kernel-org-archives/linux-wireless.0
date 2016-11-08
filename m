@@ -1,76 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36575 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3213 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751404AbcK3F3z (ORCPT
+        with ESMTP id S1751180AbcKHNPj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 00:29:55 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: Fix soft lockup during firmware crash/hw-restart
-Date: Wed, 30 Nov 2016 10:59:29 +0530
-Message-ID: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161130_062959_023861_13770863)
+        Tue, 8 Nov 2016 08:15:39 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH 4/4] mac80211: Add support to update btcoex priority value
+Date: Tue, 8 Nov 2016 18:45:32 +0530
+Message-ID: <1478610932-21954-5-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_141542_260107_40E2E47D)
+In-Reply-To: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-During firmware crash (or) user requested manual restart
-the system gets into a soft lock up state because of the
-below root cause.
+This patch introduces a new driver callback drv_set_btcoex_priority
+to pass the priority value to driver.
 
-During user requested hardware restart / firmware crash
-the system goes into a soft lockup state as 'napi_synchronize'
-is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-bit) and it sleeps into infinite loop as it waits for
-'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-'ath10k_hif_stop' is called twice as below (resulting in calling
-'napi_synchronize' after 'napi_disable')
-
-'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
--> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
-
-Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-as it makes more sense before informing mac80211 to restart h/w
-Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
-
-Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
-[v2 Added Fixes ]
+ include/net/mac80211.h    |    7 +++++++
+ net/mac80211/cfg.c        |    9 +++++++++
+ net/mac80211/driver-ops.h |   12 ++++++++++++
+ 3 files changed, 28 insertions(+)
 
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7005e2a..5bc6847 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
- 	switch (ar->state) {
- 	case ATH10K_STATE_ON:
- 		ar->state = ATH10K_STATE_RESTARTING;
--		ath10k_hif_stop(ar);
-+		ath10k_halt(ar);
- 		ath10k_scan_finish(ar);
- 		ieee80211_restart_hw(ar->hw);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 717b2fa..481842b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		ar->state = ATH10K_STATE_ON;
- 		break;
- 	case ATH10K_STATE_RESTARTING:
--		ath10k_halt(ar);
- 		ar->state = ATH10K_STATE_RESTARTED;
- 		break;
- 	case ATH10K_STATE_ON:
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index e7db763..3c61015 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3456,6 +3456,11 @@ enum ieee80211_reconfig_type {
+  *
+  * @set_btcoex_: set_btcoex: Called when BTCOEX is enabled/disabled, use
+  *	this callback to enable or disable btcoex.
++ * @set_btcoex_priority: Use this callback to set wlan high
++ *	priority frames over bluetooth. Driver supported wlan frames
++ *	for the BTCOEX is exposed by btcoex_support_flags.
++ *	When BTCOEX enabled, the high priority wlan frames will have
++ *	more priority than BT.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3709,6 +3714,8 @@ struct ieee80211_ops {
+ 			    struct ieee80211_vif *vif,
+ 			    u8 instance_id);
+ 	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled);
++	int (*set_btcoex_priority)(struct ieee80211_hw *hw,
++		struct cfg80211_btcoex_priority *btcoex_priority);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a687056..d75cf97 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3569,6 +3569,14 @@ static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
+ 	return drv_set_btcoex(local, enabled);
+ }
+ 
++static int ieee80211_set_btcoex_priority(struct wiphy *wiphy,
++			struct cfg80211_btcoex_priority *btcoex_priority)
++{
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++
++	return drv_set_btcoex_priority(local, btcoex_priority);
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3660,4 +3668,5 @@ static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
+ 	.add_nan_func = ieee80211_add_nan_func,
+ 	.del_nan_func = ieee80211_del_nan_func,
+ 	.set_btcoex = ieee80211_set_btcoex,
++	.set_btcoex_priority = ieee80211_set_btcoex_priority,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 16d9c98..75ac3ed 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1262,4 +1262,16 @@ static inline int drv_set_btcoex(struct ieee80211_local *local,
+ 	return ret;
+ }
+ 
++static inline int drv_set_btcoex_priority(struct ieee80211_local *local,
++			struct cfg80211_btcoex_priority *btcoex_priority)
++{
++	int ret = -EOPNOTSUPP;
++
++	if (local->ops->set_btcoex_priority)
++		ret = local->ops->set_btcoex_priority(&local->hw,
++						      btcoex_priority);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
 -- 
-1.9.1
+1.7.9.5
