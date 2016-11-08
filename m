@@ -1,63 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.eu1.fugro.com ([46.34.88.151]:37019 "EHLO
-        smtp.eu1.fugro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751572AbcKPIy7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6660 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750938AbcKHNPH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 03:54:59 -0500
-From: "Stam, Michel [FINT]" <m.stam@fugro.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Antonio Quartulli" <a@unstable.cc>,
-        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Antonio Quartulli <antonio@open-mesh.com>
-Subject: RE: [ath9k-devel] [NOT FOR MERGE] ath9k: work around key cache
- corruption
-Date: Wed, 16 Nov 2016 08:54:56 +0000
-Message-ID: <9830b4f752fd4837ae0fbf9b0a32e1e9@nldataex02.ad.fugro.com> (sfid-20161116_095504_297277_973E2C8E)
-References: <20161018083552.28592-1-a@unstable.cc>
- <87lgxbxl2d.fsf@purkki.adurom.net> <20161026141016.GB26376@prodigo.lan>
- <87bmy65nz8.fsf@kamboji.qca.qualcomm.com>
- <62a2dc74-4a7c-d3d4-4170-4d5759b07ab3@dd-wrt.com>
- <1477580802.4534.20.camel@sipsolutions.net>
- <4fd6af4b02474a3eb4acfbe421bd6a24@nldataex02.ad.fugro.com>
- <CAJ-VmonW7jR0vnnZmj8CsvY-6-O--L68LpBxcuXQ8Pk46AOQNQ@mail.gmail.com>
-In-Reply-To: <CAJ-VmonW7jR0vnnZmj8CsvY-6-O--L68LpBxcuXQ8Pk46AOQNQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 8 Nov 2016 08:15:07 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH 1/4] cfg80211: Add support to enable or disable btcoex
+Date: Tue, 8 Nov 2016 18:45:29 +0530
+Message-ID: <1478610932-21954-2-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_141510_052010_C2D2D47F)
+In-Reply-To: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGV5IEFkcmlhbiwNCg0KU291bmRzIGxpa2UgYW4gaWRlYSwgYWx0aG91Z2ggdXAgdG8gdGhpcyBw
-b2ludCBJIGhhdmUgbm90IGJlZW4gYWJsZSB0byBkZXRlY3Qgd2hldGhlciByZXBsdW1iaW5nIGlz
-IG5lY2Vzc2FyeS4gZGVjcnlwdF9lcnJvcnMgZG9lcyBub3QgaW5jcmVtZW50IGV4cG9uZW50aWFs
-bHkgb24gdGhlIHJlY2VpdmUgcGF0aCwgYXMgZmFyIGFzIEkgc2F3IG9ubHkgb25lIGRlY3J5cHRf
-ZXJyb3IgY29tZXMgdGhyb3VnaCwgd2hpY2ggY291bGQganVzdCBhcyB3ZWxsIGJlIGEgY29ycnVw
-dGVkIGZyYW1lLiBJIGhhdmUgbm90IHNlZW4gYW55IG90aGVyIGluZGljYXRvcnMgb2YgdGhpcyBp
-c3N1ZSwgb3RoZXIgdGhhbiBhIGNvbXBsZXRlIGxhY2sgb2YgY29ubmVjdGl2aXR5IG9uIHVuaWNh
-c3QgZnJhbWVzLg0KDQpTbyB0aGlzIGF0dGVtcHQgd2FzIHRvIHNlZSBpZiBJIGNvdWxkIGdldCB0
-aGUgbGluayBzdGFibGUsIGluIGFueSB3YXkgcG9zc2libGUsIGJ5IGJsYW5rbHkgcmVwbHVtYmlu
-ZyBvbiBldmVyeSByZWtleS4gVGhpcyBzaG91bGQsIGluIHRoZW9yeSAic29sdmUiIHRoZSBpc3N1
-ZSwgYWx0aG91Z2ggYXQgdGhlIGNvc3Qgb2YgaHVnZSBwYWNrZXQgbG9zcy4gU28gZmFyLCBubyBn
-by4NCg0KSSBhZ3JlZSB0aGF0IHNvbWUgZm9ybSBvZiBrZXkgY2FjaGluZyBtYXkgYmUgbmVjZXNz
-YXJ5LiBJdCBpcyBhIHBpdHksIGJlY2F1c2UgdGhlIG1hYzgwMjExIGxheWVyIGRvZXMgaGF2ZSBh
-biBpbnRlcmZhY2UgZm9yIGdyYWJiaW5nIHRoZSBrZXlzLCBhbHRob3VnaCBpdCByZXF1aXJlcyB0
-aGUgcnRubF9sb2NrLiBBcyBmYXIgYXMgSSBzYXcsIG9ubHkgdGhlIEludGVsIHdpcmVsZXNzIGRy
-aXZlciB1c2VzIGl0IHRvIHdyaXRlIHRoZSBrZXlzIGJhY2sgaW50byB0aGUgY2hpcCB1cG9uIHJl
-c3VtaW5nIGZyb20gYSBsb3ctcG93ZXIgc3RhdGUuDQoNCktpbmQgcmVnYXJkcywNCkZ1Z3JvIElu
-dGVyc2l0ZSBCLlYuDQoNCk1pY2hlbCBTdGFtDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-RnJvbTogYWRyaWFuLmNoYWRkQGdtYWlsLmNvbSBbbWFpbHRvOmFkcmlhbi5jaGFkZEBnbWFpbC5j
-b21dIE9uIEJlaGFsZiBPZiBBZHJpYW4gQ2hhZGQNClNlbnQ6IFR1ZXNkYXksIE5vdmVtYmVyIDE1
-LCAyMDE2IDA6MjUgQU0NClRvOiBTdGFtLCBNaWNoZWwgW0ZJTlRdDQpDYzogSm9oYW5uZXMgQmVy
-ZzsgU2ViYXN0aWFuIEdvdHRzY2hhbGw7IEthbGxlIFZhbG87IEFudG9uaW8gUXVhcnR1bGxpOyBh
-dGg5ay1kZXZlbEBsaXN0cy5hdGg5ay5vcmc7IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9y
-ZzsgQW50b25pbyBRdWFydHVsbGkNClN1YmplY3Q6IFJlOiBbYXRoOWstZGV2ZWxdIFtOT1QgRk9S
-IE1FUkdFXSBhdGg5azogd29yayBhcm91bmQga2V5IGNhY2hlIGNvcnJ1cHRpb24NCg0KSGl5YSwN
-Cg0KbWF5YmUgdGhlIHJpZ2h0IHRoaW5nIHRvIGRvIGlzIHRvIHNldCBhIGZsYWcgdGhhdCBzYXlz
-ICJwbGVhc2UNCnJlcGx1bWIiLCB0aGVuIGRvIGEgcmVzZXQsIGFuZCBoYXZlIHRoZSByZXNldCBw
-YXRoIHNlZSBpZiB3ZSBuZWVkIHRvDQpyZXBsdW1iIGtleXMgYW5kIGRvIHNvPw0KDQpUbyBtYWtl
-IGxvY2tpbmcgbGVzcyB0ZXJyaWJsZSwgbWF5YmUgd2UgbmVlZCB0byBjYWNoZSB0aGUga2V5cyBp
-biB0aGUNCmF0aDlrIGRyaXZlciBzb21ld2hlcmUgc28gcmVwbHVtYmluZyBkb2Vzbid0IHJlcXVp
-cmUgcmVhY2hpbmcgaW50bw0KbWFjODIwMTEuDQoNCg0KDQotYWRyaWFuDQoNCg==
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+
+This patch adds support to enable or disable btcoex by
+adding NL80211_ATTR_WIPHY_BTCOEX_ENABLE attribute in
+NL80211_CMD_SET_WIPHY command. By default BTCOEX disabled in driver.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ include/net/cfg80211.h       |    3 +++
+ include/uapi/linux/nl80211.h |    6 ++++++
+ net/wireless/nl80211.c       |   18 ++++++++++++++++++
+ net/wireless/rdev-ops.h      |   11 +++++++++++
+ net/wireless/trace.h         |    5 +++++
+ 5 files changed, 43 insertions(+)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9390365..919ed1d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2735,6 +2735,8 @@ struct cfg80211_nan_func {
+  * @nan_change_conf: changes NAN configuration. The changed parameters must
+  *	be specified in @changes (using &enum cfg80211_nan_conf_changes);
+  *	All other parameters must be ignored.
++ * @set_btcoex: Use this callback to call driver API when user wants to
++ *     enable/disable btcoex.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -3011,6 +3013,7 @@ struct cfg80211_ops {
+ 				   struct wireless_dev *wdev,
+ 				   struct cfg80211_nan_conf *conf,
+ 				   u32 changes);
++	int     (*set_btcoex)(struct wiphy *wiphy, bool enabled);
+ };
+ 
+ /*
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 1362d24..c47fe6c8 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1937,6 +1937,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_NAN_MATCH: used to report a match. This is a nested attribute.
+  *	See &enum nl80211_nan_match_attributes.
+  *
++ * @NL80211_ATTR_WIPHY_BTCOEX_ENABLE: u8 attribute for driver supporting
++ *	the btcoex feature. When used with %NL80211_CMD_SET_WIPHY it contains
++ *	either 0 for disable or 1 for enable btcoex.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2336,6 +2340,8 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_NAN_FUNC,
+ 	NL80211_ATTR_NAN_MATCH,
+ 
++	NL80211_ATTR_WIPHY_BTCOEX_ENABLE,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46cd489..5b77a41 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -414,6 +414,7 @@ enum nl80211_multicast_groups {
+ 	[NL80211_ATTR_NAN_MASTER_PREF] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_NAN_DUAL] = { .type = NLA_U8 },
+ 	[NL80211_ATTR_NAN_FUNC] = { .type = NLA_NESTED },
++	[NL80211_ATTR_WIPHY_BTCOEX_ENABLE] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2356,6 +2357,23 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
+ 			return result;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_WIPHY_BTCOEX_ENABLE]) {
++		u8 val;
++
++		if (!rdev->ops->set_btcoex)
++			return -ENOTSUPP;
++
++		val = nla_get_u8(info->attrs[NL80211_ATTR_WIPHY_BTCOEX_ENABLE]);
++
++		if (val > 1)
++			return -EINVAL;
++
++		result = rdev_set_btcoex(rdev, val);
++
++		if (result)
++			return result;
++	}
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+ 	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+ 		u32 tx_ant, rx_ant;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 11cf83c..2e547c3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1129,4 +1129,15 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
++
++static inline int
++rdev_set_btcoex(struct cfg80211_registered_device *rdev, bool enabled)
++{
++	int ret;
++
++	trace_rdev_set_btcoex(&rdev->wiphy, enabled);
++	ret = rdev->ops->set_btcoex(&rdev->wiphy, enabled);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
+ #endif /* __CFG80211_RDEV_OPS */
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index a3d0a91b..c9c6579 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -3026,6 +3026,11 @@
+ 		  WIPHY_PR_ARG, __entry->n_rules)
+ );
+ 
++DEFINE_EVENT(wiphy_enabled_evt, rdev_set_btcoex,
++	TP_PROTO(struct wiphy *wiphy, bool enabled),
++	TP_ARGS(wiphy, enabled)
++);
++
+ DEFINE_EVENT(wiphy_wdev_evt, rdev_abort_scan,
+ 	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
+ 	TP_ARGS(wiphy, wdev)
+-- 
+1.7.9.5
