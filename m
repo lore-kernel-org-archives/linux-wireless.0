@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49736 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752971AbcKBOMX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 10:12:23 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 00/10] rt2800: random fixes
-Date: Wed,  2 Nov 2016 15:10:55 +0100
-Message-Id: <1478095865-8651-1-git-send-email-sgruszka@redhat.com> (sfid-20161102_151227_611581_A04C68CF)
+Received: from paleale.coelho.fi ([176.9.41.70]:48868 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751577AbcKIHZW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 02:25:22 -0500
+Message-ID: <1478676318.3313.12.camel@coelho.fi> (sfid-20161109_082526_632180_18078BA3)
+From: Luca Coelho <luca@coelho.fi>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Eyal Shapira <eyal@wizery.com>,
+        Alexander Bondar <alexander.bondar@intel.com>
+Date: Wed, 09 Nov 2016 09:25:18 +0200
+In-Reply-To: <20161109055015.GA27416@google.com>
+References: <20161109055015.GA27416@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 1/3] iwlwifi: mvm: rs: Remove unused
+ 'mvmvif'/'mvmsta' variables
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Random fixes mostly related to HT performance.
+(removed Erarn Harary from the Cc list, since this email is not valid
+anymore)
 
-Stanislaw Gruszka (10):
-  rt2800: correctly report MCS TX parameters
-  rt2800usb: do not wipe out USB_DMA_CFG settings
-  rt2800: OFDM rates are mandatory
-  rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
-  rt2800: make ba_size depend on ampdu_factor
-  rt2800: correct AUTO_RSP_CFG
-  rt2800: correct TX_SW_CFG1 for 5592
-  rt2800: use RTS/CTS protection instead of CTS-to-self
-  rt2800: tune *_PROT_CFG parameters
-  rt2800: disable CCK rates on HT
+Hi Kirtika,
+Just a couple of nitpicks, nothing important, so no need to resend.
 
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c   |   62 +++++++++++----------
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c   |    5 +--
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   15 ++++--
- 3 files changed, 43 insertions(+), 39 deletions(-)
+
+On Tue, 2016-11-08 at 21:50 -0800, Kirtika Ruchandani wrote:
+> mvmvif is defined and set in rs_mimo_allow but not used. Compiling
+> iwlwifi with W=1 gives the following warning, remove it. mvmsta is used only to
+> obtain mvmvif so remove it as well.
+> 
+> iwlwifi/mvm/rs.c: In function 'rs_mimo_allow':
+> iwlwifi/mvm/rs.c:165:22: warning: variable 'mvmvif' set but not used.[-Wunused-but-set-variable]
+> 
+> This fix removes calls to iwl_mvm_sta_from_mac & iwl_mvm_vif_from_mac. They are
+> both accessors, and do not have any side-effects.
+> Commit e621c2282 removed a workaround that disabled MIMO on P2P, 'mvmvif' was
+> used for that workaround, but not removed with it.
+> 
+> Fixes: e621c2282e31 ("iwlwifi: rs: Remove workaround that disables MIMO on P2P")
+> 
+
+Usually the Fixes: tag is together with the other tags (such as Cc,
+Signed-off-by), i.e. no empty line here.
+
+
+> Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+> Cc: Alexander Bondar <alexander.bondar@intel.com>
+> Cc: Emmanuel Grumbach <emmmanuel.grumbach@intel.com>
+
+And the Signed-off-by tag is usually the last one here, after all Cc's
+and stuff.  But it doesn't matter much.
+
+-- 
+Cheers,
+Luca.
