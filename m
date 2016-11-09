@@ -1,34 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:37122 "EHLO
-        mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752997AbcKTBIe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57964 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750724AbcKIB3f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 19 Nov 2016 20:08:34 -0500
-Received: by mail-it0-f41.google.com with SMTP id y23so78019389itc.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Nov 2016 17:08:34 -0800 (PST)
-Date: Sat, 19 Nov 2016 20:07:40 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Matteo Grandi <iu5bdp@gmail.com>
-Cc: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-Subject: Re: ath10k stuck in mesh mode
-Message-ID: <20161120010740.GB3581@localhost> (sfid-20161120_020912_826282_932EBA07)
-References: <CAHdg3xaCnAp8rgMs3mVYvV6TFadNjwBtCo+rpHgH_-L8JUo-dw@mail.gmail.com>
+        Tue, 8 Nov 2016 20:29:35 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHdg3xaCnAp8rgMs3mVYvV6TFadNjwBtCo+rpHgH_-L8JUo-dw@mail.gmail.com>
+Subject: Re: [v2] rt2x00: add support for mac addr from device tree
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1472195813-30471-1-git-send-email-dev@kresin.me>
+References: <1472195813-30471-1-git-send-email-dev@kresin.me>
+To: Mathias Kresin <dev@kresin.me>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20161109012935.0C8706135E@smtp.codeaurora.org> (sfid-20161109_022939_228419_94723492)
+Date: Wed,  9 Nov 2016 01:29:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 18, 2016 at 10:43:06PM +0100, Matteo Grandi wrote:
-> So the question is: who decide if use MIMO and higher MCS hopefully on
-> 80MHz channel or not? Is the firmware? Is there a way to force the
-> interface to use 80MHz and/or MIMO? (iw provide the possibility to
-> choose between [HT20/HT40-/HT40+]).
+Mathias Kresin <dev@kresin.me> wrote:
+> On some devices the EEPROMs of Ralink Wi-Fi chips have a default Ralink
+> MAC address set (RT3062F: 00:0C:43:30:62:00, RT3060F:
+> 00:0C:43:30:60:00). Using multiple of these devices in the same network
+> can cause nasty issues.
+> 
+> Allow to override the MAC in the EEPROM with (a known good) one set in
+> the device tree to bypass the issue.
+> 
+> Signed-off-by: Mathias Kresin <dev@kresin.me>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-You can specify the channel width like so:
+Patch applied to wireless-drivers-next.git, thanks.
 
-iw dev wlan0 set freq 5745 80 5775
-iw dev wlan0 mesh join mesh-vht
+9766cb709089 rt2x00: add support for mac addr from device tree
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+https://patchwork.kernel.org/patch/9300893/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
