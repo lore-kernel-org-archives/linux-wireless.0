@@ -1,515 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:53052 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933573AbcKWKfe (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59388 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752789AbcKIBeF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:35:34 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 01/12] brcmfmac: add pcie host dongle interface rev6 support
-Date: Wed, 23 Nov 2016 10:25:20 +0000
-Message-Id: <1479896731-5091-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_113548_907307_464FB7E3)
-In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 8 Nov 2016 20:34:05 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/8] mwifiex: prevent register accesses after host is sleeping
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
+References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161109013405.097F46135B@smtp.codeaurora.org> (sfid-20161109_023424_758907_B8AEADA4)
+Date: Wed,  9 Nov 2016 01:34:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <franky.lin@broadcom.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Following is mwifiex driver-firmware host sleep handshake.
+> It involves three threads. suspend handler, interrupt handler, interrupt
+> processing in main work queue.
+> 
+> 1) Enter suspend handler
+> 2) Download HS_CFG command
+> 3) Response from firmware for HS_CFG
+> 4) Suspend thread waits until handshake completes(i.e hs_activate becomes
+>    true)
+> 5) SLEEP from firmware
+> 6) SLEEP confirm downloaded to firmware.
+> 7) SLEEP confirm response from firmware
+> 8) Driver processes SLEEP confirm response and set hs_activate to wake up
+> suspend thread
+> 9) Exit suspend handler
+> 10) Read sleep cookie in loop and wait until it indicates firmware is
+> sleep.
+> 11) After processing SLEEP confirm response, we are at the end of interrupt
+> processing routine. Recheck if there are interrupts received while we were
+> processing them.
+> 
+> During suspend-resume stress test, it's been observed that we may end up
+> acessing PCIe hardware(in 10 and 11) when PCIe bus is closed which leads
+> to a kernel crash.
+> 
+> This patch solves the problem with below changes.
+> a) action 10 above can be done before 8
+> b) Skip 11 if hs_activated is true. SLEEP confirm response
+> is the last interrupt from firmware. No need to recheck for
+> pending interrupts.
+> c) Add flush_workqueue() in suspend handler.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Brian Norris <briannorris@chromium.org>
 
-In rev6 of pcie host dongle interface protocol, host needs to maximum
-supported ring number from dongle shared memory and set up ring buffer
-and ring indices offset accordingly.
+8 patches applied to wireless-drivers-next.git, thanks.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  10 +-
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |  38 +++--
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.h  |   4 +
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 171 ++++++++++++---------
- 4 files changed, 132 insertions(+), 91 deletions(-)
+ec815dd2a5f1 mwifiex: prevent register accesses after host is sleeping
+5190f2e40591 mwifiex: report error to PCIe for suspend failure
+c44c040300d7 mwifiex: Fix NULL pointer dereference in skb_dequeue()
+113630b581d6 mwifiex: vendor_ie length check for parse WMM IEs
+a936ea543657 mwifiex: add memrw command information in README
+77f486c8bb39 mwifiex: update tx_pkts_queued for requeued packets
+49abe5c83cd0 mwifiex: fix command timeout problem seen in stress tests
+3d8bd85c2c9e mwifiex: fix p2p device doesn't find in scan problem
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index 2b24654..e21f760 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -22,10 +22,12 @@
- /* IDs of the 6 default common rings of msgbuf protocol */
- #define BRCMF_H2D_MSGRING_CONTROL_SUBMIT	0
- #define BRCMF_H2D_MSGRING_RXPOST_SUBMIT		1
-+#define BRCMF_H2D_MSGRING_FLOWRING_IDSTART	2
- #define BRCMF_D2H_MSGRING_CONTROL_COMPLETE	2
- #define BRCMF_D2H_MSGRING_TX_COMPLETE		3
- #define BRCMF_D2H_MSGRING_RX_COMPLETE		4
- 
-+
- #define BRCMF_NROF_H2D_COMMON_MSGRINGS		2
- #define BRCMF_NROF_D2H_COMMON_MSGRINGS		3
- #define BRCMF_NROF_COMMON_MSGRINGS	(BRCMF_NROF_H2D_COMMON_MSGRINGS + \
-@@ -95,14 +97,18 @@ struct brcmf_bus_ops {
-  * @flowrings: commonrings which are dynamically created and destroyed for data.
-  * @rx_dataoffset: if set then all rx data has this this offset.
-  * @max_rxbufpost: maximum number of buffers to post for rx.
-- * @nrof_flowrings: number of flowrings.
-+ * @max_flowrings: maximum number of tx flow rings supported.
-+ * @max_submissionrings: maximum number of submission rings(h2d) supported.
-+ * @max_completionrings: maximum number of completion rings(d2h) supported.
-  */
- struct brcmf_bus_msgbuf {
- 	struct brcmf_commonring *commonrings[BRCMF_NROF_COMMON_MSGRINGS];
- 	struct brcmf_commonring **flowrings;
- 	u32 rx_dataoffset;
- 	u32 max_rxbufpost;
--	u32 nrof_flowrings;
-+	u16 max_flowrings;
-+	u16 max_submissionrings;
-+	u16 max_completionrings;
- };
- 
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 7cc8851..d2c834c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -87,11 +87,6 @@ struct msgbuf_common_hdr {
- 	__le32				request_id;
- };
- 
--struct msgbuf_buf_addr {
--	__le32				low_addr;
--	__le32				high_addr;
--};
--
- struct msgbuf_ioctl_req_hdr {
- 	struct msgbuf_common_hdr	msg;
- 	__le32				cmd;
-@@ -227,7 +222,10 @@ struct brcmf_msgbuf {
- 	struct brcmf_commonring **commonrings;
- 	struct brcmf_commonring **flowrings;
- 	dma_addr_t *flowring_dma_handle;
--	u16 nrof_flowrings;
-+
-+	u16 max_flowrings;
-+	u16 max_submissionrings;
-+	u16 max_completionrings;
- 
- 	u16 rx_dataoffset;
- 	u32 max_rxbufpost;
-@@ -610,7 +608,7 @@ static void brcmf_msgbuf_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb)
- 	create->msg.request_id = 0;
- 	create->tid = brcmf_flowring_tid(msgbuf->flow, flowid);
- 	create->flow_ring_id = cpu_to_le16(flowid +
--					   BRCMF_NROF_H2D_COMMON_MSGRINGS);
-+					   BRCMF_H2D_MSGRING_FLOWRING_IDSTART);
- 	memcpy(create->sa, work->sa, ETH_ALEN);
- 	memcpy(create->da, work->da, ETH_ALEN);
- 	address = (u64)msgbuf->flowring_dma_handle[flowid];
-@@ -760,7 +758,7 @@ static void brcmf_msgbuf_txflow_worker(struct work_struct *worker)
- 	u32 flowid;
- 
- 	msgbuf = container_of(worker, struct brcmf_msgbuf, txflow_work);
--	for_each_set_bit(flowid, msgbuf->flow_map, msgbuf->nrof_flowrings) {
-+	for_each_set_bit(flowid, msgbuf->flow_map, msgbuf->max_flowrings) {
- 		clear_bit(flowid, msgbuf->flow_map);
- 		brcmf_msgbuf_txflow(msgbuf, flowid);
- 	}
-@@ -866,7 +864,7 @@ static int brcmf_msgbuf_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
- 	tx_status = (struct msgbuf_tx_status *)buf;
- 	idx = le32_to_cpu(tx_status->msg.request_id);
- 	flowid = le16_to_cpu(tx_status->compl_hdr.flow_ring_id);
--	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
-+	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
- 	skb = brcmf_msgbuf_get_pktid(msgbuf->drvr->bus_if->dev,
- 				     msgbuf->tx_pktids, idx);
- 	if (!skb)
-@@ -1174,7 +1172,7 @@ static void brcmf_msgbuf_process_event(struct brcmf_msgbuf *msgbuf, void *buf)
- 	flowring_create_resp = (struct msgbuf_flowring_create_resp *)buf;
- 
- 	flowid = le16_to_cpu(flowring_create_resp->compl_hdr.flow_ring_id);
--	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
-+	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
- 	status =  le16_to_cpu(flowring_create_resp->compl_hdr.status);
- 
- 	if (status) {
-@@ -1202,7 +1200,7 @@ static void brcmf_msgbuf_process_event(struct brcmf_msgbuf *msgbuf, void *buf)
- 	flowring_delete_resp = (struct msgbuf_flowring_delete_resp *)buf;
- 
- 	flowid = le16_to_cpu(flowring_delete_resp->compl_hdr.flow_ring_id);
--	flowid -= BRCMF_NROF_H2D_COMMON_MSGRINGS;
-+	flowid -= BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
- 	status =  le16_to_cpu(flowring_delete_resp->compl_hdr.status);
- 
- 	if (status) {
-@@ -1307,7 +1305,7 @@ int brcmf_proto_msgbuf_rx_trigger(struct device *dev)
- 	brcmf_msgbuf_process_rx(msgbuf, buf);
- 
- 	for_each_set_bit(flowid, msgbuf->txstatus_done_map,
--			 msgbuf->nrof_flowrings) {
-+			 msgbuf->max_flowrings) {
- 		clear_bit(flowid, msgbuf->txstatus_done_map);
- 		commonring = msgbuf->flowrings[flowid];
- 		qlen = brcmf_flowring_qlen(msgbuf->flow, flowid);
-@@ -1349,7 +1347,7 @@ void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid)
- 	delete->msg.request_id = 0;
- 
- 	delete->flow_ring_id = cpu_to_le16(flowid +
--					   BRCMF_NROF_H2D_COMMON_MSGRINGS);
-+					   BRCMF_H2D_MSGRING_FLOWRING_IDSTART);
- 	delete->reason = 0;
- 
- 	brcmf_dbg(MSGBUF, "Send Flow Delete Req flow ID %d, ifindex %d\n",
-@@ -1427,10 +1425,10 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 
- 	if_msgbuf = drvr->bus_if->msgbuf;
- 
--	if (if_msgbuf->nrof_flowrings >= BRCMF_FLOWRING_HASHSIZE) {
-+	if (if_msgbuf->max_flowrings >= BRCMF_FLOWRING_HASHSIZE) {
- 		brcmf_err("driver not configured for this many flowrings %d\n",
--			  if_msgbuf->nrof_flowrings);
--		if_msgbuf->nrof_flowrings = BRCMF_FLOWRING_HASHSIZE - 1;
-+			  if_msgbuf->max_flowrings);
-+		if_msgbuf->max_flowrings = BRCMF_FLOWRING_HASHSIZE - 1;
- 	}
- 
- 	msgbuf = kzalloc(sizeof(*msgbuf), GFP_KERNEL);
-@@ -1443,7 +1441,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 		goto fail;
- 	}
- 	INIT_WORK(&msgbuf->txflow_work, brcmf_msgbuf_txflow_worker);
--	count = BITS_TO_LONGS(if_msgbuf->nrof_flowrings);
-+	count = BITS_TO_LONGS(if_msgbuf->max_flowrings);
- 	count = count * sizeof(unsigned long);
- 	msgbuf->flow_map = kzalloc(count, GFP_KERNEL);
- 	if (!msgbuf->flow_map)
-@@ -1479,8 +1477,8 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	msgbuf->commonrings =
- 		(struct brcmf_commonring **)if_msgbuf->commonrings;
- 	msgbuf->flowrings = (struct brcmf_commonring **)if_msgbuf->flowrings;
--	msgbuf->nrof_flowrings = if_msgbuf->nrof_flowrings;
--	msgbuf->flowring_dma_handle = kzalloc(msgbuf->nrof_flowrings *
-+	msgbuf->max_flowrings = if_msgbuf->max_flowrings;
-+	msgbuf->flowring_dma_handle = kzalloc(msgbuf->max_flowrings *
- 		sizeof(*msgbuf->flowring_dma_handle), GFP_KERNEL);
- 	if (!msgbuf->flowring_dma_handle)
- 		goto fail;
-@@ -1501,7 +1499,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 		goto fail;
- 
- 	msgbuf->flow = brcmf_flowring_attach(drvr->bus_if->dev,
--					     if_msgbuf->nrof_flowrings);
-+					     if_msgbuf->max_flowrings);
- 	if (!msgbuf->flow)
- 		goto fail;
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-index ee6906a..f93ba6b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.h
-@@ -31,6 +31,10 @@
- #define BRCMF_D2H_MSGRING_RX_COMPLETE_ITEMSIZE		32
- #define BRCMF_H2D_TXFLOWRING_ITEMSIZE			48
- 
-+struct msgbuf_buf_addr {
-+	__le32		low_addr;
-+	__le32		high_addr;
-+};
- 
- int brcmf_proto_msgbuf_rx_trigger(struct device *dev);
- void brcmf_msgbuf_delete_flowring(struct brcmf_pub *drvr, u16 flowid);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 3deba90..048027f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -135,7 +135,7 @@ enum brcmf_pcie_state {
- 						 BRCMF_PCIE_MB_INT_D2H3_DB1)
- 
- #define BRCMF_PCIE_MIN_SHARED_VERSION		5
--#define BRCMF_PCIE_MAX_SHARED_VERSION		5
-+#define BRCMF_PCIE_MAX_SHARED_VERSION		6
- #define BRCMF_PCIE_SHARED_VERSION_MASK		0x00FF
- #define BRCMF_PCIE_SHARED_DMA_INDEX		0x10000
- #define BRCMF_PCIE_SHARED_DMA_2B_IDX		0x100000
-@@ -166,17 +166,6 @@ enum brcmf_pcie_state {
- #define BRCMF_RING_MEM_SZ			16
- #define BRCMF_RING_STATE_SZ			8
- 
--#define BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET	4
--#define BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET	8
--#define BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET	12
--#define BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET	16
--#define BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET	20
--#define BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET	28
--#define BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET	36
--#define BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET	44
--#define BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET	0
--#define BRCMF_SHARED_RING_MAX_SUB_QUEUES	52
--
- #define BRCMF_DEF_MAX_RXBUFPOST			255
- 
- #define BRCMF_CONSOLE_BUFADDR_OFFSET		8
-@@ -231,7 +220,9 @@ struct brcmf_pcie_shared_info {
- 	struct brcmf_pcie_ringbuf *commonrings[BRCMF_NROF_COMMON_MSGRINGS];
- 	struct brcmf_pcie_ringbuf *flowrings;
- 	u16 max_rxbufpost;
--	u32 nrof_flowrings;
-+	u16 max_flowrings;
-+	u16 max_submissionrings;
-+	u16 max_completionrings;
- 	u32 rx_dataoffset;
- 	u32 htod_mb_data_addr;
- 	u32 dtoh_mb_data_addr;
-@@ -241,6 +232,7 @@ struct brcmf_pcie_shared_info {
- 	dma_addr_t scratch_dmahandle;
- 	void *ringupd;
- 	dma_addr_t ringupd_dmahandle;
-+	u8 version;
- };
- 
- struct brcmf_pcie_core_info {
-@@ -284,6 +276,36 @@ struct brcmf_pcie_ringbuf {
- 	u8 id;
- };
- 
-+/**
-+ * struct brcmf_pcie_dhi_ringinfo - dongle/host interface shared ring info
-+ *
-+ * @ringmem: dongle memory pointer to ring memory location
-+ * @h2d_w_idx_ptr: h2d ring write indices dongle memory pointers
-+ * @h2d_r_idx_ptr: h2d ring read indices dongle memory pointers
-+ * @d2h_w_idx_ptr: d2h ring write indices dongle memory pointers
-+ * @d2h_r_idx_ptr: d2h ring read indices dongle memory pointers
-+ * @h2d_w_idx_hostaddr: h2d ring write indices host memory pointers
-+ * @h2d_r_idx_hostaddr: h2d ring read indices host memory pointers
-+ * @d2h_w_idx_hostaddr: d2h ring write indices host memory pointers
-+ * @d2h_r_idx_hostaddr: d2h ring reaD indices host memory pointers
-+ * @max_flowrings: maximum number of tx flow rings supported.
-+ * @max_submissionrings: maximum number of submission rings(h2d) supported.
-+ * @max_completionrings: maximum number of completion rings(d2h) supported.
-+ */
-+struct brcmf_pcie_dhi_ringinfo {
-+	__le32			ringmem;
-+	__le32			h2d_w_idx_ptr;
-+	__le32			h2d_r_idx_ptr;
-+	__le32			d2h_w_idx_ptr;
-+	__le32			d2h_r_idx_ptr;
-+	struct msgbuf_buf_addr	h2d_w_idx_hostaddr;
-+	struct msgbuf_buf_addr	h2d_r_idx_hostaddr;
-+	struct msgbuf_buf_addr	d2h_w_idx_hostaddr;
-+	struct msgbuf_buf_addr	d2h_r_idx_hostaddr;
-+	__le16			max_flowrings;
-+	__le16			max_submissionrings;
-+	__le16			max_completionrings;
-+};
- 
- static const u32 brcmf_ring_max_item[BRCMF_NROF_COMMON_MSGRINGS] = {
- 	BRCMF_H2D_MSGRING_CONTROL_SUBMIT_MAX_ITEM,
-@@ -1054,26 +1076,35 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- {
- 	struct brcmf_pcie_ringbuf *ring;
- 	struct brcmf_pcie_ringbuf *rings;
--	u32 ring_addr;
- 	u32 d2h_w_idx_ptr;
- 	u32 d2h_r_idx_ptr;
- 	u32 h2d_w_idx_ptr;
- 	u32 h2d_r_idx_ptr;
--	u32 addr;
- 	u32 ring_mem_ptr;
- 	u32 i;
- 	u64 address;
- 	u32 bufsz;
--	u16 max_sub_queues;
- 	u8 idx_offset;
--
--	ring_addr = devinfo->shared.ring_info_addr;
--	brcmf_dbg(PCIE, "Base ring addr = 0x%08x\n", ring_addr);
--	addr = ring_addr + BRCMF_SHARED_RING_MAX_SUB_QUEUES;
--	max_sub_queues = brcmf_pcie_read_tcm16(devinfo, addr);
-+	struct brcmf_pcie_dhi_ringinfo ringinfo;
-+	u16 max_flowrings;
-+	u16 max_submissionrings;
-+	u16 max_completionrings;
-+
-+	memcpy_fromio(&ringinfo, devinfo->tcm + devinfo->shared.ring_info_addr,
-+		      sizeof(ringinfo));
-+	if (devinfo->shared.version >= 6) {
-+		max_submissionrings = le16_to_cpu(ringinfo.max_submissionrings);
-+		max_flowrings = le16_to_cpu(ringinfo.max_flowrings);
-+		max_completionrings = le16_to_cpu(ringinfo.max_completionrings);
-+	} else {
-+		max_submissionrings = le16_to_cpu(ringinfo.max_flowrings);
-+		max_flowrings = max_submissionrings -
-+				BRCMF_NROF_H2D_COMMON_MSGRINGS;
-+		max_completionrings = BRCMF_NROF_D2H_COMMON_MSGRINGS;
-+	}
- 
- 	if (devinfo->dma_idx_sz != 0) {
--		bufsz = (BRCMF_NROF_D2H_COMMON_MSGRINGS + max_sub_queues) *
-+		bufsz = (max_submissionrings + max_completionrings) *
- 			devinfo->dma_idx_sz * 2;
- 		devinfo->idxbuf = dma_alloc_coherent(&devinfo->pdev->dev, bufsz,
- 						     &devinfo->idxbuf_dmahandle,
-@@ -1083,14 +1114,10 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 	}
- 
- 	if (devinfo->dma_idx_sz == 0) {
--		addr = ring_addr + BRCMF_SHARED_RING_D2H_W_IDX_PTR_OFFSET;
--		d2h_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--		addr = ring_addr + BRCMF_SHARED_RING_D2H_R_IDX_PTR_OFFSET;
--		d2h_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--		addr = ring_addr + BRCMF_SHARED_RING_H2D_W_IDX_PTR_OFFSET;
--		h2d_w_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
--		addr = ring_addr + BRCMF_SHARED_RING_H2D_R_IDX_PTR_OFFSET;
--		h2d_r_idx_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+		d2h_w_idx_ptr = le32_to_cpu(ringinfo.d2h_w_idx_ptr);
-+		d2h_r_idx_ptr = le32_to_cpu(ringinfo.d2h_r_idx_ptr);
-+		h2d_w_idx_ptr = le32_to_cpu(ringinfo.h2d_w_idx_ptr);
-+		h2d_r_idx_ptr = le32_to_cpu(ringinfo.h2d_r_idx_ptr);
- 		idx_offset = sizeof(u32);
- 		devinfo->write_ptr = brcmf_pcie_write_tcm16;
- 		devinfo->read_ptr = brcmf_pcie_read_tcm16;
-@@ -1103,34 +1130,42 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 		devinfo->read_ptr = brcmf_pcie_read_idx;
- 
- 		h2d_w_idx_ptr = 0;
--		addr = ring_addr + BRCMF_SHARED_RING_H2D_WP_HADDR_OFFSET;
- 		address = (u64)devinfo->idxbuf_dmahandle;
--		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
--		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
--
--		h2d_r_idx_ptr = h2d_w_idx_ptr + max_sub_queues * idx_offset;
--		addr = ring_addr + BRCMF_SHARED_RING_H2D_RP_HADDR_OFFSET;
--		address += max_sub_queues * idx_offset;
--		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
--		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
--
--		d2h_w_idx_ptr = h2d_r_idx_ptr + max_sub_queues * idx_offset;
--		addr = ring_addr + BRCMF_SHARED_RING_D2H_WP_HADDR_OFFSET;
--		address += max_sub_queues * idx_offset;
--		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
--		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+		ringinfo.h2d_w_idx_hostaddr.low_addr =
-+			cpu_to_le32(address & 0xffffffff);
-+		ringinfo.h2d_w_idx_hostaddr.high_addr =
-+			cpu_to_le32(address >> 32);
-+
-+		h2d_r_idx_ptr = h2d_w_idx_ptr +
-+				max_submissionrings * idx_offset;
-+		address += max_submissionrings * idx_offset;
-+		ringinfo.h2d_r_idx_hostaddr.low_addr =
-+			cpu_to_le32(address & 0xffffffff);
-+		ringinfo.h2d_r_idx_hostaddr.high_addr =
-+			cpu_to_le32(address >> 32);
-+
-+		d2h_w_idx_ptr = h2d_r_idx_ptr +
-+				max_submissionrings * idx_offset;
-+		address += max_submissionrings * idx_offset;
-+		ringinfo.d2h_w_idx_hostaddr.low_addr =
-+			cpu_to_le32(address & 0xffffffff);
-+		ringinfo.d2h_w_idx_hostaddr.high_addr =
-+			cpu_to_le32(address >> 32);
- 
- 		d2h_r_idx_ptr = d2h_w_idx_ptr +
--				BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
--		addr = ring_addr + BRCMF_SHARED_RING_D2H_RP_HADDR_OFFSET;
--		address += BRCMF_NROF_D2H_COMMON_MSGRINGS * idx_offset;
--		brcmf_pcie_write_tcm32(devinfo, addr, address & 0xffffffff);
--		brcmf_pcie_write_tcm32(devinfo, addr + 4, address >> 32);
-+				max_completionrings * idx_offset;
-+		address += max_completionrings * idx_offset;
-+		ringinfo.d2h_r_idx_hostaddr.low_addr =
-+			cpu_to_le32(address & 0xffffffff);
-+		ringinfo.d2h_r_idx_hostaddr.high_addr =
-+			cpu_to_le32(address >> 32);
-+
-+		memcpy_toio(devinfo->tcm + devinfo->shared.ring_info_addr,
-+			    &ringinfo, sizeof(ringinfo));
- 		brcmf_dbg(PCIE, "Using host memory indices\n");
- 	}
- 
--	addr = ring_addr + BRCMF_SHARED_RING_TCM_MEMLOC_OFFSET;
--	ring_mem_ptr = brcmf_pcie_read_tcm32(devinfo, addr);
-+	ring_mem_ptr = le32_to_cpu(ringinfo.ringmem);
- 
- 	for (i = 0; i < BRCMF_NROF_H2D_COMMON_MSGRINGS; i++) {
- 		ring = brcmf_pcie_alloc_dma_and_ring(devinfo, i, ring_mem_ptr);
-@@ -1161,20 +1196,19 @@ static int brcmf_pcie_init_ringbuffers(struct brcmf_pciedev_info *devinfo)
- 		ring_mem_ptr += BRCMF_RING_MEM_SZ;
- 	}
- 
--	devinfo->shared.nrof_flowrings =
--			max_sub_queues - BRCMF_NROF_H2D_COMMON_MSGRINGS;
--	rings = kcalloc(devinfo->shared.nrof_flowrings, sizeof(*ring),
--			GFP_KERNEL);
-+	devinfo->shared.max_flowrings = max_flowrings;
-+	devinfo->shared.max_submissionrings = max_submissionrings;
-+	devinfo->shared.max_completionrings = max_completionrings;
-+	rings = kcalloc(max_flowrings, sizeof(*ring), GFP_KERNEL);
- 	if (!rings)
- 		goto fail;
- 
--	brcmf_dbg(PCIE, "Nr of flowrings is %d\n",
--		  devinfo->shared.nrof_flowrings);
-+	brcmf_dbg(PCIE, "Nr of flowrings is %d\n", max_flowrings);
- 
--	for (i = 0; i < devinfo->shared.nrof_flowrings; i++) {
-+	for (i = 0; i < max_flowrings; i++) {
- 		ring = &rings[i];
- 		ring->devinfo = devinfo;
--		ring->id = i + BRCMF_NROF_COMMON_MSGRINGS;
-+		ring->id = i + BRCMF_H2D_MSGRING_FLOWRING_IDSTART;
- 		brcmf_commonring_register_cb(&ring->commonring,
- 					     brcmf_pcie_ring_mb_ring_bell,
- 					     brcmf_pcie_ring_mb_update_rptr,
-@@ -1357,17 +1391,16 @@ static int brcmf_pcie_get_memdump(struct device *dev, void *data, size_t len)
- {
- 	struct brcmf_pcie_shared_info *shared;
- 	u32 addr;
--	u32 version;
- 
- 	shared = &devinfo->shared;
- 	shared->tcm_base_address = sharedram_addr;
- 
- 	shared->flags = brcmf_pcie_read_tcm32(devinfo, sharedram_addr);
--	version = shared->flags & BRCMF_PCIE_SHARED_VERSION_MASK;
--	brcmf_dbg(PCIE, "PCIe protocol version %d\n", version);
--	if ((version > BRCMF_PCIE_MAX_SHARED_VERSION) ||
--	    (version < BRCMF_PCIE_MIN_SHARED_VERSION)) {
--		brcmf_err("Unsupported PCIE version %d\n", version);
-+	shared->version = (u8)(shared->flags & BRCMF_PCIE_SHARED_VERSION_MASK);
-+	brcmf_dbg(PCIE, "PCIe protocol version %d\n", shared->version);
-+	if ((shared->version > BRCMF_PCIE_MAX_SHARED_VERSION) ||
-+	    (shared->version < BRCMF_PCIE_MIN_SHARED_VERSION)) {
-+		brcmf_err("Unsupported PCIE version %d\n", shared->version);
- 		return -EINVAL;
- 	}
- 
-@@ -1661,18 +1694,18 @@ static void brcmf_pcie_setup(struct device *dev, const struct firmware *fw,
- 		bus->msgbuf->commonrings[i] =
- 				&devinfo->shared.commonrings[i]->commonring;
- 
--	flowrings = kcalloc(devinfo->shared.nrof_flowrings, sizeof(*flowrings),
-+	flowrings = kcalloc(devinfo->shared.max_flowrings, sizeof(*flowrings),
- 			    GFP_KERNEL);
- 	if (!flowrings)
- 		goto fail;
- 
--	for (i = 0; i < devinfo->shared.nrof_flowrings; i++)
-+	for (i = 0; i < devinfo->shared.max_flowrings; i++)
- 		flowrings[i] = &devinfo->shared.flowrings[i].commonring;
- 	bus->msgbuf->flowrings = flowrings;
- 
- 	bus->msgbuf->rx_dataoffset = devinfo->shared.rx_dataoffset;
- 	bus->msgbuf->max_rxbufpost = devinfo->shared.max_rxbufpost;
--	bus->msgbuf->nrof_flowrings = devinfo->shared.nrof_flowrings;
-+	bus->msgbuf->max_flowrings = devinfo->shared.max_flowrings;
- 
- 	init_waitqueue_head(&devinfo->mbdata_resp_wait);
- 
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9353809/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
