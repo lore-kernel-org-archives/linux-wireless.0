@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:45711 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751934AbcK0P6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 27 Nov 2016 10:58:13 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: "Valo\, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: Introduce airtime fairness scheduling between stations
-References: <20160617090929.31606-1-toke@toke.dk>
-        <20161124135455.29327-1-toke@toke.dk>
-        <87wpfr8u9v.fsf@kamboji.qca.qualcomm.com>
-Date: Sun, 27 Nov 2016 16:58:05 +0100
-In-Reply-To: <87wpfr8u9v.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 25 Nov 2016 15:16:13 +0000")
-Message-ID: <87inr8q5iq.fsf@toke.dk> (sfid-20161127_165825_883342_E96F38E4)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36360 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750803AbcKIFuy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 00:50:54 -0500
+Received: by mail-pf0-f194.google.com with SMTP id n85so22252461pfi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 21:50:54 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Tue, 8 Nov 2016 21:50:48 -0800
+To: Luca Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Eran Harary <eran.harary@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Eyal Shapira <eyal@wizery.com>,
+        Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH v2 3/3] iwlwifi: pcie: trans: Remove unused 'shift_param'
+Message-ID: <20161109055048.GA27520@google.com> (sfid-20161109_065059_019575_CBE6729A)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Valo, Kalle" <kvalo@qca.qualcomm.com> writes:
+shift_param is defined and set in iwl_pcie_load_cpu_sections
+but not used. Fix this to avoid -Wunused-but-set-variable
+warning.
+The code using it turned into dead code with commit dcab8ecd5617
+which added a separate function iwl_pcie_load_given_ucode_8000
+(then 8000b) for IWL_DEVICE_FAMILY_8000. Commit 76f8c0e17edc
+removed the dead code but left shift_param as is.
 
-> (The make-wifi-fast list is annoying as it always spams me when it's on
-> CC, so dropped it.)
->
-> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
->
->> This reworks the ath9k driver to schedule transmissions to connected
->> stations in a way that enforces airtime fairness between them. It
->> accomplishes this by measuring the time spent transmitting to or
->> receiving from a station at TX and RX completion, and accounting this to
->> a per-station, per-QoS level airtime deficit. Then, an FQ-CoDel based
->> deficit scheduler is employed at packet dequeue time, to control which
->> station gets the next transmission opportunity.
->>
->> Airtime fairness can significantly improve the efficiency of the network
->> when station rates vary. The following throughput values are from a
->> simple three-station test scenario, where two stations operate at the
->> highest HT20 rate, and one station at the lowest, and the scheduler is
->> employed at the access point:
->>
->>                   Before   /   After
->> Fast station 1:    19.17   /   25.09 Mbps
->> Fast station 2:    19.83   /   25.21 Mbps
->> Slow station:       2.58   /    1.77 Mbps
->> Total:             41.58   /   52.07 Mbps
->>
->> The benefit of airtime fairness goes up the more stations are present.
->> In a 30-station test with one station artificially limited to 1 Mbps,
->> we have seen aggregate throughput go from 2.14 to 17.76 Mbps.
->>
->> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
->
-> [...]
->
->> +void ath_acq_lock(struct ath_softc *sc, struct ath_acq *acq)
->> +	__acquires(&acq->lock)
->> +{
->> +	spin_lock_bh(&acq->lock);
->> +}
->> +
->> +void ath_acq_unlock(struct ath_softc *sc, struct ath_acq *acq)
->> +	__releases(&acq->lock)
->> +{
->> +	spin_unlock_bh(&acq->lock);
->> +}
->
-> Why these? To me it looks like they just add an extra function jump and
-> unneccessary extra layer.
+iwlwifi/pcie/trans.c: In function ‘iwl_pcie_load_cpu_sections’:
+iwlwifi/pcie/trans.c:871:6: warning: variable ‘shift_param’ set but not used [-Wunused-but-set-variable]
 
-Well, there's already similar functions for the txq lock (ath_txq_lock()
-and ath_txq_unlock() in xmit.c), so figured I'd be consistent with
-those. And also that the __acquires and __releases macros were probably
-useful.
+Fixes: dcab8ecd5617 (iwlwifi: mvm: support ucode load for family_8000 B0 only)
+Fixes: 76f8c0e17edc (iwlwifi: pcie: remove dead code)
 
-Also, won't the compiler automatically inline them?
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+Cc: Sara Sharon <sara.sharon@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Eran Harary <eran.harary@intel.com>
+Cc: Liad Kaufman <liad.kaufman@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
--Toke
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index ae95533..1b27a39 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -868,15 +868,12 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
+ 				      int cpu,
+ 				      int *first_ucode_section)
+ {
+-	int shift_param;
+ 	int i, ret = 0;
+ 	u32 last_read_idx = 0;
+ 
+ 	if (cpu == 1) {
+-		shift_param = 0;
+ 		*first_ucode_section = 0;
+ 	} else {
+-		shift_param = 16;
+ 		(*first_ucode_section)++;
+ 	}
+ 
+-- 
+2.8.0.rc3.226.g39d4020
