@@ -1,207 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:32779 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752916AbcKVJKu (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36848 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbcKIFuK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 04:10:50 -0500
-Received: by mail-qk0-f180.google.com with SMTP id x190so14143512qkb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 01:10:50 -0800 (PST)
-Subject: Re: scheduled scan interval
-To: Luca Coelho <luca@coelho.fi>,
-        Johannes Berg <johannes.berg@intel.com>
-References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
- <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
- <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
- <1479740918.2517.28.camel@coelho.fi>
- <a222d5d1-408d-fd96-4cb9-896f6a9dab59@broadcom.com>
- <1479794340.2517.34.camel@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <006ec2b0-9659-49ed-40f7-b8980b7e3ec7@broadcom.com> (sfid-20161122_101057_702605_8ECB288C)
-Date: Tue, 22 Nov 2016 10:10:46 +0100
+        Wed, 9 Nov 2016 00:50:10 -0500
+Received: by mail-pf0-f196.google.com with SMTP id n85so22248428pfi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 21:49:39 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Tue, 8 Nov 2016 21:49:30 -0800
+To: Luca Coelho <luciano.coelho@intel.com>
+Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Eran Harary <eran.harary@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Eyal Shapira <eyal@wizery.com>,
+        Alexander Bondar <alexander.bondar@intel.com>
+Subject: [PATCH v2 0/3] Fix -Wunused-but-set-variable in iwlwifi/pcie/trans
+ and iwlwifi/mvm/rs
+Message-ID: <20161109054930.GA26716@google.com> (sfid-20161109_065019_531541_6BFE92A1)
 MIME-Version: 1.0
-In-Reply-To: <1479794340.2517.34.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-11-2016 6:59, Luca Coelho wrote:
-> Hi Arend,
-> On Mon, 2016-11-21 at 20:34 +0100, Arend Van Spriel wrote:
->> On 21-11-2016 16:08, Luca Coelho wrote:
->>> Hi Arend,
->>>
->>> On Mon, 2016-11-21 at 13:03 +0100, Arend Van Spriel wrote:
->>>> On 21-11-2016 12:30, Arend Van Spriel wrote:
->>>>> On 21-11-2016 12:19, Arend Van Spriel wrote:
->>>>>> Hi Johannes, Luca,
->>>>>>
->>>>>> The gscan work made me look at scheduled scan and the implementation of
->>>>>> it in brcmfmac. The driver ignored the interval parameter from
->>>>>> user-space. Now I am fixing that. One thing is that our firmware has a
->>>>>> minimum interval which can not be indicated in struct wiphy. The other
->>>>>> issue is how the maximum interval is used in the nl80211.c.
->>>>>>
->>>>>> In nl80211_parse_sched_scan_plans() it is used against value passed in
->>>>>> NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
->>>>>> For the first one it caps the value to the maximum, but for the second
->>>>>> one it returns -EINVAL. I suspect this is done because maximum interval
->>>>>> was introduced with schedule scan plans, but it feels inconsistent.
->>>>>
->>>>> It also maybe simply wrong to cap. At least brcmfmac does not set the
->>>>> maximum so it will always get interval being zero. Maybe better to do:
->>>>>
->>>>> 		if (wiphy->max_sched_scan_plan_interval &&
->>>>> 		    request->scan_plans[0].interval >
->>>>> 		    wiphy->max_sched_scan_plan_interval)
->>>>> 			return -EINVAL;
->>>>>
->>>>>> Thoughts?
->>>>
->>>> Digging deeper. Looking at v4.3 before introduction of sched_scan_plans.
->>>> struct sched_scan_request::interval was specified in milliseconds! Below
->>>> the drivers that I see having scheduled scan support:
->>>>
->>>> iwlmvm: cap interval, convert to seconds.
->>>> ath6kl: cap to 1sec minimum, no max check, convert to seconds.
->>>> wl12xx: no checking in driver, fw need milliseconds.
->>>> wl18xx: no checking in driver, fw need milliseconds.
->>>>
->>>> The milliseconds conversion seems to be taken care of by multiplying
->>>> with MSEC_PER_SEC in wl{12,18}xx drivers.
->>>>
->>>> It seems in 4.8 only iwlmvm set wiphy->max_sched_scan_plan_interval so
->>>> other drivers will get interval of zero which only ath6kl handles.
->>>
->>> With the introduction of scheduled scan plans, we sort of deprecated
->>> the "generic" scheduled scan interval.  It doesn't make sense to have
->>> both passed at the same time, so nl80211 forbids
->>> NL80211_ATTR_SCHED_SCAN_INTERVAL if we pass
->>> NL80211_ATTR_SCHED_SCAN_PLANS.
->>
->> Indeed, but if no plans are passed it is still allowed.
-> 
-> That's right.  But the driver will get it as a single plan.
-> 
-> 
->>> The original NL80211_ATTR_SCHED_SCAN_INTERVAL was specified in msecs,
->>> which is silly because we can never get millisecond accuracy in this. 
->>> Thus, in the plans API, we decided to use seconds instead (because it
->>> makes much more sense).  Additionally, the interval is considered
->>> "advisory", because the FW may not be able guarantee the exact
->>> intervals (for instance, the iwlwifi driver actually starts the
->>> interval timer after scan completion, so if you specify 10 seconds
->>> intervals, in practice they'll be 13-14 seconds).
->>
->> Agree. Our firmware wants to have it in seconds as well.
-> 
-> It was actually my mistake when I implemented it in my TI days (can't
-> hide from git blame ;)). TI's firmware used msecs and I just blindly
-> followed it.
-> 
-> 
->>> I'm not sure I'm answering your question, because I'm also not sure I
->>> understood the question. :)
->>
->> The question is this: Why is the interval capped at
->> max_sched_scan_plan_interval if it exceeds it and no plans are provided
->> (so continue to setup the scheduled scan request) whereas when plans are
->> provided and an interval exceeds max_sched_scan_plan_interval it aborts
->> with -EINVAL.
-> 
-> Oh, I see.  The problem is that the "max_sched_scan_plan_interval" was
-> introduced later.  If the userspace passes
-> NL80211__ATTR_SCHED_SCAN_INTERVAL, it probably means that it doesn't
-> know about NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL (i.e. it's only using an
-> old API).  If it is also, for some reason, passing a very large number,
-> we shouldn't suddenly make it fail with -EINVALID, because that would
-> be a break of UABI.  And since we know the driver cannot support such a
-> large number, we cap it because it's the best we can do.
-> 
-> Now, if the userspace uses NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL, it
-> means that it knows the new API (and was written after the new API was
-> introduced), so we can be stricter and assume it must have checked
-> NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL.
-> 
-> Makes sense?
+This patchset is part of the effort led by Arnd Bergmann to clean up
+warnings in the kernel. This and following patchsets will focus on 
+"-Wunused-but-set-variable" as it among the noisier ones. These were
+found compiling with W=1.
 
-Not really. As you say if user-space passes
-NL80211_ATTR_SCHED_SCAN_INTERVAL it is using old API. Otherwise it
-should pass NL80211_ATTR_SCHED_SCAN_PLANS.
+-- 
+Changes in v2:
+- Made the following changes suggested by Arnd in all 3 patches
+  1. Each patch has a unique subject line.
+  2. Add the commit that introduced/led to the warning with the "Fixes:" line.
+  3. cc linux-wireles, cc commit authors.
 
->> And a follow-up question for this snippet of code in
->> nl80211_parse_sched_scan_plans():
->>
->> 	if (!attrs[NL80211_ATTR_SCHED_SCAN_PLANS]) {
->> 		u32 interval;
->>
->> 		/*
->> 		 * If scan plans are not specified,
->> 		 * %NL80211_ATTR_SCHED_SCAN_INTERVAL must be specified. In this
->> 		 * case one scan plan will be set with the specified scan
->> 		 * interval and infinite number of iterations.
->> 		 */
->> 		if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
->> 			return -EINVAL;
->>
->> 		interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
->> 		if (!interval)
->> 			return -EINVAL;
->>
->> 		request->scan_plans[0].interval =
->> 			DIV_ROUND_UP(interval, MSEC_PER_SEC);
->> 		if (!request->scan_plans[0].interval)
->> 			return -EINVAL;
->>
->> 		if (request->scan_plans[0].interval >
->> 		    wiphy->max_sched_scan_plan_interval)
->> 			request->scan_plans[0].interval =
->> 				wiphy->max_sched_scan_plan_interval;
->>
->> 		return 0;
->> 	}
->>
->> So in v4.3 the interval was only validated to be non-zero. Now the
->> interval is validated and capped to wiphy->max_sched_scan_plan_interval
->> but apart from iwlmvm there are no driver specifying that so
->> max_sched_scan_plan_interval = 0 for those and interval is unsigned int
->> not equal to zero. So the last if statement above is true setting the
->> interval to zero. I think the if statement should be extended to assure
->> max_sched_scan_interval is non-zero, ie. set explicitly by the driver:
->>
->> 		if (wiphy->max_sched_scan_plan_interval &&
->> 		    request->scan_plans[0].interval >
->> 		    wiphy->max_sched_scan_plan_interval)
->> 			request->scan_plans[0].interval =
->> 				wiphy->max_sched_scan_plan_interval;
-> 
-> If the driver doesn't set the max_sched_scan_plan_interval, mac80211's
-> default of MAX_U32 will be used:
-> 
-> struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
-> 			   const char *requested_name)
-> {
-> [...]
-> 	rdev->wiphy.max_sched_scan_plans = 1;
-> 	rdev->wiphy.max_sched_scan_plan_interval = U32_MAX;
-> 
-> 	return &rdev->wiphy;
-> }
-> EXPORT_SYMBOL(wiphy_new_nm);
-> 
-> ...so max_sched_scan_plan_interval will never be zero, unless the
-> driver explicitly sets it to zero.
+Kirtika Ruchandani (3):
+  iwlwifi: mvm: rs: Remove unused 'mvmvif'/'mvmsta' variables
+  iwlwifi: mvm: rs: Remove unused 'mcs' variable
+  iwlwifi: pcie: trans: Remove unused 'shift_param'
 
-I think you are overlooking the cfg80211-based drivers here. According
-to lxr at least brcmfmac, mwifiex, and ath6kl are not specifying it.
-"Funny" detail is that scheduled scan support in mwifiex seems to be
-introduced after the scan plan API change.
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c     | 10 +---------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  3 ---
+ 2 files changed, 1 insertion(+), 12 deletions(-)
 
-With the old API nl80211 only assured it to be non-zero. The only one
-capping the value was iwlmvm. The only one setting the
-max_sched_scan_plan_interval (overriding mac80211 value) now is iwlmvm.
-So I think checking if it is set before capping it retains the old API
-behaviour.
-
-Regards,
-Arend
+-- 
+2.8.0.rc3.226.g39d4020
