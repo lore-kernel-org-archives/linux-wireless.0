@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm15-vm8.bullet.mail.ir2.yahoo.com ([212.82.96.205]:60576 "EHLO
-        nm15-vm8.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752601AbcKONNv (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49442 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751332AbcKIIyj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 08:13:51 -0500
-Date: Tue, 15 Nov 2016 13:13:48 +0000 (UTC)
-From: Gianfranco Costamagna <locutusofborg@debian.org>
-Reply-To: Gianfranco Costamagna <locutusofborg@debian.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
-        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
-Message-ID: <1967239621.630327.1479215628178@mail.yahoo.com> (sfid-20161115_141355_256177_36400A7A)
-In-Reply-To: <87r36dov6u.fsf@purkki.adurom.net>
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com> <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com> <690669269.1124561.1477671348137@mail.yahoo.com> <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com> <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com> <233918815.6357602.1479123253455@mail.yahoo.com> <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com> <810879191.6335567.1479124065921@mail.yahoo.com> <87r36dov6u.fsf@purkki.adurom.net>
-Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
- regulatory domain frequency value
+        Wed, 9 Nov 2016 03:54:39 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Ricky Liang <jcliang@chromium.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:MARVELL MWIFIEX WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: fix memory leak in
+ mwifiex_save_hidden_ssid_channels()
+Date: Wed, 9 Nov 2016 08:53:40 +0000
+Message-ID: <afaba6dcd5e845118be806ffd7bbe511@SC-EXCH04.marvell.com> (sfid-20161109_095501_744740_0C496293)
+References: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
+In-Reply-To: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> From: Ricky Liang [mailto:jcliang@chromium.org]
+> Sent: Wednesday, November 09, 2016 9:07 AM
+> Cc: Ricky Liang; Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo; open
+> list:MARVELL MWIFIEX WIRELESS DRIVER; open list:NETWORKING DRIVERS; open
+> list
+> Subject: [PATCH] mwifiex: fix memory leak in
+> mwifiex_save_hidden_ssid_channels()
+> 
+> kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
+> 
+> unreferenced object 0xffffffc0a2914780 (size 192):
+>   comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
+>   hex dump (first 32 bytes):
+>     00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
+>     07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
+>   backtrace:
+>     [<ffffffc0003375f4>] create_object+0x164/0x2b4
+>     [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
+>     [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
+>     [<ffffffc00030899c>] kmemdup+0x38/0x64
+>     [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
+>     [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
+>     [<ffffffbffc22f45c>]
+> mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
+>     [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
+>     [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
+>     [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
+>     [<ffffffbffc258858>] 0xffffffbffc258858
+>     [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
+>     [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
+>     [<ffffffc000240d08>] kthread+0xf4/0x100
+>     [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> Signed-off-by: Ricky Liang <jcliang@chromium.org>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c
+> b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 97c9765..98ce072 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -1671,6 +1671,10 @@ static int
+> mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
+>  	}
+> 
+>  done:
+> +	/* beacon_ie buffer was allocated in function
+> +	 * mwifiex_fill_new_bss_desc(). Free it now.
+> +	 */
+> +	kfree(bss_desc->beacon_buf);
+>  	kfree(bss_desc);
+>  	return 0;
+>  }
 
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-> Signed-off-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
-
-> Signed-off-by: Arlone Marco <marco.arlone@roj.com>
-
->Please note that you cannot add Signed-off-by for other people without
->their explicit approval (see Documentation/SubmittingPatches). I don't
->know if they did it in this case or not, but wanted to point out this
->anyway.
-
-
-The first signoff is myself, with the company email, the other two signoffs
-are from: the author, and Nicola, who did work with me to test it
-(even if a typo fix is not "testable").
-
-Nicola, Marco, is it ok to add your two names in the signoff part?
-(that was a verbal talk, I don't have anything written)
-
-Gianfranco
+Regards,
+Amitkumar
