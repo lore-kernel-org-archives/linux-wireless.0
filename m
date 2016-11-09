@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48734 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753252AbcKCJ7n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 05:59:43 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, emmanuel.grumbach@intel.com
-Subject: [PATCH] mac80211: fix broken AP mode handling of powersave clients
-Date: Thu,  3 Nov 2016 10:59:38 +0100
-Message-Id: <20161103095938.84054-1-nbd@nbd.name> (sfid-20161103_105947_007026_5CF48217)
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36838 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751788AbcKIWWU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 17:22:20 -0500
+Received: by mail-pf0-f177.google.com with SMTP id 189so133707452pfz.3
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2016 14:22:20 -0800 (PST)
+Date: Wed, 9 Nov 2016 14:22:17 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Cathy Luo <cluo@marvell.com>, security@kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: printk() overflow with 32-byte SSIDs
+Message-ID: <20161109222216.GA3818@google.com> (sfid-20161109_232242_725685_17B74EEF)
+References: <1478658504-31045-1-git-send-email-briannorris@chromium.org>
+ <87h97guwfu.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87h97guwfu.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit c68df2e7be0c ("mac80211: allow using AP_LINK_PS with
-mac80211-generated TIM IE") introduced a logic error, where
-__sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
-set. This prevents the beacon TIM bit from being set for all drivers
-that do not implement this op (almost all of them), thus thoroughly
-essential AP mode powersave functionality.
+On Thu, Nov 10, 2016 at 12:20:53AM +0200, Kalle Valo wrote:
+> Brian Norris <briannorris@chromium.org> writes:
+> 
+> > SSIDs aren't guaranteed to be 0-terminated. Let's cap the max length
+> > when we print them out.
+> >
+> > This can be easily noticed by connecting to a network with a 32-octet
+> > SSID:
+> >
+> > [ 3903.502925] mwifiex_pcie 0000:01:00.0: info: trying to associate to
+> > '0123456789abcdef0123456789abcdef <uninitialized mem>' bssid
+> > xx:xx:xx:xx:xx:xx
+> >
+> > Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > Cc: <stable@vger.kernel.org>
+> 
+> I'm planning to push this to 4.9 if no objections.
 
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/sta_info.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 236d47e..621734e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
- 	}
- 
- 	/* No need to do anything if the driver does all */
--	if (!local->ops->set_tim)
-+	if (local->ops->set_tim)
- 		return;
- 
- 	if (sta->dead)
--- 
-2.10.1
+SGTM. Thanks.
