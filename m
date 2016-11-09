@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42658 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966699AbcKLVIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 12 Nov 2016 16:08:52 -0500
-Message-ID: <1478984929.4226.3.camel@sipsolutions.net> (sfid-20161112_220855_652635_C0C400EB)
-Subject: Re: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
-        linux-wireless@vger.kernel.org
-Date: Sat, 12 Nov 2016 22:08:49 +0100
-In-Reply-To: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de> (sfid-20161111_182223_315895_6A05EDD8)
-References: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de>
-         (sfid-20161111_182223_315895_6A05EDD8)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64849 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752183AbcKICWi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 8 Nov 2016 21:22:38 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v5] ath9k: Switch to using mac80211 intermediate software queues.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160902140030.11798-1-toke@toke.dk>
+References: <20160902140030.11798-1-toke@toke.dk>
+To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+CC: <make-wifi-fast@lists.bufferbloat.net>,
+        <linux-wireless@vger.kernel.org>,
+        =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Message-ID: <1cd07522568b40a6a3e2db6170153c74@euamsexm01a.eu.qualcomm.com> (sfid-20161109_032243_450145_407CB2D7)
+Date: Wed, 9 Nov 2016 03:22:30 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> So I would propose to put the whole struct into the netlink messages,
-
-This is a terrible idea, since internal changes to this struct would
-break the userland API/ABI. hwsim seems perhaps less important than
-most APIs, but there is wmediumd etc. already.
-
-> but I think that will break up the communication to e.g. bob
-> copelands
-> wmediumd and similar simulations. I would like to have our
-> Implementation working with mainline kernels and therefore ask how we
-> could achieve this easily.
+Toke Høiland-Jørgensen wrote:
+> This switches ath9k over to using the mac80211 intermediate software
+> queueing mechanism for data packets. It removes the queueing inside the
+> driver, except for the retry queue, and instead pulls from mac80211 when
+> a packet is needed. The retry queue is used to store a packet that was
+> pulled but can't be sent immediately.
 > 
-> Obviously, we could define another field in the hwsim messages, but
-> as bob copeland already stated, significantly more information within
-> the netlink messages could  intensify the timing overhead of hwsim.
+> The old code path in ath_tx_start that would queue packets has been
+> removed completely, as has the qlen limit tunables (since there's no
+> longer a queue in the driver to limit).
+> 
+> Based on Tim's original patch set, but reworked quite thoroughly.
+> 
+> Cc: Tim Shepard <shep@alum.mit.edu>
+> Cc: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-I don't think we have any other choice but add the relevant fields as
-proper attributes.
+All dependencies have trickled down to ath.git but unfortunately doesn't apply
+anymore, so please rebase. Hopefully the last time :)
 
-johannes
+While at it, could you also add to the commit log some info how awesome this
+patch is from user's point of view and how it helps. For example, before and
+and after numbers and other results.
+
+error: patch failed: drivers/net/wireless/ath/ath9k/xmit.c:921
+error: drivers/net/wireless/ath/ath9k/xmit.c: patch does not apply
+stg import: Diff does not apply cleanly
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/patch/9311037/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
