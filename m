@@ -1,74 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41244 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:48886 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752299AbcKVHYP (ORCPT
+        with ESMTP id S1751425AbcKIH2r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 02:24:15 -0500
-Message-ID: <1479799452.2517.39.camel@coelho.fi> (sfid-20161122_082424_342717_9DEDB4A2)
+        Wed, 9 Nov 2016 02:28:47 -0500
+Message-ID: <1478676523.3313.14.camel@coelho.fi> (sfid-20161109_082850_054594_9B75D8B9)
 From: Luca Coelho <luca@coelho.fi>
-To: dimitrysh@google.com, linux-wireless@vger.kernel.org
-Date: Tue, 22 Nov 2016 09:24:12 +0200
-In-Reply-To: <94eb2c110db85c2379054172dad0@google.com>
-References: <94eb2c110db85c2379054172dad0@google.com>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Eyal Shapira <eyal@wizery.com>,
+        Alexander Bondar <alexander.bondar@intel.com>
+Date: Wed, 09 Nov 2016 09:28:43 +0200
+In-Reply-To: <20161109055033.GA27470@google.com>
+References: <20161109055033.GA27470@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH] RFC: Universal scan proposal
+Subject: Re: [PATCH v2 2/3] iwlwifi: mvm: rs: Remove unused 'mcs' variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
-On Wed, 2016-11-16 at 22:47 +0000, dimitrysh@google.com wrote:
->  From 68a9d37a4c7e9dc7a90a6e922cdea52737a98d66 Mon Sep 17 00:00:00 2001
-> From: Dmitry Shmidt <dimitrysh@google.com>
-> Date: Wed, 16 Nov 2016 14:27:26 -0800
-> Subject: [PATCH] RFC: Universal scan proposal
+Another nitpick....
+On Tue, 2016-11-08 at 21:50 -0800, Kirtika Ruchandani wrote:
+> Commit 5fc0f76c4 introduced Rx stats from debugfs, the function
+> iwl_mvm_reset_frame_stats from that commit defines and sets mcs but does not use
+> it. Compiling iwlwifi with W=1 gives this warning -
 > 
->    Currently we have sched scan with possibility of various
-> intervals. We would like to extend it to support also
-> different types of scan.
->    In case of powerful wlan CPU, all this functionality
-> can be offloaded.
->    In general case FW processes additional scan requests
-> and puts them into queue based on start time and interval.
-> Once current request is fulfilled, FW adds it (if interval != 0)
-> again to the queue with proper interval. If requests are
-> overlapping, new request can be combined with either one before,
-> or one after, assuming that requests are not mutually exclusive.
->    Combining requests is done by combining scan channels, ssids,
-> bssids and types of scan result. Once combined request was fulfilled
-> it will be reinserted as two (or three) different requests based on
-> their type and interval.
->    Each request has attribute:
-> Type: connectivity / location
-> Report: none / batch / immediate
->    Request may have priority and can be inserted into
-> the head of the queue.
->    Types of scans:
-> - Normal scan
-> - Scheduled scan
-> - Hotlist (BSSID scan)
-> - Roaming
-> - AutoJoin
+> iwlwifi/mvm/rs.c: In function ‘iwl_mvm_update_frame_stats’:
+> iwlwifi/mvm/rs.c:3074:14: warning: variable ‘mcs’ set but not used [-Wunused-but-set-variable]
 > 
-> Change-Id: I9f3e4c975784f1c1c5156887144d80fc5a26bffa
-> Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
-> ---
+> Fixes: 5fc0f76c43bd (iwlwifi: mvm: add Rx frames statistics via debugfs)
 
-I like the initiative and I think this is definitely something that can
-improve concurrent scanning instances.  But IMHO the most important is
-to discuss the semantics of this change, such as which scans can be
-combined, who makes the decisions of combining them, how priorities are
-sorted out etc.  I think the types of scan are not relevant in the
-nl80211 API, but the characteristics of the scans are.  For instance,
-"urgent scan" (for initial connection), best-effort scan for roaming...
-and latency requirements, such as low-latency for location and initial
-connection and high-latency for scheduled scan.  Then we decided, in
-the kernel, how to combine and prioritize them according to their
-characteristics, instead of having to map scan types to these
-characteristics.
-
-What do you think?
+You forgot the quotes here, but no worries, I'll add them.
 
 --
-Cheers,
 Luca.
