@@ -1,124 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37998 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752702AbcKROEB (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:36006 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751226AbcKIDhh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:04:01 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
+        Tue, 8 Nov 2016 22:37:37 -0500
+Received: by mail-pf0-f179.google.com with SMTP id 189so119119406pfz.3
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 19:37:37 -0800 (PST)
+From: Ricky Liang <jcliang@chromium.org>
+Cc: Ricky Liang <jcliang@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v4 11/11] mwifiex: pcie: stop checking for NULL adapter->card
-Date: Fri, 18 Nov 2016 19:30:34 +0530
-Message-ID: <1479477634-27841-11-git-send-email-akarwar@marvell.com> (sfid-20161118_150404_278868_08968070)
-In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org (open list:MARVELL MWIFIEX WIRELESS
+        DRIVER), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
+Date: Wed,  9 Nov 2016 11:37:28 +0800
+Message-Id: <1478662648-70698-1-git-send-email-jcliang@chromium.org> (sfid-20161109_043804_837562_DECBF867)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
 
-It should never be NULL here, and to think otherwise makes things
-confusing.
+unreferenced object 0xffffffc0a2914780 (size 192):
+  comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
+  hex dump (first 32 bytes):
+    00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
+    07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
+  backtrace:
+    [<ffffffc0003375f4>] create_object+0x164/0x2b4
+    [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
+    [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
+    [<ffffffc00030899c>] kmemdup+0x38/0x64
+    [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
+    [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
+    [<ffffffbffc22f45c>] mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
+    [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
+    [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
+    [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
+    [<ffffffbffc258858>] 0xffffffbffc258858
+    [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
+    [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
+    [<ffffffc000240d08>] kthread+0xf4/0x100
+    [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
+    [<ffffffffffffffff>] 0xffffffffffffffff
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Ricky Liang <jcliang@chromium.org>
 ---
-v2: Same as v1
-v3: Below checkpatch warnings are resolved
-WARNING: please, no spaces at the start of a line
-#50: FILE: drivers/net/wireless/marvell/mwifiex/pcie.c:3037:
-+       } else {$
+ drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-WARNING: please, no spaces at the start of a line
-#62: FILE: drivers/net/wireless/marvell/mwifiex/pcie.c:3044:
-+       }$
-v4: Same as v3
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 53 +++++++++++++----------------
- 1 file changed, 23 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 98299a1..4b89f55 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3015,31 +3015,28 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
--	struct pci_dev *pdev;
-+	struct pci_dev *pdev = card->dev;
- 	int i;
- 
--	if (card) {
--		pdev = card->dev;
--		if (card->msix_enable) {
--			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
--				synchronize_irq(card->msix_entries[i].vector);
-+	if (card->msix_enable) {
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			synchronize_irq(card->msix_entries[i].vector);
- 
--			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
--				free_irq(card->msix_entries[i].vector,
--					 &card->msix_ctx[i]);
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			free_irq(card->msix_entries[i].vector,
-+				 &card->msix_ctx[i]);
- 
--			card->msix_enable = 0;
--			pci_disable_msix(pdev);
--	       } else {
--			mwifiex_dbg(adapter, INFO,
--				    "%s(): calling free_irq()\n", __func__);
--		       free_irq(card->dev->irq, &card->share_irq_ctx);
-+		card->msix_enable = 0;
-+		pci_disable_msix(pdev);
-+	} else {
-+		mwifiex_dbg(adapter, INFO,
-+			    "%s(): calling free_irq()\n", __func__);
-+	       free_irq(card->dev->irq, &card->share_irq_ctx);
- 
--			if (card->msi_enable)
--				pci_disable_msi(pdev);
--	       }
--		card->adapter = NULL;
-+		if (card->msi_enable)
-+			pci_disable_msi(pdev);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 97c9765..98ce072 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1671,6 +1671,10 @@ static int mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
  	}
-+	card->adapter = NULL;
+ 
+ done:
++	/* beacon_ie buffer was allocated in function
++	 * mwifiex_fill_new_bss_desc(). Free it now.
++	 */
++	kfree(bss_desc->beacon_buf);
+ 	kfree(bss_desc);
+ 	return 0;
  }
- 
- /* This function initializes the PCI-E host memory space, WCB rings, etc.
-@@ -3122,18 +3119,14 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
- 	adapter->seq_num = 0;
- 	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
- 
--	if (card) {
--		if (reg->sleep_cookie)
--			mwifiex_pcie_delete_sleep_cookie_buf(adapter);
--
--		mwifiex_pcie_delete_cmdrsp_buf(adapter);
--		mwifiex_pcie_delete_evtbd_ring(adapter);
--		mwifiex_pcie_delete_rxbd_ring(adapter);
--		mwifiex_pcie_delete_txbd_ring(adapter);
--		card->cmdrsp_buf = NULL;
--	}
-+	if (reg->sleep_cookie)
-+		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
- 
--	return;
-+	mwifiex_pcie_delete_cmdrsp_buf(adapter);
-+	mwifiex_pcie_delete_evtbd_ring(adapter);
-+	mwifiex_pcie_delete_rxbd_ring(adapter);
-+	mwifiex_pcie_delete_txbd_ring(adapter);
-+	card->cmdrsp_buf = NULL;
- }
- 
- static struct mwifiex_if_ops pcie_ops = {
 -- 
-1.9.1
+2.6.6
