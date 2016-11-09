@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49242 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754256AbcKKN5E (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36078 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752532AbcKIX1u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:57:04 -0500
-Message-ID: <1478872616.15030.29.camel@coelho.fi> (sfid-20161111_145722_583350_D56C4D23)
-From: Luca Coelho <luca@coelho.fi>
-To: =?ISO-8859-1?Q?J=FCrg?= Billeter <j@bitron.ch>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>
-Cc: linuxwifi@intel.com, Kalle Valo <kvalo@codeaurora.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Date: Fri, 11 Nov 2016 15:56:56 +0200
-In-Reply-To: <20161010163001.22865-1-j@bitron.ch>
-References: <20161010163001.22865-1-j@bitron.ch>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [linuxwifi] [PATCH 1/2] iwlwifi: fix MODULE_FIRMWARE for 6030
+        Wed, 9 Nov 2016 18:27:50 -0500
+Received: by mail-pf0-f174.google.com with SMTP id 189so134529538pfz.3
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2016 15:27:50 -0800 (PST)
+Date: Wed, 9 Nov 2016 15:27:47 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Ricky Liang <jcliang@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "open list:MARVELL MWIFIEX WIRELESS DRIVER"
+        <linux-wireless@vger.kernel.org>,
+        "open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] mwifiex: fix memory leak in
+ mwifiex_save_hidden_ssid_channels()
+Message-ID: <20161109232744.GA66287@google.com> (sfid-20161110_002813_342094_7903E36F)
+References: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jürg,
-
-On Mon, 2016-10-10 at 18:30 +0200, Jürg Billeter wrote:
-> IWL6000G2B_UCODE_API_MAX is not defined. ucode_api_max of
-> IWL_DEVICE_6030 uses IWL6000G2_UCODE_API_MAX. Use this also for
-> MODULE_FIRMWARE.
+On Wed, Nov 09, 2016 at 11:37:28AM +0800, Ricky Liang wrote:
+> kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
 > 
-> Fixes: 9d9b21d1b616 ("iwlwifi: remove IWL_*_UCODE_API_OK")
-> Signed-off-by: Jürg Billeter <j@bitron.ch>
+> unreferenced object 0xffffffc0a2914780 (size 192):
+>   comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
+>   hex dump (first 32 bytes):
+>     00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
+>     07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
+>   backtrace:
+>     [<ffffffc0003375f4>] create_object+0x164/0x2b4
+>     [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
+>     [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
+>     [<ffffffc00030899c>] kmemdup+0x38/0x64
+>     [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
+>     [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
+>     [<ffffffbffc22f45c>] mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
+>     [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
+>     [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
+>     [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
+>     [<ffffffbffc258858>] 0xffffffbffc258858
+>     [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
+>     [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
+>     [<ffffffc000240d08>] kthread+0xf4/0x100
+>     [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> Signed-off-by: Ricky Liang <jcliang@chromium.org>
 > ---
->  drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> index 0b9f6a7..39335b7 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-> @@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
->  MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
->  MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
->  MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
-> -MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
-> +MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 97c9765..98ce072 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -1671,6 +1671,10 @@ static int mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
+>  	}
+>  
+>  done:
+> +	/* beacon_ie buffer was allocated in function
+> +	 * mwifiex_fill_new_bss_desc(). Free it now.
+> +	 */
+> +	kfree(bss_desc->beacon_buf);
 
-Sorry I had missed these patches because linux-wireless@vger was not
-CCed, so it didn't get to patchwork.  I have applied both in our
-internal tree and they'll reach the mainline in my next pull-request.
+For a bit, I thought this was possibly a sort of double-free, since
+mwifiex_fill_new_bss_desc() might actually fail to allocate
+->beacon_buf, but kfree(NULL) is safe, so:
 
-Thanks!
+Reviewed-by: Brian Norris <briannorris@chromium.org>
 
---
-Cheers,
-Luca.
+>  	kfree(bss_desc);
+>  	return 0;
+>  }
+> -- 
+> 2.6.6
+> 
