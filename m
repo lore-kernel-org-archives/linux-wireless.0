@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42674 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757364AbcK3Nye (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 08:54:34 -0500
-Message-ID: <1480514067.29540.54.camel@coelho.fi> (sfid-20161130_145459_411120_990043AF)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>, Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, briselec@gmail.com
-Date: Wed, 30 Nov 2016 15:54:27 +0200
-In-Reply-To: <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
-References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
-         <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56952 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751203AbcKIP4J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 10:56:09 -0500
+Message-ID: <1478706966.18306.1.camel@sipsolutions.net> (sfid-20161109_165613_060433_CBEC0CEA)
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+From: Johannes Berg <johannes@sipsolutions.net>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-wireless@vger.kernel.org, btherthala@quantenna.com,
+        hwang@quantenna.com, smaksimenko@quantenna.com,
+        dlebed@quantenna.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Date: Wed, 09 Nov 2016 16:56:06 +0100
+In-Reply-To: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not
- reconnecting
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
-> Jes.Sorensen@redhat.com writes:
+On 2016-11-09 14:59, igor.mitsyanko.os@quantenna.com wrote:
 > 
-> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> > 
-> > Hi,
-> > 
-> > This patch works around the issue with 8192eu and 8723bu devices not
-> > being able to reconnect. It is still not clear why this fails, and
-> > looking at rtlwifi it does issue the command for 8192ee and 8723be
-> > devices.
-> > 
-> > Until we have a better idea of what is going on, I have commented out
-> > the offending code. I prefer not deleting it until we have a better
-> > understanding of why this is causing issues.
-> > 
-> > Credits to Barry Day for tracking down and isolating the issue.
-> > 
-> > Kalle, not sure if this can make it to 4.9, but if it's possible it
-> > would be ideal since this is causing real issues in the field.
-> 
-> For 4.9 this is too late, sorry. I'll queue this to 4.10.
+> [...]
 
-You should then CC stable so it gets into 4.9.x when it reaches 4.10.
+So I'm told this thing actually runs a full Linux, and consequently is
+(or at least contains) GPL code.
 
---
-Luca.
+With the carl9170 driver, the GPL firmware was required to be put as
+buildable source code into the linux-firmware tree.
+
+What should happen here? I expect the sources for this to be pretty big
+unlike carl9170 (1.1MB source).
+
+johannes
