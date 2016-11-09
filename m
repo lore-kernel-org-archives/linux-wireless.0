@@ -1,69 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:33379 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935544AbcKOOxg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 09:53:36 -0500
-Received: by mail-qk0-f174.google.com with SMTP id x190so137632030qkb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 06:53:35 -0800 (PST)
+Received: from mail.toke.dk ([52.28.52.200]:60277 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752824AbcKIXMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 18:12:17 -0500
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: <make-wifi-fast@lists.bufferbloat.net>,
+        <linux-wireless@vger.kernel.org>, Tim Shepard <shep@alum.mit.edu>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [v6] ath9k: Switch to using mac80211 intermediate software queues.
+References: <20161109113149.5724-1-toke@toke.dk>
+        <689eea51fa77432cbe4c70c6c2fe7b13@euamsexm01a.eu.qualcomm.com>
+Date: Thu, 10 Nov 2016 00:10:40 +0100
+In-Reply-To: <689eea51fa77432cbe4c70c6c2fe7b13@euamsexm01a.eu.qualcomm.com>
+        (Kalle Valo's message of "Wed, 9 Nov 2016 23:42:47 +0100")
+Message-ID: <87k2ccz1u7.fsf@toke.dk> (sfid-20161110_001221_142541_EBFD54BC)
 MIME-Version: 1.0
-In-Reply-To: <87polwq2nq.fsf@kamboji.qca.qualcomm.com>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
- <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
- <87twbnueqv.fsf@kamboji.qca.qualcomm.com> <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
- <871syn5fnb.fsf@qca.qualcomm.com> <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>
- <87polwq2nq.fsf@kamboji.qca.qualcomm.com>
-From: Bruno Antunes <baantunes@gmail.com>
-Date: Tue, 15 Nov 2016 14:53:14 +0000
-Message-ID: <CABUTiXXKm0k56M4LcxegwNgr+91SF+mX4tniHxJ5ViPy91HGhA@mail.gmail.com> (sfid-20161115_155339_861841_99425D69)
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        voncken <cedric.voncken@acksys.fr>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Ben Greear <greearb@candelatech.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 November 2016 at 13:43, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Bruno Antunes <baantunes@gmail.com> writes:
->
->> On 7 November 2016 at 18:06, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->>> Bruno Antunes <baantunes@gmail.com> writes:
->>>
->>>> On 4 November 2016 at 21:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->>>>
->>>>> Can someone file a bug to bugzilla about this so that all the info is
->>>>> properly stored? The more comprehensive the report is the better.
->>>>>
->>>>> https://bugzilla.kernel.org/
->>>>
->>>> I will file a bug report.
->>>
->>> Thanks, it's good to store all in one place so that it's easier to find
->>> the relevant info.
->>
->> Just file the bug with the ID 187241 - VLAN support in ATH10k Feel
->> free to ask for adicional info. I did not mention any names in the bug
->> report fell free to take credit if wanted.
->
-> Thanks. I'll report it to the firmware team, let's see what happens. If
-> there's more information which might help to fix this feel free to
-> update that to the bug report.
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-I'm finishing my tests and will update the bug report ASAP.
-
-Turns out the bad throughput was the result of a failure in the switch port.
-
-With Ben's firmware the VLAN support is working fine with security.
-
-Thanks,
-Bruno
+> Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> This switches ath9k over to using the mac80211 intermediate software
+>> queueing mechanism for data packets. It removes the queueing inside the
+>> driver, except for the retry queue, and instead pulls from mac80211 when
+>> a packet is needed. The retry queue is used to store a packet that was
+>> pulled but can't be sent immediately.
+>>=20
+>> The old code path in ath_tx_start that would queue packets has been
+>> removed completely, as has the qlen limit tunables (since there's no
+>> longer a queue in the driver to limit).
+>>=20
+>> The mac80211 intermediate software queues offer significant latency
+>> reductions, and this patch allows ath9k to realise them. The exact gains
+>> from this varies with the test scenario, but in an access point scenario
+>> we have seen latency reductions ranging from 1/3 to as much as an order
+>> of magnitude. We also achieve slightly better aggregation.
+>>=20
+>> Median latency (ping) figures with this patch applied at the access poin=
+t,
+>> with two high-rate stations and one low-rate station (HT20 5Ghz), running
+>> a Flent rtt_fair_var_up test with one TCP flow and one ping flow going to
+>> each station:
+>>=20
+>>                                  Fast station        Slow station
+>> Default pfifo_fast qdisc:            430.4 ms            638.7 ms
+>> fq_codel qdisc on iface:              35.5 ms            211.8 ms
+>> This patch set:                       22.4 ms             38.2 ms
+>>=20
+>> Median aggregation sizes over the same test:
+>>=20
+>> Default pfifo_fast qdisc:            9.5 pkts            1.9 pkts
+>> fq_codel qdisc on iface:            11.2 pkts            1.9 pkts
+>> This patch set:                     13.9 pkts            1.9 pkts
+>>=20
+>> This patch is based on Tim's original patch set, but reworked quite
+>> thoroughly.
+>>=20
+>> Cc: Tim Shepard <shep@alum.mit.edu>
+>> Cc: Felix Fietkau <nbd@nbd.name>
+>> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=187241
->
-> --
-> Kalle Valo
+> Perfect, just what I was hoping to see :) Unless something really
+> surprising comes up I should apply this within the next few days.
+
+Awesome, thanks! :)
+
+-Toke
