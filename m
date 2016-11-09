@@ -1,72 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35283 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754522AbcKXEpz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:48902 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751520AbcKIHbI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 23:45:55 -0500
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 20:45:49 -0800
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Alexander Bondar <alexander.bondar@intel.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/4] mac80211: Remove unused 'len' variable
-Message-ID: <dfe71b8260fee9c0fa850ba5fdd29d7d5ca6cb2b.1479962513.git.kirtika@chromium.org> (sfid-20161124_054600_763612_8E4FD568)
-References: <cover.1479962513.git.kirtika@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479962513.git.kirtika@chromium.org>
+        Wed, 9 Nov 2016 02:31:08 -0500
+Message-ID: <1478676664.3313.16.camel@coelho.fi> (sfid-20161109_083111_768107_812198D9)
+From: Luca Coelho <luca@coelho.fi>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Sara Sharon <sara.sharon@intel.com>,
+        Eran Harary <eran.harary@intel.com>,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Eyal Shapira <eyal@wizery.com>,
+        Alexander Bondar <alexander.bondar@intel.com>
+Date: Wed, 09 Nov 2016 09:31:04 +0200
+In-Reply-To: <20161109055048.GA27520@google.com>
+References: <20161109055048.GA27520@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 3/3] iwlwifi: pcie: trans: Remove unused 'shift_param'
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 633e27132625 (mac80211: split sched scan IEs) introduced the
-len variable to keep track of the return value of
-ieee80211_build_preq_ies() but did not use it. Compiling with W=1
-gives the following warning, fix it.
+On Tue, 2016-11-08 at 21:50 -0800, Kirtika Ruchandani wrote:
+> shift_param is defined and set in iwl_pcie_load_cpu_sections
+> but not used. Fix this to avoid -Wunused-but-set-variable
+> warning.
+> The code using it turned into dead code with commit dcab8ecd5617
+> which added a separate function iwl_pcie_load_given_ucode_8000
+> (then 8000b) for IWL_DEVICE_FAMILY_8000. Commit 76f8c0e17edc
+> removed the dead code but left shift_param as is.
+> 
+> iwlwifi/pcie/trans.c: In function ‘iwl_pcie_load_cpu_sections’:
+> iwlwifi/pcie/trans.c:871:6: warning: variable ‘shift_param’ set but not used [-Wunused-but-set-variable]
+> 
+> Fixes: dcab8ecd5617 (iwlwifi: mvm: support ucode load for family_8000 B0 only)
+> Fixes: 76f8c0e17edc (iwlwifi: pcie: remove dead code)
+> 
+> Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+> Cc: Sara Sharon <sara.sharon@intel.com>
+> Cc: Luca Coelho <luciano.coelho@intel.com>
+> Cc: Eran Harary <eran.harary@intel.com>
 
-net/mac80211/scan.c: In function ‘__ieee80211_request_sched_scan_start’:
-net/mac80211/scan.c:1123:9: warning: variable ‘len’ set but not used [-Wunused-but-set-variable]
+I'll remove Harary's Cc here too, since this email is not valid anymore
+and I don't know his new one (and he probably doesn't care anymore
+anyway).
 
-This is a harmless warning and is only being fixed to reduce the noise
-with W=1 in the kernel.
-
-Fixes: 633e27132625 ("mac80211: split sched scan IEs")
-Cc: David Spinadel <david.spinadel@intel.com>
-Cc: Alexander Bondar <alexander.bondar@intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
----
- net/mac80211/scan.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 23d8ac8..faab3c4 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -1120,7 +1120,6 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 	u32 rate_masks[NUM_NL80211_BANDS] = {};
- 	u8 bands_used = 0;
- 	u8 *ie;
--	size_t len;
- 
- 	iebufsz = local->scan_ies_len + req->ie_len;
- 
-@@ -1145,10 +1144,9 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
- 
- 	ieee80211_prepare_scan_chandef(&chandef, req->scan_width);
- 
--	len = ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
--				       &sched_scan_ies, req->ie,
--				       req->ie_len, bands_used,
--				       rate_masks, &chandef);
-+	ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
-+				 &sched_scan_ies, req->ie,
-+				 req->ie_len, bands_used, rate_masks, &chandef);
- 
- 	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
- 	if (ret == 0) {
--- 
-2.8.0.rc3.226.g39d4020
+--
+Luca.
