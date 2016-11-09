@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59534 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751282AbcKIBek (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 20:34:40 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.toke.dk ([52.28.52.200]:44503 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752576AbcKIKmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 9 Nov 2016 05:42:21 -0500
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Tim Shepard <shep@alum.mit.edu>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [v5] ath9k: Switch to using mac80211 intermediate software queues.
+References: <E1c4IsV-0003Rk-00@www.xplot.org>
+Date: Wed, 09 Nov 2016 11:42:16 +0100
+In-Reply-To: <E1c4IsV-0003Rk-00@www.xplot.org> (Tim Shepard's message of "Tue,
+        08 Nov 2016 21:44:42 -0500")
+Message-ID: <87k2cd0waf.fsf@toke.dk> (sfid-20161109_114225_804809_8B5A7931)
 MIME-Version: 1.0
-Subject: Re: [-next] mwifiex: fix missing destroy_workqueue() on error in
- mwifiex_add_virtual_intf()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1475161076-1409-1-git-send-email-weiyj.lk@gmail.com>
-References: <1475161076-1409-1-git-send-email-weiyj.lk@gmail.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20161109013440.18D63611CB@smtp.codeaurora.org> (sfid-20161109_023443_636073_E4F57373)
-Date: Wed,  9 Nov 2016 01:34:40 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> Add the missing destroy_workqueue() before return from
-> mwifiex_add_virtual_intf() in the error handling case.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Tim Shepard <shep@alum.mit.edu> writes:
 
-Patch applied to wireless-drivers-next.git, thanks.
+>> While at it, could you also add to the commit log some info how awesome this
+>> patch is from user's point of view and how it helps. For example, before and
+>> and after numbers and other results.
+>
+> That varies wildly, depending on many details of the scenario
+> (including the wireless capabilities of the clients connected to the
+> AP using this patch, and how far away those clients are). There's
+> really not enough room in a commit message to explain enough to make
+> any such claimed numbers reproducible.
 
-424342ff0e03 mwifiex: fix missing destroy_workqueue() on error in mwifiex_add_virtual_intf()
+I disagree; it's quite straightforward to demonstrate a gain from this
+on an ath9k access point. And while of course the mac80211 queues is the
+reason for this, the commit that uses it (i.e. this one) can explain
+that and include some numbers. I'll add that and resend :)
 
--- 
-https://patchwork.kernel.org/patch/9356567/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-Toke
