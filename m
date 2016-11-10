@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outils.crapouillou.net ([89.234.176.41]:33856 "EHLO
-        outils.crapouillou.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168874AbcKALEX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42340 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752580AbcKJG14 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 07:04:23 -0400
-From: Paul Cercueil <paul@crapouillou.net>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Cc: Maarten ter Huurne <maarten@treewalker.org>,
-        Paul Cercueil <paul@crapouillou.net>
-Subject: [PATCH 1/2] Documentation: devicetree: Add bindings info for rfkill-regulator
-Date: Tue,  1 Nov 2016 11:58:39 +0100
-Message-Id: <20161101105840.24313-1-paul@crapouillou.net> (sfid-20161101_120436_083723_23EDDA01)
+        Thu, 10 Nov 2016 01:27:56 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 10 Nov 2016 11:57:54 +0530
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: c_traja@qti.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, kbuild-all@01.org
+Subject: Re: [PATCH 2/4] ath10k: Add support to update btcoex priority value
+ via nl80211
+In-Reply-To: <alpine.DEB.2.20.1611092149120.2206@hadrien>
+References: <201611090629.9JO64IrN%fengguang.wu@intel.com>
+ <alpine.DEB.2.20.1611092149120.2206@hadrien>
+Message-ID: <5099054e6f8d4ea605d4af2f303ed31d@codeaurora.org> (sfid-20161110_072759_701676_D1F56102)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This document gives information about how to write a devicetree
-node that corresponds to the rfkill-regulator driver.
+On 2016-11-10 02:20, Julia Lawall wrote:
+> It seems possible that one might like to release the mutex lock before 
+> the
+> return on line 7556.
+> 
+yes mutex lock needs to release. I will send a v2 patch with the change.
 
-Signed-off-by: Paul Cercueil <paul@crapouillou.net>
----
- .../devicetree/bindings/net/rfkill-regulator.txt       | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/rfkill-regulator.txt
-
-diff --git a/Documentation/devicetree/bindings/net/rfkill-regulator.txt b/Documentation/devicetree/bindings/net/rfkill-regulator.txt
-new file mode 100644
-index 0000000..aac2fe1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/rfkill-regulator.txt
-@@ -0,0 +1,18 @@
-+Device tree bindings for the rfkill-regulator driver
-+
-+Required properties:
-+  - compatible:	should be "rfkill-regulator"
-+  - rfkill-name:	the name of this rfkill device
-+  - rfkill-type:	the type of this rfkill device;
-+			must correspond to a valid rfkill_type from <uapi/linux/rfkill.h>
-+  - vrfkill-supply:	phandle to a regulator
-+
-+Example:
-+
-+	wlan-rfkill {
-+		compatible = "rfkill-regulator";
-+		rfkill-name = "WLAN power switch";
-+		rfkill-type = <1>;
-+
-+		vrfkill-supply = <&wlan_power>;
-+	};
--- 
-2.9.3
+> julia
+> 
+> 
+> 
+> On Wed, 9 Nov 2016, kbuild test robot wrote:
+> 
+>> Hi Tamizh,
+>> 
+>> [auto build test WARNING on ath6kl/ath-next]
+>> [cannot apply to v4.9-rc4 next-20161108]
+>> [if your patch is applied to the wrong git tree, please drop us a note 
+>> to help improve the system]
+>> 
+>> url:    
+>> https://github.com/0day-ci/linux/commits/c_traja-qti-qualcomm-com/ath10k-Add-support-for-BTCOEX-feature/20161109-043718
+>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git 
+>> ath-next
+>> :::::: branch date: 2 hours ago
+>> :::::: commit date: 2 hours ago
+>> 
+>> >> drivers/net/wireless/ath/ath10k/mac.c:7556:2-8: preceding lock on line 7545
+>> 
+>> git remote add linux-review https://github.com/0day-ci/linux
+>> git remote update linux-review
+>> git checkout 2fc922b27f111b9e8089a3e94a17ee827e769c55
+>> vim +7556 drivers/net/wireless/ath/ath10k/mac.c
+>> 
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7539
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7540  	if 
+>> (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags))) {
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7541  		ret = -EINVAL;
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7542  		goto exit;
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7543  	}
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7544
+>> 2fc922b2 Tamizh chelvam 2016-11-08 @7545  
+>> 	mutex_lock(&ar->conf_mutex);
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7546
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7547  	if (ar->state != 
+>> ATH10K_STATE_ON &&
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7548  	    ar->state != 
+>> ATH10K_STATE_RESTARTED) {
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7549  		ret = -ENETDOWN;
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7550  		goto exit;
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7551  	}
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7552
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7553  	btcoex_prio = 
+>> ath10k_mac_get_btcoex_prio(btcoex_priority);
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7554
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7555  	if (btcoex_prio > 0x3f)
+>> 2fc922b2 Tamizh chelvam 2016-11-08 @7556  		return -E2BIG;
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7557
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7558  	ret = 
+>> ath10k_wmi_set_coex_param(ar, btcoex_prio);
+>> 2fc922b2 Tamizh chelvam 2016-11-08  7559
+>> 
+>> ---
+>> 0-DAY kernel test infrastructure                Open Source Technology 
+>> Center
+>> https://lists.01.org/pipermail/kbuild-all                   Intel 
+>> Corporation
+>> 
