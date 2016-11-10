@@ -1,198 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36794 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753178AbcKGO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:59:55 -0500
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH 2/8] phy: Use common freqchan helper for setting the operating channel
-Date: Mon,  7 Nov 2016 15:59:37 +0100
-Message-Id: <20161107145943.16761-3-benjamin@sipsolutions.net> (sfid-20161107_155959_564707_4FDA24B9)
-In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:32853 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755507AbcKJL5s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Nov 2016 06:57:48 -0500
+Received: by mail-pf0-f196.google.com with SMTP id 144so3985854pfv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:57:48 -0800 (PST)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH RESEND v2 04/11] mwifiex: remove redundant pdev check in suspend/resume handlers
+Date: Thu, 10 Nov 2016 19:57:05 +0800
+Message-Id: <1478779032-5165-4-git-send-email-huxinming820@marvell.com> (sfid-20161110_125752_339051_60DA797D)
+In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Simplify code by using the helper which has been introduced earlier.
+to_pci_dev() would just do struct offset arithmetic on struct
+device to get 'pdev' pointer. We never get NULL pdev pointer.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- phy.c | 143 ++++++++++++------------------------------------------------------
- 1 file changed, 25 insertions(+), 118 deletions(-)
+v2: Same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
+ 1 file changed, 6 insertions(+), 16 deletions(-)
 
-diff --git a/phy.c b/phy.c
-index c57a71f..266de4d 100644
---- a/phy.c
-+++ b/phy.c
-@@ -183,140 +183,47 @@ static int handle_name(struct nl80211_state *state,
- COMMAND(set, name, "<new name>", NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_name,
- 	"Rename this wireless device.");
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c4bd64b..6152f08 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -117,14 +117,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
--static int handle_freqs(struct nl_msg *msg, int argc, char **argv)
--{
--	static const struct {
--		const char *name;
--		unsigned int val;
--	} bwmap[] = {
--		{ .name = "20", .val = NL80211_CHAN_WIDTH_20, },
--		{ .name = "40", .val = NL80211_CHAN_WIDTH_40, },
--		{ .name = "80", .val = NL80211_CHAN_WIDTH_80, },
--		{ .name = "80+80", .val = NL80211_CHAN_WIDTH_80P80, },
--		{ .name = "160", .val = NL80211_CHAN_WIDTH_160, },
--	};
--	uint32_t freq;
--	unsigned int i, bwval = NL80211_CHAN_WIDTH_20_NOHT;
--	char *end;
--
--	if (argc < 1)
--		return 1;
--
--	for (i = 0; i < ARRAY_SIZE(bwmap); i++) {
--		if (strcasecmp(bwmap[i].name, argv[0]) == 0) {
--			bwval = bwmap[i].val;
--			break;
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
 -		}
--	}
--
--	if (bwval == NL80211_CHAN_WIDTH_20_NOHT)
--		return 1;
--
--	NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH, bwval);
--
--	if (argc == 1)
--		return 0;
--
--	/* center freq 1 */
--	if (!*argv[1])
--		return 1;
--	freq = strtoul(argv[1], &end, 10);
--	if (*end)
--		return 1;
--	NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ1, freq);
--
--	if (argc == 2)
--		return 0;
--
--	/* center freq 2 */
--	if (!*argv[2])
--		return 1;
--	freq = strtoul(argv[2], &end, 10);
--	if (*end)
--		return 1;
--	NLA_PUT_U32(msg, NL80211_ATTR_CENTER_FREQ2, freq);
--
--	return 0;
-- nla_put_failure:
--	return -ENOBUFS;
--}
--
--static int handle_freqchan(struct nl_msg *msg, bool chan,
--			   int argc, char **argv)
--{
--	char *end;
--	static const struct {
--		const char *name;
--		unsigned int val;
--	} htmap[] = {
--		{ .name = "HT20", .val = NL80211_CHAN_HT20, },
--		{ .name = "HT40+", .val = NL80211_CHAN_HT40PLUS, },
--		{ .name = "HT40-", .val = NL80211_CHAN_HT40MINUS, },
--	};
--	unsigned int htval = NL80211_CHAN_NO_HT;
--	unsigned int freq;
--	unsigned int i;
--
--	if (!argc || argc > 4)
--		return 1;
--
--	if (!*argv[0])
--		return 1;
--	freq = strtoul(argv[0], &end, 10);
--	if (*end)
--		return 1;
--
--	if (chan) {
--		enum nl80211_band band;
--		band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
--		freq = ieee80211_channel_to_frequency(freq, band);
--	}
--
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
--
--	if (argc > 2) {
--		return handle_freqs(msg, argc - 1, argv + 1);
--	} else if (argc == 2) {
--		for (i = 0; i < ARRAY_SIZE(htmap); i++) {
--			if (strcasecmp(htmap[i].name, argv[1]) == 0) {
--				htval = htmap[i].val;
--				break;
--			}
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		pr_err("Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
+@@ -162,14 +157,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pcie_service_card *card;
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (pdev) {
+-		card = pci_get_drvdata(pdev);
+-		if (!card || !card->adapter) {
+-			pr_err("Card or adapter structure is not valid\n");
+-			return 0;
 -		}
--		if (htval == NL80211_CHAN_NO_HT)
--			return handle_freqs(msg, argc - 1, argv + 1);
--	}
--
--	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_CHANNEL_TYPE, htval);
--
--	return 0;
-- nla_put_failure:
--	return -ENOBUFS;
--}
--
- static int handle_freq(struct nl80211_state *state, struct nl_msg *msg,
- 		       int argc, char **argv,
- 		       enum id_input id)
- {
--	return handle_freqchan(msg, false, argc, argv);
-+	struct chandef chandef;
-+	int res;
-+
-+	res = parse_freqchan(&chandef, false, argc, argv, NULL);
-+	if (res)
-+		return res;
-+
-+	return put_chandef(msg, &chandef);
- }
--COMMAND(set, freq, "<freq> [HT20|HT40+|HT40-]",
-+
-+COMMAND(set, freq,
-+	"<freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	"<control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_freq,
- 	"Set frequency/channel the hardware is using, including HT\n"
- 	"configuration.");
--COMMAND(set, freq, "<freq> [HT20|HT40+|HT40-]\n"
--		   "<control freq> [20|40|80|80+80|160] [<center freq 1>] [<center freq 2>]",
-+COMMAND(set, freq,
-+	"<freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	"<control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_freq, NULL);
+-	} else {
+-		pr_err("PCIE device is not specified\n");
++	card = pci_get_drvdata(pdev);
++	if (!card || !card->adapter) {
++		dev_err(dev, "Card or adapter structure is not valid\n");
+ 		return 0;
+ 	}
  
- static int handle_chan(struct nl80211_state *state, struct nl_msg *msg,
- 		       int argc, char **argv,
- 		       enum id_input id)
- {
--	return handle_freqchan(msg, true, argc, argv);
-+	struct chandef chandef;
-+	int res;
-+
-+	res = parse_freqchan(&chandef, true, argc, argv, NULL);
-+	if (res)
-+		return res;
-+
-+	return put_chandef(msg, &chandef);
- }
--COMMAND(set, channel, "<channel> [HT20|HT40+|HT40-]",
-+COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_PHY, handle_chan, NULL);
--COMMAND(set, channel, "<channel> [HT20|HT40+|HT40-]",
-+COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan, NULL);
- 
- static int handle_fragmentation(struct nl80211_state *state,
 -- 
-2.10.2
+1.8.1.4
