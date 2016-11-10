@@ -1,92 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43893 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1168445AbcKAK03 (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34779 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755770AbcKJSh2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 06:26:29 -0400
-From: Xinming Hu <huxm@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Thu, 10 Nov 2016 13:37:28 -0500
+Received: by mail-pf0-f178.google.com with SMTP id n85so150487453pfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 10:37:27 -0800 (PST)
+Date: Thu, 10 Nov 2016 10:37:24 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
         Kalle Valo <kvalo@qca.qualcomm.com>,
         Dmitry Torokhov <dtor@google.com>,
         Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: RE: [PATCH 01/12] mwifiex: fix power save issue when suspend
-Date: Tue, 1 Nov 2016 10:26:20 +0000
-Message-ID: <f059d1cb013c4dd3b5a5afabf953aabe@SC-EXCH02.marvell.com> (sfid-20161101_112634_585097_C65A3EA3)
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
- <20161031235712.GA101079@google.com>
-In-Reply-To: <20161031235712.GA101079@google.com>
-Content-Type: text/plain; charset="gb2312"
+        Cathy Luo <cluo@marvell.com>
+Subject: Re: [PATCH RESEND v2 03/11] mwifiex: resolve races between async FW
+ init (failure) and device removal
+Message-ID: <20161110183723.GA134624@google.com> (sfid-20161110_193736_465970_B64E6557)
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+ <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJpYW4sDQoNClRoYW5rcyBmb3IgcmV2aWV3LCB3ZSB3aWxsIGFkZHJlc3MgeW91ciBjb21t
-ZW50cyBpbiB1cGRhdGVkIHZlcnNpb24uDQpTaW5jZSB3ZSBoYXZlIGFuIGVuaGFuY2VkIHZlcmlz
-b24gZm9yIEZST01MSVNUOiBtd2lmaWV4OiBmaXggY29ybmVyIGNhc2UsIA0KdGhhdCBpcyBodHRw
-czovL3BhdGNod29yay5rZXJuZWwub3JnL3BhdGNoLzk0MDUxMTkvICwNCnRoZSB1cGRhdGVkIHBh
-dGNoIHdpbGwgYmUgcmVvcmdhbml6ZWQgdG8gZm9sbG93IGFib3ZlIHBhdGNoLg0KDQo+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIu
-a2VybmVsLm9yZw0KPiBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIEJyaWFuIE5vcnJpcw0KPiBTZW50OiAyMDE2xOoxMdTCMcjVIDc6NTcN
-Cj4gVG86IFhpbm1pbmcgSHUNCj4gQ2M6IExpbnV4IFdpcmVsZXNzOyBLYWxsZSBWYWxvOyBEbWl0
-cnkgVG9yb2tob3Y7IEFtaXRrdW1hciBLYXJ3YXI7IENhdGh5IEx1bzsNCj4gU2hlbmd6aGVuIExp
-DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDEvMTJdIG13aWZpZXg6IGZpeCBwb3dlciBzYXZlIGlz
-c3VlIHdoZW4gc3VzcGVuZA0KPiANCj4gSGksDQo+IA0KPiBPbiBNb24sIE9jdCAzMSwgMjAxNiBh
-dCAwNDowMjowOVBNICswODAwLCBYaW5taW5nIEh1IHdyb3RlOg0KPiA+IEZyb206IFNoZW5nemhl
-biBMaSA8c3psaUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IFRoaXMgcGF0Y2ggZml4ZXMgYSBjb3Ju
-ZXIgY2FzZSBmb3IgIkZST01MSVNUOiBtd2lmaWV4OiBmaXggY29ybmVyIGNhc2UNCj4gDQo+IFVw
-c3RyZWFtIHBhdGNoZXMgZG9uJ3Qgbm9ybWFsbHkgZ2V0IGEgJ0ZST01MSVNUJyB0YWcgd2hpbGUg
-eW91J3JlIHNlbmRpbmcNCj4gdGhlbSB0byB0aGUgbWFpbGluZyBsaXN0IDopIFRoYXQgZGVzaWdu
-YXRpb24gaXMgdXNlZCBmb3IgQ2hyb21lIE9TIHRyZWVzLCBzbyB3ZQ0KPiBrbm93IHdoZXJlIHRv
-IGZpbmQgdGhlIHBhdGNoIHNvdXJjZS4gQnV0IHRoZSB1cHN0cmVhbSBtYWlsaW5nIGxpc3QgKmlz
-KiB0aGUNCj4gc291cmNlLg0KPiANCj4gPiBwb3dlciBzYXZlIGlzc3VlIiwgbWFpbiBwcm9jZXNz
-IHdpbGwgY2hlY2sgdGhlIHBvd2VyIHNhdmUgY29uZGl0aW9uIGluDQo+ID4gUFNfUFJFX1NMRUVQ
-IHN0YXR1cyBzbyB0aGUgc2xlZXAgaGFuZHNoYWtlIGNvdWxkIGNvbnRpbnVlLg0KPiA+DQo+ID4g
-U2lnbmVkLW9mZi1ieTogQ2F0aHkgTHVvIDxjbHVvQG1hcnZlbGwuY29tPg0KPiA+IFNpZ25lZC1v
-ZmYtYnk6IFNoZW5nemhlbiBMaSA8c3psaUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBBbWl0a3VtYXIgS2Fyd2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiA+DQo+ID4gQlVHPWNo
-cm9tZS1vcy1wYXJ0bmVyOjU4MTY0DQo+ID4gVEVTVD1zdHJlc3MgV2lmaSB3LyBwb3dlcl9zYXZl
-IGVuYWJsZWQNCj4gPg0KPiA+IENoYW5nZS1JZDogSTVhMzZkOWVhZWI3ZmU1ZmFhY2NjNTMzZTBk
-MWJhMWYzMjUzNjY2ZGMNCj4gDQo+IEluIHRoZSBzYW1lIHZlaW46IHdoaWxlIEknbSBoYXBweSB0
-byBoYXZlIHRoZSBCVUc9LCBURVNUPSwgYW5kIEdlcnJpdA0KPiBDaGFuZ2UtSUQgZm9yIG91ciBD
-aHJvbWUgT1MgdHJlZSwgSSBkb24ndCB0aGluayB1cHN0cmVhbSByZXZpZXdlcnMgdHlwaWNhbGx5
-DQo+IGNhcmUgYWJvdXQgdGhvc2UuIFBsZWFzZSByZW1vdmUgdGhvc2UgZnJvbSB1cHN0cmVhbSBz
-dWJtaXNzaW9ucyBsaWtlIHRoaXMuDQo+IA0KPiAoU2FtZSBhcHBsaWVzIHRvIHRoZSByZXN0IG9m
-IHRoaXMgc2VyaWVzLiBBbHNvLCBjb25zaWRlciBydW5uaW5nDQo+IHNjcmlwdHMvY2hlY2twYXRj
-aC5wbC4gSXQgd2lsbCBhdCBsZWFzdCByZW1pbmQgeW91IGFib3V0IHJlbW92aW5nIHRoZSBHZXJy
-aXQNCj4gQ2hhbmdlLUlELikNCj4gDQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNz
-L21hcnZlbGwvbXdpZmlleC9jbWRldnQuYyB8IDMgKystDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmMgICB8IDUgKysrKysNCj4gPiAgMiBmaWxlcyBjaGFu
-Z2VkLCA3IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvY21kZXZ0LmMNCj4gPiBiL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9jbWRldnQuYw0KPiA+IGluZGV4IDUz
-NDc3MjguLjkwNzViZTUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2NtZGV2dC5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFy
-dmVsbC9td2lmaWV4L2NtZGV2dC5jDQo+ID4gQEAgLTExMjMsOCArMTEyMyw5IEBAIG13aWZpZXhf
-Y2hlY2tfcHNfY29uZChzdHJ1Y3QgbXdpZmlleF9hZGFwdGVyDQo+ICphZGFwdGVyKQ0KPiA+ICAJ
-CW13aWZpZXhfZG5sZF9zbGVlcF9jb25maXJtX2NtZChhZGFwdGVyKTsNCj4gPiAgCWVsc2UNCj4g
-PiAgCQltd2lmaWV4X2RiZyhhZGFwdGVyLCBDTUQsDQo+ID4gLQkJCSAgICAiY21kOiBEZWxheSBT
-bGVlcCBDb25maXJtICglcyVzJXMpXG4iLA0KPiA+ICsJCQkgICAgImNtZDogRGVsYXkgU2xlZXAg
-Q29uZmlybSAoJXMlcyVzJXMpXG4iLA0KPiA+ICAJCQkgICAgKGFkYXB0ZXItPmNtZF9zZW50KSA/
-ICJEIiA6ICIiLA0KPiA+ICsJCQkgICAgKGFkYXB0ZXItPmRhdGFfc2VudCkgPyAiVCIgOiAiIiwN
-Cj4gPiAgCQkJICAgIChhZGFwdGVyLT5jdXJyX2NtZCkgPyAiQyIgOiAiIiwNCj4gPiAgCQkJICAg
-IChJU19DQVJEX1JYX1JDVkQoYWRhcHRlcikpID8gIlIiIDogIiIpOyAgfSBkaWZmIC0tZ2l0DQo+
-ID4gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gYi9k
-cml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gaW5kZXggMjQ3
-OGNjZC4uZjU1OWVhZCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2
-ZWxsL213aWZpZXgvbWFpbi5jDQo+ID4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVs
-bC9td2lmaWV4L21haW4uYw0KPiA+IEBAIC0zMDgsNiArMzA4LDExIEBAIHByb2Nlc3Nfc3RhcnQ6
-DQo+ID4gIAkJCS8qIFdlIGhhdmUgdHJpZWQgdG8gd2FrZXVwIHRoZSBjYXJkIGFscmVhZHkgKi8N
-Cj4gPiAgCQkJaWYgKGFkYXB0ZXItPnBtX3dha2V1cF9md190cnkpDQo+ID4gIAkJCQlicmVhazsN
-Cj4gPiArCQkJaWYgKGFkYXB0ZXItPnBzX3N0YXRlID09IFBTX1NUQVRFX1BSRV9TTEVFUCkgew0K
-PiA+ICsJCQkJaWYgKCFhZGFwdGVyLT5jbWRfc2VudCAmJiAhYWRhcHRlci0+Y3Vycl9jbWQpDQo+
-IA0KPiBUaGUgZW50aXJlICdpZicgY29uZGl0aW9uIGlzIHVubmVjZXNzYXJ5LiBUaGF0J3MgYWxs
-IGNoZWNrZWQgYWxyZWFkeSB3aXRoaW4NCj4gbXdpZmlleF9jaGVja19wc19jb25kKCkuDQo+IA0K
-PiBCcmlhbg0KPiANCj4gPiArCQkJCQltd2lmaWV4X2NoZWNrX3BzX2NvbmQoYWRhcHRlcik7DQo+
-ID4gKwkJCX0NCj4gPiArDQo+ID4gIAkJCWlmIChhZGFwdGVyLT5wc19zdGF0ZSAhPSBQU19TVEFU
-RV9BV0FLRSkNCj4gPiAgCQkJCWJyZWFrOw0KPiA+ICAJCQlpZiAoYWRhcHRlci0+dHhfbG9ja19m
-bGFnKSB7DQo+ID4gLS0NCj4gPiAxLjguMS40DQo+ID4NCg0KQmVzdCBSZWdhcmRzLA0KU2ltb24N
-Cg==
+Hi,
+
+On Thu, Nov 10, 2016 at 07:57:04PM +0800, Xinming Hu wrote:
+> From: Brian Norris <briannorris@chromium.org>
+> 
+> It's possible for the FW init sequence to fail, which will trigger a
+> device cleanup sequence in mwifiex_fw_dpc(). This sequence can race with
+> device suspend() or remove() (e.g., reboot or unbind), and can trigger
+> use-after-free issues. Currently, this driver attempts (poorly) to
+> synchronize remove() using a semaphore, but it doesn't protect some of
+> the critical sections properly. Particularly, we grab a pointer to the
+> adapter struct (card->adapter) without checking if it's being freed or
+> not. We later do a NULL check on the adapter, but that doesn't work if
+> the adapter was freed.
+> 
+> Also note that the PCIe interface driver doesn't ever set card->adapter
+> to NULL, so even if we get the synchronization right, we still might try
+> to redo the cleanup in ->remove(), even if the FW init failure sequence
+> already did it.
+> 
+> This patch replaces the static semaphore with a per-device completion
+> struct, and uses that completion to synchronize the remove() thread with
+> the mwifiex_fw_dpc(). A future patch will utilize this completion to
+> synchronize the suspend() thread as well.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+> v2: Same as v1
+> ---
+>  drivers/net/wireless/marvell/mwifiex/main.c | 46 ++++++++++-------------------
+>  drivers/net/wireless/marvell/mwifiex/main.h | 13 +++++---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
+>  drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
+>  drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
+>  drivers/net/wireless/marvell/mwifiex/usb.c  | 23 +++++++--------
+>  drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
+>  8 files changed, 55 insertions(+), 69 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index c710d5e..09d46d6 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -521,7 +521,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+>  	struct mwifiex_private *priv;
+>  	struct mwifiex_adapter *adapter = context;
+>  	struct mwifiex_fw_image fw;
+> -	struct semaphore *sem = adapter->card_sem;
+>  	bool init_failed = false;
+>  	struct wireless_dev *wdev;
+>  
+> @@ -670,7 +669,8 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+>  	}
+>  	if (init_failed)
+>  		mwifiex_free_adapter(adapter);
+> -	up(sem);
+> +	/* Tell all current and future waiters we're finished */
+> +	complete_all(adapter->fw_done);
+
+This part introduces a new use-after-free. We need to dereference
+adapter->fw_done *before* we free the adapter in mwifiex_free_adapter().
+So you need a diff that looks something like this:
+
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -514,6 +514,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	struct mwifiex_fw_image fw;
+ 	bool init_failed = false;
+ 	struct wireless_dev *wdev;
++	struct completion *fw_done = adapter->fw_done;
+ 
+ 	if (!firmware) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -654,7 +655,7 @@ done:
+ 	if (init_failed)
+ 		mwifiex_free_adapter(adapter);
+ 	/* Tell all current and future waiters we're finished */
+-	complete_all(adapter->fw_done);
++	complete_all(fw_done);
+ 	return;
+ }
+
+ 
+Brian
+
+>  	return;
+>  }
+>  
+...
