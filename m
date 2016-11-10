@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56335 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752988AbcKOO5A (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 09:57:00 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from yes.iam.tj ([109.74.197.121]:33932 "EHLO iam.tj"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755881AbcKJWLx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 10 Nov 2016 17:11:53 -0500
+From: Tj <linux@iam.tj>
+Subject: [PATCH] iwlwifi: fix undefined 6000G2B firmware MAX API version
+To: "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
+        <linux-wireless@vger.kernel.org>
+Cc: "Intel Linux Wireless (supporter:INTEL WIRELESS WIFI LINK (iwlwifi))"
+        <linuxwifi@intel.com>
+Message-ID: <78f29b89-eb19-920f-f576-5009383c55e1@iam.tj> (sfid-20161110_231156_851738_0F2FD314)
+Date: Thu, 10 Nov 2016 22:04:24 +0000
 MIME-Version: 1.0
-Subject: Re: [v8,
- 1/3] Documentation: dt: net: add ath9k wireless device binding
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161016205907.19927-2-martin.blumenstingl@googlemail.com>
-References: <20161016205907.19927-2-martin.blumenstingl@googlemail.com>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-CC: <ath9k-devel@lists.ath9k.org>, <devicetree@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-        <robh+dt@kernel.org>, <mcgrof@do-not-panic.com>,
-        <mark.rutland@arm.com>, <kvalo@codeaurora.org>,
-        <chunkeey@googlemail.com>, <arend.vanspriel@broadcom.com>,
-        <julian.calaby@gmail.com>, <bjorn@mork.no>,
-        <linux@rempel-privat.de>, <nbd@nbd.name>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Message-ID: <cfd35a091551410cb69f2444109d3193@euamsexm01a.eu.qualcomm.com> (sfid-20161115_155705_794591_63C5BEC6)
-Date: Tue, 15 Nov 2016 15:56:47 +0100
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Blumenstingl <martin.blumenstingl@googlemail.com> wrote:
-> Add documentation how devicetree can be used to configure ath9k based
-> devices.
-> 
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> Acked-by: Rob Herring <robh@kernel.org>
+  $ modinfo -F firmware iwlwifi | grep API
+  iwlwifi-6000g2b-IWL6000G2B_UCODE_API_MAX.ucode
+  $ modinfo -F vermagic iwlwifi
+  4.9.0-040900rc4-lowlatency SMP preempt mod_unload modversions
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Change-Id: Ie21a4be0b12b520844c1da4a8bef9e8a0097d919
+Signed-off-by: TJ <linux@iam.tj>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-fc383ffdb91a Documentation: dt: net: add ath9k wireless device binding
-b40ded2ad75c ath9k: add a helper to get the string representation of ath_bus_type
-138b41253d9c ath9k: parse the device configuration from an OF node
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+index 0b9f6a7..19b85e8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+@@ -34,6 +34,7 @@
+ #define IWL6000_UCODE_API_MAX 6
+ #define IWL6050_UCODE_API_MAX 5
+ #define IWL6000G2_UCODE_API_MAX 6
++#define IWL6000G2B_UCODE_API_MAX 6
+ #define IWL6035_UCODE_API_MAX 6
+  /* Lowest firmware API version supported */
 -- 
-https://patchwork.kernel.org/patch/9378317/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
