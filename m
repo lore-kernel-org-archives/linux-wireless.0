@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35631 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752301AbcKRTYS (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:32814 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755627AbcKJL5m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 14:24:18 -0500
-Received: by mail-qk0-f195.google.com with SMTP id n204so34263052qke.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:18 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 07/11] ath10k: Added SDIO dbg masks
-Date: Fri, 18 Nov 2016 20:22:47 +0100
-Message-Id: <1479496971-19174-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202422_841423_60725647)
-In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+        Thu, 10 Nov 2016 06:57:42 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 144so3985573pfv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:57:42 -0800 (PST)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: [PATCH RESEND v2 02/11] mwifiex: complete blocked power save handshake in main process
+Date: Thu, 10 Nov 2016 19:57:03 +0800
+Message-Id: <1478779032-5165-2-git-send-email-huxinming820@marvell.com> (sfid-20161110_125750_833019_45855EBE)
+In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Debug masks for SDIO HIF layer.
+From: Shengzhen Li <szli@marvell.com>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Power save handshake with firmware might be blocked by on-going
+data transfer.
+this patch check the PS status in main process and complete
+previous blocked PS handshake.
+this patch also remove redudant check before call
+mwifiex_check_ps_cond fuction.
+
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.h |    2 ++
- 1 file changed, 2 insertions(+)
+v2: 1. remove redudant check(Brain)
+	2. reorgnized to follow tx_hw_pending patch
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 335512b..d35263c 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -38,6 +38,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
- 	ATH10K_DBG_PCI_PS	= 0x00004000,
- 	ATH10K_DBG_AHB		= 0x00008000,
-+	ATH10K_DBG_SDIO		= 0x00010000,
-+	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 20c9b77..c710d5e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -308,6 +308,9 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 			/* We have tried to wakeup the card already */
+ 			if (adapter->pm_wakeup_fw_try)
+ 				break;
++			if (adapter->ps_state == PS_STATE_PRE_SLEEP)
++				mwifiex_check_ps_cond(adapter);
++
+ 			if (adapter->ps_state != PS_STATE_AWAKE)
+ 				break;
+ 			if (adapter->tx_lock_flag) {
+@@ -355,10 +358,8 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
  
+ 		/* Check if we need to confirm Sleep Request
+ 		   received previously */
+-		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+-			if (!adapter->cmd_sent && !adapter->curr_cmd)
+-				mwifiex_check_ps_cond(adapter);
+-		}
++		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
++			mwifiex_check_ps_cond(adapter);
+ 
+ 		/* * The ps_state may have been changed during processing of
+ 		 * Sleep Request event.
 -- 
-1.7.9.5
+1.8.1.4
