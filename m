@@ -1,179 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39787 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753852AbcKKLP5 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35026 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755713AbcKJL6J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 06:15:57 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>
-Subject: [PATCH v2 2/3] mwifiex: Introduce mwifiex_probe_of() to parse common properties
-Date: Fri, 11 Nov 2016 16:45:10 +0530
-Message-ID: <1478862911-15498-2-git-send-email-akarwar@marvell.com> (sfid-20161111_121559_991321_E6569E21)
-In-Reply-To: <1478862911-15498-1-git-send-email-akarwar@marvell.com>
-References: <1478862911-15498-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 10 Nov 2016 06:58:09 -0500
+Received: by mail-pf0-f195.google.com with SMTP id i88so3963552pfk.2
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:58:09 -0800 (PST)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH RESEND v2 11/11] mwifiex: pcie: stop checking for NULL adapter->card
+Date: Thu, 10 Nov 2016 19:57:12 +0800
+Message-Id: <1478779032-5165-11-git-send-email-huxinming820@marvell.com> (sfid-20161110_125843_698604_17E8B0B2)
+In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajat Jain <rajatja@google.com>
+From: Brian Norris <briannorris@chromium.org>
 
-Introduce function mwifiex_probe_of() to parse common properties.
-Since the interface drivers get to decide whether or not the device
-tree node was a valid one (depending on the compatible property),
-let the interface drivers pass a flag to indicate whether the device
-tree node was a valid one.
+It should never be NULL here, and to think otherwise makes things
+confusing.
 
-The function mwifiex_probe_of()nodetself is currently only a place
-holder with the next patch adding content to it.
-
-Signed-off-by: Rajat Jain <rajatja@google.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
 v2: Same as v1
 ---
- drivers/net/wireless/marvell/mwifiex/main.c    | 15 ++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/main.h    |  2 +-
- drivers/net/wireless/marvell/mwifiex/pcie.c    |  4 +++-
- drivers/net/wireless/marvell/mwifiex/sdio.c    |  4 +++-
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c |  5 +----
- drivers/net/wireless/marvell/mwifiex/usb.c     |  2 +-
- 6 files changed, 23 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 55 +++++++++++++----------------
+ 1 file changed, 24 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index dcceab2..b2f3d96 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1552,6 +1552,16 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
- }
- EXPORT_SYMBOL_GPL(mwifiex_do_flr);
- 
-+static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
-+{
-+	struct device *dev = adapter->dev;
-+
-+	if (!dev->of_node)
-+		return;
-+
-+	adapter->dt_node = dev->of_node;
-+}
-+
- /*
-  * This function adds the card.
-  *
-@@ -1568,7 +1578,7 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
- int
- mwifiex_add_card(void *card, struct semaphore *sem,
- 		 struct mwifiex_if_ops *if_ops, u8 iface_type,
--		 struct device *dev)
-+		 struct device *dev, bool of_node_valid)
- {
- 	struct mwifiex_adapter *adapter;
- 
-@@ -1581,6 +1591,9 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
- 	}
- 
- 	adapter->dev = dev;
-+	if (of_node_valid)
-+		mwifiex_probe_of(adapter);
-+
- 	adapter->iface_type = iface_type;
- 	adapter->card_sem = sem;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 2664513..0c07434 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1413,7 +1413,7 @@ static inline u8 mwifiex_is_tdls_link_setup(u8 status)
- int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
- 			     u32 func_init_shutdown);
- int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8,
--		     struct device *);
-+		     struct device *, bool);
- int mwifiex_remove_card(struct mwifiex_adapter *, struct semaphore *);
- 
- void mwifiex_get_version(struct mwifiex_adapter *adapter, char *version,
 diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index de6939c..fe7f3b0 100644
+index 3b6d908..65f1f92 100644
 --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
 +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -201,6 +201,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent)
+@@ -3021,31 +3021,28 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
  {
- 	struct pcie_service_card *card;
-+	bool valid_of_node = false;
- 	int ret;
+ 	struct pcie_service_card *card = adapter->card;
+-	struct pci_dev *pdev;
++	struct pci_dev *pdev = card->dev;
+ 	int i;
  
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
-@@ -228,10 +229,11 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		ret = mwifiex_pcie_probe_of(&pdev->dev);
- 		if (ret)
- 			goto err_free;
-+		valid_of_node = true;
- 	}
+-	if (card) {
+-		pdev = card->dev;
+-		if (card->msix_enable) {
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				synchronize_irq(card->msix_entries[i].vector);
++	if (card->msix_enable) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			synchronize_irq(card->msix_entries[i].vector);
  
- 	ret = mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
--			       MWIFIEX_PCIE, &pdev->dev);
-+			       MWIFIEX_PCIE, &pdev->dev, valid_of_node);
- 	if (ret) {
- 		pr_err("%s failed\n", __func__);
- 		goto err_free;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index c95f41f..558743a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -156,6 +156,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- {
- 	int ret;
- 	struct sdio_mmc_card *card = NULL;
-+	bool valid_of_node = false;
+-			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+-				free_irq(card->msix_entries[i].vector,
+-					 &card->msix_ctx[i]);
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			free_irq(card->msix_entries[i].vector,
++				 &card->msix_ctx[i]);
  
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X class=%d function=%d\n",
- 		 func->vendor, func->device, func->class, func->num);
-@@ -203,10 +204,11 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 			dev_err(&func->dev, "SDIO dt node parse failed\n");
- 			goto err_disable;
- 		}
-+		valid_of_node = true;
- 	}
+-			card->msix_enable = 0;
+-			pci_disable_msix(pdev);
+-	       } else {
+-			mwifiex_dbg(adapter, INFO,
+-				    "%s(): calling free_irq()\n", __func__);
+-		       free_irq(card->dev->irq, &card->share_irq_ctx);
++		card->msix_enable = 0;
++		pci_disable_msix(pdev);
++       } else {
++		mwifiex_dbg(adapter, INFO,
++			    "%s(): calling free_irq()\n", __func__);
++	       free_irq(card->dev->irq, &card->share_irq_ctx);
  
- 	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
--			       MWIFIEX_SDIO, &func->dev);
-+			       MWIFIEX_SDIO, &func->dev, valid_of_node);
- 	if (ret) {
- 		dev_err(&func->dev, "add card failed\n");
- 		goto err_disable;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index b697b61..bcd6408 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2235,10 +2235,7 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
--		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
--		    adapter->dev->of_node) {
--			adapter->dt_node = adapter->dev->of_node;
-+		if (adapter->dt_node) {
- 			if (of_property_read_u32(adapter->dt_node,
- 						 "marvell,wakeup-pin",
- 						 &data) == 0) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index f847fff..11c9629 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -476,7 +476,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
- 	usb_set_intfdata(intf, card);
+-			if (card->msi_enable)
+-				pci_disable_msi(pdev);
+-	       }
+-		card->adapter = NULL;
+-	}
++		if (card->msi_enable)
++			pci_disable_msi(pdev);
++       }
++	card->adapter = NULL;
+ }
  
- 	ret = mwifiex_add_card(card, &add_remove_card_sem, &usb_ops,
--			       MWIFIEX_USB, &card->udev->dev);
-+			       MWIFIEX_USB, &card->udev->dev, false);
- 	if (ret) {
- 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
- 		usb_reset_device(udev);
+ /* This function initializes the PCI-E host memory space, WCB rings, etc.
+@@ -3128,18 +3125,14 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ 	adapter->seq_num = 0;
+ 	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 
+-	if (card) {
+-		if (reg->sleep_cookie)
+-			mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+-
+-		mwifiex_pcie_delete_cmdrsp_buf(adapter);
+-		mwifiex_pcie_delete_evtbd_ring(adapter);
+-		mwifiex_pcie_delete_rxbd_ring(adapter);
+-		mwifiex_pcie_delete_txbd_ring(adapter);
+-		card->cmdrsp_buf = NULL;
+-	}
++	if (reg->sleep_cookie)
++		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+ 
+-	return;
++	mwifiex_pcie_delete_cmdrsp_buf(adapter);
++	mwifiex_pcie_delete_evtbd_ring(adapter);
++	mwifiex_pcie_delete_rxbd_ring(adapter);
++	mwifiex_pcie_delete_txbd_ring(adapter);
++	card->cmdrsp_buf = NULL;
+ }
+ 
+ static struct mwifiex_if_ops pcie_ops = {
 -- 
-1.9.1
+1.8.1.4
