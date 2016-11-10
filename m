@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33050 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965354AbcKWPjP (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36007 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755648AbcKJL5v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 10:39:15 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/9] rt2800: correctly report MCS TX parameters
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479462241-9299-2-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-2-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Message-Id: <20161123153914.DFB3D6151E@smtp.codeaurora.org> (sfid-20161123_163931_895788_346552FC)
-Date: Wed, 23 Nov 2016 15:39:14 +0000 (UTC)
+        Thu, 10 Nov 2016 06:57:51 -0500
+Received: by mail-pf0-f195.google.com with SMTP id n85so3971515pfi.3
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:57:51 -0800 (PST)
+From: Xinming Hu <huxinming820@gmail.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH RESEND v2 05/11] mwifiex: don't pretend to resume while remove()'ing
+Date: Thu, 10 Nov 2016 19:57:06 +0800
+Message-Id: <1478779032-5165-5-git-send-email-huxinming820@marvell.com> (sfid-20161110_125754_755885_84CB0C85)
+In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> We should only set IEEE80211_HT_MCS_TX_RX_DIF when TX and RX MCS sets
-> are not equal, i.e. when number of tx streams is different than
-> number of RX streams.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+From: Brian Norris <briannorris@chromium.org>
 
-9 patches applied to wireless-drivers-next.git, thanks.
+The device core will not allow suspend() to race with remove().
 
-cea5b03d8a10 rt2800: correctly report MCS TX parameters
-b29a1c1f08f3 rt2800usb: do not wipe out USB_DMA_CFG settings
-770e4b730a73 rt2800: OFDM rates are mandatory
-b4c449b1b803 rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
-be82de9d64e2 rt2800: correct AUTO_RSP_CFG
-231aeca1e19e rt2800: correct TX_SW_CFG1 for 5592
-6c40063d5a61 rt2800: use RTS/CTS protection instead of CTS-to-self
-8d79b0078278 rt2800: tune *_PROT_CFG parameters
-159a55a64d44 rt2800: disable CCK rates on HT
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2: Same as v1
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 5 -----
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ---
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 5 -----
+ 3 files changed, 13 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6152f08..a2353f9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -257,11 +257,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-#ifdef CONFIG_PM_SLEEP
+-		if (adapter->is_suspended)
+-			mwifiex_pcie_resume(&pdev->dev);
+-#endif
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 90f45d9..a2257a4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -246,9 +246,6 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-		if (adapter->is_suspended)
+-			mwifiex_sdio_resume(adapter->dev);
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 14f89fe..558a7f1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -614,11 +614,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+-#ifdef CONFIG_PM
+-		if (adapter->is_suspended)
+-			mwifiex_usb_resume(intf);
+-#endif
+-
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
 -- 
-https://patchwork.kernel.org/patch/9436109/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.1.4
