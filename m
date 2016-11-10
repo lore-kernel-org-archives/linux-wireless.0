@@ -1,157 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34244 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751495AbcKRKkQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40830 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932845AbcKJOGR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 05:40:16 -0500
-Received: by mail-pg0-f67.google.com with SMTP id e9so19988500pgc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 02:40:16 -0800 (PST)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 1/4] rsi: Add support to filter rx frames
-Date: Fri, 18 Nov 2016 16:07:09 +0530
-Message-Id: <1479465429-2412-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161118_114020_697732_BDFD70EE)
+        Thu, 10 Nov 2016 09:06:17 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Xinming Hu <huxinming820@gmail.com>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Brian Norris <briannorris@google.com>,
+        Dmitry Torokhov <dtor@google.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH RESEND v2 01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+Date: Thu, 10 Nov 2016 16:06:11 +0200
+In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+        (Xinming Hu's message of "Thu, 10 Nov 2016 19:57:02 +0800")
+Message-ID: <87y40rpgz0.fsf@purkki.adurom.net> (sfid-20161110_150621_808866_173B957E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Filtering rx frames after connection in station mode avoids the
-overhead of processing un-necessary frames. Hence rx filter frame
-is added which can be configured to device at suitable times.
+Xinming Hu <huxinming820@gmail.com> writes:
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 16 +++++++++++++-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 33 +++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_mgmt.h         | 11 ++++++++++
- 3 files changed, 59 insertions(+), 1 deletion(-)
+> From: Shengzhen Li <szli@marvell.com>
+>
+> We may get SLEEP event from firmware even if TXDone interrupt
+> for last Tx packet is still pending. In this case, we may
+> end up accessing PCIe memory for handling TXDone after power
+> save handshake is completed. This causes kernel crash with
+> external abort.
+>
+> This patch will only allow downloading sleep confirm
+> when no tx done interrupt is pending in the hardware.
+>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v2: address format issues(Brain)
+> RESEND v2(Applicable for complete patch series):
+>     1) Fixed syntax issue "changelog not placed after the  Sign-offs"
+>        pointed by Brian.
+>     2) Dropped "[v2,03/12] mwifiex: don't do unbalanced free()'ing in
+>        cleanup_if()" patch in this series. It was already sent by Brian
+>        separately.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..fdd31df 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -264,6 +264,8 @@ static int rsi_mac80211_start(struct ieee80211_hw *hw)
- 	common->iface_down = false;
- 	mutex_unlock(&common->mutex);
- 
-+	rsi_send_rx_filter_frame(common, 0);
-+
- 	return 0;
- }
- 
-@@ -456,11 +458,19 @@ static void rsi_mac80211_bss_info_changed(struct ieee80211_hw *hw,
- {
- 	struct rsi_hw *adapter = hw->priv;
- 	struct rsi_common *common = adapter->priv;
-+	u16 rx_filter_word = 0;
- 
- 	mutex_lock(&common->mutex);
- 	if (changed & BSS_CHANGED_ASSOC) {
- 		rsi_dbg(INFO_ZONE, "%s: Changed Association status: %d\n",
- 			__func__, bss_conf->assoc);
-+		if (bss_conf->assoc) {
-+			/* Send the RX filter frame */
-+			rx_filter_word = (ALLOW_DATA_ASSOC_PEER |
-+					  ALLOW_CTRL_ASSOC_PEER |
-+					  ALLOW_MGMT_ASSOC_PEER);
-+			rsi_send_rx_filter_frame(common, rx_filter_word);
-+		}
- 		rsi_inform_bss_status(common,
- 				      bss_conf->assoc,
- 				      bss_conf->bssid,
-@@ -998,6 +1008,7 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
- 	struct rsi_common *common = adapter->priv;
- 
- 	mutex_lock(&common->mutex);
-+
- 	/* Resetting all the fields to default values */
- 	common->bitrate_mask[NL80211_BAND_2GHZ] = 0;
- 	common->bitrate_mask[NL80211_BAND_5GHZ] = 0;
-@@ -1007,8 +1018,11 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
- 	common->vif_info[0].seq_start = 0;
- 	common->secinfo.ptk_cipher = 0;
- 	common->secinfo.gtk_cipher = 0;
--	mutex_unlock(&common->mutex);
- 
-+	rsi_send_rx_filter_frame(common, 0);
-+	
-+	mutex_unlock(&common->mutex);
-+	
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 35c14cc..ef4b05a 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1240,6 +1240,39 @@ int rsi_send_block_unblock_frame(struct rsi_common *common, bool block_event)
- 
- }
- 
-+/**
-+ * rsi_send_rx_filter_frame() - Sends a frame to filter the RX packets
-+ *
-+ * @common: Pointer to the driver private structure.
-+ * @rx_filter_word: Flags of filter packets
-+ *
-+ * @Return: 0 on success, -1 on failure.
-+ */
-+int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
-+{
-+	struct rsi_mac_frame *cmd_frame;
-+	struct sk_buff *skb;
-+
-+	rsi_dbg(MGMT_TX_ZONE, "Sending RX filter frame\n");
-+
-+	skb = dev_alloc_skb(FRAME_DESC_SZ);
-+	if (!skb) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
-+			__func__);
-+		return -ENOMEM;
-+	}
-+
-+	memset(skb->data, 0, FRAME_DESC_SZ);
-+	cmd_frame = (struct rsi_mac_frame *)skb->data;
-+
-+	cmd_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
-+	cmd_frame->desc_word[1] = cpu_to_le16(SET_RX_FILTER);
-+	cmd_frame->desc_word[4] = cpu_to_le16(rx_filter_word);
-+
-+	skb_put(skb, FRAME_DESC_SZ);
-+
-+	return rsi_send_internal_mgmt_frame(common, skb);
-+}
- 
- /**
-  * rsi_handle_ta_confirm_type() - This function handles the confirm frames.
-diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
-index 3741173..40e8f8e 100644
---- a/drivers/net/wireless/rsi/rsi_mgmt.h
-+++ b/drivers/net/wireless/rsi/rsi_mgmt.h
-@@ -140,6 +140,16 @@
- 
- #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
- 				 FIF_BCN_PRBRESP_PROMISC)
-+
-+/* Rx filter word definitions */
-+#define PROMISCOUS_MODE			BIT(0)
-+#define ALLOW_DATA_ASSOC_PEER		BIT(1)
-+#define ALLOW_MGMT_ASSOC_PEER		BIT(2)
-+#define ALLOW_CTRL_ASSOC_PEER		BIT(3)
-+#define DISALLOW_BEACONS		BIT(4)
-+#define ALLOW_CONN_PEER_MGMT_WHILE_BUF_FULL BIT(5)
-+#define DISALLOW_BROADCAST_DATA		BIT(6)
-+
- enum opmode {
- 	STA_OPMODE = 1,
- 	AP_OPMODE = 2
-@@ -306,4 +316,5 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_mgmt_pkt(struct rsi_common *common, struct sk_buff *skb);
- int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
- int rsi_band_check(struct rsi_common *common);
-+int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word);
- #endif
+I do not know where this "v2 RESEND" practise is coming from but I very
+much prefer that people would not use it. If you need to resend
+something keep things simple, just increase the version number and
+document in the changelog that nothing changed. I don't care what the
+patchset version number is, I always look at the latest version and
+discard the older ones.
+
+This is just for the future, no need resend anything because of this.
+
 -- 
-2.4.11
+Kalle Valo
