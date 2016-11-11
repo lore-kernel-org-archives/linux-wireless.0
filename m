@@ -1,79 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49104 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752758AbcKRJsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 04:48:23 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 8/9] rt2800: tune *_PROT_CFG parameters
-Date: Fri, 18 Nov 2016 10:44:00 +0100
-Message-Id: <1479462241-9299-9-git-send-email-sgruszka@redhat.com> (sfid-20161118_104828_692161_5A9CF999)
-In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44543 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750714AbcKKNGn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 11 Nov 2016 08:06:43 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>,
+        Xinming Hu <huxinming820@gmail.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>,
+        Dmitry Torokhov <dtor@google.com>, Cathy Luo <cluo@marvell.com>
+Subject: RE: [PATCH RESEND v2 03/11] mwifiex: resolve races between async FW
+ init (failure) and device removal
+Date: Fri, 11 Nov 2016 13:06:36 +0000
+Message-ID: <e7a4031e5bcd4f72be211524e7c298a5@SC-EXCH04.marvell.com> (sfid-20161111_140647_345928_02997D1D)
+References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+ <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
+ <20161110183723.GA134624@google.com>
+In-Reply-To: <20161110183723.GA134624@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use RTS/CTS protection for TXOP on all rates modes as default and
-disable CCK rates (this cause performance problems).
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Friday, November 11, 2016 12:07 AM
+> To: Xinming Hu
+> Cc: Linux Wireless; Kalle Valo; Dmitry Torokhov; Amitkumar Karwar;
+> Cathy Luo
+> Subject: Re: [PATCH RESEND v2 03/11] mwifiex: resolve races between
+> async FW init (failure) and device removal
+> 
+> Hi,
+> 
+> On Thu, Nov 10, 2016 at 07:57:04PM +0800, Xinming Hu wrote:
+> > From: Brian Norris <briannorris@chromium.org>
+> >
+> > It's possible for the FW init sequence to fail, which will trigger a
+> > device cleanup sequence in mwifiex_fw_dpc(). This sequence can race
+> > with device suspend() or remove() (e.g., reboot or unbind), and can
+> > trigger use-after-free issues. Currently, this driver attempts
+> > (poorly) to synchronize remove() using a semaphore, but it doesn't
+> > protect some of the critical sections properly. Particularly, we grab
+> > a pointer to the adapter struct (card->adapter) without checking if
+> > it's being freed or not. We later do a NULL check on the adapter, but
+> > that doesn't work if the adapter was freed.
+> >
+> > Also note that the PCIe interface driver doesn't ever set
+> > card->adapter to NULL, so even if we get the synchronization right,
+> we
+> > still might try to redo the cleanup in ->remove(), even if the FW
+> init
+> > failure sequence already did it.
+> >
+> > This patch replaces the static semaphore with a per-device completion
+> > struct, and uses that completion to synchronize the remove() thread
+> > with the mwifiex_fw_dpc(). A future patch will utilize this
+> completion
+> > to synchronize the suspend() thread as well.
+> >
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > v2: Same as v1
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/main.c | 46
+> > ++++++++++-------------------
+> > drivers/net/wireless/marvell/mwifiex/main.h | 13 +++++---
+> > drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
+> > drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+> > drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
+> > drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
+> > drivers/net/wireless/marvell/mwifiex/usb.c  | 23 +++++++--------
+> > drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
+> >  8 files changed, 55 insertions(+), 69 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/main.c
+> > b/drivers/net/wireless/marvell/mwifiex/main.c
+> > index c710d5e..09d46d6 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> > @@ -521,7 +521,6 @@ static void mwifiex_fw_dpc(const struct firmware
+> *firmware, void *context)
+> >  	struct mwifiex_private *priv;
+> >  	struct mwifiex_adapter *adapter = context;
+> >  	struct mwifiex_fw_image fw;
+> > -	struct semaphore *sem = adapter->card_sem;
+> >  	bool init_failed = false;
+> >  	struct wireless_dev *wdev;
+> >
+> > @@ -670,7 +669,8 @@ static void mwifiex_fw_dpc(const struct firmware
+> *firmware, void *context)
+> >  	}
+> >  	if (init_failed)
+> >  		mwifiex_free_adapter(adapter);
+> > -	up(sem);
+> > +	/* Tell all current and future waiters we're finished */
+> > +	complete_all(adapter->fw_done);
+> 
+> This part introduces a new use-after-free. We need to dereference
+> adapter->fw_done *before* we free the adapter in
+> mwifiex_free_adapter().
+> So you need a diff that looks something like this:
+> 
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -514,6 +514,7 @@ static void mwifiex_fw_dpc(const struct firmware
+> *firmware, void *context)
+>  	struct mwifiex_fw_image fw;
+>  	bool init_failed = false;
+>  	struct wireless_dev *wdev;
+> +	struct completion *fw_done = adapter->fw_done;
+> 
+>  	if (!firmware) {
+>  		mwifiex_dbg(adapter, ERROR,
+> @@ -654,7 +655,7 @@ done:
+>  	if (init_failed)
+>  		mwifiex_free_adapter(adapter);
+>  	/* Tell all current and future waiters we're finished */
+> -	complete_all(adapter->fw_done);
+> +	complete_all(fw_done);
+>  	return;
+>  }
+> 
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Thanks. I will include this change in v3.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 57bfec4..8d35b2e 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4771,9 +4771,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
- 	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_RATE, 0x4004);
--	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_CTRL, 0);
-+	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_CTRL, 1);
- 	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_NAV_SHORT, 1);
--	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_CCK, 1);
-+	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_CCK, 0);
- 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
- 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_MM20, 1);
- 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
-@@ -4784,9 +4784,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, MM40_PROT_CFG, &reg);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_RATE, 0x4084);
--	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
-+	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 1);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_NAV_SHORT, 1);
--	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
-+	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 0);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_MM20, 1);
- 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
-@@ -4797,9 +4797,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, GF20_PROT_CFG, &reg);
- 	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_RATE, 0x4004);
--	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_CTRL, 0);
-+	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_CTRL, 1);
- 	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_NAV_SHORT, 1);
--	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_CCK, 1);
-+	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_CCK, 0);
- 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
- 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_MM20, 1);
- 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
-@@ -4810,9 +4810,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_register_read(rt2x00dev, GF40_PROT_CFG, &reg);
- 	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_RATE, 0x4084);
--	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_CTRL, 0);
-+	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_CTRL, 1);
- 	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_NAV_SHORT, 1);
--	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
-+	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_CCK, 0);
- 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
- 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_MM20, 1);
- 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
--- 
-1.8.3.1
+Regards,
+Amitkumar
