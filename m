@@ -1,90 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43049 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933352AbcJUPuS (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44713 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756412AbcKKNLx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 21 Oct 2016 11:50:18 -0400
+        Fri, 11 Nov 2016 08:11:53 -0500
 From: Amitkumar Karwar <akarwar@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        Brian Norris <briannorris@google.com>,
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Ganapathi Bhat" <gbhat@marvell.com>
-Subject: RE: cfg80211: race problem between suspend and disconnect event
-Date: Fri, 21 Oct 2016 15:48:52 +0000
-Message-ID: <7af766c43f2f426b8db177f8d4e67031@SC-EXCH04.marvell.com> (sfid-20161021_175022_808079_2F652704)
-References: <67400d1c5c2141b3af75bdce9ec43840@SC-EXCH04.marvell.com>
- <1476989132.14078.12.camel@sipsolutions.net>
-In-Reply-To: <1476989132.14078.12.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v3 09/11] mwifiex: sdio: don't check for NULL sdio_func
+Date: Fri, 11 Nov 2016 18:40:16 +0530
+Message-ID: <1478869818-4340-9-git-send-email-akarwar@marvell.com> (sfid-20161111_141159_735033_4767FE67)
+In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
+References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gRnJvbTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNp
-cHNvbHV0aW9ucy5uZXRdDQo+IFNlbnQ6IEZyaWRheSwgT2N0b2JlciAyMSwgMjAxNiAxMjoxNiBB
-TQ0KPiBUbzogQW1pdGt1bWFyIEthcndhcg0KPiBDYzogS2FsbGUgVmFsbzsgQnJpYW4gTm9ycmlz
-OyBOaXNoYW50IFNhcm11a2FkYW07IENhdGh5IEx1bzsgbGludXgtDQo+IHdpcmVsZXNzQHZnZXIu
-a2VybmVsLm9yZzsgR2FuYXBhdGhpIEJoYXQNCj4gU3ViamVjdDogUmU6IGNmZzgwMjExOiByYWNl
-IHByb2JsZW0gYmV0d2VlbiBzdXNwZW5kIGFuZCBkaXNjb25uZWN0IGV2ZW50DQo+IA0KPiBIaSwN
-Cj4gDQo+ID4gTXdpZmlleCBkcml2ZXIgcmVqZWN0cyBkZWxfa2V5KCkgcmVxdWVzdHMgZnJvbSBj
-Zmc4MDIxMSBkdXJpbmcNCj4gPiBzdXNwZW5kLiBUaGV5IGNhbWUgdmVyeSBsYXRlIHdoZW4gZHJp
-dmVyJ3MgY2ZnODAyMTFfc3VzcGVuZCBoYW5kbGVyIGlzDQo+ID4gYWxyZWFkeSBleGVjdXRlZCBh
-bmQgZHJpdmVyIGlzIGluIHRoZSBtaWRkbGUgb2YgU0RJTydzIHN1c3BlbmQNCj4gPiBoYW5kbGVy
-Lg0KPiANCj4gSW50ZXJlc3RpbmcuIFJlamVjdGluZyB0aG9zZSBjYWxscyBpcyBwcm9iYWJseSBw
-ZXJmZWN0bHkgcmVhc29uYWJsZSwgYW5kDQo+IGluIGZhY3QgaXQncyBub3QgY2xlYXIgdG8gbWUg
-d2h5IHdlIGV2ZW4gdHJ5IHRvIGRlbGV0ZSB0aGUga2V5cyBhZnRlcg0KPiB3ZSd2ZSBkaXNjb25u
-ZWN0ZWQgLSBhbnkgZHJpdmVyIGltcGxlbWVudGF0aW9uIHNob3VsZCBoYXZlIHJlbW92ZWQgdGhl
-bQ0KPiBhbHJlYWR5IGFueXdheT8gWW91IHByb2JhYmx5IGRvbid0IGFjdHVhbGx5IGNhcmUgYWJv
-dXQgdGhlIGtleSByZW1vdmFsDQo+IGVpdGhlcj8NCg0KVGhhbmtzIGZvciB5b3VyIHJlcGx5Lg0K
-DQpZZXMuIEluIG91ciBjYXNlLCAqODAyXzExX0RFQVVUSEVOVElDQVRFIGNvbW1hbmQgZG93bmxv
-YWRlZCB0byBmaXJtd2FyZSB0YWtlcyBjYXJlIG9mIGZsdXNoaW5nIHRoZSBrZXlzLg0KDQpJIGNh
-biBzZWUgYmVsb3cgY29kZSBpbiBjZmc4MDIxMSdzIGRpc2Nvbm5lY3QgaGFuZGxpbmcuIEl0IHNl
-ZW1zIHRvIGJlIHRoZXJlIGZvciBsb25nIHRpbWUuDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K
-LyoNCiAqIERlbGV0ZSBhbGwgdGhlIGtleXMgLi4uIHBhaXJ3aXNlIGtleXMgY2FuJ3QgcmVhbGx5
-DQogKiBleGlzdCBhbnkgbW9yZSBhbnl3YXksIGJ1dCBkZWZhdWx0IGtleXMgbWlnaHQuDQogKi8N
-CiBpZiAocmRldi0+b3BzLT5kZWxfa2V5KQ0KICAgIGZvciAoaSA9IDA7IGkgPCA2OyBpKyspDQog
-ICAgICAgcmRldl9kZWxfa2V5KHJkZXYsIGRldiwgaSwgZmFsc2UsIE5VTEwpOw0KLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0NCg0KPiANCj4gVGhhdCBzYWlkIHRob3VnaCwgdGhlcmUncyBhbHNvIHRo
-ZSBjcml0aWNhbCBwcm90b2NvbCBzdG9wIGFuZCB0aGUNCj4gc2V0X3Fvc19tYXAoTlVMTCkgY2Fs
-bCwgd2hpY2ggcmVtb3ZlcyB0aGUgUW9TIG1hcHBpbmcuIEl0IGRvZXNuJ3QgbG9vaw0KPiBsaWtl
-IHlvdSBzdXBwb3J0IHRoaXMgcmlnaHQgbm93IGluIHlvdXIgZHJpdmVyLCBidXQgaW4gYW55IGNh
-c2UgaXQnZCBiZQ0KPiBwcmV0dHkgc3RyYW5nZSB0byBoYXZlIHRoYXQgaGFwcGVuIGFmdGVyIG9y
-IGR1cmluZyBzdXNwZW5kLg0KPiANCj4gPiBQbGVhc2UgbGV0IHVzIGtub3cgaWYgeW91IGhhdmUg
-YW55IHN1Z2dlc3Rpb25zIHRvIHJlc29sdmVzIHRoaXMgd2l0aA0KPiA+IGNmZzgwMjExL2RyaXZl
-ciBjaGFuZ2UuDQo+IA0KPiBGb3IgY2ZnODAyMTEgd2UgY291bGQgZG8gc29tZXRoaW5nIGxpa2Ug
-dGhpczoNCj4gDQo+IC0tLSBhL25ldC93aXJlbGVzcy9zeXNmcy5jDQo+ICsrKyBiL25ldC93aXJl
-bGVzcy9zeXNmcy5jDQo+IEBAIC0xMDQsMTMgKzEwNCwxNiBAQCBzdGF0aWMgaW50IHdpcGh5X3N1
-c3BlbmQoc3RydWN0IGRldmljZSAqZGV2KQ0KPiANCj4gIAlydG5sX2xvY2soKTsNCj4gIAlpZiAo
-cmRldi0+d2lwaHkucmVnaXN0ZXJlZCkgew0KPiAtCQlpZiAoIXJkZXYtPndpcGh5Lndvd2xhbl9j
-b25maWcpDQo+ICsJCWlmICghcmRldi0+d2lwaHkud293bGFuX2NvbmZpZykgew0KPiAgCQkJY2Zn
-ODAyMTFfbGVhdmVfYWxsKHJkZXYpOw0KPiArCQkJY2ZnODAyMTFfcHJvY2Vzc19yZGV2X2V2ZW50
-cyhyZGV2KTsNCj4gKwkJfQ0KPiAgCQlpZiAocmRldi0+b3BzLT5zdXNwZW5kKQ0KPiAgCQkJcmV0
-ID0gcmRldl9zdXNwZW5kKHJkZXYsIHJkZXYtPndpcGh5Lndvd2xhbl9jb25maWcpOw0KPiAgCQlp
-ZiAocmV0ID09IDEpIHsNCj4gIAkJCS8qIERyaXZlciByZWZ1c2UgdG8gY29uZmlndXJlIHdvd2xh
-biAqLw0KPiAgCQkJY2ZnODAyMTFfbGVhdmVfYWxsKHJkZXYpOw0KPiArCQkJY2ZnODAyMTFfcHJv
-Y2Vzc19yZGV2X2V2ZW50cyhyZGV2KTsNCj4gIAkJCXJldCA9IHJkZXZfc3VzcGVuZChyZGV2LCBO
-VUxMKTsNCj4gIAkJfQ0KPiAgCX0NCj4gDQo+IA0KPiBIb3dldmVyLCB0aGF0IGFzc3VtZXMgdGhh
-dCB5b3UgYWN0dWFsbHnCoGNmZzgwMjExX2Rpc2Nvbm5lY3RlZCgpDQo+IHN5bmNocm9ub3VzbHkg
-d2hpbGUgYmVpbmcgYXNrZWQgdG8gZGlzY29ubmVjdCwgd2hpY2ggZG9lc24ndCBzZWVtIHRvIGJl
-DQo+IHRydWUgZnJvbSBsb29raW5nIGF0IG13aWZpZXgsIGlmIEhvc3RDbWRfQ01EXzgwMl8xMV9E
-RUFVVEhFTlRJQ0FURQ0KPiBjb21tYW5kIGNhbiBiZSBzZW50IHRvIHRoZSBmaXJtd2FyZSB0aGVu
-IHlvdSB3YWl0IGZvciBFVkVOVF9MSU5LX0xPU1QsDQo+IEVWRU5UX0RFQVVUSEVOVElDQVRFRCBv
-csKgRVZFTlRfRElTQVNTT0NJQVRFRCB0byBjb21lIGJhY2sgZnJvbSB0aGUNCj4gZmlybXdhcmUs
-IHNvIHRoaXMgY2ZnODAyMTEgY2hhbmdlIHdvbid0IGhlbHAuDQo+IA0KDQpJIHRoaW5rLCB5b3Vy
-IGNmZzgwMjExIGNoYW5nZSB3aWxsIGhlbHAuIFdlIGRvIGVuc3VyZSB0aGF0IGNmZzgwMjExX2Rp
-c2Nvbm5lY3RlZCgpIGlzIGNhbGxlZCBiZWZvcmUgZXhpdGluZyBtd2lmaWV4X2NmZzgwMjExX2Rp
-c2Nvbm5lY3QoKS4NClNlbmRpbmcgSG9zdENtZF9DTURfODAyXzExX0RFQVVUSEVOVElDQVRFIGNv
-bW1hbmQgdG8gZmlybXdhcmUgaXMgYSBibG9ja2luZyBjYWxsLiBjZmc4MDIxMV9kaXNjb25uZWN0
-ZWQoKSBpcyBjYWxsZWQgd2hpbGUgaGFuZGxpbmcgdGhhdCBjb21tYW5kJ3MgcmVzcG9uc2UuIA0K
-DQptd2lmaWV4X3JldF84MDJfMTFfZGVhdXRoZW50aWNhdGUoKS0+bXdpZmlleF9yZXNldF9jb25u
-ZWN0X3N0YXRlKCktPmNmZzgwMjExX2Rpc2Nvbm5lY3RlZCgpDQoNCj4gDQo+IFNvIHNvbWVob3cg
-eW91J2QgaGF2ZSB0byBzeW5jaHJvbml6ZSB3aXRoIHRoZSBmaXJtd2FyZSBhcyB3ZWxsLCB0bw0K
-PiBwcm9jZXNzIGFsbCB0aG9zZSB0aGluZ3MgYmVmb3JlIHN1c3BlbmQsIEkgZ3Vlc3M/DQo+IA0K
-PiBXZSBjb3VsZCB0aGVuIGV4cG9ydCBjZmc4MDIxMV9wcm9jZXNzX3JkZXZfZXZlbnRzKCkgYXMN
-Cj4gY2ZnODAyMTFfcHJvY2Vzc193aXBoeV9ldmVudHMoKSBvciBzbywgc28gdGhhdCB5b3UgY2Fu
-IGNhbGwgdGhhdCBhdCBhbg0KPiBhcHByb3ByaWF0ZSBwbGFjZSBmcm9tIHlvdXIgc3VzcGVuZCBo
-YW5kbGVyLCBhZnRlciBoYXZpbmcgc3luY2hyb25pemVkDQo+IHdpdGggdGhlIGZpcm13YXJlPw0K
-DQpUaGlzIHdvdWxkIG5vdCBiZSBuZWVkZWQuIA0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
+From: Brian Norris <briannorris@chromium.org>
+
+sdio_func is retrieved via container_of() and should never be NULL.
+Checking for NULL just makes the logic more confusing than necessary.
+Stop doing that.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v3: Same as v1 and v2
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 40 +++++++++++------------------
+ 1 file changed, 15 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 4c4b012..bee7326 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -190,15 +190,10 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	struct mwifiex_adapter *adapter;
+ 	mmc_pm_flag_t pm_flag = 0;
+ 
+-	if (func) {
+-		pm_flag = sdio_get_host_pm_caps(func);
+-		card = sdio_get_drvdata(func);
+-		if (!card || !card->adapter) {
+-			pr_err("resume: invalid card or adapter\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("resume: sdio_func is not specified\n");
++	pm_flag = sdio_get_host_pm_caps(func);
++	card = sdio_get_drvdata(func);
++	if (!card || !card->adapter) {
++		dev_err(dev, "resume: invalid card or adapter\n");
+ 		return 0;
+ 	}
+ 
+@@ -274,23 +269,18 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 	mmc_pm_flag_t pm_flag = 0;
+ 	int ret = 0;
+ 
+-	if (func) {
+-		pm_flag = sdio_get_host_pm_caps(func);
+-		pr_debug("cmd: %s: suspend: PM flag = 0x%x\n",
+-			 sdio_func_id(func), pm_flag);
+-		if (!(pm_flag & MMC_PM_KEEP_POWER)) {
+-			pr_err("%s: cannot remain alive while host is"
+-				" suspended\n", sdio_func_id(func));
+-			return -ENOSYS;
+-		}
++	pm_flag = sdio_get_host_pm_caps(func);
++	pr_debug("cmd: %s: suspend: PM flag = 0x%x\n",
++		 sdio_func_id(func), pm_flag);
++	if (!(pm_flag & MMC_PM_KEEP_POWER)) {
++		dev_err(dev, "%s: cannot remain alive while host is"
++			" suspended\n", sdio_func_id(func));
++		return -ENOSYS;
++	}
+ 
+-		card = sdio_get_drvdata(func);
+-		if (!card) {
+-			dev_err(dev, "suspend: invalid card\n");
+-			return 0;
+-		}
+-	} else {
+-		pr_err("suspend: sdio_func is not specified\n");
++	card = sdio_get_drvdata(func);
++	if (!card) {
++		dev_err(dev, "suspend: invalid card\n");
+ 		return 0;
+ 	}
+ 
+-- 
+1.9.1
