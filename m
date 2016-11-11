@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35974 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754104AbcKIWU7 (ORCPT
+Received: from edge01.uni-rostock.de ([139.30.8.12]:55963 "EHLO
+        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934778AbcKKRWO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 17:20:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>, security@kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: printk() overflow with 32-byte SSIDs
-References: <1478658504-31045-1-git-send-email-briannorris@chromium.org>
-Date: Thu, 10 Nov 2016 00:20:53 +0200
-In-Reply-To: <1478658504-31045-1-git-send-email-briannorris@chromium.org>
-        (Brian Norris's message of "Tue, 8 Nov 2016 18:28:24 -0800")
-Message-ID: <87h97guwfu.fsf@kamboji.qca.qualcomm.com> (sfid-20161109_232120_487065_CE1E2082)
+        Fri, 11 Nov 2016 12:22:14 -0500
+To: <linux-wireless@vger.kernel.org>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Subject: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
+Message-ID: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de> (sfid-20161111_182223_315895_6A05EDD8)
+Date: Fri, 11 Nov 2016 18:22:01 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+Hi,
 
-> SSIDs aren't guaranteed to be 0-terminated. Let's cap the max length
-> when we print them out.
->
-> This can be easily noticed by connecting to a network with a 32-octet
-> SSID:
->
-> [ 3903.502925] mwifiex_pcie 0000:01:00.0: info: trying to associate to
-> '0123456789abcdef0123456789abcdef <uninitialized mem>' bssid
-> xx:xx:xx:xx:xx:xx
->
-> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Cc: <stable@vger.kernel.org>
+we are working on a sophisticated Wifi simulation framework based on
+mac80211_hwsim. This includes the simulation of frame transmissions with
+realistic channel access and channel conditions. Therefore we need
+several information (e.g. long/short gi, usage of RTS/CTS, ...), which
+are available on a per frame/rate basis from struct ieee80211_tx_rate.
+But this information is thrown away by the conversation to struct
+hwsim_tx_rate (eg. in mac80211_hwsim_tx_frame_nl)
 
-I'm planning to push this to 4.9 if no objections.
+Firstly I think this information is valuable and I don't believe, the 4
+Byte per frame greatly influences speed. Moreover the explicit double
+copy (firstly from the info->status.rates to tx_attempts, secondly by
+nla_put), takes longer than simply put the whole info->status.rates into
+the netlink message.
 
--- 
-Kalle Valo
+So I would propose to put the whole struct into the netlink messages,
+but I think that will break up the communication to e.g. bob copelands
+wmediumd and similar simulations. I would like to have our
+Implementation working with mainline kernels and therefore ask how we
+could achieve this easily.
+
+Obviously, we could define another field in the hwsim messages, but as
+bob copeland already stated, significantly more information within the
+netlink messages could  intensify the timing overhead of hwsim.
+
+Any suggestions?
