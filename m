@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:35883 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756488AbcK2JXf (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36780 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756013AbcKKJQ5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 04:23:35 -0500
-Received: by mail-qt0-f169.google.com with SMTP id w33so148899366qtc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 01:23:35 -0800 (PST)
-Subject: Re: [PATCH 03/12] brcmfmac: move pno helper functions in separate
- source file
-To: Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
- <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com>
- <CACna6rwSDT1UeuexMpNhVMxKHWpZGdzDg7C1b5wVOhXzO3o=MA@mail.gmail.com>
- <1480406267.10012.0.camel@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f0329a78-abdc-020a-5362-7b3e6b772593@broadcom.com> (sfid-20161129_102352_605172_2DF54E74)
-Date: Tue, 29 Nov 2016 10:23:31 +0100
+        Fri, 11 Nov 2016 04:16:57 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Wolfram Sang <wsa@the-dreams.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: RE: Problems getting mwifiex with sd8887 to work
+Date: Fri, 11 Nov 2016 09:16:51 +0000
+Message-ID: <507fff29bd2048c2b2295beb451943b5@SC-EXCH04.marvell.com> (sfid-20161111_101704_474815_2D21F204)
+References: <20161110175915.GB1585@katana>
+In-Reply-To: <20161110175915.GB1585@katana>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1480406267.10012.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29-11-2016 8:57, Johannes Berg wrote:
-> On Tue, 2016-11-29 at 08:08 +0100, Rafał Miłecki wrote:
->> On 23 November 2016 at 11:25, Arend van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>>
->>> Introducing new source file for pno related functionality. Moving
->>> existing pno functions.
->>
->> Let me ask one basic question as I'm curious: what that PNO stands
->> for? I couldn't find it explained in the code.
+> From: Wolfram Sang [mailto:wsa@the-dreams.de]
+> Sent: Thursday, November 10, 2016 11:29 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo
+> Subject: Problems getting mwifiex with sd8887 to work
 > 
-> It's an Android term - Preferred Network Offload(ing?)
+> Hi,
+> 
+> I am trying to get a SD8887 based SDIO card to work with my Renesas H3
+> Salvator-X board. The card is either a u-blox emmy-w1-evk or a ZComax
+> AC-180M, I am evaluating both. I really prefer to run the upstream
+> driver instead of the paperwork protected and surprisingly old custom
+> ones.
+> 
+> However, for both cards, I run into an error I cannot parse:
+> 
+> [    4.028588] mwifiex_sdio mmc2:0001:1: mwifiex_process_cmdresp: cmd
+> 0x242 failed during	initialization
+> 
+> I use a v4.9-rc2 based tree called 'renesas-drives' [1] which has a few
+> Renesas specific patches on top but nothing mwifiex related AFAICT. I
+> use the firmware from the linux-firmware tree.
+> 
+> Any further use of the interface mlan0 or reading eeprom via debugfs
+> will result in a timeout.
+> 
+> [   18.146710] mwifiex_sdio mmc2:0001:1: mwifiex_cmd_timeout_func:
+> Timeout cmd id = 0x10, act = 0x1
+> 
+> I assume this is a follow-up problem so I skip the logs for these
+> timeouts (can easily send them, of course, in case they are
+> interesting). I'll attach a full debug output from mwifiex from
+> insertion until the initial 0x242 error.
+> 
+> For full disclaimer, I am the maintainer of the underlying Renesas SD
+> driver and I want to use this setup to create a test scenario for SDIO
+> with UHS speeds. So, if there is something wrong in the SD part, I'll
+> happily hack on that.
+> 
+> But for now, I simply would need a starting point :) 0x242 is
+> "HostCmd_CMD_CHAN_REGION_CFG". Could this mean it cannot load
+> configuration data? I did search around but couldn't find anything
+> useful.
 
-Yeah. The module is called pfn in our firmware, which stands for
-preferred network. So not sure whether it was a BRCM term morphed into
-Android term or vice versa.
 
-Kalle,
+0x242 command failure is expected for sd8887, as It's not supported. Driver shouldn't abort initialization in this case. You can try below change. I will prepare a patch to send this command based on firmware version/capability.
 
-If needed I could drop the use of the term and resubmit the series.
+-------
+@ -2304,8 +2304,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
+                                return -1;
+                }
+
+-               mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REGION_CFG,
+-                                HostCmd_ACT_GEN_GET, 0, NULL, true);
++//             mwifiex_send_cmd(priv, HostCmd_CMD_CHAN_REGION_CFG,
++//                              HostCmd_ACT_GEN_GET, 0, NULL, true);
+        }
+---------
 
 Regards,
-Arend
+Amitkumar
