@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33196 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752210AbcKPTBH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:49164 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756176AbcKKIfv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 14:01:07 -0500
-Received: by mail-pf0-f177.google.com with SMTP id d2so44196600pfd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2016 11:01:07 -0800 (PST)
-Date: Wed, 16 Nov 2016 11:01:04 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card
- remove process
-Message-ID: <20161116190104.GB115729@google.com> (sfid-20161116_200111_192670_CD664E61)
-References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
- <1479301749-14803-4-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1479301749-14803-4-git-send-email-akarwar@marvell.com>
+        Fri, 11 Nov 2016 03:35:51 -0500
+Message-ID: <1478853340.15030.21.camel@coelho.fi> (sfid-20161111_093621_278926_FEDD00CD)
+From: Luca Coelho <luca@coelho.fi>
+To: Tj <linux@iam.tj>,
+        "open list:INTEL WIRELESS WIFI LINK (iwlwifi)"
+        <linux-wireless@vger.kernel.org>
+Cc: "Intel Linux Wireless (supporter:INTEL WIRELESS WIFI LINK (iwlwifi))"
+        <linuxwifi@intel.com>
+Date: Fri, 11 Nov 2016 10:35:40 +0200
+In-Reply-To: <78f29b89-eb19-920f-f576-5009383c55e1@iam.tj>
+References: <78f29b89-eb19-920f-f576-5009383c55e1@iam.tj>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: fix undefined 6000G2B firmware MAX API version
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 16, 2016 at 06:39:08PM +0530, Amitkumar Karwar wrote:
-> From: Xinming Hu <huxm@marvell.com>
+Hi,
+On Thu, 2016-11-10 at 22:04 +0000, Tj wrote:
+>   $ modinfo -F firmware iwlwifi | grep API
+>   iwlwifi-6000g2b-IWL6000G2B_UCODE_API_MAX.ucode
+>   $ modinfo -F vermagic iwlwifi
+>   4.9.0-040900rc4-lowlatency SMP preempt mod_unload modversions
 > 
-> Wait for firmware dump complete in card remove function.
-> For sdio interface, there are two diffenrent cases,
-> card reset trigger sdio_work and firmware dump trigger sdio_work.
-> Do code rearrangement for distinguish between these two cases.
+> Change-Id: Ie21a4be0b12b520844c1da4a8bef9e8a0097d919
+> Signed-off-by: TJ <linux@iam.tj>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v2: 1. Get rid of reset_triggered flag. Instead split the code and use
->     __mwifiex_sdio_remove() (Brian Norris/Dmitry Torokhov)
->     2. "v1 4/5 mwifiex: firmware dump code rearrangement.." is dropped. So
->     rebased accordingly.
-> v3: same as [v2,5/5]. The improvement of 'moving pcie_work to card struct'
-> suggested by Brian is taken care in next patch.
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c |  6 +++++-
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++---
->  2 files changed, 17 insertions(+), 4 deletions(-)
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+> b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+> index 0b9f6a7..19b85e8 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+> @@ -34,6 +34,7 @@
+>  #define IWL6000_UCODE_API_MAX 6
+>  #define IWL6050_UCODE_API_MAX 5
+>  #define IWL6000G2_UCODE_API_MAX 6
+> +#define IWL6000G2B_UCODE_API_MAX 6
+>  #define IWL6035_UCODE_API_MAX 6
+>   /* Lowest firmware API version supported */
 
-I've expressed my unhappiness with the SDIO card-reset code that already
-exists (and prevents doing sane code improvements on the rest of the
-driver), but the current change looks OK anyway.
+Thanks for your patch! But the correct thing to do would be to change
+the MODULE_FIRMWARE line instead of adding this define here.  The 6030
+NIC uses IWL6000G2_UCODE_API_MAX in the config structure, so the
+MODULE_FIRMWARE macro should use that too.
 
-I haven't reviewed patch 1 as closely, but for 2 to 5:
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+index 0b9f6a7..39335b7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+@@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
 
-Reviewed-by: Brian Norris <briannorris@chromium.org>
+--
+Cheers,
+Luca.
