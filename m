@@ -1,116 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34779 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755770AbcKJSh2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2016 13:37:28 -0500
-Received: by mail-pf0-f178.google.com with SMTP id n85so150487453pfi.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 10:37:27 -0800 (PST)
-Date: Thu, 10 Nov 2016 10:37:24 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH RESEND v2 03/11] mwifiex: resolve races between async FW
- init (failure) and device removal
-Message-ID: <20161110183723.GA134624@google.com> (sfid-20161110_193736_465970_B64E6557)
-References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
- <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1478779032-5165-3-git-send-email-huxinming820@marvell.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42658 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966699AbcKLVIw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 12 Nov 2016 16:08:52 -0500
+Message-ID: <1478984929.4226.3.camel@sipsolutions.net> (sfid-20161112_220855_652635_C0C400EB)
+Subject: Re: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>,
+        linux-wireless@vger.kernel.org
+Date: Sat, 12 Nov 2016 22:08:49 +0100
+In-Reply-To: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de> (sfid-20161111_182223_315895_6A05EDD8)
+References: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de>
+         (sfid-20161111_182223_315895_6A05EDD8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> So I would propose to put the whole struct into the netlink messages,
 
-On Thu, Nov 10, 2016 at 07:57:04PM +0800, Xinming Hu wrote:
-> From: Brian Norris <briannorris@chromium.org>
-> 
-> It's possible for the FW init sequence to fail, which will trigger a
-> device cleanup sequence in mwifiex_fw_dpc(). This sequence can race with
-> device suspend() or remove() (e.g., reboot or unbind), and can trigger
-> use-after-free issues. Currently, this driver attempts (poorly) to
-> synchronize remove() using a semaphore, but it doesn't protect some of
-> the critical sections properly. Particularly, we grab a pointer to the
-> adapter struct (card->adapter) without checking if it's being freed or
-> not. We later do a NULL check on the adapter, but that doesn't work if
-> the adapter was freed.
-> 
-> Also note that the PCIe interface driver doesn't ever set card->adapter
-> to NULL, so even if we get the synchronization right, we still might try
-> to redo the cleanup in ->remove(), even if the FW init failure sequence
-> already did it.
-> 
-> This patch replaces the static semaphore with a per-device completion
-> struct, and uses that completion to synchronize the remove() thread with
-> the mwifiex_fw_dpc(). A future patch will utilize this completion to
-> synchronize the suspend() thread as well.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
-> v2: Same as v1
-> ---
->  drivers/net/wireless/marvell/mwifiex/main.c | 46 ++++++++++-------------------
->  drivers/net/wireless/marvell/mwifiex/main.h | 13 +++++---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
->  drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
->  drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
->  drivers/net/wireless/marvell/mwifiex/usb.c  | 23 +++++++--------
->  drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
->  8 files changed, 55 insertions(+), 69 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index c710d5e..09d46d6 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -521,7 +521,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
->  	struct mwifiex_private *priv;
->  	struct mwifiex_adapter *adapter = context;
->  	struct mwifiex_fw_image fw;
-> -	struct semaphore *sem = adapter->card_sem;
->  	bool init_failed = false;
->  	struct wireless_dev *wdev;
->  
-> @@ -670,7 +669,8 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
->  	}
->  	if (init_failed)
->  		mwifiex_free_adapter(adapter);
-> -	up(sem);
-> +	/* Tell all current and future waiters we're finished */
-> +	complete_all(adapter->fw_done);
+This is a terrible idea, since internal changes to this struct would
+break the userland API/ABI. hwsim seems perhaps less important than
+most APIs, but there is wmediumd etc. already.
 
-This part introduces a new use-after-free. We need to dereference
-adapter->fw_done *before* we free the adapter in mwifiex_free_adapter().
-So you need a diff that looks something like this:
+> but I think that will break up the communication to e.g. bob
+> copelands
+> wmediumd and similar simulations. I would like to have our
+> Implementation working with mainline kernels and therefore ask how we
+> could achieve this easily.
+> 
+> Obviously, we could define another field in the hwsim messages, but
+> as bob copeland already stated, significantly more information within
+> the netlink messages could  intensify the timing overhead of hwsim.
 
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -514,6 +514,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
- 	struct mwifiex_fw_image fw;
- 	bool init_failed = false;
- 	struct wireless_dev *wdev;
-+	struct completion *fw_done = adapter->fw_done;
- 
- 	if (!firmware) {
- 		mwifiex_dbg(adapter, ERROR,
-@@ -654,7 +655,7 @@ done:
- 	if (init_failed)
- 		mwifiex_free_adapter(adapter);
- 	/* Tell all current and future waiters we're finished */
--	complete_all(adapter->fw_done);
-+	complete_all(fw_done);
- 	return;
- }
+I don't think we have any other choice but add the relevant fields as
+proper attributes.
 
- 
-Brian
-
->  	return;
->  }
->  
-...
+johannes
