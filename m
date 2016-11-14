@@ -1,91 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42340 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752580AbcKJG14 (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34735 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752344AbcKNLgz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2016 01:27:56 -0500
+        Mon, 14 Nov 2016 06:36:55 -0500
+Received: by mail-pf0-f177.google.com with SMTP id c4so17557845pfb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 03:36:54 -0800 (PST)
+Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
+ regulatory domain frequency value
+To: Gianfranco Costamagna <locutusofborg@debian.org>,
+        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
+ <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
+ <690669269.1124561.1477671348137@mail.yahoo.com>
+ <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
+ <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
+ <233918815.6357602.1479123253455@mail.yahoo.com>
+Cc: "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
+        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com> (sfid-20161114_123738_360333_F3885D50)
+Date: Mon, 14 Nov 2016 12:36:50 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 10 Nov 2016 11:57:54 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: c_traja@qti.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, kbuild-all@01.org
-Subject: Re: [PATCH 2/4] ath10k: Add support to update btcoex priority value
- via nl80211
-In-Reply-To: <alpine.DEB.2.20.1611092149120.2206@hadrien>
-References: <201611090629.9JO64IrN%fengguang.wu@intel.com>
- <alpine.DEB.2.20.1611092149120.2206@hadrien>
-Message-ID: <5099054e6f8d4ea605d4af2f303ed31d@codeaurora.org> (sfid-20161110_072759_701676_D1F56102)
+In-Reply-To: <233918815.6357602.1479123253455@mail.yahoo.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-11-10 02:20, Julia Lawall wrote:
-> It seems possible that one might like to release the mutex lock before 
-> the
-> return on line 7556.
+On 14-11-2016 12:34, Gianfranco Costamagna wrote:
+> Hi Arend,
 > 
-yes mutex lock needs to release. I will send a v2 patch with the change.
+> 
+>> Finally response. As it turns out the range was explcitly changed
+> 
+>> enabling channels 12 and 13 to be used where applicable. They forgot to
+>> update the comment.
+> 
+> 
+> so, the struct in net/wireless/reg.c is actually used in that case?
+> 
+> static const struct ieee80211_regdomain world_regdom = {
+> 
+> do you plan to update the comment?
 
-> julia
-> 
-> 
-> 
-> On Wed, 9 Nov 2016, kbuild test robot wrote:
-> 
->> Hi Tamizh,
->> 
->> [auto build test WARNING on ath6kl/ath-next]
->> [cannot apply to v4.9-rc4 next-20161108]
->> [if your patch is applied to the wrong git tree, please drop us a note 
->> to help improve the system]
->> 
->> url:    
->> https://github.com/0day-ci/linux/commits/c_traja-qti-qualcomm-com/ath10k-Add-support-for-BTCOEX-feature/20161109-043718
->> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git 
->> ath-next
->> :::::: branch date: 2 hours ago
->> :::::: commit date: 2 hours ago
->> 
->> >> drivers/net/wireless/ath/ath10k/mac.c:7556:2-8: preceding lock on line 7545
->> 
->> git remote add linux-review https://github.com/0day-ci/linux
->> git remote update linux-review
->> git checkout 2fc922b27f111b9e8089a3e94a17ee827e769c55
->> vim +7556 drivers/net/wireless/ath/ath10k/mac.c
->> 
->> 2fc922b2 Tamizh chelvam 2016-11-08  7539
->> 2fc922b2 Tamizh chelvam 2016-11-08  7540  	if 
->> (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags))) {
->> 2fc922b2 Tamizh chelvam 2016-11-08  7541  		ret = -EINVAL;
->> 2fc922b2 Tamizh chelvam 2016-11-08  7542  		goto exit;
->> 2fc922b2 Tamizh chelvam 2016-11-08  7543  	}
->> 2fc922b2 Tamizh chelvam 2016-11-08  7544
->> 2fc922b2 Tamizh chelvam 2016-11-08 @7545  
->> 	mutex_lock(&ar->conf_mutex);
->> 2fc922b2 Tamizh chelvam 2016-11-08  7546
->> 2fc922b2 Tamizh chelvam 2016-11-08  7547  	if (ar->state != 
->> ATH10K_STATE_ON &&
->> 2fc922b2 Tamizh chelvam 2016-11-08  7548  	    ar->state != 
->> ATH10K_STATE_RESTARTED) {
->> 2fc922b2 Tamizh chelvam 2016-11-08  7549  		ret = -ENETDOWN;
->> 2fc922b2 Tamizh chelvam 2016-11-08  7550  		goto exit;
->> 2fc922b2 Tamizh chelvam 2016-11-08  7551  	}
->> 2fc922b2 Tamizh chelvam 2016-11-08  7552
->> 2fc922b2 Tamizh chelvam 2016-11-08  7553  	btcoex_prio = 
->> ath10k_mac_get_btcoex_prio(btcoex_priority);
->> 2fc922b2 Tamizh chelvam 2016-11-08  7554
->> 2fc922b2 Tamizh chelvam 2016-11-08  7555  	if (btcoex_prio > 0x3f)
->> 2fc922b2 Tamizh chelvam 2016-11-08 @7556  		return -E2BIG;
->> 2fc922b2 Tamizh chelvam 2016-11-08  7557
->> 2fc922b2 Tamizh chelvam 2016-11-08  7558  	ret = 
->> ath10k_wmi_set_coex_param(ar, btcoex_prio);
->> 2fc922b2 Tamizh chelvam 2016-11-08  7559
->> 
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology 
->> Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel 
->> Corporation
->> 
+Well, not before you pointed it out ;-). You are welcome to send a patch
+fixing it. Otherwise, I will take care of it.
+
+Regards,
+Arend
