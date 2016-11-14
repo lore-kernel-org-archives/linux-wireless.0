@@ -1,131 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42739 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750998AbcKPNKU (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:32930 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751455AbcKNJmS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 08:10:20 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card remove process
-Date: Wed, 16 Nov 2016 18:39:08 +0530
-Message-ID: <1479301749-14803-4-git-send-email-akarwar@marvell.com> (sfid-20161116_141023_142639_3214011D)
-In-Reply-To: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
-References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
+        Mon, 14 Nov 2016 04:42:18 -0500
+Received: by mail-it0-f67.google.com with SMTP id c20so10379510itb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 01:42:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20161114084536.GB12372@redhat.com>
+References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+ <1478095865-8651-6-git-send-email-sgruszka@redhat.com> <ebc4779b-a68b-f3b3-c8fc-87db9401a603@kresin.me>
+ <20161114084536.GB12372@redhat.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 14 Nov 2016 20:41:57 +1100
+Message-ID: <CAGRGNgU=3tRrdgzoiGjoGr6QguyYnQ2kadiaX+HWxm0jiKqaqw@mail.gmail.com> (sfid-20161114_104351_243930_FDF2C838)
+Subject: Re: [PATCH 05/10] rt2800: make ba_size depend on ampdu_factor
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Mathias Kresin <dev@kresin.me>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Hi Stainslaw,
 
-Wait for firmware dump complete in card remove function.
-For sdio interface, there are two diffenrent cases,
-card reset trigger sdio_work and firmware dump trigger sdio_work.
-Do code rearrangement for distinguish between these two cases.
+On Mon, Nov 14, 2016 at 7:45 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Sat, Nov 05, 2016 at 01:56:58PM +0100, Mathias Kresin wrote:
+>> 02.11.2016 15:11, Stanislaw Gruszka:
+>> >
+>> >-            sta_priv = sta_to_rt2x00_sta(sta);
+>> >+            txdesc->u.ht.mpdu_density = sta->ht_cap.ampdu_density;
+>> >             txdesc->u.ht.wcid = sta_priv->wcid;
+>> >+
+>> >+            if (!(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)) {
+>> >+                    ba_size = IEEE80211_MIN_AMPDU_BUF;
+>> >+                    ba_size <<= sta->ht_cap.ampdu_factor;
+>> >+                    ba_size = min_t(int, 63, ba_size - 1);
+>> >+            }
+>> >     }
+>> >
+>> >     /*
+>> >@@ -345,7 +350,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+>> >             return;
+>> >     }
+>> >
+>> >-    txdesc->u.ht.ba_size = 7;       /* FIXME: What value is needed? */
+>> >+    txdesc->u.ht.ba_size = ba_size;
+>> >
+>> >     /*
+>> >      * Only one STBC stream is supported for now.
+>> >
+>>
+>> Having this patch applied, the throughput on a vgv7510kw22 (RT3062F)
+>> in AP mode using LEDE head is decreased by somewhat around 10
+>> Mbits/sec. I'm using iperf3 for throughput tests and having this
+>> patch reverted the throughout is back to 80 Mbits/sec.
+>>
+>> When bringing down the wifi interface the following messages are
+>> logged with the patch applied:
+>>
+>> [  281.738373] ieee80211 phy0: rt2x00queue_flush_queue: Warning -
+>> Queue 2 failed to flush
+>> [  281.906380] ieee80211 phy0: rt2x00queue_flush_queue: Warning -
+>> Queue 2 failed to flush
+>
+> Could you check below patch and see if it helps? If it does not,
+> could you printk sta->ht_cap.ampdu_density and ba_size values
+> and provide them here.
+>
+> Thanks
+> Stanislaw
+>
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> index 2515702..72c7948 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> @@ -4707,7 +4707,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+>             rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E))
+>                 rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+>         else
+> -               rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 1);
+> +               rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 3;
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: 1. Get rid of reset_triggered flag. Instead split the code and use
-    __mwifiex_sdio_remove() (Brian Norris/Dmitry Torokhov)
-    2. "v1 4/5 mwifiex: firmware dump code rearrangement.." is dropped. So
-    rebased accordingly.
-v3: same as [v2,5/5]. The improvement of 'moving pcie_work to card struct'
-suggested by Brian is taken care in next patch.
----
- drivers/net/wireless/marvell/mwifiex/pcie.c |  6 +++++-
- drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++---
- 2 files changed, 17 insertions(+), 4 deletions(-)
+You're missing a closing parenthesis, so it isn't going to work unless
+it's added back in.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index dd8f7aa..c8e69a4 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -51,6 +51,9 @@ static int mwifiex_pcie_probe_of(struct device *dev)
- 	return 0;
- }
- 
-+static void mwifiex_pcie_work(struct work_struct *work);
-+static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
-+
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -254,6 +257,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	cancel_work_sync(&pcie_work);
-+
- 	if (user_rmmod && !adapter->mfg_mode) {
- 		mwifiex_deauthenticate_all(adapter);
- 
-@@ -2722,7 +2727,6 @@ static void mwifiex_pcie_work(struct work_struct *work)
- 		mwifiex_pcie_device_dump_work(save_adapter);
- }
- 
--static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
- /* This function dumps FW information */
- static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
- {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 16d1d30..78f2cc9 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -46,6 +46,9 @@
-  */
- static u8 user_rmmod;
- 
-+static void mwifiex_sdio_work(struct work_struct *work);
-+static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
-+
- static struct mwifiex_if_ops sdio_ops;
- static unsigned long iface_work_flags;
- 
-@@ -220,7 +223,7 @@ static int mwifiex_sdio_resume(struct device *dev)
-  * This function removes the interface and frees up the card structure.
-  */
- static void
--mwifiex_sdio_remove(struct sdio_func *func)
-+__mwifiex_sdio_remove(struct sdio_func *func)
- {
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
-@@ -249,6 +252,13 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	mwifiex_remove_card(adapter);
- }
- 
-+static void
-+mwifiex_sdio_remove(struct sdio_func *func)
-+{
-+	cancel_work_sync(&sdio_work);
-+	__mwifiex_sdio_remove(func);
-+}
-+
- /*
-  * SDIO suspend.
-  *
-@@ -2227,7 +2237,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 	 * discovered and initializes them from scratch.
- 	 */
- 
--	mwifiex_sdio_remove(func);
-+	__mwifiex_sdio_remove(func);
- 
- 	/*
- 	 * Normally, we would let the driver core take care of releasing these.
-@@ -2568,7 +2578,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
- 		mwifiex_sdio_card_reset_work(save_adapter);
- }
- 
--static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
- /* This function resets the card */
- static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
- {
+>         rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_PSDU, 0);
+>         rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 0);
+>         rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
