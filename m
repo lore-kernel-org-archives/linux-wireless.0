@@ -1,134 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.smtp.broadcom.com ([192.19.211.62]:50622 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934883AbcKQSFg (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35634 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932515AbcKNQff (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:05:36 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC V2 1/5] nl80211: allow reporting RTT information in scan results
-Date: Thu, 17 Nov 2016 13:18:42 +0000
-Message-Id: <1479388726-3288-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_190542_428645_BCB4C284)
-In-Reply-To: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
+        Mon, 14 Nov 2016 11:35:35 -0500
+Received: by mail-lf0-f66.google.com with SMTP id p100so7513013lfg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:34 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 10/12] ath10k: Added QCA65XX hw definition
+Date: Mon, 14 Nov 2016 17:33:40 +0100
+Message-Id: <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173600_017637_98571078)
+In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add distance and its variance to the BSS structure so drivers
-may provide RTT information for BSS instances found during
-scanning.
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- include/net/cfg80211.h       | 11 +++++++++++
- include/uapi/linux/nl80211.h |  6 ++++++
- net/wireless/nl80211.c       |  8 ++++++++
- net/wireless/scan.c          |  2 ++
- 4 files changed, 27 insertions(+)
+ drivers/net/wireless/ath/ath10k/hw.h |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2019310..d1217da 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1675,6 +1675,9 @@ enum cfg80211_signal_type {
-  * @scan_width: scan width that was used
-  * @signal: signal strength value, according to the wiphy's
-  *	signal type
-+ * @distance: distance to AP with %parent_bssid in centimeters. Zero
-+ *	value indicates this is undetermined.
-+ * @var_distance: variance of %distance indicating accurracy.
-  * @boottime_ns: timestamp (CLOCK_BOOTTIME) when the information was
-  *	received; should match the time when the frame was actually
-  *	received by the device (not just by the host, in case it was
-@@ -1691,6 +1694,8 @@ struct cfg80211_inform_bss {
- 	struct ieee80211_channel *chan;
- 	enum nl80211_bss_scan_width scan_width;
- 	s32 signal;
-+	u32 distance;
-+	u32 var_distance;
- 	u64 boottime_ns;
- 	u64 parent_tsf;
- 	u8 parent_bssid[ETH_ALEN] __aligned(2);
-@@ -1737,6 +1742,9 @@ struct cfg80211_bss_ies {
-  *	that holds the beacon data. @beacon_ies is still valid, of course, and
-  *	points to the same data as hidden_beacon_bss->beacon_ies in that case.
-  * @signal: signal strength value (type depends on the wiphy's signal_type)
-+ * @distance: distance to AP with %parent_bssid in centimeters. Zero
-+ *	value indicates this is undetermined.
-+ * @var_distance: variance of %distance indicating accurracy.
-  * @priv: private area for driver use, has at least wiphy->bss_priv_size bytes
-  */
- struct cfg80211_bss {
-@@ -1756,6 +1764,9 @@ struct cfg80211_bss {
- 
- 	u8 bssid[ETH_ALEN];
- 
-+	u32 distance;
-+	u32 var_distance;
-+
- 	u8 priv[0] __aligned(sizeof(void *));
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 46142e9..ef45ecf 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -224,6 +224,7 @@ enum ath10k_hw_rev {
+ 	ATH10K_HW_QCA9377,
+ 	ATH10K_HW_QCA4019,
+ 	ATH10K_HW_QCA9887,
++	ATH10K_HW_QCA65XX,
  };
  
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 259c9c7..7e935f6 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -3651,6 +3651,10 @@ enum nl80211_bss_scan_width {
-  *	@NL80211_BSS_PARENT_BSSID. (u64).
-  * @NL80211_BSS_PARENT_BSSID: the BSS according to which @NL80211_BSS_PARENT_TSF
-  *	is set.
-+ * @NL80211_BSS_DISTANCE: distance to AP with @NL80211_BSS_PARENT_BSSID in
-+ *	centimeters (u32).
-+ * @NL80211_BSS_VARIANCE_DISTANCE: variance of @NL80211_BSS_DISTANCE value (u32).
-+ *
-  * @__NL80211_BSS_AFTER_LAST: internal
-  * @NL80211_BSS_MAX: highest BSS attribute
-  */
-@@ -3674,6 +3678,8 @@ enum nl80211_bss {
- 	NL80211_BSS_PAD,
- 	NL80211_BSS_PARENT_TSF,
- 	NL80211_BSS_PARENT_BSSID,
-+	NL80211_BSS_DISTANCE,
-+	NL80211_BSS_VARIANCE_DISTANCE,
- 
- 	/* keep last */
- 	__NL80211_BSS_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 24ab199..ffce566 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7515,6 +7515,14 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
- 			      intbss->ts_boottime, NL80211_BSS_PAD))
- 		goto nla_put_failure;
- 
-+	if (res->distance && nla_put_u32(msg, NL80211_BSS_DISTANCE,
-+					 res->distance))
-+		goto nla_put_failure;
-+
-+	if (res->var_distance && nla_put_u32(msg, NL80211_BSS_VARIANCE_DISTANCE,
-+					     res->var_distance))
-+		goto nla_put_failure;
-+
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
- 		if (nla_put_u32(msg, NL80211_BSS_SIGNAL_MBM, res->signal))
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index b5bd58d..afda1f9 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -973,6 +973,8 @@ struct cfg80211_bss *
- 	tmp.pub.signal = data->signal;
- 	tmp.pub.beacon_interval = beacon_interval;
- 	tmp.pub.capability = capability;
-+	tmp.pub.distance = data->distance;
-+	tmp.pub.var_distance = data->var_distance;
- 	tmp.ts_boottime = data->boottime_ns;
- 
- 	/*
+ struct ath10k_hw_regs {
 -- 
-1.9.1
+1.7.9.5
