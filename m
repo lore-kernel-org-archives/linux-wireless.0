@@ -1,51 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40100 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753329AbcK1HZg (ORCPT
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:46821 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753044AbcKNCGs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 02:25:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Wireless <linux-wireless@vger.kernel.org>,
-        linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: linux-next: build warning after merge of the wireless-drivers-next tree
-References: <20161128115814.2cabf139@canb.auug.org.au>
-Date: Mon, 28 Nov 2016 09:25:30 +0200
-In-Reply-To: <20161128115814.2cabf139@canb.auug.org.au> (Stephen Rothwell's
-        message of "Mon, 28 Nov 2016 11:58:14 +1100")
-Message-ID: <87d1hg83rp.fsf@kamboji.qca.qualcomm.com> (sfid-20161128_082600_897654_2E99BF36)
+        Sun, 13 Nov 2016 21:06:48 -0500
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+CC: akpm@linux-foundation.org, "Denys Vlasenko" <dvlasenk@redhat.com>,
+        linux-wireless@vger.kernel.org, "H. Peter Anvin" <hpa@zytor.com>,
+        "Andy Lutomirski" <luto@kernel.org>,
+        "Thomas Gleixner" <tglx@linutronix.de>,
+        "Matt Fleming" <matt@codeblueprint.co.uk>,
+        "Peter Zijlstra" <peterz@infradead.org>,
+        "Konstantin Simanov" <k.simanov@stlk.ru>,
+        "Borislav Petkov" <bp@alien8.de>, linux-pci@vger.kernel.org,
+        "Brian Gerst" <brgerst@gmail.com>, "Michael Buesch" <m@bues.ch>,
+        "Andrew Worsley" <amworsley@gmail.com>,
+        "Lukas Wunner" <lukas@wunner.de>,
+        "=?UTF-8?Q?Rafa=C5=82=20?= =?UTF-8?Q?Mi=C5=82ecki?="
+        <zajec5@gmail.com>,
+        "Chris Bainbridge" <chris.bainbridge@gmail.com>,
+        b43-dev@lists.infradead.org,
+        "Bryan Paradis" <bryan.paradis@gmail.com>,
+        "Linus Torvalds" <torvalds@linux-foundation.org>,
+        "Josh Poimboeuf" <jpoimboe@redhat.com>,
+        "Chris Milsted" <cmilsted@redhat.com>,
+        "Matthew Garrett" <mjg59@srcf.ucam.org>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        "Yinghai Lu" <yinghai@kernel.org>, "Ingo Molnar" <mingo@kernel.org>
+Date: Mon, 14 Nov 2016 00:14:07 +0000
+Message-ID: <lsq.1479082447.295446131@decadent.org.uk> (sfid-20161114_030747_055461_AC0A04FB)
+Subject: [PATCH 3.2 017/152] x86/quirks: Add early quirk to reset Apple
+ AirPort card
+In-Reply-To: <lsq.1479082446.271293126@decadent.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+3.2.84-rc1 review patch.  If anyone has any objections, please let me know.
 
-> Hi all,
->
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (x86_64 allmodconfig) produced this warning:
->
-> In file included from include/linux/usb/ch9.h:35:0,
->                  from include/linux/usb.h:5,
->                  from drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:32:
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
-> include/linux/device.h:1214:36: warning: 'rate' may be used uninitialized in this function [-Wmaybe-uninitialized]
->  #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
->                                     ^
-> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4841:6: note: 'rate' was declared here
->   u32 rate;
->       ^
->
-> Introduced by commit
->
->   b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
->
-> This is a correct diagnosis.
+------------------
 
-Thanks for the report. Jes, can you send a patch to fix this? (Unless
-someone else beats to it.)
+From: Lukas Wunner <lukas@wunner.de>
 
--- 
-Kalle Valo
+commit abb2bafd295fe962bbadc329dbfb2146457283ac upstream.
+
+The EFI firmware on Macs contains a full-fledged network stack for
+downloading OS X images from osrecovery.apple.com. Unfortunately
+on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+wireless card on every boot and leaves it enabled even after
+ExitBootServices has been called. The card continues to assert its IRQ
+line, causing spurious interrupts if the IRQ is shared. It also corrupts
+memory by DMAing received packets, allowing for remote code execution
+over the air. This only stops when a driver is loaded for the wireless
+card, which may be never if the driver is not installed or blacklisted.
+
+The issue seems to be constrained to the Broadcom 4331. Chris Milsted
+has verified that the newer Broadcom 4360 built into the MacBookPro11,3
+(2013/2014) does not exhibit this behaviour. The chances that Apple will
+ever supply a firmware fix for the older machines appear to be zero.
+
+The solution is to reset the card on boot by writing to a reset bit in
+its mmio space. This must be done as an early quirk and not as a plain
+vanilla PCI quirk to successfully combat memory corruption by DMAed
+packets: Matthew Garrett found out in 2012 that the packets are written
+to EfiBootServicesData memory (http://mjg59.dreamwidth.org/11235.html).
+This type of memory is made available to the page allocator by
+efi_free_boot_services(). Plain vanilla PCI quirks run much later, in
+subsys initcall level. In-between a time window would be open for memory
+corruption. Random crashes occurring in this time window and attributed
+to DMAed packets have indeed been observed in the wild by Chris
+Bainbridge.
+
+When Matthew Garrett analyzed the memory corruption issue in 2012, he
+sought to fix it with a grub quirk which transitions the card to D3hot:
+http://git.savannah.gnu.org/cgit/grub.git/commit/?id=9d34bb85da56
+
+This approach does not help users with other bootloaders and while it
+may prevent DMAed packets, it does not cure the spurious interrupts
+emanating from the card. Unfortunately the card's mmio space is
+inaccessible in D3hot, so to reset it, we have to undo the effect of
+Matthew's grub patch and transition the card back to D0.
+
+Note that the quirk takes a few shortcuts to reduce the amount of code:
+The size of BAR 0 and the location of the PM capability is identical
+on all affected machines and therefore hardcoded. Only the address of
+BAR 0 differs between models. Also, it is assumed that the BCMA core
+currently mapped is the 802.11 core. The EFI driver seems to always take
+care of this.
+
+Michael Büsch, Bjorn Helgaas and Matt Fleming contributed feedback
+towards finding the best solution to this problem.
+
+The following should be a comprehensive list of affected models:
+    iMac13,1        2012  21.5"       [Root Port 00:1c.3 = 8086:1e16]
+    iMac13,2        2012  27"         [Root Port 00:1c.3 = 8086:1e16]
+    Macmini5,1      2011  i5 2.3 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,2      2011  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini5,3      2011  i7 2.0 GHz  [Root Port 00:1c.1 = 8086:1c12]
+    Macmini6,1      2012  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    Macmini6,2      2012  i7 2.3 GHz  [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro8,1   2011  13"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,2   2011  15"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro8,3   2011  17"         [Root Port 00:1c.1 = 8086:1c12]
+    MacBookPro9,1   2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro9,2   2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,1  2012  15"         [Root Port 00:1c.1 = 8086:1e12]
+    MacBookPro10,2  2012  13"         [Root Port 00:1c.1 = 8086:1e12]
+
+For posterity, spurious interrupts caused by the Broadcom 4331 wireless
+card resulted in splats like this (stacktrace omitted):
+
+    irq 17: nobody cared (try booting with the "irqpoll" option)
+    handlers:
+    [<ffffffff81374370>] pcie_isr
+    [<ffffffffc0704550>] sdhci_irq [sdhci] threaded [<ffffffffc07013c0>] sdhci_thread_irq [sdhci]
+    [<ffffffffc0a0b960>] azx_interrupt [snd_hda_codec]
+    Disabling IRQ #17
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
+Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
+Tested-by: Konstantin Simanov <k.simanov@stlk.ru>        # [MacBookPro8,1]
+Tested-by: Lukas Wunner <lukas@wunner.de>                # [MacBookPro9,1]
+Tested-by: Bryan Paradis <bryan.paradis@gmail.com>       # [MacBookPro9,2]
+Tested-by: Andrew Worsley <amworsley@gmail.com>          # [MacBookPro10,1]
+Tested-by: Chris Bainbridge <chris.bainbridge@gmail.com> # [MacBookPro10,2]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Acked-by: Rafał Miłecki <zajec5@gmail.com>
+Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Chris Milsted <cmilsted@redhat.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Michael Buesch <m@bues.ch>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: b43-dev@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Link: http://lkml.kernel.org/r/48d0972ac82a53d460e5fce77a07b2560db95203.1465690253.git.lukas@wunner.de
+[ Did minor readability edits. ]
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+[bwh: Backported to 3.2:
+ - early_ioremap() is declared in <asm/io.h> not <asm/early_ioremap.h>
+ - Add definition of BCMA_RESET_ST
+ - Adjust context]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ arch/x86/kernel/early-quirks.c | 64 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/bcma/bcma_private.h    |  2 --
+ include/linux/bcma/bcma.h      |  1 +
+ 3 files changed, 65 insertions(+), 2 deletions(-)
+
+--- a/arch/x86/kernel/early-quirks.c
++++ b/arch/x86/kernel/early-quirks.c
+@@ -11,13 +11,20 @@
+ 
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
++#include <linux/delay.h>
++#include <linux/dmi.h>
+ #include <linux/pci_ids.h>
++#include <linux/bcma/bcma.h>
++#include <linux/bcma/bcma_regs.h>
+ #include <asm/pci-direct.h>
+ #include <asm/dma.h>
+ #include <asm/io_apic.h>
+ #include <asm/apic.h>
+ #include <asm/iommu.h>
+ #include <asm/gart.h>
++#include <asm/io.h>
++
++#define dev_err(msg)  pr_err("pci 0000:%02x:%02x.%d: %s", bus, slot, func, msg)
+ 
+ static void __init fix_hypertransport_config(int num, int slot, int func)
+ {
+@@ -199,6 +206,62 @@ static void __init ati_bugs_contd(int nu
+ }
+ #endif
+ 
++#define BCM4331_MMIO_SIZE	16384
++#define BCM4331_PM_CAP		0x40
++#define bcma_aread32(reg)	ioread32(mmio + 1 * BCMA_CORE_SIZE + reg)
++#define bcma_awrite32(reg, val)	iowrite32(val, mmio + 1 * BCMA_CORE_SIZE + reg)
++
++static void __init apple_airport_reset(int bus, int slot, int func)
++{
++	void __iomem *mmio;
++	u16 pmcsr;
++	u64 addr;
++	int i;
++
++	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc."))
++		return;
++
++	/* Card may have been put into PCI_D3hot by grub quirk */
++	pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
++
++	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
++		write_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
++		mdelay(10);
++
++		pmcsr = read_pci_config_16(bus, slot, func, BCM4331_PM_CAP + PCI_PM_CTRL);
++		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
++			dev_err("Cannot power up Apple AirPort card\n");
++			return;
++		}
++	}
++
++	addr  =      read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_0);
++	addr |= (u64)read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_1) << 32;
++	addr &= PCI_BASE_ADDRESS_MEM_MASK;
++
++	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
++	if (!mmio) {
++		dev_err("Cannot iomap Apple AirPort card\n");
++		return;
++	}
++
++	pr_info("Resetting Apple AirPort card (left enabled by EFI)\n");
++
++	for (i = 0; bcma_aread32(BCMA_RESET_ST) && i < 30; i++)
++		udelay(10);
++
++	bcma_awrite32(BCMA_RESET_CTL, BCMA_RESET_CTL_RESET);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(1);
++
++	bcma_awrite32(BCMA_RESET_CTL, 0);
++	bcma_aread32(BCMA_RESET_CTL);
++	udelay(10);
++
++	early_iounmap(mmio, BCM4331_MMIO_SIZE);
++}
++
+ #define QFLAG_APPLY_ONCE 	0x1
+ #define QFLAG_APPLIED		0x2
+ #define QFLAG_DONE		(QFLAG_APPLY_ONCE|QFLAG_APPLIED)
+@@ -222,6 +285,8 @@ static struct chipset early_qrk[] __init
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs },
+ 	{ PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS,
+ 	  PCI_CLASS_SERIAL_SMBUS, PCI_ANY_ID, 0, ati_bugs_contd },
++	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
++	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
+ 	{}
+ };
+ 
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -8,8 +8,6 @@
+ #include <linux/bcma/bcma.h>
+ #include <linux/delay.h>
+ 
+-#define BCMA_CORE_SIZE		0x1000
+-
+ struct bcma_bus;
+ 
+ /* main.c */
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -124,6 +124,7 @@ struct bcma_host_ops {
+ #define BCMA_CORE_DEFAULT		0xFFF
+ 
+ #define BCMA_MAX_NR_CORES		16
++#define BCMA_CORE_SIZE			0x1000
+ 
+ struct bcma_device {
+ 	struct bcma_bus *bus;
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -35,6 +35,7 @@
+ #define  BCMA_IOST_BIST_DONE		0x8000
+ #define BCMA_RESET_CTL			0x0800
+ #define  BCMA_RESET_CTL_RESET		0x0001
++#define BCMA_RESET_ST			0x0804
+ 
+ /* BCMA PCI config space registers. */
+ #define BCMA_PCI_PMCSR			0x44
