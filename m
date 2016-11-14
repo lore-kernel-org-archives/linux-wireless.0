@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:38337 "EHLO pokefinder.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750714AbcKKNKM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:10:12 -0500
-Date: Fri, 11 Nov 2016 14:10:07 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: Problems getting mwifiex with sd8887 to work
-Message-ID: <20161111131007.GC1687@katana> (sfid-20161111_141015_397402_575F8ADB)
-References: <20161110175915.GB1585@katana>
- <507fff29bd2048c2b2295beb451943b5@SC-EXCH04.marvell.com>
+Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:18642
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933352AbcKNKC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Nov 2016 05:02:27 -0500
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com> (sfid-20161114_110236_539327_F5EE9C38)
+Date: Mon, 14 Nov 2016 11:26:04 +0300
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="CblX+4bnyfN0pR09"
-In-Reply-To: <507fff29bd2048c2b2295beb451943b5@SC-EXCH04.marvell.com>
+In-Reply-To: <1478864146.4129.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks, Johannes.
 
---CblX+4bnyfN0pR09
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+To clarify with you and Kalle, as persons involved with linux-wireless: 
+is my understanding correct that submitting firmware into linux-fimware 
+repository is a prerequisite to accepting new driver into linux-wireless?
 
+There is an option to start Quantenna device from internal flash memory, 
+no external binary files involved. If we will introduce this 
+functionality and remove code handling external firmware for now (until 
+firmware problem resolved), would that allow driver to be reviewed/accepted?
 
-> 0x242 command failure is expected for sd8887, as It's not supported.
-> Driver shouldn't abort initialization in this case. You can try below
-> change. I will prepare a patch to send this command based on firmware
-> version/capability.
-
-Thanks for the heads up. If you CC me on the patch, I'll happily ack it.
-
-Meanwhile, I nailed my problem down to some SDIO IRQ delivery issue.
-
-Thanks again.
-
-
---CblX+4bnyfN0pR09
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJYJcMvAAoJEBQN5MwUoCm2tR8QAIhcFAbNeGG/KMwmv4nlrNVX
-2dyy99vTcY0HPfdkunxPtaywfI7ewFwhzHQMLK32tWslNzpbA1XPw8qRl+UkKi5y
-9sse9uv7HlZjs/ZuHP16wC+0hVDkyqkntzAzLa6ddjIAoReeaV6RBghyhgQBVU0y
-HJeSX/Cx9groetMLXrbEhYyFwX4nb6dzlkhVaeRIiy5JbNYNrHq7+zacbpp7EadQ
-qEJghSC0R5tUviYsAq1j7Qd9Xa1sQtvQggMOCP+qxdB2+uAGEXz3WTa3YmqtZBvr
-gssqX67sWKJb5LG56bPtST1fndCNUJTvNuapcvAOAV42g20/Ug6odZC4KO5m5ZpD
-kof2Pl57zhWWWJ3sWwGH91eekJkoqS0tJr5ruuL26X6+A6WjyyMCI1WZtmAcLo7a
-Ueq6t+ojkOca2QsBQf7JWW24jTESACLk2j1vu0+C98fGpotNnEBdduGUQoMaTBX9
-4MUOzJNNi7pphKPdd8kwbXHPuvP8XGaGnQakNBqpi/i9B0ZSKrv5c+16bXMD1cHL
-s/TtP1fDOTcRiZKahBTMFsfFjqW9zylumsB/BhJfcYRlHbEOpDvEN2dxI3NhxCVn
-WnW5KxkprG8QN9dZad/WUz910ZdiNvhr0hHGLuiLbI/OWjwzvcv068Rrowo/E6QW
-P5xlPOUosB2rOs9IsIHC
-=MBQT
------END PGP SIGNATURE-----
-
---CblX+4bnyfN0pR09--
+On 11/11/2016 02:35 PM, Johannes Berg wrote:
+> Adding linux-firmware people to Cc, since presumably they don't
+> necessarily read linux-wireless...
+>
+>> Johannes, from that perspective, who are the "redistributors"?
+>> Specifically, is linux-firmware git repository considered a
+>> redistributor or its just hosting files? I mean, at what moment
+>> someone else other then Quantenna will start to be legally obliged to
+>> make GPL code used in firmware available for others?
+> Look, I don't know. I'd assume people who ship it, like any regular
+> distro, would be (re)distributors thereof. "Normal" (non-GPL) firmware
+> images come with a redistribution license, but that obviously can't
+> work here.
+>
+> There's some info from Ben here regarding the carl9170 case:
+> http://lkml.iu.edu/hypermail/linux/kernel/1605.3/01176.html
+>
+>> Personally I still hope that linux-firmware itself is not legally
+>> concerned with what is the content of firmware its hosting, but looks
+>> like there already was a precedent case  with carl9170 driver and
+>> we have to somehow deal with it.
+> That's really all I wanted to bring up. I'm not involved with the
+> linux-firmware git tree.
+>
+>> There still may be a difference though: Quantenna is semiconductor
+>> company only, software
+>> used on actual products based on Quantenna chipsets is released by
+>> other
+>> companies.
+>> I just want to present our legal team with a clear case (and position
+>> of
+>> Linux maintainers) so that they can
+>> work with it and make decision on how to proceed.
+>>
+>>   From technical perspective, as I mentioned, SDK is quite huge and
+>> include a lot of opensource
+>> components including full Linux, I don't think its reasonable to have
+>> it
+>> inside linux-firmware tree.
+>> What are the options to share it other then providing it on request
+>> basis:
+>> - git repository
+>> - store tarball somewhere on official website
+> Clearly that wasn't deemed appropriate for carl9170, so I don't see why
+> it'd be different here.
+>
+> johannes
