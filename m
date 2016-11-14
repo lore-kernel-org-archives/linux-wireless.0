@@ -1,160 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36399 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756461AbcKXQtm (ORCPT
+Received: from nm2-vm2.bullet.mail.ir2.yahoo.com ([212.82.96.82]:53275 "EHLO
+        nm2-vm2.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752376AbcKNLsj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 11:49:42 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Sebastian Reichel <sre@kernel.org>
-Subject: Re: wl1251 & mac address & calibration data
-Date: Thu, 24 Nov 2016 17:49:33 +0100
-Cc: Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-References: <201611111820.52072@pali> <20161124152045.GK13735@pali> <20161124160830.kdpbonsz3l26uuo5@earth>
-In-Reply-To: <20161124160830.kdpbonsz3l26uuo5@earth>
+        Mon, 14 Nov 2016 06:48:39 -0500
+Date: Mon, 14 Nov 2016 11:47:45 +0000 (UTC)
+From: Gianfranco Costamagna <locutusofborg@debian.org>
+Reply-To: Gianfranco Costamagna <locutusofborg@debian.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
+        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
+Message-ID: <810879191.6335567.1479124065921@mail.yahoo.com> (sfid-20161114_124845_442654_77882AEB)
+In-Reply-To: <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
+References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com> <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com> <690669269.1124561.1477671348137@mail.yahoo.com> <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com> <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com> <233918815.6357602.1479123253455@mail.yahoo.com> <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
+Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
+ regulatory domain frequency value
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2626355.tNxa7UNqEK";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201611241749.33681@pali> (sfid-20161124_175007_092109_625F2269)
+Content-Type: multipart/mixed;
+        boundary="----=_Part_6335566_1331583645.1479124065921"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2626355.tNxa7UNqEK
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+------=_Part_6335566_1331583645.1479124065921
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Thursday 24 November 2016 17:08:30 Sebastian Reichel wrote:
-> Hi,
->=20
-> On Thu, Nov 24, 2016 at 04:20:45PM +0100, Pali Roh=C3=A1r wrote:
-> > On Thursday 24 November 2016 16:13:17 Sebastian Reichel wrote:
-> > > On Thu, Nov 24, 2016 at 09:33:29AM +0100, Pali Roh=C3=A1r wrote:
-> > > > On Thursday 24 November 2016 08:51:04 Pavel Machek wrote:
-> > > > > > > "ifconfig hw ether XX" normally sets the address. I guess
-> > > > > > > that's ioctl?
-> > > > > >=20
-> > > > > > This sets temporary address and it is ioctl. IIRC same as
-> > > > > > what ethtool uses. (ifconfig is already deprecated).
-> > > > > >=20
-> > > > > > > And I guess we should use similar mechanism for permanent
-> > > > > > > address.
-> > > > > >=20
-> > > > > > I'm not sure here... Above ioctl =E2=86=91=E2=86=91=E2=86=91 is=
- for changing
-> > > > > > temporary mac address. But here we do not want to change
-> > > > > > permanent mac address. We want to tell kernel driver
-> > > > > > current permanent mac address which is stored
-> > > > >=20
-> > > > > Well... I'd still use similar mechanism :-).
-> > > >=20
-> > > > Thats problematic, because in time when wlan0 interface is
-> > > > registered into system and visible in ifconfig output it
-> > > > already needs to have permanent mac address assigned.
-> > > >=20
-> > > > We should assign permanent mac address before wlan0 of wl1251
-> > > > is registered into system.
-> > >=20
-> > > You can just add the MAC address to the NVS data, which is also
-> > > required for the device initialization.
-> >=20
-> > NVS data file has fixed size, there is IIRC no place for it.
-> >=20
-> > But one of my suggestion was to use another request_firmware for
-> > MAC address. So this is similar to what you are proposing, as NVS
-> > data are loaded by request_firmware too...
->=20
-> Just append it to NVS data and modify the size check accordingly?
+Hi Arend,
 
-=46irst that would mean to have request_firmware() function which will not=
-=20
-use direct VFS access, but instead use userspace helper.
 
-NVS data file with some default values (not suitable for usage) is=20
-already present in linux-firmware and available in /lib/firmware/...
 
-Also I'm not sure if such thing is allowed by license:
-https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tr=
-ee/LICENCE.ti-connectivity
+>Well, not before you pointed it out ;-). You are welcome to send a patch
+>fixing it. Otherwise, I will take care of it.
 
-> > > I wonder if those information could be put into DT. Iirc some
-> > > network devices get their MAC address from DT. Maybe we can add
-> > > all NVS info to DT? How much data is it?
-> >=20
-> > Proprietary, signed and closed bootloader NOLO does not support DT.
-> > So for booting you need to append DTS file to kernel image.
->=20
-> Yeah, so NOLO without U-Boot will depend on userspace to fixup DT.
->=20
-> > U-Boot is optional and can be used as intermediate bootloader
-> > between NOLO and kernel. But still it has problems with reading
-> > from nand, so cannot read NVS data nor MAC address.
->=20
-> It may in the future?
 
-I already tried that, but I failed. I was not able to access N900's nand=20
-from u-boot. No idea where was problem...
+attaching a format-patch like version.
+I don't think we need a Tested-by or whatever, because it is just a typo in a comment.
+(this is my first contribution, feel free to rebase or change whatever you prefer
+to make it in line with other styles)
 
-And if somebody fix onenand in u-boot, then needs to reimplement Nokia's=20
-proprietary parser of that partition where is stored NVS and mac address=20
-&& make this support in upstream u-boot.
+(I gave authorship to Marco, the first one who discovered such typo)
 
-So... I doubt it will be in any future.
+thanks!
 
-+ no men power
+G.
 
-> > > Userspace application can add all those information to the DT
-> > > using a DT overlay. Also the u-boot could parse and add it at
-> > > some point in the future.
-> >=20
-> > In case when wl1251 is statically linked into kernel image, it is
-> > loaded and initialized before even userspace applications starts.
-> >=20
-> > So no... adding NVS data or MAC address into DT or DT overlay is
-> > not a solution.
->=20
-> Actually with data loaded from DT you *can* load data quite early in
-> the boot process, while your suggestions always require userspace.
-> So you argument against yourself?
+------=_Part_6335566_1331583645.1479124065921
+Content-Type: text/x-diff
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename*0=0001-cfg80211-fix-typo-in-REG-channel-frequency-comment.patc;
+	filename*1=h
+Content-ID: <3d3e2742-fe31-3bbe-fcea-7d44252f03c2@yahoo.com>
 
-You cannot add DTS in uboot (no support). And if you modify DTS on=20
-running kernel from userspace, then it is too late when wl1251 is=20
-statically linked into kernel image.
+RnJvbSBiZjBjZGQ4YWQyNzgzMzYzOTQ0N2EzMDcxZDY2MmY3OWE3MjE5YjFkIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBBcmxvbmUgTWFyY28gPG1hcmNvLmFybG9uZUByb2ouY29tPgpE
+YXRlOiBTYXQsIDIyIE9jdCAyMDE2IDE1OjA4OjM1ICswMjAwClN1YmplY3Q6IFtQQVRDSF0gYnJv
+YWRjb20gY2ZnODAyMTE6IGZpeCB0eXBvIGluIFJFRyBjaGFubmVsIGZyZXF1ZW5jeSBjb21tZW50
+CgpmcmVxdWVuY3kgMjQ3MiBjb3JyZXNwb25kcyB0byBjaGFubmVsIDEzLCBub3QgY2hhbm5lbCAx
+MQoKU2lnbmVkLW9mZi1ieTogR2lhbmZyYW5jbyBDb3N0YW1hZ25hIDxnaWFuZnJhbmNvLmNvc3Rh
+bWFnbmFAYWJpbnN1bGEuY29tPgpTaWduZWQtb2ZmLWJ5OiBOaWNvbGEgU21hbGRvbmUgPG5pY29s
+YS5zbWFsZG9uZUB0aWVycmFzZXJ2aWNlLmNvbT4KU2lnbmVkLW9mZi1ieTogQXJsb25lIE1hcmNv
+IDxtYXJjby5hcmxvbmVAcm9qLmNvbT4KLS0tCiBkcml2ZXJzL25ldC93aXJlbGVzcy9icm9hZGNv
+bS9icmNtODAyMTEvYnJjbWZtYWMvY2ZnODAyMTEuYyB8IDIgKy0KIDEgZmlsZSBjaGFuZ2VkLCAx
+IGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dp
+cmVsZXNzL2Jyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMS5jIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMKaW5kZXgg
+Yjc3N2UxYi4uYjRkOGIxYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJvYWRj
+b20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxl
+c3MvYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExLmMKQEAgLTIwMyw3ICsyMDMs
+NyBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdkb21haW4gYnJjbWZfcmVnZG9t
+ID0gewogCS5uX3JlZ19ydWxlcyA9IDQsCiAJLmFscGhhMiA9ICAiOTkiLAogCS5yZWdfcnVsZXMg
+PSB7Ci0JCS8qIElFRUUgODAyLjExYi9nLCBjaGFubmVscyAxLi4xMSAqLworCQkvKiBJRUVFIDgw
+Mi4xMWIvZywgY2hhbm5lbHMgMS4uMTMgKi8KIAkJUkVHX1JVTEUoMjQxMi0xMCwgMjQ3MisxMCwg
+NDAsIDYsIDIwLCAwKSwKIAkJLyogSWYgYW55ICovCiAJCS8qIElFRUUgODAyLjExIGNoYW5uZWwg
+MTQgLSBPbmx5IEpQIGVuYWJsZXMKLS0gCjIuNy40Cgo=
 
-wl1251 will not wait until some userspace modify DTS and add data...
-
-But request_firmware() in fallback mode *can* wait for userspace so=20
-wl1251 can postpone its operation until mdev/udev/whatever starts=20
-listening for events and push needed firmware data to kernel.
-
-So no, there is no argument against... request_firmware() in fallback=20
-mode with userspace helper is by design blocking and waiting for=20
-userspace. But waiting for some change in DST in kernel is just=20
-nonsense.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart2626355.tNxa7UNqEK
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlg3Gh0ACgkQi/DJPQPkQ1IzRACfaqVXvE8L0hQdsNAu5laB+eyP
-RgkAoK/tIYnSim7S5BHS0eAkyIMxGRS9
-=ypNA
------END PGP SIGNATURE-----
-
---nextPart2626355.tNxa7UNqEK--
+------=_Part_6335566_1331583645.1479124065921--
