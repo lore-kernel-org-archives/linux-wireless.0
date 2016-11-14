@@ -1,129 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44718 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756679AbcKKNLt (ORCPT
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:35752 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752583AbcKNL1J (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:49 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 10/11] mwifiex: stop checking for NULL drvata/intfdata
-Date: Fri, 11 Nov 2016 18:40:17 +0530
-Message-ID: <1478869818-4340-10-git-send-email-akarwar@marvell.com> (sfid-20161111_141155_682000_E9807C0F)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
+        Mon, 14 Nov 2016 06:27:09 -0500
+Received: by mail-pg0-f47.google.com with SMTP id p66so53360483pga.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 03:27:08 -0800 (PST)
+Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
+ regulatory domain frequency value
+To: Gianfranco Costamagna <locutusofborg@debian.org>,
+        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
+ <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
+ <690669269.1124561.1477671348137@mail.yahoo.com>
+ <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
+Cc: "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
+        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com> (sfid-20161114_122713_719142_2708F2F6)
+Date: Mon, 14 Nov 2016 12:22:00 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+On 28-10-2016 22:41, Arend Van Spriel wrote:
+> On 28-10-2016 18:15, Gianfranco Costamagna wrote:
+>> (resending from my debian.org mail address, to avoid spam filtering)
+>>
+>> Hi Broadcom developers and linux wireless list.
+>>
+>> We found a possible issue in the cfg80211 implementation of the regulatory domain rules:
+>>
+>>         .reg_rules = {
+>>                 /* IEEE 802.11b/g, channels 1..11 */
+>>                 REG_RULE(2412-10, 2472+10, 40, 6, 20, 0),
+>>
+>>
+>> the referred channel 11 has/should have a frequency of 2462, not 2472 (corresponding to channel 13).
+>> Is this a typo in the code or the above comment?
+>>
+>> (I'm not sure why the override of reg.c is in place for 2.4 Ghz frequencies)
+>>
+>> Can you please double check and in case apply the attached patch?
+> 
+> checking.... stay tuned.
 
-These are never NULL, so stop making people think they might be.
+Hi Gianfranco,
 
-I don't change this for SDIO because SDIO has a racy card-reset handler
-that reallocates this struct. I'd rather not touch that mess right now.
+Finally response. As it turns out the range was explcitly changed
+enabling channels 12 and 13 to be used where applicable. They forgot to
+update the comment.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v3: Same as v1 and v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 14 +++++---------
- drivers/net/wireless/marvell/mwifiex/usb.c  | 15 +++------------
- 2 files changed, 8 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 1ab366c..3b6d908 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -118,10 +118,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card) {
--		dev_err(dev, "card structure is not valid\n");
--		return 0;
--	}
- 
- 	/* Might still be loading firmware */
- 	wait_for_completion(&card->fw_done);
-@@ -166,8 +162,9 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
--		dev_err(dev, "Card or adapter structure is not valid\n");
-+
-+	if (!card->adapter) {
-+		dev_err(dev, "adapter structure is not valid\n");
- 		return 0;
- 	}
- 
-@@ -255,8 +252,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	struct mwifiex_private *priv;
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card)
--		return;
- 
- 	wait_for_completion(&card->fw_done);
- 
-@@ -2249,7 +2244,8 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 	}
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
-+
-+	if (!card->adapter) {
- 		pr_err("info: %s: card=%p adapter=%p\n", __func__, card,
- 		       card ? card->adapter : NULL);
- 		goto exit;
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 8bcfd92..806ded6 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -503,11 +503,6 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	struct usb_tx_data_port *port;
- 	int i, j;
- 
--	if (!card) {
--		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
--		return 0;
--	}
--
- 	/* Might still be loading firmware */
- 	wait_for_completion(&card->fw_done);
- 
-@@ -574,8 +569,9 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- 	struct mwifiex_adapter *adapter;
- 	int i;
- 
--	if (!card || !card->adapter) {
--		pr_err("%s: card or card->adapter is NULL\n", __func__);
-+	if (!card->adapter) {
-+		dev_err(&intf->dev, "%s: card->adapter is NULL\n",
-+			__func__);
- 		return 0;
- 	}
- 	adapter = card->adapter;
-@@ -617,11 +613,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	struct usb_card_rec *card = usb_get_intfdata(intf);
- 	struct mwifiex_adapter *adapter;
- 
--	if (!card) {
--		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
--		return;
--	}
--
- 	wait_for_completion(&card->fw_done);
- 
- 	adapter = card->adapter;
--- 
-1.9.1
+Regards,
+Arend
