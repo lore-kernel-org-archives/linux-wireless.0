@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f180.google.com ([209.85.210.180]:32769 "EHLO
-        mail-wj0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754663AbcK2NpI (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40332 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932172AbcKNMst (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 08:45:08 -0500
-Received: by mail-wj0-f180.google.com with SMTP id xy5so145549120wjc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 05:44:19 -0800 (PST)
-Subject: Re: [PATCH] mac80211: fix Tx BA session stuck issue during sw
- scanning
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Chris Chiu <chiu@endlessm.com>, linux-wireless@vger.kernel.org
-References: <1479887968-17473-1-git-send-email-chiu@endlessm.com>
- <1480424369.10012.6.camel@sipsolutions.net>
-Cc: linux@endlessm.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0a225a3e-9338-0b16-d97a-01236df137af@broadcom.com> (sfid-20161129_144514_263145_FA908C61)
-Date: Tue, 29 Nov 2016 14:38:52 +0100
+        Mon, 14 Nov 2016 07:48:49 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>
+Subject: RE: [PATCH v2 2/3] mwifiex: Introduce mwifiex_probe_of() to parse
+ common properties
+Date: Mon, 14 Nov 2016 12:48:43 +0000
+Message-ID: <26d48dadd53945e9bafe5b94e2d4e6f4@SC-EXCH04.marvell.com> (sfid-20161114_134853_005607_4A1E924F)
+References: <1478862911-15498-1-git-send-email-akarwar@marvell.com>
+ <1478862911-15498-2-git-send-email-akarwar@marvell.com>
+ <20161111204957.GC111624@google.com>
+In-Reply-To: <20161111204957.GC111624@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1480424369.10012.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Brian,
 
-
-On 29-11-2016 13:59, Johannes Berg wrote:
-> On Wed, 2016-11-23 at 15:59 +0800, Chris Chiu wrote:
->> ieee80211_iface_work() will check if sw scanning is in progress
->> before handling block ack session. In our case, the RTL8821AE
->> operate in station mode, when tx session expired, DELBA packet
->> stuck during sw scanning and so do other data packets.
->>
->> ieee80211_scan_state_decision() will take lots of time in
->> SCAN_SUSPEND/SCAN_RESUME state due to !tx_empty or bad_latency.
->> Then the sw scanning mostly take > 20 seconds to finish or even
->> worse in our case RTL8821AE have 37 channels for 2G+5G to scan
->> and tx stalls ~300 seconds. AP side still thinks the connection
->> is alive because it still receives the QoS NULL packet from STA.
->> So the link state will never change but actually no data tx/rx
->> during this long time.
->>
->> This commit tries to send out packet in SCAN_SUSPEND state so the
->> sw scanning can complete more efficiently and less affect on Block
->> Ack session handling. Verified on RTL8821AE for > 30000 pings and
->> no Tx BA session stuck observed.
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Saturday, November 12, 2016 2:20 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> rajatja@google.com; dmitry.torokhov@gmail.com
+> Subject: Re: [PATCH v2 2/3] mwifiex: Introduce mwifiex_probe_of() to
+> parse common properties
 > 
-> The premise seems fairly reasonable, although I'm a little worried that
-> if so much new traffic is coming in we never finish the scan suspend?
-> Actually, the queues are still stopped, so it's only management frames
-> that can come in, so that should be ok?
+> On Fri, Nov 11, 2016 at 04:45:10PM +0530, Amitkumar Karwar wrote:
+> > From: Rajat Jain <rajatja@google.com>
+> >
+> > Introduce function mwifiex_probe_of() to parse common properties.
+> > Since the interface drivers get to decide whether or not the device
+> > tree node was a valid one (depending on the compatible property), let
+> > the interface drivers pass a flag to indicate whether the device tree
+> > node was a valid one.
+> 
+> Wait, what? I don't understand why this is needed. The current of_node
+> user (SDIO) always checks dev->of_node (if !NULL), and if it's not
+> matching, it rejects the device and doesn't even try to register the
+> card at all. That's a common pattern for DT-based drivers, and I don't
+> see why we need to do differently for any other driver (e.g., PCIe).
+> 
+> So...isn't 'dev->of_node != NULL' an equivalent test to
+> 'of_node_valid'?
+> Or put another way, mwifiex_add_card() should never see a 'struct
+> device' whose of_node is not compatible. Do you agree?
 
-So are pings a good way to verify block-ack session handling. How often
-was a scan issued within those 30000 pings or was that left to
-wpa_supplicant/network-manager/whatever?
+I agree. 'of_node_valid' seems to be redundant here. I will remove it and post updated version.
 
 Regards,
-Arend
-
->> +	test_and_clear_bit(SCAN_SUSPEND_SCANNING, &local->scanning);
->>
-> 
-> That makes no sense, you're not checking the return value, just clear
-> the bit without test.
->  
->> @@ -844,6 +846,8 @@ static void ieee80211_scan_state_suspend(struct
->> ieee80211_local *local,
->>  	/* disable PS */
->>  	ieee80211_offchannel_return(local);
->>  
->> +	__set_bit(SCAN_SUSPEND_SCANNING, &local->scanning);
-> 
-> Why are you using the non-atomic version here, vs. the atomic one
-> above?
-> 
-> johannes
-> 
+Amitkumar
