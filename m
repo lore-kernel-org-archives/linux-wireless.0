@@ -1,53 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:8489 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754539AbcKNKUz (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34807 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933551AbcKNQfl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 05:20:55 -0500
-Subject: Re: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
-To: Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>
-References: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de>
- <1478984929.4226.3.camel@sipsolutions.net>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Message-ID: <faf081ea-18c6-8ad5-e336-aac9a79a0ce3@uni-rostock.de> (sfid-20161114_112122_548314_35C4FA9C)
-Date: Mon, 14 Nov 2016 11:20:53 +0100
-MIME-Version: 1.0
-In-Reply-To: <1478984929.4226.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 14 Nov 2016 11:35:41 -0500
+Received: by mail-lf0-f66.google.com with SMTP id o141so7513862lff.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:40 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 11/12] ath10k: Added more host_interest members
+Date: Mon, 14 Nov 2016 17:33:41 +0100
+Message-Id: <1479141222-8493-12-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173600_590070_EAF11AEE)
+In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Augmented struct host_interest with more members.
 
->> So I would propose to put the whole struct into the netlink messages,
-> This is a terrible idea, since internal changes to this struct would
-> break the userland API/ABI. hwsim seems perhaps less important than
-> most APIs, but there is wmediumd etc. already.
-I agree with that, but there exist also other code in hwsim, which is
-tightly coupled with the mac80211 API, as e.g., the usage of
-IEEE80211_TX_MAX_RATES, which already broke older versions of wmediumd
-or similar implementations. Maybe a review regarding such things would
-be good to decouple the userspace daemon from the special kernel version.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
->> but I think that will break up the communication to e.g. bob
->> copelands
->> wmediumd and similar simulations. I would like to have our
->> Implementation working with mainline kernels and therefore ask how we
->> could achieve this easily.
->>
->> Obviously, we could define another field in the hwsim messages, but
->> as bob copeland already stated, significantly more information within
->> the netlink messages could  intensify the timing overhead of hwsim.
-> I don't think we have any other choice but add the relevant fields as
-> proper attributes.
-
-I'm totally fine with that. Nonetheless,  I would suggest to add the
-flags to "struct hwsim_tx_rate", since the flags are also tightly
-coupled to the rates and tries of a frame. To not break up things, we
-could add the flags as a separate attribute in the struct and not as
-part of the bitfield like in the original. This would be possible, due
-to the "__packed" flag, but I'm also unsure, whether this is a really
-good idea for a userspace API/ABI.
-
-
-Benjamin
+diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
+index a47cab4..58e0541 100644
+--- a/drivers/net/wireless/ath/ath10k/targaddrs.h
++++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
+@@ -205,6 +205,24 @@ struct host_interest {
+ 	 */
+ 	/* Bit 1 - unused */
+ 	u32 hi_fw_swap;					/* 0x104 */
++
++	/* global arenas pointer address, used by host driver debug */
++	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
++
++	/* allocated bytes of DRAM use by allocated */
++	u32 hi_dynamic_mem_allocated;			/* 0x10C */
++
++	/* remaining bytes of DRAM */
++	u32 hi_dynamic_mem_remaining;			/* 0x110 */
++
++	/* memory track count, configured by host */
++	u32 hi_dynamic_mem_track_max;			/* 0x114 */
++
++	/* minidump buffer */
++	u32 hi_minidump;				/* 0x118 */
++
++	/* bdata's sig and key addr */
++	u32 hi_bd_sig_key;				/* 0x11c */
+ } __packed;
+ 
+ #define HI_ITEM(item)  offsetof(struct host_interest, item)
+@@ -319,6 +337,12 @@ struct host_interest {
+ #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
+ /* Use test VAP */
+ #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
++/* SDIO/mailbox ACS flag definitions */
++#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
++#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
++#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
++#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
++#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
+ 
+ /*
+  * CONSOLE FLAGS
+-- 
+1.7.9.5
