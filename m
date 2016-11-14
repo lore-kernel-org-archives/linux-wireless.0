@@ -1,93 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.eu1.fugro.com ([46.34.88.151]:60839 "EHLO
-        smtp.eu1.fugro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752154AbcKNNEq (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34776 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933528AbcKNQfk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 08:04:46 -0500
-From: "Stam, Michel [FINT]" <m.stam@fugro.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "Antonio Quartulli" <a@unstable.cc>
-CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Antonio Quartulli" <antonio@open-mesh.com>
-Subject: RE: [ath9k-devel] [NOT FOR MERGE] ath9k: work around key cache
-        corruption
-Date: Mon, 14 Nov 2016 12:50:51 +0000
-Message-ID: <4fd6af4b02474a3eb4acfbe421bd6a24@nldataex02.ad.fugro.com> (sfid-20161114_140450_321502_3E4C08F4)
-References: <20161018083552.28592-1-a@unstable.cc>
-        <87lgxbxl2d.fsf@purkki.adurom.net> <20161026141016.GB26376@prodigo.lan>
-        <87bmy65nz8.fsf@kamboji.qca.qualcomm.com>
-        <62a2dc74-4a7c-d3d4-4170-4d5759b07ab3@dd-wrt.com>
-        (sfid-20161027_165606_267532_E06CA534)
- <1477580802.4534.20.camel@sipsolutions.net>
-In-Reply-To: <1477580802.4534.20.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Mon, 14 Nov 2016 11:35:40 -0500
+Received: by mail-lf0-f68.google.com with SMTP id o141so7513497lff.1
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:34 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 04/12] ath10k: htc: refactorization
+Date: Mon, 14 Nov 2016 17:33:34 +0100
+Message-Id: <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173601_176327_7F047927)
+In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear List,
+Code refactorization:
 
-After 2 weeks of Ferry Huberts and me trying to resolve this issue, this is the result:
-The problem can be mitigated by resetting the chip and immediately replumbing the encryption keys. I wrote a patch for this, which unfortunately this seems to suffer from some locking issues, rtnl_lock and sc->mutex being the chief culprits.
+Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+to ath10k_htc_control_rx_complete.
 
-Code snippet:
-static void ath9k_plumb_key(struct ieee80211_hw *hw,
-               struct ieee80211_vif *vif,
-               struct ieee80211_sta *sta,
-               struct ieee80211_key_conf *keyconf, void *data)
-{
-   struct ath_common *common = (struct ath_common *)data;
-   int ret;
+This eases the implementation of SDIO/mbox significantly since
+the ep_rx_complete cb is invoked directly from the SDIO/mbox
+hif layer.
 
-   /* delete and re-install keys which were programmed into the hardware */
-   if (vif && test_bit(keyconf->hw_key_idx, common->keymap)) {
-       ath_key_delete(common, keyconf);
-       keyconf->hw_key_idx = 0;
-       ret = ath_key_config(common, vif, sta, keyconf);
-       if (ret >= 0)
-           keyconf->hw_key_idx = ret;
-   }
-}
+Since the ath10k_htc_control_rx_complete already is present
+(only containing a warning message) there is no reason for not
+using it (instead of having a special case for ep 0 in
+ath10k_htc_rx_completion_handler).
 
-To reset and replumb, taken from ath_reset_internal():
-	ath9k_hw_kill_interrupts(sc->sc_ah);
-	set_bit(ATH_OP_HW_RESET, &common->op_flags);
-	ath9k_ps_wakeup(sc);
-	ath_reset_internal(sc, NULL);
-	rtnl_lock();
-	ieee80211_iter_keys(sc->hw, NULL, ath9k_plumb_key, common);
-	rtnl_unlock();
-	ath9k_ps_restore(sc);
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   73 +++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 39 deletions(-)
 
-In any case, the problem is only mitigated. It is not solved, as I see the error appearing still (less frequently though).
-Looking at the OpenHAL has not yielded anything working either (there is a reference to KEY_PLUMB_WAR, but it is not a full implementation).
-
-What I understand from previous attempts to tackle this issue is that Qualcomm is aware of the problem, and a workaround exists in at least the proprietary driver. I have tried to contact Qualcomm support about this, since it is not radio card specific, but I have not received any response so far.
-
-I hope a Qualcomm employee reads this and is able to help obtain the information that is necessary to resolve this issue. Until then, I recommend using software encryption (nohwcrypt), or setting a very long rekeying time.
-
-Kind regards,
-
-Michel Stam
------Original Message-----
-From: ath9k-devel-bounces@lists.ath9k.org [mailto:ath9k-devel-bounces@lists.ath9k.org] On Behalf Of Johannes Berg
-Sent: Thursday, October 27, 2016 17:07 PM
-To: Sebastian Gottschall; Kalle Valo; Antonio Quartulli
-Cc: ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org; Antonio Quartulli
-Subject: Re: [ath9k-devel] [NOT FOR MERGE] ath9k: work around key cache corruption
-
-On Thu, 2016-10-27 at 09:54 +0200, Sebastian Gottschall wrote:
-> all patches have a unclear license since most patches are not comming
-> with any licence declaration ;-)
-
-You should read the DCO some time. Maybe you shouldn't be sending
-patches if you think so.
-
-johannes
-_______________________________________________
-ath9k-devel mailing list
-ath9k-devel@lists.ath9k.org
-https://lists.ath9k.org/mailman/listinfo/ath9k-devel
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 7257366..a5a2f78 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -457,42 +457,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		/* zero length packet with trailer data, just drop these */
+ 		goto out;
+ 
+-	if (eid == ATH10K_HTC_EP_0) {
+-		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
+-
+-		switch (__le16_to_cpu(msg->hdr.message_id)) {
+-		case ATH10K_HTC_MSG_READY_ID:
+-		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
+-			/* handle HTC control message */
+-			if (completion_done(&htc->ctl_resp)) {
+-				/*
+-				 * this is a fatal error, target should not be
+-				 * sending unsolicited messages on the ep 0
+-				 */
+-				ath10k_warn(ar, "HTC rx ctrl still processing\n");
+-				complete(&htc->ctl_resp);
+-				goto out;
+-			}
+-
+-			htc->control_resp_len =
+-				min_t(int, skb->len,
+-				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
+-
+-			memcpy(htc->control_resp_buffer, skb->data,
+-			       htc->control_resp_len);
+-
+-			complete(&htc->ctl_resp);
+-			break;
+-		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
+-			htc->htc_ops.target_send_suspend_complete(ar);
+-			break;
+-		default:
+-			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
+-			break;
+-		}
+-		goto out;
+-	}
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
+ 		   eid, skb);
+ 	ep->ep_ops.ep_rx_complete(ar, skb);
+@@ -507,9 +471,40 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ static void ath10k_htc_control_rx_complete(struct ath10k *ar,
+ 					   struct sk_buff *skb)
+ {
+-	/* This is unexpected. FW is not supposed to send regular rx on this
+-	 * endpoint. */
+-	ath10k_warn(ar, "unexpected htc rx\n");
++	struct ath10k_htc *htc = &ar->htc;
++	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
++
++	switch (__le16_to_cpu(msg->hdr.message_id)) {
++	case ATH10K_HTC_MSG_READY_ID:
++	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++		/* handle HTC control message */
++		if (completion_done(&htc->ctl_resp)) {
++			/* this is a fatal error, target should not be
++			 * sending unsolicited messages on the ep 0
++			 */
++			ath10k_warn(ar, "HTC rx ctrl still processing\n");
++			complete(&htc->ctl_resp);
++			goto out;
++		}
++
++		htc->control_resp_len =
++			min_t(int, skb->len,
++			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
++
++		memcpy(htc->control_resp_buffer, skb->data,
++		       htc->control_resp_len);
++
++		complete(&htc->ctl_resp);
++		break;
++	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
++		htc->htc_ops.target_send_suspend_complete(ar);
++		break;
++	default:
++		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
++		break;
++	}
++
++out:
+ 	kfree_skb(skb);
+ }
+ 
+-- 
+1.7.9.5
