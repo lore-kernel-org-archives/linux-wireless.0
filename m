@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50934 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752088AbcKRLHr (ORCPT
+Received: from edge01.uni-rostock.de ([139.30.8.12]:8489 "EHLO
+        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754539AbcKNKUz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 06:07:47 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [v7] mwifiex: parse device tree node for PCIe
-References: <1479215662-631-1-git-send-email-akarwar@marvell.com>
-        <20161117123920.E159F6162A@smtp.codeaurora.org>
-        <20161117173824.GA129893@google.com>
-Date: Fri, 18 Nov 2016 13:07:39 +0200
-In-Reply-To: <20161117173824.GA129893@google.com> (Brian Norris's message of
-        "Thu, 17 Nov 2016 09:38:25 -0800")
-Message-ID: <87y40hkpvo.fsf@kamboji.qca.qualcomm.com> (sfid-20161118_120751_183368_C2804B5C)
+        Mon, 14 Nov 2016 05:20:55 -0500
+Subject: Re: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
+To: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>
+References: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de>
+ <1478984929.4226.3.camel@sipsolutions.net>
+From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
+Message-ID: <faf081ea-18c6-8ad5-e336-aac9a79a0ce3@uni-rostock.de> (sfid-20161114_112122_548314_35C4FA9C)
+Date: Mon, 14 Nov 2016 11:20:53 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478984929.4226.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
 
-> On Thu, Nov 17, 2016 at 12:39:20PM +0000, Kalle Valo wrote:
->> Amitkumar Karwar <akarwar@marvell.com> wrote:
->> > From: Xinming Hu <huxm@marvell.com>
->> > 
->> > This patch derives device tree node from pcie bus layer framework.
->> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
->> > marvell-8xxx.txt) to accommodate PCIe changes.
->> > 
->> > Signed-off-by: Xinming Hu <huxm@marvell.com>
->> > Signed-off-by: Rajat Jain <rajatja@google.com>
->> > Reviewed-by: Brian Norris <briannorris@chromium.org>
->> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
->> 
->> You should CC the device tree list when making changes to the bindings.
->
-> FWIW, Rajat had that right on v6...
+>> So I would propose to put the whole struct into the netlink messages,
+> This is a terrible idea, since internal changes to this struct would
+> break the userland API/ABI. hwsim seems perhaps less important than
+> most APIs, but there is wmediumd etc. already.
+I agree with that, but there exist also other code in hwsim, which is
+tightly coupled with the mac80211 API, as e.g., the usage of
+IEEE80211_TX_MAX_RATES, which already broke older versions of wmediumd
+or similar implementations. Maybe a review regarding such things would
+be good to decouple the userspace daemon from the special kernel version.
 
-Indeed. But please submit now v8 and also CC devicetree list. I need an
-ack from them before I can apply this.
+>> but I think that will break up the communication to e.g. bob
+>> copelands
+>> wmediumd and similar simulations. I would like to have our
+>> Implementation working with mainline kernels and therefore ask how we
+>> could achieve this easily.
+>>
+>> Obviously, we could define another field in the hwsim messages, but
+>> as bob copeland already stated, significantly more information within
+>> the netlink messages could  intensify the timing overhead of hwsim.
+> I don't think we have any other choice but add the relevant fields as
+> proper attributes.
 
--- 
-Kalle Valo
+I'm totally fine with that. Nonetheless,  I would suggest to add the
+flags to "struct hwsim_tx_rate", since the flags are also tightly
+coupled to the rates and tries of a frame. To not break up things, we
+could add the flags as a separate attribute in the struct and not as
+part of the bitfield like in the original. This would be possible, due
+to the "__packed" flag, but I'm also unsure, whether this is a really
+good idea for a userspace API/ABI.
+
+
+Benjamin
