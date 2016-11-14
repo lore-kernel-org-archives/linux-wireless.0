@@ -1,114 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.smtp.broadcom.com ([192.19.211.62]:49980 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754703AbcKQRfh (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35619 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932174AbcKNQfb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:35:37 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2] cfg80211: get rid of name indirection trick for ieee80211_get_channel()
-Date: Thu, 17 Nov 2016 12:48:53 +0000
-Message-Id: <1479386933-17834-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_183542_772422_AABE932B)
+        Mon, 14 Nov 2016 11:35:31 -0500
+Received: by mail-lf0-f65.google.com with SMTP id p100so7512864lfg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:30 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 06/12] ath10k: bmi: Added SOC reg read/write functions
+Date: Mon, 14 Nov 2016 17:33:36 +0100
+Message-Id: <1479141222-8493-7-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173629_116706_0C96DEAC)
+In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The comment on the name indirection suggested an issue but turned out
-to be untrue. Digging in older kernel version showed issue with ipw2x00
-but that is no longer true so get rid on the name indirection.
+Added functions implementing the following BMI commands:
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+BMI_READ_SOC_REGISTER
+BMI_WRITE_SOC_REGISTER
+
+Reading and writing BMI registers is sometimes needed for
+SDIO chipsets.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c        |  3 +--
- drivers/net/wireless/marvell/mwifiex/cfg80211.c |  2 +-
- include/net/cfg80211.h                          | 17 +++--------------
- net/wireless/util.c                             |  5 ++---
- 4 files changed, 7 insertions(+), 20 deletions(-)
+ drivers/net/wireless/ath/ath10k/bmi.c |   79 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/bmi.h |    4 ++
+ 2 files changed, 81 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 0b4c156..01f3803 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2329,8 +2329,7 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		u32 phymode = __le32_to_cpu(resp->chan_change.phymode);
- 		u32 freq = __le32_to_cpu(resp->chan_change.freq);
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
+index 2872d34..1c378a2 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.c
++++ b/drivers/net/wireless/ath/ath10k/bmi.c
+@@ -97,7 +97,8 @@ int ath10k_bmi_read_memory(struct ath10k *ar,
+ 	u32 rxlen;
+ 	int ret;
  
--		ar->tgt_oper_chan =
--			__ieee80211_get_channel(ar->hw->wiphy, freq);
-+		ar->tgt_oper_chan = ieee80211_get_channel(ar->hw->wiphy, freq);
- 		ath10k_dbg(ar, ATH10K_DBG_HTT,
- 			   "htt chan change freq %u phymode %s\n",
- 			   freq, ath10k_wmi_phymode_str(phymode));
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 39ce76a..9efc3d9 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2072,7 +2072,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 	ie_len = ie_buf[1] + sizeof(struct ieee_types_header);
+-	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi read address 0x%x length %d\n",
++	ath10k_dbg(ar, ATH10K_DBG_BMI,
++		   "bmi read memory address 0x%x length %d\n",
+ 		   address, length);
  
- 	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
--	chan = __ieee80211_get_channel(priv->wdev.wiphy,
-+	chan = ieee80211_get_channel(priv->wdev.wiphy,
- 			ieee80211_channel_to_frequency(bss_info.bss_chan,
- 						       band));
+ 	if (ar->bmi.done_sent) {
+@@ -137,7 +138,8 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
+ 	u32 txlen;
+ 	int ret;
  
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2019310..ef42749 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3955,26 +3955,15 @@ static inline void *wdev_priv(struct wireless_dev *wdev)
-  */
- int ieee80211_frequency_to_channel(int freq);
+-	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi write address 0x%x length %d\n",
++	ath10k_dbg(ar, ATH10K_DBG_BMI,
++		   "bmi write memory address 0x%x length %d\n",
+ 		   address, length);
  
--/*
-- * Name indirection necessary because the ieee80211 code also has
-- * a function named "ieee80211_get_channel", so if you include
-- * cfg80211's header file you get cfg80211's version, if you try
-- * to include both header files you'll (rightfully!) get a symbol
-- * clash.
-- */
--struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
--						  int freq);
- /**
-  * ieee80211_get_channel - get channel struct from wiphy for specified frequency
-+ *
-  * @wiphy: the struct wiphy to get the channel for
-  * @freq: the center frequency of the channel
-+ *
-  * Return: The channel struct from @wiphy at @freq.
-  */
--static inline struct ieee80211_channel *
--ieee80211_get_channel(struct wiphy *wiphy, int freq)
--{
--	return __ieee80211_get_channel(wiphy, freq);
--}
-+struct ieee80211_channel *ieee80211_get_channel(struct wiphy *wiphy, int freq);
- 
- /**
-  * ieee80211_get_response_rate - get basic rate for a given rate
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 88725f8..f717694 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -114,8 +114,7 @@ int ieee80211_frequency_to_channel(int freq)
+ 	if (ar->bmi.done_sent) {
+@@ -175,6 +177,79 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
+ 	return 0;
  }
- EXPORT_SYMBOL(ieee80211_frequency_to_channel);
  
--struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
--						  int freq)
-+struct ieee80211_channel *ieee80211_get_channel(struct wiphy *wiphy, int freq)
++int ath10k_bmi_read_soc_reg(struct ath10k *ar,
++			    u32 address, u32 *regval)
++{
++	struct bmi_cmd cmd;
++	union bmi_resp resp;
++	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.read_soc_reg);
++	u32 rxlen;
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BMI,
++		   "bmi read SOC register address 0x%x\n",
++		   address);
++
++	if (ar->bmi.done_sent) {
++		ath10k_warn(ar, "command disallowed\n");
++		return -EBUSY;
++	}
++
++	rxlen = sizeof(resp.read_soc_reg.value);
++
++	cmd.id                = __cpu_to_le32(BMI_READ_SOC_REGISTER);
++	cmd.read_soc_reg.addr = __cpu_to_le32(address);
++
++	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen,
++					  &resp, &rxlen);
++	if (ret) {
++		ath10k_warn(ar, "unable to read from the device (%d)\n",
++			    ret);
++		return ret;
++	}
++
++	if (rxlen != sizeof(resp.read_soc_reg.value)) {
++		ath10k_warn(ar, "Unexpected read len: %u (expected %u)\n",
++			    rxlen, sizeof(resp.read_soc_reg.value));
++		return ret;
++	}
++
++	*regval = __le32_to_cpu(resp.read_soc_reg.value);
++
++	return 0;
++}
++
++int ath10k_bmi_write_soc_reg(struct ath10k *ar,
++			     u32 address, u32 regval)
++{
++	struct bmi_cmd cmd;
++	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.write_soc_reg);
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BMI,
++		   "bmi write SOC register address 0x%x\n",
++		   address);
++
++	if (ar->bmi.done_sent) {
++		ath10k_warn(ar, "command disallowed\n");
++		return -EBUSY;
++	}
++
++	cmd.id                  = __cpu_to_le32(BMI_WRITE_SOC_REGISTER);
++	cmd.write_soc_reg.addr  = __cpu_to_le32(address);
++	cmd.write_soc_reg.value = __cpu_to_le32(regval);
++
++	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen,
++					  NULL, NULL);
++	if (ret) {
++		ath10k_warn(ar, "unable to write to the device (%d)\n",
++			    ret);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result)
  {
- 	enum nl80211_band band;
- 	struct ieee80211_supported_band *sband;
-@@ -135,7 +134,7 @@ struct ieee80211_channel *__ieee80211_get_channel(struct wiphy *wiphy,
+ 	struct bmi_cmd cmd;
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index 7d3231a..a867867 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -201,6 +201,10 @@ int ath10k_bmi_read_memory(struct ath10k *ar, u32 address,
+ 			   void *buffer, u32 length);
+ int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
+ 			    const void *buffer, u32 length);
++int ath10k_bmi_read_soc_reg(struct ath10k *ar,
++			    u32 address, u32 *regval);
++int ath10k_bmi_write_soc_reg(struct ath10k *ar,
++			     u32 address, u32 regval);
  
- 	return NULL;
- }
--EXPORT_SYMBOL(__ieee80211_get_channel);
-+EXPORT_SYMBOL(ieee80211_get_channel);
- 
- static void set_mandatory_flags_band(struct ieee80211_supported_band *sband,
- 				     enum nl80211_band band)
+ #define ath10k_bmi_read32(ar, item, val)				\
+ 	({								\
 -- 
-1.9.1
+1.7.9.5
