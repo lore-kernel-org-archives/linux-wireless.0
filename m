@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37905 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752975AbcKROBs (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33080 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932951AbcKNQfb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:01:48 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v4 04/11] mwifiex: remove redundant pdev check in suspend/resume handlers
-Date: Fri, 18 Nov 2016 19:30:27 +0530
-Message-ID: <1479477634-27841-4-git-send-email-akarwar@marvell.com> (sfid-20161118_150203_737440_ED548B66)
-In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 14 Nov 2016 11:35:31 -0500
+Received: by mail-lf0-f68.google.com with SMTP id 98so7490822lfs.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:30 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 05/12] ath10k: htc: Added ATH10K_HTC_FLAG_BUNDLE_LSB
+Date: Mon, 14 Nov 2016 17:33:35 +0100
+Message-Id: <1479141222-8493-6-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173622_090194_9EC8DB56)
+In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-to_pci_dev() would just do struct offset arithmetic on struct
-device to get 'pdev' pointer. We never get NULL pdev pointer.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
-v4: Same v1, v2, v3
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 547806f..86ae084 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -117,14 +117,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 589800a..df16a04 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -62,6 +62,8 @@ enum ath10k_htc_rx_flags {
+ 	ATH10K_HTC_FLAG_BUNDLE_MASK     = 0xF0
+ };
  
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		pr_err("Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
-@@ -162,14 +157,9 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		dev_err(dev, "Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
++#define ATH10K_HTC_FLAG_BUNDLE_LSB         4
++
+ struct ath10k_htc_hdr {
+ 	u8 eid; /* @enum ath10k_htc_ep_id */
+ 	u8 flags; /* @enum ath10k_htc_tx_flags, ath10k_htc_rx_flags */
 -- 
-1.9.1
+1.7.9.5
