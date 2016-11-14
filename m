@@ -1,155 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35619 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932174AbcKNQfb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:35:31 -0500
-Received: by mail-lf0-f65.google.com with SMTP id p100so7512864lfg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:30 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 06/12] ath10k: bmi: Added SOC reg read/write functions
-Date: Mon, 14 Nov 2016 17:33:36 +0100
-Message-Id: <1479141222-8493-7-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173629_116706_0C96DEAC)
-In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33720 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752795AbcKNKRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Nov 2016 05:17:05 -0500
+Date: Mon, 14 Nov 2016 11:15:44 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Problems with mwifiex_pcie firmware activation
+Message-ID: <20161114101544.GA13943@redhat.com> (sfid-20161114_111727_911777_BE00A73A)
+References: <20160614135015.GB4962@redhat.com>
+ <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
+ <20160616115315.GB21199@redhat.com>
+ <20160623120952.GA11157@redhat.com>
+ <20160811090113.GA27059@redhat.com>
+ <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
+ <20160811122917.GB27059@redhat.com>
+ <fc70c75bfcab4e0e932274034b5b4493@SC-EXCH04.marvell.com>
+ <20160812081342.GA15538@redhat.com>
+ <20160825150626.GA9256@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160825150626.GA9256@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added functions implementing the following BMI commands:
+On Thu, Aug 25, 2016 at 05:06:26PM +0200, Stanislaw Gruszka wrote:
+> On Fri, Aug 12, 2016 at 10:13:43AM +0200, Stanislaw Gruszka wrote:
+> > On Fri, Aug 12, 2016 at 07:17:38AM +0000, Amitkumar Karwar wrote:
+> > > The problem looks strange. The patch just splits mwifiex_check_fw_status() and increases poll count. It should not have any side-effects.
+> > > Our code used to check winner status before this patch also.
+> > 
+> > Ok, I misread the patch. Anyway checking "winner status" seems
+> > does not work well on some condition and prevent loading firmware
+> > into device.
+> 
+> I debug this a bit more on latest wireless-testing-next tree + 3 patches
+> I just posted and debug_mask=0x700000ff.
+> 
+> On broken system, we do not download FW to device when system is
+> rebooted, due to PCI-E is not the winner. However if system is
+> powered OFF and then powered ON, we do FW downloading. Hence
+> download the new FW into device does not make it work as was
+> my theory.
+> 
+> In attachments are full dmesgs of good/bad and reboot/power-off-on
+> cases.
+> 
+> The difference is that on broken system FW (or HW) do not create
+> new USB Bluetooth device (1286:2046) and do not report
+> FIRMWARE_READY_PCIE. Additionally on reboot case there are errors
+> from USB xhci.
 
-BMI_READ_SOC_REGISTER
-BMI_WRITE_SOC_REGISTER
+It was discovered that not working device require pcie8897_uapsta.bin 
+firmware from ubuntu package to work:
+https://launchpad.net/~snappy-dev/+archive/ubuntu/snappy-devices/+sourcepub/5936055/+listing-archive-extra
 
-Reading and writing BMI registers is sometimes needed for
-SDIO chipsets.
+Device initialize like this then:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/bmi.c |   79 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/bmi.h |    4 ++
- 2 files changed, 81 insertions(+), 2 deletions(-)
+[   15.374630] mwifiex_pcie 0000:02:00.0: info: FW download over, size 689624 bytes
+[   16.101214] mwifiex_pcie 0000:02:00.0: WLAN FW is active
+[   16.242825] mwifiex_pcie 0000:02:00.0: info: MWIFIEX VERSION: mwifiex 1.0 (15.150.13.p21) 
+[   16.251231] mwifiex_pcie 0000:02:00.0: driver_version = mwifiex 1.0 (15.150.13.p21) 
 
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
-index 2872d34..1c378a2 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.c
-+++ b/drivers/net/wireless/ath/ath10k/bmi.c
-@@ -97,7 +97,8 @@ int ath10k_bmi_read_memory(struct ath10k *ar,
- 	u32 rxlen;
- 	int ret;
+I'm not sure where ubuntu get this 15.150.13.p21 version of firmware as
+it seems it's not present nor in upstream linux-firmware repo not in
+http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
+
+Anyway could you modify firmware to support this device or modify
+driver to load 15.150.13.p21 if required and push this F/W image
+upstream ?
+
+Thanks
+Stanislaw
  
--	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi read address 0x%x length %d\n",
-+	ath10k_dbg(ar, ATH10K_DBG_BMI,
-+		   "bmi read memory address 0x%x length %d\n",
- 		   address, length);
- 
- 	if (ar->bmi.done_sent) {
-@@ -137,7 +138,8 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
- 	u32 txlen;
- 	int ret;
- 
--	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi write address 0x%x length %d\n",
-+	ath10k_dbg(ar, ATH10K_DBG_BMI,
-+		   "bmi write memory address 0x%x length %d\n",
- 		   address, length);
- 
- 	if (ar->bmi.done_sent) {
-@@ -175,6 +177,79 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
- 	return 0;
- }
- 
-+int ath10k_bmi_read_soc_reg(struct ath10k *ar,
-+			    u32 address, u32 *regval)
-+{
-+	struct bmi_cmd cmd;
-+	union bmi_resp resp;
-+	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.read_soc_reg);
-+	u32 rxlen;
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BMI,
-+		   "bmi read SOC register address 0x%x\n",
-+		   address);
-+
-+	if (ar->bmi.done_sent) {
-+		ath10k_warn(ar, "command disallowed\n");
-+		return -EBUSY;
-+	}
-+
-+	rxlen = sizeof(resp.read_soc_reg.value);
-+
-+	cmd.id                = __cpu_to_le32(BMI_READ_SOC_REGISTER);
-+	cmd.read_soc_reg.addr = __cpu_to_le32(address);
-+
-+	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen,
-+					  &resp, &rxlen);
-+	if (ret) {
-+		ath10k_warn(ar, "unable to read from the device (%d)\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	if (rxlen != sizeof(resp.read_soc_reg.value)) {
-+		ath10k_warn(ar, "Unexpected read len: %u (expected %u)\n",
-+			    rxlen, sizeof(resp.read_soc_reg.value));
-+		return ret;
-+	}
-+
-+	*regval = __le32_to_cpu(resp.read_soc_reg.value);
-+
-+	return 0;
-+}
-+
-+int ath10k_bmi_write_soc_reg(struct ath10k *ar,
-+			     u32 address, u32 regval)
-+{
-+	struct bmi_cmd cmd;
-+	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.write_soc_reg);
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BMI,
-+		   "bmi write SOC register address 0x%x\n",
-+		   address);
-+
-+	if (ar->bmi.done_sent) {
-+		ath10k_warn(ar, "command disallowed\n");
-+		return -EBUSY;
-+	}
-+
-+	cmd.id                  = __cpu_to_le32(BMI_WRITE_SOC_REGISTER);
-+	cmd.write_soc_reg.addr  = __cpu_to_le32(address);
-+	cmd.write_soc_reg.value = __cpu_to_le32(regval);
-+
-+	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen,
-+					  NULL, NULL);
-+	if (ret) {
-+		ath10k_warn(ar, "unable to write to the device (%d)\n",
-+			    ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_bmi_execute(struct ath10k *ar, u32 address, u32 param, u32 *result)
- {
- 	struct bmi_cmd cmd;
-diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
-index 7d3231a..a867867 100644
---- a/drivers/net/wireless/ath/ath10k/bmi.h
-+++ b/drivers/net/wireless/ath/ath10k/bmi.h
-@@ -201,6 +201,10 @@ int ath10k_bmi_read_memory(struct ath10k *ar, u32 address,
- 			   void *buffer, u32 length);
- int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
- 			    const void *buffer, u32 length);
-+int ath10k_bmi_read_soc_reg(struct ath10k *ar,
-+			    u32 address, u32 *regval);
-+int ath10k_bmi_write_soc_reg(struct ath10k *ar,
-+			     u32 address, u32 regval);
- 
- #define ath10k_bmi_read32(ar, item, val)				\
- 	({								\
--- 
-1.7.9.5
