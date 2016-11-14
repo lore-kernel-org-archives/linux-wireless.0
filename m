@@ -1,89 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:18642
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933352AbcKNKC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 05:02:27 -0500
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <1478706966.18306.1.camel@sipsolutions.net>
- <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
- <1478725543.21403.4.camel@sipsolutions.net>
- <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
- <1478864146.4129.4.camel@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
-        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
-        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Ben Hutchings <ben@decadent.org.uk>,
-        Kyle McMartin <kyle@kernel.org>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com> (sfid-20161114_110236_539327_F5EE9C38)
-Date: Mon, 14 Nov 2016 11:26:04 +0300
+Received: from mx1.redhat.com ([209.132.183.28]:58592 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752944AbcKNMrG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 14 Nov 2016 07:47:06 -0500
+Date: Mon, 14 Nov 2016 13:45:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 05/10] rt2800: make ba_size depend on ampdu_factor
+Message-ID: <20161114124545.GB31857@redhat.com> (sfid-20161114_134709_433040_18D65D2D)
+References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+ <1478095865-8651-6-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1478864146.4129.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478095865-8651-6-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, Johannes.
+On Wed, Nov 02, 2016 at 03:11:00PM +0100, Stanislaw Gruszka wrote:
+> We can calculate BA window size (max number of pending frames not
+> yet block acked) of remote station using Maximum A-MPDU length factor
+> for that station.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-To clarify with you and Kalle, as persons involved with linux-wireless: 
-is my understanding correct that submitting firmware into linux-fimware 
-repository is a prerequisite to accepting new driver into linux-wireless?
+Kalle, please drop this patch from the set, it requires some rework.
 
-There is an option to start Quantenna device from internal flash memory, 
-no external binary files involved. If we will introduce this 
-functionality and remove code handling external firmware for now (until 
-firmware problem resolved), would that allow driver to be reviewed/accepted?
+Thanks
+Stanislaw
 
-On 11/11/2016 02:35 PM, Johannes Berg wrote:
-> Adding linux-firmware people to Cc, since presumably they don't
-> necessarily read linux-wireless...
->
->> Johannes, from that perspective, who are the "redistributors"?
->> Specifically, is linux-firmware git repository considered a
->> redistributor or its just hosting files? I mean, at what moment
->> someone else other then Quantenna will start to be legally obliged to
->> make GPL code used in firmware available for others?
-> Look, I don't know. I'd assume people who ship it, like any regular
-> distro, would be (re)distributors thereof. "Normal" (non-GPL) firmware
-> images come with a redistribution license, but that obviously can't
-> work here.
->
-> There's some info from Ben here regarding the carl9170 case:
-> http://lkml.iu.edu/hypermail/linux/kernel/1605.3/01176.html
->
->> Personally I still hope that linux-firmware itself is not legally
->> concerned with what is the content of firmware its hosting, but looks
->> like there already was a precedent case  with carl9170 driver and
->> we have to somehow deal with it.
-> That's really all I wanted to bring up. I'm not involved with the
-> linux-firmware git tree.
->
->> There still may be a difference though: Quantenna is semiconductor
->> company only, software
->> used on actual products based on Quantenna chipsets is released by
->> other
->> companies.
->> I just want to present our legal team with a clear case (and position
->> of
->> Linux maintainers) so that they can
->> work with it and make decision on how to proceed.
->>
->>   From technical perspective, as I mentioned, SDK is quite huge and
->> include a lot of opensource
->> components including full Linux, I don't think its reasonable to have
->> it
->> inside linux-firmware tree.
->> What are the options to share it other then providing it on request
->> basis:
->> - git repository
->> - store tarball somewhere on official website
-> Clearly that wasn't deemed appropriate for carl9170, so I don't see why
-> it'd be different here.
->
-> johannes
+
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   15 ++++++++++-----
+>  1 files changed, 10 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+> index 68b620b..9da89e3 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+> @@ -305,14 +305,19 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+>  	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+>  	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
+>  	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+> -	struct rt2x00_sta *sta_priv = NULL;
+> +	u8 ba_size = 0;
+>  
+>  	if (sta) {
+> -		txdesc->u.ht.mpdu_density =
+> -		    sta->ht_cap.ampdu_density;
+> +		struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
+>  
+> -		sta_priv = sta_to_rt2x00_sta(sta);
+> +		txdesc->u.ht.mpdu_density = sta->ht_cap.ampdu_density;
+>  		txdesc->u.ht.wcid = sta_priv->wcid;
+> +
+> +		if (!(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)) {
+> +			ba_size = IEEE80211_MIN_AMPDU_BUF;
+> +			ba_size <<= sta->ht_cap.ampdu_factor;
+> +			ba_size = min_t(int, 63, ba_size - 1);
+> +		}
+>  	}
+>  
+>  	/*
+> @@ -345,7 +350,7 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+>  		return;
+>  	}
+>  
+> -	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
+> +	txdesc->u.ht.ba_size = ba_size;
+>  
+>  	/*
+>  	 * Only one STBC stream is supported for now.
+> -- 
+> 1.7.1
+> 
