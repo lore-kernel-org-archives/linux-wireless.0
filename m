@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59580 "EHLO sipsolutions.net"
+Received: from smsin.roj.com ([89.96.160.179]:44201 "EHLO smsin.roj.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752755AbcKPMmE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 07:42:04 -0500
-Message-ID: <1479300119.4141.3.camel@sipsolutions.net> (sfid-20161116_134207_959280_C45CA664)
-Subject: Re: [PATCH 0/8] iw: Add common chandef parser and new DFS related
- commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Benjamin Berg <benjamin@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Date: Wed, 16 Nov 2016 13:41:59 +0100
-In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net> (sfid-20161107_155953_169276_BFE30AD3)
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
-         (sfid-20161107_155953_169276_BFE30AD3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752774AbcKONgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 08:36:39 -0500
+From: Arlone Marco <Marco.Arlone@roj.com>
+To: 'Nicola Smaldone' <nsmaldone@tierratelematics.com>,
+        Gianfranco Costamagna <locutusofborg@debian.org>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 15 Nov 2016 14:21:21 +0100
+Subject: R: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
+ regulatory domain frequency value
+Message-ID: <9D40A4E69516DE4886301D513BE518D8015AE2C98914@rojmail2007> (sfid-20161115_143654_469317_E50659EE)
+References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
+ <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
+ <690669269.1124561.1477671348137@mail.yahoo.com>
+ <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
+ <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
+ <233918815.6357602.1479123253455@mail.yahoo.com>
+ <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
+ <810879191.6335567.1479124065921@mail.yahoo.com>
+ <87r36dov6u.fsf@purkki.adurom.net>
+ <1967239621.630327.1479215628178@mail.yahoo.com>
+ <8947AB956BCA3E4E9A143D07C3F63F22D6A0B215@LIV-EXCHMBX1.TOPCON.com>
+In-Reply-To: <8947AB956BCA3E4E9A143D07C3F63F22D6A0B215@LIV-EXCHMBX1.TOPCON.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-11-07 at 15:59 +0100, Benjamin Berg wrote:
-> From: Benjamin Berg <benjamin.berg@open-mesh.com>
-> 
-> Hi,
-> 
-> This patchset adds commands for doing a CAC and sending CSA.
-> 
-> Another change is that parsing of command line frequency and channel
-> definitions is split out so that it can be shared between the
-> different users.
-
-That's nice :)
-
-I've applied all except for patch 7 - I don't see any justification for
-adding that - quite clearly iw will not listen to any radar detection
-events, so even for testing/certification this doesn't seem useful
-since then you'd want to check/prove that you *do* listen to those ...
-
-johannes
+Tm8gcHJvYmxlbSBmb3IgbWUsIGFsc28uDQoNCk1hcmNvIEFybG9uZQ0KDQotLS0tLU1lc3Nh
+Z2dpbyBvcmlnaW5hbGUtLS0tLQ0KRGE6IE5pY29sYSBTbWFsZG9uZSBbbWFpbHRvOm5zbWFs
+ZG9uZUB0aWVycmF0ZWxlbWF0aWNzLmNvbV0gDQpJbnZpYXRvOiBtYXJ0ZWTDrCAxNSBub3Zl
+bWJyZSAyMDE2IDE0OjE4DQpBOiBHaWFuZnJhbmNvIENvc3RhbWFnbmE7IEthbGxlIFZhbG8N
+CkNjOiBBcmVuZCBWYW4gU3ByaWVsOyBicmNtODAyMTEtZGV2LWxpc3RAYnJvYWRjb20uY29t
+OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFybG9uZSBNYXJjbw0KT2dnZXR0
+bzogUkU6IFtQQVRDSF0gYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExIGRy
+aXZlciwgYmFkIHJlZ3VsYXRvcnkgZG9tYWluIGZyZXF1ZW5jeSB2YWx1ZQ0KDQpObyBwcm9i
+bGVtIGZvciBtZSwgdGhhbmtzLg0KDQpOaWNvbGEgU01BTERPTkUNCnd3dy50aWVycmF0ZWxl
+bWF0aWNzLmNvbQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lhbmZy
+YW5jbyBDb3N0YW1hZ25hIFttYWlsdG86bG9jdXR1c29mYm9yZ0BkZWJpYW4ub3JnXQ0KU2Vu
+dDogbWFydGVkw6wgMTUgbm92ZW1icmUgMjAxNiAxNDoxNA0KVG86IEthbGxlIFZhbG8gPGt2
+YWxvQGNvZGVhdXJvcmEub3JnPg0KQ2M6IEFyZW5kIFZhbiBTcHJpZWwgPGFyZW5kLnZhbnNw
+cmllbEBicm9hZGNvbS5jb20+OyBicmNtODAyMTEtZGV2LWxpc3RAYnJvYWRjb20uY29tOyBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE5pY29sYSBTbWFsZG9uZSA8bnNtYWxk
+b25lQHRpZXJyYXRlbGVtYXRpY3MuY29tPjsgTWFyY28uQXJsb25lQHJvai5jb20NClN1Ympl
+Y3Q6IFJlOiBbUEFUQ0hdIGJyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMSBk
+cml2ZXIsIGJhZCByZWd1bGF0b3J5IGRvbWFpbiBmcmVxdWVuY3kgdmFsdWUNCg0KSGksDQoN
+Cg0KPiBTaWduZWQtb2ZmLWJ5OiBOaWNvbGEgU21hbGRvbmUgPG5pY29sYS5zbWFsZG9uZUB0
+aWVycmFzZXJ2aWNlLmNvbT4NCg0KPiBTaWduZWQtb2ZmLWJ5OiBBcmxvbmUgTWFyY28gPG1h
+cmNvLmFybG9uZUByb2ouY29tPg0KDQo+UGxlYXNlIG5vdGUgdGhhdCB5b3UgY2Fubm90IGFk
+ZCBTaWduZWQtb2ZmLWJ5IGZvciBvdGhlciBwZW9wbGUgd2l0aG91dCANCj50aGVpciBleHBs
+aWNpdCBhcHByb3ZhbCAoc2VlIERvY3VtZW50YXRpb24vU3VibWl0dGluZ1BhdGNoZXMpLiBJ
+IGRvbid0IA0KPmtub3cgaWYgdGhleSBkaWQgaXQgaW4gdGhpcyBjYXNlIG9yIG5vdCwgYnV0
+IHdhbnRlZCB0byBwb2ludCBvdXQgdGhpcyANCj5hbnl3YXkuDQoNCg0KVGhlIGZpcnN0IHNp
+Z25vZmYgaXMgbXlzZWxmLCB3aXRoIHRoZSBjb21wYW55IGVtYWlsLCB0aGUgb3RoZXIgdHdv
+IHNpZ25vZmZzIGFyZSBmcm9tOiB0aGUgYXV0aG9yLCBhbmQgTmljb2xhLCB3aG8gZGlkIHdv
+cmsgd2l0aCBtZSB0byB0ZXN0IGl0IChldmVuIGlmIGEgdHlwbyBmaXggaXMgbm90ICJ0ZXN0
+YWJsZSIpLg0KDQpOaWNvbGEsIE1hcmNvLCBpcyBpdCBvayB0byBhZGQgeW91ciB0d28gbmFt
+ZXMgaW4gdGhlIHNpZ25vZmYgcGFydD8NCih0aGF0IHdhcyBhIHZlcmJhbCB0YWxrLCBJIGRv
+bid0IGhhdmUgYW55dGhpbmcgd3JpdHRlbikNCg0KR2lhbmZyYW5jbw0KDQpDb25maWRlbnRp
+YWxpdHkgTm90aWNlOiBUaGlzIG1lc3NhZ2UgKGluY2x1ZGluZyBhdHRhY2htZW50cykgaXMg
+YSBwcml2YXRlIGNvbW11bmljYXRpb24gc29sZWx5IGZvciB1c2Ugb2YgdGhlIGludGVuZGVk
+IHJlY2lwaWVudChzKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudChz
+KSBvciBiZWxpZXZlIHlvdSByZWNlaXZlZCB0aGlzIG1lc3NhZ2UgaW4gZXJyb3IsIG5vdGlm
+eSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGFuZCB0aGVuIGRlbGV0ZSB0aGlzIG1lc3NhZ2Uu
+IEFueSBvdGhlciB1c2UsIHJldGVudGlvbiwgZGlzc2VtaW5hdGlvbiBvciBjb3B5aW5nIGlz
+IHByb2hpYml0ZWQgYW5kIG1heSBiZSBhIHZpb2xhdGlvbiBvZiBsYXcsIGluY2x1ZGluZyB0
+aGUgRWxlY3Ryb25pYyBDb21tdW5pY2F0aW9uIFByaXZhY3kgQWN0IG9mIDE5ODYuDQoNCkZv
+bGxvdyB1cyBvbiBZb3VUdWJlOiBodHRwczovL3d3dy55b3V0dWJlLmNvbS9jaGFubmVsL1VD
+OW5US2plcThVZHhFeEtuQ05YRFBtQQ0KDQpQcmltYSBkaSBzdGFtcGFyZSwgcGVuc2EgYWxs
+J2FtYmllbnRlICoqIFRoaW5rIGFib3V0IHRoZSBlbnZpcm9ubWVudCBiZWZvcmUgcHJpbnRp
+bmcNCg0KDQpST0ogUy5yLmwuIC0gQmllbGxhIC0gSXRhbHkgICh3d3cucm9qLmNvbSkgDQpU
+ZWw6ICszOS4wMTUuODQ4MDExMSAgIEZheDogKzM5LjAxNS40MDU4MTUvODQ4MDIwOQ0KDQpU
+aGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgaXMgY29uZmlk
+ZW50aWFsIGFuZCBpbnRlbmRlZCBvbmx5IGZvciB0aGUgc3RhdGVkIGFkZHJlc3NlZShzKS4g
+QW55IHVuYXV0aG9yaXNlZCBkaXNjbG9zdXJlLCB1c2Ugb3IgZGlzc2VtaW5hdGlvbiwgZWl0
+aGVyIHdob2xlIG9yIHBhcnRpYWwsIGJ5IHBlcnNvbiBvciBlbnRpdGllcyBvdGhlciB0aGFu
+IHRoZSBhZGRyZXNzZWUocykgaXMgcHJvaGliaXRlZC4gUGxlYXNlIG5vdGlmeSB0aGUgc2Vu
+ZGVyIGltbWVkaWF0ZWx5IGJ5IGUtbWFpbCBpZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUt
+bWFpbCBieSBtaXN0YWtlIGFuZCBkZWxldGUgdGhpcyBlLW1haWwgZnJvbSB5b3VyIHN5c3Rl
+bS4gDQpQbGVhc2Ugbm90ZSB0aGF0IGFueSB2aWV3cyBvciBvcGluaW9ucyBwcmVzZW50ZWQg
+aW4gdGhpcyBlLW1haWwgYXJlIHNvbGVseSB0aG9zZSBvZiB0aGUgYXV0aG9yIGFuZCBhcmUg
+bm90IG5lY2Vzc2FyaWx5IGVuZG9yc2VkIGJ5IHRoZSBjb21wYW55LiBBbHRob3VnaCB0aGUg
+Y29tcGFueSBoYXMgdGFrZW4gcmVhc29uYWJsZSBwcmVjYXV0aW9ucyB0byBlbnN1cmUgbm8g
+dmlydXNlcyBhcmUgcHJlc2VudCBpbiB0aGlzIGUtbWFpbCwgdGhlIGNvbXBhbnkgY2Fubm90
+IGFjY2VwdCByZXNwb25zaWJpbGl0eSBmb3IgYW55IGxvc3Mgb3IgZGFtYWdlIGFyaXNpbmcg
+ZnJvbSB0aGUgdXNlIG9mIHRoaXMgZS1tYWlsIG9yIGF0dGFjaG1lbnRzLiANCg0K
