@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59286 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750850AbcKYJuZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 04:50:25 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: cleanup wake-IRQ handling if suspend fails
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
-References: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <rajatja@google.com>,
-        <briannorris@google.com>, <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20161125095019.4BC32613D3@smtp.codeaurora.org> (sfid-20161125_105048_958496_87688B1A)
-Date: Fri, 25 Nov 2016 09:50:19 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48742 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934979AbcKONUT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 08:20:19 -0500
+Message-ID: <1479216012.12007.27.camel@sipsolutions.net> (sfid-20161115_142119_855402_D5E6B018)
+Subject: Re: [PATCH V2] mac80211: Ignore VHT IE from peer with wrong
+ rx_mcs_map
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Filip Matusiak <filip.matusiak@tieto.com>,
+        linux-wireless@vger.kernel.org
+Cc: marek.kwaczynski@tieto.com, davem@davemloft.net,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 15 Nov 2016 14:20:12 +0100
+In-Reply-To: <1478077466-4308-1-git-send-email-filip.matusiak@tieto.com> (sfid-20161102_100438_908657_9F74D2B9)
+References: <1478077466-4308-1-git-send-email-filip.matusiak@tieto.com>
+         (sfid-20161102_100438_908657_9F74D2B9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Brian Norris <briannorris@chromium.org>
+On Wed, 2016-11-02 at 10:04 +0100, Filip Matusiak wrote:
+> This is a workaround for VHT-enabled STAs which break the spec
+> and have the VHT-MCS Rx map filled in with value 3 for all eight
+> spacial streams, an example is AR9462 in AP mode.
 > 
-> We don't want to leave the wake IRQ enabled.
+> As per spec, in section 22.1.1 Introduction to the VHT PHY
+> A VHT STA shall support at least single spactial stream VHT-MCSs
+> 0 to 7 (transmit and receive) in all supported channel widths.
 > 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Some devices in STA mode will get firmware assert when trying to
+> associate, examples are QCA9377 & QCA6174.
+> 
+> Packet example of broken VHT Cap IE of AR9462:
+> 
+> [...]
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Applied, thanks.
 
-d96e39270ba5 mwifiex: cleanup wake-IRQ handling if suspend fails
-b9da4d223bda mwifiex: avoid double-disable_irq() race
-
--- 
-https://patchwork.kernel.org/patch/9437097/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
