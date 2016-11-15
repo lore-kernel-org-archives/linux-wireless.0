@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37542 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54278 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752301AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:44:30 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 7/7] rtl8xxxu: Fix non static symbol warning
-Date: Fri, 18 Nov 2016 16:44:28 -0500
-Message-Id: <1479505468-29383-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224441_236314_EC268A85)
-In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+        id S1751088AbcKOPNc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 10:13:32 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Barry Day <briselec@gmail.com>
+Cc: John Heenan <john@zgus.com>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu wireless IC
+References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com>
+        <20161031222045.GA14900@testbox> <wrfjoa20qgyt.fsf@redhat.com>
+        <20161031234706.GA15054@testbox>
+Date: Tue, 15 Nov 2016 10:13:31 -0500
+In-Reply-To: <20161031234706.GA15054@testbox> (Barry Day's message of "Tue, 1
+        Nov 2016 09:47:08 +1000")
+Message-ID: <wrfj7f84srms.fsf@redhat.com> (sfid-20161115_161335_749525_F0F04A18)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+Barry Day <briselec@gmail.com> writes:
+> On Mon, Oct 31, 2016 at 06:41:30PM -0400, Jes Sorensen wrote:
+>> Barry Day <briselec@gmail.com> writes:
+>> > On Mon, Oct 31, 2016 at 05:25:12PM -0400, Jes Sorensen wrote:
+>> >> As mentioned previously, if this is to be changed here, it has to be
+>> >> matched in the _stop section too. It also has to be investigated exactly
+>> >> why this matters for 8723bu. It is possible this matters for other
+>> >> devices, but we need to find out exactly what causes this not moving a
+>> >> major block of init code around like this.
+>> >
+>> > I've tested this on the 8192e and 8192c. The same problems occurs with the
+>> > 8192e but not the 8192c. Stopping and restarting wpa_supplicant had
+>> > no affect on the 8192c ability to connect to an AP.
+>> 
+>> Which version of the driver? I did push in some changes for 8192eu
+>> recently that fixed the issue with 8192eu driver reloading, and I would
+>> be interested in knowing if this didn't fix the problem for you?
+>> 
+>> Second, could we please keep this on the linux-wireless list where it
+>> belongs. Everybody else doesn't necessarily want to receive a copy via
+>> netdev and linux-kernel
+>
+> The tests were done with the latest version of rtl8xxxu-devel. I haven't
+> noticed any occurence of the previous issue with the 8192eu.
 
-Fixes the following sparse warning:
+OK, I am back from my trip, but still burried alive catching up on
+things. This is very much on the list of things I want to investigate.
 
-drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c:1559:6: warning:
- symbol 'rtl8192eu_power_off' was not declared. Should it be static?
-
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index a793fed..a1178c5 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1556,7 +1556,7 @@ static int rtl8192eu_power_on(struct rtl8xxxu_priv *priv)
- 	return ret;
- }
- 
--void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
-+static void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
- 	u16 val16;
--- 
-2.7.4
+Jes
