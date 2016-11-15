@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from edge01.uni-rostock.de ([139.30.8.12]:55963 "EHLO
-        edge01.uni-rostock.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934778AbcKKRWO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38156 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751693AbcKONnq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 12:22:14 -0500
-To: <linux-wireless@vger.kernel.org>
-From: Benjamin Beichler <Benjamin.Beichler@uni-rostock.de>
-Subject: [RFC] change mac80211_hwsim tx_rates to ieee80211_tx_rate
-Message-ID: <dcc2ec52-abe0-3182-e7f5-d1df40fd492b@uni-rostock.de> (sfid-20161111_182223_315895_6A05EDD8)
-Date: Fri, 11 Nov 2016 18:22:01 +0100
+        Tue, 15 Nov 2016 08:43:46 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Bruno Antunes <baantunes@gmail.com>
+CC: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        voncken <cedric.voncken@acksys.fr>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
+Date: Tue, 15 Nov 2016 13:43:38 +0000
+Message-ID: <87polwq2nq.fsf@kamboji.qca.qualcomm.com> (sfid-20161115_144349_153990_2426EDB0)
+References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
+        <566849DB.9040901@candelatech.com>
+        <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
+        <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
+        <87twbnueqv.fsf@kamboji.qca.qualcomm.com>
+        <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
+        <871syn5fnb.fsf@qca.qualcomm.com>
+        <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>
+In-Reply-To: <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>       (Bruno
+ Antunes's message of "Mon, 7 Nov 2016 18:40:37 +0000")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Bruno Antunes <baantunes@gmail.com> writes:
 
-we are working on a sophisticated Wifi simulation framework based on
-mac80211_hwsim. This includes the simulation of frame transmissions with
-realistic channel access and channel conditions. Therefore we need
-several information (e.g. long/short gi, usage of RTS/CTS, ...), which
-are available on a per frame/rate basis from struct ieee80211_tx_rate.
-But this information is thrown away by the conversation to struct
-hwsim_tx_rate (eg. in mac80211_hwsim_tx_frame_nl)
+> On 7 November 2016 at 18:06, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>> Bruno Antunes <baantunes@gmail.com> writes:
+>>
+>>> On 4 November 2016 at 21:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote=
+:
+>>>
+>>>> Can someone file a bug to bugzilla about this so that all the info is
+>>>> properly stored? The more comprehensive the report is the better.
+>>>>
+>>>> https://bugzilla.kernel.org/
+>>>
+>>> I will file a bug report.
+>>
+>> Thanks, it's good to store all in one place so that it's easier to find
+>> the relevant info.
+>
+> Just file the bug with the ID 187241 - VLAN support in ATH10k Feel
+> free to ask for adicional info. I did not mention any names in the bug
+> report fell free to take credit if wanted.
 
-Firstly I think this information is valuable and I don't believe, the 4
-Byte per frame greatly influences speed. Moreover the explicit double
-copy (firstly from the info->status.rates to tx_attempts, secondly by
-nla_put), takes longer than simply put the whole info->status.rates into
-the netlink message.
+Thanks. I'll report it to the firmware team, let's see what happens. If
+there's more information which might help to fix this feel free to
+update that to the bug report.
 
-So I would propose to put the whole struct into the netlink messages,
-but I think that will break up the communication to e.g. bob copelands
-wmediumd and similar simulations. I would like to have our
-Implementation working with mainline kernels and therefore ask how we
-could achieve this easily.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D187241
 
-Obviously, we could define another field in the hwsim messages, but as
-bob copeland already stated, significantly more information within the
-netlink messages could  intensify the timing overhead of hwsim.
-
-Any suggestions?
+--=20
+Kalle Valo=
