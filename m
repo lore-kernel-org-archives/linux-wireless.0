@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39298 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932127AbcK1LxN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45364 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751981AbcKOPGJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 06:53:13 -0500
+        Tue, 15 Nov 2016 10:06:09 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: rtl8xxxu: tx rate reported before set
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161126021158.GA12838@box64.home.org>
-References: <20161126021158.GA12838@box64.home.org>
-To: Barry Day <briselec@gmail.com>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20161128115312.4E2646134E@smtp.codeaurora.org> (sfid-20161128_125316_123585_B2AE0334)
-Date: Mon, 28 Nov 2016 11:53:12 +0000 (UTC)
+Subject: Re: [v3,1/2] ath10k: clean up HTT tx buffer allocation and free
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1476278778-4253-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1476278778-4253-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <b46170abfbc548458e6be817f9d31079@euamsexm01a.eu.qualcomm.com> (sfid-20161115_160612_881361_FF14E2EA)
+Date: Tue, 15 Nov 2016 16:06:02 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Barry Day <briselec@gmail.com> wrote:
-> Move the dev_info call that attempts to show the rate used before it is set.
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> Signed-off-by: Barry Day <briselec@gmail.com>
+> cleanup 'ath10k_htt_tx_alloc' by introducing the API's
+> 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
+> re-use them whereever needed
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Jes, I would like to take this directly to fix the compiler warning. Also I'll
-change the commit log to:
+2 patches applied to ath-next branch of ath.git, thanks.
 
-rtl8xxxu: tx rate reported before set
-
-Move the dev_info call that attempts to show the rate used before it is set.
-Fixes a compiler warning:
-
-drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
-include/linux/device.h:1214:36: warning: 'rate' may be used uninitialized in this function [-Wmaybe-uninitialized]
- #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
-
-Fixes: b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Barry Day <briselec@gmail.com>
+19f338c6eb0c ath10k: clean up HTT tx buffer allocation and free
+f004e532a80a ath10k: remove extraneous error message in tx alloc
 
 -- 
-https://patchwork.kernel.org/patch/9448225/
+https://patchwork.kernel.org/patch/9373055/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
