@@ -1,74 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45886 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756661AbcKKNLf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19389 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753133AbcKOKyS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:35 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v3 07/11] mwifiex: reset card->adapter during device unregister
-Date: Fri, 11 Nov 2016 18:40:14 +0530
-Message-ID: <1478869818-4340-7-git-send-email-akarwar@marvell.com> (sfid-20161111_141151_127019_0480B853)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
+        Tue, 15 Nov 2016 05:54:18 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+CC: Erik Stromdahl <erik.stromdahl@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC 10/12] ath10k: Added QCA65XX hw definition
+Date: Tue, 15 Nov 2016 10:54:13 +0000
+Message-ID: <87wpg5qai1.fsf@qca.qualcomm.com> (sfid-20161115_115422_250030_9486F8D4)
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+        <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com>
+        <CA+BoTQmcyVQDOd2o0YDvepuLbSz76p8hetrWA6mWJeGxvbM8iQ@mail.gmail.com>
+In-Reply-To: <CA+BoTQmcyVQDOd2o0YDvepuLbSz76p8hetrWA6mWJeGxvbM8iQ@mail.gmail.com>       (Michal
+ Kazior's message of "Tue, 15 Nov 2016 11:34:11 +0100")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-card->adapter gets initialized in mwifiex_register_dev(). As it's not
-cleared in mwifiex_unregister_dev(), we may end up accessing the memory
-which is already free in below scenario.
+> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> w=
+rote:
+>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/hw.h |    1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless=
+/ath/ath10k/hw.h
+>> index 46142e9..ef45ecf 100644
+>> --- a/drivers/net/wireless/ath/ath10k/hw.h
+>> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+>> @@ -224,6 +224,7 @@ enum ath10k_hw_rev {
+>>         ATH10K_HW_QCA9377,
+>>         ATH10K_HW_QCA4019,
+>>         ATH10K_HW_QCA9887,
+>> +       ATH10K_HW_QCA65XX,
+>
+> Are you 100% positive that you're supporting all QCA65XX chips? The
+> rule of thumb is to avoid Xs as much as possible unless totally
+> perfectly completely sure.
 
-Scenario: Driver initialization is failed due to incorrect firmware or
-some other reason. Meanwhile device reboot/unload occurs.
+But the thing is that nobody can't be absolutely sure as we never know
+what marketing comes up within few years again. So I would say that XX
+in chip names should be completely avoided to avoid any confusion. We
+already suffer from this in ath10k with QCA988X and QCA9888 which are
+different designs but the names overlap.
 
-This is safe, now that we've properly synchronized suspend() and
-remove() with the FW initialization thread; now that code can simply
-check for 'card->adapter == NULL' and exit safely.
+I haven't reviewed Erik's patches yet but I'm surprised why even a new
+enum value is needed here. I was assuming we could use ATH10K_HW_QCA6174
+because AFAIK they share the same design. Any particular reason for
+this?
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v3: Same as v1 and v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
- drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 4d96683..1ab366c 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3048,6 +3048,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 			if (card->msi_enable)
- 				pci_disable_msi(pdev);
- 	       }
-+		card->adapter = NULL;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 39ffe7d..4c4b012 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2019,6 +2019,7 @@ static int mwifiex_alloc_sdio_mpa_buffers(struct mwifiex_adapter *adapter,
- 	struct sdio_mmc_card *card = adapter->card;
- 
- 	if (adapter->card) {
-+		card->adapter = NULL;
- 		sdio_claim_host(card->func);
- 		sdio_disable_func(card->func);
- 		sdio_release_host(card->func);
--- 
-1.9.1
+--=20
+Kalle Valo=
