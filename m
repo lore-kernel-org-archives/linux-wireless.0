@@ -1,87 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45871 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756659AbcKKNLX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:23 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 05/11] mwifiex: don't pretend to resume while remove()'ing
-Date: Fri, 11 Nov 2016 18:40:12 +0530
-Message-ID: <1478869818-4340-5-git-send-email-akarwar@marvell.com> (sfid-20161111_141134_708709_A1F32A06)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:47660 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751012AbcKOLFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 06:05:16 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: limit scan results cache size
+Date: Tue, 15 Nov 2016 12:05:11 +0100
+Message-Id: <20161115110511.12259-1-johannes@sipsolutions.net> (sfid-20161115_120522_490414_90805DC0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-The device core will not allow suspend() to race with remove().
+It's possible to make scanning consume almost arbitrary amounts
+of memory, e.g. by sending beacon frames with random BSSIDs at
+high rates while somebody is scanning.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Limit the number of BSS table entries we're willing to cache to
+1000, limiting maximum memory usage to maybe 4-5MB, but lower
+in practice - that would be the case for having both full-sized
+beacon and probe response frames for each entry; this seems not
+possible in practice, so a limit of 1000 entries will likely be
+closer to 0.5 MB.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-v3: Same as v1 and v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 5 -----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ---
- drivers/net/wireless/marvell/mwifiex/usb.c  | 5 -----
- 3 files changed, 13 deletions(-)
+ net/wireless/core.h |  1 +
+ net/wireless/scan.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 70 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6152f08..a2353f9 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -257,11 +257,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 		return;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 08d2e948c9ad..f0c0c8a48c92 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -71,6 +71,7 @@ struct cfg80211_registered_device {
+ 	struct list_head bss_list;
+ 	struct rb_root bss_tree;
+ 	u32 bss_generation;
++	u32 bss_entries;
+ 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
+ 	struct sk_buff *scan_msg;
+ 	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index b5bd58d0f731..35ad69fd0838 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -57,6 +57,19 @@
+  * also linked into the probe response struct.
+  */
  
- 	if (user_rmmod && !adapter->mfg_mode) {
--#ifdef CONFIG_PM_SLEEP
--		if (adapter->is_suspended)
--			mwifiex_pcie_resume(&pdev->dev);
--#endif
--
- 		mwifiex_deauthenticate_all(adapter);
++/*
++ * Limit the number of BSS entries stored in mac80211. Each one is
++ * a bit over 4k at most, so this limits to roughly 4-5M of memory.
++ * If somebody wants to really attack this though, they'd likely
++ * use small beacons, and only one type of frame, limiting each of
++ * the entries to a much smaller size (in order to generate more
++ * entries in total, so overhead is bigger.)
++ */
++static int bss_entries_limit = 1000;
++module_param(bss_entries_limit, int, 0644);
++MODULE_PARM_DESC(bss_entries_limit,
++                 "limit to number of scan BSS entries (per wiphy, default 1000)");
++
+ #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
  
- 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 90f45d9..a2257a4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -246,9 +246,6 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ static void bss_free(struct cfg80211_internal_bss *bss)
+@@ -137,6 +150,10 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
  
- 	if (user_rmmod && !adapter->mfg_mode) {
--		if (adapter->is_suspended)
--			mwifiex_sdio_resume(adapter->dev);
--
- 		mwifiex_deauthenticate_all(adapter);
+ 	list_del_init(&bss->list);
+ 	rb_erase(&bss->rbn, &rdev->bss_tree);
++	rdev->bss_entries--;
++	WARN_ONCE((rdev->bss_entries == 0) ^ list_empty(&rdev->bss_list),
++		  "rdev bss entries[%d]/list[empty:%d] corruption\n",
++		  rdev->bss_entries, list_empty(&rdev->bss_list));
+ 	bss_ref_put(rdev, bss);
+ 	return true;
+ }
+@@ -163,6 +180,40 @@ static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
+ 		rdev->bss_generation++;
+ }
  
- 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 14f89fe..558a7f1 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -614,11 +614,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 		return;
++static bool cfg80211_bss_expire_oldest(struct cfg80211_registered_device *rdev)
++{
++	struct cfg80211_internal_bss *bss, *oldest = NULL;
++	bool ret;
++
++	lockdep_assert_held(&rdev->bss_lock);
++
++	list_for_each_entry(bss, &rdev->bss_list, list) {
++		if (atomic_read(&bss->hold))
++			continue;
++
++		if (!list_empty(&bss->hidden_list) &&
++		    !bss->pub.hidden_beacon_bss)
++			continue;
++
++		if (oldest && time_before(oldest->ts, bss->ts))
++			continue;
++		oldest = bss;
++	}
++
++	if (WARN_ON(!oldest))
++		return false;
++
++	/*
++	 * The callers make sure to increase rdev->bss_generation if anything
++	 * gets removed (and a new entry added), so there's no need to also do
++	 * it here.
++	 */
++
++	ret = __cfg80211_unlink_bss(rdev, oldest);
++	WARN_ON(!ret);
++	return ret;
++}
++
+ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
+ 			   bool send_message)
+ {
+@@ -689,6 +740,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ 	const u8 *ie;
+ 	int i, ssidlen;
+ 	u8 fold = 0;
++	u32 n_entries = 0;
  
- 	if (user_rmmod && !adapter->mfg_mode) {
--#ifdef CONFIG_PM
--		if (adapter->is_suspended)
--			mwifiex_usb_resume(intf);
--#endif
--
- 		mwifiex_deauthenticate_all(adapter);
+ 	ies = rcu_access_pointer(new->pub.beacon_ies);
+ 	if (WARN_ON(!ies))
+@@ -712,6 +764,12 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ 	/* This is the bad part ... */
  
- 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
+ 	list_for_each_entry(bss, &rdev->bss_list, list) {
++		/*
++		 * we're iterating all the entries anyway, so take the
++		 * opportunity to validate the list length accounting
++		 */
++		n_entries++;
++
+ 		if (!ether_addr_equal(bss->pub.bssid, new->pub.bssid))
+ 			continue;
+ 		if (bss->pub.channel != new->pub.channel)
+@@ -740,6 +798,10 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
+ 				   new->pub.beacon_ies);
+ 	}
+ 
++	WARN_ONCE(n_entries != rdev->bss_entries,
++		  "rdev bss entries[%d]/list[len:%d] corruption\n",
++		  rdev->bss_entries, n_entries);
++
+ 	return true;
+ }
+ 
+@@ -894,7 +956,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
+ 			}
+ 		}
+ 
++		if (rdev->bss_entries >= bss_entries_limit &&
++		    !cfg80211_bss_expire_oldest(rdev)) {
++			kfree(new);
++			goto drop;
++		}
++
+ 		list_add_tail(&new->list, &rdev->bss_list);
++		rdev->bss_entries++;
+ 		rb_insert_bss(rdev, new);
+ 		found = new;
+ 	}
 -- 
-1.9.1
+2.9.3
