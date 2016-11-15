@@ -1,127 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:35549 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934494AbcKDOlg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 10:41:36 -0400
-Received: by mail-qt0-f173.google.com with SMTP id c47so49229745qtc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 07:41:35 -0700 (PDT)
+Received: from ni.piap.pl ([195.187.100.4]:36858 "EHLO ni.piap.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S937351AbcKOKC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 05:02:28 -0500
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4.9.0-rc5] AR9300 calibration problems with antenna selected
+Date: Tue, 15 Nov 2016 10:56:37 +0100
+Message-ID: <m3wpg52hii.fsf@t19.piap.pl> (sfid-20161115_110233_276714_A4D27248)
 MIME-Version: 1.0
-In-Reply-To: <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
- <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com> <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net>
-From: Bruno Antunes <baantunes@gmail.com>
-Date: Fri, 4 Nov 2016 14:41:14 +0000
-Message-ID: <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com> (sfid-20161104_154139_642811_407F836A)
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-To: Mauro Mozzarelli <openwrt@ezplanet.net>
-Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 November 2016 at 14:18, Mauro Mozzarelli <openwrt@ezplanet.net> wrote:
-> Since the capability is implemented in software you might be testing the
-> limit of your router's CPU i/o speed.
+Hi,
 
-By loading the module in rawmode?
+I recently tried to select a single antenna on AR9300 and it works for
+30 seconds only. The subsequent calibration makes the RX signal level to
+drop from the usual -30/-40 dBm to -70/-80 dBm, and the transmission
+practically stops.
 
-The AP is an APU and Sta is an APU2.
+With the attached patch it works, though selecting the antenna doesn't
+seem to have any visible effect, at least with "iw wlanX station dump"
+(perhaps it works for TX).
 
->
->
->
-> On 04/11/16 14:13, Bruno Antunes wrote:
->>
->> Hi all,
->>
->> Old thread but I think the issue is still present.
->>
->> I'm running a setup with VLANs with WDS and ath10k cards.
->>
->> To make it work both cards must be loaded in rawmode, AP
->> and Sta, and with no security.
->>
->> I'm using a OpenWrt trunk r49941 and the most recent firmware,
->> 10.2.4.70.58, from Kalle ath10k firmware tree.
->>
->> Although it works the throughput is very bad.
->> Are there any alternatives to improve the throughput.
->>
->> Best Regards,
->> Bruno
->>
->> On 9 December 2015 at 17:24, voncken <cedric.voncken@acksys.fr> wrote:
->>>
->>>
->>>> -----Message d'origine-----
->>>> De : Ben Greear [mailto:greearb@candelatech.com]
->>>> Envoy=C3=A9 : mercredi 9 d=C3=A9cembre 2015 16:34
->>>> =C3=80 : Cedric VONCKEN; ath10k@lists.infradead.org; linux-wireless
->>>> Objet : Re: ATH10K VLAN firmware issue
->>>>
->>>> This only happens when you use STA  + WDS, or is .1q broken for you in
->>>> other cases as well?
->>>
->>> No, this issue occurs in all modes (STA, STA + WDS, AP).
->>>
->>> Thanks
->>>
->>> Cedric.
->>>
->>>> Thanks,
->>>> Ben
->>>>
->>>> On 12/08/2015 06:29 AM, Cedric VONCKEN wrote:
->>>>>
->>>>>      I'm testing to transmit frame with 802.1q tag (VLAN).
->>>>>
->>>>>      My client is set in STA + WDS and the netdev is bridged with eth=
-0.
->>>>>      I have a computer with vlan configuration set connected to the S=
-TA
->>>>> eth0.
->>>>>
->>>>>      If I try to transmit frames with 802.1q tag, the frames are not
->>>
->>> sent.
->>>>>
->>>>>      I checked with wireless sniffer, and I don't see the frame with
->>>>> VLAN
->>>>> tag (the frames without VLAN tag are sent).
->>>>>
->>>>>      I tested with firmware 10.2.4.70.14-2 from kale github,
->>>>> 10.1.467-ct-com-full-015 from candelatech and 10.2.4.70-2 from
->>>>> openwrt, and in all cases I have the same issue.
->>>>>
->>>>>      Thanks for your help.
->>>>>
->>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>> linux-wireless" in the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>>
->>>> --
->>>> Ben Greear <greearb@candelatech.com>
->>>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireles=
-s"
->>> in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->> _______________________________________________
->> openwrt-devel mailing list
->> openwrt-devel@lists.openwrt.org
->> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->
-> _______________________________________________
-> openwrt-devel mailing list
-> openwrt-devel@lists.openwrt.org
-> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
+I'm using ad-hoc mode:
+
+rmmod ath9k
+modprobe ath9k
+iw dev wlan0 set type ibss
+iw phy phyX set antenna 2
+ip link set up dev wlan0
+iw dev wlan0 set bitrates legacy-2.4 18
+iw dev wlan0 ibss join nameXXX freqYYY
+ip addr add ZZZ broadcast + dev wlan0
+
+The card in question is Mikrotik (Routerboard) R11e-2HPnD mPCIe adapter:
+AR9580 Wireless Network Adapter (rev 01), ID 168c:0033, subsystem
+19b6:d016.
+ieee80211 phy0: Atheros AR9300 Rev:4 mem=0xc0f40000, irq=334
+https://routerboard.com/R11e-2HPnD
+
+Linux 4.9.0-rc5.
+
+
+Is there a better way?
+
+Signed-off-by: Krzysztof Halasa <khalasa@piap.pl>
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e9f32b5..7f17e5d 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -2245,7 +2245,7 @@ static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+ 		return 0;
+ 
+ 	/* AR9100 runs into calibration issues if not all rx chains are enabled */
+-	if (AR_SREV_9100(ah))
++	if (AR_SREV_9100(ah) || AR_SREV_9300(ah))
+ 		ah->rxchainmask = 0x7;
+ 	else
+ 		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
+
+
+-- 
+Krzysztof Halasa
+
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
