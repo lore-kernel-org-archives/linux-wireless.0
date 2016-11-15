@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:33854 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934630AbcKXB0b (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:35701 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966504AbcKOKTW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 20:26:31 -0500
-Received: by mail-pg0-f67.google.com with SMTP id e9so2201532pgc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:26:31 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 17:26:06 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 5/7] mwifiex: Remove unused 'pm_flag' variable
-Message-ID: <56d02b0bc8845cf71da212aa006ee15eb95023c9.1479950323.git.kirtika@google.com> (sfid-20161124_022635_152738_C3583A7E)
-References: <cover.1479950323.git.kirtika@google.com>
+        Tue, 15 Nov 2016 05:19:22 -0500
+Received: by mail-wm0-f49.google.com with SMTP id a197so156779985wmd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 02:19:22 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479950323.git.kirtika@google.com>
+In-Reply-To: <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 15 Nov 2016 11:19:20 +0100
+Message-ID: <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com> (sfid-20161115_111932_665747_ECC4B5B6)
+Subject: Re: [RFC 04/12] ath10k: htc: refactorization
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mwifiex_sdio_resume() intializes pm_flag, just like
-mwifiex_sdio_suspend(), but does not use it. Compiling with W=1 gives
-the following warning, fix it.
-mwifiex/sdio.c: In function ‘mwifiex_sdio_resume’:
-mwifiex/sdio.c:234:16: warning: variable ‘pm_flag’ set but not used [-Wunused-but-set-variable]
+On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
+te:
+> Code refactorization:
+>
+> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+> to ath10k_htc_control_rx_complete.
+>
+> This eases the implementation of SDIO/mbox significantly since
+> the ep_rx_complete cb is invoked directly from the SDIO/mbox
+> hif layer.
+>
+> Since the ath10k_htc_control_rx_complete already is present
+> (only containing a warning message) there is no reason for not
+> using it (instead of having a special case for ep 0 in
+> ath10k_htc_rx_completion_handler).
 
-sdio_get_host_pm_caps() is just an acessor, so the call to it is safe
-to remove. The unused variable seems to be present since
-5e6e3a92b9a4 which introduced mwifiex_sdio_resume().
+This should be squashed with Patch 3 since it's inseparable part of
+the same refactorization.
 
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 2 --
- 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 0d00db5..6c9f16e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -186,9 +186,7 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	struct sdio_func *func = dev_to_sdio_func(dev);
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
--	mmc_pm_flag_t pm_flag = 0;
- 
--	pm_flag = sdio_get_host_pm_caps(func);
- 	card = sdio_get_drvdata(func);
- 	if (!card || !card->adapter) {
- 		dev_err(dev, "resume: invalid card or adapter\n");
--- 
-2.8.0.rc3.226.g39d4020
+Micha=C5=82
