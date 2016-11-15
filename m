@@ -1,66 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35243 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754622AbcKXEpm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 23:45:42 -0500
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 20:45:36 -0800
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Alexander Bondar <alexander.bondar@intel.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/4] mac80211: Removed unused 'i' variable
-Message-ID: <c7cb0fc989545ddc3c3dd1fe29774ee3bf483623.1479962513.git.kirtika@chromium.org> (sfid-20161124_054550_177035_E99AD135)
-References: <cover.1479962513.git.kirtika@chromium.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53824 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752020AbcKOPQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 10:16:31 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Avery Pennarun <apenwarr@gmail.com>
+Cc: Barry Day <briselec@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Avery's notes from LPC2016 wireless track (Santa Fe)
+References: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
+        <20161103215525.GA25551@testbox>
+        <CAHqTa-3TnBdAhtuoVkU5nSCQM4f1pE=d=K0F7xMCZUSAdk6wvA@mail.gmail.com>
+Date: Tue, 15 Nov 2016 10:16:30 -0500
+In-Reply-To: <CAHqTa-3TnBdAhtuoVkU5nSCQM4f1pE=d=K0F7xMCZUSAdk6wvA@mail.gmail.com>
+        (Avery Pennarun's message of "Thu, 3 Nov 2016 21:59:28 -0400")
+Message-ID: <wrfj37issrht.fsf@redhat.com> (sfid-20161115_161634_988286_A542B234)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479962513.git.kirtika@chromium.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 5bcae31d9 (mac80211: implement multi-vif in-place reservations)
-introduced ieee80211_vif_use_reserved_switch() with a counter variable
-'i' that is set but not used. Compiling with W=1 gives the following
-warning, fix it.
-net/mac80211/chan.c: In function ‘ieee80211_vif_use_reserved_switch’:
-net/mac80211/chan.c:1273:6: warning: variable ‘i’ set but not used [-Wunused-but-set-variable]
+Avery Pennarun <apenwarr@gmail.com> writes:
+> On Thu, Nov 3, 2016 at 5:55 PM, Barry Day <briselec@gmail.com> wrote:
+>> Thanks for that. Can I take this as meaning there won't be any videos?
+>> I would like to have seen Jes Sorensen's talk on rtl8xxxu
+>
+> As far as I know, no talks at this LPC were recorded.
 
-This is a harmless warning, and is only being fixed to reduce the
-noise obtained with W=1 in the kernel.
+They weren't but my slides should be available from the Plumbers site.
 
-Fixes: 5bcae31d9 ("mac80211: implement multi-vif in-place reservations")
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
----
- net/mac80211/chan.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+https://www.linuxplumbersconf.org/2016/ocw/proposals/4089
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index e75cbf6..7550fd2 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -1270,7 +1270,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
- 	struct ieee80211_sub_if_data *sdata, *sdata_tmp;
- 	struct ieee80211_chanctx *ctx, *ctx_tmp, *old_ctx;
- 	struct ieee80211_chanctx *new_ctx = NULL;
--	int i, err, n_assigned, n_reserved, n_ready;
-+	int err, n_assigned, n_reserved, n_ready;
- 	int n_ctx = 0, n_vifs_switch = 0, n_vifs_assign = 0, n_vifs_ctxless = 0;
- 
- 	lockdep_assert_held(&local->mtx);
-@@ -1391,8 +1391,6 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
- 	 * Update all structures, values and pointers to point to new channel
- 	 * context(s).
- 	 */
--
--	i = 0;
- 	list_for_each_entry(ctx, &local->chanctx_list, list) {
- 		if (ctx->replace_state != IEEE80211_CHANCTX_REPLACES_OTHER)
- 			continue;
--- 
-2.8.0.rc3.226.g39d4020
+Cheers,
+Jes
