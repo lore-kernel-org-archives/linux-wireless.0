@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33074 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750762AbcKXGG6 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2556 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754037AbcKOOyE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 01:06:58 -0500
+        Tue, 15 Nov 2016 09:54:04 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 24 Nov 2016 14:06:57 +0800
-From: miaoqing@codeaurora.org
-To: Jason Cooper <jason@lakedaemon.net>,
-        Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: linux-wireless@vger.kernel.org,
-        Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        ath9k-devel@lists.ath9k.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Gregory CLEMENT <gregory.clement@free-electrons.com>,
-        Kalle Valo <kvalo@codeaurora.org>, Andrew Lunn <andrew@lunn.ch>
-Subject: Re: ath9k ARMv7 OOPS in v4.8.6, v4.2.8
-In-Reply-To: <aaba8b1e30dd4c22be52e50befb202b2@aptaiexm02f.ap.qualcomm.com>
-References: <20161123191539.GF2799@io.lakedaemon.net>
- <20161123195120.GE14217@n2100.armlinux.org.uk>
- <20161123205917.GI2799@io.lakedaemon.net>
- <20161123211745.GF14217@n2100.armlinux.org.uk>
- <20161123214053.GJ2799@io.lakedaemon.net>
- <aaba8b1e30dd4c22be52e50befb202b2@aptaiexm02f.ap.qualcomm.com>
-Message-ID: <7aba95bdf0d562f3c9640d533c33e1ca@codeaurora.org> (sfid-20161124_070702_605012_2EFFE7C1)
+Subject: Re: ath9k: Move generic entries below specific ones in
+ ath_pci_id_table.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <ath9k-patch-20161003@vittgam.net>
+References: <ath9k-patch-20161003@vittgam.net>
+To: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
+CC: <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <4e23eb6c1bcd430faab4591325a81cff@euamsexm01a.eu.qualcomm.com> (sfid-20161115_155407_817085_2F86FA6F)
+Date: Tue, 15 Nov 2016 15:53:58 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
->> Okay, so i was 0, so running UP probably isn't going to help.  r7 is
->> also spec_priv->rfs_chan_spec_scan.
->> 
->> So, I think the question is... how is this NULL - and has it always
->> been NULL...
+"Vittorio Gambaletta \(VittGam\)" <linux-wireless@vittgam.net> wrote:
+> If generic entries are positioned above specific ones, then the
+> former will be matched first and used instead of the latter.
 > 
-> The problem appears to be that ath_cmn_process_fft() isn't called that
-> often.  When it is, it crashes in ath_cmn_is_fft_buf_full() because
-> spec_priv->rfs_chan_spec_scan is NULL when ATH9K_DEBUGFS=n. :-(
+> Cc: <linux-wireless@vger.kernel.org>
+> Cc: <ath9k-devel@qca.qualcomm.com>
+> Cc: <ath9k-devel@lists.ath9k.org>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 > 
-> I'm running with ATH9K_DEBUGFS=y now.  If it goes a couple of days
-> without crashing, I'll gin up a patch.
-> 
+> --- a/drivers/net/wireless/ath/ath9k/pci.c
+> +++ b/drivers/net/wireless/ath/ath9k/pci.c
+> @@ -26,7 +26,6 @@
+>  	{ PCI_VDEVICE(ATHEROS, 0x0023) }, /* PCI   */
+>  	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+>  	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+> -	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
+>  
+>  #ifdef CONFIG_ATH9K_PCOEM
+>  	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
+> @@ -37,7 +36,7 @@
+>  	  .driver_data = ATH9K_PCI_LED_ACT_HI },
+>  #endif
+>  
+> -	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+> +	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
+>  
+>  #ifdef CONFIG_ATH9K_PCOEM
+>  	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+> @@ -85,7 +84,11 @@
+>  			 0x10CF, /* Fujitsu */
+>  			 0x1536),
+>  	  .driver_data = ATH9K_PCI_D3_L1_WAR },
+> +#endif
+>  
+> +	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+> +
+> +#ifdef CONFIG_ATH9K_PCOEM
+>  	/* AR9285 card for Asus */
+>  	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
+>  			 0x002B,
 
-A similar patch was applied to ath-next branch: 
-https://patchwork.kernel.org/patch/9431163/.
+Patch applied to ath-next branch of ath.git, thanks.
 
---
-Miaoqing
+79e57dd113d3 ath9k: Really fix LED polarity for some Mini PCI AR9220 MB92 cards.
+
+-- 
+https://patchwork.kernel.org/patch/9360361/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
