@@ -1,114 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:34901 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936594AbcKOSQw (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:35701 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966501AbcKOJ5Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 13:16:52 -0500
-Received: by mail-pg0-f45.google.com with SMTP id p66so69162761pga.2
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 10:16:52 -0800 (PST)
-Date: Tue, 15 Nov 2016 10:16:49 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com
-Subject: Re: [PATCH v4 3/3] mwifiex: Enable WoWLAN for both sdio and pcie
-Message-ID: <20161115181648.GA121911@google.com> (sfid-20161115_191656_963288_CF06069A)
-References: <1479216964-3328-1-git-send-email-akarwar@marvell.com>
- <1479216964-3328-3-git-send-email-akarwar@marvell.com>
- <20161115173507.GB22897@dtor-ws>
+        Tue, 15 Nov 2016 04:57:25 -0500
+Received: by mail-wm0-f48.google.com with SMTP id a197so155618934wmd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 01:57:24 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161115173507.GB22897@dtor-ws>
+In-Reply-To: <1479141222-8493-3-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> <1479141222-8493-3-git-send-email-erik.stromdahl@gmail.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 15 Nov 2016 10:57:23 +0100
+Message-ID: <CA+BoTQkJqv28=Mg1ncmyznRo-CLh6Y_OW-mJ+YTyqaREaqp39Q@mail.gmail.com> (sfid-20161115_105734_634075_CF51A0EC)
+Subject: Re: [RFC 02/12] ath10k: htc: rx trailer lookahead support
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 15, 2016 at 09:35:07AM -0800, Dmitry Torokhov wrote:
-> On Tue, Nov 15, 2016 at 07:06:04PM +0530, Amitkumar Karwar wrote:
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> > @@ -1552,14 +1552,55 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
-> >  }
-> >  EXPORT_SYMBOL_GPL(mwifiex_do_flr);
-> >  
-> > +static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
-> > +{
-> > +	struct mwifiex_adapter *adapter = priv;
-> > +
-> > +	if (adapter->irq_wakeup >= 0) {
-> > +		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-> > +		adapter->wake_by_wifi = true;
-> > +		disable_irq_nosync(irq);
-> > +	}
-> > +
-> > +	/* Notify PM core we are wakeup source */
-> > +	pm_wakeup_event(adapter->dev, 0);
-> > +
-> > +	return IRQ_HANDLED;
-> > +}
-> > +
-> >  static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
-> >  {
-> > +	int ret;
-> >  	struct device *dev = adapter->dev;
-> >  
-> >  	if (!dev->of_node)
-> >  		return;
-> >  
-> >  	adapter->dt_node = dev->of_node;
-> > +	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
-> > +	if (!adapter->irq_wakeup) {
-> > +		dev_info(dev, "fail to parse irq_wakeup from device tree\n");
-> > +		return;
-> > +	}
-> 
-> I'd rather we used of_irq_get() here, because ti allows handling
-> deferrals. of_irq_get_byname() would be even better, but I guess we
-> already have bindings in the wild...
+On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
+te:
+> The RX trailer parsing is now capable of parsing lookahead reports.
+> This is needed by SDIO/mbox.
 
-This function doesn't handle errors very gracefully at all; we just try,
-and if we fail, we just skip the rest...
+It'd be useful to know what exactly lookahead will be used for. What
+payload does it carry.
 
-This could be an argument for rewriting the error handling to stop just
-returning -1 in mwifiex_add_card() and use real Linux error codes.
-Perhaps that can be a later cleanup?
 
-> > +
-> > +	ret = devm_request_irq(dev, adapter->irq_wakeup,
-> > +			       mwifiex_irq_wakeup_handler, IRQF_TRIGGER_LOW,
-> 
-> irq_of_parse_and_map() (and of_irq_get()) will set trigger flags,
-> why do we override them?
-> 
-> > +			       "wifi_wake", adapter);
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to request irq_wakeup %d (%d)\n",
-> > +			adapter->irq_wakeup, ret);
-> > +		goto err_exit;
-> > +	}
-> > +
-> > +	disable_irq(adapter->irq_wakeup);
-> > +	if (device_init_wakeup(dev, true)) {
-> > +		dev_err(dev, "fail to init wakeup for mwifiex\n");
-> > +		goto err_exit;
-> 
-> Leaking interrupt (not forever, but if we are not using wakeup irq there
-> is no need to have it claimed).
-> 
-> > +	}
-> > +	return;
-> > +
-> > +err_exit:
-> > +	adapter->irq_wakeup = 0;
-> >  }
-> 
-> I also do not see anyone actually calling mwifiex_probe_of() in this
-> patch?
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/htc.c |   91 +++++++++++++++++++++++++++=
++++++-
+>  drivers/net/wireless/ath/ath10k/htc.h |   30 +++++++++--
+>  2 files changed, 116 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless=
+/ath/ath10k/htc.c
+> index 26b1e15..e3f7bf4 100644
+> --- a/drivers/net/wireless/ath/ath10k/htc.c
+> +++ b/drivers/net/wireless/ath/ath10k/htc.c
+> @@ -228,10 +228,74 @@ void ath10k_htc_tx_completion_handler(struct ath10k=
+ *ar, struct sk_buff *skb)
+>         spin_unlock_bh(&htc->tx_lock);
+>  }
+>
+> +static int
+> +ath10k_htc_process_lookahead(struct ath10k_htc *htc,
+> +                            const struct ath10k_htc_lookahead_report *re=
+port,
+> +                            int len,
+> +                            enum ath10k_htc_ep_id eid,
+> +                            u32 *next_lk_ahds,
 
-It was added to mwifiex_add_card() in the previous patch, so all users
-with a proper ->dt_node would call it.
+next_lk_ahds should be u8 or void. From what I understand by glancing
+through the code it is an agnostic buffer that carries payload which
+is later interpreted either as eid or htc header, right? void is
+probably most suitable in this case for passing around and u8 for
+inline-based storage.
 
-> >  
-> >  /*
+I'd also avoid silly abbreviations. Probably "lookahead" alone is enough.
 
-Brian
+> +                            int *next_lk_ahds_len)
+> +{
+> +       struct ath10k *ar =3D htc->ar;
+> +
+> +       if (report->pre_valid !=3D ((~report->post_valid) & 0xFF))
+> +               /* Invalid lookahead flags are actually transmitted by
+> +                * the target in the HTC control message.
+> +                * Since this will happen at every boot we silently ignor=
+e
+> +                * the lookahead in this case
+> +                */
+
+I'd put this comment before the if().
+
+
+> +               return 0;
+> +
+> +       if (next_lk_ahds && next_lk_ahds_len) {
+> +               ath10k_dbg(ar, ATH10K_DBG_HTC,
+> +                          "htc rx lk_ahd found pre_valid 0x%x post_valid=
+ 0x%x\n",
+> +                          report->pre_valid, report->post_valid);
+> +
+> +               /* look ahead bytes are valid, copy them over */
+> +               memcpy((u8 *)&next_lk_ahds[0], report->lk_ahd, 4);
+> +
+> +               *next_lk_ahds_len =3D 1;
+> +       }
+> +
+> +       return 0;
+> +}
+> +
+> +static int
+> +ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
+> +                                   const struct ath10k_htc_lookahead_rep=
+ort_bundle *report,
+> +                                   int len,
+> +                                   enum ath10k_htc_ep_id eid,
+> +                                   u32 *next_lk_ahds,
+
+Ditto. void.
+
+
+> +                                   int *next_lk_ahds_len)
+> +{
+> +       int bundle_cnt =3D len / sizeof(*report);
+> +
+> +       if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
+> +               WARN_ON(1);
+
+This should be ath10k_warn() instead. This isn't internal driver flow
+assertion. It is possible firmware bug or revision misalignment
+instead.
+
+
+> +               return -EINVAL;
+> +       }
+> +
+> +       if (next_lk_ahds && next_lk_ahds_len) {
+> +               int i;
+> +
+> +               for (i =3D 0; i < bundle_cnt; i++) {
+> +                       memcpy((u8 *)&next_lk_ahds[i], report->lk_ahd,
+> +                              sizeof(u32));
+
+You'll need to re-adjust the &x[i] to maintain proper offset with void poin=
+ter.
+
+
+Micha=C5=82
