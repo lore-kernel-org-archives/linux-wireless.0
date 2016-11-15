@@ -1,123 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45877 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756458AbcKKNL2 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46657 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751088AbcKOQh6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:28 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 06/11] mwifiex: resolve suspend() race with async FW init failure
-Date: Fri, 11 Nov 2016 18:40:13 +0530
-Message-ID: <1478869818-4340-6-git-send-email-akarwar@marvell.com> (sfid-20161111_141142_255690_5CBBEB62)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
+        Tue, 15 Nov 2016 11:37:58 -0500
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCHv3 2/2] ath10k: add support for per sta tx bitrate
+Date: Tue, 15 Nov 2016 22:08:49 +0530
+Message-ID: <1479227929-10142-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20161115_173801_085329_D542D7F5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v3: Same as v1 and v2
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 12 ++++++++++--
- drivers/net/wireless/marvell/mwifiex/sdio.c | 12 ++++++++++--
- drivers/net/wireless/marvell/mwifiex/usb.c  | 12 ++++++++++--
- 3 files changed, 30 insertions(+), 6 deletions(-)
+Per STA tx bitrate info is filled from peer stats.
+Export per sta txrate info to cfg80211/nl80211
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a2353f9..4d96683 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -118,12 +118,20 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+---
+v2:
+ * address Kalle's comments
+
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 9955fea0802a..fce6f8137d33 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -77,6 +77,19 @@ void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
  
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
--		pr_err("Card or adapter structure is not valid\n");
-+	if (!card) {
-+		dev_err(dev, "card structure is not valid\n");
- 		return 0;
- 	}
- 
-+	/* Might still be loading firmware */
-+	wait_for_completion(&card->fw_done);
+ 	sinfo->rx_duration = arsta->rx_duration;
+ 	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
 +
- 	adapter = card->adapter;
-+	if (!adapter) {
-+		dev_err(dev, "adapter is not valid\n");
-+		return 0;
++	if (!arsta->txrate.legacy && !arsta->txrate.nss)
++		return;
++
++	if (arsta->txrate.legacy) {
++		sinfo->txrate.legacy = arsta->txrate.legacy;
++	} else {
++		sinfo->txrate.mcs = arsta->txrate.mcs;
++		sinfo->txrate.nss = arsta->txrate.nss;
++		sinfo->txrate.bw = arsta->txrate.bw;
 +	}
-+
- 	mwifiex_enable_wake(adapter);
++	sinfo->txrate.flags = arsta->txrate.flags;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_TX_BITRATE;
+ }
  
- 	/* Enable the Host Sleep */
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index a2257a4..39ffe7d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -285,8 +285,8 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 		}
- 
- 		card = sdio_get_drvdata(func);
--		if (!card || !card->adapter) {
--			pr_err("suspend: invalid card or adapter\n");
-+		if (!card) {
-+			dev_err(dev, "suspend: invalid card\n");
- 			return 0;
- 		}
- 	} else {
-@@ -294,7 +294,15 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 		return 0;
- 	}
- 
-+	/* Might still be loading firmware */
-+	wait_for_completion(&card->fw_done);
-+
- 	adapter = card->adapter;
-+	if (!adapter) {
-+		dev_err(dev, "adapter is not valid\n");
-+		return 0;
-+	}
-+
- 	mwifiex_enable_wake(adapter);
- 
- 	/* Enable the Host Sleep */
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 558a7f1..671702c 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -503,11 +503,19 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	struct usb_tx_data_port *port;
- 	int i, j;
- 
--	if (!card || !card->adapter) {
--		pr_err("%s: card or card->adapter is NULL\n", __func__);
-+	if (!card) {
-+		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
- 		return 0;
- 	}
-+
-+	/* Might still be loading firmware */
-+	wait_for_completion(&card->fw_done);
-+
- 	adapter = card->adapter;
-+	if (!adapter) {
-+		dev_err(&intf->dev, "card is not valid\n");
-+		return 0;
-+	}
- 
- 	if (unlikely(adapter->is_suspended))
- 		mwifiex_dbg(adapter, WARN,
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
 -- 
-1.9.1
+1.7.9.5
