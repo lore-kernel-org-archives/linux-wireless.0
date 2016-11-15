@@ -1,79 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:32853 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755507AbcKJL5s (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34696 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752305AbcKOO6U (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2016 06:57:48 -0500
-Received: by mail-pf0-f196.google.com with SMTP id 144so3985854pfv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:57:48 -0800 (PST)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH RESEND v2 04/11] mwifiex: remove redundant pdev check in suspend/resume handlers
-Date: Thu, 10 Nov 2016 19:57:05 +0800
-Message-Id: <1478779032-5165-4-git-send-email-huxinming820@marvell.com> (sfid-20161110_125752_339051_60DA797D)
-In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
-References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+        Tue, 15 Nov 2016 09:58:20 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k_htc: fix minor mistakes in dev_err messages
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161031151247.18127-1-colin.king@canonical.com>
+References: <20161031151247.18127-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <b7cc9960ad9d4227bf4388d05a6d8dad@euamsexm01a.eu.qualcomm.com> (sfid-20161115_155847_791505_F78E8001)
+Date: Tue, 15 Nov 2016 15:58:11 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Add missing space in a dev_err message and join wrapped text so
+> it does not span multiple lines.  Fix spelling mistake on "unknown".
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-to_pci_dev() would just do struct offset arithmetic on struct
-device to get 'pdev' pointer. We never get NULL pdev pointer.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: Same as v1
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+14acebc33e6d ath9k_htc: fix minor mistakes in dev_err messages
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index c4bd64b..6152f08 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -117,14 +117,9 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		pr_err("Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
-@@ -162,14 +157,9 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pcie_service_card *card;
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
--	if (pdev) {
--		card = pci_get_drvdata(pdev);
--		if (!card || !card->adapter) {
--			pr_err("Card or adapter structure is not valid\n");
--			return 0;
--		}
--	} else {
--		pr_err("PCIE device is not specified\n");
-+	card = pci_get_drvdata(pdev);
-+	if (!card || !card->adapter) {
-+		dev_err(dev, "Card or adapter structure is not valid\n");
- 		return 0;
- 	}
- 
 -- 
-1.8.1.4
+https://patchwork.kernel.org/patch/9405663/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
