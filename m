@@ -1,117 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43534 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941355AbcKQLCc (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33965 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753990AbcKORbS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 06:02:32 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de,
-        prameela.garnepudi@redpinesignals.com
-Subject: Re: [PATCH 3/5] rsi: Added support for configuring tx power
-References: <1479125836-2722-1-git-send-email-prameela.j04cs@gmail.com>
-Date: Thu, 17 Nov 2016 13:02:22 +0200
-In-Reply-To: <1479125836-2722-1-git-send-email-prameela.j04cs@gmail.com>
-        (Prameela Rani Garnepudi's message of "Mon, 14 Nov 2016 17:47:16
-        +0530")
-Message-ID: <87eg2apdxd.fsf@purkki.adurom.net> (sfid-20161117_120254_960912_CAE1643D)
+        Tue, 15 Nov 2016 12:31:18 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g23so2220212wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 09:31:18 -0800 (PST)
+Subject: Re: [RFC 02/12] ath10k: htc: rx trailer lookahead support
+To: Michal Kazior <michal.kazior@tieto.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+ <1479141222-8493-3-git-send-email-erik.stromdahl@gmail.com>
+ <CA+BoTQkJqv28=Mg1ncmyznRo-CLh6Y_OW-mJ+YTyqaREaqp39Q@mail.gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <ac58b3f6-4432-b0b6-8b50-c733f898eded@gmail.com> (sfid-20161115_183123_062153_8F93B996)
+Date: Tue, 15 Nov 2016 18:31:15 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+BoTQkJqv28=Mg1ncmyznRo-CLh6Y_OW-mJ+YTyqaREaqp39Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-> TX power can be configured from iwconfig, iw or from mac80211 when
-> regulatory changes are done. Hence support for configuring tx power
-> to device is added. This can be done by sending RADIO_PARAMS_UPDATE
-> command frame to device with upated tx power value.
->
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-[...]
+On 11/15/2016 10:57 AM, Michal Kazior wrote:
+> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
+>> The RX trailer parsing is now capable of parsing lookahead reports.
+>> This is needed by SDIO/mbox.
+> 
+> It'd be useful to know what exactly lookahead will be used for. What
+> payload does it carry.
+> 
+It carries the 4 first bytes of the next RX message, i.e. the first 4
+bytes of an HTC header.
 
->  /* Send Frames Types */
->  enum cmd_frame_type {
-> -	TX_DOT11_MGMT,
-> -	RESET_MAC_REQ,
-> -	RADIO_CAPABILITIES,
-> -	BB_PROG_VALUES_REQUEST,
-> -	RF_PROG_VALUES_REQUEST,
-> -	WAKEUP_SLEEP_REQUEST,
-> -	SCAN_REQUEST,
-> -	TSF_UPDATE,
-> -	PEER_NOTIFY,
-> -	BLOCK_HW_QUEUE,
-> -	SET_KEY_REQ,
-> -	AUTO_RATE_IND,
-> -	BOOTUP_PARAMS_REQUEST,
-> -	VAP_CAPABILITIES,
-> -	EEPROM_READ_TYPE ,
-> -	EEPROM_WRITE,
-> -	GPIO_PIN_CONFIG ,
-> -	SET_RX_FILTER,
-> -	AMPDU_IND,
-> -	STATS_REQUEST_FRAME,
-> -	BB_BUF_PROG_VALUES_REQ,
-> -	BBP_PROG_IN_TA,
-> -	BG_SCAN_PARAMS,
-> -	BG_SCAN_PROBE_REQ,
-> -	CW_MODE_REQ,
-> -	PER_CMD_PKT
-> +	TX_DOT11_MGMT = 0,
-> +	RESET_MAC_REQ, /* 0x1 */
-> +	RADIO_CAPABILITIES, /* 0x2 */
-> +	BB_PROG_VALUES_REQUEST, /* 0x3 */
-> +	RF_PROG_VALUES_REQUEST, /* 0x4 */
-> +	WAKEUP_SLEEP_REQUEST, /* 0x5 */
-> +	SCAN_REQUEST, /* 0x6 */
-> +	TSF_UPDATE, /* 0x7 */
-> +	PEER_NOTIFY, /* 0x8 */
-> +	BLOCK_HW_QUEUE, /* 0x9 */
-> +	SET_KEY_REQ, /* 0xA */
-> +	AUTO_RATE_IND, /* 0xB */
-> +	BOOTUP_PARAMS_REQUEST, /* 0xC */
-> +	VAP_CAPABILITIES, /* 0xD */
-> +	EEPROM_READ_TYPE, /* 0xE */
-> +	EEPROM_WRITE, /* 0xF */
-> +	GPIO_PIN_CONFIG, /* 0x10 */
-> +	SET_RX_FILTER, /* 0x11 */
-> +	AMPDU_IND, /* 0x12 */
-> +	STATS_REQUEST, /* 0x13 */
-> +	BB_BUF_PROG_VALUES_REQ, /* 0x14 */
-> +	BBP_PROG_IN_TA, /* 0x15 */
-> +	BG_SCAN_PARAMS, /* 0x16 */
-> +	BG_SCAN_PROBE_REQ, /* 0x17 */
-> +	CW_MODE_REQ, /* 0x18 */
-> +	PER_CMD_PKT, /* 0x19 */
-> +	DEV_SLEEP_REQUEST, /* 0x1A */
-> +	DEV_WAKEUP_CNF,  /* 0x1B */
-> +	RF_LOOPBACK_REQ, /* 0x1C */
-> +	RF_LPBK_M3,  /* 0x1D */
-> +	RF_RESET_FRAME,  /* 0x1E */
-> +	LMAC_REG_OPS,  /* 0x1F */
-> +	ANT_SEL_FRAME, /* 0x20 */
-> +	CONFIRM, /* 0x21 */
-> +	WLAN_DE_REGISTER, /* 0x22 */
-> +	DEBUG_FRAME,  /* 0x23 */
-> +	HW_BMISS_HANDLE, /* 0x24 */
-> +	MULTICAST_ENABLE, /* 0x25 */
-> +	TX_MISC_IND, /* 0x26 */
-> +	VAP_DYNAMIC_UPDATE, /* 0x27 */
-> +	COMMON_DEV_CONFIG, /* 0x28 */
-> +	RADIO_PARAMS_UPDATE, /* 0x29 */
-> +	RADAR_REQUEST, /* 0x2A */
-> +	WOWLAN_CONFIG_PARAMS, /* 2B */
-> +	IAP_CONFIG, /* 0x2C */
->  };
+It is used by the sdio interrupt handler to know if the next packet is a
+part of an RX bundle, which endpoint it belongs to and how long it is
+(so we know how many bytes to allocate).
 
-Adding the values for enums is a separate logical change and makes it
-hard to see the real changes, so please do this in a separate patch.
+> 
+>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/htc.c |   91 ++++++++++++++++++++++++++++++++-
+>>  drivers/net/wireless/ath/ath10k/htc.h |   30 +++++++++--
+>>  2 files changed, 116 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+>> index 26b1e15..e3f7bf4 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htc.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htc.c
+>> @@ -228,10 +228,74 @@ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+>>         spin_unlock_bh(&htc->tx_lock);
+>>  }
+>>
+>> +static int
+>> +ath10k_htc_process_lookahead(struct ath10k_htc *htc,
+>> +                            const struct ath10k_htc_lookahead_report *report,
+>> +                            int len,
+>> +                            enum ath10k_htc_ep_id eid,
+>> +                            u32 *next_lk_ahds,
+> 
+> next_lk_ahds should be u8 or void. From what I understand by glancing
+> through the code it is an agnostic buffer that carries payload which
+> is later interpreted either as eid or htc header, right? void is
+> probably most suitable in this case for passing around and u8 for
+> inline-based storage.
+> 
+Sounds reasonable, I'll change to void pointer.
 
-But in overall your patches look now _much_ better, easy to review and
-basically what I expect to see. Keep up the good work.
+> I'd also avoid silly abbreviations. Probably "lookahead" alone is enough.
+> 
+Ok, this abbreviation was actually taken from the ath6kl code. I think
+the intention was to reduce line lengths.
 
--- 
-Kalle Valo
+>> +                            int *next_lk_ahds_len)
+>> +{
+>> +       struct ath10k *ar = htc->ar;
+>> +
+>> +       if (report->pre_valid != ((~report->post_valid) & 0xFF))
+>> +               /* Invalid lookahead flags are actually transmitted by
+>> +                * the target in the HTC control message.
+>> +                * Since this will happen at every boot we silently ignore
+>> +                * the lookahead in this case
+>> +                */
+> 
+> I'd put this comment before the if().
+
+Ok
+> 
+> 
+>> +               return 0;
+>> +
+>> +       if (next_lk_ahds && next_lk_ahds_len) {
+>> +               ath10k_dbg(ar, ATH10K_DBG_HTC,
+>> +                          "htc rx lk_ahd found pre_valid 0x%x post_valid 0x%x\n",
+>> +                          report->pre_valid, report->post_valid);
+>> +
+>> +               /* look ahead bytes are valid, copy them over */
+>> +               memcpy((u8 *)&next_lk_ahds[0], report->lk_ahd, 4);
+>> +
+>> +               *next_lk_ahds_len = 1;
+>> +       }
+>> +
+>> +       return 0;
+>> +}
+>> +
+>> +static int
+>> +ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
+>> +                                   const struct ath10k_htc_lookahead_report_bundle *report,
+>> +                                   int len,
+>> +                                   enum ath10k_htc_ep_id eid,
+>> +                                   u32 *next_lk_ahds,
+> 
+> Ditto. void.
+> 
+> 
+>> +                                   int *next_lk_ahds_len)
+>> +{
+>> +       int bundle_cnt = len / sizeof(*report);
+>> +
+>> +       if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
+>> +               WARN_ON(1);
+> 
+> This should be ath10k_warn() instead. This isn't internal driver flow
+> assertion. It is possible firmware bug or revision misalignment
+> instead.
+> 
+Ok
+
+> 
+>> +               return -EINVAL;
+>> +       }
+>> +
+>> +       if (next_lk_ahds && next_lk_ahds_len) {
+>> +               int i;
+>> +
+>> +               for (i = 0; i < bundle_cnt; i++) {
+>> +                       memcpy((u8 *)&next_lk_ahds[i], report->lk_ahd,
+>> +                              sizeof(u32));
+> 
+> You'll need to re-adjust the &x[i] to maintain proper offset with void pointer.
+> 
+> 
+> Michał
+> 
