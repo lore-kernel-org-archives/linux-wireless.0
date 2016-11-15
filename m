@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35098 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751015AbcKIFuk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 00:50:40 -0500
-Received: by mail-pf0-f194.google.com with SMTP id i88so22240936pfk.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 21:50:39 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Tue, 8 Nov 2016 21:50:33 -0800
-To: Luca Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Eran Harary <eran.harary@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Eyal Shapira <eyal@wizery.com>,
-        Alexander Bondar <alexander.bondar@intel.com>
-Subject: [PATCH v2 2/3] iwlwifi: mvm: rs: Remove unused 'mcs' variable
-Message-ID: <20161109055033.GA27470@google.com> (sfid-20161109_065044_926262_4B5ACF33)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:46980 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941393AbcKOJbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 04:31:32 -0500
+Message-ID: <1479202288.12007.25.camel@sipsolutions.net> (sfid-20161115_103145_088880_1D339265)
+Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
+ associated
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ashok Raj Nagarajan <arnagara@codeaurora.org>,
+        Ben Greear <greearb@candelatech.com>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Date: Tue, 15 Nov 2016 10:31:28 +0100
+In-Reply-To: <8908f6e7bb8ca043fbeb07ee8b004e8f@codeaurora.org>
+References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
+         <1467110918.2493.9.camel@sipsolutions.net>
+         <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org>
+         <1470043740.3389.10.camel@sipsolutions.net>
+         <579F4E4E.80103@candelatech.com>
+         <8908f6e7bb8ca043fbeb07ee8b004e8f@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 5fc0f76c4 introduced Rx stats from debugfs, the function
-iwl_mvm_reset_frame_stats from that commit defines and sets mcs but does not use
-it. Compiling iwlwifi with W=1 gives this warning -
 
-iwlwifi/mvm/rs.c: In function ‘iwl_mvm_update_frame_stats’:
-iwlwifi/mvm/rs.c:3074:14: warning: variable ‘mcs’ set but not used [-Wunused-but-set-variable]
+> In the case of manual intervention by user, the firmware will check 
+> three
+> values - regulatory domain, automatic tx power and user entered
+> value. 
+> System
+> will always cap to the minimum of these values and see to that we do
+> not 
+> exceed
+> the regulatory power limits.
 
-Fixes: 5fc0f76c43bd (iwlwifi: mvm: add Rx frames statistics via debugfs)
+Fair enough.
 
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
-Cc: Eyal Shapira <eyal@wizery.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> If there are no more comments I will resent this patch series after 
+> rebase.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 0b79f4a..80f99c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -3065,7 +3065,7 @@ static void iwl_mvm_reset_frame_stats(struct iwl_mvm *mvm)
- 
- void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
- {
--	u8 nss = 0, mcs = 0;
-+	u8 nss = 0;
- 
- 	spin_lock(&mvm->drv_stats_lock);
- 
-@@ -3093,11 +3093,9 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
- 
- 	if (rate & RATE_MCS_HT_MSK) {
- 		mvm->drv_rx_stats.ht_frames++;
--		mcs = rate & RATE_HT_MCS_RATE_CODE_MSK;
- 		nss = ((rate & RATE_HT_MCS_NSS_MSK) >> RATE_HT_MCS_NSS_POS) + 1;
- 	} else if (rate & RATE_MCS_VHT_MSK) {
- 		mvm->drv_rx_stats.vht_frames++;
--		mcs = rate & RATE_VHT_MCS_RATE_CODE_MSK;
- 		nss = ((rate & RATE_VHT_MCS_NSS_MSK) >>
- 		       RATE_VHT_MCS_NSS_POS) + 1;
- 	} else {
--- 
-2.8.0.rc3.226.g39d4020
+I suspect we should also have some kind of capability for all of this,
+so it can be used reliably?
+
+johannes
