@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45726 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753431AbcK3RuF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 12:50:05 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
-        briselec@gmail.com
-Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not reconnecting
-References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
-        <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
-        <1480514067.29540.54.camel@coelho.fi> <wrfja8ch6l1o.fsf@redhat.com>
-        <87inr4ubc2.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 30 Nov 2016 12:40:11 -0500
-In-Reply-To: <87inr4ubc2.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 30 Nov 2016 19:27:57 +0200")
-Message-ID: <wrfjeg1s6f44.fsf@redhat.com> (sfid-20161130_185008_920960_DFB7589C)
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:33618 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941543AbcKOK2k (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 15 Nov 2016 05:28:40 -0500
+Received: by mail-wm0-f42.google.com with SMTP id c184so21633319wmd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 02:28:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1479141222-8493-7-git-send-email-erik.stromdahl@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> <1479141222-8493-7-git-send-email-erik.stromdahl@gmail.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 15 Nov 2016 11:28:38 +0100
+Message-ID: <CA+BoTQ=jSun0Je6sVsZz-SaiDA6+nZxSTJF_5OH0unPkjm1gvw@mail.gmail.com> (sfid-20161115_112844_343522_C3225E89)
+Subject: Re: [RFC 06/12] ath10k: bmi: Added SOC reg read/write functions
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
+te:
+> Added functions implementing the following BMI commands:
 >
->> Luca Coelho <luca@coelho.fi> writes:
->>> On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
->>>> Jes.Sorensen@redhat.com writes:
->>>> 
->>>> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>>> > 
->>>> > Hi,
->>>> > 
->>>> > This patch works around the issue with 8192eu and 8723bu devices not
->>>> > being able to reconnect. It is still not clear why this fails, and
->>>> > looking at rtlwifi it does issue the command for 8192ee and 8723be
->>>> > devices.
->>>> > 
->>>> > Until we have a better idea of what is going on, I have commented out
->>>> > the offending code. I prefer not deleting it until we have a better
->>>> > understanding of why this is causing issues.
->>>> > 
->>>> > Credits to Barry Day for tracking down and isolating the issue.
->>>> > 
->>>> > Kalle, not sure if this can make it to 4.9, but if it's possible it
->>>> > would be ideal since this is causing real issues in the field.
->>>> 
->>>> For 4.9 this is too late, sorry. I'll queue this to 4.10.
->>>
->>> You should then CC stable so it gets into 4.9.x when it reaches 4.10.
->>
->> Yeah good idea - Kalle do you want me to repost it with the CC line or
->> are you happy to add it?
+> BMI_READ_SOC_REGISTER
+> BMI_WRITE_SOC_REGISTER
 >
-> I can add it. To which stable releases should this go to?
+> Reading and writing BMI registers is sometimes needed for
+> SDIO chipsets.
 
-Lets target 4.8 and 4.9 - I just verified it applies against 4.8.
+I didn't see ath10k_bmi_write_soc_reg nor ath10k_bmi_read_soc_reg
+being used in your Patch 12. Is this patch really necessary?
 
-Thanks,
-Jes
+
+[...]
+> diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless=
+/ath/ath10k/bmi.c
+> index 2872d34..1c378a2 100644
+> --- a/drivers/net/wireless/ath/ath10k/bmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/bmi.c
+> @@ -97,7 +97,8 @@ int ath10k_bmi_read_memory(struct ath10k *ar,
+>         u32 rxlen;
+>         int ret;
+>
+> -       ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi read address 0x%x length %d\n=
+",
+> +       ath10k_dbg(ar, ATH10K_DBG_BMI,
+> +                  "bmi read memory address 0x%x length %d\n",
+>                    address, length);
+>
+>         if (ar->bmi.done_sent) {
+> @@ -137,7 +138,8 @@ int ath10k_bmi_write_memory(struct ath10k *ar,
+>         u32 txlen;
+>         int ret;
+>
+> -       ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi write address 0x%x length %d\=
+n",
+> +       ath10k_dbg(ar, ATH10K_DBG_BMI,
+> +                  "bmi write memory address 0x%x length %d\n",
+>                    address, length);
+>
+
+These 2 hunks shouldn't be modified in this patch. If you want to do a
+clean up this warrants a separate patch :)
+
+
+Micha=C5=82
