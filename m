@@ -1,204 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34513 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751058AbcKFCIv (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:33379 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935544AbcKOOxg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 5 Nov 2016 22:08:51 -0400
-Received: by mail-wm0-f65.google.com with SMTP id p190so10149624wmp.1
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Nov 2016 19:08:50 -0700 (PDT)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/3][RFC] mac80211: Pass new RSSI level in CQM RSSI notification
-Date: Sun,  6 Nov 2016 03:08:31 +0100
-Message-Id: <1478398113-14966-2-git-send-email-andrew.zaborowski@intel.com> (sfid-20161106_030855_644786_EC04C496)
-In-Reply-To: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
-References: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
+        Tue, 15 Nov 2016 09:53:36 -0500
+Received: by mail-qk0-f174.google.com with SMTP id x190so137632030qkb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 06:53:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87polwq2nq.fsf@kamboji.qca.qualcomm.com>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
+ <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
+ <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
+ <87twbnueqv.fsf@kamboji.qca.qualcomm.com> <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
+ <871syn5fnb.fsf@qca.qualcomm.com> <CABUTiXV8eFsW4MJET4spvjVQvFgi66NV7hLLxFC6Ttqs1znxjA@mail.gmail.com>
+ <87polwq2nq.fsf@kamboji.qca.qualcomm.com>
+From: Bruno Antunes <baantunes@gmail.com>
+Date: Tue, 15 Nov 2016 14:53:14 +0000
+Message-ID: <CABUTiXXKm0k56M4LcxegwNgr+91SF+mX4tniHxJ5ViPy91HGhA@mail.gmail.com> (sfid-20161115_155339_861841_99425D69)
+Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        voncken <cedric.voncken@acksys.fr>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Ben Greear <greearb@candelatech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
- drivers/net/wireless/st/cw1200/sta.c        |  2 +-
- drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
- drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
- include/net/mac80211.h                      |  2 ++
- net/mac80211/mlme.c                         |  7 ++++---
- net/mac80211/trace.h                        | 11 +++++++----
- 8 files changed, 21 insertions(+), 12 deletions(-)
+On 15 November 2016 at 13:43, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Bruno Antunes <baantunes@gmail.com> writes:
+>
+>> On 7 November 2016 at 18:06, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>>> Bruno Antunes <baantunes@gmail.com> writes:
+>>>
+>>>> On 4 November 2016 at 21:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>>>>
+>>>>> Can someone file a bug to bugzilla about this so that all the info is
+>>>>> properly stored? The more comprehensive the report is the better.
+>>>>>
+>>>>> https://bugzilla.kernel.org/
+>>>>
+>>>> I will file a bug report.
+>>>
+>>> Thanks, it's good to store all in one place so that it's easier to find
+>>> the relevant info.
+>>
+>> Just file the bug with the ID 187241 - VLAN support in ATH10k Feel
+>> free to ask for adicional info. I did not mention any names in the bug
+>> report fell free to take credit if wanted.
+>
+> Thanks. I'll report it to the firmware team, let's see what happens. If
+> there's more information which might help to fix this feel free to
+> update that to the bug report.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 0e60e38..e06a2e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+			sig,
- 			GFP_KERNEL);
- 	} else if (sig > thold &&
- 		   (last_event == 0 || sig > last_event + hyst)) {
-@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+			sig,
- 			GFP_KERNEL);
- 	}
- }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..3e260b4 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -818,7 +818,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
- 
- 	common->cqm_info.last_cqm_event_rssi = rssi;
- 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
--	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
-+	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
- 
- 	return;
- }
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index daf06a4..a522248 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
- 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
--			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
-+			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
- 						  GFP_KERNEL);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index d0593bc..f5acd24 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 
- 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
-@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 4b59f67..f2e90d2 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
- 
- 		vif = wl12xx_wlvif_to_vif(wlvif);
- 		if (event != wlvif->last_rssi_event)
--			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
-+			ieee80211_cqm_rssi_notify(vif, event, metric,
-+						  GFP_KERNEL);
- 		wlvif->last_rssi_event = event;
- 	}
- }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a810dfc..33026e1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5244,6 +5244,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @rssi_event: the RSSI trigger event type
-+ * @rssi_level: new RSSI level value or 0 if not available
-  * @gfp: context flags
-  *
-  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
-@@ -5252,6 +5253,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  */
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp);
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7486f2d..a55cdd7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3405,14 +3405,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		} else if (sig > thold &&
- 			   (last_event == 0 || sig > last_event + hyst)) {
- 			ifmgd->last_cqm_event_signal = sig;
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		}
- 	}
- 
-@@ -5000,11 +5000,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 
--	trace_api_cqm_rssi_notify(sdata, rssi_event);
-+	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
- 
- 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
- }
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 92a47af..f78d9f4 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
- 
- TRACE_EVENT(api_cqm_rssi_notify,
- 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
--		 enum nl80211_cqm_rssi_threshold_event rssi_event),
-+		 enum nl80211_cqm_rssi_threshold_event rssi_event,
-+		 s32 rssi_level),
- 
--	TP_ARGS(sdata, rssi_event),
-+	TP_ARGS(sdata, rssi_event, rssi_level),
- 
- 	TP_STRUCT__entry(
- 		VIF_ENTRY
- 		__field(u32, rssi_event)
-+		__field(s32, rssi_level)
- 	),
- 
- 	TP_fast_assign(
- 		VIF_ASSIGN;
- 		__entry->rssi_event = rssi_event;
-+		__entry->rssi_level = rssi_level;
- 	),
- 
- 	TP_printk(
--		VIF_PR_FMT " event:%d",
--		VIF_PR_ARG, __entry->rssi_event
-+		VIF_PR_FMT " event:%d rssi:%d",
-+		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
- 	)
- );
- 
--- 
-2.7.4
+I'm finishing my tests and will update the bug report ASAP.
+
+Turns out the bad throughput was the result of a failure in the switch port.
+
+With Ben's firmware the VLAN support is working fine with security.
+
+Thanks,
+Bruno
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=187241
+>
+> --
+> Kalle Valo
