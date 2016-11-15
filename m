@@ -1,71 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:35062 "EHLO
-        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754324AbcKBO2A (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64622 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938657AbcKOOgZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 10:28:00 -0400
-Received: by mail-oi0-f47.google.com with SMTP id x4so18451490oix.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2016 07:27:59 -0700 (PDT)
+        Tue, 15 Nov 2016 09:36:25 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Matteo Grandi <iu5bdp@gmail.com>
-Date: Wed, 2 Nov 2016 15:27:58 +0100
-Message-ID: <CAHdg3xa1uOuBoncz5YwLRmC-HWMsuVmNkWoPB=0tWavcpWNkgQ@mail.gmail.com> (sfid-20161102_152803_373525_879FEE3C)
-Subject: ath10k and compex WLE600V5-27
-To: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCHv2,1/2] ath10k: add per peer htt tx stats support for 10.4
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1476783085-10724-2-git-send-email-akolli@qti.qualcomm.com>
+References: <1476783085-10724-2-git-send-email-akolli@qti.qualcomm.com>
+To: <akolli@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <82cc2d18b1e747068ea6a10ca47b212a@euamsexm01a.eu.qualcomm.com> (sfid-20161115_153654_799160_F3A61036)
+Date: Tue, 15 Nov 2016 15:36:12 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello all,
-I'm using two WiFi module Compex WLE600V5-27
-http://www.compex.com.sg/product/wle600v5-27/
-capable of 2x2 MIMO on two boards (Gateworks ventana 5410) using ath10k drivers.
-The chipset is the Qualcomm-Atheros QCA9882 but I didn't find a
-firmware for this chipset, so I'm using the QCA988X.
-Everithing worked fine until I tried to plug 2 antennas in both cards
-in order to make some data-rate tests. Even if there are two antennas
-plugged in, there aren't any changes in the data-rate measured between
-using one or two antennas. Sniffing the channel I sow that the Number
-of STBC streams is 1 and iw list shows that only 1 spatial stream is
-supported (but the card is capable of managing 2 spatial streams):
+akolli@qti.qualcomm.com wrote:
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> 
+> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
+> event, Firmware sends one HTT event for every four PPDUs.
+> HTT payload has success pkts/bytes, failed pkts/bytes, retry
+> pkts/bytes and rate info per ppdu.
+> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
+> which are nowadays enabled by default.
+> 
+> Parse peer stats and update the tx rate information per STA.
+> 
+> tx rate, Peer stats are tested on QCA4019 with Firmware version
+> 10.4-3.2.1-00028.
+> 
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Wiphy phy0
-    Band 1:
-        Capabilities: 0x19e3
-            RX LDPC
-            HT20/HT40
-            Static SM Power Save
-            RX HT20 SGI
-            RX HT40 SGI
-            TX STBC
-            RX STBC 1-stream
-            Max AMSDU length: 7935 bytes
-            DSSS/CCK HT40
-        Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-        Minimum RX AMPDU time spacing: 8 usec (0x06)
-        HT TX/RX MCS rate indexes supported: 0-15
-        Frequencies:
-            * 5180 MHz [36] (17.0 dBm)
-            * 5200 MHz [40] (17.0 dBm)
-...
+I see a new sparse warning:
 
-    Available Antennas: TX 0x3 RX 0x3
-    Configured Antennas: TX 0x3 RX 0x3
-    Supported interface modes:
-         * managed
-         * AP
-         * AP/VLAN
-         * monitor
-         * mesh point
+drivers/net/wireless/ath/ath10k/htt_rx.c:2290:17: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/ath/ath10k/htt_rx.c:2290:17:    expected int [signed] peer_id
+drivers/net/wireless/ath/ath10k/htt_rx.c:2290:17:    got restricted __le16 [usertype] peer_id
 
+2 patches set to Changes Requested.
 
-I tried the tests both on channel 48 HT40- and 149 HT40+.
-The RSSI measured with iw station dump lays around -40dBm
+9381691 [PATCHv2,1/2] ath10k: add per peer htt tx stats support for 10.4
+9381693 [PATCHv2,2/2] ath10k: add support for per sta tx bitrate
 
-Is it an issue related to the firmware in use?
-Or maybe there aren't the right conditions to have MIMO working?
+-- 
+https://patchwork.kernel.org/patch/9381691/
 
-Thanks in advence
-All the best
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Matteo
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
