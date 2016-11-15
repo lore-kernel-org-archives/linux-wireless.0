@@ -1,193 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f196.google.com ([209.85.210.196]:35994 "EHLO
-        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933319AbcK3MDg (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33547 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751599AbcKOSeb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 07:03:36 -0500
-Received: by mail-wj0-f196.google.com with SMTP id jb2so21894113wjb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 04:03:35 -0800 (PST)
-From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] net: rfkill: Add rfkill-any LED trigger
-Date: Wed, 30 Nov 2016 13:03:17 +0100
-Message-Id: <20161130120317.11851-2-kernel@kempniu.pl> (sfid-20161130_130439_581427_87D5A971)
-In-Reply-To: <20161130120317.11851-1-kernel@kempniu.pl>
-References: <20161130120317.11851-1-kernel@kempniu.pl>
+        Tue, 15 Nov 2016 13:34:31 -0500
+Received: by mail-wm0-f65.google.com with SMTP id u144so2828486wmu.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 10:34:30 -0800 (PST)
+Subject: Re: [RFC 10/12] ath10k: Added QCA65XX hw definition
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+ <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com>
+ <CA+BoTQmcyVQDOd2o0YDvepuLbSz76p8hetrWA6mWJeGxvbM8iQ@mail.gmail.com>
+ <87wpg5qai1.fsf@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+Message-ID: <0c1172f0-2e3b-6147-646c-adb98b9ea3b7@gmail.com> (sfid-20161115_193434_902538_93494DC1)
+Date: Tue, 15 Nov 2016 19:34:28 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87wpg5qai1.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new "global" (i.e. not per-rfkill device) LED trigger,
-rfkill-any, which may be useful for laptops with a single "radio LED"
-and multiple radio transmitters.  The trigger is meant to turn a LED on
-whenever there is at least one radio transmitter active and turn it off
-otherwise.
 
-Signed-off-by: Michał Kępień <kernel@kempniu.pl>
----
-Note that the search for any active radio will have quadratic complexity
-whenever __rfkill_switch_all() is used (as it calls rfkill_set_block()
-for every affected rfkill device), but I intentionally refrained from
-implementing rfkill_any_led_trigger_event() using struct work_struct to
-keep things simple, given the average number of rfkill devices in
-hardware these days.  Please let me know in case this should be
-reworked.
 
- net/rfkill/core.c | 73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 73 insertions(+)
+On 11/15/2016 11:54 AM, Valo, Kalle wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+> 
+>> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
+>>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/ath/ath10k/hw.h |    1 +
+>>>  1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+>>> index 46142e9..ef45ecf 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/hw.h
+>>> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+>>> @@ -224,6 +224,7 @@ enum ath10k_hw_rev {
+>>>         ATH10K_HW_QCA9377,
+>>>         ATH10K_HW_QCA4019,
+>>>         ATH10K_HW_QCA9887,
+>>> +       ATH10K_HW_QCA65XX,
+>>
+>> Are you 100% positive that you're supporting all QCA65XX chips? The
+>> rule of thumb is to avoid Xs as much as possible unless totally
+>> perfectly completely sure.
+> 
+I admit that I am definitely not totally perfectly completely sure about
+this :)
+In fact, I don't have a clue what does numbers really mean. All I know
+is that the chipset I am using is called QCA6584 which I think is an
+automotive version of another chipses called QCA6574. I have tried to
+google these numbers up, but it is really hard to find anything useful.
+So I thought, hey, why don't I just add a few X'es in there and I have
+support for both!
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index f28e441..5275f2f 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -176,6 +176,47 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
- {
- 	led_trigger_unregister(&rfkill->led_trigger);
- }
-+
-+static struct led_trigger rfkill_any_led_trigger;
-+
-+static void __rfkill_any_led_trigger_event(void)
-+{
-+	enum led_brightness brightness = LED_OFF;
-+	struct rfkill *rfkill;
-+
-+	list_for_each_entry(rfkill, &rfkill_list, node) {
-+		if (!(rfkill->state & RFKILL_BLOCK_ANY)) {
-+			brightness = LED_FULL;
-+			break;
-+		}
-+	}
-+
-+	led_trigger_event(&rfkill_any_led_trigger, brightness);
-+}
-+
-+static void rfkill_any_led_trigger_event(void)
-+{
-+	mutex_lock(&rfkill_global_mutex);
-+	__rfkill_any_led_trigger_event();
-+	mutex_unlock(&rfkill_global_mutex);
-+}
-+
-+static void rfkill_any_led_trigger_activate(struct led_classdev *led_cdev)
-+{
-+	rfkill_any_led_trigger_event();
-+}
-+
-+static int rfkill_any_led_trigger_register(void)
-+{
-+	rfkill_any_led_trigger.name = "rfkill-any";
-+	rfkill_any_led_trigger.activate = rfkill_any_led_trigger_activate;
-+	return led_trigger_register(&rfkill_any_led_trigger);
-+}
-+
-+static void rfkill_any_led_trigger_unregister(void)
-+{
-+	led_trigger_unregister(&rfkill_any_led_trigger);
-+}
- #else
- static void rfkill_led_trigger_event(struct rfkill *rfkill)
- {
-@@ -189,6 +230,19 @@ static inline int rfkill_led_trigger_register(struct rfkill *rfkill)
- static inline void rfkill_led_trigger_unregister(struct rfkill *rfkill)
- {
- }
-+
-+static void rfkill_any_led_trigger_event(void)
-+{
-+}
-+
-+static int rfkill_any_led_trigger_register(void)
-+{
-+	return 0;
-+}
-+
-+static void rfkill_any_led_trigger_unregister(void)
-+{
-+}
- #endif /* CONFIG_RFKILL_LEDS */
- 
- static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
-@@ -297,6 +351,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
- 	spin_unlock_irqrestore(&rfkill->lock, flags);
- 
- 	rfkill_led_trigger_event(rfkill);
-+	__rfkill_any_led_trigger_event();
- 
- 	if (prev != curr)
- 		rfkill_event(rfkill);
-@@ -477,6 +532,7 @@ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
- 	spin_unlock_irqrestore(&rfkill->lock, flags);
- 
- 	rfkill_led_trigger_event(rfkill);
-+	rfkill_any_led_trigger_event();
- 
- 	if (!rfkill->registered)
- 		return ret;
-@@ -523,6 +579,7 @@ bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
- 		schedule_work(&rfkill->uevent_work);
- 
- 	rfkill_led_trigger_event(rfkill);
-+	rfkill_any_led_trigger_event();
- 
- 	return blocked;
- }
-@@ -572,6 +629,7 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
- 			schedule_work(&rfkill->uevent_work);
- 
- 		rfkill_led_trigger_event(rfkill);
-+		rfkill_any_led_trigger_event();
- 	}
- }
- EXPORT_SYMBOL(rfkill_set_states);
-@@ -988,6 +1046,7 @@ int __must_check rfkill_register(struct rfkill *rfkill)
- #endif
- 	}
- 
-+	__rfkill_any_led_trigger_event();
- 	rfkill_send_events(rfkill, RFKILL_OP_ADD);
- 
- 	mutex_unlock(&rfkill_global_mutex);
-@@ -1020,6 +1079,7 @@ void rfkill_unregister(struct rfkill *rfkill)
- 	mutex_lock(&rfkill_global_mutex);
- 	rfkill_send_events(rfkill, RFKILL_OP_DEL);
- 	list_del_init(&rfkill->node);
-+	__rfkill_any_led_trigger_event();
- 	mutex_unlock(&rfkill_global_mutex);
- 
- 	rfkill_led_trigger_unregister(rfkill);
-@@ -1278,8 +1338,18 @@ static int __init rfkill_init(void)
- 		goto error_input;
- #endif
- 
-+#ifdef CONFIG_RFKILL_LEDS
-+	error = rfkill_any_led_trigger_register();
-+	if (error)
-+		goto error_led_trigger;
-+#endif
-+
- 	return 0;
- 
-+error_led_trigger:
-+#ifdef CONFIG_RFKILL_INPUT
-+	rfkill_handler_exit();
-+#endif
- error_input:
- 	misc_deregister(&rfkill_miscdev);
- error_misc:
-@@ -1291,6 +1361,9 @@ subsys_initcall(rfkill_init);
- 
- static void __exit rfkill_exit(void)
- {
-+#ifdef CONFIG_RFKILL_LEDS
-+	rfkill_any_led_trigger_unregister();
-+#endif
- #ifdef CONFIG_RFKILL_INPUT
- 	rfkill_handler_exit();
- #endif
--- 
-2.10.2
+> But the thing is that nobody can't be absolutely sure as we never know
+> what marketing comes up within few years again. So I would say that XX
+> in chip names should be completely avoided to avoid any confusion. We
+> already suffer from this in ath10k with QCA988X and QCA9888 which are
+> different designs but the names overlap.
+> 
+> I haven't reviewed Erik's patches yet but I'm surprised why even a new
+> enum value is needed here. I was assuming we could use ATH10K_HW_QCA6174
+> because AFAIK they share the same design. Any particular reason for
+> this?
+> 
+The reason for this was that the switch(hw_rev)-statement in
+ath10k_core_create assigns ar->regs and ar->hw_values to structures
+containing values that are not applicable for SDIO. I though that I
+would potentially need other structures, but after investigating the
+qca6174_regs struct, it seems that the values that are applicable for
+SDIO are the same.
+I will remove this enum and use ATH10K_HW_QCA6174 instead as you
+propose. If for some reason I would need other regs and hw_values
+structs in the future, we can figure out appropriate names then.
