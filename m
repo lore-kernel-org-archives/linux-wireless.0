@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:53876 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751495AbcKRIuH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:56335 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752988AbcKOO5A (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 03:50:07 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: Re: [PATCH 0/7] Fix -Wunused-but-set-variable in mwifiex/
-Date: Fri, 18 Nov 2016 09:49:53 +0100
-Message-ID: <5402325.TthllWe10s@wuerfel> (sfid-20161118_095010_427824_4DD199EB)
-In-Reply-To: <cover.1479458373.git.kirtika@google.com>
-References: <cover.1479458373.git.kirtika@google.com>
+        Tue, 15 Nov 2016 09:57:00 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: [v8,
+ 1/3] Documentation: dt: net: add ath9k wireless device binding
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161016205907.19927-2-martin.blumenstingl@googlemail.com>
+References: <20161016205907.19927-2-martin.blumenstingl@googlemail.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: <ath9k-devel@lists.ath9k.org>, <devicetree@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <robh+dt@kernel.org>, <mcgrof@do-not-panic.com>,
+        <mark.rutland@arm.com>, <kvalo@codeaurora.org>,
+        <chunkeey@googlemail.com>, <arend.vanspriel@broadcom.com>,
+        <julian.calaby@gmail.com>, <bjorn@mork.no>,
+        <linux@rempel-privat.de>, <nbd@nbd.name>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Message-ID: <cfd35a091551410cb69f2444109d3193@euamsexm01a.eu.qualcomm.com> (sfid-20161115_155705_794591_63C5BEC6)
+Date: Tue, 15 Nov 2016 15:56:47 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, November 18, 2016 12:43:22 AM CET Kirtika Ruchandani wrote:
-> This patchset is part of the effort led by Arnd Bergmann to clean up
-> warnings in the kernel. This and following patchsets will focus on
-> "-Wunused-but-set-variable" as it among the noisier ones. These were
-> found compiling with W=1.
- 
-All seven patches look good to me, nice cleanup! 
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> wrote:
+> Add documentation how devicetree can be used to configure ath9k based
+> devices.
+> 
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> Acked-by: Rob Herring <robh@kernel.org>
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+3 patches applied to ath-next branch of ath.git, thanks.
+
+fc383ffdb91a Documentation: dt: net: add ath9k wireless device binding
+b40ded2ad75c ath9k: add a helper to get the string representation of ath_bus_type
+138b41253d9c ath9k: parse the device configuration from an OF node
+
+-- 
+https://patchwork.kernel.org/patch/9378317/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
