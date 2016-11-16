@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45364 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751981AbcKOPGJ (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48409 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932808AbcKPP1Q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 10:06:09 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 16 Nov 2016 10:27:16 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "briannorris@google.com" <briannorris@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v2 5/5] mwifiex: wait firmware dump complete during card
+ remove process
+Date: Wed, 16 Nov 2016 15:27:11 +0000
+Message-ID: <2048af37ed4240ae86fd9f547259bf7b@SC-EXCH04.marvell.com> (sfid-20161116_162720_589899_324CFA24)
+References: <1477559563-18328-1-git-send-email-akarwar@marvell.com>
+ <1477559563-18328-5-git-send-email-akarwar@marvell.com>
+ <20161027184851.GB28717@localhost>
+In-Reply-To: <20161027184851.GB28717@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [v3,1/2] ath10k: clean up HTT tx buffer allocation and free
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1476278778-4253-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1476278778-4253-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <b46170abfbc548458e6be817f9d31079@euamsexm01a.eu.qualcomm.com> (sfid-20161115_160612_881361_FF14E2EA)
-Date: Tue, 15 Nov 2016 16:06:02 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Hi Brian,
+
+> > +
+> >  static int
+> >  mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct
+> sk_buff *skb,
+> >  		       size_t size, int flags)
+> > @@ -249,6 +252,8 @@ static void mwifiex_pcie_remove(struct pci_dev
+> *pdev)
+> >  	if (!adapter || !adapter->priv_num)
+> >  		return;
+> >
+> > +	cancel_work_sync(&pcie_work);
 > 
-> cleanup 'ath10k_htt_tx_alloc' by introducing the API's
-> 'ath10k_htt_tx_alloc/free_{cont_txbuf, txdone_fifo} and
-> re-use them whereever needed
+> Hmm, actually what happens if we have !adapter? Then that means we've
+> already torn down the device (e.g., unregister_dev() -- except we
+> haven't quite fixed that bug, see the other patch series you sent out),
+> and so we'll never reach this. But that also means we haven't
+> synchronized any outstanding work.
+
+There won't be any outstanding work in that case where init failure thread has already cleared "adapter"
+
+Pcie/sdio Work(firmware dump + card reset) is scheduled in below two scenarios
+1) Command timeout -- We have a check to skip triggering work when hw_status shows it's INITIALIZING. 
+2) Tx data timeout -- Tx data is applicable only when wifi connection is alive. In above mentioned case, device itself has failed to initialize.
+
 > 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> So this really belongs in one of the earlier mwifiex callbacks
+> (unregister_dev()?), and not in the device remove() callback.
+> 
 
-2 patches applied to ath-next branch of ath.git, thanks.
-
-19f338c6eb0c ath10k: clean up HTT tx buffer allocation and free
-f004e532a80a ath10k: remove extraneous error message in tx alloc
-
--- 
-https://patchwork.kernel.org/patch/9373055/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Amitkumar
