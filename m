@@ -1,98 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34989 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754303AbcKJL6D (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 10 Nov 2016 06:58:03 -0500
-Received: by mail-pf0-f195.google.com with SMTP id i88so3963286pfk.2
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Nov 2016 03:58:03 -0800 (PST)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH RESEND v2 09/11] mwifiex: sdio: don't check for NULL sdio_func
-Date: Thu, 10 Nov 2016 19:57:10 +0800
-Message-Id: <1478779032-5165-9-git-send-email-huxinming820@marvell.com> (sfid-20161110_125817_602808_C2FD6C56)
-In-Reply-To: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
-References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
+Received: from mail-by2nam01on0049.outbound.protection.outlook.com ([104.47.34.49]:4560
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751263AbcKPQvG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Nov 2016 11:51:06 -0500
+Subject: Re: [PATCH V3] qtnfmac: announcement of new FullMAC driver for
+ Quantenna chipsets
+To: <linux-wireless@vger.kernel.org>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478700000-11624-2-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1479117120.9766.8.camel@sipsolutions.net>
+ <62102ba6-cae0-f00d-f989-3f2e9ea43d9b@quantenna.com>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <c6655668-f433-c784-0098-a94a61874e43@quantenna.com> (sfid-20161116_175111_132947_47E19850)
+Date: Wed, 16 Nov 2016 19:50:56 +0300
+MIME-Version: 1.0
+In-Reply-To: <62102ba6-cae0-f00d-f989-3f2e9ea43d9b@quantenna.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+Resending because previous attempt was rejected by vger.kernel.org
 
-sdio_func is retrieved via container_of() and should never be NULL.
-Checking for NULL just makes the logic more confusing than necessary.
-Stop doing that.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v2: Same as v1
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 40 +++++++++++------------------
- 1 file changed, 15 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 4c4b012..bee7326 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -190,15 +190,10 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	struct mwifiex_adapter *adapter;
- 	mmc_pm_flag_t pm_flag = 0;
- 
--	if (func) {
--		pm_flag = sdio_get_host_pm_caps(func);
--		card = sdio_get_drvdata(func);
--		if (!card || !card->adapter) {
--			pr_err("resume: invalid card or adapter\n");
--			return 0;
--		}
--	} else {
--		pr_err("resume: sdio_func is not specified\n");
-+	pm_flag = sdio_get_host_pm_caps(func);
-+	card = sdio_get_drvdata(func);
-+	if (!card || !card->adapter) {
-+		dev_err(dev, "resume: invalid card or adapter\n");
- 		return 0;
- 	}
- 
-@@ -274,23 +269,18 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 	mmc_pm_flag_t pm_flag = 0;
- 	int ret = 0;
- 
--	if (func) {
--		pm_flag = sdio_get_host_pm_caps(func);
--		pr_debug("cmd: %s: suspend: PM flag = 0x%x\n",
--			 sdio_func_id(func), pm_flag);
--		if (!(pm_flag & MMC_PM_KEEP_POWER)) {
--			pr_err("%s: cannot remain alive while host is"
--				" suspended\n", sdio_func_id(func));
--			return -ENOSYS;
--		}
-+	pm_flag = sdio_get_host_pm_caps(func);
-+	pr_debug("cmd: %s: suspend: PM flag = 0x%x\n",
-+		 sdio_func_id(func), pm_flag);
-+	if (!(pm_flag & MMC_PM_KEEP_POWER)) {
-+		dev_err(dev, "%s: cannot remain alive while host is"
-+			" suspended\n", sdio_func_id(func));
-+		return -ENOSYS;
-+	}
- 
--		card = sdio_get_drvdata(func);
--		if (!card) {
--			dev_err(dev, "suspend: invalid card\n");
--			return 0;
--		}
--	} else {
--		pr_err("suspend: sdio_func is not specified\n");
-+	card = sdio_get_drvdata(func);
-+	if (!card) {
-+		dev_err(dev, "suspend: invalid card\n");
- 		return 0;
- 	}
- 
--- 
-1.8.1.4
+On 11/16/2016 06:04 PM, IgorMitsyanko wrote:
+> On 11/14/2016 12:52 PM, Johannes Berg wrote:
+>>> +++ b/drivers/net/wireless/quantenna/qtnfmac/Kconfig
+>>> @@ -0,0 +1,23 @@
+>>> +config QTNFMAC
+>>> +	tristate "Quantenna WiFi FullMAC WLAN driver"
+>>> +	default n
+>> No need to state that default explicitly, but it also doesn't really
+>> matter.
+>>
+>>> +	  it as a module, it will be called qtnfmac_pearl_pcie.ko.
+>> Where did the "pearl" come from? You didn't mention that in the commit
+>> log.
+>
+> Module name was changed to address future support for another device. 
+> And I forgot to modify commit message accordingly.
+>
+>> Also, are you planning to add any other things to this soon? It seems
+>> to me that perhaps the PCIe option should be the only one that's user-
+>> visible, selecting the other one internally?
+>
+> Yes, I think it actually makes sense; another option is useless 
+> without PCIe anyway.
+>
+>>> +	struct qtnf_bus_ops *bus_ops;
+>> You should make that const and actually make all instances const, it's
+>> better for security :)
+>
+> Ok, will review this and add const where possible.
+>
+>>> +/* Supported crypto cipher suits to be advertised to cfg80211 */
+>>> +static const u32 qtnf_cipher_suites[] = {
+>>> +	WLAN_CIPHER_SUITE_TKIP,
+>>> +	WLAN_CIPHER_SUITE_CCMP,
+>>> +	WLAN_CIPHER_SUITE_AES_CMAC,
+>>> +};
+>> I'm surprised - no WEP? No CMAC and GCMP/GMAC?
+>
+> For now we only advertise suits that we actually verified; HW supports 
+> CCMP/GCMP-128/256 which we plan to enable in followup patches.
+> For WEP support, company decision was to drop WEP support from SW 
+> altogether since it does not provide security anyway, and we can reuse 
+> HW resources to support more clients instead.
+>
+>>
+>>> +static int
+>>> +qtnf_change_virtual_intf(struct wiphy *wiphy,
+>>> +			 struct net_device *dev,
+>>> +			 enum nl80211_iftype type, u32 *flags,
+>>> +			 struct vif_params *params)
+>>> +{
+>>> +	struct qtnf_vif *vif;
+>>> +	u8 *mac_addr;
+>>> +
+>>> +	vif = qtnf_netdev_get_priv(dev);
+>>> +
+>>> +	if (params)
+>>> +		mac_addr = params->macaddr;
+>>> +	else
+>>> +		mac_addr = NULL;
+>>> +
+>>> +	if (qtnf_cmd_send_change_intf_type(vif, type, mac_addr)) {
+>>> +		pr_err("failed to change interface type\n");
+>>> +		return -EFAULT;
+>> Maybe -EIO would be better.
+>
+> Ok
+>
+>>> +struct wireless_dev *qtnf_add_virtual_intf(struct wiphy *wiphy,
+>>> +					   const char *name,
+>>> +					   unsigned char
+>>> name_assign_type,
+>>> +					   enum nl80211_iftype type,
+>>> +					   u32 *flags,
+>>> +					   struct vif_params
+>>> *params)
+>>> +{
+>>> +	struct qtnf_wmac *mac;
+>>> +	struct qtnf_vif *vif;
+>>> +	u8 *mac_addr = NULL;
+>>> +
+>>> +	mac = wiphy_priv(wiphy);
+>>> +
+>>> +	if (!mac)
+>>> +		return ERR_PTR(-EFAULT);
+>>> +
+>>> +	switch (type) {
+>>> +	case NL80211_IFTYPE_STATION:
+>>> +	case NL80211_IFTYPE_AP:
+>>> +		vif = qtnf_get_free_vif(mac);
+>>> +		if (!vif) {
+>>> +			pr_err("could not get free private
+>>> structure\n");
+>>> +			return ERR_PTR(-EFAULT);
+>>> +		}
+>> This is probably fairly natural to do, and it's not the first driver to
+>> do this (brcmfmac also does), but some users may assume that they can
+>> add interfaces as much as they want, until they bring them up (netdev
+>> open).
+>>
+>> It's probably worth having a discussion about this behaviour difference
+>> - not necessarily in the context of this driver submission though.
+>
+> Do you mean that default is to allow to dynamically allocate resources 
+> (add_interface) for as much interfaces as memory allows, but only use 
+> (allow to open) a limited number of them? This seems like unnecessary 
+> complication, I can see only one relevant comment in documentation to 
+> "struct ieee80211_iface_combination" that does not clarify what should 
+> be the behavior:
+>
+>      * @max_interfaces: maximum number of interfaces in total allowed
+>     in this
+>      *    group
+>
+>
+>>> +	if (qtnf_cmd_send_add_intf(vif, type, mac_addr)) {
+>>> +		vif->wdev.iftype = NL80211_IFTYPE_UNSPECIFIED;
+>>> +		pr_err("failed to send add_intf command\n");
+>>> +		return ERR_PTR(-EFAULT);
+>> I can't really tell, does this leak "vif"?
+>
+> It frees "vif" in driver by setting "iftype = 
+> NL80211_IFTYPE_UNSPECIFIED", but does not free it on device side in 
+> case further operations fail! Will fix.
+>
+>> OK I need to find another way to review this patch now, it's too big
+>> for my email client to work responsively...
+>>
+>> johannes
+>>
+>
