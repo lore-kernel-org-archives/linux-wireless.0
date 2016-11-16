@@ -1,171 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47660 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:34626 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751012AbcKOLFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 06:05:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: limit scan results cache size
-Date: Tue, 15 Nov 2016 12:05:11 +0100
-Message-Id: <20161115110511.12259-1-johannes@sipsolutions.net> (sfid-20161115_120522_490414_90805DC0)
+        id S1753058AbcKPV3S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Nov 2016 16:29:18 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: John Heenan <john@zgus.com>
+Cc: Barry Day <briselec@gmail.com>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu wireless IC
+References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com>
+        <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
+        <CAAye0QNjYY5gBzSdc+0_rhy1OHk7iQ-CVp0Svph1DR7+mgVWGg@mail.gmail.com>
+        <CAAye0QP0FQetaaa-RE23teVgZ335ELE8O5qnzMA7CwQ4T8wc_Q@mail.gmail.com>
+Date: Wed, 16 Nov 2016 16:29:16 -0500
+In-Reply-To: <CAAye0QP0FQetaaa-RE23teVgZ335ELE8O5qnzMA7CwQ4T8wc_Q@mail.gmail.com>
+        (John Heenan's message of "Wed, 2 Nov 2016 11:13:34 +1000")
+Message-ID: <wrfj60nni05v.fsf@redhat.com> (sfid-20161116_222953_213951_414939A2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+John Heenan <john@zgus.com> writes:
+> Barry Day has submitted real world reports for the 8192eu and 8192cu.
+> This needs to be acknowledged. I have submitted real world reports for
+> the 8723bu.
 
-It's possible to make scanning consume almost arbitrary amounts
-of memory, e.g. by sending beacon frames with random BSSIDs at
-high rates while somebody is scanning.
+Lets get this a little more clear - first of all, I have asked you to
+investigate which part resolves the problem. Rather than 'I randomly
+moved something around and it happens to work for me'.
 
-Limit the number of BSS table entries we're willing to cache to
-1000, limiting maximum memory usage to maybe 4-5MB, but lower
-in practice - that would be the case for having both full-sized
-beacon and probe response frames for each entry; this seems not
-possible in practice, so a limit of 1000 entries will likely be
-closer to 0.5 MB.
+> When it comes down to it, it looks like the kernel code changes are
+> really going to be very trivial to fix this problem and we need to
+> take the focus off dramatic outbursts over style issues to a strategy
+> for getting usable results from real world testing.
+>
+> Addressing style issues in a dramatic manner to me looks like a mean
+> sport for maintainers who line up to easy target first time
+> contributors. This mean attitude comes from the top with a well known
+> comment about "publicly making fun of people". The polite comments
+> over style from Joe Perches and Rafał Miłecki are welcomed.
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/core.h |  1 +
- net/wireless/scan.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 70 insertions(+)
+Once bad code is in place, it is way harder to get rid of it again. It
+is *normal* for maintainers to ask contributors to do things
+correctly. In addition you have been asked repeatedly by multiple people
+to respect coding style, but every patch you posted violated it again in
+a different way, instead of spending the little time it would take for
+you to get it right.
 
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 08d2e948c9ad..f0c0c8a48c92 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -71,6 +71,7 @@ struct cfg80211_registered_device {
- 	struct list_head bss_list;
- 	struct rb_root bss_tree;
- 	u32 bss_generation;
-+	u32 bss_entries;
- 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
- 	struct sk_buff *scan_msg;
- 	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index b5bd58d0f731..35ad69fd0838 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -57,6 +57,19 @@
-  * also linked into the probe response struct.
-  */
- 
-+/*
-+ * Limit the number of BSS entries stored in mac80211. Each one is
-+ * a bit over 4k at most, so this limits to roughly 4-5M of memory.
-+ * If somebody wants to really attack this though, they'd likely
-+ * use small beacons, and only one type of frame, limiting each of
-+ * the entries to a much smaller size (in order to generate more
-+ * entries in total, so overhead is bigger.)
-+ */
-+static int bss_entries_limit = 1000;
-+module_param(bss_entries_limit, int, 0644);
-+MODULE_PARM_DESC(bss_entries_limit,
-+                 "limit to number of scan BSS entries (per wiphy, default 1000)");
-+
- #define IEEE80211_SCAN_RESULT_EXPIRE	(30 * HZ)
- 
- static void bss_free(struct cfg80211_internal_bss *bss)
-@@ -137,6 +150,10 @@ static bool __cfg80211_unlink_bss(struct cfg80211_registered_device *rdev,
- 
- 	list_del_init(&bss->list);
- 	rb_erase(&bss->rbn, &rdev->bss_tree);
-+	rdev->bss_entries--;
-+	WARN_ONCE((rdev->bss_entries == 0) ^ list_empty(&rdev->bss_list),
-+		  "rdev bss entries[%d]/list[empty:%d] corruption\n",
-+		  rdev->bss_entries, list_empty(&rdev->bss_list));
- 	bss_ref_put(rdev, bss);
- 	return true;
- }
-@@ -163,6 +180,40 @@ static void __cfg80211_bss_expire(struct cfg80211_registered_device *rdev,
- 		rdev->bss_generation++;
- }
- 
-+static bool cfg80211_bss_expire_oldest(struct cfg80211_registered_device *rdev)
-+{
-+	struct cfg80211_internal_bss *bss, *oldest = NULL;
-+	bool ret;
-+
-+	lockdep_assert_held(&rdev->bss_lock);
-+
-+	list_for_each_entry(bss, &rdev->bss_list, list) {
-+		if (atomic_read(&bss->hold))
-+			continue;
-+
-+		if (!list_empty(&bss->hidden_list) &&
-+		    !bss->pub.hidden_beacon_bss)
-+			continue;
-+
-+		if (oldest && time_before(oldest->ts, bss->ts))
-+			continue;
-+		oldest = bss;
-+	}
-+
-+	if (WARN_ON(!oldest))
-+		return false;
-+
-+	/*
-+	 * The callers make sure to increase rdev->bss_generation if anything
-+	 * gets removed (and a new entry added), so there's no need to also do
-+	 * it here.
-+	 */
-+
-+	ret = __cfg80211_unlink_bss(rdev, oldest);
-+	WARN_ON(!ret);
-+	return ret;
-+}
-+
- void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 			   bool send_message)
- {
-@@ -689,6 +740,7 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
- 	const u8 *ie;
- 	int i, ssidlen;
- 	u8 fold = 0;
-+	u32 n_entries = 0;
- 
- 	ies = rcu_access_pointer(new->pub.beacon_ies);
- 	if (WARN_ON(!ies))
-@@ -712,6 +764,12 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
- 	/* This is the bad part ... */
- 
- 	list_for_each_entry(bss, &rdev->bss_list, list) {
-+		/*
-+		 * we're iterating all the entries anyway, so take the
-+		 * opportunity to validate the list length accounting
-+		 */
-+		n_entries++;
-+
- 		if (!ether_addr_equal(bss->pub.bssid, new->pub.bssid))
- 			continue;
- 		if (bss->pub.channel != new->pub.channel)
-@@ -740,6 +798,10 @@ static bool cfg80211_combine_bsses(struct cfg80211_registered_device *rdev,
- 				   new->pub.beacon_ies);
- 	}
- 
-+	WARN_ONCE(n_entries != rdev->bss_entries,
-+		  "rdev bss entries[%d]/list[len:%d] corruption\n",
-+		  rdev->bss_entries, n_entries);
-+
- 	return true;
- }
- 
-@@ -894,7 +956,14 @@ cfg80211_bss_update(struct cfg80211_registered_device *rdev,
- 			}
- 		}
- 
-+		if (rdev->bss_entries >= bss_entries_limit &&
-+		    !cfg80211_bss_expire_oldest(rdev)) {
-+			kfree(new);
-+			goto drop;
-+		}
-+
- 		list_add_tail(&new->list, &rdev->bss_list);
-+		rdev->bss_entries++;
- 		rb_insert_bss(rdev, new);
- 		found = new;
- 	}
--- 
-2.9.3
+> An effective strategy would be to insert some printk statements to
+> trace what init steps vendor derived drivers do each time
+> wpa_supplicant is called and ask real world testers to report their
+> results. This is a lot more productive and less error prone than
+> laboriously pouring over vendor source code. Alternative drivers that
+> use vendor code from Realtek is enormously complicated and a huge pain
+> to make sense of.
+>
+> Joe Sorensen's driver code is far easier to make sense of and it is a
+> shame Realtek don't come to the party. Joe Sorensens's code take takes
+> advantage of the excellent work of kernel contributors to the mac80211
+> driver.
+
+Now you are pissing on my name - do you really want to be taken
+seriously here?
+
+> Previous comments I made about enable_rf, rtl8xxxu_start,
+> rtl8xxxu_init_device etc should be clarified. I will leave it for the
+> moment as it currently serves no direct useful purpose.
+
+I have made it very clear I want this issue resolved, but I want it
+done right.
+
+Jes
