@@ -1,75 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18254 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757698AbcK2OqK (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35690 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752790AbcKPKiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 09:46:10 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: ath10k: Fix soft lockup during firmware crash/hw-restart
-Date: Tue, 29 Nov 2016 20:16:02 +0530
-Message-ID: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161129_154615_016002_679452E5)
+        Wed, 16 Nov 2016 05:38:09 -0500
+Received: by mail-pf0-f178.google.com with SMTP id i88so42300957pfk.2
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2016 02:38:09 -0800 (PST)
+Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
+ regulatory domain frequency value
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Gianfranco Costamagna <locutusofborg@debian.org>
+References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
+ <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
+ <690669269.1124561.1477671348137@mail.yahoo.com>
+ <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
+ <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
+ <233918815.6357602.1479123253455@mail.yahoo.com>
+ <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
+ <810879191.6335567.1479124065921@mail.yahoo.com>
+ <87r36dov6u.fsf@purkki.adurom.net>
+Cc: "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
+        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f00a3e1d-acf5-fc6a-e3b6-ab687a359dd2@broadcom.com> (sfid-20161116_113813_600601_DB88423F)
+Date: Wed, 16 Nov 2016 11:38:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87r36dov6u.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On 15-11-2016 12:10, Kalle Valo wrote:
+> Gianfranco Costamagna <locutusofborg@debian.org> writes:
+> 
+>>> Well, not before you pointed it out ;-). You are welcome to send a patch
+>>> fixing it. Otherwise, I will take care of it.
+>>
+>> attaching a format-patch like version.
+>> I don't think we need a Tested-by or whatever, because it is just a typo in a comment.
+>> (this is my first contribution, feel free to rebase or change whatever you prefer
+>> to make it in line with other styles)
+>>
+>> (I gave authorship to Marco, the first one who discovered such typo)
+> 
+> [...]
+> 
+>> Signed-off-by: Gianfranco Costamagna <gianfranco.costamagna@abinsula.com>
+>> Signed-off-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
+>> Signed-off-by: Arlone Marco <marco.arlone@roj.com>
+> 
+> Please note that you cannot add Signed-off-by for other people without
+> their explicit approval (see Documentation/SubmittingPatches). I don't
+> know if they did it in this case or not, but wanted to point out this
+> anyway.
 
-During firmware crash (or) user requested manual restart
-the system gets into a soft lock up state because of the
-below root cause.
+Thanks, Kalle
 
-During user requested hardware restart / firmware crash
-the system goes into a soft lockup state as 'napi_synchronize'
-is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-bit) and it sleeps into infinite loop as it waits for
-'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-'ath10k_hif_stop' is called twice as below (resulting in calling
-'napi_synchronize' after 'napi_disable')
+It was on my list to give a contrib boot camp here. So let's go over
+things here albeit it late.
 
-'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
--> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
+Hi Gianfrance,
 
-Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-as it makes more sense before informing mac80211 to restart h/w
-Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
+A couple of things from which you may benefit for future contributions.
+Basic info can be found in Documentation/SubmittingPatches as Kalle
+indicated.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
-[thanks to Kalle and Michal for their inputs]
+Patches should not be submitted as attachments. After doing 'git
+format-patch' the easiest way is using 'git send-email' (which requires
+you to have sendmail on your system properly setup). I tend to send
+patches to Kalle and Cc: linux-wireless, but that is my personal
+preference. Sending it to the list should be sufficient as patchwork
+will pick it up [1].
 
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+When it comes to attribution of others you should have their approval
+for Signed-off-by. However, reading your remarks it seems a proper way
+is below:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7005e2a..5bc6847 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
- 	switch (ar->state) {
- 	case ATH10K_STATE_ON:
- 		ar->state = ATH10K_STATE_RESTARTING;
--		ath10k_hif_stop(ar);
-+		ath10k_halt(ar);
- 		ath10k_scan_finish(ar);
- 		ieee80211_restart_hw(ar->hw);
- 		break;
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 717b2fa..481842b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 		ar->state = ATH10K_STATE_ON;
- 		break;
- 	case ATH10K_STATE_RESTARTING:
--		ath10k_halt(ar);
- 		ar->state = ATH10K_STATE_RESTARTED;
- 		break;
- 	case ATH10K_STATE_ON:
--- 
-1.9.1
+Reported-by: Arlone Marco <marco.arlone@roj.com>
+Tested-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
+Signed-off-by: Gianfranco Costamagna <gianfranco.costamagna@abinsula.com>
+
+Regards,
+Arend
+
+[1] https://patchwork.kernel.org/project/linux-wireless/list/
