@@ -1,134 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outils.crapouillou.net ([89.234.176.41]:33854 "EHLO
-        outils.crapouillou.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168811AbcKALEX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44722 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752194AbcKPP71 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 07:04:23 -0400
-From: Paul Cercueil <paul@crapouillou.net>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Cc: Maarten ter Huurne <maarten@treewalker.org>,
-        Paul Cercueil <paul@crapouillou.net>
-Subject: [PATCH 2/2] net: rfkill-regulator: Add devicetree support
-Date: Tue,  1 Nov 2016 11:58:40 +0100
-Message-Id: <20161101105840.24313-2-paul@crapouillou.net> (sfid-20161101_120436_712656_FDC29F01)
-In-Reply-To: <20161101105840.24313-1-paul@crapouillou.net>
-References: <20161101105840.24313-1-paul@crapouillou.net>
+        Wed, 16 Nov 2016 10:59:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Matthias Schiffer <mschiffer@universe-factory.net>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org, miaoqing@codeaurora.org
+Subject: Re: [PATCH] ath9k: fix ath9k_hw_gpio_get() to return 0 or 1 on success
+References: <44116a7bca8524a187083916bdea535145e7a23a.1479232041.git.mschiffer@universe-factory.net>
+        <8760nno6th.fsf@kamboji.qca.qualcomm.com>
+        <6d1da72b-33b5-b99e-69ac-8b8307ce60f0@universe-factory.net>
+Date: Wed, 16 Nov 2016 17:59:21 +0200
+In-Reply-To: <6d1da72b-33b5-b99e-69ac-8b8307ce60f0@universe-factory.net>
+        (Matthias Schiffer's message of "Wed, 16 Nov 2016 15:40:02 +0100")
+Message-ID: <871sybo1pi.fsf@kamboji.qca.qualcomm.com> (sfid-20161116_165931_340027_739C6AEB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit adds the support for probing the rfkill-regulator
-from devicetree.
+Matthias Schiffer <mschiffer@universe-factory.net> writes:
 
-Information about the devicetree bindings can be found here:
-Documentation/devicetree/bindings/net/rfkill-regulator.txt
+> On 11/16/2016 03:08 PM, Kalle Valo wrote:
+>> Matthias Schiffer <mschiffer@universe-factory.net> writes:
+>> 
+>>> Commit b2d70d4944c1 ("ath9k: make GPIO API to support both of WMAC and
+>>> SOC") refactored ath9k_hw_gpio_get() to support both WMAC and SOC GPIOs,
+>>> changing the return on success from 1 to BIT(gpio). This broke some callers
+>>> like ath_is_rfkill_set().
+>>>
+>>> Instead of fixing all callers, change ath9k_hw_gpio_get() back to only
+>>> return 0 or 1.
+>>>
+>>> Fixes: b2d70d4944c1 ("ath9k: make GPIO API to support both of WMAC and SOC")
+>>> Cc: <stable@vger.kernel.org> # v4.7+
+>>> Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
+>> 
+>> Can you describe more about the symptoms, how did this break from user's
+>> point of view? I can add that to the commit log.
+>> 
+>
+> I did actually not experience an issue myself with a mainline kernel.
+>
+> Looking at the functions ath_is_rfkill_set() and ath9k_rfkill_poll_state()
+> in gpio.c, this issue causes wiphy_rfkill_set_hw_state() always to be
+> passed false when ah->rfkill_polarity==1, breaking rfkill. I don't know how
+> common devices with ah->rfkill_polarity==1 are.
+>
+> I became aware of this issue when rebasing an out-of-tree patch in LEDE
+> which uses the WMAC GPIOs to configure some kind of bandpass filter found
+> in Ubiquiti hardware. (I hope to find time to get this patch upsteam at
+> some point...)
 
-Signed-off-by: Paul Cercueil <paul@crapouillou.net>
----
- net/rfkill/rfkill-regulator.c | 43 ++++++++++++++++++++++++++++++++-----------
- 1 file changed, 32 insertions(+), 11 deletions(-)
+Thanks, this kind of information is good to have in the commit log. That
+way maintainers, like me or stable tree folks, can prioritise the fix to
+various releases. And I guess Linux distros also like to know this as
+well as some of the normal users when trying to solve problems.
 
-diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
-index 50cd26a..29ded4c 100644
---- a/net/rfkill/rfkill-regulator.c
-+++ b/net/rfkill/rfkill-regulator.c
-@@ -13,6 +13,7 @@
-  */
- 
- #include <linux/module.h>
-+#include <linux/of.h>
- #include <linux/err.h>
- #include <linux/slab.h>
- #include <linux/platform_device.h>
-@@ -60,24 +61,38 @@ static struct rfkill_ops rfkill_regulator_ops = {
- static int rfkill_regulator_probe(struct platform_device *pdev)
- {
- 	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
-+	struct device_node *node = pdev->dev.of_node;
- 	struct rfkill_regulator_data *rfkill_data;
- 	struct regulator *vcc;
- 	struct rfkill *rf_kill;
-+	const char *name;
-+	u32 type;
- 	int ret = 0;
- 
--	if (pdata == NULL) {
-+	if (pdata) {
-+		if (!pdata->name || !pdata->type) {
-+			dev_err(&pdev->dev, "invalid name or type in platform data\n");
-+			return -EINVAL;
-+		}
-+
-+		name = pdata->name;
-+		type = pdata->type;
-+	} else if (node) {
-+		ret = of_property_read_u32(node, "rfkill-type", &type);
-+		if (ret < 0)
-+			return ret;
-+
-+		ret = of_property_read_string(node, "rfkill-name", &name);
-+		if (ret < 0)
-+			return ret;
-+	} else {
- 		dev_err(&pdev->dev, "no platform data\n");
- 		return -ENODEV;
- 	}
- 
--	if (pdata->name == NULL || pdata->type == 0) {
--		dev_err(&pdev->dev, "invalid name or type in platform data\n");
--		return -EINVAL;
--	}
--
- 	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
- 	if (IS_ERR(vcc)) {
--		dev_err(&pdev->dev, "Cannot get vcc for %s\n", pdata->name);
-+		dev_err(&pdev->dev, "Cannot get vcc for %s\n", name);
- 		ret = PTR_ERR(vcc);
- 		goto out;
- 	}
-@@ -88,9 +103,8 @@ static int rfkill_regulator_probe(struct platform_device *pdev)
- 		goto err_data_alloc;
- 	}
- 
--	rf_kill = rfkill_alloc(pdata->name, &pdev->dev,
--				pdata->type,
--				&rfkill_regulator_ops, rfkill_data);
-+	rf_kill = rfkill_alloc(name, &pdev->dev, type,
-+			       &rfkill_regulator_ops, rfkill_data);
- 	if (rf_kill == NULL) {
- 		ret = -ENOMEM;
- 		goto err_rfkill_alloc;
-@@ -110,7 +124,7 @@ static int rfkill_regulator_probe(struct platform_device *pdev)
- 	}
- 
- 	platform_set_drvdata(pdev, rfkill_data);
--	dev_info(&pdev->dev, "%s initialized\n", pdata->name);
-+	dev_info(&pdev->dev, "%s initialized\n", name);
- 
- 	return 0;
- 
-@@ -137,11 +151,18 @@ static int rfkill_regulator_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+static const struct of_device_id rfkill_regulator_of_match[] = {
-+	{ .compatible = "rfkill-regulator" },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, rfkill_regulator_of_match);
-+
- static struct platform_driver rfkill_regulator_driver = {
- 	.probe = rfkill_regulator_probe,
- 	.remove = rfkill_regulator_remove,
- 	.driver = {
- 		.name = "rfkill-regulator",
-+		.of_match_table = of_match_ptr(rfkill_regulator_of_match),
- 	},
- };
- 
+I'll mention in the commit log that this doesn't fix any known bug. And
+I'll push this to 4.10, I don't think this is important enough for 4.9.
+
 -- 
-2.9.3
+Kalle Valo
