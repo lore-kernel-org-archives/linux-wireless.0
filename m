@@ -1,70 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:36006 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751226AbcKIDhh (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:49353 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751564AbcKPPHq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 22:37:37 -0500
-Received: by mail-pf0-f179.google.com with SMTP id 189so119119406pfz.3
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 19:37:37 -0800 (PST)
-From: Ricky Liang <jcliang@chromium.org>
-Cc: Ricky Liang <jcliang@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org (open list:MARVELL MWIFIEX WIRELESS
-        DRIVER), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
-Date: Wed,  9 Nov 2016 11:37:28 +0800
-Message-Id: <1478662648-70698-1-git-send-email-jcliang@chromium.org> (sfid-20161109_043804_837562_DECBF867)
-To: unlisted-recipients:; (no To-header on input)
+        Wed, 16 Nov 2016 10:07:46 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Glen Lee <glen.lee@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+        Binoy Jayan <binoy.jayan@linaro.org>,
+        Chris Park <chris.park@atmel.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: simplify vif[i]->ndev accesses
+Date: Wed, 16 Nov 2016 16:07:10 +0100
+Message-Id: <20161116150728.3055415-1-arnd@arndb.de> (sfid-20161116_160812_963624_4910EC9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
+With gcc-7, I got a new warning for this driver:
 
-unreferenced object 0xffffffc0a2914780 (size 192):
-  comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
-  hex dump (first 32 bytes):
-    00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
-    07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
-  backtrace:
-    [<ffffffc0003375f4>] create_object+0x164/0x2b4
-    [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
-    [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
-    [<ffffffc00030899c>] kmemdup+0x38/0x64
-    [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
-    [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
-    [<ffffffbffc22f45c>] mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
-    [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
-    [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
-    [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
-    [<ffffffbffc258858>] 0xffffffbffc258858
-    [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
-    [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
-    [<ffffffc000240d08>] kthread+0xf4/0x100
-    [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
-    [<ffffffffffffffff>] 0xffffffffffffffff
+wilc1000/linux_wlan.c: In function 'wilc_netdev_cleanup':
+wilc1000/linux_wlan.c:1224:15: error: 'vif[1]' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+wilc1000/linux_wlan.c:1224:15: error: 'vif[0]' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Signed-off-by: Ricky Liang <jcliang@chromium.org>
+A closer look at the function reveals that it's more complex than
+it needs to be, given that based on how the device is created
+we always get
+
+	netdev_priv(vif->ndev) == vif
+
+Based on this assumption, I found a few other places in the same file
+that can be simplified. That code appears to be a relic from times
+when the assumption above was not valid.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c | 34 +++++++++-------------------------
+ 1 file changed, 9 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 97c9765..98ce072 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1671,6 +1671,10 @@ static int mwifiex_save_hidden_ssid_channels(struct mwifiex_private *priv,
- 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 82c602ba3289..3775706578b2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -260,23 +260,12 @@ static struct net_device *get_if_handler(struct wilc *wilc, u8 *mac_header)
  
- done:
-+	/* beacon_ie buffer was allocated in function
-+	 * mwifiex_fill_new_bss_desc(). Free it now.
-+	 */
-+	kfree(bss_desc->beacon_buf);
- 	kfree(bss_desc);
- 	return 0;
+ int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid, u8 mode)
+ {
+-	int i = 0;
+-	int ret = -1;
+-	struct wilc_vif *vif;
+-	struct wilc *wilc;
+-
+-	vif = netdev_priv(wilc_netdev);
+-	wilc = vif->wilc;
++	struct wilc_vif *vif = netdev_priv(wilc_netdev);
+ 
+-	for (i = 0; i < wilc->vif_num; i++)
+-		if (wilc->vif[i]->ndev == wilc_netdev) {
+-			memcpy(wilc->vif[i]->bssid, bssid, 6);
+-			wilc->vif[i]->mode = mode;
+-			ret = 0;
+-			break;
+-		}
++	memcpy(vif->bssid, bssid, 6);
++	vif->mode = mode;
+ 
+-	return ret;
++	return 0;
  }
+ 
+ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+@@ -1203,16 +1192,11 @@ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
+ 
+ void wilc_netdev_cleanup(struct wilc *wilc)
+ {
+-	int i = 0;
+-	struct wilc_vif *vif[NUM_CONCURRENT_IFC];
++	int i;
+ 
+-	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
++	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev))
+ 		unregister_inetaddr_notifier(&g_dev_notifier);
+ 
+-		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+-			vif[i] = netdev_priv(wilc->vif[i]->ndev);
+-	}
+-
+ 	if (wilc && wilc->firmware) {
+ 		release_firmware(wilc->firmware);
+ 		wilc->firmware = NULL;
+@@ -1221,7 +1205,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+ 			if (wilc->vif[i]->ndev)
+-				if (vif[i]->mac_opened)
++				if (wilc->vif[i]->mac_opened)
+ 					wilc_mac_close(wilc->vif[i]->ndev);
+ 
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
+@@ -1269,9 +1253,9 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 
+ 		vif->idx = wl->vif_num;
+ 		vif->wilc = *wilc;
++		vif->ndev = ndev;
+ 		wl->vif[i] = vif;
+-		wl->vif[wl->vif_num]->ndev = ndev;
+-		wl->vif_num++;
++		wl->vif_num = i;
+ 		ndev->netdev_ops = &wilc_netdev_ops;
+ 
+ 		{
 -- 
-2.6.6
+2.9.0
