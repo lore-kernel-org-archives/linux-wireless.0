@@ -1,698 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:52675 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932340AbcK1KNW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 05:13:22 -0500
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH v3] ath9k: Introduce airtime fairness scheduling between stations
-Date: Mon, 28 Nov 2016 11:12:56 +0100
-Message-Id: <20161128101256.6721-1-toke@toke.dk> (sfid-20161128_111332_664087_31FBF6E8)
-In-Reply-To: <20160617090929.31606-1-toke@toke.dk>
-References: <20160617090929.31606-1-toke@toke.dk>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42739 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750998AbcKPNKU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Nov 2016 08:10:20 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card remove process
+Date: Wed, 16 Nov 2016 18:39:08 +0530
+Message-ID: <1479301749-14803-4-git-send-email-akarwar@marvell.com> (sfid-20161116_141023_142639_3214011D)
+In-Reply-To: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
+References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reworks the ath9k driver to schedule transmissions to connected
-stations in a way that enforces airtime fairness between them. It
-accomplishes this by measuring the time spent transmitting to or
-receiving from a station at TX and RX completion, and accounting this to
-a per-station, per-QoS level airtime deficit. Then, an FQ-CoDel based
-deficit scheduler is employed at packet dequeue time, to control which
-station gets the next transmission opportunity.
+From: Xinming Hu <huxm@marvell.com>
 
-Airtime fairness can significantly improve the efficiency of the network
-when station rates vary. The following throughput values are from a
-simple three-station test scenario, where two stations operate at the
-highest HT20 rate, and one station at the lowest, and the scheduler is
-employed at the access point:
+Wait for firmware dump complete in card remove function.
+For sdio interface, there are two diffenrent cases,
+card reset trigger sdio_work and firmware dump trigger sdio_work.
+Do code rearrangement for distinguish between these two cases.
 
-                  Before   /   After
-Fast station 1:    19.17   /   25.09 Mbps
-Fast station 2:    19.83   /   25.21 Mbps
-Slow station:       2.58   /    1.77 Mbps
-Total:             41.58   /   52.07 Mbps
-
-The benefit of airtime fairness goes up the more stations are present.
-In a 30-station test with one station artificially limited to 1 Mbps,
-we have seen aggregate throughput go from 2.14 to 17.76 Mbps.
-
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
-Changes since v2:
-  - Just call spin_*lock_bh() instead of introducing ath_acq_*lock()
-    functions.
-    
- drivers/net/wireless/ath/ath9k/ath9k.h     |  25 +++-
- drivers/net/wireless/ath/ath9k/channel.c   |  14 ++-
- drivers/net/wireless/ath/ath9k/debug.c     |   3 +
- drivers/net/wireless/ath/ath9k/debug.h     |  13 +++
- drivers/net/wireless/ath/ath9k/debug_sta.c |  54 +++++++++
- drivers/net/wireless/ath/ath9k/init.c      |   2 +
- drivers/net/wireless/ath/ath9k/main.c      |   6 +-
- drivers/net/wireless/ath/ath9k/recv.c      |  65 +++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c      | 177 +++++++++++++++++++++--------
- 9 files changed, 303 insertions(+), 56 deletions(-)
+v2: 1. Get rid of reset_triggered flag. Instead split the code and use
+    __mwifiex_sdio_remove() (Brian Norris/Dmitry Torokhov)
+    2. "v1 4/5 mwifiex: firmware dump code rearrangement.." is dropped. So
+    rebased accordingly.
+v3: same as [v2,5/5]. The improvement of 'moving pcie_work to card struct'
+suggested by Brian is taken care in next patch.
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c |  6 +++++-
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 15 ++++++++++++---
+ 2 files changed, 17 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 378d345..79e4b71 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -112,6 +112,8 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define ATH_TXFIFO_DEPTH           8
- #define ATH_TX_ERROR               0x01
- 
-+#define ATH_AIRTIME_QUANTUM        300 /* usec */
-+
- /* Stop tx traffic 1ms before the GO goes away */
- #define ATH_P2P_PS_STOP_TIME       1000
- 
-@@ -247,6 +249,9 @@ struct ath_atx_tid {
- 	bool has_queued;
- };
- 
-+void __ath_tx_queue_tid(struct ath_softc *sc, struct ath_atx_tid *tid);
-+void ath_tx_queue_tid(struct ath_softc *sc, struct ath_atx_tid *tid);
-+
- struct ath_node {
- 	struct ath_softc *sc;
- 	struct ieee80211_sta *sta; /* station struct we're part of */
-@@ -258,9 +263,12 @@ struct ath_node {
- 
- 	bool sleeping;
- 	bool no_ps_filter;
-+	s64 airtime_deficit[IEEE80211_NUM_ACS];
-+	u32 airtime_rx_start;
- 
- #ifdef CONFIG_ATH9K_STATION_STATISTICS
- 	struct ath_rx_rate_stats rx_rate_stats;
-+	struct ath_airtime_stats airtime_stats;
- #endif
- 	u8 key_idx[4];
- 
-@@ -317,10 +325,16 @@ struct ath_rx {
- /* Channel Context */
- /*******************/
- 
-+struct ath_acq {
-+	struct list_head acq_new;
-+	struct list_head acq_old;
-+	spinlock_t lock;
-+};
-+
- struct ath_chanctx {
- 	struct cfg80211_chan_def chandef;
- 	struct list_head vifs;
--	struct list_head acq[IEEE80211_NUM_ACS];
-+	struct ath_acq acq[IEEE80211_NUM_ACS];
- 	int hw_queue_base;
- 
- 	/* do not dereference, use for comparison only */
-@@ -575,6 +589,8 @@ void ath_txq_schedule_all(struct ath_softc *sc);
- int ath_tx_init(struct ath_softc *sc, int nbufs);
- int ath_txq_update(struct ath_softc *sc, int qnum,
- 		   struct ath9k_tx_queue_info *q);
-+u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
-+		     int width, int half_gi, bool shortPreamble);
- void ath_update_max_aggr_framelen(struct ath_softc *sc, int queue, int txop);
- void ath_assign_seq(struct ath_common *common, struct sk_buff *skb);
- int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
-@@ -963,6 +979,11 @@ void ath_ant_comb_scan(struct ath_softc *sc, struct ath_rx_status *rs);
- 
- #define ATH9K_NUM_CHANCTX  2 /* supports 2 operating channels */
- 
-+#define AIRTIME_USE_TX		BIT(0)
-+#define AIRTIME_USE_RX		BIT(1)
-+#define AIRTIME_USE_NEW_QUEUES	BIT(2)
-+#define AIRTIME_ACTIVE(flags) (!!(flags & (AIRTIME_USE_TX|AIRTIME_USE_RX)))
-+
- struct ath_softc {
- 	struct ieee80211_hw *hw;
- 	struct device *dev;
-@@ -1005,6 +1026,8 @@ struct ath_softc {
- 	short nbcnvifs;
- 	unsigned long ps_usecount;
- 
-+	u16 airtime_flags; /* AIRTIME_* */
-+
- 	struct ath_rx rx;
- 	struct ath_tx tx;
- 	struct ath_beacon beacon;
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 929dd70..b84539d 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -118,8 +118,11 @@ void ath_chanctx_init(struct ath_softc *sc)
- 		INIT_LIST_HEAD(&ctx->vifs);
- 		ctx->txpower = ATH_TXPOWER_MAX;
- 		ctx->flush_timeout = HZ / 5; /* 200ms */
--		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++)
--			INIT_LIST_HEAD(&ctx->acq[j]);
-+		for (j = 0; j < ARRAY_SIZE(ctx->acq); j++) {
-+			INIT_LIST_HEAD(&ctx->acq[j].acq_new);
-+			INIT_LIST_HEAD(&ctx->acq[j].acq_old);
-+			spin_lock_init(&ctx->acq[j].lock);
-+		}
- 	}
- }
- 
-@@ -1345,8 +1348,11 @@ void ath9k_offchannel_init(struct ath_softc *sc)
- 	ctx->txpower = ATH_TXPOWER_MAX;
- 	cfg80211_chandef_create(&ctx->chandef, chan, NL80211_CHAN_HT20);
- 
--	for (i = 0; i < ARRAY_SIZE(ctx->acq); i++)
--		INIT_LIST_HEAD(&ctx->acq[i]);
-+	for (i = 0; i < ARRAY_SIZE(ctx->acq); i++) {
-+		INIT_LIST_HEAD(&ctx->acq[i].acq_new);
-+		INIT_LIST_HEAD(&ctx->acq[i].acq_old);
-+		spin_lock_init(&ctx->acq[i].lock);
-+	}
- 
- 	sc->offchannel.chan.offchannel = true;
- }
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 89a94dd..43930c3 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1399,5 +1399,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	debugfs_create_file("tpc", S_IRUSR | S_IWUSR,
- 			    sc->debug.debugfs_phy, sc, &fops_tpc);
- 
-+	debugfs_create_u16("airtime_flags", S_IRUSR | S_IWUSR,
-+			   sc->debug.debugfs_phy, &sc->airtime_flags);
-+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index dd8f7aa..c8e69a4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -51,6 +51,9 @@ static int mwifiex_pcie_probe_of(struct device *dev)
  	return 0;
  }
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index a078cdd..249f814 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -221,6 +221,11 @@ struct ath_rx_rate_stats {
- 	} cck_stats[4];
- };
  
-+struct ath_airtime_stats {
-+	u32 rx_airtime;
-+	u32 tx_airtime;
-+};
++static void mwifiex_pcie_work(struct work_struct *work);
++static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
 +
- #define ANT_MAIN 0
- #define ANT_ALT  1
- 
-@@ -314,12 +319,20 @@ ath9k_debug_sync_cause(struct ath_softc *sc, u32 sync_cause)
- void ath_debug_rate_stats(struct ath_softc *sc,
- 			  struct ath_rx_status *rs,
- 			  struct sk_buff *skb);
-+void ath_debug_airtime(struct ath_softc *sc,
-+		       struct ath_node *an,
-+		       u32 rx, u32 tx);
- #else
- static inline void ath_debug_rate_stats(struct ath_softc *sc,
- 					struct ath_rx_status *rs,
- 					struct sk_buff *skb)
- {
- }
-+static inline void ath_debug_airtime(struct ath_softc *sc,
-+			      struct ath_node *an,
-+			      u32 rx, u32 tx)
-+{
-+}
- #endif /* CONFIG_ATH9K_STATION_STATISTICS */
- 
- #endif /* DEBUG_H */
-diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
-index 2a3a3c4..524cbf13 100644
---- a/drivers/net/wireless/ath/ath9k/debug_sta.c
-+++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
-@@ -242,6 +242,59 @@ static const struct file_operations fops_node_recv = {
- 	.llseek = default_llseek,
- };
- 
-+void ath_debug_airtime(struct ath_softc *sc,
-+		struct ath_node *an,
-+		u32 rx,
-+		u32 tx)
-+{
-+	struct ath_airtime_stats *astats = &an->airtime_stats;
-+
-+	astats->rx_airtime += rx;
-+	astats->tx_airtime += tx;
-+}
-+
-+static ssize_t read_airtime(struct file *file, char __user *user_buf,
-+			size_t count, loff_t *ppos)
-+{
-+	struct ath_node *an = file->private_data;
-+	struct ath_airtime_stats *astats;
-+	static const char *qname[4] = {
-+		"VO", "VI", "BE", "BK"
-+	};
-+	u32 len = 0, size = 256;
-+	char *buf;
-+	size_t retval;
-+	int i;
-+
-+	buf = kzalloc(size, GFP_KERNEL);
-+	if (buf == NULL)
-+		return -ENOMEM;
-+
-+	astats = &an->airtime_stats;
-+
-+	len += scnprintf(buf + len, size - len, "RX: %u us\n", astats->rx_airtime);
-+	len += scnprintf(buf + len, size - len, "TX: %u us\n", astats->tx_airtime);
-+	len += scnprintf(buf + len, size - len, "Deficit: ");
-+	for (i = 0; i < 4; i++)
-+		len += scnprintf(buf+len, size - len, "%s: %lld us ", qname[i], an->airtime_deficit[i]);
-+	if (len < size)
-+		buf[len++] = '\n';
-+
-+	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return retval;
-+}
-+
-+
-+static const struct file_operations fops_airtime = {
-+	.read = read_airtime,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
-+
- void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 			   struct ieee80211_vif *vif,
- 			   struct ieee80211_sta *sta,
-@@ -251,4 +304,5 @@ void ath9k_sta_add_debugfs(struct ieee80211_hw *hw,
- 
- 	debugfs_create_file("node_aggr", S_IRUGO, dir, an, &fops_node_aggr);
- 	debugfs_create_file("node_recv", S_IRUGO, dir, an, &fops_node_recv);
-+	debugfs_create_file("airtime", S_IRUGO, dir, an, &fops_airtime);
- }
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c0c8bf0..5aa665f 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -620,6 +620,8 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 
- 	/* Will be cleared in ath9k_start() */
- 	set_bit(ATH_OP_INVALID, &common->op_flags);
-+	sc->airtime_flags = (AIRTIME_USE_TX | AIRTIME_USE_RX |
-+			     AIRTIME_USE_NEW_QUEUES);
- 
- 	sc->sc_ah = ah;
- 	sc->dfs_detector = dfs_pattern_detector_init(common, NL80211_DFS_UNSET);
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 59e3bd0..58f06ce 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -70,10 +70,10 @@ static bool ath9k_has_pending_frames(struct ath_softc *sc, struct ath_txq *txq,
- 		goto out;
- 
- 	if (txq->mac80211_qnum >= 0) {
--		struct list_head *list;
-+		struct ath_acq *acq;
- 
--		list = &sc->cur_chan->acq[txq->mac80211_qnum];
--		if (!list_empty(list))
-+		acq = &sc->cur_chan->acq[txq->mac80211_qnum];
-+		if (!list_empty(&acq->acq_new) || !list_empty(&acq->acq_old))
- 			pending = true;
- 	}
- out:
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6697342..6cc36a8 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -991,6 +991,70 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
- 	}
- }
- 
-+static void ath_rx_count_airtime(struct ath_softc *sc,
-+				 struct ath_rx_status *rs,
-+				 struct sk_buff *skb)
-+{
-+	struct ath_node *an;
-+	struct ath_acq *acq;
-+	struct ath_vif *avp;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_rx_status *rxs;
-+	const struct ieee80211_rate *rate;
-+	bool is_sgi, is_40, is_sp;
-+	int phy;
-+	u16 len = rs->rs_datalen;
-+	u32 airtime = 0;
-+	u8 tidno, acno;
-+
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return;
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(sc->hw, hdr->addr2, NULL);
-+	if (!sta)
-+		goto exit;
-+	an = (struct ath_node *) sta->drv_priv;
-+	avp = (struct ath_vif *) an->vif->drv_priv;
-+	tidno = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
-+	acno = TID_TO_WME_AC(tidno);
-+	acq = &avp->chanctx->acq[acno];
-+
-+	rxs = IEEE80211_SKB_RXCB(skb);
-+
-+	is_sgi = !!(rxs->flag & RX_FLAG_SHORT_GI);
-+	is_40 = !!(rxs->flag & RX_FLAG_40MHZ);
-+	is_sp = !!(rxs->flag & RX_FLAG_SHORTPRE);
-+
-+	if (!!(rxs->flag & RX_FLAG_HT)) {
-+		/* MCS rates */
-+
-+		airtime += ath_pkt_duration(sc, rxs->rate_idx, len,
-+					is_40, is_sgi, is_sp);
-+	} else {
-+
-+		phy = IS_CCK_RATE(rs->rs_rate) ? WLAN_RC_PHY_CCK : WLAN_RC_PHY_OFDM;
-+		rate = &common->sbands[rxs->band].bitrates[rxs->rate_idx];
-+		airtime += ath9k_hw_computetxtime(ah, phy, rate->bitrate * 100,
-+						len, rxs->rate_idx, is_sp);
-+	}
-+
-+ 	if (!!(sc->airtime_flags & AIRTIME_USE_RX)) {
-+		spin_lock_bh(&acq->lock);
-+		an->airtime_deficit[acno] -= airtime;
-+		if (an->airtime_deficit[acno] <= 0)
-+			__ath_tx_queue_tid(sc, ATH_AN_2_TID(an, tidno));
-+		spin_unlock_bh(&acq->lock);
-+	}
-+	ath_debug_airtime(sc, an, airtime, 0);
-+exit:
-+	rcu_read_unlock();
-+}
-+
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_rxbuf *bf;
-@@ -1137,6 +1201,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		ath9k_antenna_check(sc, &rs);
- 		ath9k_apply_ampdu_details(sc, &rs, rxs);
- 		ath_debug_rate_stats(sc, &rs, skb);
-+		ath_rx_count_airtime(sc, &rs, skb);
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		if (ieee80211_is_ack(hdr->frame_control))
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 486afa9..80d4793 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -124,21 +124,44 @@ void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq)
- 		ath_tx_status(hw, skb);
- }
- 
--static void ath_tx_queue_tid(struct ath_softc *sc, struct ath_txq *txq,
--			     struct ath_atx_tid *tid)
-+void __ath_tx_queue_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- {
--	struct list_head *list;
- 	struct ath_vif *avp = (struct ath_vif *) tid->an->vif->drv_priv;
- 	struct ath_chanctx *ctx = avp->chanctx;
-+	struct ath_acq *acq;
-+	struct list_head *tid_list;
-+	u8 acno = TID_TO_WME_AC(tid->tidno);
- 
--	if (!ctx)
-+	if (!ctx || !list_empty(&tid->list))
+ static int
+ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 		       size_t size, int flags)
+@@ -254,6 +257,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	if (!adapter || !adapter->priv_num)
  		return;
  
--	list = &ctx->acq[TID_TO_WME_AC(tid->tidno)];
--	if (list_empty(&tid->list))
--		list_add_tail(&tid->list, list);
++	cancel_work_sync(&pcie_work);
 +
-+	acq = &ctx->acq[acno];
-+	if ((sc->airtime_flags & AIRTIME_USE_NEW_QUEUES) &&
-+	    tid->an->airtime_deficit[acno] > 0)
-+		tid_list = &acq->acq_new;
-+	else
-+		tid_list = &acq->acq_old;
-+
-+	list_add_tail(&tid->list, tid_list);
+ 	if (user_rmmod && !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+@@ -2722,7 +2727,6 @@ static void mwifiex_pcie_work(struct work_struct *work)
+ 		mwifiex_pcie_device_dump_work(save_adapter);
  }
  
-+void ath_tx_queue_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
-+{
-+	struct ath_vif *avp = (struct ath_vif *) tid->an->vif->drv_priv;
-+	struct ath_chanctx *ctx = avp->chanctx;
-+	struct ath_acq *acq;
-+
-+	if (!ctx || !list_empty(&tid->list))
-+		return;
-+
-+	acq = &ctx->acq[TID_TO_WME_AC(tid->tidno)];
-+	spin_lock_bh(&acq->lock);
-+	__ath_tx_queue_tid(sc, tid);
-+	spin_unlock_bh(&acq->lock);
-+}
-+
-+
- void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
+-static DECLARE_WORK(pcie_work, mwifiex_pcie_work);
+ /* This function dumps FW information */
+ static void mwifiex_pcie_device_dump(struct mwifiex_adapter *adapter)
  {
- 	struct ath_softc *sc = hw->priv;
-@@ -153,7 +176,7 @@ void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
- 	ath_txq_lock(sc, txq);
- 
- 	tid->has_queued = true;
--	ath_tx_queue_tid(sc, txq, tid);
-+	ath_tx_queue_tid(sc, tid);
- 	ath_txq_schedule(sc, txq);
- 
- 	ath_txq_unlock(sc, txq);
-@@ -660,7 +683,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 
- 		skb_queue_splice_tail(&bf_pending, &tid->retry_q);
- 		if (!an->sleeping) {
--			ath_tx_queue_tid(sc, txq, tid);
-+			ath_tx_queue_tid(sc, tid);
- 
- 			if (ts->ts_status & (ATH9K_TXERR_FILT | ATH9K_TXERR_XRETRY))
- 				tid->clear_ps_filter = true;
-@@ -688,6 +711,53 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
-     return bf_isampdu(bf) && !(info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE);
- }
- 
-+static void ath_tx_count_airtime(struct ath_softc *sc, struct ath_txq *txq,
-+				 struct ath_buf *bf, struct ath_tx_status *ts)
-+{
-+	struct ath_node *an;
-+	struct ath_acq *acq = &sc->cur_chan->acq[txq->mac80211_qnum];
-+	struct sk_buff *skb;
-+	struct ieee80211_hdr *hdr;
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ieee80211_tx_rate rates[4];
-+	struct ieee80211_sta *sta;
-+	int i;
-+	u32 airtime = 0;
-+
-+	skb = bf->bf_mpdu;
-+	if(!skb)
-+		return;
-+
-+	hdr = (struct ieee80211_hdr *)skb->data;
-+	memcpy(rates, bf->rates, sizeof(rates));
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
-+	if(!sta)
-+		goto exit;
-+
-+
-+	an = (struct ath_node *) sta->drv_priv;
-+
-+	airtime += ts->duration * (ts->ts_longretry + 1);
-+
-+	for(i=0; i < ts->ts_rateindex; i++)
-+		airtime += ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc, i) * rates[i].count;
-+
-+	if (!!(sc->airtime_flags & AIRTIME_USE_TX)) {
-+		spin_lock_bh(&acq->lock);
-+		an->airtime_deficit[txq->mac80211_qnum] -= airtime;
-+		if (an->airtime_deficit[txq->mac80211_qnum] <= 0)
-+			__ath_tx_queue_tid(sc, ath_get_skb_tid(sc, an, skb));
-+		spin_unlock_bh(&acq->lock);
-+	}
-+	ath_debug_airtime(sc, an, 0, airtime);
-+
-+exit:
-+	rcu_read_unlock();
-+}
-+
- static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 				  struct ath_tx_status *ts, struct ath_buf *bf,
- 				  struct list_head *bf_head)
-@@ -709,6 +779,7 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	ts->duration = ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc,
- 					     ts->ts_rateindex);
-+	ath_tx_count_airtime(sc, txq, bf, ts);
- 
- 	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
- 	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
-@@ -1068,8 +1139,8 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
-  * width  - 0 for 20 MHz, 1 for 40 MHz
-  * half_gi - to use 4us v/s 3.6 us for symbol time
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 16d1d30..78f2cc9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -46,6 +46,9 @@
   */
--static u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
--			    int width, int half_gi, bool shortPreamble)
-+u32 ath_pkt_duration(struct ath_softc *sc, u8 rix, int pktlen,
-+		     int width, int half_gi, bool shortPreamble)
- {
- 	u32 nbits, nsymbits, duration, nsymbols;
- 	int streams;
-@@ -1467,7 +1538,7 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
- }
+ static u8 user_rmmod;
  
- static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
--			      struct ath_atx_tid *tid, bool *stop)
-+			      struct ath_atx_tid *tid)
- {
- 	struct ath_buf *bf;
- 	struct ieee80211_tx_info *tx_info;
-@@ -1489,7 +1560,6 @@ static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
- 	    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
- 		__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
--		*stop = true;
- 		return false;
- 	}
- 
-@@ -1613,7 +1683,7 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
- 		ath_txq_lock(sc, txq);
- 		tid->clear_ps_filter = true;
- 		if (ath_tid_has_buffered(tid)) {
--			ath_tx_queue_tid(sc, txq, tid);
-+			ath_tx_queue_tid(sc, tid);
- 			ath_txq_schedule(sc, txq);
- 		}
- 		ath_txq_unlock_complete(sc, txq);
-@@ -1912,9 +1982,10 @@ void ath_tx_cleanupq(struct ath_softc *sc, struct ath_txq *txq)
- void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_atx_tid *tid, *last_tid;
-+	struct ath_atx_tid *tid;
- 	struct list_head *tid_list;
--	bool sent = false;
-+	struct ath_acq *acq;
-+	bool active = AIRTIME_ACTIVE(sc->airtime_flags);
- 
- 	if (txq->mac80211_qnum < 0)
- 		return;
-@@ -1923,48 +1994,55 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 		return;
- 
- 	spin_lock_bh(&sc->chan_lock);
--	tid_list = &sc->cur_chan->acq[txq->mac80211_qnum];
--
--	if (list_empty(tid_list)) {
--		spin_unlock_bh(&sc->chan_lock);
--		return;
--	}
--
- 	rcu_read_lock();
-+	acq = &sc->cur_chan->acq[txq->mac80211_qnum];
- 
--	last_tid = list_entry(tid_list->prev, struct ath_atx_tid, list);
--	while (!list_empty(tid_list)) {
--		bool stop = false;
--
--		if (sc->cur_chan->stopped)
--			break;
--
--		tid = list_first_entry(tid_list, struct ath_atx_tid, list);
--		list_del_init(&tid->list);
-+	if (sc->cur_chan->stopped)
-+		goto out;
- 
--		if (ath_tx_sched_aggr(sc, txq, tid, &stop))
--			sent = true;
-+begin:
-+	tid_list = &acq->acq_new;
-+	if (list_empty(tid_list)) {
-+		tid_list = &acq->acq_old;
-+		if (list_empty(tid_list))
-+			goto out;
-+	}
-+	tid = list_first_entry(tid_list, struct ath_atx_tid, list);
- 
--		/*
--		 * add tid to round-robin queue if more frames
--		 * are pending for the tid
--		 */
--		if (ath_tid_has_buffered(tid))
--			ath_tx_queue_tid(sc, txq, tid);
-+	if (active && tid->an->airtime_deficit[txq->mac80211_qnum] <= 0) {
-+		spin_lock_bh(&acq->lock);
-+		tid->an->airtime_deficit[txq->mac80211_qnum] += ATH_AIRTIME_QUANTUM;
-+		list_move_tail(&tid->list, &acq->acq_old);
-+		spin_unlock_bh(&acq->lock);
-+		goto begin;
-+	}
- 
--		if (stop)
--			break;
-+	if (!ath_tid_has_buffered(tid)) {
-+		spin_lock_bh(&acq->lock);
-+		if ((tid_list == &acq->acq_new) && !list_empty(&acq->acq_old))
-+			list_move_tail(&tid->list, &acq->acq_old);
-+		else {
-+			list_del_init(&tid->list);
-+		}
-+		spin_unlock_bh(&acq->lock);
-+		goto begin;
-+	}
- 
--		if (tid == last_tid) {
--			if (!sent)
--				break;
- 
--			sent = false;
--			last_tid = list_entry(tid_list->prev,
--					      struct ath_atx_tid, list);
-+	/*
-+	 * If we succeed in scheduling something, immediately restart to make
-+	 * sure we keep the HW busy.
-+	 */
-+	if(ath_tx_sched_aggr(sc, txq, tid)) {
-+		if (!active) {
-+			spin_lock_bh(&acq->lock);
-+			list_move_tail(&tid->list, &acq->acq_old);
-+			spin_unlock_bh(&acq->lock);
- 		}
-+		goto begin;
- 	}
- 
-+out:
- 	rcu_read_unlock();
- 	spin_unlock_bh(&sc->chan_lock);
- }
-@@ -2818,6 +2896,9 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 	struct ath_atx_tid *tid;
- 	int tidno, acno;
- 
-+	for (acno = 0; acno < IEEE80211_NUM_ACS; acno++)
-+		an->airtime_deficit[acno] = ATH_AIRTIME_QUANTUM;
++static void mwifiex_sdio_work(struct work_struct *work);
++static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
 +
- 	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
- 		tid = ath_node_to_tid(an, tidno);
- 		tid->an        = an;
-
-base-commit: 705d7aa062203226c8df73f18622664e30bd8a61
+ static struct mwifiex_if_ops sdio_ops;
+ static unsigned long iface_work_flags;
+ 
+@@ -220,7 +223,7 @@ static int mwifiex_sdio_resume(struct device *dev)
+  * This function removes the interface and frees up the card structure.
+  */
+ static void
+-mwifiex_sdio_remove(struct sdio_func *func)
++__mwifiex_sdio_remove(struct sdio_func *func)
+ {
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+@@ -249,6 +252,13 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	mwifiex_remove_card(adapter);
+ }
+ 
++static void
++mwifiex_sdio_remove(struct sdio_func *func)
++{
++	cancel_work_sync(&sdio_work);
++	__mwifiex_sdio_remove(func);
++}
++
+ /*
+  * SDIO suspend.
+  *
+@@ -2227,7 +2237,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+ 	 * discovered and initializes them from scratch.
+ 	 */
+ 
+-	mwifiex_sdio_remove(func);
++	__mwifiex_sdio_remove(func);
+ 
+ 	/*
+ 	 * Normally, we would let the driver core take care of releasing these.
+@@ -2568,7 +2578,6 @@ static void mwifiex_sdio_work(struct work_struct *work)
+ 		mwifiex_sdio_card_reset_work(save_adapter);
+ }
+ 
+-static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+ /* This function resets the card */
+ static void mwifiex_sdio_card_reset(struct mwifiex_adapter *adapter)
+ {
 -- 
-2.10.2
+1.9.1
