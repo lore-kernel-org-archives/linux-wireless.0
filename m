@@ -1,47 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36013 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755545AbcKOKeN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41972 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936439AbcKPJXW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 05:34:13 -0500
-Received: by mail-wm0-f46.google.com with SMTP id g23so157694310wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 02:34:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Tue, 15 Nov 2016 11:34:11 +0100
-Message-ID: <CA+BoTQmcyVQDOd2o0YDvepuLbSz76p8hetrWA6mWJeGxvbM8iQ@mail.gmail.com> (sfid-20161115_113416_726135_1CD8498E)
-Subject: Re: [RFC 10/12] ath10k: Added QCA65XX hw definition
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 16 Nov 2016 04:23:22 -0500
+From: miaoqing@codeaurora.org
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        devin.tuchsen@gmail.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH] ath9k: fix NULL pointer dereference
+Date: Wed, 16 Nov 2016 17:23:08 +0800
+Message-Id: <1479288188-3793-1-git-send-email-miaoqing@codeaurora.org> (sfid-20161116_102333_990594_54447FEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
-te:
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath10k/hw.h |    1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/=
-ath/ath10k/hw.h
-> index 46142e9..ef45ecf 100644
-> --- a/drivers/net/wireless/ath/ath10k/hw.h
-> +++ b/drivers/net/wireless/ath/ath10k/hw.h
-> @@ -224,6 +224,7 @@ enum ath10k_hw_rev {
->         ATH10K_HW_QCA9377,
->         ATH10K_HW_QCA4019,
->         ATH10K_HW_QCA9887,
-> +       ATH10K_HW_QCA65XX,
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Are you 100% positive that you're supporting all QCA65XX chips? The
-rule of thumb is to avoid Xs as much as possible unless totally
-perfectly completely sure.
+relay_open() may return NULL, check the return value to avoid the crash.
 
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000040
+IP: [<ffffffffa01a95c5>] ath_cmn_process_fft+0xd5/0x700 [ath9k_common]
+PGD 41cf28067 PUD 41be92067 PMD 0
+Oops: 0000 [#1] SMP
+CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.6+ #35
+Hardware name: Hewlett-Packard h8-1080t/2A86, BIOS 6.15    07/04/2011
+task: ffffffff81e0c4c0 task.stack: ffffffff81e00000
+RIP: 0010:[<ffffffffa01a95c5>] [<ffffffffa01a95c5>] ath_cmn_process_fft+0xd5/0x700 [ath9k_common]
+RSP: 0018:ffff88041f203ca0 EFLAGS: 00010293
+RAX: 0000000000000000 RBX: 000000000000059f RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000040 RDI: ffffffff81f0ca98
+RBP: ffff88041f203dc8 R08: ffffffffffffffff R09: 00000000000000ff
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: ffffffff81f0ca98 R14: 0000000000000000 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff88041f200000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000040 CR3: 000000041b6ec000 CR4: 00000000000006f0
+Stack:
+0000000000000363 00000000000003f3 00000000000003f3 00000000000001f9
+000000000000049a 0000000001252c04 ffff88041f203e44 ffff880417b4bfd0
+0000000000000008 ffff88041785b9c0 0000000000000002 ffff88041613dc60
 
-Micha=C5=82
+Call Trace:
+<IRQ>
+[<ffffffffa01b6441>] ath9k_tasklet+0x1b1/0x220 [ath9k]
+[<ffffffff8105d8dd>] tasklet_action+0x4d/0xf0
+[<ffffffff8105dde2>] __do_softirq+0x92/0x2a0
+
+Reported-by: Devin Tuchsen <devin.tuchsen@gmail.com>
+Tested-by: Devin Tuchsen <devin.tuchsen@gmail.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/common-spectral.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/common-spectral.c b/drivers/net/wireless/ath/ath9k/common-spectral.c
+index e2512d5..eedf86b 100644
+--- a/drivers/net/wireless/ath/ath9k/common-spectral.c
++++ b/drivers/net/wireless/ath/ath9k/common-spectral.c
+@@ -528,6 +528,9 @@ int ath_cmn_process_fft(struct ath_spec_scan_priv *spec_priv, struct ieee80211_h
+ 	if (!(radar_info->pulse_bw_info & SPECTRAL_SCAN_BITMASK))
+ 		return 0;
+ 
++	if (!spec_priv->rfs_chan_spec_scan)
++		return 1;
++
+ 	/* Output buffers are full, no need to process anything
+ 	 * since there is no space to put the result anyway
+ 	 */
+@@ -1072,7 +1075,7 @@ static int remove_buf_file_handler(struct dentry *dentry)
+ 
+ void ath9k_cmn_spectral_deinit_debug(struct ath_spec_scan_priv *spec_priv)
+ {
+-	if (IS_ENABLED(CONFIG_ATH9K_DEBUGFS)) {
++	if (IS_ENABLED(CONFIG_ATH9K_DEBUGFS) && spec_priv->rfs_chan_spec_scan) {
+ 		relay_close(spec_priv->rfs_chan_spec_scan);
+ 		spec_priv->rfs_chan_spec_scan = NULL;
+ 	}
+@@ -1086,6 +1089,9 @@ void ath9k_cmn_spectral_init_debug(struct ath_spec_scan_priv *spec_priv,
+ 					    debugfs_phy,
+ 					    1024, 256, &rfs_spec_scan_cb,
+ 					    NULL);
++	if (!spec_priv->rfs_chan_spec_scan)
++		return;
++
+ 	debugfs_create_file("spectral_scan_ctl",
+ 			    S_IRUSR | S_IWUSR,
+ 			    debugfs_phy, spec_priv,
+-- 
+1.9.1
