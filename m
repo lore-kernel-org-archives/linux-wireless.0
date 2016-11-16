@@ -1,41 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34822 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754726AbcKXEp3 (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34077 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753099AbcKPQB0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 23:45:29 -0500
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 20:45:23 -0800
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Alexander Bondar <alexander.bondar@intel.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/4] Fix -Wunused-but-set-variable in net/mac80211/
-Message-ID: <cover.1479962513.git.kirtika@chromium.org> (sfid-20161124_054535_974361_648CC55D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Wed, 16 Nov 2016 11:01:26 -0500
+Received: by mail-wm0-f65.google.com with SMTP id g23so12578544wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2016 08:01:25 -0800 (PST)
+From: Vishal Thanki <vishalthanki@gmail.com>
+To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Cc: Vishal Thanki <vishalthanki@gmail.com>
+Subject: [PATCH] rt2x00: Fix incorrect usage of CONFIG_RT2X00_LIB_USB
+Date: Wed, 16 Nov 2016 17:01:54 +0100
+Message-Id: <1479312114-9389-1-git-send-email-vishalthanki@gmail.com> (sfid-20161116_170129_994091_BB990952)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset is part of the effort led by Arnd Bergmann to clean up
-warnings in the kernel. This and following patchsets will focus on
-"-Wunused-but-set-variable" as it among the noisier ones. These were
-found compiling with W=1.
+In device removal routine, usage of "#ifdef CONFIG_RT2X00_LIB_USB"
+will not cover the case when it is configured as module. This will
+omit the entire if-block which does cleanup of URBs and cancellation
+of pending work. Changing the #ifdef to #if IS_ENABLED() to fix it.
 
-Kirtika Ruchandani (4):
-  mac80211: Removed unused 'i' variable
-  mac80211: Remove unused 'len' variable
-  mac80211: Removed unused 'struct ieee80211_supported_band*' variable
-  mac80211: Remove unused 'beaconint_us' variable
+Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- net/mac80211/chan.c | 4 +---
- net/mac80211/mlme.c | 4 ----
- net/mac80211/scan.c | 8 +++-----
- net/mac80211/vht.c  | 4 ----
- 4 files changed, 4 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 17a0c1b..eb7b714 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -1441,7 +1441,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	cancel_work_sync(&rt2x00dev->intf_work);
+ 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+ 	cancel_work_sync(&rt2x00dev->sleep_work);
+-#ifdef CONFIG_RT2X00_LIB_USB
++#if IS_ENABLED(CONFIG_RT2X00_LIB_USB)
+ 	if (rt2x00_is_usb(rt2x00dev)) {
+ 		usb_kill_anchored_urbs(rt2x00dev->anchor);
+ 		hrtimer_cancel(&rt2x00dev->txstatus_timer);
 -- 
-2.8.0.rc3.226.g39d4020
+2.4.11
