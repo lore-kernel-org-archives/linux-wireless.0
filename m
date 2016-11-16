@@ -1,60 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58508 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753817AbcKUQgV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47591 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751937AbcKPNHg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 11:36:21 -0500
-Date: Mon, 21 Nov 2016 21:58:20 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Break-it testing for wifi
-Message-ID: <20161121162820.GA31693@atheros-ThinkPad-T61> (sfid-20161121_173633_715987_B722D57A)
-References: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>
+        Wed, 16 Nov 2016 08:07:36 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        "Nishant Sarmukadam" <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+ remove_card
+Date: Wed, 16 Nov 2016 13:07:31 +0000
+Message-ID: <ceb954280b8344328f305ab91d7c6155@SC-EXCH04.marvell.com> (sfid-20161116_140740_718262_924418AE)
+References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
+ <1477318892-22877-5-git-send-email-akarwar@marvell.com>
+ <20161025001405.GE15034@dtor-ws> <87d1imudwm.fsf@purkki.adurom.net>
+ <20161102204537.GA27786@google.com>
+ <271acd7f41694b09be6f4ad82846782a@SC-EXCH04.marvell.com>
+ <20161109203710.GA118631@google.com>
+In-Reply-To: <20161109203710.GA118631@google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+Hi Brian,
 
-just googled out 'wifi fuzzy testing' and found something relevant
-as below
-https://www.blackhat.com/presentations/bh-europe-07/Butti/Presentation/bh-eu-07-Butti.pdf
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Thursday, November 10, 2016 2:07 AM
+> To: Amitkumar Karwar
+> Cc: Kalle Valo; Dmitry Torokhov; linux-wireless@vger.kernel.org; Cathy
+> Luo; Nishant Sarmukadam; Xinming Hu
+> Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
+> remove_card
+> 
+> On Wed, Nov 09, 2016 at 12:35:22PM +0000, Amitkumar Karwar wrote:
+> > Hi Brian,
+> 
+> Hi,
+> 
+> > > From: Brian Norris [mailto:briannorris@chromium.org]
+> > > Sent: Thursday, November 03, 2016 2:16 AM
+> > > To: Kalle Valo
+> > > Cc: Dmitry Torokhov; Amitkumar Karwar;
+> > > linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > > Xinming Hu
+> > > Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion
+> > > in remove_card
+> > >
+> > > On Thu, Oct 27, 2016 at 04:20:25PM +0300, Kalle Valo wrote:
+> > > > Dmitry Torokhov <dmitry.torokhov@gmail.com> writes:
+> > > >
+> > > > >> +/* reset_trigger variable is used to identify if
+> > > > >> +mwifiex_sdio_remove()
+> > > > >> + * is called by sdio_work during reset or the call is from
+> > > > >> +sdio
+> > > subsystem.
+> > > > >> + * We will cancel sdio_work only if the call is from sdio
+> > > subsystem.
+> > > > >> + */
+> > > > >> +static u8 reset_triggered;
+> > > > >
+> > > > > It would be really great if the driver supported multiple
+> devices.
+> > > > > IOW please avoid module-globals.
+> > > >
+> > > > Good catch, it's a hard requirement to support multiple devices
+> at
+> > > > the same time.
+> > >
+> > > BTW, this problem is repeated in several places throughout this
+> driver.
+> > > For instance, look for 'user_rmmod' (why? you shouldn't need to
+> > > treat module unload differently...)
+> >
+> > We have 2 kinds of teardown cases.
+> > 1) Chip is going to be powered off.
+> > 	a) System reboot
+> > 	b) Someone manually removed wifi card from system
+> > 2) User unloaded the driver.
+> >
+> > In case 1. b), we can't have logic to terminate WIFI connection and
+> > download SHUTDOWN command to firmware, as hardware itself is not
+> > present.
+> 
+> That seems like a poor way of determining the difference between hot
+> unplug and clean shutdown. What if unplug happens concurrently with
+> rmmod? Seems like it'd be better to identify hardware failures as such,
+> and just skip talking to HW. Also, for interfaces that support unplug
+> well (like USB), shouldn't you be able to get hotplug info from the
+> driver core, instead of having to guess the inverse of that ("this was
+> not a hotplug") from static variables like that?
+> 
+> > This logic is useful when user just unloads and loads the driver.
+> > Firmware download will be skipped in this case, as it's already
+> > running. SHUTDOWN command sent during unload has cleared firmware's
+> > state.
+> 
+> Why is that useful?
+> 
+> > 'user_rmmod' flag doesn't create problem for supporting multiple
+> > devices. The flag is true during module unload OR reboot. It's
+> > applicable for all devices.
+> >
+> > > and the work structs (and corresponding 'saved_adapter' and
+> > > 'iface_flags') used for PCIe function-level reset and SDIO reset.
+> >
+> > We are working on the v3 of this patch series. We will try to get rid
+> > of these variables along with global "work_struct" as you suggested.
 
-regards,
-shafi
+I observed some crash issues while testing with PCIe/SDIO chipsets after removing user_rmmod. We are still checking them. I will not include user_rmmod removal patch in v3 series. Other pcie_work related global variables are removed in v3 series.
+Card is freed and recreated during mwifiex_sdio_card_reset_work(). It is one of the activities in sdio_work. So moving sdio_work inside card won't be straight forward.
 
-On Mon, Nov 21, 2016 at 08:10:37AM -0800, Ben Greear wrote:
-> Hello!
-> 
-> I am thinking about adding some sort of framework to wpa_supplicant and/or the
-> mac80211 stack to allow purposefully creating bad station behaviour in order to
-> test robustness of APs.
-> 
-> Some ideas so far:
-> 
-> 1)  Allow supplicant to do bad state-machine transitions (start 4-way before associating, for instance).
-> 
-> 2)  Randomly corrupt mgt frames in driver and/or mac80211 stack and/or supplicant.
-> 
-> 3)  Possibly allow user to make specific corruptions.  This would probably be in supplicant
->     only, and I am not sure how this would be configured.  Maybe allow user to over-ride
->     existing IEs and add bogus ones of their own choosing.
-> 
-> 4)  Maybe some specific tests like putting in over-flow sized lengths of IEs.
-> 
-> Has anyone done anything similar they would like to share?
-> 
-> Johannes:  Any interest in having such a framework in upstream kernels?
-> 
-> Any other ideas for how to improve this feature set?
-> 
-> Thanks,
-> Ben
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
+Regards,
+Amitkumar 
