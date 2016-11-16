@@ -1,147 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f181.google.com ([209.85.217.181]:33530 "EHLO
-        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168226AbcKAJdg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 05:33:36 -0400
-Received: by mail-ua0-f181.google.com with SMTP id 20so108398813uak.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 02:33:36 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:56328 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750998AbcKPL5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 16 Nov 2016 06:57:30 -0500
+Date: Wed, 16 Nov 2016 12:53:20 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH v2 04/10] rt2800: do not overwrite
+ WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
+Message-ID: <20161116115319.GA26475@redhat.com> (sfid-20161116_125733_889446_1D9D55B1)
+References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+ <1478095865-8651-5-git-send-email-sgruszka@redhat.com>
 MIME-Version: 1.0
-From: Jonas Gorski <jonas.gorski@gmail.com>
-Date: Tue, 1 Nov 2016 10:33:14 +0100
-Message-ID: <CAOiHx=nbLZHW94MF+ki8CXO9n_S5b26t1O9p_pFPu6Z1mZmOtw@mail.gmail.com> (sfid-20161101_103341_191181_D74B0514)
-Subject: "silent" TL-WDN4200 (RT593 usb) devices
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Gabor Juhos <juhosg@openwrt.org>
-Content-Type: multipart/mixed; boundary=94eb2c190cb0bce2bb05403a0492
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1478095865-8651-5-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---94eb2c190cb0bce2bb05403a0492
-Content-Type: text/plain; charset=UTF-8
+We already initlized WPDMA_GLO_CFG_WP_DMA_BURST_SIZE to 3 on
+rt2800_init_registers() for USB devices. For PCI devices we will use
+HW default setting, which is 2, so patch does not change behaviour
+on PCI devices.
 
-Hi,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+v1 -> v2 Changelog fixes
 
-I have a bunch of rt5393 based TL-WDN4200 devices of which only one is
-working as expected, and the rest fail to tx with rt2800-usb, using
-latest master of lede (but also older verions). They are working fine
-with the windows drivers.
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Symptoms are:
-1. Scanning works fine (so RX seems to work)
-2. Trying to assoc in STA mode will time out
-3. In AP mode it won't show up on scan by other devices
-
-I tried listening with tcpdump (from an ath9k card, with encryption
-disabled), but didn't see anything on the air from the non-working
-sticks.
-
-I also tried comparing the rt3593 ralink driver with rt2x00, and
-couldn't find any differences on a first glance, so I'm a bit stumped.
-Any pointers what else I can try/test would be good.
-
-For comparison, I attached the eeprom contents from a working and a
-non working stick, in hope it will help. If needed, I can try to
-create a usb trace on windows.
-
-
-Regards
-Jonas
-
---94eb2c190cb0bce2bb05403a0492
-Content-Type: text/plain; charset=US-ASCII; name="nonworking.txt"
-Content-Disposition: attachment; filename="nonworking.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_iufakcwg0
-
-MDogICAgICAweDM1NzMgMHgwMTAwIDB4ZGVlOCAweDIwMjcKNDogICAgICAweGFmZDQgMHgwMDAw
-IDB4MDAwMCAweDAwMDAKODogICAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMTI6ICAg
-ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweDAwMDAKMTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
-MCAweDAwMDAKMjA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMjQ6ICAgICAweDAw
-MDAgMHgwMDAwIDB4MGQzMyAweDAwOGUKMjg6ICAgICAweDAwMzMgMHgwMDAwIDB4MDAwMCAweDA2
-MDEKMzI6ICAgICAweGZmZmYgMHgwMTE2IDB4MDEyNCAweDU1NTUKMzY6ICAgICAweGJiZDkgMHhm
-ZmJiIDB4MGEwYSAweDA4MDgKNDA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDQ6
-ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDg6ICAgICAweDBkMGQgMHgwZTBkIDB4
-MGUwZSAweDBmMGUKNTI6ICAgICAweDEwMGYgMHgxMDEwIDB4MTAxMCAweDBkMGQKNTY6ICAgICAw
-eDBlMGQgMHgwZTBlIDB4MGUwZSAweDBmMGYKNjA6ICAgICAweDBmMGYgMHgwZTBlIDB4MGQwZCAw
-eDBlMGUKNjQ6ICAgICAweDBmMGYgMHgxMDEwIDB4MTExMSAweDEyMTIKNjg6ICAgICAweDExMTEg
-MHhiOGM5IDB4ODhhMSAweDY4NzEKNzI6ICAgICAweDQ1NTUgMHgwMTMwIDB4MDUwMCAweDBkMGQK
-NzY6ICAgICAweDBjMGQgMHgwYzBjIDB4MGIwYiAweDBiMGIKODA6ICAgICAweDBhMGEgMHgwNjA3
-IDB4MDYwNiAweDA1MDYKODQ6ICAgICAweDA1MDUgMHgwNDA1IDB4MDQwNCAweDAzMDMKODg6ICAg
-ICAweDAzMDMgMHgwMjAyIDB4MDEwMSAweDAxMDEKOTI6ICAgICAweDAwMDEgMHgwMDAwIDB4MDAw
-MCAweDAwMDAKOTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTAwOiAgICAweDAw
-MDAgMHgwNzA3IDB4MDcwNyAweDA3MDcKMTA0OiAgICAweDA3MDcgMHgwNzA3IDB4MDcwNyAweDA2
-MDYKMTA4OiAgICAweDA2MDYgMHgwNjA2IDB4MDYwNiAweDA2MDYKMTEyOiAgICAweDA1MDYgMHgw
-NTA1IDB4MDUwNSAweDA1MDUKMTE2OiAgICAweDA1MDUgMHgwNTA1IDB4MDAwNSAweDAwMDAKMTIw
-OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTI0OiAgICAweDAwMDAgMHgwMDAwIDB4
-MDAwMCAweDA4MDgKMTI4OiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTMyOiAgICAw
-eDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTM2OiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAw
-eDA4MDgKMTQwOiAgICAweDA4MDggMHgwODA4IDB4MDgwOCAweDA4MDgKMTQ0OiAgICAweDAwMDgg
-MHgwMDAwIDB4MDAwMCAweDAwMDAKMTQ4OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAK
-MTUyOiAgICAweDAwMDAgMHgwMDAwIDB4YjhjOSAweDg4YTIKMTU2OiAgICAweDY1NzEgMHg0MzU1
-IDB4MDEzNSAweDAwMDAKMTYwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTY0OiAg
-ICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTY4OiAgICAweGFjMDAgMHgwNjY4IDB4Njhh
-YyAweDhhYzYKMTcyOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTc2OiAgICAweGFj
-MDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTgwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAw
-MDYKMTg0OiAgICAweGFjMDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTg4OiAgICAweGFjNjYgMHgw
-NjY4IDB4NjhhYyAweDAwMDYKMTkyOiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTk2
-OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweGZmZmYKMjAwOiAgICAweGZmZmYgMHhmZmZmIDB4
-ZmZmZiAweGZmZmYKMjA0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjA4OiAgICAw
-eGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjEyOiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAw
-eGZmZmYKMjE2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjIwOiAgICAweGZmZmYg
-MHhmZmZmIDB4ZmZmZiAweGZmZmYKMjI0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
-MjI4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjMyOiAgICAweGZmZmYgMHhmZmZm
-IDB4ZmZmZiAweGZmZmYKMjM2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQwOiAg
-ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQ0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZm
-ZiAweGZmZmYKMjQ4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjUyOiAgICAweGZm
-ZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
---94eb2c190cb0bce2bb05403a0492
-Content-Type: text/plain; charset=US-ASCII; name="working.txt"
-Content-Disposition: attachment; filename="working.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_iufakd3d1
-
-MDogICAgICAweDM1NzMgMHgwMTAwIDB4ZGVlOCAweDFkMjcKNDogICAgICAweDExMzcgMHgwMDAw
-IDB4MDAwMCAweDAwMDAKODogICAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMTI6ICAg
-ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweDAwMDAKMTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
-MCAweDAwMDAKMjA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMjQ6ICAgICAweDAw
-MDAgMHgwMDAwIDB4MGQzMyAweDAwOGUKMjg6ICAgICAweDAwMzMgMHgwMDAwIDB4MDAwMCAweDA2
-MDEKMzI6ICAgICAweGZmZmYgMHgwMTE2IDB4MDEyOCAweDU1NTUKMzY6ICAgICAweGJiZDkgMHhm
-ZmJiIDB4MGEwYSAweDA4MDgKNDA6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDQ6
-ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKNDg6ICAgICAweDBjMGMgMHgwZDBjIDB4
-MGQwZCAweDBlMGQKNTI6ICAgICAweDBmMGUgMHgwZjBmIDB4MGYwZiAweDBkMGQKNTY6ICAgICAw
-eDBlMGUgMHgwZjBmIDB4MGYwZiAweDEwMTAKNjA6ICAgICAweDEwMTAgMHgwZjBmIDB4MGYwZiAw
-eDEwMTAKNjQ6ICAgICAweDExMTEgMHgxMjEyIDB4MTMxMyAweDEzMTQKNjg6ICAgICAweDEyMTMg
-MHhiOGM5IDB4ODhhMSAweDY4NzEKNzI6ICAgICAweDQ1NTUgMHgwMTMwIDB4MDUwMCAweDBkMGQK
-NzY6ICAgICAweDBjMGQgMHgwYzBjIDB4MGIwYiAweDBhMGIKODA6ICAgICAweDBhMGEgMHgwNjA2
-IDB4MDUwNiAweDA1MDUKODQ6ICAgICAweDA0MDQgMHgwNDA0IDB4MDMwMyAweDAyMDMKODg6ICAg
-ICAweDAyMDIgMHgwMTAxIDB4MDAwMCAweDAwMDAKOTI6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAw
-MCAweDAwMDAKOTY6ICAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTAwOiAgICAweDAw
-MDAgMHgwNDA0IDB4MDQwNCAweDA0MDQKMTA0OiAgICAweDA0MDQgMHgwNDA0IDB4MDQwNCAweDAz
-MDMKMTA4OiAgICAweDAzMDMgMHgwMzAzIDB4MDMwMyAweDAzMDMKMTEyOiAgICAweDAzMDMgMHgw
-MzAzIDB4MDMwMyAweDAzMDMKMTE2OiAgICAweDAzMDMgMHgwMzAzIDB4MDAwMyAweDAwMDAKMTIw
-OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTI0OiAgICAweDAwMDAgMHgwMDAwIDB4
-MDAwMCAweDA1MDUKMTI4OiAgICAweDA1MDUgMHgwNTA1IDB4MDUwNSAweDA1MDUKMTMyOiAgICAw
-eDA1MDUgMHgwNjA2IDB4MDYwNiAweDA2MDYKMTM2OiAgICAweDA2MDYgMHgwNjA2IDB4MDcwNiAw
-eDA3MDcKMTQwOiAgICAweDA3MDcgMHgwNzA3IDB4MDcwNyAweDA3MDcKMTQ0OiAgICAweDAwMDcg
-MHgwMDAwIDB4MDAwMCAweDAwMDAKMTQ4OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAK
-MTUyOiAgICAweDAwMDAgMHgwMDAwIDB4YjhjOSAweDg4YTIKMTU2OiAgICAweDY1NzEgMHg0MzU1
-IDB4MDEzNSAweDAwMDAKMTYwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTY0OiAg
-ICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTY4OiAgICAweGFjMDAgMHgwNjY4IDB4Njhh
-YyAweDhhYzYKMTcyOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAwMDYKMTc2OiAgICAweGFj
-MDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTgwOiAgICAweGFjNjYgMHgwNjY4IDB4NjhhYyAweDAw
-MDYKMTg0OiAgICAweGFjMDAgMHgwNjY4IDB4NjhhYyAweDhhYzYKMTg4OiAgICAweGFjNjYgMHgw
-NjY4IDB4NjhhYyAweDAwMDYKMTkyOiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweDAwMDAKMTk2
-OiAgICAweDAwMDAgMHgwMDAwIDB4MDAwMCAweGZmZmYKMjAwOiAgICAweGZmZmYgMHhmZmZmIDB4
-ZmZmZiAweGZmZmYKMjA0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjA4OiAgICAw
-eGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjEyOiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAw
-eGZmZmYKMjE2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjIwOiAgICAweGZmZmYg
-MHhmZmZmIDB4ZmZmZiAweGZmZmYKMjI0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
-MjI4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjMyOiAgICAweGZmZmYgMHhmZmZm
-IDB4ZmZmZiAweGZmZmYKMjM2OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQwOiAg
-ICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjQ0OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZm
-ZiAweGZmZmYKMjQ4OiAgICAweGZmZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYKMjUyOiAgICAweGZm
-ZmYgMHhmZmZmIDB4ZmZmZiAweGZmZmYK
---94eb2c190cb0bce2bb05403a0492--
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index feceb13..9ecdc4c 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -6756,7 +6756,6 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 1);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 1);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_WP_DMA_BURST_SIZE, 2);
+ 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+ 	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+ 
+-- 
+1.7.1
