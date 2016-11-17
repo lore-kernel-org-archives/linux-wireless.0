@@ -1,54 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33860 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755481AbcK3AGg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45722 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750790AbcKQLJo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 19:06:36 -0500
-Received: by mail-pg0-f65.google.com with SMTP id e9so17758184pgc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 16:06:18 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com,
-        Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH] mac80211: Suppress NEW_PEER_CANDIDATE event if no room
-Date: Wed, 30 Nov 2016 09:06:04 +0900
-Message-Id: <1480464364-5054-1-git-send-email-masashi.honma@gmail.com> (sfid-20161130_010640_292510_2BC89B73)
+        Thu, 17 Nov 2016 06:09:44 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [4.9.0-rc5] AR9300 calibration problems with antenna selected
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <m3wpg52hii.fsf@t19.piap.pl>
+References: <m3wpg52hii.fsf@t19.piap.pl>
+To: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20161117110943.D2D92615E1@smtp.codeaurora.org> (sfid-20161117_121007_518999_61F47F96)
+Date: Thu, 17 Nov 2016 11:09:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, kernel sends NEW_PEER_CANDIDATE event to user land even if
-the found peer does not have any room to accept other peer. This causes
-continuous connection trials.
+Krzysztof wrote:
+> Hi,
+> 
+> I recently tried to select a single antenna on AR9300 and it works for
+> 30 seconds only. The subsequent calibration makes the RX signal level to
+> drop from the usual -30/-40 dBm to -70/-80 dBm, and the transmission
+> practically stops.
+> 
+> With the attached patch it works, though selecting the antenna doesn't
+> seem to have any visible effect, at least with "iw wlanX station dump"
+> (perhaps it works for TX).
+> 
+> I'm using ad-hoc mode:
+> 
+> rmmod ath9k
+> modprobe ath9k
+> iw dev wlan0 set type ibss
+> iw phy phyX set antenna 2
+> ip link set up dev wlan0
+> iw dev wlan0 set bitrates legacy-2.4 18
+> iw dev wlan0 ibss join nameXXX freqYYY
+> ip addr add ZZZ broadcast + dev wlan0
+> 
+> The card in question is Mikrotik (Routerboard) R11e-2HPnD mPCIe adapter:
+> AR9580 Wireless Network Adapter (rev 01), ID 168c:0033, subsystem
+> 19b6:d016.
+> ieee80211 phy0: Atheros AR9300 Rev:4 mem=0xc0f40000, irq=334
+> https://routerboard.com/R11e-2HPnD
+> 
+> Linux 4.9.0-rc5.
+> 
+> 
+> Is there a better way?
+> 
+> Signed-off-by: Krzysztof Halasa <khalasa@piap.pl>
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> index e9f32b5..7f17e5d 100644
+> --- a/drivers/net/wireless/ath/ath9k/main.c
+> +++ b/drivers/net/wireless/ath/ath9k/main.c
+> @@ -2245,7 +2245,7 @@ static int ath9k_set_antenna(struct ieee80211_hw *hw, u32 tx_ant, u32 rx_ant)
+>  		return 0;
+>  
+>  	/* AR9100 runs into calibration issues if not all rx chains are enabled */
+> -	if (AR_SREV_9100(ah))
+> +	if (AR_SREV_9100(ah) || AR_SREV_9300(ah))
+>  		ah->rxchainmask = 0x7;
+>  	else
+>  		ah->rxchainmask = fill_chainmask(ah->caps.rx_chainmask, rx_ant);
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/mesh_plink.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+I'll assume this is an RFC patch. Please resubmit if this is the right
+approach.
 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 7fcdcf6..fcba70e5 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -505,12 +505,14 @@ mesh_sta_info_alloc(struct ieee80211_sub_if_data *sdata, u8 *addr,
- 
- 	/* Userspace handles station allocation */
- 	if (sdata->u.mesh.user_mpm ||
--	    sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED)
--		cfg80211_notify_new_peer_candidate(sdata->dev, addr,
--						   elems->ie_start,
--						   elems->total_len,
--						   GFP_KERNEL);
--	else
-+	    sdata->u.mesh.security & IEEE80211_MESH_SEC_AUTHED) {
-+		if (mesh_peer_accepts_plinks(elems) &&
-+		    mesh_plink_availables(sdata))
-+			cfg80211_notify_new_peer_candidate(sdata->dev, addr,
-+							   elems->ie_start,
-+							   elems->total_len,
-+							   GFP_KERNEL);
-+	} else
- 		sta = __mesh_sta_info_alloc(sdata, addr);
- 
- 	return sta;
+Patch set to RFC.
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9429263/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
