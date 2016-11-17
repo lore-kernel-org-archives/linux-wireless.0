@@ -1,128 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33987 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755278AbcKBC0Q (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41360 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753493AbcKQK6G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 22:26:16 -0400
-Received: by mail-pf0-f195.google.com with SMTP id y68so273637pfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:26:16 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 11/12] mwifiex: stop checking for NULL drvata/intfdata
-Date: Wed,  2 Nov 2016 10:24:47 +0800
-Message-Id: <1478053488-16042-9-git-send-email-huxinming820@marvell.com> (sfid-20161102_032620_916997_EEF0D6E9)
-In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
-References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+        Thu, 17 Nov 2016 05:58:06 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com
+Subject: Re: [PATCH 2/5] rsi: Added rx filter frame
+References: <1479125812-2666-1-git-send-email-prameela.j04cs@gmail.com>
+Date: Thu, 17 Nov 2016 12:58:01 +0200
+In-Reply-To: <1479125812-2666-1-git-send-email-prameela.j04cs@gmail.com>
+        (Prameela Rani Garnepudi's message of "Mon, 14 Nov 2016 17:46:52
+        +0530")
+Message-ID: <87inrmpe4m.fsf@purkki.adurom.net> (sfid-20161117_115818_055633_45D3F1D7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> writes:
 
-These are never NULL, so stop making people think they might be.
+> Filtering the rx frames in firmware after connection in station mode
+> avoids the overhead of processing un-necessary frames. Hence rx filter
+> frame is added which can be configured to device at suitable times.
+>
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-I don't change this for SDIO because SDIO has a racy card-reset handler
-that reallocates this struct. I'd rather not touch that mess right now.
+A minor nitpick about the patch title. As I slept through most of my
+english classes I don't know the correct terminology but the common
+style is to use form "rsi: add foo", not "rsi: added foo".
 
----
-v2: Same as v1
----
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 14 +++++---------
- drivers/net/wireless/marvell/mwifiex/usb.c  | 15 +++------------
- 2 files changed, 8 insertions(+), 21 deletions(-)
+> +/**
+> + * This function sends a frame to filter the RX packets
+> + *
+> + * @param common Pointer to the driver private structure.
+> + * @param rx_filter_word - Flags of filter packets
+> + * @return 0 on success, -1 on failure.
+> + */
+> +int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 04b9961..c061d00 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -102,10 +102,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card) {
--		dev_err(dev, "adapter structure is not valid\n");
--		return 0;
--	}
- 
- 	/* Might still be loading firmware */
- 	wait_for_completion(&card->fw_done);
-@@ -148,8 +144,9 @@ static int mwifiex_pcie_resume(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
--		dev_err(dev, "Card or adapter structure is not valid\n");
-+
-+	if (!card->adapter) {
-+		dev_err(dev, "adapter structure is not valid\n");
- 		return 0;
- 	}
- 
-@@ -222,8 +219,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
- 	struct mwifiex_private *priv;
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card)
--		return;
- 
- 	wait_for_completion(&card->fw_done);
- 
-@@ -2216,7 +2211,8 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 	}
- 
- 	card = pci_get_drvdata(pdev);
--	if (!card || !card->adapter) {
-+
-+	if (!card->adapter) {
- 		pr_err("info: %s: card=%p adapter=%p\n", __func__, card,
- 		       card ? card->adapter : NULL);
- 		goto exit;
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index c26daf4..78b46fa 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -503,11 +503,6 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 	struct usb_tx_data_port *port;
- 	int i, j;
- 
--	if (!card) {
--		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
--		return 0;
--	}
--
- 	/* Might still be loading firmware */
- 	wait_for_completion(&card->fw_done);
- 
-@@ -574,8 +569,9 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
- 	struct mwifiex_adapter *adapter;
- 	int i;
- 
--	if (!card || !card->adapter) {
--		pr_err("%s: card or card->adapter is NULL\n", __func__);
-+	if (!card->adapter) {
-+		dev_err(&intf->dev, "%s: card->adapter is NULL\n",
-+			__func__);
- 		return 0;
- 	}
- 	adapter = card->adapter;
-@@ -617,11 +613,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
- 	struct usb_card_rec *card = usb_get_intfdata(intf);
- 	struct mwifiex_adapter *adapter;
- 
--	if (!card) {
--		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
--		return;
--	}
--
- 	wait_for_completion(&card->fw_done);
- 
- 	adapter = card->adapter;
+Based on Documentation/kernel-documentation.rst this doesn't look to be
+valid kernel-doc format. But AFAICS you got the format correct in patch
+3.
+
+Also this function uses negative error codes (as preferred), it's not
+just -1 on failure. You should fix that in the comment (similar problems
+also elsewhere in this patchset).
+
+Personally I would not even bother adding kernel-docs for driver
+internal functions. It's a lot of work to maintain them and still they
+are quite often outdated, so people can't trust them and need to check
+from the source anyway. But if you like them feel free to continue
+adding them.
+
 -- 
-1.8.1.4
+Kalle Valo
