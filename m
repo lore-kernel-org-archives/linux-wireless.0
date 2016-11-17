@@ -1,343 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:53048 "EHLO
+Received: from relay.smtp.broadcom.com ([192.19.211.62]:38283 "EHLO
         relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935249AbcKWKfe (ORCPT
+        with ESMTP id S1753058AbcKQLkB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:35:34 -0500
+        Thu, 17 Nov 2016 06:40:01 -0500
 From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend@broadcom.com>,
         Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 03/12] brcmfmac: move pno helper functions in separate source file
-Date: Wed, 23 Nov 2016 10:25:22 +0000
-Message-Id: <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_113547_966405_93FB1D26)
-In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/5] nl80211: add reporting of gscan capabilities
+Date: Thu, 17 Nov 2016 11:39:49 +0000
+Message-Id: <1479382792-13131-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_124005_602110_48A12DA1)
+In-Reply-To: <1479382792-13131-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479382792-13131-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introducing new source file for pno related functionality. Moving
-existing pno functions.
+From: Arend van Spriel <arend@broadcom.com>
+
+GScan is a scan offload feature used in recent Android releases. This
+patch adds possibility for wireless device drivers to report their
+capabilities and provide it to user-space.
 
 Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
 Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
 Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |   3 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  93 ++-----------------
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 100 +++++++++++++++++++++
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  40 +++++++++
- 4 files changed, 150 insertions(+), 86 deletions(-)
- create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
- create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+ include/net/cfg80211.h       | 36 +++++++++++++++++++++++++++
+ include/uapi/linux/nl80211.h | 58 ++++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 45 +++++++++++++++++++++++++++++++++-
+ 3 files changed, 138 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 9e4b505..d1568be 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -35,7 +35,8 @@ brcmfmac-objs += \
- 		firmware.o \
- 		feature.o \
- 		btcoex.o \
--		vendor.o
-+		vendor.o \
-+		pno.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
- 		bcdc.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 1e7c6f0..ee27095 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -32,6 +32,7 @@
- #include "fwil_types.h"
- #include "p2p.h"
- #include "btcoex.h"
-+#include "pno.h"
- #include "cfg80211.h"
- #include "feature.h"
- #include "fwil.h"
-@@ -41,16 +42,6 @@
- #include "common.h"
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index d1217da..c77bb08 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3372,6 +3372,40 @@ struct wiphy_iftype_ext_capab {
+ };
  
- #define BRCMF_SCAN_IE_LEN_MAX		2048
--#define BRCMF_PNO_VERSION		2
--#define BRCMF_PNO_TIME			30
--#define BRCMF_PNO_REPEAT		4
--#define BRCMF_PNO_FREQ_EXPO_MAX		3
--#define BRCMF_PNO_MAX_PFN_COUNT		16
--#define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
--#define BRCMF_PNO_HIDDEN_BIT		2
--#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
--#define BRCMF_PNO_SCAN_COMPLETE		1
--#define BRCMF_PNO_SCAN_INCOMPLETE	0
+ /**
++ * struct wiphy_gscan_caps -  gscan capabilities of the device.
++ *
++ * @max_scan_cache_size: total space allocated for scan results (in bytes).
++ * @max_scan_buckets: maximum number of channel buckets.
++ * @max_ap_cache_per_scan: maximum number of APs that can be stored per scan.
++ * @max_rssi_sample_size: number of RSSI samples used for averaging RSSI.
++ * @max_scan_reporting_threshold: max possible report threshold. in percentage.
++ * @max_hotlist_bssids: maximum number of entries for hotlist BSSIDs.
++ * @max_hotlist_ssids: maximum number of entries for hotlist SSIDs.
++ * @max_significant_wifi_change_aps: maximum number of entries for significant
++ *	change APs.
++ * @max_bssid_history_entries: number of BSSID/RSSI entries that device can
++ *	hold.
++ * @max_epno_networks: max number of hashed epno entries.
++ * @max_epno_networks_by_ssid: max number of epno entries for which an
++ *	exact match of SSID is required or which are hidded SSIDs.
++ * @max_white_list_ssid: max number of white listed SSIDs.
++ */
++struct wiphy_gscan_caps {
++	u32 max_scan_cache_size;
++	u32 max_scan_buckets;
++	u32 max_ap_cache_per_scan;
++	u32 max_rssi_sample_size;
++	u32 max_scan_reporting_threshold;
++	u32 max_hotlist_bssids;
++	u32 max_hotlist_ssids;
++	u32 max_significant_wifi_change_aps;
++	u32 max_bssid_history_entries;
++	u32 max_epno_hashed_networks;
++	u32 max_epno_exact_networks;
++	u32 max_white_list_ssid;
++};
++
++/**
+  * struct wiphy - wireless hardware description
+  * @reg_notifier: the driver's regulatory notification callback,
+  *	note that if your driver uses wiphy_apply_custom_regulatory()
+@@ -3524,6 +3558,7 @@ struct wiphy_iftype_ext_capab {
+  * @bss_select_support: bitmask indicating the BSS selection criteria supported
+  *	by the driver in the .connect() callback. The bit position maps to the
+  *	attribute indices defined in &enum nl80211_bss_select_attr.
++ * @gscan: structure holding the hardware capabilities for gscan.
+  *
+  * @cookie_counter: unique generic cookie counter, used to identify objects.
+  */
+@@ -3654,6 +3689,7 @@ struct wiphy {
+ 	u8 max_adj_channel_rssi_comp;
  
- #define WPA_OUI				"\x00\x50\xF2"	/* WPA OUI */
- #define WPA_OUI_TYPE			1
-@@ -3323,76 +3314,6 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
- 	return err;
- }
+ 	u32 bss_select_support;
++	const struct wiphy_gscan_caps *gscan;
  
--static int brcmf_dev_pno_clean(struct net_device *ndev)
--{
--	int ret;
--
--	/* Disable pfn */
--	ret = brcmf_fil_iovar_int_set(netdev_priv(ndev), "pfn", 0);
--	if (ret == 0) {
--		/* clear pfn */
--		ret = brcmf_fil_iovar_data_set(netdev_priv(ndev), "pfnclear",
--					       NULL, 0);
--	}
--	if (ret < 0)
--		brcmf_err("failed code %d\n", ret);
--
--	return ret;
--}
--
--static int brcmf_dev_pno_config(struct brcmf_if *ifp,
--				struct cfg80211_sched_scan_request *request)
--{
--	struct brcmf_pno_param_le pfn_param;
--	struct brcmf_pno_macaddr_le pfn_mac;
--	s32 err;
--	u8 *mac_mask;
--	int i;
--
--	memset(&pfn_param, 0, sizeof(pfn_param));
--	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
--
--	/* set extra pno params */
--	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
--	pfn_param.repeat = BRCMF_PNO_REPEAT;
--	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
--
--	/* set up pno scan fr */
--	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
--
--	err = brcmf_fil_iovar_data_set(ifp, "pfn_set", &pfn_param,
--				       sizeof(pfn_param));
--	if (err) {
--		brcmf_err("pfn_set failed, err=%d\n", err);
--		return err;
--	}
--
--	/* Find out if mac randomization should be turned on */
--	if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR))
--		return 0;
--
--	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
--	pfn_mac.flags = BRCMF_PFN_MAC_OUI_ONLY | BRCMF_PFN_SET_MAC_UNASSOC;
--
--	memcpy(pfn_mac.mac, request->mac_addr, ETH_ALEN);
--	mac_mask = request->mac_addr_mask;
--	for (i = 0; i < ETH_ALEN; i++) {
--		pfn_mac.mac[i] &= mac_mask[i];
--		pfn_mac.mac[i] |= get_random_int() & ~(mac_mask[i]);
--	}
--	/* Clear multi bit */
--	pfn_mac.mac[0] &= 0xFE;
--	/* Set locally administered */
--	pfn_mac.mac[0] |= 0x02;
--
--	err = brcmf_fil_iovar_data_set(ifp, "pfn_macaddr", &pfn_mac,
--				       sizeof(pfn_mac));
--	if (err)
--		brcmf_err("pfn_macaddr failed, err=%d\n", err);
--
--	return err;
--}
--
- static int
- brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
- 				struct net_device *ndev,
-@@ -3436,15 +3357,16 @@ static int brcmf_dev_pno_config(struct brcmf_if *ifp,
+ 	u64 cookie_counter;
  
- 	if (request->n_match_sets > 0) {
- 		/* clean up everything */
--		ret = brcmf_dev_pno_clean(ndev);
-+		ret = brcmf_pno_clean(ifp);
- 		if  (ret < 0) {
- 			brcmf_err("failed error=%d\n", ret);
- 			return ret;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7e935f6..232a792 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1977,6 +1977,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED: Indicates whether or not multicast
+  *	packets should be send out as unicast to all stations (flag attribute).
+  *
++ * @NL80211_ATTR_GSCAN_CAPS: indicating capabilities of GScan functionality
++ *	of the device. This is a nested attribute.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2381,6 +2384,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
+ 
++	NL80211_ATTR_GSCAN_CAPS,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -5188,4 +5193,57 @@ enum nl80211_nan_match_attributes {
+ 	NL80211_NAN_MATCH_ATTR_MAX = NUM_NL80211_NAN_MATCH_ATTR - 1
+ };
+ 
++/**
++ * enum nl80211_gscan_caps_attr - GScan capabilities attributes.
++ *
++ * @__NL80211_GSCAN_CAPS_ATTR_INVALID: reserved.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_CACHE_SIZE: total space allocated for
++ *	scan results (in bytes).
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_BUCKETS: maximum number of channel buckets.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_AP_CACHE_PER_SCAN: maximum number of APs that
++ *	can be stored per scan.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_RSSI_SAMPLE_SIZE:  number of RSSI samples used
++ *	for averaging RSSI.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_REPORTING_THRESHOLD: max possible report
++ *	threshold. in percentage.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_BSSID: maximum number of entries for
++ *	hotlist BSSIDs.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_SSID: maximum number of entries for
++ *	hotlist SSIDs.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_SIGNIFICANT_WIFI_CHANGE_APS: maximum number of
++ *	entries for significant change APs.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_BSSID_HISTORY: number of BSSID/RSSI entries that
++ *	device can hold.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_HASHED_NETWORKS: max number of hashed epno
++ *	entries.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_EXACT_NETWORKS: max number of epno entries
++ *	for which an exact match of SSID is required or which are hidded SSIDs.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX_WHITE_LIST_SSID: max number of white listed
++ *	SSIDs.
++ * @NL80211_GSCAN_CAPS_ATTR_MAX: highest GScan capability attribute.
++ *
++ * @__NL80211_GSCAN_CAPS_ATTR_AFTER_LAST: internal use.
++ *
++ * All attributes are u32 type.
++ */
++enum nl80211_gscan_caps_attr {
++	__NL80211_GSCAN_CAPS_ATTR_INVALID,
++	NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_CACHE_SIZE,
++	NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_BUCKETS,
++	NL80211_GSCAN_CAPS_ATTR_MAX_AP_CACHE_PER_SCAN,
++	NL80211_GSCAN_CAPS_ATTR_MAX_RSSI_SAMPLE_SIZE,
++	NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_REPORTING_THRESHOLD,
++	NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_BSSID,
++	NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_SSID,
++	NL80211_GSCAN_CAPS_ATTR_MAX_SIGNIFICANT_WIFI_CHANGE_APS,
++	NL80211_GSCAN_CAPS_ATTR_MAX_BSSID_HISTORY,
++	NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_HASHED_NETWORKS,
++	NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_EXACT_NETWORKS,
++	NL80211_GSCAN_CAPS_ATTR_MAX_WHITE_LIST_SSID,
++
++	/* keep last */
++	__NL80211_GSCAN_CAPS_ATTR_AFTER_LAST,
++	NL80211_GSCAN_CAPS_ATTR_MAX = __NL80211_GSCAN_CAPS_ATTR_AFTER_LAST - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ffce566..4606fc9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -1423,9 +1423,10 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 	void *hdr;
+ 	struct nlattr *nl_bands, *nl_band;
+ 	struct nlattr *nl_freqs, *nl_freq;
+-	struct nlattr *nl_cmds;
++	struct nlattr *nl_cmds, *nl_gscan;
+ 	enum nl80211_band band;
+ 	struct ieee80211_channel *chan;
++	const struct wiphy_gscan_caps *gscan;
+ 	int i;
+ 	const struct ieee80211_txrx_stypes *mgmt_stypes =
+ 				rdev->wiphy.mgmt_stypes;
+@@ -1880,6 +1881,48 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			}
  		}
  
- 		/* configure pno */
--		if (brcmf_dev_pno_config(ifp, request))
--			return -EINVAL;
-+		ret = brcmf_pno_config(ifp, request);
-+		if (ret < 0)
-+			return ret;
- 
- 		/* configure each match set */
- 		for (i = 0; i < request->n_match_sets; i++) {
-@@ -3486,11 +3408,12 @@ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
- 					  struct net_device *ndev)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct brcmf_if *ifp = netdev_priv(ndev);
- 
- 	brcmf_dbg(SCAN, "enter\n");
--	brcmf_dev_pno_clean(ndev);
-+	brcmf_pno_clean(ifp);
- 	if (cfg->sched_escan)
--		brcmf_notify_escan_complete(cfg, netdev_priv(ndev), true, true);
-+		brcmf_notify_escan_complete(cfg, ifp, true, true);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-new file mode 100644
-index 0000000..2f6a4e0
---- /dev/null
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -0,0 +1,100 @@
-+/*
-+ * Copyright (c) 2016 Broadcom
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#include <linux/netdevice.h>
-+#include <net/cfg80211.h>
++		state->split_start++;
++		break;
++	case 14:
++		if (!rdev->wiphy.gscan) {
++			/* done */
++			state->split_start = 0;
++			break;
++		}
++		gscan = rdev->wiphy.gscan;
++		nl_gscan = nla_nest_start(msg, NL80211_ATTR_GSCAN_CAPS);
++		if (!nl_gscan ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_CACHE_SIZE,
++				gscan->max_scan_cache_size) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_BUCKETS,
++				gscan->max_scan_buckets) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_AP_CACHE_PER_SCAN,
++				gscan->max_ap_cache_per_scan) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_RSSI_SAMPLE_SIZE,
++				gscan->max_rssi_sample_size) ||
++		    nla_put_u32(msg,
++				NL80211_GSCAN_CAPS_ATTR_MAX_SCAN_REPORTING_THRESHOLD,
++				gscan->max_scan_reporting_threshold) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_BSSID,
++				gscan->max_hotlist_bssids) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_HOTLIST_SSID,
++				gscan->max_hotlist_ssids) ||
++		    nla_put_u32(msg,
++				NL80211_GSCAN_CAPS_ATTR_MAX_SIGNIFICANT_WIFI_CHANGE_APS,
++				gscan->max_significant_wifi_change_aps) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_BSSID_HISTORY,
++				gscan->max_bssid_history_entries) ||
++		    nla_put_u32(msg,
++				NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_HASHED_NETWORKS,
++				gscan->max_epno_hashed_networks) ||
++		    nla_put_u32(msg,
++				NL80211_GSCAN_CAPS_ATTR_MAX_EPNO_EXACT_NETWORKS,
++				gscan->max_epno_exact_networks) ||
++		    nla_put_u32(msg, NL80211_GSCAN_CAPS_ATTR_MAX_WHITE_LIST_SSID,
++				gscan->max_white_list_ssid))
++			goto nla_put_failure;
++		nla_nest_end(msg, nl_gscan);
 +
-+#include "core.h"
-+#include "debug.h"
-+#include "pno.h"
-+#include "fwil.h"
-+#include "fwil_types.h"
-+
-+#define BRCMF_PNO_VERSION		2
-+#define BRCMF_PNO_TIME			30
-+#define BRCMF_PNO_REPEAT		4
-+#define BRCMF_PNO_FREQ_EXPO_MAX		3
-+#define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
-+#define BRCMF_PNO_SCAN_INCOMPLETE	0
-+
-+int brcmf_pno_clean(struct brcmf_if *ifp)
-+{
-+	int ret;
-+
-+	/* Disable pfn */
-+	ret = brcmf_fil_iovar_int_set(ifp, "pfn", 0);
-+	if (ret == 0) {
-+		/* clear pfn */
-+		ret = brcmf_fil_iovar_data_set(ifp, "pfnclear", NULL, 0);
-+	}
-+	if (ret < 0)
-+		brcmf_err("failed code %d\n", ret);
-+
-+	return ret;
-+}
-+
-+int brcmf_pno_config(struct brcmf_if *ifp,
-+		     struct cfg80211_sched_scan_request *request)
-+{
-+	struct brcmf_pno_param_le pfn_param;
-+	struct brcmf_pno_macaddr_le pfn_mac;
-+	s32 err;
-+	u8 *mac_mask;
-+	int i;
-+
-+	memset(&pfn_param, 0, sizeof(pfn_param));
-+	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
-+
-+	/* set extra pno params */
-+	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
-+	pfn_param.repeat = BRCMF_PNO_REPEAT;
-+	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
-+
-+	/* set up pno scan fr */
-+	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_set", &pfn_param,
-+				       sizeof(pfn_param));
-+	if (err) {
-+		brcmf_err("pfn_set failed, err=%d\n", err);
-+		return err;
-+	}
-+
-+	/* Find out if mac randomization should be turned on */
-+	if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR))
-+		return 0;
-+
-+	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
-+	pfn_mac.flags = BRCMF_PFN_MAC_OUI_ONLY | BRCMF_PFN_SET_MAC_UNASSOC;
-+
-+	memcpy(pfn_mac.mac, request->mac_addr, ETH_ALEN);
-+	mac_mask = request->mac_addr_mask;
-+	for (i = 0; i < ETH_ALEN; i++) {
-+		pfn_mac.mac[i] &= mac_mask[i];
-+		pfn_mac.mac[i] |= get_random_int() & ~(mac_mask[i]);
-+	}
-+	/* Clear multi bit */
-+	pfn_mac.mac[0] &= 0xFE;
-+	/* Set locally administered */
-+	pfn_mac.mac[0] |= 0x02;
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "pfn_macaddr", &pfn_mac,
-+				       sizeof(pfn_mac));
-+	if (err)
-+		brcmf_err("pfn_macaddr failed, err=%d\n", err);
-+
-+	return err;
-+}
-+
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
-new file mode 100644
-index 0000000..08d701e
---- /dev/null
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
-@@ -0,0 +1,40 @@
-+/*
-+ * Copyright (c) 2016 Broadcom
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+#ifndef _BRCMF_PNO_H
-+#define _BRCMF_PNO_H
-+
-+#define BRCMF_PNO_SCAN_COMPLETE		1
-+#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
-+#define BRCMF_PNO_HIDDEN_BIT		2
-+#define BRCMF_PNO_MAX_PFN_COUNT		16
-+
-+/**
-+ * brcmf_pno_clean - disable and clear pno in firmware.
-+ *
-+ * @ifp: interface object used.
-+ */
-+int brcmf_pno_clean(struct brcmf_if *ifp);
-+
-+/**
-+ * brcmf_pno_config - configure pno parameters.
-+ *
-+ * @ifp: interface object used.
-+ * @request: scheduled scan parameters.
-+ */
-+int brcmf_pno_config(struct brcmf_if *ifp,
-+		     struct cfg80211_sched_scan_request *request);
-+
-+#endif /* _BRCMF_PNO_H */
+ 		/* done */
+ 		state->split_start = 0;
+ 		break;
 -- 
 1.9.1
