@@ -1,90 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28349 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753513AbcKNMvM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 07:51:12 -0500
-From: "Erenfeld, Aviya" <aviya.erenfeld@intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-Subject: RE: [bug report] iwlwifi: mvm: use dev_coredumpsg()
-Date: Mon, 14 Nov 2016 12:51:05 +0000
-Message-ID: <C2360C247E162A4E9DC7851CB60DD6331A3992FC@HASMSX106.ger.corp.intel.com> (sfid-20161114_135115_554404_FD2DD23F)
-References: <20161114112039.GA21931@mwanda>
-In-Reply-To: <20161114112039.GA21931@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:54628 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932110AbcKQL20 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 06:28:26 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [1/2] mwifiex: fix corner case power save issue
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1477062948-8558-1-git-send-email-akarwar@marvell.com>
+References: <1477062948-8558-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161117112825.D8F186164F@smtp.codeaurora.org> (sfid-20161117_122830_486643_A3F34F31)
+Date: Thu, 17 Nov 2016 11:28:25 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks,
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> We may get SLEEP event from firmware even if TXDone for last Tx packet
+> is still pending. In this case, we may end up accessing PCIe memory for
+> handling TXDone after power save handshake is completed. This causes
+> kernel crash with external abort.
+> 
+> We will delay sending SLEEP confirm to firmware in
+> this case to resolve the problem.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Tested-by: Brian Norris <briannorris@chromium.org>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-Right, we already have a pending fix for that one.
+Dropped per request from Amitkumar.
 
-Aviya
+Patch set to Changes Requested.
 
------Original Message-----
-From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
-Sent: Monday, November 14, 2016 13:21
-To: Erenfeld, Aviya <aviya.erenfeld@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] iwlwifi: mvm: use dev_coredumpsg()
+-- 
+https://patchwork.kernel.org/patch/9389485/
 
-Hello Aviya Erenfeld,
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-The patch 7e62a699aafb: "iwlwifi: mvm: use dev_coredumpsg()" from Sep 20, 2016, leads to the following static checker warning:
-
-	drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c:821 iwl_mvm_fw_error_dump()
-	error: we previously assumed 'fw_error_dump->trans_ptr' could be null (see line 809)
-
-drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-   805  dump_trans_data:
-   806          fw_error_dump->trans_ptr = iwl_trans_dump_data(mvm->trans,
-   807                                                         mvm->fw_dump_trig);
-   808          fw_error_dump->op_mode_len = file_len;
-   809          if (fw_error_dump->trans_ptr)
-   810                  file_len += fw_error_dump->trans_ptr->len;
-
-We assume ->trans_ptr can be NULL.
-
-   811          dump_file->file_len = cpu_to_le32(file_len);
-   812  
-   813          sg_dump_data = alloc_sgtable(file_len);
-
-That probably means file_len is zero?  (didn't look).  That means sg_dump_data is ZERO_SIZE_PTR (16).
-
-   814          if (sg_dump_data) {
-   815                  sg_pcopy_from_buffer(sg_dump_data,
-   816                                       sg_nents(sg_dump_data),
-   817                                       fw_error_dump->op_mode_ptr,
-   818                                       fw_error_dump->op_mode_len, 0);
-   819                  sg_pcopy_from_buffer(sg_dump_data,
-   820                                       sg_nents(sg_dump_data),
-   821                                       fw_error_dump->trans_ptr->data,
-
-Leading to an oops.
-
-   822                                       fw_error_dump->trans_ptr->len,
-   823                                       fw_error_dump->op_mode_len);
-   824                  dev_coredumpsg(mvm->trans->dev, sg_dump_data, file_len,
-   825                                 GFP_KERNEL);
-   826          }
-   827          vfree(fw_error_dump->op_mode_ptr);
-   828          vfree(fw_error_dump->trans_ptr);
-   829          kfree(fw_error_dump);
-   830  
-   831  out:
-   832          iwl_mvm_free_fw_dump_desc(mvm);
-   833          mvm->fw_dump_trig = NULL;
-   834          clear_bit(IWL_MVM_STATUS_DUMPING_FW_LOG, &mvm->status);
-   835  }
-
-regards,
-dan carpenter
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
