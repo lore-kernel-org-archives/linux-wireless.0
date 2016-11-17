@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:35498 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755283AbcK1UIC (ORCPT
+Received: from relay.smtp.broadcom.com ([192.19.211.62]:33434 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752432AbcKQJKf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 15:08:02 -0500
-Received: by mail-wm0-f43.google.com with SMTP id a197so216771978wmd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 12:08:02 -0800 (PST)
-Subject: Re: [RFC V2 1/5] nl80211: allow reporting RTT information in scan
- results
+        Thu, 17 Nov 2016 04:10:35 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
- <1479388726-3288-2-git-send-email-arend.vanspriel@broadcom.com>
- <1480343530.8107.51.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6f75b940-d0b1-1e9c-f286-3923089d202d@broadcom.com> (sfid-20161128_210942_056304_70A28762)
-Date: Mon, 28 Nov 2016 21:07:57 +0100
-MIME-Version: 1.0
-In-Reply-To: <1480343530.8107.51.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/2] nl80211: check NL80211_ATTR_SCHED_SCAN_INTERVAL only once
+Date: Thu, 17 Nov 2016 09:02:40 +0000
+Message-Id: <1479373360-1398-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_101042_678900_62808FE2)
+In-Reply-To: <1479373360-1398-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479373360-1398-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The presence of the NL80211_ATTR_SCHED_SCAN_INTERVAL attribute was
+checked in nl80211_parse_sched_scan() and
+nl80211_parse_sched_scan_plans() which might be a bit redundant
+so removing one.
 
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/nl80211.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-On 28-11-2016 15:32, Johannes Berg wrote:
-> 
->> + * @distance: distance to AP with %parent_bssid in centimeters. Zero
->> + *	value indicates this is undetermined.
->> + * @var_distance: variance of %distance indicating accurracy.
-> 
-> accuracy
-> 
-> The distance between the two APs? Where are you even obtaining that
-> information from?
-
-I was wondering about the meaning of the term "parent_bssid". Given your
-remark it means something else than my guess. I actually meant the
-distance to the AP indicated by this BSS. Our gscan code obtains the
-gscan results from firmware and in that API it has RTT info. However,
-recent testing revealed those fields are always coming up with zero
-values :-(
-
-So right now I am not sure if we need this extension.
-
-Regards,
-Arend
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 24ab199..051cd5a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6761,13 +6761,10 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 		/*
+ 		 * If scan plans are not specified,
+-		 * %NL80211_ATTR_SCHED_SCAN_INTERVAL must be specified. In this
++		 * %NL80211_ATTR_SCHED_SCAN_INTERVAL will be specified. In this
+ 		 * case one scan plan will be set with the specified scan
+ 		 * interval and infinite number of iterations.
+ 		 */
+-		if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
+-			return -EINVAL;
+-
+ 		interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
+ 		if (!interval)
+ 			return -EINVAL;
+-- 
+1.9.1
