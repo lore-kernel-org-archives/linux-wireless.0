@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60620 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750787AbcKYI0M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 03:26:12 -0500
-Message-ID: <1480062330.4317.2.camel@sipsolutions.net> (sfid-20161125_092617_738163_E9593B0D)
-Subject: Re: [PATCH] nl80211: provide minimum scheduled scan (plan) interval
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 25 Nov 2016 09:25:30 +0100
-In-Reply-To: <5c249c34-5e8c-093a-c5df-3507cabc8872@broadcom.com> (sfid-20161122_210634_601031_8D67F631)
-References: <1479821515-13261-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1479821915.9021.4.camel@sipsolutions.net>
-         <5c249c34-5e8c-093a-c5df-3507cabc8872@broadcom.com>
-         (sfid-20161122_210634_601031_8D67F631)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:44494 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938698AbcKQGp4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 01:45:56 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: p54: memset(0) whole array
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161014092309.24113-1-jslaby@suse.cz>
+References: <20161014092309.24113-1-jslaby@suse.cz>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: chunkeey@googlemail.com, linux-kernel@vger.kernel.org,
+        Jiri Slaby <jslaby@suse.cz>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Message-Id: <20161117064555.F21F6615DB@smtp.codeaurora.org> (sfid-20161117_074600_483262_863062BB)
+Date: Thu, 17 Nov 2016 06:45:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry, forgot to reply to this until Luca's email bumped it up...
+Jiri Slaby <jslaby@suse.cz> wrote:
+> gcc 7 complains:
+> drivers/net/wireless/intersil/p54/fwio.c: In function 'p54_scan':
+> drivers/net/wireless/intersil/p54/fwio.c:491:4: warning: 'memset' used with length equal to number of elements without multiplication by element size [-Wmemset-elt-size]
+> 
+> Fix that by passing the correct size to memset.
+> 
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Christian Lamparter <chunkeey@googlemail.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
-On Tue, 2016-11-22 at 21:06 +0100, Arend Van Spriel wrote:
+Patch applied to wireless-drivers-next.git, thanks.
 
-> Are we? Currently, the minimum is not checked in nl80211, but that
-> does not say anything about the driver which might validate the
-> interval as well and return an error.
+6f1758178820 p54: memset(0) whole array
 
-Well, since drivers currently don't return an error (even if they
-ignore the value!) that *does* change the API.
+-- 
+https://patchwork.kernel.org/patch/9376333/
 
-> What made me start looking at this is that in brcmfmac the interval
-> in the request was ignored and a fixed interval was provisioned in
-> the device. I wanted to fix that but was not sure if I needed to
-> check it against our firmware min..max range and what the appropriate
-> error handling should be. If silently changing what user-space is
-> requesting is fine for this, I am happy to make it so. Preferably in
-> nl80211.
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-I think (agreeing with Luca) bumping it up is fine.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
