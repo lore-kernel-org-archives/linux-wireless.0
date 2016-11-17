@@ -1,153 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:36511 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S948048AbcKAAOl (ORCPT
+Received: from mail-it0-f53.google.com ([209.85.214.53]:37413 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933320AbcKQRi2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 20:14:41 -0400
-Received: by mail-pf0-f176.google.com with SMTP id 189so31306541pfz.3
-        for <linux-wireless@vger.kernel.org>; Mon, 31 Oct 2016 17:14:41 -0700 (PDT)
-Date: Mon, 31 Oct 2016 17:14:38 -0700
+        Thu, 17 Nov 2016 12:38:28 -0500
+Received: by mail-it0-f53.google.com with SMTP id y23so65325283itc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 09:38:28 -0800 (PST)
+Date: Thu, 17 Nov 2016 09:38:25 -0800
 From: Brian Norris <briannorris@chromium.org>
-To: Xinming Hu <huxinming820@gmail.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>
-Subject: Re: [PATCH 02/12] mwifiex: check tx_hw_pending before downloading
- sleep confirm
-Message-ID: <20161101001437.GB101079@google.com> (sfid-20161101_011445_646159_8E41DFE9)
-References: <1477900940-10549-1-git-send-email-huxinming820@marvell.com>
- <1477900940-10549-2-git-send-email-huxinming820@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
+Subject: Re: [v7] mwifiex: parse device tree node for PCIe
+Message-ID: <20161117173824.GA129893@google.com> (sfid-20161117_183838_386715_877ECC15)
+References: <1479215662-631-1-git-send-email-akarwar@marvell.com>
+ <20161117123920.E159F6162A@smtp.codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1477900940-10549-2-git-send-email-huxinming820@marvell.com>
+In-Reply-To: <20161117123920.E159F6162A@smtp.codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 31, 2016 at 04:02:10PM +0800, Xinming Hu wrote:
-> From: Shengzhen Li <szli@marvell.com>
+On Thu, Nov 17, 2016 at 12:39:20PM +0000, Kalle Valo wrote:
+> Amitkumar Karwar <akarwar@marvell.com> wrote:
+> > From: Xinming Hu <huxm@marvell.com>
+> > 
+> > This patch derives device tree node from pcie bus layer framework.
+> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> > marvell-8xxx.txt) to accommodate PCIe changes.
+> > 
+> > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Rajat Jain <rajatja@google.com>
+> > Reviewed-by: Brian Norris <briannorris@chromium.org>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 > 
-> This patch will only allow downloading sleep confirm
-> when no tx done interrupt is pending in the hardware.
-> 
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> 
-> Change-Id: I6d6955b4a2de0ad791ca28f0f635d636a2c7e406
+> You should CC the device tree list when making changes to the bindings.
 
+FWIW, Rajat had that right on v6...
 
-^^ Remove this
-
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 4 ++--
->  drivers/net/wireless/marvell/mwifiex/init.c   | 1 +
->  drivers/net/wireless/marvell/mwifiex/main.h   | 1 +
->  drivers/net/wireless/marvell/mwifiex/pcie.c   | 5 +++++
->  4 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> index 9075be5..25a7475 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> @@ -1118,14 +1118,14 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
->  void
->  mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
->  {
-> -	if (!adapter->cmd_sent &&
-> +	if (!adapter->cmd_sent && !atomic_read(&adapter->tx_hw_pending) &&
-
-How is this different from the following?
-
-https://patchwork.kernel.org/patch/9389485/
-
-And parituclarly, they conflict on this line, so you need to resolve
-that somehow...
-
-And if the linked patch serves the same purpose, then I'd rather take
-it, since it's much simpler.
+> Patch set to Changes Requested.
 
 Brian
-
->  	    !adapter->curr_cmd && !IS_CARD_RX_RCVD(adapter))
->  		mwifiex_dnld_sleep_confirm_cmd(adapter);
->  	else
->  		mwifiex_dbg(adapter, CMD,
->  			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
->  			    (adapter->cmd_sent) ? "D" : "",
-> -			    (adapter->data_sent) ? "T" : "",
-> +			    atomic_read(&adapter->tx_hw_pending) ? "T" : "",
->  			    (adapter->curr_cmd) ? "C" : "",
->  			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
->  }
-> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-> index 82839d9..b36cb3f 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/init.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
-> @@ -270,6 +270,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
->  	adapter->adhoc_11n_enabled = false;
->  
->  	mwifiex_wmm_init(adapter);
-> +	atomic_set(&adapter->tx_hw_pending, 0);
->  
->  	sleep_cfm_buf = (struct mwifiex_opt_sleep_confirm *)
->  					adapter->sleep_cfm->data;
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index d61fe3a..7f67f23 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -857,6 +857,7 @@ struct mwifiex_adapter {
->  	atomic_t rx_pending;
->  	atomic_t tx_pending;
->  	atomic_t cmd_pending;
-> +	atomic_t tx_hw_pending;
->  	struct workqueue_struct *workqueue;
->  	struct work_struct main_work;
->  	struct workqueue_struct *rx_workqueue;
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 063c707..4aa5d91 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -516,6 +516,7 @@ static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
->  		}
->  	}
->  
-> +	atomic_set(&adapter->tx_hw_pending, 0);
->  	return 0;
->  }
->  
-> @@ -689,6 +690,7 @@ static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
->  		card->tx_buf_list[i] = NULL;
->  	}
->  
-> +	atomic_set(&adapter->tx_hw_pending, 0);
->  	return;
->  }
->  
-> @@ -1126,6 +1128,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
->  							    -1);
->  			else
->  				mwifiex_write_data_complete(adapter, skb, 0, 0);
-> +			atomic_dec(&adapter->tx_hw_pending);
->  		}
->  
->  		card->tx_buf_list[wrdoneidx] = NULL;
-> @@ -1218,6 +1221,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
->  		wrindx = (card->txbd_wrptr & reg->tx_mask) >> reg->tx_start_ptr;
->  		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
->  		card->tx_buf_list[wrindx] = skb;
-> +		atomic_inc(&adapter->tx_hw_pending);
->  
->  		if (reg->pfu_enabled) {
->  			desc2 = card->txbd_ring[wrindx];
-> @@ -1295,6 +1299,7 @@ mwifiex_pcie_send_data(struct mwifiex_adapter *adapter, struct sk_buff *skb,
->  done_unmap:
->  	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
->  	card->tx_buf_list[wrindx] = NULL;
-> +	atomic_dec(&adapter->tx_hw_pending);
->  	if (reg->pfu_enabled)
->  		memset(desc2, 0, sizeof(*desc2));
->  	else
-> -- 
-> 1.8.1.4
-> 
