@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43156 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932283AbcK1OUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 09:20:25 -0500
-Message-ID: <1480342821.8107.44.camel@sipsolutions.net> (sfid-20161128_152027_957954_3DB43816)
-Subject: Re: [PATCH 2/2] cfg80211: Add support to sched scan to report
- better BSSs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        vamsi krishna <vamsin@qti.qualcomm.com>
-Date: Mon, 28 Nov 2016 15:20:21 +0100
-In-Reply-To: <ee0072cd-83b8-1264-d792-bcf4ce1a8940@broadcom.com> (sfid-20161127_215109_122180_ADB0DD12)
-References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
-         <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
-         <ee0072cd-83b8-1264-d792-bcf4ce1a8940@broadcom.com>
-         (sfid-20161127_215109_122180_ADB0DD12)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:49770 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933373AbcKQLSQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 06:18:16 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: printk() overflow with 32-byte SSIDs
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1478658504-31045-1-git-send-email-briannorris@chromium.org>
+References: <1478658504-31045-1-git-send-email-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Cathy Luo <cluo@marvell.com>, security@kernel.org,
+        stable@vger.kernel.org, Brian Norris <briannorris@chromium.org>
+Message-Id: <20161117111816.227EE61626@smtp.codeaurora.org> (sfid-20161117_121837_238380_BDC28C75)
+Date: Thu, 17 Nov 2016 11:18:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It seems there has already
-> been taken a shot at this which may be used/extended [1].
+Brian Norris <briannorris@chromium.org> wrote:
+> SSIDs aren't guaranteed to be 0-terminated. Let's cap the max length
+> when we print them out.
 > 
+> This can be easily noticed by connecting to a network with a 32-octet
+> SSID:
+> 
+> [ 3903.502925] mwifiex_pcie 0000:01:00.0: info: trying to associate to
+> '0123456789abcdef0123456789abcdef <uninitialized mem>' bssid
+> xx:xx:xx:xx:xx:xx
+> 
+> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Cc: <stable@vger.kernel.org>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-That's a good point - it's somewhat similar.
+Patch applied to wireless-drivers.git, thanks.
 
-This is obviously a different context - offloaded BSS selection vs.
-scheduled scan (for host BSS selection), but perhaps the attribute &
-definitions could be reused?
+fcd2042e8d36 mwifiex: printk() overflow with 32-byte SSIDs
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9418369/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
