@@ -1,61 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56110 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965222AbcKWPZO (ORCPT
+Received: from relay.smtp.broadcom.com ([192.19.211.62]:38284 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753268AbcKQLkB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 10:25:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
-        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
-        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Ben Hutchings <ben@decadent.org.uk>,
-        Kyle McMartin <kyle@kernel.org>
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        <1478706966.18306.1.camel@sipsolutions.net>
-        <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
-        <1478725543.21403.4.camel@sipsolutions.net>
-        <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
-        <1478864146.4129.4.camel@sipsolutions.net>
-        <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
-Date: Wed, 23 Nov 2016 17:25:08 +0200
-In-Reply-To: <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
-        (IgorMitsyanko's message of "Mon, 14 Nov 2016 11:26:04 +0300")
-Message-ID: <87d1hmnrqj.fsf@purkki.adurom.net> (sfid-20161123_162518_361073_C81F4FCB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 17 Nov 2016 06:40:01 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/5] nl80211: allow reporting RTT information in scan results
+Date: Thu, 17 Nov 2016 11:39:48 +0000
+Message-Id: <1479382792-13131-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_124012_605382_AF2643E0)
+In-Reply-To: <1479382792-13131-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479382792-13131-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+Add distance and its variance to the BSS structure so drivers
+may provide RTT information for BSS instances found during
+scanning.
 
-> To clarify with you and Kalle, as persons involved with
-> linux-wireless: is my understanding correct that submitting firmware
-> into linux-fimware repository is a prerequisite to accepting new
-> driver into linux-wireless?
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ include/net/cfg80211.h       | 11 +++++++++++
+ include/uapi/linux/nl80211.h |  6 ++++++
+ net/wireless/nl80211.c       |  8 ++++++++
+ net/wireless/scan.c          |  2 ++
+ 4 files changed, 27 insertions(+)
 
-In my opinion the most important is that the device is usable with an
-upstream driver so that anyone can start using the driver (if they have
-the hardware).
-
-> There is an option to start Quantenna device from internal flash
-> memory, no external binary files involved. If we will introduce this
-> functionality and remove code handling external firmware for now
-> (until firmware problem resolved), would that allow driver to be
-> reviewed/accepted?
-
-Do all the publically available hardware contain the firmware in
-internal flash (flashed in the factory)? Or is this something which must
-be installed separately for each board's internal flash by the user?
-
-BTW, the original mail with the firmware image didn't make it to the
-list, I guess it was too big? It would be good if you could post the
-license separately so that people can see it.
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 2019310..d1217da 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1675,6 +1675,9 @@ enum cfg80211_signal_type {
+  * @scan_width: scan width that was used
+  * @signal: signal strength value, according to the wiphy's
+  *	signal type
++ * @distance: distance to AP with %parent_bssid in centimeters. Zero
++ *	value indicates this is undetermined.
++ * @var_distance: variance of %distance indicating accurracy.
+  * @boottime_ns: timestamp (CLOCK_BOOTTIME) when the information was
+  *	received; should match the time when the frame was actually
+  *	received by the device (not just by the host, in case it was
+@@ -1691,6 +1694,8 @@ struct cfg80211_inform_bss {
+ 	struct ieee80211_channel *chan;
+ 	enum nl80211_bss_scan_width scan_width;
+ 	s32 signal;
++	u32 distance;
++	u32 var_distance;
+ 	u64 boottime_ns;
+ 	u64 parent_tsf;
+ 	u8 parent_bssid[ETH_ALEN] __aligned(2);
+@@ -1737,6 +1742,9 @@ struct cfg80211_bss_ies {
+  *	that holds the beacon data. @beacon_ies is still valid, of course, and
+  *	points to the same data as hidden_beacon_bss->beacon_ies in that case.
+  * @signal: signal strength value (type depends on the wiphy's signal_type)
++ * @distance: distance to AP with %parent_bssid in centimeters. Zero
++ *	value indicates this is undetermined.
++ * @var_distance: variance of %distance indicating accurracy.
+  * @priv: private area for driver use, has at least wiphy->bss_priv_size bytes
+  */
+ struct cfg80211_bss {
+@@ -1756,6 +1764,9 @@ struct cfg80211_bss {
+ 
+ 	u8 bssid[ETH_ALEN];
+ 
++	u32 distance;
++	u32 var_distance;
++
+ 	u8 priv[0] __aligned(sizeof(void *));
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 259c9c7..7e935f6 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3651,6 +3651,10 @@ enum nl80211_bss_scan_width {
+  *	@NL80211_BSS_PARENT_BSSID. (u64).
+  * @NL80211_BSS_PARENT_BSSID: the BSS according to which @NL80211_BSS_PARENT_TSF
+  *	is set.
++ * @NL80211_BSS_DISTANCE: distance to AP with @NL80211_BSS_PARENT_BSSID in
++ *	centimeters (u32).
++ * @NL80211_BSS_VARIANCE_DISTANCE: variance of @NL80211_BSS_DISTANCE value (u32).
++ *
+  * @__NL80211_BSS_AFTER_LAST: internal
+  * @NL80211_BSS_MAX: highest BSS attribute
+  */
+@@ -3674,6 +3678,8 @@ enum nl80211_bss {
+ 	NL80211_BSS_PAD,
+ 	NL80211_BSS_PARENT_TSF,
+ 	NL80211_BSS_PARENT_BSSID,
++	NL80211_BSS_DISTANCE,
++	NL80211_BSS_VARIANCE_DISTANCE,
+ 
+ 	/* keep last */
+ 	__NL80211_BSS_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 24ab199..ffce566 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7515,6 +7515,14 @@ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			      intbss->ts_boottime, NL80211_BSS_PAD))
+ 		goto nla_put_failure;
+ 
++	if (res->distance && nla_put_u32(msg, NL80211_BSS_DISTANCE,
++					 res->distance))
++		goto nla_put_failure;
++
++	if (res->var_distance && nla_put_u32(msg, NL80211_BSS_VARIANCE_DISTANCE,
++					     res->var_distance))
++		goto nla_put_failure;
++
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+ 		if (nla_put_u32(msg, NL80211_BSS_SIGNAL_MBM, res->signal))
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index b5bd58d..afda1f9 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -973,6 +973,8 @@ struct cfg80211_bss *
+ 	tmp.pub.signal = data->signal;
+ 	tmp.pub.beacon_interval = beacon_interval;
+ 	tmp.pub.capability = capability;
++	tmp.pub.distance = data->distance;
++	tmp.pub.var_distance = data->var_distance;
+ 	tmp.ts_boottime = data->boottime_ns;
+ 
+ 	/*
 -- 
-Kalle Valo
+1.9.1
