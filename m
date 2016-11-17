@@ -1,123 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45896 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932825AbcKKNL4 (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36165 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752305AbcKQIg3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:56 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v3 11/11] mwifiex: pcie: stop checking for NULL adapter->card
-Date: Fri, 11 Nov 2016 18:40:18 +0530
-Message-ID: <1478869818-4340-11-git-send-email-akarwar@marvell.com> (sfid-20161111_141200_295543_E485DB07)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 17 Nov 2016 03:36:29 -0500
+Received: by mail-wm0-f42.google.com with SMTP id g23so295182506wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 00:36:28 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        Simon Wunderlich <simon.wunderlich@open-mesh.com>,
+        Sven Eckelmann <sven.eckelmann@open-mesh.com>
+Subject: [RFC v2 2/2] ath9k: Reset chip on potential deaf state
+Date: Thu, 17 Nov 2016 09:36:14 +0100
+Message-Id: <20161117083614.19188-2-sven.eckelmann@open-mesh.com> (sfid-20161117_093632_345888_BDE0B998)
+In-Reply-To: <20161117083614.19188-1-sven.eckelmann@open-mesh.com>
+References: <20161117083614.19188-1-sven.eckelmann@open-mesh.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+From: Simon Wunderlich <simon.wunderlich@open-mesh.com>
 
-It should never be NULL here, and to think otherwise makes things
-confusing.
+The chip is switching seemingly random into a state which can be described
+as "deaf". No or nearly no interrupts are generated anymore for incoming
+packets. Existing links either break down after a while and new links will
+not be established.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+The driver doesn't know if there is no other device available or if it
+ended up in an "deaf" state. Resetting the chip proactively avoids
+permanent problems in case the chip really was in its "deaf" state but
+maybe causes unnecessary resets in case it wasn't "deaf".
+
+Signed-off-by: Simon Wunderlich <simon.wunderlich@open-mesh.com>
+[sven.eckelmann@open-mesh.com: port to recent ath9k, add commit message]
+Signed-off-by: Sven Eckelmann <sven.eckelmann@open-mesh.com>
 ---
-v2: Same as v1
-v3: Below checkpatch warnings are resolved
-WARNING: please, no spaces at the start of a line
-#50: FILE: drivers/net/wireless/marvell/mwifiex/pcie.c:3037:
-+       } else {$
+v2:
+ - reduce amount of possible goto-raptor attacks by one (thanks Kalle Valo)
 
-WARNING: please, no spaces at the start of a line
-#62: FILE: drivers/net/wireless/marvell/mwifiex/pcie.c:3044:
-+       }$
+This problem was discovered in mesh setups. It was noticed that some nodes
+were not able to see their neighbors (mostly after running for a while) -
+even when those neighbors received data from them via IBSS. A simple `iw
+dev wlan0 scan` fixed the problem for them. But the problem seems to
+reappear after while(tm) in a large enough(tm) mesh.
+
+This patch is a little bit obscure because it requires CONFIG_ATH9K_DEBUGFS
+to actually work. But there still seems to be potential interest in
+Freifunk communities or Freifunk meta-projects (e.g. freifunk-gluon). It is
+currently not known if it helps them but publishing this to allow them to
+test and play around with it will not hurt :)
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 53 +++++++++++++----------------
- 1 file changed, 23 insertions(+), 30 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  3 +++
+ drivers/net/wireless/ath/ath9k/debug.c |  1 +
+ drivers/net/wireless/ath/ath9k/debug.h |  1 +
+ drivers/net/wireless/ath/ath9k/link.c  | 48 +++++++++++++++++++++++++++++++++-
+ 4 files changed, 52 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3b6d908..fb2b22d 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3021,31 +3021,28 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
--	struct pci_dev *pdev;
-+	struct pci_dev *pdev = card->dev;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 9c6fee7..3987ad5 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -996,6 +996,9 @@ struct ath_softc {
+ 	short nbcnvifs;
+ 	unsigned long ps_usecount;
+ 
++	unsigned long last_check_time;
++	u32 last_check_interrupts;
++
+ 	struct ath_rx rx;
+ 	struct ath_tx tx;
+ 	struct ath_beacon beacon;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 608b370..6d5c253 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -768,6 +768,7 @@ static int read_file_reset(struct seq_file *file, void *data)
+ 		[RESET_TX_DMA_ERROR] = "Tx DMA stop error",
+ 		[RESET_RX_DMA_ERROR] = "Rx DMA stop error",
+ 		[RESET_TYPE_DEADBEEF] = "deadbeef hang",
++		[RESET_TYPE_DEAF] = "deaf hang",
+ 	};
  	int i;
  
--	if (card) {
--		pdev = card->dev;
--		if (card->msix_enable) {
--			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
--				synchronize_irq(card->msix_entries[i].vector);
-+	if (card->msix_enable) {
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			synchronize_irq(card->msix_entries[i].vector);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 0d77abbf6..6f186bd 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -53,6 +53,7 @@ enum ath_reset_type {
+ 	RESET_TX_DMA_ERROR,
+ 	RESET_RX_DMA_ERROR,
+ 	RESET_TYPE_DEADBEEF,
++	RESET_TYPE_DEAF,
+ 	__RESET_TYPE_MAX
+ };
  
--			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
--				free_irq(card->msix_entries[i].vector,
--					 &card->msix_ctx[i]);
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			free_irq(card->msix_entries[i].vector,
-+				 &card->msix_ctx[i]);
- 
--			card->msix_enable = 0;
--			pci_disable_msix(pdev);
--	       } else {
--			mwifiex_dbg(adapter, INFO,
--				    "%s(): calling free_irq()\n", __func__);
--		       free_irq(card->dev->irq, &card->share_irq_ctx);
-+		card->msix_enable = 0;
-+		pci_disable_msix(pdev);
-+	} else {
-+		mwifiex_dbg(adapter, INFO,
-+			    "%s(): calling free_irq()\n", __func__);
-+	       free_irq(card->dev->irq, &card->share_irq_ctx);
- 
--			if (card->msi_enable)
--				pci_disable_msi(pdev);
--	       }
--		card->adapter = NULL;
-+		if (card->msi_enable)
-+			pci_disable_msi(pdev);
- 	}
-+	card->adapter = NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/link.c b/drivers/net/wireless/ath/ath9k/link.c
+index 04195d5..ae99c02 100644
+--- a/drivers/net/wireless/ath/ath9k/link.c
++++ b/drivers/net/wireless/ath/ath9k/link.c
+@@ -158,13 +158,59 @@ static bool ath_hw_hang_deadbeef(struct ath_softc *sc)
+ 	return true;
  }
  
- /* This function initializes the PCI-E host memory space, WCB rings, etc.
-@@ -3128,18 +3125,14 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
- 	adapter->seq_num = 0;
- 	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
++static bool ath_hw_hang_deaf(struct ath_softc *sc)
++{
++#ifndef CONFIG_ATH9K_DEBUGFS
++	return false;
++#else
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	u32 interrupts, interrupt_per_s;
++	unsigned int interval;
++
++	/* get historic data */
++	interval = jiffies_to_msecs(jiffies - sc->last_check_time);
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++		interrupts = sc->debug.stats.istats.rxlp;
++	else
++		interrupts = sc->debug.stats.istats.rxok;
++
++	interrupts -= sc->last_check_interrupts;
++
++	/* save current data */
++	sc->last_check_time = jiffies;
++	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
++		sc->last_check_interrupts = sc->debug.stats.istats.rxlp;
++	else
++		sc->last_check_interrupts = sc->debug.stats.istats.rxok;
++
++	/* sanity check, should be 30 seconds */
++	if (interval > 40000 || interval < 20000)
++		return false;
++
++	/* should be at least one interrupt per second */
++	interrupt_per_s = interrupts / (interval / 1000);
++	if (interrupt_per_s >= 1)
++		return false;
++
++	ath_dbg(common, RESET,
++		"RX deaf hang is detected. Schedule chip reset\n");
++	ath9k_queue_reset(sc, RESET_TYPE_DEAF);
++
++	return true;
++#endif
++}
++
+ void ath_hw_hang_work(struct work_struct *work)
+ {
+ 	struct ath_softc *sc = container_of(work, struct ath_softc,
+ 					    hw_hang_work.work);
  
--	if (card) {
--		if (reg->sleep_cookie)
--			mwifiex_pcie_delete_sleep_cookie_buf(adapter);
--
--		mwifiex_pcie_delete_cmdrsp_buf(adapter);
--		mwifiex_pcie_delete_evtbd_ring(adapter);
--		mwifiex_pcie_delete_rxbd_ring(adapter);
--		mwifiex_pcie_delete_txbd_ring(adapter);
--		card->cmdrsp_buf = NULL;
--	}
-+	if (reg->sleep_cookie)
-+		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
+-	ath_hw_hang_deadbeef(sc);
++	if (ath_hw_hang_deadbeef(sc))
++		goto requeue_worker;
++
++	ath_hw_hang_deaf(sc);
  
--	return;
-+	mwifiex_pcie_delete_cmdrsp_buf(adapter);
-+	mwifiex_pcie_delete_evtbd_ring(adapter);
-+	mwifiex_pcie_delete_rxbd_ring(adapter);
-+	mwifiex_pcie_delete_txbd_ring(adapter);
-+	card->cmdrsp_buf = NULL;
++requeue_worker:
+ 	ieee80211_queue_delayed_work(sc->hw, &sc->hw_hang_work,
+ 				     msecs_to_jiffies(ATH_HANG_WORK_INTERVAL));
  }
- 
- static struct mwifiex_if_ops pcie_ops = {
 -- 
-1.9.1
+2.10.2
