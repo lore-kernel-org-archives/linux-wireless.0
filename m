@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:14361 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932263AbcKVLFQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 06:05:16 -0500
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@qca.qualcomm.com, michal.kazior@tieto.com,
-        benjamin@sipsolutions.net
-Subject: [PATCH] ath9k: feed only active spectral / dfs-detector
-Date: Tue, 22 Nov 2016 12:05:09 +0100
-Message-Id: <1479812709-18875-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20161122_120519_934773_86BB8052)
+Received: from smtp.codeaurora.org ([198.145.29.96]:38546 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935017AbcKQG3S (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 01:29:18 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: Re: [PATCH v2 04/10] rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
+References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+        <1478095865-8651-5-git-send-email-sgruszka@redhat.com>
+        <20161116115319.GA26475@redhat.com>
+Date: Thu, 17 Nov 2016 08:29:14 +0200
+In-Reply-To: <20161116115319.GA26475@redhat.com> (Stanislaw Gruszka's message
+        of "Wed, 16 Nov 2016 12:53:20 +0100")
+Message-ID: <87mvgypqkl.fsf@purkki.adurom.net> (sfid-20161117_072923_276754_93AA5FE9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Radar pulse and spectral scan reports are provided by the HW
-with the ATH9K_RXERR_PHY flag set. Those are forwarded to
-the dfs-detector and spectral module for further processing.
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-For some older chips, the pre-conditions checked in those
-modules are ambiguous, since ATH9K_PHYERR_RADAR is used to
-tag both types. As a result, spectral frames are fed into
-the dfs-detector and vice versa.
+> We already initlized WPDMA_GLO_CFG_WP_DMA_BURST_SIZE to 3 on
+> rt2800_init_registers() for USB devices. For PCI devices we will use
+> HW default setting, which is 2, so patch does not change behaviour
+> on PCI devices.
+>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+> v1 -> v2 Changelog fixes
 
-This could lead to a false radar detection on a non-DFS
-channel (which is uncritical), but more relevant it causes
-useless CPU load for processing invalid frames.
+Please resend the whole patchset. For me cherry picking patches
+individually like this is difficult and especially error prone.
 
-This commit ensures that the dfs-detector and spectral
-collector are only fed when they are active.
-
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
----
- drivers/net/wireless/ath/ath9k/recv.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 6697342..48f8af1 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -867,10 +867,21 @@ static int ath9k_rx_skb_preprocess(struct ath_softc *sc,
- 	 * can be dropped.
- 	 */
- 	if (rx_stats->rs_status & ATH9K_RXERR_PHY) {
--		ath9k_dfs_process_phyerr(sc, hdr, rx_stats, rx_status->mactime);
--		if (ath_cmn_process_fft(&sc->spec_priv, hdr, rx_stats, rx_status->mactime))
-+		/*
-+		 * DFS and spectral are mutually exclusive
-+		 *
-+		 * Since some chips use PHYERR_RADAR as indication for both, we
-+		 * need to double check which feature is enabled to prevent
-+		 * feeding spectral or dfs-detector with wrong frames.
-+		 */
-+		if (hw->conf.radar_enabled) {
-+			ath9k_dfs_process_phyerr(sc, hdr, rx_stats,
-+						 rx_status->mactime);
-+		} else if (sc->spec_priv.spectral_mode != SPECTRAL_DISABLED &&
-+			   ath_cmn_process_fft(&sc->spec_priv, hdr, rx_stats,
-+					       rx_status->mactime)) {
- 			RX_STAT_INC(rx_spectral);
--
-+		}
- 		return -EINVAL;
- 	}
- 
 -- 
-2.7.4
+Kalle Valo
