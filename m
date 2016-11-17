@@ -1,82 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37298 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757687AbcK3Ojr (ORCPT
+Received: from bastet.se.axis.com ([195.60.68.11]:33397 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751328AbcKQRVo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 09:39:47 -0500
-Received: by mail-wm0-f41.google.com with SMTP id t79so220996538wmt.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 06:39:46 -0800 (PST)
+        Thu, 17 Nov 2016 12:21:44 -0500
+Date: Thu, 17 Nov 2016 18:21:34 +0100
+From: Henrik Eriksson <henrik.eriksson@axis.com>
+To: Benjamin Berg <benjamin@sipsolutions.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: Re: [PATCH 8/8] Print frequency of radar events.
+Message-ID: <20161117172134.GB14213@lnxhenriken2.se.axis.com> (sfid-20161117_182209_818204_71DE7DD0)
+References: <20161107145943.16761-1-benjamin@sipsolutions.net>
+ <20161107145943.16761-9-benjamin@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <CABxcv=nc1qjtSjzfcuGTo-zUpuWdRT6OR7MZCCWaoeq4Co3Uew@mail.gmail.com>
-References: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
- <CABxcv=nEih8xX4fM0eqjkqprdt1uGTEyx5tzK04GuSgsHc=Haw@mail.gmail.com>
- <CAJ_EiST_bpBm+spPuWH-a+47t4qVsDVFjUm=a+TtL-BWN3DHdw@mail.gmail.com> <CABxcv=nc1qjtSjzfcuGTo-zUpuWdRT6OR7MZCCWaoeq4Co3Uew@mail.gmail.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Wed, 30 Nov 2016 15:39:43 +0100
-Message-ID: <CAPDyKFpVNeSrsAjabSOgr6p0dWPiQr4C=jUhO26dcyYOXdXFyw@mail.gmail.com> (sfid-20161130_154027_233106_6CD7C568)
-Subject: Re: [PATCH] mmc: pwrseq: add support for Marvell SD8787 chip
-To: Javier Martinez Canillas <javier@dowhile0.org>,
-        Matt Ranostay <matt@ranostay.consulting>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20161107145943.16761-9-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 November 2016 at 14:11, Javier Martinez Canillas
-<javier@dowhile0.org> wrote:
-> Hello Matt,
->
-> On Tue, Nov 29, 2016 at 10:20 PM, Matt Ranostay
-> <matt@ranostay.consulting> wrote:
->> On Tue, Nov 29, 2016 at 9:13 AM, Javier Martinez Canillas
->
-> [snip]
->
->>
->>
->>>> +- pwndn-gpio: contains a power down GPIO specifier.
->>>> +- reset-gpio: contains a reset GPIO specifier.
->>>> +
->>>
->>> I wonder if we really need a custom power sequence provider for just
->>> this SDIO WiFI chip though. AFAICT the only missing piece in
->>> mmc-pwrseq-simple is the power down GPIO property, so maybe
->>> mmc-pwrseq-simple could be extended instead to have an optional
->>> powerdown-gpios property and instead in the Marvell SD8787 DT binding
->>> can be mentioned which mmc-pwrseq-simple properties are required for
->>> the device.
->>>
->>
->> The reason we didn't do that is we need delay between the two
->> assertions/desertions of GPIOs. It wouldn't seems good practice to
->> hack the pwrseq-simple for this...
->>
->
-> Yes, I noticed that. I wouldn't say that it would be a hack for the
-> pwrseq-simple since it already has a "post-power-on-delay-ms" DT
-> property, so AFAICT it would just be adding a "pre-power-on-delay-ms"
-> property for your use case.
->
-> It would also be more consistent since it would support a delay for
-> pre and post power callbacks. It would also make you avoid hardcoding
-> the 300 msec wait, in case other device has a similar need but with a
-> different wait time.
->
-> In summary, I think that devices having a power (or power down) and
-> enable GPIO, and needing to wait between the GPIO toggling are common.
-> So I would prefer to make pwrseq-simple usable for these instead of
-> adding device specific power sequence providers. But it's just my
-> opinion and not my call :-)
+On Mon, Nov 07, 2016 at 15:59:43 +0100, Benjamin Berg wrote:
+> From: Benjamin Berg <benjamin.berg@open-mesh.com>
+> 
+> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
+> Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+> ---
+>  event.c | 48 +++++++++++++++++++++++++-----------------------
+>  1 file changed, 25 insertions(+), 23 deletions(-)
+> 
+> diff --git a/event.c b/event.c
+> index 446debb..8014d73 100644
+> --- a/event.c
+> +++ b/event.c
+> @@ -584,30 +584,32 @@ static int print_event(struct nl_msg *msg, void *arg)
+>  				   nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
+>  				   nla_len(tb[NL80211_ATTR_VENDOR_DATA]));
+>  		break;
+> -	case NL80211_CMD_RADAR_DETECT:
+> -		printf("radar event ");
+> -		if (tb[NL80211_ATTR_RADAR_EVENT]) {
+> -			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
+> -				case NL80211_RADAR_DETECTED:
+> -					printf("(radar detected)");
+> -					break;
+> -				case NL80211_RADAR_CAC_FINISHED:
+> -					printf("(cac finished)");
+> -					break;
+> -				case NL80211_RADAR_CAC_ABORTED:
+> -					printf("(cac aborted)");
+> -					break;
+> -				case NL80211_RADAR_NOP_FINISHED:
+> -					printf("(nop finished)");
+> -					break;
+> -				default:
+> -					printf("(unknown)");
+> -					break;
+> -			};
+> -		} else {
+> -			printf("(unknown)");
+> +	case NL80211_CMD_RADAR_DETECT: {
+> +			enum nl80211_radar_event event_type;
+> +			uint32_t freq;
+> +
+> +			if (!tb[NL80211_ATTR_RADAR_EVENT] || !tb[NL80211_ATTR_WIPHY_FREQ])
+> +				printf("BAD radar event");
 
-This is a good idea. Please try out this approach.
+Should not this end the parsing here or at least avoid getting the value of
+the NULL attributes below?  I do not know if libnl nla_get_u32() is
+intended to be NULL safe, but following
+https://www.infradead.org/~tgr/libnl/doc/api/attr_8c_source.html#l00624
+it seems like you will get whatever u32 value is at address
+(NULL+)NLA_HDRLEN, assuming it is readable.  The original behavior was to
+do nothing if tb[NL80211_ATTR_RADAR_EVENT] was not set.
 
-[...]
+> +			freq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
+> +			event_type = nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT]);
 
-Kind regards
-Uffe
+br,
+henrik
