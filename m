@@ -1,94 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0079.outbound.protection.outlook.com ([104.47.42.79]:49664
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751644AbcKYKtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 05:49:13 -0500
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <1478706966.18306.1.camel@sipsolutions.net>
- <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
- <1478725543.21403.4.camel@sipsolutions.net>
- <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
- <1478864146.4129.4.camel@sipsolutions.net>
- <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
- <87d1hmnrqj.fsf@purkki.adurom.net>
- <a5fa00c7-f8db-708a-cd21-4d5b0fbdf49b@quantenna.com>
- <87shqhf5rs.fsf@kamboji.qca.qualcomm.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
-        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
-        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Ben Hutchings <ben@decadent.org.uk>,
-        Kyle McMartin <kyle@kernel.org>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <4079db3d-ae29-28a3-9149-1d401ca38f06@quantenna.com> (sfid-20161125_114918_581387_D8206B74)
-Date: Fri, 25 Nov 2016 13:16:33 +0300
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37234 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751246AbcKQUXM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 15:23:12 -0500
+Received: by mail-wm0-f42.google.com with SMTP id t79so169670373wmt.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 12:23:12 -0800 (PST)
+Subject: Re: [RFC 0/5] nl80211: add support for g-scan
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1479393551.1463.11.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Dmitry Shmidt <dimitrysh@google.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <32018e71-4fb0-92db-158e-e1a98d4f7d28@broadcom.com> (sfid-20161117_212316_751851_6D3A5EB9)
+Date: Thu, 17 Nov 2016 21:23:09 +0100
 MIME-Version: 1.0
-In-Reply-To: <87shqhf5rs.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <1479393551.1463.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/24/2016 02:59 PM, Kalle Valo wrote:
-> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
->
->> On 11/23/2016 06:25 PM, Kalle Valo wrote:
->>> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
->>>
->>>> To clarify with you and Kalle, as persons involved with
->>>> linux-wireless: is my understanding correct that submitting firmware
->>>> into linux-fimware repository is a prerequisite to accepting new
->>>> driver into linux-wireless?
->>> In my opinion the most important is that the device is usable with an
->>> upstream driver so that anyone can start using the driver (if they have
->>> the hardware).
->>>
->>>> There is an option to start Quantenna device from internal flash
->>>> memory, no external binary files involved. If we will introduce this
->>>> functionality and remove code handling external firmware for now
->>>> (until firmware problem resolved), would that allow driver to be
->>>> reviewed/accepted?
->>> Do all the publically available hardware contain the firmware in
->>> internal flash (flashed in the factory)? Or is this something which must
->>> be installed separately for each board's internal flash by the user?
->> Each board must have flash installed on it, preflashed in the factory
->> with uboot and firmware binary, otherwise board won't boot
-> Will the preflashed firmware binary will have all the normal
-> functionality needed by this driver? I mean that you can start an AP
-> interface etc.
+On 17-11-2016 15:39, Johannes Berg wrote:
+> On Thu, 2016-11-17 at 13:18 +0000, Arend van Spriel wrote:
+>> Android employs a Wifi-HAL layer in its wireless frame. It basically
+>> abstracts dealing with netlink messages from the framework. For some
+>> features it employs nl80211 vendor commands. The goal I set myself is
+>> to be able to have a generic nl80211 Wifi-HAL implementation. One of
+>> the features currently requiring the vendor commands is g-scan. We
+>> can only guess what the 'g' stands for ;-) This series converts the
+>> vendor command api into common nl80211 api.
+> 
+> Hehe :)
+> We also have gscan API. If you're interested, you can see it here:
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/tree/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.h#n96
 
-Yes, we tried to design system in a way that the same firmware will 
-support working as a FullMAC device with cfg80211 framework, as well as 
-working in a default mode of emulating ethernet card (when all wireless 
-rated components are hidden inside device itself); it's just a problem 
-of telling device which mode it should boot to.
+I am interested and I did have a look at it when I found out, but I had
+already tinkered out a large portion so decided to stick with that.
 
->> (won't boot without uboot, firmware itself is not mandatory).
-> Are you expecting that there are devices on the field which have uboot
-> preflashed but not the firmware?
+>> Before making an attempt to explain more about the g-scan
+>> functionality first this. While I am still testing the driver
+>> implementation resulting in numerous questions Dmitry send the email
+>> below to bring a related discussion to the table..eh.. the linux-
+>> wireless list. This is probably a good thing as anyone can dive in
+>> and share their thoughts.
+> 
+> 
+> Yeah. How does this overlap? Have you looked at it already?
 
-For the new QSR10G chipset, there are no such devices right now. I think 
-it is possible for them to appear in the future: makes sense to have 
-designs with smaller flash sizes, to save a few cents on each device, 
-but hopefully by that time we will have firmware binary accepted in 
-linux-firmare.
+The overlap occurred when Dmitry pointed me to this thread in response
+to questions I had regarding gscan :-p Now the similarity is reflected
+mainly in terms used for functionality like bss hotlist, batch results,
+etc. which are also found in gscan defintions in android wifi hal.
 
+The main difference between the gscan and universal scan is that gscan
+specifies everything in a single start request and the universal scan
+api can be used to add/remove individual scans, which would be
+equivalent with the ability to add/remove buckets in gscan.
 
->
->> Booting from flash is default behavior on boards that are currently on
->> the market, but for developemnt purpuses it's not very convenient and
->> harder to upgrade.
-> Sure, I understand.
->
->>> BTW, the original mail with the firmware image didn't make it to the
->>> list, I guess it was too big? It would be good if you could post the
->>> license separately so that people can see it.
->>>
->> I resent the email without binary patch to linux-wireless.
-> Saw it now, thanks.
->
+I will comment more replying the RFC email from Dmitry.
+
+Regards,
+Arend
