@@ -1,60 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33453 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755278AbcKBC0H (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47004 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932568AbcKQLN3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 22:26:07 -0400
-Received: by mail-pf0-f193.google.com with SMTP id a136so277259pfa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 19:26:07 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
+        Thu, 17 Nov 2016 06:13:29 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
+References: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
+To: Ricky Liang <jcliang@chromium.org>
+Cc: unlisted-recipients:; (no To-header on input)
+        Ricky Liang <jcliang@chromium.org>,
         Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 09/12] mwifiex: usb: handle HS failures
-Date: Wed,  2 Nov 2016 10:24:45 +0800
-Message-Id: <1478053488-16042-7-git-send-email-huxinming820@marvell.com> (sfid-20161102_032617_078725_E6121CCA)
-In-Reply-To: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
-References: <1478053488-16042-1-git-send-email-huxinming820@marvell.com>
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org (open list:MARVELL MWIFIEX WIRELESS
+        DRIVER), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+        linux-kernel@vger.kernel.org (open list)
+Message-Id: <20161117111328.CE36E61652@smtp.codeaurora.org> (sfid-20161117_121404_319370_ABB5F4F9)
+Date: Thu, 17 Nov 2016 11:13:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
+Ricky Liang <jcliang@chromium.org> wrote:
+> kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
+> 
+> unreferenced object 0xffffffc0a2914780 (size 192):
+>   comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
+>   hex dump (first 32 bytes):
+>     00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
+>     07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
+>   backtrace:
+>     [<ffffffc0003375f4>] create_object+0x164/0x2b4
+>     [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
+>     [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
+>     [<ffffffc00030899c>] kmemdup+0x38/0x64
+>     [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
+>     [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
+>     [<ffffffbffc22f45c>] mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
+>     [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
+>     [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
+>     [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
+>     [<ffffffbffc258858>] 0xffffffbffc258858
+>     [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
+>     [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
+>     [<ffffffc000240d08>] kthread+0xf4/0x100
+>     [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
+>     [<ffffffffffffffff>] 0xffffffffffffffff
+> 
+> Signed-off-by: Ricky Liang <jcliang@chromium.org>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-SDIO and PCIe drivers handle this. Let's imitate it.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Not tested.
+5ff262229378 mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
 
----
-v2: Same as v1
----
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 70126c3..c26daf4 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -521,7 +521,14 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
- 		mwifiex_dbg(adapter, WARN,
- 			    "Device already suspended\n");
- 
--	mwifiex_enable_hs(adapter);
-+	/* Enable the Host Sleep */
-+	if (!mwifiex_enable_hs(adapter)) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "cmd: failed to suspend\n");
-+		adapter->hs_enabling = false;
-+		return -EFAULT;
-+	}
-+
- 
- 	/* 'is_suspended' flag indicates device is suspended.
- 	 * It must be set here before the usb_kill_urb() calls. Reason
 -- 
-1.8.1.4
+https://patchwork.kernel.org/patch/9418433/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
