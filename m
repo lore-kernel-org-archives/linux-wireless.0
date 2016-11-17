@@ -1,113 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35122 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1168359AbcKAKCW (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:36826 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754459AbcKQO0x (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 06:02:22 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s8so11283165pfj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 03:02:21 -0700 (PDT)
-Date: Tue, 1 Nov 2016 19:54:35 +1000
-From: Barry Day <briselec@gmail.com>
-To: John Heenan <john@zgus.com>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-Message-ID: <20161101095433.GA15859@testbox> (sfid-20161101_110226_065716_DE02D34F)
-References: <20161101072447.GA21575@cube>
+        Thu, 17 Nov 2016 09:26:53 -0500
+Received: by mail-wm0-f49.google.com with SMTP id g23so314269438wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 06:26:52 -0800 (PST)
+Subject: Re: [PATCH 3/5] nl80211: add support for gscan
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <201611172006.xRJ9na1r%fengguang.wu@intel.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <014498fc-8f54-c07e-da5c-8dae0e577a7b@broadcom.com> (sfid-20161117_152818_249421_CA77E64F)
+Date: Thu, 17 Nov 2016 13:40:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161101072447.GA21575@cube>
+In-Reply-To: <201611172006.xRJ9na1r%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 01, 2016 at 05:24:47PM +1000, John Heenan wrote:
-> The rtl8723bu wireless IC shows evidence of a more agressive approach to
-> power saving, powering down its RF side when there is no wireless
-> interfacing but leaving USB interfacing intact. This makes the wireless
-> IC more suitable for use in devices which need to keep their power use
-> as low as practical, such as tablets and Surface Pro type devices.
+On 17-11-2016 13:10, kbuild test robot wrote:
+> Hi Arend,
 > 
-> In effect this means that a full initialisation must be performed
-> whenever a wireless interface is brought up. It also means that
-> interpretations of power status from general wireless registers should
-> not be relied on to influence an init sequence.
+> [auto build test ERROR on mac80211-next/master]
+> [also build test ERROR on next-20161117]
+> [cannot apply to v4.9-rc5]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 > 
-> The patch works by forcing a fuller initialisation and forcing it to
-> occur more often in code paths (such as occurs during a low level
-> authentication that initiates wireless interfacing).
-> 
-> The initialisation sequence is now more consistent with code based
-> directly on vendor code. For example while the vendor derived code
-> interprets a register as indcating a particular powered state, it does
-> not use this information to influence its init sequence.
-> 
-> Only devices that use the rtl8723bu driver are affected by this patch.
-> 
-> With this patch wpa_supplicant reliably and consistently connects with
-> an AP. Before a workaround such as executing rmmod and modprobe before
-> each call to wpa_supplicant worked with some distributions.
-> 
-> Signed-off-by: John Heenan <john@zgus.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> index 04141e5..ab2f2ef 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> @@ -3900,7 +3900,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->  	 * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
->  	 * initialized. First MAC returns 0xea, second MAC returns 0x00
->  	 */
-> -	if (val8 == 0xea)
-> +	if (val8 == 0xea || priv->fops == &rtl8723bu_fops)
->  		macpower = false;
->  	else
->  		macpower = true;
-> @@ -5779,6 +5779,12 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
->  
->  	ret = 0;
->  
-> +	if(priv->fops == &rtl8723bu_fops) {
-> +		ret = rtl8xxxu_init_device(hw);
-> +		if (ret)
-> +			goto error_out;
-> +	}
-> +
->  	init_usb_anchor(&priv->rx_anchor);
->  	init_usb_anchor(&priv->tx_anchor);
->  	init_usb_anchor(&priv->int_anchor);
-> @@ -6080,9 +6086,11 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
->  		goto exit;
->  	}
->  
-> -	ret = rtl8xxxu_init_device(hw);
-> -	if (ret)
-> -		goto exit;
-> +	if(priv->fops != &rtl8723bu_fops) {
-> +		ret = rtl8xxxu_init_device(hw);
-> +		if (ret)
-> +			goto exit;
-> +	}
->  
->  	hw->wiphy->max_scan_ssids = 1;
->  	hw->wiphy->max_scan_ie_len = IEEE80211_MAX_DATA_LEN;
-> -- 
-> 2.10.1
-> 
+> url:    https://github.com/0day-ci/linux/commits/Arend-van-Spriel/nl80211-add-support-for-g-scan/20161117-194818
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+> config: i386-randconfig-x004-201646 (attached as .config)
+> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
 
-I've been trying similar modifications, testing them with the 8192eu and cu.
-Basically I moved all the usb stuff out of start and stop and into probe and
-disconnect. I moved the call to rtl8xxxu_init_device() from probe to
-start.
-Doing wpa_supplicant restart tests, the 8192cu still works everytime as it did
-before. The 8192eu now works at least 50% of the time, and when it fails it's
-now during the 4-way handshake phase which may be a separate issue confined to
-the 8192eu only.
-Note these results rely on changing the macpower test to this -
-	if(val8 == 0xea || val8 == 0xff)
-which is different again from what you are using so I'm of the opinion we
-need to come up with a different way of telling whether the mac is powered.
+Shuffled the patches while rebasing. Not nice. Will fix it.
+
+Regards,
+Arend
+
+> Note: the linux-review/Arend-van-Spriel/nl80211-add-support-for-g-scan/20161117-194818 HEAD 407f604bb543a049c99ae0f9974943f1c64ea880 builds fine.
+>       It only hurts bisectibility.
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    net/wireless/scan.c: In function '__cfg80211_stop_gscan':
+>>> net/wireless/scan.c:358:2: error: implicit declaration of function 'nl80211_send_scan_event' [-Werror=implicit-function-declaration]
+>      nl80211_send_scan_event(rdev, dev, NL80211_CMD_GSCAN_STOPPED);
+>      ^~~~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
+> --
+>    net/wireless/nl80211.c: In function 'nl80211_start_gscan':
+>>> net/wireless/nl80211.c:12167:2: error: implicit declaration of function 'nl80211_send_scan_event' [-Werror=implicit-function-declaration]
+>      nl80211_send_scan_event(rdev, dev,
+>      ^~~~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
+> 
+> vim +/nl80211_send_scan_event +358 net/wireless/scan.c
+> 
+>    352		if (!driver_initiated) {
+>    353			int err = rdev_stop_gscan(rdev, dev);
+>    354			if (err)
+>    355				return err;
+>    356		}
+>    357	
+>  > 358		nl80211_send_scan_event(rdev, dev, NL80211_CMD_GSCAN_STOPPED);
+>    359	
+>    360		RCU_INIT_POINTER(rdev->gscan_req, NULL);
+>    361		kfree_rcu(gscan_req, rcu_head);
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
