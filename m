@@ -1,107 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35322 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbcKORHM (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37839 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932132AbcKQRxl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 12:07:12 -0500
-Received: by mail-wm0-f65.google.com with SMTP id a20so1970858wme.2
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 09:07:12 -0800 (PST)
-Subject: Re: [RFC 03/12] ath10k: htc: Changed order of wait target and ep
- connect
-To: Michal Kazior <michal.kazior@tieto.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
- <1479141222-8493-4-git-send-email-erik.stromdahl@gmail.com>
- <CA+BoTQmA0E+N46E3XkpqVPXSVkQNyZj2Qzrizk8iLdYzVthNQg@mail.gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <33589cf2-a7e6-fe9a-ea2b-a2252ac00355@gmail.com> (sfid-20161115_180716_935445_3D251661)
-Date: Tue, 15 Nov 2016 18:07:09 +0100
+        Thu, 17 Nov 2016 12:53:41 -0500
+Received: by mail-wm0-f45.google.com with SMTP id t79so160896086wmt.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 09:53:41 -0800 (PST)
+Subject: Re: [PATCH 5/5] nl80211: add driver api for gscan notifications
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1479382792-13131-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1479382792-13131-6-git-send-email-arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5a82983f-f306-beee-cf2d-ba799eaf3180@broadcom.com> (sfid-20161117_185351_274073_948B5249)
+Date: Thu, 17 Nov 2016 13:11:41 +0100
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmA0E+N46E3XkpqVPXSVkQNyZj2Qzrizk8iLdYzVthNQg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1479382792-13131-6-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 11/15/2016 11:13 AM, Michal Kazior wrote:
-> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
->> This patch changes the order in which the driver waits for the
->> target to become ready and the service connect of the HTC
->> control service.
->>
->> The HTC control service is connected before the driver starts
->> waiting for the HTC ready control message.
->>
->> The reason for this is that the HTC ready control message is
->> transmitted on EP 0 and that sdio/mbox based systems will ignore
->> messages received on unconnected endpoints.
->>
->> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/htc.c |   32 ++++++++++++++++----------------
->>  1 file changed, 16 insertions(+), 16 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
->> index e3f7bf4..7257366 100644
->> --- a/drivers/net/wireless/ath/ath10k/htc.c
->> +++ b/drivers/net/wireless/ath/ath10k/htc.c
->> @@ -606,6 +606,22 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
->>         u16 credit_count;
->>         u16 credit_size;
->>
->> +       /* setup our pseudo HTC control endpoint connection */
->> +       memset(&conn_req, 0, sizeof(conn_req));
->> +       memset(&conn_resp, 0, sizeof(conn_resp));
->> +       conn_req.ep_ops.ep_tx_complete = ath10k_htc_control_tx_complete;
->> +       conn_req.ep_ops.ep_rx_complete = ath10k_htc_control_rx_complete;
->> +       conn_req.max_send_queue_depth = ATH10K_NUM_CONTROL_TX_BUFFERS;
->> +       conn_req.service_id = ATH10K_HTC_SVC_ID_RSVD_CTRL;
->> +
->> +       /* connect fake service */
->> +       status = ath10k_htc_connect_service(htc, &conn_req, &conn_resp);
->> +       if (status) {
->> +               ath10k_err(ar, "could not connect to htc service (%d)\n",
->> +                          status);
->> +               return status;
->> +       }
->> +
+On 17-11-2016 12:39, Arend van Spriel wrote:
+> The driver can indicate gscan results are available or gscan operation
+> has stopped.
 > 
-> How is this supposed to work? ath10k_htc_connect_service() requires
-> htc->target_credit_size to compute tx_credits_per_max_message. Or am I
-> missing something? Applying this patch alone results in:
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>  include/net/cfg80211.h       | 28 ++++++++++++++++++++
+>  include/uapi/linux/nl80211.h |  2 ++
+>  net/wireless/core.c          |  2 ++
+>  net/wireless/core.h          |  2 ++
+>  net/wireless/nl80211.c       | 19 ++++++++++++++
+>  net/wireless/nl80211.h       |  2 ++
+>  net/wireless/scan.c          | 61 ++++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/trace.h         | 10 ++++++++
+>  8 files changed, 126 insertions(+)
 > 
-> [    6.680101] divide error: 0000 [#1] SMP
-> [    6.681342] Modules linked in: ath10k_pci(O) ath10k_core(O) ath
-> mac80211 cfg80211
-> [    6.684876] CPU: 3 PID: 823 Comm: kworker/u8:2 Tainted: G        W
-> O    4.9.0-rc4-wt-ath+ #79
-> [    6.688051] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996),
-> BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
-> [    6.691644] Workqueue: ath10k_wq ath10k_core_register_work [ath10k_core]
-> [    6.694309] task: ffff88000a190000 task.stack: ffffc900006d4000
-> [    6.695458] RIP: 0010:[<ffffffffa01ae46b>]  [<ffffffffa01ae46b>]
-> ath10k_htc_connect_service+0x21b/0x420 [ath10k_core]
-> 
-> 
-> Michał
-> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index b4b0536..d85a439 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -4570,6 +4570,34 @@ void cfg80211_scan_done(struct cfg80211_scan_request *request,
+>  void cfg80211_sched_scan_stopped_rtnl(struct wiphy *wiphy);
+>  
+>  /**
+> + * cfg80211_gscan_results - notify that new scan results are available
+> + *
+> + * @wiphy: the wiphy which got GScan results
+> + */
+> +void cfg80211_gscan_results(struct wiphy *wiphy);
+> +
+> +/**
+> + * cfg80211_gscan_stopped - notify that the GScan has stopped
+> + *
+> + * @wiphy: the wiphy on which the GScan stopped.
+> + *
+> + * The driver can call this function to inform cfg80211 that the
+> + * GScan had to be stopped, for whatever reason.
+> + */
+> +void cfg80211_gscan_stopped(struct wiphy *wiphy);
+> +
+> +/**
+> + * cfg80211_gscan_stopped_rtnl - notify that the GScan has stopped
+> + *
+> + * @wiphy: the wiphy on which the GScan stopped.
+> + *
+> + * The driver can call this function to inform cfg80211 that the
+> + * GScan had to be stopped, for whatever reason.
+> + * This function should be called with rtnl locked.
+> + */
+> +void cfg80211_gscan_stopped_rtnl(struct wiphy *wiphy);
+> +
+> +/**
+>   * cfg80211_inform_bss_frame_data - inform cfg80211 of a received BSS frame
+>   * @wiphy: the wiphy reporting the BSS
+>   * @data: the BSS metadata
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 8071dae..c4c9005 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -896,6 +896,7 @@
+>   *
+>   * @NL80211_CMD_START_GSCAN: start GScan.
+>   * @NL80211_CMD_STOP_GSCAN: request to stop current GScan.
+> + * @NL80211_CMD_GSCAN_RESULTS: indicates that there GScan results available.
+>   * @NL80211_CMD_GSCAN_STOPPED: indicates that the currently running GScan
+>   *	has stopped. This event is generated upon @NL80211_CMD_STOP_GSCAN and
+>   *	the driver may issue this event at any time when a GScan is running.
+> @@ -1101,6 +1102,7 @@ enum nl80211_commands {
+>  
+>  	NL80211_CMD_START_GSCAN,
+>  	NL80211_CMD_STOP_GSCAN,
+> +	NL80211_CMD_GSCAN_RESULTS,
+>  	NL80211_CMD_GSCAN_STOPPED,
+>  
+>  	/* add new commands above here */
+> diff --git a/net/wireless/core.c b/net/wireless/core.c
+> index 760a2fb..69eea4c 100644
+> --- a/net/wireless/core.c
+> +++ b/net/wireless/core.c
+> @@ -453,6 +453,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+>  	INIT_LIST_HEAD(&rdev->bss_list);
+>  	INIT_WORK(&rdev->scan_done_wk, __cfg80211_scan_done);
+>  	INIT_WORK(&rdev->sched_scan_results_wk, __cfg80211_sched_scan_results);
+> +	INIT_WORK(&rdev->gscan_results_wk, __cfg80211_gscan_results);
+>  	INIT_LIST_HEAD(&rdev->mlme_unreg);
+>  	spin_lock_init(&rdev->mlme_unreg_lock);
+>  	INIT_WORK(&rdev->mlme_unreg_wk, cfg80211_mlme_unreg_wk);
+> @@ -935,6 +936,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+>  	cancel_delayed_work_sync(&rdev->dfs_update_channels_wk);
+>  	flush_work(&rdev->destroy_work);
+>  	flush_work(&rdev->sched_scan_stop_wk);
+> +	flush_work(&rdev->gscan_stop_wk);
+>  	flush_work(&rdev->mlme_unreg_wk);
+>  
+>  #ifdef CONFIG_PM
+> diff --git a/net/wireless/core.h b/net/wireless/core.h
+> index b0f2519..1d56ef4 100644
+> --- a/net/wireless/core.h
+> +++ b/net/wireless/core.h
+> @@ -78,6 +78,7 @@ struct cfg80211_registered_device {
+>  	unsigned long suspend_at;
+>  	struct work_struct scan_done_wk;
+>  	struct work_struct sched_scan_results_wk;
+> +	struct work_struct gscan_results_wk;
+>  
+>  	struct genl_info *cur_cmd_info;
+>  
+> @@ -423,6 +424,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
+>  void __cfg80211_sched_scan_results(struct work_struct *wk);
+>  int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+>  			       bool driver_initiated);
+> +void __cfg80211_gscan_results(struct work_struct *wk);
+>  int __cfg80211_stop_gscan(struct cfg80211_registered_device *rdev,
+>  			  bool driver_initiated);
+>  void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 5b22310..f0099ee 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -13304,6 +13304,25 @@ void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
+>  				NL80211_MCGRP_SCAN, GFP_KERNEL);
+>  }
+>  
+> +void nl80211_send_gscan_results(struct cfg80211_registered_device *rdev,
+> +				struct net_device *netdev)
+> +{
+> +	struct sk_buff *msg;
+> +
+> +	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+> +	if (!msg)
+> +		return;
+> +
+> +	if (nl80211_send_scan_event_msg(msg, rdev, netdev, 0, 0, 0,
+> +					NL80211_CMD_GSCAN_RESULTS) < 0) {
+> +		nlmsg_free(msg);
+> +		return;
+> +	}
+> +
+> +	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
+> +				NL80211_MCGRP_SCAN, GFP_KERNEL);
+> +}
+> +
+>  void nl80211_send_scan_event(struct cfg80211_registered_device *rdev,
+>  			     struct net_device *netdev, u32 cmd)
+>  {
+> diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+> index fb304ce9..4eec856 100644
+> --- a/net/wireless/nl80211.h
+> +++ b/net/wireless/nl80211.h
+> @@ -20,6 +20,8 @@ void nl80211_send_scan_event(struct cfg80211_registered_device *rdev,
+>  			     struct net_device *netdev, u32 cmd);
+>  void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
+>  				     struct net_device *netdev);
+> +void nl80211_send_gscan_results(struct cfg80211_registered_device *rdev,
+> +				     struct net_device *netdev);
+>  void nl80211_common_reg_change_event(enum nl80211_commands cmd_id,
+>  				     struct regulatory_request *request);
+>  
+> diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+> index 327b23c..f34d5d4 100644
+> --- a/net/wireless/scan.c
+> +++ b/net/wireless/scan.c
+> @@ -287,6 +287,47 @@ void cfg80211_sched_scan_results(struct wiphy *wiphy)
+>  }
+>  EXPORT_SYMBOL(cfg80211_sched_scan_results);
+>  
+> +void __cfg80211_gscan_results(struct work_struct *wk)
+> +{
+> +	struct cfg80211_registered_device *rdev;
+> +	struct cfg80211_gscan_request *request;
+> +
+> +	rdev = container_of(wk, struct cfg80211_registered_device,
+> +			    gscan_results_wk);
+> +
+> +	rtnl_lock();
+> +
+> +	request = rtnl_dereference(rdev->gscan_req);
+> +
+> +	/* we don't have sched_scan_req anymore if the scan is stopping */
+> +	if (request) {
+> +#if 0
+> +		/* TODO: how to deal with flush */
+> +		if (request->flags & NL80211_SCAN_FLAG_FLUSH) {
+> +			/* flush entries from previous scans */
+> +			spin_lock_bh(&rdev->bss_lock);
+> +			__cfg80211_bss_expire(rdev, request->scan_start);
+> +			spin_unlock_bh(&rdev->bss_lock);
+> +			request->scan_start = jiffies;
+> +		}
+> +#endif
 
-You're right. I have totally missed this. What is strange is that my
-compiler (ARM linaro) seems to optimize the code in a way that removes
-the tx_credits_per_max_message value.
+Yikes. Still subject to discussion, but need it is bss storage with last
+results is sufficient.
 
-If I add a printk in ath10k_htc_connect_service (printing the value) I
-get a similar oops.
+> +		nl80211_send_gscan_results(rdev, request->dev);
+> +	}
+> +
+> +	rtnl_unlock();
+> +}
 
-I think it has to do with the fact the this value isn't really used at
-all. grepping the code reveals that tx_credits_per_max_message is only
-used inside ath10k_htc_connect_service (only written, never read).
-
-Removing it doesn't seem to break anything, so perhaps it should be removed?
-
-Or is there something I have missed?
-
-/Erik
+Regards,
+Arend
