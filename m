@@ -1,44 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53032 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966101AbcKKIvo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 03:51:44 -0500
-Message-ID: <1478854301.6101.0.camel@sipsolutions.net> (sfid-20161111_095157_443691_8FE45F6C)
-Subject: Re: =?UTF-8?Q?=E2=80=9CWireless?= usage of
- =?UTF-8?Q?pm-qos=E2=80=9D?=
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Aleksandersen <code@daniel.priv.no>,
-        Linux kernel wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 11 Nov 2016 09:51:41 +0100
-In-Reply-To: <1478814972.2686901.784042113.31AFDC88@webmail.messagingengine.com> (sfid-20161110_225617_763917_DA906456)
-References: <1478814972.2686901.784042113.31AFDC88@webmail.messagingengine.com>
-         (sfid-20161110_225617_763917_DA906456)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:53602 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934935AbcKQR0R (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 12:26:17 -0500
+Subject: Re: cfg80211: add set/get link loss profile
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+ <8737izqw0q.fsf@purkki.adurom.net>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+From: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
+Message-ID: <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org> (sfid-20161117_182624_351411_01BDF6FB)
+Date: Thu, 17 Nov 2016 15:50:35 +0200
+MIME-Version: 1.0
+In-Reply-To: <8737izqw0q.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-11-10 at 22:56 +0100, Daniel Aleksandersen wrote:
-> Hi,
-> 
-> This patch from Johannes Berg removed the /dev/network_latency
-> system, right?
-> http://marc.info/?l=linux-wireless&m=144483867919159&w=2
+Hi Kalle,
 
-No, it didn't remove the system itself, just the use thereof in
-wireless.
+In this context the term "link" does mean connection to AP.
+There are scenarios that require to lose connection faster once
+reduced link quality detected in order maintain better user experience
+(from both sides - AP and STA).
+Example case is FST (Fast Session Transfer), where we have a fast 11ad
+connection but close-range and a backup 11ac connection which is
+"always on".
+in such cases if we detect poor link quality in the active band we
+prefer to disconnect and switch to the backup connection with the good
+link quality.
+This will be reached by setting "aggressive" profile that will cause
+more rapid disconnect in such cases.
 
-> So shouldn’t all the documentation be updated to indicate that it has
-> been removed?
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/pm-qos
-> https://wireless.wiki.kernel.org/en/developers/documentation/ieee8021
-> 1/power-savings
+Alexei Lazar
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc. 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum a Linux Foundation Collaborative Project
 
-Right, those should probably be removed.
 
-> https://www.kernel.org/doc/Documentation/power/pm_qos_interface.txt
-
-This still exists, even if it may have no users now - haven't checked.
-
-johannes
+On 11/10/2016 3:55 PM, Kalle Valo wrote:
+> "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org> writes:
+>
+>> >From b739abb6f29dc43a86b8b2b60e893b4441f8aa1f Mon Sep 17 00:00:00 2001
+>> From: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+>> Date: Sun, 6 Nov 2016 16:21:20 +0200
+>> Subject: [PATCH] cfg80211: add set/get link loss profile
+>>
+>> Introduce NL80211_CMD_SET_LINK_LOSS_PROFILE and
+>> NL80211_CMD_GET_LINK_LOSS_PROFILE as it required by the user space
+>> to configure the link loss profile.
+>> The link loss profile represents the priority of maintaining link up
+>> in different link quality environments.
+>> Three types of behavior for link loss defined:
+>> LINK_LOSS_PROFILE_RELAXED: prefer maintaining link up even in poor
+>> link quality environment.
+>> LINK_LOSS_PROFILE_DEFAULT: The default behavior for maintaining link
+>> up vs link quality.
+>> LINK_LOSS_PROFILE_AGGRESSIVE: prefer losing link up in poor link
+>> quality environment.
+>> New cfg80211 API also been added, set/get_link_loss_profile.
+>>
+>> Signed-off-by: Alexei Avshalom Lazar <ailizaro@codeaurora.org>
+> What does the term "link" mean in this context? A connection to the AP
+> or something else? The documentation doesn't give me any detailed
+> information nor any examples and lefts me guessing what this is supposed
+> to do.
+>
