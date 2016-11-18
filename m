@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35342 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754029AbcKUOQb (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37957 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752605AbcKROD2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 09:16:31 -0500
-Received: by mail-wm0-f52.google.com with SMTP id a197so149415699wmd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 06:16:30 -0800 (PST)
+        Fri, 18 Nov 2016 09:03:28 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v4 08/11] mwifiex: usb: handle HS failures
+Date: Fri, 18 Nov 2016 19:30:31 +0530
+Message-ID: <1479477634-27841-8-git-send-email-akarwar@marvell.com> (sfid-20161118_150331_222415_2C4A208D)
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20161121140423.24367-1-benjamin@sipsolutions.net>
-References: <20161121140423.24367-1-benjamin@sipsolutions.net>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 21 Nov 2016 15:16:29 +0100
-Message-ID: <CA+BoTQkucZn7prTns-GB0435+UnVx-0Q4H2AuV-mYLNNYLMZ9w@mail.gmail.com> (sfid-20161121_151644_146872_0BF510B0)
-Subject: Re: [PATCH] ath9k: Prevent radar detection and spectral scan to be
- used concurrently
-To: Benjamin Berg <benjamin@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-        Simon Wunderlich <sw@simonwunderlich.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 November 2016 at 15:04, Benjamin Berg <benjamin@sipsolutions.net> wro=
-te:
-> In the case that a spectral scan is enabled the PHY errors sent by the
-> hardware as part of the scanning might trigger the radar detection and
-> channels might be marked as 'unusable' incorrectly. This patch fixes
-> the issue by preventing the spectral scan to be enabled if DFS is used
-> and only analysing the PHY errors for DFS if radar detection is enabled.
+From: Brian Norris <briannorris@chromium.org>
 
-According to the comment in ath_cmn_process_fft() this doesn't seem to
-be necessary for all chips:
+SDIO and PCIe drivers handle this. Let's imitate it.
 
- 515         /* AR9280 and before report via ATH9K_PHYERR_RADAR,
-AR93xx and newer
- 516          * via ATH9K_PHYERR_SPECTRAL. Haven't seen
-ATH9K_PHYERR_FALSE_RADAR_EXT
- 517          * yet, but this is supposed to be possible as well.
- 518          */
- 519         if (rs->rs_phyerr !=3D ATH9K_PHYERR_RADAR &&
- 520             rs->rs_phyerr !=3D ATH9K_PHYERR_FALSE_RADAR_EXT &&
- 521             rs->rs_phyerr !=3D ATH9K_PHYERR_SPECTRAL)
- 522                 return 0;
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v4: Same as v1, v2, v3
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-
-Micha=C5=82
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 64a4020..55e3a01 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -521,7 +521,14 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 		mwifiex_dbg(adapter, WARN,
+ 			    "Device already suspended\n");
+ 
+-	mwifiex_enable_hs(adapter);
++	/* Enable the Host Sleep */
++	if (!mwifiex_enable_hs(adapter)) {
++		mwifiex_dbg(adapter, ERROR,
++			    "cmd: failed to suspend\n");
++		adapter->hs_enabling = false;
++		return -EFAULT;
++	}
++
+ 
+ 	/* 'is_suspended' flag indicates device is suspended.
+ 	 * It must be set here before the usb_kill_urb() calls. Reason
+-- 
+1.9.1
