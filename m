@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.xplot.org ([23.30.144.12]:45690 "EHLO www.xplot.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751668AbcKIDHs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 22:07:48 -0500
-From: Tim Shepard <shep@alum.mit.edu>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-cc: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [v5] ath9k: Switch to using mac80211 intermediate software queues. 
-In-reply-to: Your message of Wed, 09 Nov 2016 03:22:30 +0100.
-             <1cd07522568b40a6a3e2db6170153c74@euamsexm01a.eu.qualcomm.com>
-Date: Tue, 08 Nov 2016 21:44:42 -0500
-Message-Id: <E1c4IsV-0003Rk-00@www.xplot.org> (sfid-20161109_040753_206963_85151945)
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:35759 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752017AbcKRVnH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:43:07 -0500
+Received: by mail-oi0-f41.google.com with SMTP id b126so65626130oia.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 13:43:07 -0800 (PST)
+MIME-Version: 1.0
+From: Matteo Grandi <iu5bdp@gmail.com>
+Date: Fri, 18 Nov 2016 22:43:06 +0100
+Message-ID: <CAHdg3xaCnAp8rgMs3mVYvV6TFadNjwBtCo+rpHgH_-L8JUo-dw@mail.gmail.com> (sfid-20161118_224311_107524_E54EED71)
+Subject: ath10k stuck in mesh mode
+To: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>,
+        me@bobcopeland.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
+I experimented a strange behavior during some data rate tests between
+two wireless interfaces in mesh mode. The data rate stuck on 120Mbps
+(iperf UDP test) and MCS7 that is the higher MCS of 80211n without
+using MIMO, even when the channel is completely free.
 
+My configuration:
+two boards Gateworks Ventana 5410 running Ubuntu 14.04 kernel 3.14,
+each board has two miniPCIe WiFi adapter Compex WLE600V5-27, 2
+antennas each, ath10k drivers 802.11ac capabilities.
+Backports-4.4.2
+Firmware firmware-5.bin_10.2.4.70.58
 
-> While at it, could you also add to the commit log some info how awesome this
-> patch is from user's point of view and how it helps. For example, before and
-> and after numbers and other results.
+I set up a mesh configuring, on each board, one interface as mesh
+point, and I run an iperf UDP test, but even using channels free of
+any other communication (48 and 149 in particular) the max data rate
+achieved was 120Mbps on MCS7, and it stucked on that value and MIMO
+was not in use despite the two antennas.
+By sniffing the packets I discovered that only 802.11n was in use, and
+I didn't notice nothing clearly strange in the syslog.
+I tried on other channels but no MIMO nor 80MHz bandwidth (as expected
+from the capabilities) was never  used (at most 40MHz with SGI). I
+tried to have line of sight and play with the antennas position and
+distance, but the data rate stuck on that value.
+Note: I didn't the "@80" in any regulatoru domain by iw reg get (but
+only @40), as it's using the reg. domain from ath9k (used on a
+previous 802.11n miniPCIe adapter).
+Note: I also tried to set up an AP and STA, and in that case MIMO was used.
 
-That varies wildly, depending on many details of the scenario
-(including the wireless capabilities of the clients connected to the
-AP using this patch, and how far away those clients are).  There's
-really not enough room in a commit message to explain enough to make
-any such claimed numbers reproducible.
+So the question is: who decide if use MIMO and higher MCS hopefully on
+80MHz channel or not? Is the firmware? Is there a way to force the
+interface to use 80MHz and/or MIMO? (iw provide the possibility to
+choose between [HT20/HT40-/HT40+]).
 
-And, BTW, this patch alone is not really where the big improvement
-comes from.  This just cuts ath9k over to use the new
-transmit-a-packet interface between the mac80211 layer and the
-wireless device driver.  All the good work to improve latency is being
-done on the new mac80211 interface to the driver to transmit a packet.
-If you want numbers in a commit message, those numbers belong over on
-those commits, not on this ath9k commit, IMHO.
+Any advice is the welcome, this project is part of my master thesis
+and are weeks that I'm struggling with this problem.
 
-And there's different patches that taken together achieve the best
-improvement, and in various subsets differing amounts of improvement,
-which again all depends on the scenarios.
+Thank you
 
-And all this is complicated by how often real users are involved in
-scenarios where this matters (hard to say).
-
-
-This mainly improves things when you have an ath9k interface with
-packets queued simultaneously to different wireless destinations,
-which is typically when the ath9k interface is serving as an AP.
-
-And I would expect similar improvements for any wireless driver cut
-over to use the new mac80211 interface.  (This patch might be a
-helpful guide to other wireless driver maintainers wishing to see the
-same improvements other wireless drivers.)
-
-I hope that the above paragraphs were helpful.
-
-			-Tim Shepard
-			 shep@alum.mit.edu
+Matteo
