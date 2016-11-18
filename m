@@ -1,87 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36830 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932294AbcKGO76 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:59:58 -0500
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH 8/8] Print frequency of radar events.
-Date: Mon,  7 Nov 2016 15:59:43 +0100
-Message-Id: <20161107145943.16761-9-benjamin@sipsolutions.net> (sfid-20161107_160002_275193_3256178B)
-In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59420 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753188AbcKRLWt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 06:22:49 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4,1/3] mwifiex: Allow mwifiex early access to device structure
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479216964-3328-1-git-send-email-akarwar@marvell.com>
+References: <1479216964-3328-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161118112248.598AD62669@smtp.codeaurora.org> (sfid-20161118_122255_186730_F87F66AD)
+Date: Fri, 18 Nov 2016 11:22:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Rajat Jain <rajatja@google.com>
+> 
+> Today all the interface drivers (usb/pcie/sdio) assign the
+> adapter->dev in the register_dev() callback, although they
+> have this piece of info well before hand.
+> 
+> This patch makes the device structure available for mwifiex
+> right at the beginning, so that it can be used for early
+> initialization if needed.
+> 
+> This is needed for subsequent patches in this patchset that
+> intend to unify and consolidate some of the code that would
+> otherwise have to be duplicated among the interface drivers
+> (sdio, pcie, usb).
+> 
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
----
- event.c | 48 +++++++++++++++++++++++++-----------------------
- 1 file changed, 25 insertions(+), 23 deletions(-)
+This patchset doesn't apply:
 
-diff --git a/event.c b/event.c
-index 446debb..8014d73 100644
---- a/event.c
-+++ b/event.c
-@@ -584,30 +584,32 @@ static int print_event(struct nl_msg *msg, void *arg)
- 				   nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
- 				   nla_len(tb[NL80211_ATTR_VENDOR_DATA]));
- 		break;
--	case NL80211_CMD_RADAR_DETECT:
--		printf("radar event ");
--		if (tb[NL80211_ATTR_RADAR_EVENT]) {
--			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
--				case NL80211_RADAR_DETECTED:
--					printf("(radar detected)");
--					break;
--				case NL80211_RADAR_CAC_FINISHED:
--					printf("(cac finished)");
--					break;
--				case NL80211_RADAR_CAC_ABORTED:
--					printf("(cac aborted)");
--					break;
--				case NL80211_RADAR_NOP_FINISHED:
--					printf("(nop finished)");
--					break;
--				default:
--					printf("(unknown)");
--					break;
--			};
--		} else {
--			printf("(unknown)");
-+	case NL80211_CMD_RADAR_DETECT: {
-+			enum nl80211_radar_event event_type;
-+			uint32_t freq;
-+
-+			if (!tb[NL80211_ATTR_RADAR_EVENT] || !tb[NL80211_ATTR_WIPHY_FREQ])
-+				printf("BAD radar event");
-+			freq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
-+			event_type = nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT]);
-+
-+			switch (event_type) {
-+			case NL80211_RADAR_DETECTED:
-+				printf("%d MHz: radar detected\n", freq);
-+				break;
-+			case NL80211_RADAR_CAC_FINISHED:
-+				printf("%d MHz: CAC finished\n", freq);
-+				break;
-+			case NL80211_RADAR_CAC_ABORTED:
-+				printf("%d MHz: CAC was aborted\n", freq);
-+				break;
-+			case NL80211_RADAR_NOP_FINISHED:
-+				printf("%d MHz: NOP finished\n", freq);
-+				break;
-+			default:
-+				printf("%d MHz: unknown radar event\n", freq);
-+			}
- 		}
--		printf("\n");
- 		break;
- 	case NL80211_CMD_DEL_WIPHY:
- 		printf("delete wiphy\n");
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 mwifiex: Introduce mwifiex_probe_of() to parse common properties
+
+I guess it depends on this patch which is still under review:
+
+mwifiex: parse device tree node for PCIe
+
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9429835/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
