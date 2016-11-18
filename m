@@ -1,99 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47240 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S938769AbcKXNQx (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:34712 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752959AbcKRTYQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 08:16:53 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>,
-        Nishant Sarmukadam <nishants@marvell.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        "Dmitry Torokhov" <dmitry.torokhov@gmail.com>
-Subject: RE: [PATCH] mwifiex: pcie: implement timeout loop for FW programming
- doorbell
-Date: Thu, 24 Nov 2016 13:16:37 +0000
-Message-ID: <7c71dfb4c8c74c318e95a2bb2baecbe2@SC-EXCH04.marvell.com> (sfid-20161124_141741_967921_B122C1D0)
-References: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
-In-Reply-To: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Fri, 18 Nov 2016 14:24:16 -0500
+Received: by mail-qk0-f196.google.com with SMTP id y205so858121qkb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:16 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 05/11] ath10k: htc: refactorization
+Date: Fri, 18 Nov 2016 20:22:45 +0100
+Message-Id: <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202423_837368_DE212E45)
+In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Wednesday, November 23, 2016 8:10 AM
-> To: Amitkumar Karwar; Nishant Sarmukadam
-> Cc: linux-kernel@vger.kernel.org; Kalle Valo; linux-
-> wireless@vger.kernel.org; Cathy Luo; Dmitry Torokhov; Brian Norris
-> Subject: [PATCH] mwifiex: pcie: implement timeout loop for FW
-> programming doorbell
-> 
-> Marvell Wifi PCIe modules don't always behave nicely for PCIe power
-> management when their firmware hasn't been loaded, particularly after
-> suspending the PCIe link one or more times. When this happens, we might
-> end up spinning forever in this status-polling tight loop. Let's make
-> this less tight by adding a timeout and by sleeping a bit in between
-> reads, as we do with the other similar loops.
-> 
-> This prevents us from hogging a CPU even in such pathological cases,
-> and allows the FW initialization to just fail gracefully instead.
-> 
-> I chose the same polling parameters as the earlier loop in this
-> function, and empirically, I found that this loop never makes it more
-> than about 12 cycles in a sane FW init sequence. I had no official
-> information on the actual intended latency for this portion of the
-> download.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c | 16 +++++++++++++---
->  1 file changed, 13 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 4b89f557d0b6..9f9ea1350591 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -2050,7 +2050,7 @@ static int mwifiex_prog_fw_w_helper(struct
-> mwifiex_adapter *adapter,
->  		}
-> 
->  		/* Wait for the command done interrupt */
-> -		do {
-> +		for (tries = 0; tries < MAX_POLL_TRIES; tries++) {
->  			if (mwifiex_read_reg(adapter, PCIE_CPU_INT_STATUS,
->  					     &ireg_intr)) {
->  				mwifiex_dbg(adapter, ERROR,
-> @@ -2062,8 +2062,18 @@ static int mwifiex_prog_fw_w_helper(struct
-> mwifiex_adapter *adapter,
->  				ret = -1;
->  				goto done;
->  			}
-> -		} while ((ireg_intr & CPU_INTR_DOOR_BELL) ==
-> -			 CPU_INTR_DOOR_BELL);
-> +			if (!(ireg_intr & CPU_INTR_DOOR_BELL))
-> +				break;
-> +			usleep_range(10, 20);
-> +		}
-> +		if (ireg_intr & CPU_INTR_DOOR_BELL) {
-> +			mwifiex_dbg(adapter, ERROR, "%s: Card failed to ACK
-> download\n",
-> +				    __func__);
-> +			mwifiex_unmap_pci_memory(adapter, skb,
-> +						 PCI_DMA_TODEVICE);
-> +			ret = -1;
-> +			goto done;
-> +		}
-> 
->  		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
-> 
+Code refactorization:
 
-Patch looks fine to me.
+Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+to ath10k_htc_control_rx_complete.
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+This eases the implementation of SDIO/mbox significantly since
+the ep_rx_complete cb is invoked directly from the SDIO/mbox
+hif layer.
 
-Regards,
-Amitkumar
+Since the ath10k_htc_control_rx_complete already is present
+(only containing a warning message) there is no reason for not
+using it (instead of having a special case for ep 0 in
+ath10k_htc_rx_completion_handler).
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   73 +++++++++++++++------------------
+ 1 file changed, 34 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 6ff5837..f4ffeef 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -457,42 +457,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		/* zero length packet with trailer data, just drop these */
+ 		goto out;
+ 
+-	if (eid == ATH10K_HTC_EP_0) {
+-		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
+-
+-		switch (__le16_to_cpu(msg->hdr.message_id)) {
+-		case ATH10K_HTC_MSG_READY_ID:
+-		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
+-			/* handle HTC control message */
+-			if (completion_done(&htc->ctl_resp)) {
+-				/*
+-				 * this is a fatal error, target should not be
+-				 * sending unsolicited messages on the ep 0
+-				 */
+-				ath10k_warn(ar, "HTC rx ctrl still processing\n");
+-				complete(&htc->ctl_resp);
+-				goto out;
+-			}
+-
+-			htc->control_resp_len =
+-				min_t(int, skb->len,
+-				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
+-
+-			memcpy(htc->control_resp_buffer, skb->data,
+-			       htc->control_resp_len);
+-
+-			complete(&htc->ctl_resp);
+-			break;
+-		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
+-			htc->htc_ops.target_send_suspend_complete(ar);
+-			break;
+-		default:
+-			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
+-			break;
+-		}
+-		goto out;
+-	}
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
+ 		   eid, skb);
+ 	ep->ep_ops.ep_rx_complete(ar, skb);
+@@ -507,9 +471,40 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ static void ath10k_htc_control_rx_complete(struct ath10k *ar,
+ 					   struct sk_buff *skb)
+ {
+-	/* This is unexpected. FW is not supposed to send regular rx on this
+-	 * endpoint. */
+-	ath10k_warn(ar, "unexpected htc rx\n");
++	struct ath10k_htc *htc = &ar->htc;
++	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
++
++	switch (__le16_to_cpu(msg->hdr.message_id)) {
++	case ATH10K_HTC_MSG_READY_ID:
++	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++		/* handle HTC control message */
++		if (completion_done(&htc->ctl_resp)) {
++			/* this is a fatal error, target should not be
++			 * sending unsolicited messages on the ep 0
++			 */
++			ath10k_warn(ar, "HTC rx ctrl still processing\n");
++			complete(&htc->ctl_resp);
++			goto out;
++		}
++
++		htc->control_resp_len =
++			min_t(int, skb->len,
++			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
++
++		memcpy(htc->control_resp_buffer, skb->data,
++		       htc->control_resp_len);
++
++		complete(&htc->ctl_resp);
++		break;
++	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
++		htc->htc_ops.target_send_suspend_complete(ar);
++		break;
++	default:
++		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
++		break;
++	}
++
++out:
+ 	kfree_skb(skb);
+ }
+ 
+-- 
+1.7.9.5
