@@ -1,76 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59388 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752789AbcKIBeF (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35565 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752123AbcKRTYM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 20:34:05 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/8] mwifiex: prevent register accesses after host is sleeping
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20161109013405.097F46135B@smtp.codeaurora.org> (sfid-20161109_023424_758907_B8AEADA4)
-Date: Wed,  9 Nov 2016 01:34:05 +0000 (UTC)
+        Fri, 18 Nov 2016 14:24:12 -0500
+Received: by mail-qk0-f194.google.com with SMTP id n204so34262245qke.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:11 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 00/11] ath10k sdio support
+Date: Fri, 18 Nov 2016 20:22:40 +0100
+Message-Id: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202415_845633_25DFEA15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Following is mwifiex driver-firmware host sleep handshake.
-> It involves three threads. suspend handler, interrupt handler, interrupt
-> processing in main work queue.
-> 
-> 1) Enter suspend handler
-> 2) Download HS_CFG command
-> 3) Response from firmware for HS_CFG
-> 4) Suspend thread waits until handshake completes(i.e hs_activate becomes
->    true)
-> 5) SLEEP from firmware
-> 6) SLEEP confirm downloaded to firmware.
-> 7) SLEEP confirm response from firmware
-> 8) Driver processes SLEEP confirm response and set hs_activate to wake up
-> suspend thread
-> 9) Exit suspend handler
-> 10) Read sleep cookie in loop and wait until it indicates firmware is
-> sleep.
-> 11) After processing SLEEP confirm response, we are at the end of interrupt
-> processing routine. Recheck if there are interrupts received while we were
-> processing them.
-> 
-> During suspend-resume stress test, it's been observed that we may end up
-> acessing PCIe hardware(in 10 and 11) when PCIe bus is closed which leads
-> to a kernel crash.
-> 
-> This patch solves the problem with below changes.
-> a) action 10 above can be done before 8
-> b) Skip 11 if hs_activated is true. SLEEP confirm response
-> is the last interrupt from firmware. No need to recheck for
-> pending interrupts.
-> c) Add flush_workqueue() in suspend handler.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> Tested-by: Brian Norris <briannorris@chromium.org>
+Changes since last version:
 
-8 patches applied to wireless-drivers-next.git, thanks.
+The BMI patch (no. 6 in the previous version) has been removed since
+it is not used by the last (major) sdio patch.
 
-ec815dd2a5f1 mwifiex: prevent register accesses after host is sleeping
-5190f2e40591 mwifiex: report error to PCIe for suspend failure
-c44c040300d7 mwifiex: Fix NULL pointer dereference in skb_dequeue()
-113630b581d6 mwifiex: vendor_ie length check for parse WMM IEs
-a936ea543657 mwifiex: add memrw command information in README
-77f486c8bb39 mwifiex: update tx_pkts_queued for requeued packets
-49abe5c83cd0 mwifiex: fix command timeout problem seen in stress tests
-3d8bd85c2c9e mwifiex: fix p2p device doesn't find in scan problem
+The QCA65XX enum patch (no. 10 in the previous version) was also
+removed since it was considered not necessary.
+
+Added a new patch (no. 3) that removes two unused members in
+struct ath10k_htc_ep. These removals makes it possible to connect
+the HTC control endpoint before wait target (just as ath6kl does).
+
+Updated commit comments for a few patches.
+
+Other updates according to the comments from Michal Kazior and
+Kalle Valo.
+
+The new version was built and tested against:
+tag: ath-201611151509
+
+
+*Original description*
+
+This patch series adds sdio support to ath10k.
+
+Overview:
+A new HIF layer: sdio/mailbox.
+The current HIF ops are unaltered even though some ops
+are not applicable for sdio.
+
+The HTC layer has only suffered minor modifications:
+- A few new functions for handling the mailbox specific
+  RX trailers (lookahead reports)
+- Some minor refactorization of the existing code
+  (patches 3 and 4)
+
+This is not included in this patch series:
+
+- HTT High latency RX and TX support
+- Full integration in core.c
+
+The following basic tests have been made so far:
+
+BMI fw load and firmware startup (all the steps in ath10k_core_start).
+This means:
+
+- HTT service connect
+- WMI control service connect
+- WMI unified init
+
+The above mentioned bullets where verified with a QCA6584 chipset.
+
+I have not been able to test the patch series together with
+ath10k pcie hardware, but I will do so as soon as I can get
+my hands on some hardware.
+
+The patches have been built and tested against the ath tree:
+git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
+branch/tag: master/ath-201611090123
+
+Erik Stromdahl (11):
+  ath10k: htc: made static function public
+  ath10k: htc: rx trailer lookahead support
+  ath10k: htc: Removal of unused struct members
+  ath10k: htc: Changed order of wait target and ep connect
+  ath10k: htc: refactorization
+  ath10k: htc: Added ATH10K_HTC_FLAG_BUNDLE_LSB
+  ath10k: Added SDIO dbg masks
+  ath10k: Added ATH10K_BUS_SDIO enum
+  ath10k: Mailbox address definitions
+  ath10k: Added more host_interest members
+  ath10k: Added sdio support
+
+ drivers/net/wireless/ath/ath10k/Kconfig     |    6 +
+ drivers/net/wireless/ath/ath10k/Makefile    |    3 +
+ drivers/net/wireless/ath/ath10k/core.h      |    3 +
+ drivers/net/wireless/ath/ath10k/debug.h     |    2 +
+ drivers/net/wireless/ath/ath10k/htc.c       |  214 ++-
+ drivers/net/wireless/ath/ath10k/htc.h       |   38 +-
+ drivers/net/wireless/ath/ath10k/hw.h        |   53 +
+ drivers/net/wireless/ath/ath10k/sdio.c      | 1860 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/sdio.h      |  276 ++++
+ drivers/net/wireless/ath/ath10k/targaddrs.h |   24 +
+ 10 files changed, 2407 insertions(+), 72 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
 
 -- 
-https://patchwork.kernel.org/patch/9353809/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
