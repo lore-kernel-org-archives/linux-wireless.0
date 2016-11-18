@@ -1,44 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41976 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933124AbcKWT0t (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:34432 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752648AbcKROtw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 14:26:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: linux-wireless@vger.kernel.org,
-        Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>,
-        ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Gregory CLEMENT <gregory.clement@free-electrons.com>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: Re: ath9k ARMv7 OOPS in v4.8.6, v4.2.8
-References: <20161123191539.GF2799@io.lakedaemon.net>
-Date: Wed, 23 Nov 2016 21:26:42 +0200
-In-Reply-To: <20161123191539.GF2799@io.lakedaemon.net> (Jason Cooper's message
-        of "Wed, 23 Nov 2016 19:15:39 +0000")
-Message-ID: <87a8cqgfpp.fsf@kamboji.qca.qualcomm.com> (sfid-20161123_202653_424565_6F2A8A43)
+        Fri, 18 Nov 2016 09:49:52 -0500
+Received: by mail-wm0-f44.google.com with SMTP id u144so6312244wmu.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 06:49:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5b62d41b-7125-f1ce-b09f-29db7572a748@gmail.com>
+References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+ <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
+ <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com> <5b62d41b-7125-f1ce-b09f-29db7572a748@gmail.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 18 Nov 2016 15:49:50 +0100
+Message-ID: <CA+BoTQk8kov-fZ3CiTrVdfoevM=AmO-a2GK2PcGtLh6Ch2-x6g@mail.gmail.com> (sfid-20161118_155012_760355_59662FE6)
+Subject: Re: [RFC 04/12] ath10k: htc: refactorization
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jason Cooper <jason@lakedaemon.net> writes:
-
-> All,
+On 17 November 2016 at 17:32, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
+te:
 >
-> I have a Ubiquiti SR-71 mini-pcie ath9k card in a Globalscale Mirabox
-> board (Marvell Armada 370 SoC).  Every day or so I get a consistent
-> crash that brings down the whole board.  I've attached three oops I
-> captured on the serial port.
 >
-> I looked at the commits from v4.8.6 to v4.9-rc6, and nothing jumped out
-> at me as "this would fix it".  And since it takes a day or so to trigger
-> the oops, bisecting would be a bit brutal.  Does anyone have any insight
-> into this?
+> On 11/15/2016 11:19 AM, Michal Kazior wrote:
+>> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> =
+wrote:
+>>> Code refactorization:
+>>>
+>>> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+>>> to ath10k_htc_control_rx_complete.
+>>>
+>>> This eases the implementation of SDIO/mbox significantly since
+>>> the ep_rx_complete cb is invoked directly from the SDIO/mbox
+>>> hif layer.
+>>>
+>>> Since the ath10k_htc_control_rx_complete already is present
+>>> (only containing a warning message) there is no reason for not
+>>> using it (instead of having a special case for ep 0 in
+>>> ath10k_htc_rx_completion_handler).
+>>
+>> This should be squashed with Patch 3 since it's inseparable part of
+>> the same refactorization.
+>>
+>>
+>> Micha=C5=82
+>>
+>
+>
+> Hmm, I don't really see why this is an inseparable part of the previous
+> patch.
+>
+> As far as I see this patch has nothing to do with patch 3, or am I
+> missing anything?
+>
+> Are you really sure they should be squashed?
 
-Is this a regression, meaning that it didn't crash on older kernels but
-crashes on newer ones? Or has it always crashed?
+Hmm.. on second thought this should be fine as it is.
 
--- 
-Kalle Valo
+
+Micha=C5=82
