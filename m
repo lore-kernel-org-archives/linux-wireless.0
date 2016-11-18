@@ -1,63 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:32847 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935508AbcKXB1C (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 20:27:02 -0500
-Received: by mail-pf0-f194.google.com with SMTP id 144so1181929pfv.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:27:02 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 17:26:57 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 6/7] mwifiex: Removed unused 'pkt_type' variable
-Message-ID: <34137703e30c2578ba138261d825874a753c88e4.1479950323.git.kirtika@google.com> (sfid-20161124_022706_616167_F44BBEA8)
-References: <cover.1479950323.git.kirtika@google.com>
+Received: from muru.com ([72.249.23.125]:32844 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753163AbcKRUTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 15:19:36 -0500
+Date: Fri, 18 Nov 2016 12:19:33 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Matt Ranostay <matt@ranostay.consulting>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-mmc@vger.kernel.org,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH] mmc: pwrseq: add support for Marvell SD8787 chip
+Message-ID: <20161118201932.GY4082@atomide.com> (sfid-20161118_211941_118291_46A6A8A9)
+References: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479950323.git.kirtika@google.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 92263a841b15 introduced mwifiex_deaggr_sdio_pkt which initializes
-variable pkt_type but does not use it. Compiling with W=1 gives the following
-warning, fix it.
-mwifiex/sdio.c: In function ‘mwifiex_deaggr_sdio_pkt’:
-mwifiex/sdio.c:1198:6: warning: variable ‘pkt_type’ set but not used [-Wunused-but-set-variable]
+* Matt Ranostay <matt@ranostay.consulting> [161117 17:55]:
+> Allow power sequencing for the Marvell SD8787 Wifi/BT chip.
+> This can be abstracted to other chipsets if needed in the future.
 
-Fixes: 92263a841b15 ("mwifiex: add SDIO rx single port aggregation")
-Cc: Zhaoyang Liu <liuzy@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 3 ---
- 1 file changed, 3 deletions(-)
+Good to see this happening:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 6c9f16e..09c586f 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1134,7 +1134,6 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- {
- 	u32 total_pkt_len, pkt_len;
- 	struct sk_buff *skb_deaggr;
--	u32 pkt_type;
- 	u16 blk_size;
- 	u8 blk_num;
- 	u8 *data;
-@@ -1155,8 +1154,6 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 			break;
- 		}
- 		pkt_len = le16_to_cpu(*(__le16 *)(data + SDIO_HEADER_OFFSET));
--		pkt_type = le16_to_cpu(*(__le16 *)(data + SDIO_HEADER_OFFSET +
--					 2));
- 		if ((pkt_len + SDIO_HEADER_OFFSET) > blk_size) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "%s: error in pkt_len,\t"
--- 
-2.8.0.rc3.226.g39d4020
+Acked-by: Tony Lindgren <tony@atomide.com>
