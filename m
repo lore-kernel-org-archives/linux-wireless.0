@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:34432 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752648AbcKROtw (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33802 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752274AbcKRIqb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:49:52 -0500
-Received: by mail-wm0-f44.google.com with SMTP id u144so6312244wmu.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 06:49:52 -0800 (PST)
+        Fri, 18 Nov 2016 03:46:31 -0500
+Received: by mail-pg0-f65.google.com with SMTP id e9so19719164pgc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:46:31 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Fri, 18 Nov 2016 00:46:25 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH 7/7] mwifiex: Remove unused 'bcd_usb' variable
+Message-ID: <eb22a169bcb478a8221d9c78f6335a11520fd336.1479458374.git.kirtika@google.com> (sfid-20161118_094635_094629_A1C80CCA)
+References: <cover.1479458373.git.kirtika@google.com>
 MIME-Version: 1.0
-In-Reply-To: <5b62d41b-7125-f1ce-b09f-29db7572a748@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
- <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
- <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com> <5b62d41b-7125-f1ce-b09f-29db7572a748@gmail.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 18 Nov 2016 15:49:50 +0100
-Message-ID: <CA+BoTQk8kov-fZ3CiTrVdfoevM=AmO-a2GK2PcGtLh6Ch2-x6g@mail.gmail.com> (sfid-20161118_155012_760355_59662FE6)
-Subject: Re: [RFC 04/12] ath10k: htc: refactorization
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479458373.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 November 2016 at 17:32, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
-te:
->
->
-> On 11/15/2016 11:19 AM, Michal Kazior wrote:
->> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> =
-wrote:
->>> Code refactorization:
->>>
->>> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
->>> to ath10k_htc_control_rx_complete.
->>>
->>> This eases the implementation of SDIO/mbox significantly since
->>> the ep_rx_complete cb is invoked directly from the SDIO/mbox
->>> hif layer.
->>>
->>> Since the ath10k_htc_control_rx_complete already is present
->>> (only containing a warning message) there is no reason for not
->>> using it (instead of having a special case for ep 0 in
->>> ath10k_htc_rx_completion_handler).
->>
->> This should be squashed with Patch 3 since it's inseparable part of
->> the same refactorization.
->>
->>
->> Micha=C5=82
->>
->
->
-> Hmm, I don't really see why this is an inseparable part of the previous
-> patch.
->
-> As far as I see this patch has nothing to do with patch 3, or am I
-> missing anything?
->
-> Are you really sure they should be squashed?
+mwifiex_usb_probe() defines and sets bcd_usb but does not use it,
+Compiling with W=1 gives the following warning, fix it.
+mwifiex/usb.c: In function ‘mwifiex_usb_probe’:
+mwifiex/usb.c:383:41: warning: variable ‘bcd_usb’ set but not used [-Wunused-but-set-variable]
 
-Hmm.. on second thought this should be fine as it is.
+The unused variable seems to be present since 4daffe354366 which introduced
+mwifiex_usb_probe().
 
+Fixes: 4daffe354366 ("mwifiex: add support for Marvell USB8797 chipset")
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/usb.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Micha=C5=82
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 73eb084..67a15c1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -380,7 +380,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	struct usb_endpoint_descriptor *epd;
+ 	int ret, i;
+ 	struct usb_card_rec *card;
+-	u16 id_vendor, id_product, bcd_device, bcd_usb;
++	u16 id_vendor, id_product, bcd_device;
+
+ 	card = kzalloc(sizeof(struct usb_card_rec), GFP_KERNEL);
+ 	if (!card)
+@@ -389,7 +389,6 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	id_vendor = le16_to_cpu(udev->descriptor.idVendor);
+ 	id_product = le16_to_cpu(udev->descriptor.idProduct);
+ 	bcd_device = le16_to_cpu(udev->descriptor.bcdDevice);
+-	bcd_usb = le16_to_cpu(udev->descriptor.bcdUSB);
+ 	pr_debug("info: VID/PID = %X/%X, Boot2 version = %X\n",
+ 		 id_vendor, id_product, bcd_device);
+
+--
+2.8.0.rc3.226.g39d4020
