@@ -1,99 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:36315 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933819AbcKDONv (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36406 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754159AbcKRRGO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 10:13:51 -0400
-Received: by mail-qt0-f173.google.com with SMTP id w33so48634236qtc.3
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 07:13:51 -0700 (PDT)
+        Fri, 18 Nov 2016 12:06:14 -0500
+Date: Fri, 18 Nov 2016 11:06:10 -0600
+From: Rob Herring <robh@kernel.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
+        briannorris@google.com, dmitry.torokhov@gmail.com,
+        devicetree@vger.kernel.org, Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v8] mwifiex: parse device tree node for PCIe
+Message-ID: <20161118170610.42gumxv37a3dsgxu@rob-hp-laptop> (sfid-20161118_180638_347515_B35AC1EC)
+References: <1479472624-22340-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
-From: Bruno Antunes <baantunes@gmail.com>
-Date: Fri, 4 Nov 2016 14:13:29 +0000
-Message-ID: <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com> (sfid-20161104_151355_424516_D3EC8814)
-Subject: Re: ATH10K VLAN firmware issue
-To: voncken <cedric.voncken@acksys.fr>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1479472624-22340-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On Fri, Nov 18, 2016 at 06:07:04PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> This patch derives device tree node from pcie bus layer framework.
+> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> marvell-8xxx.txt) to accommodate PCIe changes.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v2: Included vendor and product IDs in compatible strings for PCIe
+> chipsets(Rob Herring)
+> v3: Patch is created using -M option so that it will only include diff of
+> original and renamed files(Rob Herring)
+> Resend v3: Resending the patch because I missed to include device tree mailing
+> while sending v3.
+> v4: Fix error handling, also move-on even if no device tree node is present.
+> v5: Update commit log to include memory leak, return -EINVAL instead of -1.
+> v6: Remove an unnecessary error print, fix typo in commit log
+> v7: a) Earlier versions of this patch claims to have a change which fixes "memory
+>        leak". But it actually introduces double-free problem. That change is removed
+>        here(Brian Norris)
+>     b) Cosmetic change in bindings documentation(Rob Herring)
+> 	s/marvell/Marvell/
+> 	s/sdio\/pcie/SDIO\/PCIE/
+> v8: Same as v7. I had missed to CC device tree mailing list in v7. Correcting this
+>     in v8.
+> ---
+>  .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++++---
 
-Old thread but I think the issue is still present.
+Acked-by: Rob Herring <robh@kernel.org>
 
-I'm running a setup with VLANs with WDS and ath10k cards.
-
-To make it work both cards must be loaded in rawmode, AP
-and Sta, and with no security.
-
-I'm using a OpenWrt trunk r49941 and the most recent firmware,
-10.2.4.70.58, from Kalle ath10k firmware tree.
-
-Although it works the throughput is very bad.
-Are there any alternatives to improve the throughput.
-
-Best Regards,
-Bruno
-
-On 9 December 2015 at 17:24, voncken <cedric.voncken@acksys.fr> wrote:
->
->
->> -----Message d'origine-----
->> De : Ben Greear [mailto:greearb@candelatech.com]
->> Envoy=C3=A9 : mercredi 9 d=C3=A9cembre 2015 16:34
->> =C3=80 : Cedric VONCKEN; ath10k@lists.infradead.org; linux-wireless
->> Objet : Re: ATH10K VLAN firmware issue
->>
->> This only happens when you use STA  + WDS, or is .1q broken for you in
->> other cases as well?
->
-> No, this issue occurs in all modes (STA, STA + WDS, AP).
->
-> Thanks
->
-> Cedric.
->
->>
->> Thanks,
->> Ben
->>
->> On 12/08/2015 06:29 AM, Cedric VONCKEN wrote:
->> >     I'm testing to transmit frame with 802.1q tag (VLAN).
->> >
->> >     My client is set in STA + WDS and the netdev is bridged with eth0.
->> >     I have a computer with vlan configuration set connected to the STA
->> > eth0.
->> >
->> >     If I try to transmit frames with 802.1q tag, the frames are not
-> sent.
->> >     I checked with wireless sniffer, and I don't see the frame with VL=
-AN
->> > tag (the frames without VLAN tag are sent).
->> >
->> >     I tested with firmware 10.2.4.70.14-2 from kale github,
->> > 10.1.467-ct-com-full-015 from candelatech and 10.2.4.70-2 from
->> > openwrt, and in all cases I have the same issue.
->> >
->> >     Thanks for your help.
->> >
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe
->> > linux-wireless" in the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> >
->>
->> --
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/net/wireless/marvell/mwifiex/pcie.c        | 24 ++++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 ++-
+>  3 files changed, 31 insertions(+), 4 deletions(-)
+>  rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
