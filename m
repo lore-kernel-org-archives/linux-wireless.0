@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:42672 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753267AbcKUQKi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42960 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932255AbcKRQVr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 11:10:38 -0500
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail2.candelatech.com (Postfix) with ESMTPSA id 9966640A626
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 08:10:37 -0800 (PST)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Break-it testing for wifi
-Message-ID: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com> (sfid-20161121_171042_142074_00CD9837)
-Date: Mon, 21 Nov 2016 08:10:37 -0800
+        Fri, 18 Nov 2016 11:21:47 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, <devicetree@vger.kernel.org>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v8] mwifiex: parse device tree node for PCIe
+References: <1479472624-22340-1-git-send-email-akarwar@marvell.com>
+Date: Fri, 18 Nov 2016 18:21:41 +0200
+In-Reply-To: <1479472624-22340-1-git-send-email-akarwar@marvell.com>
+        (Amitkumar Karwar's message of "Fri, 18 Nov 2016 18:07:04 +0530")
+Message-ID: <87oa1coj1m.fsf@purkki.adurom.net> (sfid-20161118_172153_740178_AB01669D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-I am thinking about adding some sort of framework to wpa_supplicant and/or the
-mac80211 stack to allow purposefully creating bad station behaviour in order to
-test robustness of APs.
+> From: Xinming Hu <huxm@marvell.com>
+>
+> This patch derives device tree node from pcie bus layer framework.
+> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> marvell-8xxx.txt) to accommodate PCIe changes.
+>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Rajat Jain <rajatja@google.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Some ideas so far:
+[...]
 
-1)  Allow supplicant to do bad state-machine transitions (start 4-way before associating, for instance).
+> @@ -10,6 +10,8 @@ Required properties:
+>    - compatible : should be one of the following:
+>  	* "marvell,sd8897"
+>  	* "marvell,sd8997"
+> +	* "pci11ab,2b42"
+> +	* "pci1b4b,2b42"
 
-2)  Randomly corrupt mgt frames in driver and/or mac80211 stack and/or supplicant.
+Are these correct? In v6 Rob said:
 
-3)  Possibly allow user to make specific corruptions.  This would probably be in supplicant
-     only, and I am not sure how this would be configured.  Maybe allow user to over-ride
-     existing IEs and add bogus ones of their own choosing.
+"I think I already said this, but you have the vendor and product IDs 
+reversed."
 
-4)  Maybe some specific tests like putting in over-flow sized lengths of IEs.
-
-Has anyone done anything similar they would like to share?
-
-Johannes:  Any interest in having such a framework in upstream kernels?
-
-Any other ideas for how to improve this feature set?
-
-Thanks,
-Ben
+https://patchwork.kernel.org/patch/9390225/
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
