@@ -1,137 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56134 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938679AbcKQRbS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:31:18 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com, Shengzhen Li <szli@marvell.com>
-Subject: Re: [PATCH v3 01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-        <20161114194049.GA131593@google.com>
-Date: Thu, 17 Nov 2016 14:41:11 +0200
-In-Reply-To: <20161114194049.GA131593@google.com> (Brian Norris's message of
-        "Mon, 14 Nov 2016 11:40:50 -0800")
-Message-ID: <877f82mg7s.fsf@kamboji.qca.qualcomm.com> (sfid-20161117_183134_559730_F724B568)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:41846 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752653AbcKRVob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:44:31 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 6/7] rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count
+Date: Fri, 18 Nov 2016 16:44:27 -0500
+Message-Id: <1479505468-29383-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224439_700997_C4B8CE5E)
+In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> On Fri, Nov 11, 2016 at 06:40:08PM +0530, Amitkumar Karwar wrote:
->
->> There are multiple mwifiex patches under review. I want you consider them
->> in following sequence(first being oldest) to avoid conflicts
->
-> Thanks for doing this! It's a little confusing about what's outstanding
-> at the moment (and I think I was just confused on a review a bit ago; I
-> wasn't 100% sure what it was based on), so this listing helps.
->
-> If it helps, I'll put my comments here, since I've reviewed most of
-> these:
->
->> [v3] mwifiex: report wakeup for wowlan
->
-> Reviewed, SGMT.
->
->> mwifiex: add power save parameters in hs_cfg cmd
->
-> Didn't review. No comment.
->
->> [2/2] mwifiex: ignore calibration data failure (Note: 1/2 has dropped)
->
-> Didn't review. But FWIW, Kalle expressed a preference for full series,
-> not partial.
+In order to obtain retry count for a given rate we need to pass the
+full struct ieee80211_tx_info to the function setting the rate in he
+TX descriptor.
 
-You are correct, but dropping patches in patchwork is easy so I usually
-can do that myself. Changing or adding patches to a patchset is the
-difficult part.
+This uncovered a huge bug where the old code would use struct
+ieee80211_rate.flags to test for rate parameters, which is always
+zero, instead of the flags value from struct ieee80211_tx_rate.
 
-So I dropped patch 1 now.
+Time to find a brown paper bag :(
 
->> [v6] mwifiex: parse device tree node for PCIe
->
-> This one is marked Deferred in patchwork, and I had some comments about
-> it, since it introduced a double-free issue. I'd prefer it get fixed and
-> resent, and I expect Kalle is also waiting for this.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   | 27 ++++----
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 71 ++++++++++++++--------
+ 2 files changed, 60 insertions(+), 38 deletions(-)
 
-Correct, I dropped v6.
-
->> [v2,1/3] mwifiex: Allow mwifiex early access to device structure
->> [v2,2/3] mwifiex: Introduce mwifiex_probe_of() to parse common properties
->> [v2,3/3] mwifiex: Enable WoWLAN for both sdio and pcie
->
-> You sent v3 for the above, and those LGTM (I provided my review). I was
-> probably also confused because they were based on the above "[v6]
-> mwifiex: parse device tree node for PCIe", which was not completely
-> correct.
-
-v4 of this patchset is now "Under Review", which in practise means that
-the patches are pending for commit. (Too bad that patchwork doesn't have
-a "Pending" state, so I have to use "Under Review" instead)
-
->> mwifiex: don't do unbalanced free()'ing in cleanup_if()
->> mwifiex: printk() overflow with 32-byte SSIDs
->> mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
->
-> I wrote or reviewed the above 3. LGTM.
-
-The first is now "Under Review" and the last two I have already applied.
-
->> [v3,01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
->> [v3,02/11] mwifiex: complete blocked power save handshake in main process
->> [v3,03/11] mwifiex: resolve races between async FW init (failure) and device removal
->> [v3,04/11] mwifiex: remove redundant pdev check in suspend/resume handlers
->> [v3,05/11] mwifiex: don't pretend to resume while remove()'ing
->> [v3,06/11] mwifiex: resolve suspend() race with async FW init failure
->> [v3,07/11] mwifiex: reset card->adapter during device unregister
->> [v3,08/11] mwifiex: usb: handle HS failures
->> [v3,09/11] mwifiex: sdio: don't check for NULL sdio_func
->> [v3,10/11] mwifiex: stop checking for NULL drvata/intfdata
->> [v3,11/11] mwifiex: pcie: stop checking for NULL adapter->card
->
-> For this entire series, I looked over them again (and I wrote several in
-> the first place), so for all 11:
->
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-
-These 11 are now "Under Review".
-
-So to summarise, this is what I'm planning to commit (it's sorted by
-date but I try to follow the order Amit specified when I commit these):
-
-[  1] mwifiex: add power save parameters in hs_cfg cmd             2016-10-14 Amitkumar Ka Under Review
-[  2] [2/2] mwifiex: ignore calibration data failure               2016-10-21 Amitkumar Ka Under Review
-[  3] mwifiex: don't do unbalanced free()'ing in cleanup_if()      2016-10-26 Brian Norris Under Review
-[  4] [v3,01/11] mwifiex: check tx_hw_pending before downloadin... 2016-11-11 Amitkumar Ka Under Review
-[  5] [v3,02/11] mwifiex: complete blocked power save handshake... 2016-11-11 Amitkumar Ka Under Review
-[  6] [v3,03/11] mwifiex: resolve races between async FW init (... 2016-11-11 Amitkumar Ka Under Review
-[  7] [v3,04/11] mwifiex: remove redundant pdev check in suspen... 2016-11-11 Amitkumar Ka Under Review
-[  8] [v3,05/11] mwifiex: don't pretend to resume while remove(... 2016-11-11 Amitkumar Ka Under Review
-[  9] [v3,06/11] mwifiex: resolve suspend() race with async FW.... 2016-11-11 Amitkumar Ka Under Review
-[ 10] [v3,07/11] mwifiex: reset card->adapter during device unr... 2016-11-11 Amitkumar Ka Under Review
-[ 11] [v3,08/11] mwifiex: usb: handle HS failures                  2016-11-11 Amitkumar Ka Under Review
-[ 12] [v3,09/11] mwifiex: sdio: don't check for NULL sdio_func     2016-11-11 Amitkumar Ka Under Review
-[ 13] [v3,10/11] mwifiex: stop checking for NULL drvata/intfdata   2016-11-11 Amitkumar Ka Under Review
-[ 14] [v3,11/11] mwifiex: pcie: stop checking for NULL adapter-... 2016-11-11 Amitkumar Ka Under Review
-[ 15] [v3,1/3] mwifiex: Allow mwifiex early access to device st... 2016-11-14 Amitkumar Ka Under Review
-[ 16] [v3,2/3] mwifiex: Introduce mwifiex_probe_of() to parse c... 2016-11-14 Amitkumar Ka Under Review
-[ 17] [v3,3/3] mwifiex: Enable WoWLAN for both sdio and pcie       2016-11-14 Amitkumar Ka Under Review
-[ 18] [v4,1/3] mwifiex: Allow mwifiex early access to device st... 2016-11-15 Amitkumar Ka Under Review
-[ 19] [v4,2/3] mwifiex: Introduce mwifiex_probe_of() to parse c... 2016-11-15 Amitkumar Ka Under Review
-[ 20] [v4,3/3] mwifiex: Enable WoWLAN for both sdio and pcie       2016-11-15 Amitkumar Ka Under Review
-
-Patchwork link for the same:
-
-https://patchwork.kernel.org/project/linux-wireless/list/?state=2&q=mwifiex
-
-Does that look ok?
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index bc3c990..df551b2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1337,10 +1337,11 @@ struct rtl8xxxu_fileops {
+ 				  u32 ramask, int sgi);
+ 	void (*report_connect) (struct rtl8xxxu_priv *priv,
+ 				u8 macid, bool connect);
+-	void (*fill_txdesc) (struct ieee80211_hdr *hdr,
+-			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+-			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable, u32 rts_rate);
++	void (*fill_txdesc) (struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
++			     struct ieee80211_tx_info *tx_info,
++			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
++			     bool short_preamble, bool ampdu_enable,
++			     u32 rts_rate);
+ 	int writeN_block_size;
+ 	int rx_agg_buf_size;
+ 	char tx_desc_size;
+@@ -1434,14 +1435,16 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb);
+ int rtl8xxxu_gen2_channel_to_group(int channel);
+ bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
+ 				      int result[][8], int c1, int c2);
+-void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+-			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+-			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable, u32 rts_rate);
+-void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+-			     struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
+-			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable, u32 rts_rate);
++void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
++			     struct ieee80211_tx_info *tx_info,
++			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
++			     bool short_preamble, bool ampdu_enable,
++			     u32 rts_rate);
++void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
++			     struct ieee80211_tx_info *tx_info,
++			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
++			     bool short_preamble, bool ampdu_enable,
++			     u32 rts_rate);
+ 
+ extern struct rtl8xxxu_fileops rtl8192cu_fops;
+ extern struct rtl8xxxu_fileops rtl8192eu_fops;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index a4ac557..04141e5 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4759,13 +4759,28 @@ static void rtl8xxxu_dump_action(struct device *dev,
+  * This format is used on 8188cu/8192cu/8723au
+  */
+ void
+-rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+-			struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+-			u16 rate_flag, bool sgi, bool short_preamble,
+-			bool ampdu_enable, u32 rts_rate)
++rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
++			struct ieee80211_tx_info *tx_info,
++			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
++			bool short_preamble, bool ampdu_enable, u32 rts_rate)
+ {
++	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
++	struct rtl8xxxu_priv *priv = hw->priv;
++	struct device *dev = &priv->udev->dev;
++	u32 rate;
++	u16 rate_flags = tx_info->control.rates[0].flags;
+ 	u16 seq_number;
+ 
++	if (rate_flags & IEEE80211_TX_RC_MCS &&
++	    !ieee80211_is_mgmt(hdr->frame_control))
++		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
++	else
++		rate = tx_rate->hw_value;
++
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
++		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
++			 __func__, rate, cpu_to_le16(tx_desc->pkt_size));
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+ 	tx_desc->txdw5 = cpu_to_le32(rate);
+@@ -4800,10 +4815,10 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+ 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
+ 	 */
+ 	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
+-	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
++	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+-	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+ 	}
+@@ -4814,16 +4829,31 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+  * This format is used on 8192eu/8723bu
+  */
+ void
+-rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+-			struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
+-			u16 rate_flag, bool sgi, bool short_preamble,
+-			bool ampdu_enable, u32 rts_rate)
++rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
++			struct ieee80211_tx_info *tx_info,
++			struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
++			bool short_preamble, bool ampdu_enable, u32 rts_rate)
+ {
++	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
++	struct rtl8xxxu_priv *priv = hw->priv;
++	struct device *dev = &priv->udev->dev;
+ 	struct rtl8xxxu_txdesc40 *tx_desc40;
++	u32 rate;
++	u16 rate_flags = tx_info->control.rates[0].flags;
+ 	u16 seq_number;
+ 
+ 	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
+ 
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
++		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
++			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
++
++	if (rate_flags & IEEE80211_TX_RC_MCS &&
++	    !ieee80211_is_mgmt(hdr->frame_control))
++		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
++	else
++		rate = tx_rate->hw_value;
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+ 	tx_desc40->txdw4 = cpu_to_le32(rate);
+@@ -4854,10 +4884,10 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+ 	/*
+ 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
+ 	 */
+-	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
++	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
+-	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
+ 		/*
+ 		 * For some reason the vendor driver doesn't set
+ 		 * TXDESC40_HW_RTS_ENABLE for CTS to SELF
+@@ -4872,14 +4902,13 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct rtl8xxxu_txdesc32 *tx_desc;
+ 	struct rtl8xxxu_tx_urb *tx_urb;
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+ 	struct device *dev = &priv->udev->dev;
+-	u32 queue, rate, rts_rate;
++	u32 queue, rts_rate;
+ 	u16 pktlen = skb->len;
+ 	u16 seq_number;
+ 	u16 rate_flag = tx_info->control.rates[0].flags;
+@@ -4906,10 +4935,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		goto error;
+ 	}
+ 
+-	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+-		dev_info(dev, "%s: TX rate: %d (%d), pkt size %d\n",
+-			 __func__, tx_rate->bitrate, tx_rate->hw_value, pktlen);
+-
+ 	if (ieee80211_is_action(hdr->frame_control))
+ 		rtl8xxxu_dump_action(dev, hdr);
+ 
+@@ -4963,12 +4988,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (rate_flag & IEEE80211_TX_RC_MCS &&
+-	    !ieee80211_is_mgmt(hdr->frame_control))
+-		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
+-	else
+-		rate = tx_rate->hw_value;
+-
+ 	if (rate_flag & IEEE80211_TX_RC_SHORT_GI ||
+ 	    (ieee80211_is_data_qos(hdr->frame_control) &&
+ 	     sta && sta->ht_cap.cap &
+@@ -4988,8 +5007,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+-	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag, sgi,
+-				short_preamble, ampdu_enable, rts_rate);
++	priv->fops->fill_txdesc(hw, hdr, tx_info, tx_desc, sgi, short_preamble,
++				ampdu_enable, rts_rate);
+ 
+ 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
+ 
 -- 
-Kalle Valo
+2.7.4
