@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34105 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751135AbcKCBAG (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35487 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752320AbcKRIpZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 21:00:06 -0400
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
- macpower
-To: John Heenan <john@zgus.com>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
-Cc: linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net> (sfid-20161103_020045_490919_CB940A2F)
-Date: Wed, 2 Nov 2016 20:00:03 -0500
+        Fri, 18 Nov 2016 03:45:25 -0500
+Received: by mail-pf0-f195.google.com with SMTP id i88so13155987pfk.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:45:25 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Fri, 18 Nov 2016 00:45:16 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH 3/7] mwifiex: Remove unused 'sta_ptr' variable
+Message-ID: <a061a166bddcf6cc060594512674934ad2979790.1479458373.git.kirtika@google.com> (sfid-20161118_094530_323091_D8723CBF)
+References: <cover.1479458373.git.kirtika@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20161030102112.GA5789@cube>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479458373.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10/30/2016 05:21 AM, John Heenan wrote:
-> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to set
-> macpower, is never 0xea. It is only ever 0x01 (first time after modprobe)
-> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These results
-> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
->
-> Whatever was returned, code tests always showed that at least
-> rtl8xxxu_init_queue_reserved_page(priv);
-> is always required. Not called if macpower set to true.
->
-> Please see cover letter, [PATCH 0/2], for more information from tests.
+Commit 429d90d2212b introduced mwifiex_cmd_tdls_oper() which initializes
+struct mwifiex_sta_node* sta_ptr, but does not use it. Compiling with W=1 gives
+the following warning, fix it.
+mwifiex/sta_cmd.c: In function ‘mwifiex_cmd_tdls_oper’:
+mwifiex/sta_cmd.c:1732:27: warning: variable ‘sta_ptr’ set but not used [-Wunused-but-set-variable]
 
-That cover letter will NOT be included in the commit message, thus referring to 
-it here is totally pointless.
+Fixes: 429d90d2212b ("mwifiex: add cfg80211 tdls_oper handler support")
+Cc: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 2 --
+ 1 file changed, 2 deletions(-)
 
->
-> For rtl8xxxu-devel branch of git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 2a162c3..d5aa1b7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1729,7 +1729,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ {
+ 	struct host_cmd_ds_tdls_oper *tdls_oper = &cmd->params.tdls_oper;
+ 	struct mwifiex_ds_tdls_oper *oper = data_buf;
+-	struct mwifiex_sta_node *sta_ptr;
+ 	struct host_cmd_tlv_rates *tlv_rates;
+ 	struct mwifiex_ie_types_htcap *ht_capab;
+ 	struct mwifiex_ie_types_qos_info *wmm_qos_info;
+@@ -1747,7 +1746,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
 
-Same comment as for the previous patch.
+ 	tdls_oper->reason = 0;
+ 	memcpy(tdls_oper->peer_mac, oper->peer_mac, ETH_ALEN);
+-	sta_ptr = mwifiex_get_sta_entry(priv, oper->peer_mac);
 
-Again I leave the review of the code changes to Jes.
+ 	pos = (u8 *)tdls_oper + sizeof(struct host_cmd_ds_tdls_oper);
 
-Larry
+--
+2.8.0.rc3.226.g39d4020
