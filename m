@@ -1,34 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53400 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752561AbcKIIKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 03:10:53 -0500
-Message-ID: <1478679046.4345.1.camel@sipsolutions.net> (sfid-20161109_091119_730636_F868756A)
-Subject: Re: [PATCH] wireless: fix bogus maybe-uninitialized warning
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Jouni Malinen <j@w1.fi>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 09 Nov 2016 09:10:46 +0100
-In-Reply-To: <87mvh9qwhi.fsf@purkki.adurom.net>
-References: <20161024153918.2810634-1-arnd@arndb.de>
-         <20161024153918.2810634-2-arnd@arndb.de> <87mvh9qwhi.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50530 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752168AbcKRXRP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 18:17:15 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] ath10k: fix monitor vdev for receiving other bss frames
+Date: Fri, 18 Nov 2016 15:10:58 -0800
+Message-ID: <1479510658-8326-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20161119_001719_538562_7B1381F4)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In order to receive other BSS entries in mesh mode, Monitor vdev
+is created whenever filter flag is set with OTHER_BSS. Recently
+it is root caused that setting promisc filter for Mesh interface
+is causing performance and stability issues. To fix this issue,
+firmware will configure appropriate rxfilters by default for mesh
+vdev during vdev creation. This change fixes monitor vdev creation
+based on firmware IE
 
-> Ideally we prefer that drivers/net/wireless and net/wireless changes
-> are
-> split into different patches as they get applied to different trees.
-> Johannes, is it ok if I take this change through my tree this time?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+ drivers/net/wireless/ath/ath10k/mac.c  | 4 +++-
+ 3 files changed, 11 insertions(+), 1 deletion(-)
 
-Sure, please do, thanks.
-
-(I don't particularly care about the lib80211 stuff anyway)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7005e2a98726..b796be1d6318 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -326,6 +326,7 @@
+ 	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
+ 	[ATH10K_FW_FEATURE_BTCOEX_PARAM] = "btcoex-param",
+ 	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
++	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e8decfaba5b6..179e52fbad55 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -562,6 +562,13 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR = 15,
+ 
++	/* Firmware allow other BSS mesh broadcast/multicast frames without
++	 * creating monitor interface. Appropriate rxfilters are programmed for
++	 * mesh vdev by firmware itself. This feature flags will be used for
++	 * not creating monitor vdev while configuring mesh node.
++	 */
++	ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST = 16,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 717b2fad9a8a..56b8859d4a72 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1167,7 +1167,9 @@ static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
+ 		return false;
+ 
+ 	return ar->monitor ||
+-	       ar->filter_flags & FIF_OTHER_BSS ||
++	       (!test_bit(ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST,
++			  ar->running_fw->fw_file.fw_features) &&
++		(ar->filter_flags & FIF_OTHER_BSS)) ||
+ 	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
+ }
+ 
+-- 
+1.9.1
