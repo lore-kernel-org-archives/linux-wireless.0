@@ -1,66 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47004 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932568AbcKQLN3 (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34699 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752301AbcKRTYO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 06:13:29 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
-References: <1478662648-70698-1-git-send-email-jcliang@chromium.org>
-To: Ricky Liang <jcliang@chromium.org>
-Cc: unlisted-recipients:; (no To-header on input)
-        Ricky Liang <jcliang@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org (open list:MARVELL MWIFIEX WIRELESS
-        DRIVER), netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Message-Id: <20161117111328.CE36E61652@smtp.codeaurora.org> (sfid-20161117_121404_319370_ABB5F4F9)
-Date: Thu, 17 Nov 2016 11:13:28 +0000 (UTC)
+        Fri, 18 Nov 2016 14:24:14 -0500
+Received: by mail-qk0-f194.google.com with SMTP id y205so857932qkb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:14 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 03/11] ath10k: htc: Removal of unused struct members
+Date: Fri, 18 Nov 2016 20:22:43 +0100
+Message-Id: <1479496971-19174-4-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202420_788115_844A81AF)
+In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ricky Liang <jcliang@chromium.org> wrote:
-> kmemleak reports memory leak in mwifiex_save_hidden_ssid_channels():
-> 
-> unreferenced object 0xffffffc0a2914780 (size 192):
->   comm "ksdioirqd/mmc2", pid 2004, jiffies 4307182506 (age 820.684s)
->   hex dump (first 32 bytes):
->     00 06 47 49 4e 2d 32 67 01 03 c8 60 6c 03 01 40  ..GIN-2g...`l..@
->     07 10 54 57 20 34 04 1e 64 05 24 84 03 24 95 04  ..TW 4..d.$..$..
->   backtrace:
->     [<ffffffc0003375f4>] create_object+0x164/0x2b4
->     [<ffffffc0008e3530>] kmemleak_alloc+0x50/0x88
->     [<ffffffc000335120>] __kmalloc_track_caller+0x1bc/0x264
->     [<ffffffc00030899c>] kmemdup+0x38/0x64
->     [<ffffffbffc2311cc>] mwifiex_fill_new_bss_desc+0x3c/0x130 [mwifiex]
->     [<ffffffbffc22ee9c>] mwifiex_save_curr_bcn+0x4ec/0x640 [mwifiex]
->     [<ffffffbffc22f45c>] mwifiex_handle_event_ext_scan_report+0x1d4/0x268 [mwifiex]
->     [<ffffffbffc2375d0>] mwifiex_process_sta_event+0x378/0x898 [mwifiex]
->     [<ffffffbffc224dc8>] mwifiex_process_event+0x1a8/0x1e8 [mwifiex]
->     [<ffffffbffc2228f0>] mwifiex_main_process+0x258/0x534 [mwifiex]
->     [<ffffffbffc258858>] 0xffffffbffc258858
->     [<ffffffc00071ee90>] process_sdio_pending_irqs+0xf8/0x160
->     [<ffffffc00071efdc>] sdio_irq_thread+0x9c/0x1a4
->     [<ffffffc000240d08>] kthread+0xf4/0x100
->     [<ffffffc0002043fc>] ret_from_fork+0xc/0x50
->     [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> Signed-off-by: Ricky Liang <jcliang@chromium.org>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+Removed tx_credits_per_max_message and tx_credit_size
+from struct ath10k_htc_ep since they are not used
+anywhere in the code.
 
-Patch applied to wireless-drivers-next.git, thanks.
+They are just written, never read.
 
-5ff262229378 mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |    6 ------
+ drivers/net/wireless/ath/ath10k/htc.h |    2 --
+ 2 files changed, 8 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 957e828..79d44de 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -815,12 +815,6 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	ep->max_tx_queue_depth = conn_req->max_send_queue_depth;
+ 	ep->max_ep_message_len = __le16_to_cpu(resp_msg->max_msg_size);
+ 	ep->tx_credits = tx_alloc;
+-	ep->tx_credit_size = htc->target_credit_size;
+-	ep->tx_credits_per_max_message = ep->max_ep_message_len /
+-					 htc->target_credit_size;
+-
+-	if (ep->max_ep_message_len % htc->target_credit_size)
+-		ep->tx_credits_per_max_message++;
+ 
+ 	/* copy all the callbacks */
+ 	ep->ep_ops = conn_req->ep_ops;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index b0f9cf3..f94b25a 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -336,8 +336,6 @@ struct ath10k_htc_ep {
+ 
+ 	u8 seq_no; /* for debugging */
+ 	int tx_credits;
+-	int tx_credit_size;
+-	int tx_credits_per_max_message;
+ 	bool tx_credit_flow_enabled;
+ };
+ 
 -- 
-https://patchwork.kernel.org/patch/9418433/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.7.9.5
