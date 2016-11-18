@@ -1,70 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f178.google.com ([209.85.210.178]:33061 "EHLO
-        mail-wj0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964794AbcKXJzi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 04:55:38 -0500
-Received: by mail-wj0-f178.google.com with SMTP id xy5so29358469wjc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2016 01:55:38 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
-References: <cover.1479974100.git.kirtika@chromium.org> <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Thu, 24 Nov 2016 10:50:19 +0100
-Message-ID: <CA+BoTQntqod=Aj7MzuU0KfmbTQb7A-zEcySWqVkycSYE-MqtDQ@mail.gmail.com> (sfid-20161124_105542_660741_D7709BDD)
-Subject: Re: [PATCH 3/5] ath10k: Remove unused wmi_p2p_noa_descriptor 'noa' in wmi-tlv
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Arnd Bergmann <arnd@arndb.de>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Raja Mani <rmani@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:49054 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752123AbcKRJsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 04:48:12 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH v2 1/9] rt2800: correctly report MCS TX parameters
+Date: Fri, 18 Nov 2016 10:43:53 +0100
+Message-Id: <1479462241-9299-2-git-send-email-sgruszka@redhat.com> (sfid-20161118_104816_459204_A615B128)
+In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24 November 2016 at 09:01, Kirtika Ruchandani
-<kirtika.ruchandani@gmail.com> wrote:
-> Commit ca996ec56608 (ath10k: implement wmi-tlv backend)
-> introduced ath10k_wmi_tlv_op_gen_vdev_start() where
-> 'struct wmi_p2p_noa_descriptor *noa' is defined and set but not used.
-> Compiling with W=3D1 gives the following warning, fix it.
-> drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function =E2=80=98ath10k_wm=
-i_tlv_op_gen_vdev_start=E2=80=99:
-> drivers/net/wireless/ath/ath10k/wmi-tlv.c:1647:33: warning: variable =E2=
-=80=98noa=E2=80=99 set but not used [-Wunused-but-set-variable]
->
-> Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
-> Cc: Michal Kazior <michal.kazior@tieto.com>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
-> ---
->  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
->  1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wire=
-less/ath/ath10k/wmi-tlv.c
-> index e64f593..0e4bd29 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-> @@ -1644,7 +1644,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
->  {
->         struct wmi_tlv_vdev_start_cmd *cmd;
->         struct wmi_channel *ch;
-> -       struct wmi_p2p_noa_descriptor *noa;
->         struct wmi_tlv *tlv;
->         struct sk_buff *skb;
->         size_t len;
-> @@ -1702,7 +1701,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
->         tlv =3D ptr;
->         tlv->tag =3D __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
->         tlv->len =3D 0;
-> -       noa =3D (void *)tlv->value;
->
->         /* Note: This is a nested TLV containing:
->          * [wmi_tlv][wmi_p2p_noa_descriptor][wmi_tlv]..
+We should only set IEEE80211_HT_MCS_TX_RX_DIF when TX and RX MCS sets
+are not equal, i.e. when number of tx streams is different than
+number of RX streams.
 
-I would rather keep this one as it serves as documentation. Would
-"(void) noa;" be enough satisfy the compiler?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
-
-Micha=C5=82
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index bf3f0a3..aab59f6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7464,7 +7464,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	char *default_power1;
+ 	char *default_power2;
+ 	char *default_power3;
+-	unsigned int i;
++	unsigned int i, tx_chains, rx_chains;
+ 	u32 reg;
+ 
+ 	/*
+@@ -7589,21 +7589,24 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	    IEEE80211_HT_CAP_SGI_20 |
+ 	    IEEE80211_HT_CAP_SGI_40;
+ 
+-	if (rt2x00dev->default_ant.tx_chain_num >= 2)
++	tx_chains = rt2x00dev->default_ant.tx_chain_num;
++	rx_chains = rt2x00dev->default_ant.rx_chain_num;
++
++	if (tx_chains >= 2)
+ 		spec->ht.cap |= IEEE80211_HT_CAP_TX_STBC;
+ 
+-	spec->ht.cap |= rt2x00dev->default_ant.rx_chain_num <<
+-			IEEE80211_HT_CAP_RX_STBC_SHIFT;
++	spec->ht.cap |= rx_chains << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 
+ 	spec->ht.ampdu_factor = 3;
+ 	spec->ht.ampdu_density = 4;
+-	spec->ht.mcs.tx_params =
+-	    IEEE80211_HT_MCS_TX_DEFINED |
+-	    IEEE80211_HT_MCS_TX_RX_DIFF |
+-	    ((rt2x00dev->default_ant.tx_chain_num - 1) <<
+-	     IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT);
++	spec->ht.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
++	if (tx_chains != rx_chains) {
++		spec->ht.mcs.tx_params |= IEEE80211_HT_MCS_TX_RX_DIFF;
++		spec->ht.mcs.tx_params |=
++		    (tx_chains - 1) << IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT;
++	}
+ 
+-	switch (rt2x00dev->default_ant.rx_chain_num) {
++	switch (rx_chains) {
+ 	case 3:
+ 		spec->ht.mcs.rx_mask[2] = 0xff;
+ 	case 2:
+-- 
+1.8.3.1
