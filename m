@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37106 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49384 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbcKYJ5S (ORCPT
+        with ESMTP id S1751243AbcKRLF1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 04:57:18 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmsmac: fix array out-of-bounds access in qm_log10
+        Fri, 18 Nov 2016 06:05:27 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
-References: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
-To: Tobias Regnery <tobias.regnery@gmail.com>
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        brcm80211-dev-list.pdl@broadcom.com,
-        Tobias Regnery <tobias.regnery@gmail.com>
-Message-Id: <20161125095717.EE565613A8@smtp.codeaurora.org> (sfid-20161125_105723_771536_BDDE26C3)
-Date: Fri, 25 Nov 2016 09:57:17 +0000 (UTC)
+To: "Lazar\, Alexei Avshalom" <ailizaro@codeaurora.org>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: cfg80211: add set/get link loss profile
+References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+        <8737izqw0q.fsf@purkki.adurom.net>
+        <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org>
+Date: Fri, 18 Nov 2016 13:05:21 +0200
+In-Reply-To: <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org> (Alexei
+        Avshalom Lazar's message of "Thu, 17 Nov 2016 15:50:35 +0200")
+Message-ID: <8737ipm4jy.fsf@kamboji.qca.qualcomm.com> (sfid-20161118_120531_381589_DB3DCAEB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tobias Regnery <tobias.regnery@gmail.com> wrote:
-> I get the following UBSAN warning during boot on my laptop:
-> 
-> ================================================================================
-> UBSAN: Undefined behaviour in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c:280:21
-> index 32 is out of range for type 's16 [32]'
-> CPU: 0 PID: 879 Comm: NetworkManager Not tainted 4.9.0-rc4 #28
-> Hardware name: LENOVO Lenovo IdeaPad N581/INVALID, BIOS 5ECN96WW(V9.01) 03/14/2013
-> ffff8800b74a6478 ffffffff828e59d2 0000000041b58ab3 ffffffff8398330c
-> ffffffff828e5920 ffff8800b74a64a0 ffff8800b74a6450 0000000000000020
-> 1ffffffff845848c ffffed0016e94bf1 ffffffffc22c2460 000000006b9c0514
-> Call Trace:
-> [<ffffffff828e59d2>] dump_stack+0xb2/0x110
-> [<ffffffff828e5920>] ? _atomic_dec_and_lock+0x150/0x150
-> [<ffffffff82968c9d>] ubsan_epilogue+0xd/0x4e
-> [<ffffffff82969875>] __ubsan_handle_out_of_bounds+0xfa/0x13e
-> [<ffffffff8296977b>] ? __ubsan_handle_shift_out_of_bounds+0x241/0x241
-> [<ffffffffc0d48379>] ? bcma_host_pci_read16+0x59/0xa0 [bcma]
-> [<ffffffffc0d48388>] ? bcma_host_pci_read16+0x68/0xa0 [bcma]
-> [<ffffffffc212ad78>] ? read_phy_reg+0xe8/0x180 [brcmsmac]
-> [<ffffffffc2184714>] qm_log10+0x2e4/0x350 [brcmsmac]
-> [<ffffffffc2142eb8>] wlc_phy_init_lcnphy+0x538/0x1f20 [brcmsmac]
-> [<ffffffffc2142980>] ? wlc_lcnphy_periodic_cal+0x5c0/0x5c0 [brcmsmac]
-> [<ffffffffc1ba0c93>] ? ieee80211_open+0xb3/0x110 [mac80211]
-> [<ffffffff82f73a02>] ? sk_busy_loop+0x1e2/0x840
-> [<ffffffff82f7a6ce>] ? __dev_change_flags+0xae/0x220
-> ...
-> 
-> The report is valid: doing the math in this function, with an input value
-> N=63 the variable s16tableIndex gets a value of 31. This value is used as
-> an index in the array log_table with 32 entries. But the next line is:
-> 
-> 	s16errorApproximation = (s16) qm_mulu16(u16offset,
-> 				(u16) (log_table[s16tableIndex + 1] -
-> 				       log_table[s16tableIndex]));
-> 
-> With s16tableIndex + 1 we are trying an out-of-bounds access to the array.
-> 
-> The log_table array provides log2 values in q.15 format and the above
-> statement tries an error approximation with the next value. To fix this
-> issue add the next value to the array and update the comment accordingly.
-> 
-> Signed-off-by: Tobias Regnery <tobias.regnery@gmail.com>
+Hi Alexei,
 
-Patch applied to wireless-drivers-next.git, thanks.
+"Lazar, Alexei Avshalom" <ailizaro@codeaurora.org> writes:
 
-4c0bfeaae9f9 brcmsmac: fix array out-of-bounds access in qm_log10
+> In this context the term "link" does mean connection to AP. There are
+> scenarios that require to lose connection faster once reduced link
+> quality detected in order maintain better user experience (from both
+> sides - AP and STA). Example case is FST (Fast Session Transfer),
+> where we have a fast 11ad connection but close-range and a backup 11ac
+> connection which is "always on". in such cases if we detect poor link
+> quality in the active band we prefer to disconnect and switch to the
+> backup connection with the good link quality. This will be reached by
+> setting "aggressive" profile that will cause more rapid disconnect in
+> such cases.
+
+The documentation should clearly document what this command is supposed,
+currently it only tells me "maintain/lose link" and does not specify in
+detail what this is supposed to do. Also there's no mention in what
+modes this can be used. (STA, P2P?)
+
+Also please refrain from top posting in public mailing lists, the
+preferred way is to edit quotes and bottom post. It's much more natural
+way to have long detailed discussions.
 
 -- 
-https://patchwork.kernel.org/patch/9439423/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
