@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:32994 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756680AbcK3SjC (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34075 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752259AbcKRInc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 13:39:02 -0500
-Received: by mail-pg0-f66.google.com with SMTP id 3so2046754pgd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 10:39:02 -0800 (PST)
-Date: Wed, 30 Nov 2016 10:38:53 -0800
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+        Fri, 18 Nov 2016 03:43:32 -0500
+Received: by mail-pg0-f67.google.com with SMTP id e9so19712429pgc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:43:32 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Fri, 18 Nov 2016 00:43:22 -0800
 To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        briannorris@google.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 2/2] mwifiex: get rid of global user_rmmod flag
-Message-ID: <20161130183853.GD31934@dtor-ws> (sfid-20161130_193910_056550_1F2216E3)
-References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
- <1480517537-9920-2-git-send-email-akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH 0/7] Fix -Wunused-but-set-variable in mwifiex/
+Message-ID: <cover.1479458373.git.kirtika@google.com> (sfid-20161118_094337_507873_0ED7304E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1480517537-9920-2-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
+This patchset is part of the effort led by Arnd Bergmann to clean up
+warnings in the kernel. This and following patchsets will focus on
+"-Wunused-but-set-variable" as it among the noisier ones. These were
+found compiling with W=1.
 
-On Wed, Nov 30, 2016 at 08:22:17PM +0530, Amitkumar Karwar wrote:
-> @@ -3177,9 +3184,6 @@ static int mwifiex_pcie_init_module(void)
->  
->  	pr_debug("Marvell PCIe Driver\n");
->  
-> -	/* Clear the flag in case user removes the card. */
-> -	user_rmmod = 0;
-> -
->  	ret = pci_register_driver(&mwifiex_pcie);
->  	if (ret)
->  		pr_err("Driver register failed!\n");
-> @@ -3200,9 +3204,6 @@ static int mwifiex_pcie_init_module(void)
->   */
->  static void mwifiex_pcie_cleanup_module(void)
->  {
-> -	/* Set the flag as user is removing this module. */
-> -	user_rmmod = 1;
-> -
->  	pci_unregister_driver(&mwifiex_pcie);
->  }
+Kirtika Ruchandani (7):
+  mwifiex: Removed unused mwifiex_private* 'priv' variable
+  mwifiex: Remove unused  'chan_num' variable
+  mwifiex: Remove unused 'sta_ptr' variable
+  mwifiex: Remove unused 'adapter'variable
+  mwifiex: Remove unused 'pm_flag' variable
+  mwifiex: Removed unused 'pkt_type' variable
+  mwifiex: Remove unused 'bcd_usb' variable
 
-Now that your module init/exit code turns into wrapper around bus
-driver registration calls, please consider using module_pci_driver(),
-module_usb_driver(). Note that I do not see module_sdio_driver, but you
-could still use
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 --
+ drivers/net/wireless/marvell/mwifiex/main.c     | 3 ---
+ drivers/net/wireless/marvell/mwifiex/scan.c     | 8 +++-----
+ drivers/net/wireless/marvell/mwifiex/sdio.c     | 5 -----
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c  | 2 --
+ drivers/net/wireless/marvell/mwifiex/usb.c      | 3 +--
+ 6 files changed, 4 insertions(+), 19 deletions(-)
 
-module_driver(mwifiex_sdio, sdio_register_driver, sdio_unregister_driver);
-
-Thanks.
-
--- 
-Dmitry
+--
+2.8.0.rc3.226.g39d4020
