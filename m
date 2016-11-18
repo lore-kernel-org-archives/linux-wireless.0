@@ -1,134 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0048.outbound.protection.outlook.com ([104.47.41.48]:26269
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755515AbcK1Wks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 17:40:48 -0500
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-To: Kyle McMartin <kyle@mcmartin.ca>
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <1478706966.18306.1.camel@sipsolutions.net>
- <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
- <1478725543.21403.4.camel@sipsolutions.net>
- <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
- <1478864146.4129.4.camel@sipsolutions.net>
- <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com>
- <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
-CC: Ben Hutchings <ben@decadent.org.uk>,
-        Kyle McMartin <kyle@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
-        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
-        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        "Sergey Matyukevich" <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <15e3a2fd-7201-29d8-c0e8-b8ac9e943da2@quantenna.com> (sfid-20161128_234053_995814_D2655D5A)
-Date: Tue, 29 Nov 2016 01:07:09 +0300
-MIME-Version: 1.0
-In-Reply-To: <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:35615 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751095AbcKRKlB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 05:41:01 -0500
+Received: by mail-pg0-f65.google.com with SMTP id p66so20369460pga.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 02:41:01 -0800 (PST)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 3/4] rsi: Add support for antenna selection
+Date: Fri, 18 Nov 2016 16:08:22 +0530
+Message-Id: <1479465502-2523-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161118_114104_280310_6F37B053)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/28/2016 07:34 PM, Kyle McMartin wrote:
-> On Tue, Nov 22, 2016 at 9:44 AM, IgorMitsyanko
-> <igor.mitsyanko.os@quantenna.com> wrote:
->> Hi Ben, Kyle,
->> could you please share what is the position of linux-firmware regarding
->> firmware binaries that include GPL components? Does it require entire GPL
->> components codebase be present in linux-firmware tree, or maybe having this
->> clause in license file is enough:
->> +Open Source Software. The Software may include components that are licensed
->> +pursuant to open source software (“Open Source Components”). Information
->> +regarding the Open Source Components included with the Software is
->> available
->> +upon request to oslegal@quantenna.com. To the extent such Open Source
->> +Components are required to be licensed to you under the terms of a separate
->> +license (such as an open source license) then such other terms shall apply,
->> and
->> +nothing herein shall be deemed or interpreted to limit any rights you may
->> have
->> +under any such applicable license.
->>
->>  From technical perspective, size of the codebase used to build Quantenna
->> firmware is a few hundred MBs, it seems too much to include into
->> linux-firmware tree.
->>
-> I don't have strong feelings one way or another. I'd prefer not having
-> several hundred
-> MB of source that's unlikely to change included in the linux-firmware
-> git tree. I'm also not
-> a lawyer, so I can't help you decide what would satisfy the
-> distribution clause of the GPLv2.
-> We already have one GPL firmware (carl9170fw) which includes the
-> source, but just references
-> a seperate toolchain for downloading, so it's only approximately 1MB
-> in size in the tree.
->
-> Is your firmware source really that large, or is it just including the
-> entire build toolchain with it?
+RSI 9113 device supports single antenna for tx and rx. Support for using
+external is added. This can be configured from user space using iw.
 
-It does include Linux environment with userspace tools, toolchain and 
-some other components that are not actually needed, you're right.
-Maybe its possible to skip providing entire build environment, but 
-simply provide GPL code and patches to 3-d party opensource components? 
-Just state which version the patch is based on: for example, patch  to 
-apply on top of Linux 3.14 sources, but no sources themselves. In this 
-case, it won't be possible to build firmware manually, but GPL code 
-modifications will be available.
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 78 +++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 33 ++++++++++++
+ drivers/net/wireless/rsi/rsi_main.h         |  1 +
+ drivers/net/wireless/rsi/rsi_mgmt.h         |  5 ++
+ 4 files changed, 117 insertions(+)
 
-
->
-> regards,
-> --Kyle
->
->> On 11/11/2016 02:35 PM, Johannes Berg wrote:
->>> Adding linux-firmware people to Cc, since presumably they don't
->>> necessarily read linux-wireless...
->>>
->>>> Johannes, from that perspective, who are the "redistributors"?
->>>> Specifically, is linux-firmware git repository considered a
->>>> redistributor or its just hosting files? I mean, at what moment
->>>> someone else other then Quantenna will start to be legally obliged to
->>>> make GPL code used in firmware available for others?
->>> Look, I don't know. I'd assume people who ship it, like any regular
->>> distro, would be (re)distributors thereof. "Normal" (non-GPL) firmware
->>> images come with a redistribution license, but that obviously can't
->>> work here.
->>>
->>> There's some info from Ben here regarding the carl9170 case:
->>> http://lkml.iu.edu/hypermail/linux/kernel/1605.3/01176.html
->>>
->>>> Personally I still hope that linux-firmware itself is not legally
->>>> concerned with what is the content of firmware its hosting, but looks
->>>> like there already was a precedent case  with carl9170 driver and
->>>> we have to somehow deal with it.
->>> That's really all I wanted to bring up. I'm not involved with the
->>> linux-firmware git tree.
->>>
->>>> There still may be a difference though: Quantenna is semiconductor
->>>> company only, software
->>>> used on actual products based on Quantenna chipsets is released by
->>>> other
->>>> companies.
->>>> I just want to present our legal team with a clear case (and position
->>>> of
->>>> Linux maintainers) so that they can
->>>> work with it and make decision on how to proceed.
->>>>
->>>>    From technical perspective, as I mentioned, SDK is quite huge and
->>>> include a lot of opensource
->>>> components including full Linux, I don't think its reasonable to have
->>>> it
->>>> inside linux-firmware tree.
->>>> What are the options to share it other then providing it on request
->>>> basis:
->>>> - git repository
->>>> - store tarball somewhere on official website
->>> Clearly that wasn't deemed appropriate for carl9170, so I don't see why
->>> it'd be different here.
->>>
->>> johannes
->>
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index ba0f5ca..6789c0b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -1060,6 +1060,82 @@ static int rsi_mac80211_sta_remove(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++/**
++ * rsi_mac80211_set_antenna() - This function is used to configure
++ *				tx and rx antennas.
++ * @hw: Pointer to the ieee80211_hw structure.
++ * @tx_ant: Bitmap for tx antenna
++ * @rx_ant: Bitmap for rx antenna
++ *
++ * Return: 0 on success, Negative error code on failure.
++ */
++static int rsi_mac80211_set_antenna(struct ieee80211_hw *hw,
++				    u32 tx_ant, u32 rx_ant)
++{
++	struct rsi_hw *adapter = hw->priv;
++	struct rsi_common *common = adapter->priv;
++	u8 antenna = 0;
++
++	if (tx_ant > 1 || rx_ant > 1) {
++		rsi_dbg(ERR_ZONE,
++			"Invalid antenna selection (tx: %d, rx:%d)\n",
++			tx_ant, rx_ant);
++		rsi_dbg(ERR_ZONE,
++			"Use 0 for int_ant, 1 for ext_ant\n");
++		return -EINVAL; 
++	}
++
++	rsi_dbg(INFO_ZONE, "%s: Antenna map Tx %x Rx %d\n",
++			__func__, tx_ant, rx_ant);
++
++	mutex_lock(&common->mutex);
++
++	antenna = tx_ant ? ANTENNA_SEL_UFL : ANTENNA_SEL_INT;
++	if (common->ant_in_use != antenna)
++		if (rsi_set_antenna(common, antenna))
++			goto fail_set_antenna;
++
++	rsi_dbg(INFO_ZONE, "(%s) Antenna path configured successfully\n",
++		tx_ant ? "UFL" : "INT");
++
++	common->ant_in_use = antenna;
++	
++	mutex_unlock(&common->mutex);
++	
++	return 0;
++
++fail_set_antenna:
++	rsi_dbg(ERR_ZONE, "%s: Failed.\n", __func__);
++	mutex_unlock(&common->mutex);
++	return -EINVAL;
++}
++
++/**
++ * rsi_mac80211_get_antenna() - This function is used to configure 
++ * 				tx and rx antennas.
++ *
++ * @hw: Pointer to the ieee80211_hw structure.
++ * @tx_ant: Bitmap for tx antenna
++ * @rx_ant: Bitmap for rx antenna
++ * 
++ * Return: 0 on success, -1 on failure.
++ */
++static int rsi_mac80211_get_antenna(struct ieee80211_hw *hw,
++				    u32 *tx_ant, u32 *rx_ant)
++{
++	struct rsi_hw *adapter = hw->priv;
++	struct rsi_common *common = adapter->priv;
++
++	mutex_lock(&common->mutex);
++
++	*tx_ant = (common->ant_in_use == ANTENNA_SEL_UFL) ? 1 : 0;
++	*rx_ant = 0;
++
++	mutex_unlock(&common->mutex);
++	
++	return 0;	
++}
++
+ static struct ieee80211_ops mac80211_ops = {
+ 	.tx = rsi_mac80211_tx,
+ 	.start = rsi_mac80211_start,
+@@ -1076,6 +1152,8 @@ static struct ieee80211_ops mac80211_ops = {
+ 	.ampdu_action = rsi_mac80211_ampdu_action,
+ 	.sta_add = rsi_mac80211_sta_add,
+ 	.sta_remove = rsi_mac80211_sta_remove,
++	.set_antenna = rsi_mac80211_set_antenna,
++	.get_antenna = rsi_mac80211_get_antenna,
+ };
+ 
+ /**
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index f20db82..a16eeed 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -1312,6 +1312,39 @@ int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word)
+ }
+ 
+ /**
++ * rsi_set_antenna() - This fuction send antenna configuration request
++ *		       to device
++ *
++ * @common: Pointer to the driver private structure.
++ * @antenna: bitmap for tx antenna selection
++ *
++ * Return: 0 on Success, negative error code on failure
++ */
++int rsi_set_antenna(struct rsi_common *common, u8 antenna)
++{
++	struct rsi_mac_frame *cmd_frame;
++	struct sk_buff *skb;
++
++	skb = dev_alloc_skb(FRAME_DESC_SZ);
++	if (!skb) {
++		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of skb\n",
++			__func__);
++		return -ENOMEM;
++	}
++
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	cmd_frame = (struct rsi_mac_frame *)skb->data;
++
++	cmd_frame->desc_word[1] = cpu_to_le16(ANT_SEL_FRAME);
++	cmd_frame->desc_word[3] = cpu_to_le16(antenna & 0x00ff);
++	cmd_frame->desc_word[0] = cpu_to_le16(RSI_WIFI_MGMT_Q << 12);
++
++	skb_put(skb, FRAME_DESC_SZ);
++
++	return rsi_send_internal_mgmt_frame(common, skb);
++}
++
++/**
+  * rsi_handle_ta_confirm_type() - This function handles the confirm frames.
+  * @common: Pointer to the driver private structure.
+  * @msg: Pointer to received packet.
+diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
+index 3938f13..2405b30 100644
+--- a/drivers/net/wireless/rsi/rsi_main.h
++++ b/drivers/net/wireless/rsi/rsi_main.h
+@@ -206,6 +206,7 @@ struct rsi_common {
+ 	bool hw_data_qs_blocked;
+ 	
+ 	int tx_power;
++	u8 ant_in_use;
+ };
+ 
+ struct rsi_hw {
+diff --git a/drivers/net/wireless/rsi/rsi_mgmt.h b/drivers/net/wireless/rsi/rsi_mgmt.h
+index 80d3331..02b203f 100644
+--- a/drivers/net/wireless/rsi/rsi_mgmt.h
++++ b/drivers/net/wireless/rsi/rsi_mgmt.h
+@@ -141,6 +141,9 @@
+ #define RSI_SUPP_FILTERS	(FIF_ALLMULTI | FIF_PROBE_REQ |\
+ 				 FIF_BCN_PRBRESP_PROMISC)
+ 
++#define ANTENNA_SEL_INT			0x02 /* RF_OUT_2 / Integerated */
++#define ANTENNA_SEL_UFL			0x03 /* RF_OUT_1 / U.FL */
++
+ /* Rx filter word definitions */
+ #define PROMISCOUS_MODE			BIT(0)
+ #define ALLOW_DATA_ASSOC_PEER		BIT(1)
+@@ -195,6 +198,7 @@ enum cmd_frame_type {
+ 	BG_SCAN_PROBE_REQ,
+ 	CW_MODE_REQ,
+ 	PER_CMD_PKT,
++	ANT_SEL_FRAME = 0x20,
+ 	RADIO_PARAMS_UPDATE = 0x29
+ };
+ 
+@@ -319,4 +323,5 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb);
+ int rsi_band_check(struct rsi_common *common);
+ int rsi_send_rx_filter_frame(struct rsi_common *common, u16 rx_filter_word);
+ int rsi_send_radio_params_update(struct rsi_common *common);
++int rsi_set_antenna(struct rsi_common *common, u8 antenna);
+ #endif
+-- 
+2.4.11
