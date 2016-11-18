@@ -1,77 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33720 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752795AbcKNKRF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 05:17:05 -0500
-Date: Mon, 14 Nov 2016 11:15:44 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Problems with mwifiex_pcie firmware activation
-Message-ID: <20161114101544.GA13943@redhat.com> (sfid-20161114_111727_911777_BE00A73A)
-References: <20160614135015.GB4962@redhat.com>
- <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
- <20160616115315.GB21199@redhat.com>
- <20160623120952.GA11157@redhat.com>
- <20160811090113.GA27059@redhat.com>
- <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
- <20160811122917.GB27059@redhat.com>
- <fc70c75bfcab4e0e932274034b5b4493@SC-EXCH04.marvell.com>
- <20160812081342.GA15538@redhat.com>
- <20160825150626.GA9256@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160825150626.GA9256@redhat.com>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:35571 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752301AbcKRTYM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 14:24:12 -0500
+Received: by mail-qk0-f195.google.com with SMTP id n204so34262308qke.2
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:12 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 01/11] ath10k: htc: made static function public
+Date: Fri, 18 Nov 2016 20:22:41 +0100
+Message-Id: <1479496971-19174-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202416_911151_7868CE01)
+In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 25, 2016 at 05:06:26PM +0200, Stanislaw Gruszka wrote:
-> On Fri, Aug 12, 2016 at 10:13:43AM +0200, Stanislaw Gruszka wrote:
-> > On Fri, Aug 12, 2016 at 07:17:38AM +0000, Amitkumar Karwar wrote:
-> > > The problem looks strange. The patch just splits mwifiex_check_fw_status() and increases poll count. It should not have any side-effects.
-> > > Our code used to check winner status before this patch also.
-> > 
-> > Ok, I misread the patch. Anyway checking "winner status" seems
-> > does not work well on some condition and prevent loading firmware
-> > into device.
-> 
-> I debug this a bit more on latest wireless-testing-next tree + 3 patches
-> I just posted and debug_mask=0x700000ff.
-> 
-> On broken system, we do not download FW to device when system is
-> rebooted, due to PCI-E is not the winner. However if system is
-> powered OFF and then powered ON, we do FW downloading. Hence
-> download the new FW into device does not make it work as was
-> my theory.
-> 
-> In attachments are full dmesgs of good/bad and reboot/power-off-on
-> cases.
-> 
-> The difference is that on broken system FW (or HW) do not create
-> new USB Bluetooth device (1286:2046) and do not report
-> FIRMWARE_READY_PCIE. Additionally on reboot case there are errors
-> from USB xhci.
+Changed ath10k_htc_notify_tx_completion and
+ath10k_htc_process_trailer from static to non static.
 
-It was discovered that not working device require pcie8897_uapsta.bin 
-firmware from ubuntu package to work:
-https://launchpad.net/~snappy-dev/+archive/ubuntu/snappy-devices/+sourcepub/5936055/+listing-archive-extra
+These functions are needed by SDIO/mbox.
 
-Device initialize like this then:
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |   14 ++++++++------
+ drivers/net/wireless/ath/ath10k/htc.h |    6 ++++++
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-[   15.374630] mwifiex_pcie 0000:02:00.0: info: FW download over, size 689624 bytes
-[   16.101214] mwifiex_pcie 0000:02:00.0: WLAN FW is active
-[   16.242825] mwifiex_pcie 0000:02:00.0: info: MWIFIEX VERSION: mwifiex 1.0 (15.150.13.p21) 
-[   16.251231] mwifiex_pcie 0000:02:00.0: driver_version = mwifiex 1.0 (15.150.13.p21) 
-
-I'm not sure where ubuntu get this 15.150.13.p21 version of firmware as
-it seems it's not present nor in upstream linux-firmware repo not in
-http://git.marvell.com/?p=mwifiex-firmware.git;a=summary
-
-Anyway could you modify firmware to support this device or modify
-driver to load 15.150.13.p21 if required and push this F/W image
-upstream ?
-
-Thanks
-Stanislaw
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 175aae3..26b1e15 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+ }
  
+-static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+-					    struct sk_buff *skb)
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = ep->htc->ar;
+ 
+@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ 
+ 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
+ }
++EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
+ 
+ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 				      struct sk_buff *skb)
+@@ -227,10 +228,10 @@ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	spin_unlock_bh(&htc->tx_lock);
+ }
+ 
+-static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+-				      u8 *buffer,
+-				      int length,
+-				      enum ath10k_htc_ep_id src_eid)
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid)
+ {
+ 	struct ath10k *ar = htc->ar;
+ 	int status = 0;
+@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 
+ 	return status;
+ }
++EXPORT_SYMBOL(ath10k_htc_process_trailer);
+ 
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 0c55cd9..858e19f 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -354,5 +354,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
+ struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
+ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb);
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid);
+ 
+ #endif
+-- 
+1.7.9.5
