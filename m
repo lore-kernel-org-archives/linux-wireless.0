@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47476 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754613AbcKQRYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:24:16 -0500
-Message-ID: <1479393551.1463.11.camel@sipsolutions.net> (sfid-20161117_182434_930758_A754226C)
-Subject: Re: [RFC 0/5] nl80211: add support for g-scan
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 17 Nov 2016 15:39:11 +0100
-In-Reply-To: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp1.cypress.com ([157.95.67.100]:34565 "EHLO
+        smtp1.cypress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751532AbcKRB7z (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 17 Nov 2016 20:59:55 -0500
+Date: Fri, 18 Nov 2016 09:59:52 +0800
+From: Wright Feng <wefe@cypress.com>
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, pieterpg@broadcom.com,
+        kvalo@codeaurora.org, brcm80211-dev-list.pdl@broadcom.com,
+        linux-wireless@vger.kernel.org
+Cc: Chi-Hsien Lin <chln@cypress.com>, wright.feng@cypress.com
+Subject: [PATCH V2] brcmfmac: update beacon IE after bss up and clear when AP
+ stopped
+Message-ID: <20161118015952.GA22142@cypress.com> (sfid-20161118_030000_257880_B54E5370)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-11-17 at 13:18 +0000, Arend van Spriel wrote:
-> Android employs a Wifi-HAL layer in its wireless frame. It basically
-> abstracts dealing with netlink messages from the framework. For some
-> features it employs nl80211 vendor commands. The goal I set myself is
-> to be able to have a generic nl80211 Wifi-HAL implementation. One of
-> the features currently requiring the vendor commands is g-scan. We
-> can only guess what the 'g' stands for ;-) This series converts the
-> vendor command api into common nl80211 api.
+Firmware doesn't update beacon/Probe Response vendor IEs correctly when
+bss is down, so we move brcmf_config_ap_mgmt_ie after BSS up. And host
+driver should clear IEs when AP stopped so that the IEs in host side will
+be synced with in firmware side.
 
-Hehe :)
-We also have gscan API. If you're interested, you can see it here:
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/tree/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.h#n96
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+V2: word wrap the commit log
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-
-> Before making an attempt to explain more about the g-scan
-> functionality first this. While I am still testing the driver
-> implementation resulting in numerous questions Dmitry send the email
-> below to bring a related discussion to the table..eh.. the linux-
-> wireless list. This is probably a good thing as anyone can dive in
-> and share their thoughts.
-
-
-Yeah. How does this overlap? Have you looked at it already?
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index b777e1b..d022605 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4578,8 +4578,6 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		brcmf_configure_opensecurity(ifp);
+ 	}
+ 
+-	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
+-
+ 	/* Parameters shared by all radio interfaces */
+ 	if (!mbss) {
+ 		if ((supports_11d) && (is_11d != ifp->vif->is_11d)) {
+@@ -4708,6 +4706,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 		WARN_ON(1);
+ 	}
+ 
++	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
+ 	set_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
+ 	brcmf_net_setcarrier(ifp, true);
+ 
+@@ -4764,6 +4763,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
+ 		if (err < 0)
+ 			brcmf_err("BRCMF_C_UP error %d\n", err);
++
++		brcmf_vif_clear_mgmt_ies(ifp->vif);
+ 	} else {
+ 		bss_enable.bsscfgidx = cpu_to_le32(ifp->bsscfgidx);
+ 		bss_enable.enable = cpu_to_le32(0);
+-- 
+2.1.0
