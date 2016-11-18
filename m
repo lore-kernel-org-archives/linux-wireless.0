@@ -1,37 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50854 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755221AbcK2H5w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 02:57:52 -0500
-Message-ID: <1480406267.10012.0.camel@sipsolutions.net> (sfid-20161129_085755_339172_5AD3D6DD)
-Subject: Re: [PATCH 03/12] brcmfmac: move pno helper functions in separate
- source file
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 29 Nov 2016 08:57:47 +0100
-In-Reply-To: <CACna6rwSDT1UeuexMpNhVMxKHWpZGdzDg7C1b5wVOhXzO3o=MA@mail.gmail.com> (sfid-20161129_080814_911793_E1764CEC)
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com>
-         <CACna6rwSDT1UeuexMpNhVMxKHWpZGdzDg7C1b5wVOhXzO3o=MA@mail.gmail.com>
-         (sfid-20161129_080814_911793_E1764CEC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37876 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752421AbcKROBR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 09:01:17 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Shengzhen Li <szli@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v4 02/11] mwifiex: complete blocked power save handshake in main process
+Date: Fri, 18 Nov 2016 19:30:25 +0530
+Message-ID: <1479477634-27841-2-git-send-email-akarwar@marvell.com> (sfid-20161118_150120_226802_CF687AAE)
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-11-29 at 08:08 +0100, Rafał Miłecki wrote:
-> On 23 November 2016 at 11:25, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
-> > 
-> > Introducing new source file for pno related functionality. Moving
-> > existing pno functions.
-> 
-> Let me ask one basic question as I'm curious: what that PNO stands
-> for? I couldn't find it explained in the code.
+From: Shengzhen Li <szli@marvell.com>
 
-It's an Android term - Preferred Network Offload(ing?)
+Power save handshake with firmware might be blocked by on-going
+data transfer.
+this patch check the PS status in main process and complete
+previous blocked PS handshake.
+this patch also remove redudant check before call
+mwifiex_check_ps_cond function.
 
-johannes
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: 1. remove redudant check(Brain)
+        2. reorgnized to follow tx_hw_pending patch
+v4: Same as v2, v3
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 948f5c2..9e7acb4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -308,6 +308,9 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 			/* We have tried to wakeup the card already */
+ 			if (adapter->pm_wakeup_fw_try)
+ 				break;
++			if (adapter->ps_state == PS_STATE_PRE_SLEEP)
++				mwifiex_check_ps_cond(adapter);
++
+ 			if (adapter->ps_state != PS_STATE_AWAKE)
+ 				break;
+ 			if (adapter->tx_lock_flag) {
+@@ -355,10 +358,8 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
+ 
+ 		/* Check if we need to confirm Sleep Request
+ 		   received previously */
+-		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
+-			if (!adapter->cmd_sent && !adapter->curr_cmd)
+-				mwifiex_check_ps_cond(adapter);
+-		}
++		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
++			mwifiex_check_ps_cond(adapter);
+ 
+ 		/* * The ps_state may have been changed during processing of
+ 		 * Sleep Request event.
+-- 
+1.9.1
