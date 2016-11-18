@@ -1,115 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38246 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752729AbcKGOGh (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47886 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752605AbcKRODS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:06:37 -0500
-Message-ID: <58208A6A.5040307@candelatech.com> (sfid-20161107_150640_744640_9403083B)
-Date: Mon, 07 Nov 2016 06:06:34 -0800
-From: Ben Greear <greearb@candelatech.com>
+        Fri, 18 Nov 2016 09:03:18 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v4 07/11] mwifiex: reset card->adapter during device unregister
+Date: Fri, 18 Nov 2016 19:30:30 +0530
+Message-ID: <1479477634-27841-7-git-send-email-akarwar@marvell.com> (sfid-20161118_150320_827555_26E0ACBE)
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-To: Bruno Antunes <baantunes@gmail.com>
-CC: yu-chieh kung <jay0607@gmail.com>,
-        Mauro Mozzarelli <openwrt@ezplanet.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local> <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr> <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com> <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net> <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com> <CAGJdtRCKidEfDF7sc4BRGSfOTmcGJUJ4KZt0xU1vj4bGAnuu1Q@mail.gmail.com> <c58ffbe0-c305-3282-34e9-98814c6f0d14@candelatech.com> <68bd7ebd-b12a-5dbf-a267-5913127718a1@candelatech.com> <CABUTiXXvqQ=yrrK3wp0fck=Mcb0LSrE7_Jw6KisYOuADvo3sdQ@mail.gmail.com>
-In-Reply-To: <CABUTiXXvqQ=yrrK3wp0fck=Mcb0LSrE7_Jw6KisYOuADvo3sdQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/07/2016 03:54 AM, Bruno Antunes wrote:
-> On 4 November 2016 at 22:23, Ben Greear <greearb@candelatech.com> wrote:
->> The bug appears that vlan-tx-stripping is unconditionally enabled in
->> at least my firmware.  I have re-compiled w/out that flag set, and it
->> appears
->> to work for me.
->>
->> Please download this firmware, rename it firmware-2.bin, make sure you
->> remove/rename
->> any firmware-5.bin (etc) so mine will load, and see if that fixes your
->> problem.
->
-> Thanks for the fast reply but it only solves "half"  the problem.
->
-> Now the connection between the AP and the Sta can be secure and the
-> driver doesn't need to be loaded in rawmode.
->
-> Unfortunatly the the throughput is still bad.
->
-> iperf3 -c 10.10.4.15
-> Connecting to host 10.10.4.15, port 5201
-> [  4] local 10.10.4.16 port 44893 connected to 10.10.4.15 port 5201
-> [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
-> [  4]   0.00-1.01   sec  42.4 KBytes   345 Kbits/sec    6   1.41 KBytes
-> [  4]   1.01-2.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
-> [  4]   2.01-3.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
-> [  4]   3.01-4.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> [  4]   4.01-5.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> [  4]   5.01-6.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> [  4]   6.01-7.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
-> [  4]   7.01-8.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> [  4]   8.01-9.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> [  4]   9.01-10.01  sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
-> - - - - - - - - - - - - - - - - - - - - - - - - -
-> [ ID] Interval           Transfer     Bandwidth       Retr
-> [  4]   0.00-10.01  sec  42.4 KBytes  34.7 Kbits/sec    9             sender
-> [  4]   0.00-10.01  sec  0.00 Bytes  0.00 bits/sec                  receiver
+From: Xinming Hu <huxm@marvell.com>
 
-You have a complex setup, so I think it would be best if you could break it into
-simpler parts to test.
+card->adapter gets initialized in mwifiex_register_dev(). As it's not
+cleared in mwifiex_unregister_dev(), we may end up accessing the memory
+which is already free in below scenario.
 
-First, try just STA to AP, no vlans, and see if you get useful throughput.
+Scenario: Driver initialization is failed due to incorrect firmware or
+some other reason. Meanwhile device reboot/unload occurs.
 
-Then try with VLANs
+This is safe, now that we've properly synchronized suspend() and
+remove() with the FW initialization thread; now that code can simply
+check for 'card->adapter == NULL' and exit safely.
 
-Then, try with WDS.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v4: Same as v1, v2, v3
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-Then try with WDS and vlans.
-
-In STA to AP mode with VLANs, it performed well for me.
-
-Thanks,
-Ben
-
-
->
-> iperf Done.
->
->>
->> Please note that it is very likely you will have to use same MAC address
->> for the VLAN devices that the underlying station uses in order for this to
->> work.
->
-> Can you please elaborate more?
-> My setup  is the folowing.
-> The connection between the AP and Sta is in WDS
-> For the moment all devices are in the same VLAN.
->
-> client1 --- SW1 ---- AP ...... Sta ---- SW2 --- client2
->
->
-> Thanks,
-> Bruno
->
->>
->> https://www.candelatech.com/downloads/tmp/firmware-2-full-community.bin
->>
->>
->> Thanks,
->> Ben
->>
->>
->>
->
->> Ben Greear <greearb@candelatech.com>
->> Candela Technologies Inc  http://www.candelatech.com
->>
->
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6176cb78..f6d28d9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ 			if (card->msi_enable)
+ 				pci_disable_msi(pdev);
+ 	       }
++		card->adapter = NULL;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 5077d56..69542f8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -2017,6 +2017,7 @@ static int mwifiex_alloc_sdio_mpa_buffers(struct mwifiex_adapter *adapter,
+ 	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	if (adapter->card) {
++		card->adapter = NULL;
+ 		sdio_claim_host(card->func);
+ 		sdio_disable_func(card->func);
+ 		sdio_release_host(card->func);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
