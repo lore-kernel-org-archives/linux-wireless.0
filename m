@@ -1,45 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45672 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938698AbcKQGsw (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:34895 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753027AbcKRXxj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 01:48:52 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 18 Nov 2016 18:53:39 -0500
+Received: by mail-wm0-f52.google.com with SMTP id a197so67778944wmd.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 15:53:38 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [net-next] rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1478011720-27363-1-git-send-email-weiyj.lk@gmail.com>
-References: <1478011720-27363-1-git-send-email-weiyj.lk@gmail.com>
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-wireless@vger.kernel.org
-Message-Id: <20161117064851.6B611615E4@smtp.codeaurora.org> (sfid-20161117_074855_539945_87912FCF)
-Date: Thu, 17 Nov 2016 06:48:51 +0000 (UTC)
+In-Reply-To: <7645397c-c9cd-f7ac-4add-fae580c485e9@broadcom.com>
+References: <94eb2c110db85c2379054172dad0@google.com> <7645397c-c9cd-f7ac-4add-fae580c485e9@broadcom.com>
+From: Dmitry Shmidt <dimitrysh@google.com>
+Date: Fri, 18 Nov 2016 15:53:36 -0800
+Message-ID: <CAH7ZN-zGi3XBECO16kZsGB1E0YGQxhVCb=yJOxajnDnNW5xMOg@mail.gmail.com> (sfid-20161119_005349_955993_89377F49)
+Subject: Re: [PATCH] RFC: Universal scan proposal
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei Yongjun <weiyj.lk@gmail.com> wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> It is not allowed to call kfree_skb() from hardware interrupt
-> context or with interrupts being disabled, spin_lock_irqsave()
-> make sure always in irq disable context. So the kfree_skb()
-> should be replaced with dev_kfree_skb_irq().
-> 
-> This is detected by Coccinelle semantic patch.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+On Thu, Nov 17, 2016 at 12:56 PM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 16-11-2016 23:47, dimitrysh@google.com wrote:
+>> From 68a9d37a4c7e9dc7a90a6e922cdea52737a98d66 Mon Sep 17 00:00:00 2001
+>> From: Dmitry Shmidt <dimitrysh@google.com>
+>> Date: Wed, 16 Nov 2016 14:27:26 -0800
+>> Subject: [PATCH] RFC: Universal scan proposal
+>>
+>>   Currently we have sched scan with possibility of various
+>> intervals. We would like to extend it to support also
+>> different types of scan.
+>>   In case of powerful wlan CPU, all this functionality
+>> can be offloaded.
+>>   In general case FW processes additional scan requests
+>> and puts them into queue based on start time and interval.
+>> Once current request is fulfilled, FW adds it (if interval != 0)
+>> again to the queue with proper interval. If requests are
+>> overlapping, new request can be combined with either one before,
+>> or one after, assuming that requests are not mutually exclusive.
+>>   Combining requests is done by combining scan channels, ssids,
+>> bssids and types of scan result. Once combined request was fulfilled
+>> it will be reinserted as two (or three) different requests based on
+>> their type and interval.
+>>   Each request has attribute:
+>> Type: connectivity / location
+>
+> Don't see this type in the patch below (guess it was a last minute
+> addition ;-) ).
+>
+>> Report: none / batch / immediate
+>>   Request may have priority and can be inserted into
+>> the head of the queue.
+>>   Types of scans:
+>> - Normal scan
+>> - Scheduled scan
+>> - Hotlist (BSSID scan)
+>> - Roaming
+>> - AutoJoin
+>
+> Don't see the last one mentioned in the patch below.
+>
+>> Change-Id: I9f3e4c975784f1c1c5156887144d80fc5a26bffa
+>> Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+>> ---
+>>  include/net/cfg80211.h | 37 +++++++++++++++++++++++++++++++------
+>>  1 file changed, 31 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+>> index 14b51d7..1ae2570 100644
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -1602,8 +1602,10 @@ struct cfg80211_sched_scan_plan {
+>>   *    cycle.  The driver may ignore this parameter and start
+>>   *    immediately (or at any other time), if this feature is not
+>>   *    supported.
+>
+> At the the top of this kernel doc section it probably still refers to
+> struct cfg80211_sched_scan_request.
+>
+>> + * @uscan_type: uscan type (scan, sched_scan, hotlist, scan_history,
+>> roaming)
+>> + * @uscan_results: uscan results report (none/batch/immediate)
+>
+> If you change the type to struct cfg80211_uscan_request it seems a bit
+> redundant to prefix the field names with 'uscan_'.
+>
+>>   */
+>> -struct cfg80211_sched_scan_request {
+>> +struct cfg80211_uscan_request {
+>>      struct cfg80211_ssid *ssids;
+>>      int n_ssids;
+>>      u32 n_channels;
+>> @@ -1621,6 +1623,10 @@ struct cfg80211_sched_scan_request {
+>>      u8 mac_addr[ETH_ALEN] __aligned(2);
+>>      u8 mac_addr_mask[ETH_ALEN] __aligned(2);
+>>
+>> +    /* universal scan fields */
+>
+> As the struct name changed it seems to me all fields in the struct are
+> universal scan fields.
+>
+>> +    u32 uscan_type;
+>> +    u32 uscan_results;
+>> +
+>>      /* internal */
+>>      struct wiphy *wiphy;
+>>      struct net_device *dev;
+>> @@ -1633,6 +1639,21 @@ struct cfg80211_sched_scan_request {
+>>  };
+>>
+>>  /**
+>> + * struct cfg80211_uscan_capa - universal scan capabilities
+>> + *
+>> + * @uscan_type: uscan type (scan, sched_scan, hotlist, scan_history,
+>> roaming)
+>> + * @max_ssids: max amount of ssids in sched scan
+>> + * @max_hotlist: max amount of bssids in hotlist
+>> + * @max_history: max amount of records in history
+>> + */
+>> +struct cfg80211_uscan_capa {
+>> +    u32 uscan_type;
+>> +    u32 max_ssids;
+>> +    u32 max_hotlist;
+>> +    u32 max_history;
+>> +};
+>> +
+>> +/**
+>>   * enum cfg80211_signal_type - signal type
+>>   *
+>>   * @CFG80211_SIGNAL_TYPE_NONE: no signal strength information available
+>> @@ -2898,10 +2919,13 @@ struct cfg80211_ops {
+>>      int    (*set_antenna)(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant);
+>>      int    (*get_antenna)(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant);
+>>
+>> -    int    (*sched_scan_start)(struct wiphy *wiphy,
+>> +    int    (*uscan_get_capa)(struct wiphy *wiphy, struct net_device *dev,
+>> +                struct cfg80211_uscan_capa *uscan_capa);
+>
+> Not sure if people start worrying about the size of struct wiphy
+> already, but for static information like capabilities I think a callback
+> is overkill.
+>
+>> +    int    (*uscan_start)(struct wiphy *wiphy,
+>>                  struct net_device *dev,
+>> -                struct cfg80211_sched_scan_request *request);
+>> -    int    (*sched_scan_stop)(struct wiphy *wiphy, struct net_device
+>> *dev);
+>> +                struct cfg80211_uscan_request *request);
+>
+> So given the two extra fields, what different driver/device behaviour is
+> required, eg. if uscan_type == roaming what will be different compared
+> to a normal scan.
+>
+>> +    int    (*uscan_stop)(struct wiphy *wiphy, struct net_device *dev,
+>> +                int uscan_id);
+>
+> The uscan_id is probably referring to a specific scan request started by
+> uscan_start. So who hands out that id (wiphy->cookie_counter?) and how
+> does the driver know about it. If cfg80211 determines the id it probably
+> need to be passed in the uscan request.
+>
+>>      int    (*set_rekey_data)(struct wiphy *wiphy, struct net_device *dev,
+>>                    struct cfg80211_gtk_rekey_data *data);
+>> @@ -4305,11 +4329,12 @@ void cfg80211_scan_done(struct
+>> cfg80211_scan_request *request,
+>>              struct cfg80211_scan_info *info);
+>>
+>>  /**
+>> - * cfg80211_sched_scan_results - notify that new scan results are
+>> available
+>> + * cfg80211_uscan_results - notify that new uscan results are available
+>>   *
+>>   * @wiphy: the wiphy which got scheduled scan results
+>> + * @uscan_id: type of scan results
+>
+> Confused now. What is uscan_id here? Same as in .uscan_stop() callback?
 
-Patch applied to wireless-drivers-next.git, thanks.
+Just to clarify - this is not a patch that is passing compilation.
+It is something to discuss as a concept.
+And we have several options - either have different set of functions for
+different scans or to get id from start and use it for stop and notification.
 
-e49656147359 rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb
+>>   */
+>> -void cfg80211_sched_scan_results(struct wiphy *wiphy);
+>> +void cfg80211_sched_scan_results(struct wiphy *wiphy, int uscan_id);
+>
+> should this be renamed to cfg80211_uscan_results().
+>
+>>  /**
+>>   * cfg80211_sched_scan_stopped - notify that the scheduled scan has
+>> stopped
+>
+> Also change to cfg80211_uscan_stopped()? Does it need an additional
+> argument, ie. uscan_id.
 
--- 
-https://patchwork.kernel.org/patch/9407493/
+Yes
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> Regards,
+> Arend
