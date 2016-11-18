@@ -1,56 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57106 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750772AbcKOLKX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 06:10:23 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Gianfranco Costamagna <locutusofborg@debian.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "brcm80211-dev-list\@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "nsmaldone\@tierratelematics.com" <nsmaldone@tierratelematics.com>,
-        "Marco.Arlone\@roj.com" <Marco.Arlone@roj.com>
-Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad regulatory domain frequency value
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
-        <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
-        <690669269.1124561.1477671348137@mail.yahoo.com>
-        <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
-        <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
-        <233918815.6357602.1479123253455@mail.yahoo.com>
-        <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
-        <810879191.6335567.1479124065921@mail.yahoo.com>
-Date: Tue, 15 Nov 2016 13:10:17 +0200
-In-Reply-To: <810879191.6335567.1479124065921@mail.yahoo.com> (Gianfranco
-        Costamagna's message of "Mon, 14 Nov 2016 11:47:45 +0000 (UTC)")
-Message-ID: <87r36dov6u.fsf@purkki.adurom.net> (sfid-20161115_121026_829056_F1DACD5D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:60242 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752761AbcKRVob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:44:31 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 5/7] rtl8xxxu: Obtain RTS rates from mac80211
+Date: Fri, 18 Nov 2016 16:44:26 -0500
+Message-Id: <1479505468-29383-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224444_282789_F9EA0005)
+In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gianfranco Costamagna <locutusofborg@debian.org> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->> Well, not before you pointed it out ;-). You are welcome to send a patch
->> fixing it. Otherwise, I will take care of it.
->
-> attaching a format-patch like version.
-> I don't think we need a Tested-by or whatever, because it is just a typo in a comment.
-> (this is my first contribution, feel free to rebase or change whatever you prefer
-> to make it in line with other styles)
->
-> (I gave authorship to Marco, the first one who discovered such typo)
+Use the mac80211 provided rate for RTS rather than the hard coded
+24Mbps as suggested by the vendor drivers.
 
-[...]
+Reported-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  6 +--
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 46 ++++++++++++++--------
+ 2 files changed, 32 insertions(+), 20 deletions(-)
 
-> Signed-off-by: Gianfranco Costamagna <gianfranco.costamagna@abinsula.com>
-> Signed-off-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
-> Signed-off-by: Arlone Marco <marco.arlone@roj.com>
-
-Please note that you cannot add Signed-off-by for other people without
-their explicit approval (see Documentation/SubmittingPatches). I don't
-know if they did it in this case or not, but wanted to point out this
-anyway.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 08d587a..bc3c990 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1340,7 +1340,7 @@ struct rtl8xxxu_fileops {
+ 	void (*fill_txdesc) (struct ieee80211_hdr *hdr,
+ 			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+ 			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable);
++			     bool ampdu_enable, u32 rts_rate);
+ 	int writeN_block_size;
+ 	int rx_agg_buf_size;
+ 	char tx_desc_size;
+@@ -1437,11 +1437,11 @@ bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
+ void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+ 			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+ 			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable);
++			     bool ampdu_enable, u32 rts_rate);
+ void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+ 			     struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
+ 			     u16 rate_flag, bool sgi, bool short_preamble,
+-			     bool ampdu_enable);
++			     bool ampdu_enable, u32 rts_rate);
+ 
+ extern struct rtl8xxxu_fileops rtl8192cu_fops;
+ extern struct rtl8xxxu_fileops rtl8192eu_fops;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index a5e6ec2..a4ac557 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4762,7 +4762,7 @@ void
+ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+ 			struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
+ 			u16 rate_flag, bool sgi, bool short_preamble,
+-			bool ampdu_enable)
++			bool ampdu_enable, u32 rts_rate)
+ {
+ 	u16 seq_number;
+ 
+@@ -4796,15 +4796,16 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
+ 	if (sgi)
+ 		tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
+ 
++	/*
++	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
++	 */
++	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
+ 	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
+-		/*
+-		 * Use RTS rate 24M - does the mac80211 tell
+-		 * us which to use?
+-		 */
+-		tx_desc->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
+-					      TXDESC32_RTS_RATE_SHIFT);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
++	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+ 	}
+ }
+ 
+@@ -4816,7 +4817,7 @@ void
+ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+ 			struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
+ 			u16 rate_flag, bool sgi, bool short_preamble,
+-			bool ampdu_enable)
++			bool ampdu_enable, u32 rts_rate)
+ {
+ 	struct rtl8xxxu_txdesc40 *tx_desc40;
+ 	u16 seq_number;
+@@ -4849,15 +4850,19 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
+ 	if (short_preamble)
+ 		tx_desc40->txdw5 |= cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
+ 
++	tx_desc40->txdw4 |= cpu_to_le32(rts_rate << TXDESC40_RTS_RATE_SHIFT);
++	/*
++	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
++	 */
+ 	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
+-		/*
+-		 * Use RTS rate 24M - does the mac80211 tell
+-		 * us which to use?
+-		 */
+-		tx_desc40->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
+-						TXDESC40_RTS_RATE_SHIFT);
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
+ 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
++	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
++		/*
++		 * For some reason the vendor driver doesn't set
++		 * TXDESC40_HW_RTS_ENABLE for CTS to SELF
++		 */
++		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_CTS_SELF_ENABLE);
+ 	}
+ }
+ 
+@@ -4874,7 +4879,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+ 	struct device *dev = &priv->udev->dev;
+-	u32 queue, rate;
++	u32 queue, rate, rts_rate;
+ 	u16 pktlen = skb->len;
+ 	u16 seq_number;
+ 	u16 rate_flag = tx_info->control.rates[0].flags;
+@@ -4974,10 +4979,17 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	    (sta && vif && vif->bss_conf.use_short_preamble))
+ 		short_preamble = true;
+ 
++	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS)
++		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
++	else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT)
++		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
++	else
++		rts_rate = 0;
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+-	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag,
+-				sgi, short_preamble, ampdu_enable);
++	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag, sgi,
++				short_preamble, ampdu_enable, rts_rate);
+ 
+ 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
+ 
 -- 
-Kalle Valo
+2.7.4
