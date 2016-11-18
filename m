@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41480 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:60224 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750772AbcKQHyu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 02:54:50 -0500
-Message-ID: <1479369286.1463.3.camel@sipsolutions.net> (sfid-20161117_085454_074146_763B341A)
-Subject: Re: [PATCH V3] qtnfmac: announcement of new FullMAC driver for
- Quantenna chipsets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-Cc: btherthala@quantenna.com, hwang@quantenna.com,
-        smaksimenko@quantenna.com, dlebed@quantenna.com,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Date: Thu, 17 Nov 2016 08:54:46 +0100
-In-Reply-To: <301c5abc-d28d-41dd-c7d6-4a7d7ec3681c@quantenna.com>
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <1478700000-11624-2-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <1479200773.12007.13.camel@sipsolutions.net>
-         <301c5abc-d28d-41dd-c7d6-4a7d7ec3681c@quantenna.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752366AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:44:30 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 4/7] rtl8xxxu: Fix rtl8192eu driver reload issue
+Date: Fri, 18 Nov 2016 16:44:25 -0500
+Message-Id: <1479505468-29383-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224434_052142_48FB45B5)
+In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> > > +static int qtnf_pcie_init_shm_ipc(struct qtnf_pcie_bus_priv
-> > > *priv)
-> > > +{
-> > > +	struct qtnf_shm_ipc_region __iomem *ipc_tx_reg;
-> > > +	struct qtnf_shm_ipc_region __iomem *ipc_rx_reg;
-> > > +	const struct qtnf_shm_ipc_int ipc_int = {
-> > qtnf_ipc_gen_ep_int, priv };
-> > > 
-> > > +	const struct qtnf_shm_ipc_rx_callback rx_callback = {
-> > > +					qtnf_pcie_control_rx_cal
-> > > lbac
-> > k, priv };
-> > 
-> > If those are const, why not also static? In fact, it seems they
-> > really
-> > should be, since they're registered below?
-> 
-> Later qtnf_shm_ipc_init() will make a full copy of rx_callback (which
-> actually only contains two pointers), it does not expect it to have 
-> static time of live, so no point in statically allocating it.
+The 8192eu suffered from two issues when reloading the driver.
 
-Ok. Nevertheless, marking it static might reduce binary size - as right
-now there are two options for the compiler
- 1) emit a static variable anyway since it's const - no changes then
- 2) actually put it on the stack
-    a) from a static variable - extra memcpy()
-    b) initialised by code - extra initialisation code
+The same problems as with the 8723bu where REG_RX_WAIT_CCA bits 22 and
+23 didn't get set in rtl8192e_enable_rf().
 
-Anyway, it doesn't really matter, just seemed strange to me :)
+In addition it also seems prone to issues when setting REG_RF_CTRL to
+0 intead of just disabling the RF_ENABLE bit. Similar to what was
+causing issues with the 8188eu.
 
-> The idea we used for flow synchronization is that all commands/events
-> processing is serialized with RTNL mutex. Not very smart approach,
-> but simple and in fact can be enough (there are not too much 
-> commands/notifications going on anyway). In the future it is possible
-> to move to a more fine-grained locking.
+With this patch I can successfully reload the driver and reassociate
+to an APi with an 8192eu dongle.
 
-Using the rtnl is probably fine, you've offloaded most things so can't
-really expect much to happen on the host. You still might have problems
-though - if you get a notification that the device disconnected, while
-cfg80211 is already holding the RTNL to disconnect itself, the firmware
-would think it's disconnected, the driver wouldn't have processed that
-notification yet, and would try to disconnect.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-That's just one possible race that we found in the past, and it needs
-to be handled in the firmware anyway (basically: don't do anything bad
-if asked to disconnect while not connected). :)
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index df54d27..a793fed 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1461,7 +1461,9 @@ static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
+ 	int count, ret = 0;
+ 
+ 	/* Turn off RF */
+-	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
++	val8 = rtl8xxxu_read8(priv, REG_RF_CTRL);
++	val8 &= ~RF_ENABLE;
++	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
+ 
+ 	/* Switch DPDT_SEL_P output from register 0x65[2] */
+ 	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
+@@ -1593,6 +1595,10 @@ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
+ 	u32 val32;
+ 	u8 val8;
+ 
++	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
++	val32 |= (BIT(22) | BIT(23));
++	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
++
+ 	val8 = rtl8xxxu_read8(priv, REG_GPIO_MUXCFG);
+ 	val8 |= BIT(5);
+ 	rtl8xxxu_write8(priv, REG_GPIO_MUXCFG, val8);
+-- 
+2.7.4
