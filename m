@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:47148 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932750AbcKVKWN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 05:22:13 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] nl80211: change validation of scheduled scan interval values
-Date: Tue, 22 Nov 2016 10:22:06 +0000
-Message-Id: <1479810126-28492-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161122_112216_836581_ABA1AB58)
+Received: from mx1.redhat.com ([209.132.183.28]:38134 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752301AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:44:30 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/7] rtl8xxxu: Fix big-endian problem reporting mactime
+Date: Fri, 18 Nov 2016 16:44:23 -0500
+Message-Id: <1479505468-29383-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224444_840093_37024BD7)
+In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When user-space does not provide scheduled scan plans, ie. uses the
-old scheduled scan API containing NL80211_ATTR_SCHED_SCAN_INTERVAL.
-The interval value passed by user-space is validated against
-struct wiphy::max_sched_scan_plan_interval and if it is exceeding
-it the interval is set to struct wiphy::max_sched_scan_plan_interval.
-However, when the driver does not set this limit the interval the
-interval in the request will always be zero. Hence add a check to
-see whether the driver set struct wiphy::max_sched_scan_plan_interval.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-For the new API, ie. for scheduled scan plans, the interval validation
-has been simalarly adjusted to assure the limit is non-zero.
+The full RX descriptor is converted so converting tsfl again would
+return it to it's original endian value.
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- net/wireless/nl80211.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 4 ++--
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 24ab199..e621554 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6777,7 +6777,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 		if (!request->scan_plans[0].interval)
- 			return -EINVAL;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 10166289..08d587a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -238,7 +238,7 @@ struct rtl8xxxu_rxdesc16 {
+ 	u32 pattern1match:1;
+ 	u32 pattern0match:1;
+ #endif
+-	__le32 tsfl;
++	u32 tsfl;
+ #if 0
+ 	u32 bassn:12;
+ 	u32 bavld:1;
+@@ -368,7 +368,7 @@ struct rtl8xxxu_rxdesc24 {
+ 	u32 ldcp:1;
+ 	u32 splcp:1;
+ #endif
+-	__le32 tsfl;
++	u32 tsfl;
+ };
  
--		if (request->scan_plans[0].interval >
-+		if (wiphy->max_sched_scan_plan_interval &&
-+		    request->scan_plans[0].interval >
- 		    wiphy->max_sched_scan_plan_interval)
- 			request->scan_plans[0].interval =
- 				wiphy->max_sched_scan_plan_interval;
-@@ -6801,7 +6802,10 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ struct rtl8xxxu_txdesc32 {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index a96ff17..a5e6ec2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5220,7 +5220,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 			rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
+ 						   rx_desc->rxmcs);
  
- 		request->scan_plans[i].interval =
- 			nla_get_u32(plan[NL80211_SCHED_SCAN_PLAN_INTERVAL]);
--		if (!request->scan_plans[i].interval ||
-+		if (!request->scan_plans[i].interval)
-+			return -EINVAL;
-+
-+		if (wiphy->max_sched_scan_plan_interval &&
- 		    request->scan_plans[i].interval >
- 		    wiphy->max_sched_scan_plan_interval)
- 			return -EINVAL;
+-		rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
++		rx_status->mactime = rx_desc->tsfl;
+ 		rx_status->flag |= RX_FLAG_MACTIME_START;
+ 
+ 		if (!rx_desc->swdec)
+@@ -5290,7 +5290,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 		rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
+ 					   rx_desc->rxmcs);
+ 
+-	rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
++	rx_status->mactime = rx_desc->tsfl;
+ 	rx_status->flag |= RX_FLAG_MACTIME_START;
+ 
+ 	if (!rx_desc->swdec)
 -- 
-1.9.1
+2.7.4
