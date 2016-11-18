@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56099 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752301AbcKRRN7 (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:34750 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753031AbcKRTYT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 12:13:59 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: cleanup wake-IRQ handling if suspend fails
-Date: Fri, 18 Nov 2016 22:43:24 +0530
-Message-ID: <1479489205-30288-1-git-send-email-akarwar@marvell.com> (sfid-20161118_181402_565214_C4000B9D)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 18 Nov 2016 14:24:19 -0500
+Received: by mail-qk0-f195.google.com with SMTP id y205so858488qkb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:19 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v2 08/11] ath10k: Added ATH10K_BUS_SDIO enum
+Date: Fri, 18 Nov 2016 20:22:48 +0100
+Message-Id: <1479496971-19174-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_205413_021519_A9B21F13)
+In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Brian Norris <briannorris@chromium.org>
-
-We don't want to leave the wake IRQ enabled.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
- drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
- 2 files changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/core.h |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 62ec141..32fa4ed 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -137,6 +137,7 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 		mwifiex_dbg(adapter, ERROR,
- 			    "cmd: failed to suspend\n");
- 		adapter->hs_enabling = false;
-+		mwifiex_disable_wake(adapter);
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e8decfa..be6cd55 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -74,6 +74,7 @@
+ enum ath10k_bus {
+ 	ATH10K_BUS_PCI,
+ 	ATH10K_BUS_AHB,
++	ATH10K_BUS_SDIO,
+ };
+ 
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+@@ -83,6 +84,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ 		return "pci";
+ 	case ATH10K_BUS_AHB:
+ 		return "ahb";
++	case ATH10K_BUS_SDIO:
++		return "sdio";
  	}
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index c219671..78f2cc9 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -308,6 +308,7 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 		mwifiex_dbg(adapter, ERROR,
- 			    "cmd: failed to suspend\n");
- 		adapter->hs_enabling = false;
-+		mwifiex_disable_wake(adapter);
- 		return -EFAULT;
- 	}
- 
+ 	return "unknown";
 -- 
-1.9.1
+1.7.9.5
