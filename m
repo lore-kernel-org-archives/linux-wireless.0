@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:32901 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965912AbcKAMIj (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56106 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752301AbcKRROH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 08:08:39 -0400
-Received: by mail-pf0-f194.google.com with SMTP id a136so8165546pfa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Nov 2016 05:08:39 -0700 (PDT)
-From: Xinming Hu <huxinming820@gmail.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2 02/12] mwifiex: complete blocked power save handshake in main process
-Date: Tue,  1 Nov 2016 20:08:18 +0800
-Message-Id: <1478002098-14189-2-git-send-email-huxinming820@marvell.com> (sfid-20161101_130941_657301_100BFFEE)
-In-Reply-To: <1478002098-14189-1-git-send-email-huxinming820@marvell.com>
-References: <1478002098-14189-1-git-send-email-huxinming820@marvell.com>
+        Fri, 18 Nov 2016 12:14:07 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: avoid double-disable_irq() race
+Date: Fri, 18 Nov 2016 22:43:25 +0530
+Message-ID: <1479489205-30288-2-git-send-email-akarwar@marvell.com> (sfid-20161118_181410_160614_46D770CE)
+In-Reply-To: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
+References: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+From: Brian Norris <briannorris@chromium.org>
 
-Power save handshake with firmware might be blocked by on-going
-data transfer.
-this patch check the PS status in main process and complete
-previous blocked PS handshake.
-this patch also remove redudant check before call
-mwifiex_check_ps_cond fuction.
+We have a race where the wakeup IRQ might be in flight while we're
+calling mwifiex_disable_wake() from resume(). This can leave us
+disabling the IRQ twice.
 
----
-v2: 1. remove redudant check(Brain)
-	3. reorgnized to follow tx_hw_pending patch
----
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
+Let's disable the IRQ and enable it in case if we have double-disabled
+it.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/marvell/mwifiex/main.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/main.h | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 2478ccd..d700c44 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -308,6 +308,9 @@ process_start:
- 			/* We have tried to wakeup the card already */
- 			if (adapter->pm_wakeup_fw_try)
- 				break;
-+			if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-+				mwifiex_check_ps_cond(adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index b8ef1c0..d501d03 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1419,8 +1419,13 @@ static inline void mwifiex_disable_wake(struct mwifiex_adapter *adapter)
+ {
+ 	if (adapter->irq_wakeup >= 0) {
+ 		disable_irq_wake(adapter->irq_wakeup);
+-		if (!adapter->wake_by_wifi)
+-			disable_irq(adapter->irq_wakeup);
++		disable_irq(adapter->irq_wakeup);
++		if (adapter->wake_by_wifi)
++			/* Undo our disable, since interrupt handler already
++			 * did this.
++			 */
++			enable_irq(adapter->irq_wakeup);
 +
- 			if (adapter->ps_state != PS_STATE_AWAKE)
- 				break;
- 			if (adapter->tx_lock_flag) {
-@@ -355,10 +358,8 @@ process_start:
+ 	}
+ }
  
- 		/* Check if we need to confirm Sleep Request
- 		   received previously */
--		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
--			if (!adapter->cmd_sent && !adapter->curr_cmd)
--				mwifiex_check_ps_cond(adapter);
--		}
-+		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-+			mwifiex_check_ps_cond(adapter);
- 
- 		/* * The ps_state may have been changed during processing of
- 		 * Sleep Request event.
 -- 
-1.8.1.4
+1.9.1
