@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:34592 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752647AbcKISCz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 13:02:55 -0500
-Received: by mail-pf0-f179.google.com with SMTP id n85so130379214pfi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2016 10:02:54 -0800 (PST)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Andy Gross <andy.gross@linaro.org>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] wcn36xx: Correct Kconfig dependency
-Date: Wed,  9 Nov 2016 10:02:50 -0800
-Message-Id: <1478714571-4841-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20161109_190336_696908_6DA0B7C2)
-In-Reply-To: <201611092150.OxpAuHow%fengguang.wu@intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46998 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751139AbcKRJsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 04:48:11 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH v2 0/9] rt2800: random fixes 
+Date: Fri, 18 Nov 2016 10:43:52 +0100
+Message-Id: <1479462241-9299-1-git-send-email-sgruszka@redhat.com> (sfid-20161118_104814_859927_997BDA99)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the case SMD or WCNSS_CTRL are compiled as modules, wcn36xx must be
-compiled as module as well, so we need to mention this dependency.
-But we still want allow the driver to be compiled in case either of
-those are =n, for compile testing reasons.
+Random fixes mostly related to HT performance.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/Kconfig | 2 ++
- 1 file changed, 2 insertions(+)
+v1 -> v2:
+ - drop patch "rt2800: make ba_size depend on ampdu_factor"
+ - fix changelog for patch "rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE" 
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/Kconfig b/drivers/net/wireless/ath/wcn36xx/Kconfig
-index 591ebaea8265..4b83e87f0b94 100644
---- a/drivers/net/wireless/ath/wcn36xx/Kconfig
-+++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
-@@ -1,6 +1,8 @@
- config WCN36XX
- 	tristate "Qualcomm Atheros WCN3660/3680 support"
- 	depends on MAC80211 && HAS_DMA
-+	depends on QCOM_WCNSS_CTRL || QCOM_WCNSS_CTRL=n
-+	depends on QCOM_SMD || QCOM_SMD=n
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Qualcomm Atheros WCN3660 and WCN3680 mobile chipsets.
+Stanislaw Gruszka (9):
+  rt2800: correctly report MCS TX parameters
+  rt2800usb: do not wipe out USB_DMA_CFG settings
+  rt2800: OFDM rates are mandatory
+  rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
+  rt2800: correct AUTO_RSP_CFG
+  rt2800: correct TX_SW_CFG1 for 5592
+  rt2800: use RTS/CTS protection instead of CTS-to-self
+  rt2800: tune *_PROT_CFG parameters
+  rt2800: disable CCK rates on HT
+
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 62 +++++++++++++-------------
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c |  5 +--
+ 2 files changed, 33 insertions(+), 34 deletions(-)
+
 -- 
-2.5.0
+1.8.3.1
