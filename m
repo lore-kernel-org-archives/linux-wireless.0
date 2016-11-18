@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47886 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752605AbcKRODS (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38570 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752414AbcKRV6m (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 09:03:18 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v4 07/11] mwifiex: reset card->adapter during device unregister
-Date: Fri, 18 Nov 2016 19:30:30 +0530
-Message-ID: <1479477634-27841-7-git-send-email-akarwar@marvell.com> (sfid-20161118_150320_827555_26E0ACBE)
-In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
-References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+        Fri, 18 Nov 2016 16:58:42 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Iago Abal <iago.abal@gmail.com>
+Date: Fri, 18 Nov 2016 22:58:00 +0100
+Message-ID: <CAGbDTvrA85Qao_y0FxCFR_cE26WejoLLrA=PA1qhTButiDp3xg@mail.gmail.com> (sfid-20161118_225846_312367_C2141747)
+Subject: Potential deadlock BUG in drivers/net/wireless/st/cw1200/sta.c (Linux 4.9)
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Solomon Peachy <pizza@shaftnet.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Hi,
 
-card->adapter gets initialized in mwifiex_register_dev(). As it's not
-cleared in mwifiex_unregister_dev(), we may end up accessing the memory
-which is already free in below scenario.
+With the help of a static bug finder (EBA -
+https://github.com/models-team/eba) I have found a potential deadlock
+in drivers/net/wireless/st/cw1200/
+sta.c. This happens due to a recursive mutex_lock on `priv->conf_mutex'.
 
-Scenario: Driver initialization is failed due to incorrect firmware or
-some other reason. Meanwhile device reboot/unload occurs.
+If this is indeed a bug, I will be happy to help with a patch.
 
-This is safe, now that we've properly synchronized suspend() and
-remove() with the FW initialization thread; now that code can simply
-check for 'card->adapter == NULL' and exit safely.
+A quick (not elegant) fix could be to unlock before the call to
+`cw1200_do_unjoin' in line 1174, and lock again afterwards. It seems
+that `cw1200_join_complete' is always called with `priv->conf_mutex'
+held. Another option could be to add a Boolean parameter to
+`cw1200_do_unjoin' to choose whether this function should take the
+lock itself. Yet another option would be to have a
+`__cw1200_do_unjoin' that does not lock, and make `cw1200_do_unjoin' a
+wrapper over this that adds the locking; `cw1200_join_complete' would
+call `__cw1200_do_unjoin' instead.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-v4: Same as v1, v2, v3
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
- drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
- 2 files changed, 2 insertions(+)
+Someone who is actually familiar with this code may have a better
+proposal though.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6176cb78..f6d28d9 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -3042,6 +3042,7 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- 			if (card->msi_enable)
- 				pci_disable_msi(pdev);
- 	       }
-+		card->adapter = NULL;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 5077d56..69542f8 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2017,6 +2017,7 @@ static int mwifiex_alloc_sdio_mpa_buffers(struct mwifiex_adapter *adapter,
- 	struct sdio_mmc_card *card = adapter->card;
- 
- 	if (adapter->card) {
-+		card->adapter = NULL;
- 		sdio_claim_host(card->func);
- 		sdio_disable_func(card->func);
- 		sdio_release_host(card->func);
--- 
-1.9.1
+The trace is as follows:
+
+1. Function `cw1200_join_complete_work' takes the first lock in line 1189:
+
+    // see https://github.com/torvalds/linux/blob/v4.9-rc5/drivers/net/wireless/st/cw1200/sta.c#L1189
+    mutex_lock(& priv->conf_mutex);
+
+2. and subsequently calls `cw1200_join_complete';
+3. which calls `cw1200_do_unjoin' in line 1174;
+4. and this latter function takes the lock for the second time in line 1387:
+
+    // see https://github.com/torvalds/linux/blob/v4.9-rc5/drivers/net/wireless/st/cw1200/sta.c#L1387
+    mutex_lock(& priv->conf_mutex);
+
+Hope it helps!
+
+--
+iago
