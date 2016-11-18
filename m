@@ -1,64 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37234 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbcKQUXM (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34583 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752497AbcKRIqB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 15:23:12 -0500
-Received: by mail-wm0-f42.google.com with SMTP id t79so169670373wmt.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 12:23:12 -0800 (PST)
-Subject: Re: [RFC 0/5] nl80211: add support for g-scan
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
- <1479393551.1463.11.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Shmidt <dimitrysh@google.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <32018e71-4fb0-92db-158e-e1a98d4f7d28@broadcom.com> (sfid-20161117_212316_751851_6D3A5EB9)
-Date: Thu, 17 Nov 2016 21:23:09 +0100
+        Fri, 18 Nov 2016 03:46:01 -0500
+Received: by mail-pf0-f195.google.com with SMTP id y68so13208444pfb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:46:01 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Fri, 18 Nov 2016 00:45:54 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH 5/7] mwifiex: Remove unused 'pm_flag' variable
+Message-ID: <41391bae10a957d9146b25d6919a2d69f4b5e2f0.1479458373.git.kirtika@google.com> (sfid-20161118_094604_590773_FD7F59D0)
+References: <cover.1479458373.git.kirtika@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1479393551.1463.11.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479458373.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-11-2016 15:39, Johannes Berg wrote:
-> On Thu, 2016-11-17 at 13:18 +0000, Arend van Spriel wrote:
->> Android employs a Wifi-HAL layer in its wireless frame. It basically
->> abstracts dealing with netlink messages from the framework. For some
->> features it employs nl80211 vendor commands. The goal I set myself is
->> to be able to have a generic nl80211 Wifi-HAL implementation. One of
->> the features currently requiring the vendor commands is g-scan. We
->> can only guess what the 'g' stands for ;-) This series converts the
->> vendor command api into common nl80211 api.
-> 
-> Hehe :)
-> We also have gscan API. If you're interested, you can see it here:
-> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/tree/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.h#n96
+mwifiex_sdio_resume() intializes pm_flag, just like mwifiex_sdio_suspend(), but
+does not use it. Compiling with W=1 gives the following warning, fix it.
+mwifiex/sdio.c: In function ‘mwifiex_sdio_resume’:
+mwifiex/sdio.c:234:16: warning: variable ‘pm_flag’ set but not used [-Wunused-but-set-variable]
 
-I am interested and I did have a look at it when I found out, but I had
-already tinkered out a large portion so decided to stick with that.
+sdio_get_host_pm_caps() is just an acessor, so the call to it is safe to
+remove.
+The unused variable seems to be present since 5e6e3a92b9a4 which introduced
+mwifiex_sdio_resume().
 
->> Before making an attempt to explain more about the g-scan
->> functionality first this. While I am still testing the driver
->> implementation resulting in numerous questions Dmitry send the email
->> below to bring a related discussion to the table..eh.. the linux-
->> wireless list. This is probably a good thing as anyone can dive in
->> and share their thoughts.
-> 
-> 
-> Yeah. How does this overlap? Have you looked at it already?
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-The overlap occurred when Dmitry pointed me to this thread in response
-to questions I had regarding gscan :-p Now the similarity is reflected
-mainly in terms used for functionality like bss hotlist, batch results,
-etc. which are also found in gscan defintions in android wifi hal.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 8718950..41ec59d7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -231,10 +231,8 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+-	mmc_pm_flag_t pm_flag = 0;
 
-The main difference between the gscan and universal scan is that gscan
-specifies everything in a single start request and the universal scan
-api can be used to add/remove individual scans, which would be
-equivalent with the ability to add/remove buckets in gscan.
-
-I will comment more replying the RFC email from Dmitry.
-
-Regards,
-Arend
+ 	if (func) {
+-		pm_flag = sdio_get_host_pm_caps(func);
+ 		card = sdio_get_drvdata(func);
+ 		if (!card || !card->adapter) {
+ 			pr_err("resume: invalid card or adapter\n");
+--
+2.8.0.rc3.226.g39d4020
