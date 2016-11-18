@@ -1,297 +1,578 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33394 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936488AbcKQLo3 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37887 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751788AbcKROBc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 06:44:29 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <robh@kernel.org>, Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHv2 2/4] ath10k: Add support to update btcoex priority value via nl80211
-Date: Thu, 17 Nov 2016 17:14:22 +0530
-Message-ID: <1479383064-25718-3-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161117_124538_860649_0F0A26AD)
-In-Reply-To: <1479383064-25718-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1479383064-25718-1-git-send-email-c_traja@qti.qualcomm.com>
+        Fri, 18 Nov 2016 09:01:32 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v4 03/11] mwifiex: resolve races between async FW init (failure) and device removal
+Date: Fri, 18 Nov 2016 19:30:26 +0530
+Message-ID: <1479477634-27841-3-git-send-email-akarwar@marvell.com> (sfid-20161118_150135_503619_DBA9FF90)
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+From: Brian Norris <briannorris@chromium.org>
 
-This patch adds support to update btcoex priority value via nl80211.
-Here driver will be exposing the supported frame format for this
-feature via btcoex_support_flags which is a member of
-wiphy structure. 10.4 based firmware support this feature.
-WMI service WMI_SERVICE_BTCOEX is used to identify the firmware support
-of this feature. BTCOEX needs to enable to modify this value.
+It's possible for the FW init sequence to fail, which will trigger a
+device cleanup sequence in mwifiex_fw_dpc(). This sequence can race with
+device suspend() or remove() (e.g., reboot or unbind), and can trigger
+use-after-free issues. Currently, this driver attempts (poorly) to
+synchronize remove() using a semaphore, but it doesn't protect some of
+the critical sections properly. Particularly, we grab a pointer to the
+adapter struct (card->adapter) without checking if it's being freed or
+not. We later do a NULL check on the adapter, but that doesn't work if
+the adapter was freed.
 
-This patch has dependency of
-"cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to support BTCOEX"
-patch.
+Also note that the PCIe interface driver doesn't ever set card->adapter
+to NULL, so even if we get the synchronization right, we still might try
+to redo the cleanup in ->remove(), even if the FW init failure sequence
+already did it.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+This patch replaces the static semaphore with a per-device completion
+struct, and uses that completion to synchronize the remove() thread with
+the mwifiex_fw_dpc(). A future patch will utilize this completion to
+synchronize the suspend() thread as well.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/net/wireless/ath/ath10k/mac.c     |   78 +++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   19 +++++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   19 +++++++
- drivers/net/wireless/ath/ath10k/wmi.h     |   18 +++++++
- 4 files changed, 134 insertions(+)
+v2: Same as v1
+v3: Included Brian's suggested change which fixes new use-after-free
+introduced by this patch.
+v4: Resolved minor conflict while rebasing v3 on top of
+"[v4,1/3] mwifiex: Allow mwifiex early access to device structure"
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 47 +++++++++++------------------
+ drivers/net/wireless/marvell/mwifiex/main.h | 11 +++++--
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 18 +++++------
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 18 +++++------
+ drivers/net/wireless/marvell/mwifiex/sdio.h |  2 ++
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 23 ++++++--------
+ drivers/net/wireless/marvell/mwifiex/usb.h  |  2 ++
+ 8 files changed, 55 insertions(+), 68 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index e7131b9..ce5d529 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7502,6 +7502,71 @@ static int ath10k_mac_op_set_btcoex(struct ieee80211_hw *hw, bool enabled)
- 	return ret;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 9e7acb4..eac44fe 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -521,9 +521,9 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	struct mwifiex_private *priv;
+ 	struct mwifiex_adapter *adapter = context;
+ 	struct mwifiex_fw_image fw;
+-	struct semaphore *sem = adapter->card_sem;
+ 	bool init_failed = false;
+ 	struct wireless_dev *wdev;
++	struct completion *fw_done = adapter->fw_done;
+ 
+ 	if (!firmware) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -670,7 +670,8 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	}
+ 	if (init_failed)
+ 		mwifiex_free_adapter(adapter);
+-	up(sem);
++	/* Tell all current and future waiters we're finished */
++	complete_all(fw_done);
+ 	return;
  }
  
-+u32
-+ath10k_mac_get_btcoex_prio(struct cfg80211_btcoex_priority *btcoex_priority)
-+{
-+	u32 btcoex_prio = 0;
-+
-+	if (btcoex_priority->wlan_be_preferred)
-+		btcoex_prio |= WIPHY_WLAN_BE_PREFERRED;
-+
-+	if (btcoex_priority->wlan_bk_preferred)
-+		btcoex_prio |= WIPHY_WLAN_BK_PREFERRED;
-+
-+	if (btcoex_priority->wlan_vi_preferred)
-+		btcoex_prio |= WIPHY_WLAN_VI_PREFERRED;
-+
-+	if (btcoex_priority->wlan_vo_preferred)
-+		btcoex_prio |= WIPHY_WLAN_VO_PREFERRED;
-+
-+	if (btcoex_priority->wlan_beacon_preferred)
-+		btcoex_prio |= WIPHY_WLAN_BEACON_PREFERRED;
-+
-+	if (btcoex_priority->wlan_mgmt_preferred)
-+		btcoex_prio |= WIPHY_WLAN_MGMT_PREFERRED;
-+
-+	return btcoex_prio;
-+}
-+
-+static int ath10k_mac_op_set_btcoex_priority(struct ieee80211_hw *hw,
-+			struct cfg80211_btcoex_priority *btcoex_priority)
-+{
-+	u32 btcoex_prio;
-+	struct ath10k *ar = hw->priv;
-+	int ret;
-+
-+	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags))) {
-+		ret = -EINVAL;
-+		goto exit;
-+	}
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_RESTARTED) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	btcoex_prio = ath10k_mac_get_btcoex_prio(btcoex_priority);
-+
-+	if (btcoex_prio > 0x3f) {
-+		ret = -E2BIG;
-+		goto exit;
-+	}
-+
-+	ret = ath10k_wmi_set_coex_param(ar, btcoex_prio);
-+
-+	if (ret) {
-+		ath10k_warn(ar, "failed to set btcoex priority: %d\n", ret);
-+		goto exit;
-+	}
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_mac_op_tx,
- 	.wake_tx_queue			= ath10k_mac_op_wake_tx_queue,
-@@ -7544,6 +7609,7 @@ static int ath10k_mac_op_set_btcoex(struct ieee80211_hw *hw, bool enabled)
- 	.unassign_vif_chanctx		= ath10k_mac_op_unassign_vif_chanctx,
- 	.switch_vif_chanctx		= ath10k_mac_op_switch_vif_chanctx,
- 	.set_btcoex                     = ath10k_mac_op_set_btcoex,
-+	.set_btcoex_priority		= ath10k_mac_op_set_btcoex_priority,
+@@ -1365,7 +1366,7 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+  * code is extracted from mwifiex_remove_card()
+  */
+ static int
+-mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
++mwifiex_shutdown_sw(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv;
+ 	int i;
+@@ -1373,8 +1374,9 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ 	if (!adapter)
+ 		goto exit_return;
  
- 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
++	wait_for_completion(adapter->fw_done);
++	/* Caller should ensure we aren't suspending while this happens */
++	reinit_completion(adapter->fw_done);
  
-@@ -8134,6 +8200,18 @@ int ath10k_mac_register(struct ath10k *ar)
- 	 */
- 	ar->hw->offchannel_tx_hw_queue = IEEE80211_MAX_QUEUES - 1;
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 	mwifiex_deauthenticate(priv, NULL);
+@@ -1431,8 +1433,6 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ 		rtnl_unlock();
+ 	}
  
-+	if (test_bit(WMI_SERVICE_BTCOEX, ar->wmi.svc_map)) {
-+		ar->hw->wiphy->btcoex_support_flags =
-+			WIPHY_WLAN_BE_PREFERRED |
-+			WIPHY_WLAN_BK_PREFERRED |
-+			WIPHY_WLAN_VI_PREFERRED |
-+			WIPHY_WLAN_VO_PREFERRED |
-+			WIPHY_WLAN_BEACON_PREFERRED |
-+			WIPHY_WLAN_MGMT_PREFERRED;
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT, "btcoex supported mask :%u\n",
-+			   ar->hw->wiphy->btcoex_support_flags);
-+	}
+-	up(sem);
+-exit_sem_err:
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+ exit_return:
+ 	return 0;
+@@ -1442,21 +1442,18 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+  * code is extracted from mwifiex_add_card()
+  */
+ static int
+-mwifiex_reinit_sw(struct mwifiex_adapter *adapter, struct semaphore *sem,
++mwifiex_reinit_sw(struct mwifiex_adapter *adapter, struct completion *fw_done,
+ 		  struct mwifiex_if_ops *if_ops, u8 iface_type)
+ {
+ 	char fw_name[32];
+ 	struct pcie_service_card *card = adapter->card;
+ 
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
+-
+ 	mwifiex_init_lock_list(adapter);
+ 	if (adapter->if_ops.up_dev)
+ 		adapter->if_ops.up_dev(adapter);
+ 
+ 	adapter->iface_type = iface_type;
+-	adapter->card_sem = sem;
++	adapter->fw_done = fw_done;
+ 
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
+ 	adapter->surprise_removed = false;
+@@ -1507,7 +1504,8 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ 	}
+ 	strcpy(adapter->fw_name, fw_name);
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+-	up(sem);
 +
- 	switch (ar->running_fw->fw_file.wmi_op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
- 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index c9a8bb1..90c8390 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -197,6 +197,8 @@ struct wmi_ops {
- 					(struct ath10k *ar,
- 					 enum wmi_bss_survey_req_type type);
- 	struct sk_buff *(*gen_echo)(struct ath10k *ar, u32 value);
-+	struct sk_buff *(*gen_set_coex_param)(struct ath10k *ar,
-+					      u32 btcoex_prio);
- };
++	complete_all(adapter->fw_done);
+ 	return 0;
  
- int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
-@@ -1411,4 +1413,21 @@ struct wmi_ops {
- 	return ath10k_wmi_cmd_send(ar, skb, wmi->cmd->echo_cmdid);
+ err_init_fw:
+@@ -1527,8 +1525,7 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ err_kmalloc:
+ 	mwifiex_terminate_workqueue(adapter);
+ 	adapter->surprise_removed = true;
+-	up(sem);
+-exit_sem_err:
++	complete_all(adapter->fw_done);
+ 	mwifiex_dbg(adapter, INFO, "%s, error\n", __func__);
+ 
+ 	return -1;
+@@ -1543,12 +1540,12 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
+ 	struct mwifiex_if_ops if_ops;
+ 
+ 	if (!prepare) {
+-		mwifiex_reinit_sw(adapter, adapter->card_sem, &if_ops,
++		mwifiex_reinit_sw(adapter, adapter->fw_done, &if_ops,
+ 				  adapter->iface_type);
+ 	} else {
+ 		memcpy(&if_ops, &adapter->if_ops,
+ 		       sizeof(struct mwifiex_if_ops));
+-		mwifiex_shutdown_sw(adapter, adapter->card_sem);
++		mwifiex_shutdown_sw(adapter);
+ 	}
  }
+ EXPORT_SYMBOL_GPL(mwifiex_do_flr);
+@@ -1618,15 +1615,12 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+  *      - Add logical interfaces
+  */
+ int
+-mwifiex_add_card(void *card, struct semaphore *sem,
++mwifiex_add_card(void *card, struct completion *fw_done,
+ 		 struct mwifiex_if_ops *if_ops, u8 iface_type,
+ 		 struct device *dev)
+ {
+ 	struct mwifiex_adapter *adapter;
  
-+static inline int
-+ath10k_wmi_set_coex_param(struct ath10k *ar, u32 btcoex_prio)
-+{
-+	struct sk_buff *skb;
-+
-+	if (!ar->wmi.ops->gen_set_coex_param)
-+		return -EOPNOTSUPP;
-+
-+	skb = ar->wmi.ops->gen_set_coex_param(ar, btcoex_prio);
-+
-+	if (IS_ERR(skb))
-+		return PTR_ERR(skb);
-+
-+	return ath10k_wmi_cmd_send(ar, skb,
-+				   ar->wmi.cmd->set_coex_param_cmdid);
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 387c4ee..de35c17 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -710,6 +710,7 @@
- 	.pdev_bss_chan_info_request_cmdid =
- 			WMI_10_4_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
- 	.ext_resource_cfg_cmdid = WMI_10_4_EXT_RESOURCE_CFG_CMDID,
-+	.set_coex_param_cmdid = WMI_10_4_BTCOEX_CFG_CMDID,
- };
+-	if (down_interruptible(sem))
+-		goto exit_sem_err;
+-
+ 	if (mwifiex_register(card, if_ops, (void **)&adapter)) {
+ 		pr_err("%s: software init failed\n", __func__);
+ 		goto err_init_sw;
+@@ -1636,7 +1630,7 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 	mwifiex_probe_of(adapter);
  
- /* MAIN WMI VDEV param map */
-@@ -7859,6 +7860,23 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
+ 	adapter->iface_type = iface_type;
+-	adapter->card_sem = sem;
++	adapter->fw_done = fw_done;
+ 
+ 	adapter->hw_status = MWIFIEX_HW_STATUS_INITIALIZING;
+ 	adapter->surprise_removed = false;
+@@ -1705,9 +1699,7 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+ 	mwifiex_free_adapter(adapter);
+ 
+ err_init_sw:
+-	up(sem);
+ 
+-exit_sem_err:
+ 	return -1;
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_add_card);
+@@ -1723,14 +1715,11 @@ static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
+  *      - Unregister the device
+  *      - Free the adapter structure
+  */
+-int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
++int mwifiex_remove_card(struct mwifiex_adapter *adapter)
+ {
+ 	struct mwifiex_private *priv = NULL;
+ 	int i;
+ 
+-	if (down_trylock(sem))
+-		goto exit_sem_err;
+-
+ 	if (!adapter)
+ 		goto exit_remove;
+ 
+@@ -1800,8 +1789,6 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	mwifiex_free_adapter(adapter);
+ 
+ exit_remove:
+-	up(sem);
+-exit_sem_err:
  	return 0;
  }
+ EXPORT_SYMBOL_GPL(mwifiex_remove_card);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 904a2ed..cf4c780 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -20,6 +20,7 @@
+ #ifndef _MWIFIEX_MAIN_H_
+ #define _MWIFIEX_MAIN_H_
  
-+static struct sk_buff *
-+ath10k_wmi_10_4_op_gen_set_coex_param(struct ath10k *ar,
-+				      u32 btcoex_prio)
-+{
-+	struct wmi_set_coex_param_10_4_cmd *cmd;
-+	struct sk_buff *skb;
++#include <linux/completion.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/sched.h>
+@@ -985,7 +986,10 @@ struct mwifiex_adapter {
+ 	u32 usr_dot_11ac_mcs_support;
+ 
+ 	atomic_t pending_bridged_pkts;
+-	struct semaphore *card_sem;
 +
-+	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
-+	if (!skb)
-+		return ERR_PTR(-ENOMEM);
++	/* For synchronizing FW initialization with device lifecycle. */
++	struct completion *fw_done;
 +
-+	cmd = (struct wmi_set_coex_param_10_4_cmd *)skb->data;
-+	cmd->btcoex_prio = __cpu_to_le32(btcoex_prio);
+ 	bool ext_scan;
+ 	u8 fw_api_ver;
+ 	u8 key_api_major_ver, key_api_minor_ver;
+@@ -1438,10 +1442,11 @@ static inline void mwifiex_enable_wake(struct mwifiex_adapter *adapter)
+ 
+ int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
+ 			     u32 func_init_shutdown);
+-int mwifiex_add_card(void *card, struct semaphore *sem,
 +
-+	ath10k_dbg(ar, ATH10K_DBG_WMI, "BTCOEX priority :%u\n", btcoex_prio);
-+	return skb;
-+}
- static const struct wmi_ops wmi_ops = {
- 	.rx = ath10k_wmi_op_rx,
- 	.map_svc = wmi_main_svc_map,
-@@ -8205,6 +8223,7 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
- 	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
- 	.gen_echo = ath10k_wmi_op_gen_echo,
- 	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
-+	.gen_set_coex_param = ath10k_wmi_10_4_op_gen_set_coex_param,
- };
++int mwifiex_add_card(void *card, struct completion *fw_done,
+ 		     struct mwifiex_if_ops *if_ops, u8 iface_type,
+ 		     struct device *dev);
+-int mwifiex_remove_card(struct mwifiex_adapter *, struct semaphore *);
++int mwifiex_remove_card(struct mwifiex_adapter *adapter);
  
- int ath10k_wmi_attach(struct ath10k *ar)
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 1b243c8..3a739e3 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -184,6 +184,8 @@ enum wmi_service {
- 	WMI_SERVICE_TX_MODE_PUSH_ONLY,
- 	WMI_SERVICE_TX_MODE_PUSH_PULL,
- 	WMI_SERVICE_TX_MODE_DYNAMIC,
-+	WMI_SERVICE_VDEV_RX_FILTER,
-+	WMI_SERVICE_BTCOEX,
+ void mwifiex_get_version(struct mwifiex_adapter *adapter, char *version,
+ 			 int maxlen);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index cfb45ef..547806f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -35,8 +35,6 @@
  
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -310,6 +312,8 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
- 	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
- 	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
-+	WMI_10_4_SERVICE_VDEV_RX_FILTER,
-+	WMI_10_4_SERVICE_BTCOEX,
- };
+ static struct mwifiex_if_ops pcie_ops;
  
- static inline char *wmi_service_name(int service_id)
-@@ -408,6 +412,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
- 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
- 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
-+	SVCSTR(WMI_SERVICE_BTCOEX);
- 	default:
- 		return NULL;
+-static struct semaphore add_remove_card_sem;
+-
+ static const struct of_device_id mwifiex_pcie_of_match_table[] = {
+ 	{ .compatible = "pci11ab,2b42" },
+ 	{ .compatible = "pci1b4b,2b42" },
+@@ -212,6 +210,8 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
++
+ 	card->dev = pdev;
+ 
+ 	if (ent->driver_data) {
+@@ -232,7 +232,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 			return ret;
  	}
-@@ -663,6 +668,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_TX_MODE_PUSH_PULL, len);
- 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
- 	       WMI_SERVICE_TX_MODE_DYNAMIC, len);
-+	SVCMAP(WMI_10_4_SERVICE_BTCOEX,
-+	       WMI_SERVICE_BTCOEX, len);
+ 
+-	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
++	if (mwifiex_add_card(card, &card->fw_done, &pcie_ops,
+ 			     MWIFIEX_PCIE, &pdev->dev)) {
+ 		pr_err("%s failed\n", __func__);
+ 		return -1;
+@@ -254,6 +254,8 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	if (!card)
+ 		return;
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+@@ -273,7 +275,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+-	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
  }
  
- #undef SVCMAP
-@@ -837,6 +844,7 @@ struct wmi_cmd_map {
- 	u32 pdev_bss_chan_info_request_cmdid;
- 	u32 pdev_enable_adaptive_cca_cmdid;
- 	u32 ext_resource_cfg_cmdid;
-+	u32 set_coex_param_cmdid;
+ static void mwifiex_pcie_shutdown(struct pci_dev *pdev)
+@@ -3175,8 +3177,7 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ /*
+  * This function initializes the PCIE driver module.
+  *
+- * This initiates the semaphore and registers the device with
+- * PCIE bus.
++ * This registers the device with PCIE bus.
+  */
+ static int mwifiex_pcie_init_module(void)
+ {
+@@ -3184,8 +3185,6 @@ static int mwifiex_pcie_init_module(void)
+ 
+ 	pr_debug("Marvell PCIe Driver\n");
+ 
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	/* Clear the flag in case user removes the card. */
+ 	user_rmmod = 0;
+ 
+@@ -3209,9 +3208,6 @@ static int mwifiex_pcie_init_module(void)
+  */
+ static void mwifiex_pcie_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* Set the flag as user is removing this module. */
+ 	user_rmmod = 1;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 46f99ca..ae3365d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -22,6 +22,7 @@
+ #ifndef	_MWIFIEX_PCIE_H
+ #define	_MWIFIEX_PCIE_H
+ 
++#include    <linux/completion.h>
+ #include    <linux/pci.h>
+ #include    <linux/interrupt.h>
+ 
+@@ -345,6 +346,7 @@ struct pcie_service_card {
+ 	struct pci_dev *dev;
+ 	struct mwifiex_adapter *adapter;
+ 	struct mwifiex_pcie_device pcie;
++	struct completion fw_done;
+ 
+ 	u8 txbd_flush;
+ 	u32 txbd_wrptr;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index f410cf5..5312ffb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -49,8 +49,6 @@
+ static struct mwifiex_if_ops sdio_ops;
+ static unsigned long iface_work_flags;
+ 
+-static struct semaphore add_remove_card_sem;
+-
+ static struct memory_type_mapping generic_mem_type_map[] = {
+ 	{"DUMP", NULL, 0, 0xDD},
  };
+@@ -115,6 +113,8 @@ static int mwifiex_sdio_probe_of(struct device *dev)
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
++
+ 	card->func = func;
+ 	card->device_id = id;
+ 
+@@ -154,7 +154,7 @@ static int mwifiex_sdio_probe_of(struct device *dev)
+ 			goto err_disable;
+ 	}
+ 
+-	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
++	ret = mwifiex_add_card(card, &card->fw_done, &sdio_ops,
+ 			       MWIFIEX_SDIO, &func->dev);
+ 	if (ret) {
+ 		dev_err(&func->dev, "add card failed\n");
+@@ -235,6 +235,8 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	if (!card)
+ 		return;
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+@@ -252,7 +254,7 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 		mwifiex_init_shutdown_fw(priv, MWIFIEX_FUNC_SHUTDOWN);
+ 	}
+ 
+-	mwifiex_remove_card(card->adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
+ }
  
  /*
-@@ -1646,6 +1654,11 @@ enum wmi_10_4_cmd_id {
- 	WMI_10_4_EXT_RESOURCE_CFG_CMDID,
- 	WMI_10_4_VDEV_SET_IE_CMDID,
- 	WMI_10_4_SET_LTEU_CONFIG_CMDID,
-+	WMI_10_4_ATF_SSID_GROUPING_REQUEST_CMDID,
-+	WMI_10_4_PEER_ATF_EXT_REQUEST_CMDID,
-+	WMI_10_4_SET_PERIODIC_CHANNEL_STATS_CONFIG,
-+	WMI_10_4_PEER_BWF_REQUEST_CMDID,
-+	WMI_10_4_BTCOEX_CFG_CMDID,
- 	WMI_10_4_PDEV_UTF_CMDID = WMI_10_4_END_CMDID - 1,
- };
+@@ -2714,14 +2716,11 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ /*
+  * This function initializes the SDIO driver.
+  *
+- * This initiates the semaphore and registers the device with
+- * SDIO bus.
++ * This registers the device with SDIO bus.
+  */
+ static int
+ mwifiex_sdio_init_module(void)
+ {
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	/* Clear the flag in case user removes the card. */
+ 	user_rmmod = 0;
  
-@@ -2723,6 +2736,11 @@ struct wmi_ext_resource_config_10_4_cmd {
- 	__le32 fw_feature_bitmap;
- };
+@@ -2740,9 +2739,6 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_sdio_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* Set the flag as user is removing this module. */
+ 	user_rmmod = 1;
+ 	cancel_work_sync(&sdio_work);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+index b9fbc5c..cdbf3a3a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.h
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+@@ -21,6 +21,7 @@
+ #define	_MWIFIEX_SDIO_H
  
-+struct wmi_set_coex_param_10_4_cmd {
-+	/* contains wlan priority frame type value preferred over bt */
-+	__le32 btcoex_prio;
-+};
+ 
++#include <linux/completion.h>
+ #include <linux/mmc/sdio.h>
+ #include <linux/mmc/sdio_ids.h>
+ #include <linux/mmc/sdio_func.h>
+@@ -238,6 +239,7 @@ struct sdio_mmc_card {
+ 	struct sdio_func *func;
+ 	struct mwifiex_adapter *adapter;
+ 
++	struct completion fw_done;
+ 	const char *firmware;
+ 	const struct mwifiex_sdio_card_reg *reg;
+ 	u8 max_ports;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 9cc2a0c0..63a755c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -24,7 +24,6 @@
+ 
+ static u8 user_rmmod;
+ static struct mwifiex_if_ops usb_ops;
+-static struct semaphore add_remove_card_sem;
+ 
+ static struct usb_device_id mwifiex_usb_table[] = {
+ 	/* 8766 */
+@@ -386,6 +385,8 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 	if (!card)
+ 		return -ENOMEM;
+ 
++	init_completion(&card->fw_done);
 +
- /* strucutre describing host memory chunk. */
- struct host_memory_chunk {
- 	/* id of the request that is passed up in service ready */
+ 	id_vendor = le16_to_cpu(udev->descriptor.idVendor);
+ 	id_product = le16_to_cpu(udev->descriptor.idProduct);
+ 	bcd_device = le16_to_cpu(udev->descriptor.bcdDevice);
+@@ -475,7 +476,7 @@ static int mwifiex_usb_probe(struct usb_interface *intf,
+ 
+ 	usb_set_intfdata(intf, card);
+ 
+-	ret = mwifiex_add_card(card, &add_remove_card_sem, &usb_ops,
++	ret = mwifiex_add_card(card, &card->fw_done, &usb_ops,
+ 			       MWIFIEX_USB, &card->udev->dev);
+ 	if (ret) {
+ 		pr_err("%s: mwifiex_add_card failed: %d\n", __func__, ret);
+@@ -601,13 +602,15 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	struct usb_card_rec *card = usb_get_intfdata(intf);
+ 	struct mwifiex_adapter *adapter;
+ 
+-	if (!card || !card->adapter) {
+-		pr_err("%s: card or card->adapter is NULL\n", __func__);
++	if (!card) {
++		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+ 		return;
+ 	}
+ 
++	wait_for_completion(&card->fw_done);
++
+ 	adapter = card->adapter;
+-	if (!adapter->priv_num)
++	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
+ 	if (user_rmmod && !adapter->mfg_mode) {
+@@ -627,7 +630,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 
+ 	mwifiex_dbg(adapter, FATAL,
+ 		    "%s: removing card\n", __func__);
+-	mwifiex_remove_card(adapter, &add_remove_card_sem);
++	mwifiex_remove_card(adapter);
+ 
+ 	usb_put_dev(interface_to_usbdev(intf));
+ }
+@@ -1200,8 +1203,7 @@ static void mwifiex_usb_submit_rem_rx_urbs(struct mwifiex_adapter *adapter)
+ 
+ /* This function initializes the USB driver module.
+  *
+- * This initiates the semaphore and registers the device with
+- * USB bus.
++ * This registers the device with USB bus.
+  */
+ static int mwifiex_usb_init_module(void)
+ {
+@@ -1209,8 +1211,6 @@ static int mwifiex_usb_init_module(void)
+ 
+ 	pr_debug("Marvell USB8797 Driver\n");
+ 
+-	sema_init(&add_remove_card_sem, 1);
+-
+ 	ret = usb_register(&mwifiex_usb_driver);
+ 	if (ret)
+ 		pr_err("Driver register failed!\n");
+@@ -1230,9 +1230,6 @@ static int mwifiex_usb_init_module(void)
+  */
+ static void mwifiex_usb_cleanup_module(void)
+ {
+-	if (!down_interruptible(&add_remove_card_sem))
+-		up(&add_remove_card_sem);
+-
+ 	/* set the flag as user is removing this module */
+ 	user_rmmod = 1;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
+index 30e8eb8..e5f204e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.h
++++ b/drivers/net/wireless/marvell/mwifiex/usb.h
+@@ -20,6 +20,7 @@
+ #ifndef _MWIFIEX_USB_H
+ #define _MWIFIEX_USB_H
+ 
++#include <linux/completion.h>
+ #include <linux/usb.h>
+ 
+ #define USB8XXX_VID		0x1286
+@@ -75,6 +76,7 @@ struct usb_card_rec {
+ 	struct mwifiex_adapter *adapter;
+ 	struct usb_device *udev;
+ 	struct usb_interface *intf;
++	struct completion fw_done;
+ 	u8 rx_cmd_ep;
+ 	struct urb_context rx_cmd;
+ 	atomic_t rx_cmd_urb_pending;
 -- 
-1.7.9.5
+1.9.1
