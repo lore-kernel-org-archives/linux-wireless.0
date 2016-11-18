@@ -1,45 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43064 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S940575AbcKQGma (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 01:42:30 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/8] rtlwifi: rtl8192de: Remove address of Free Software
- Foundation
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1475640490-5895-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1475640490-5895-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20161117064229.9D299615DB@smtp.codeaurora.org> (sfid-20161117_074247_190339_7C930085)
-Date: Thu, 17 Nov 2016 06:42:29 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:60222 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752651AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 16:44:30 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/7] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
+Date: Fri, 18 Nov 2016 16:44:22 -0500
+Message-Id: <1479505468-29383-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224442_662023_DE872AFE)
+In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Since this driver was added to the kernel, the checkpatch script was
-> modified to request that the address of the FSF not be included.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-8 patches applied to wireless-drivers-next.git, thanks.
+A device running without RX package aggregation could return more data
+in the USB packet than the actual network packet. In this case the
+could would clone the skb but then determine that that there was no
+packet to handle and exit without freeing the cloned skb first.
 
-0d3d253b2040 rtlwifi: rtl8192de: Remove address of Free Software Foundation
-22beafeaf324 rtlwifi: rtl8192se: Remove address of Free Software Foundation
-6456d4d35e9b rtlwifi: rtl8192ce: Remove address of Free Software Foundation
-7d63d36b9286 rtlwifi: rtl8192cu: Remove address of Free Software Foundation
-20ac950f20a0 rtlwifi: rtl8723ae: Remove address of Free Software Foundation
-044a609a1dc9 rtlwifi: rtl8188ee: Remove address of Free Software Foundation
-61a288fcdc9d rtlwifi: rtl8192c: Remove address of Free Software Foundation
-1b4893264e4f rtlwifi: Remove address of Free Software Foundation
+This has so far only been observed with 8188eu devices, but could
+affect others.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index b2d7f6e..a96ff17 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5197,7 +5197,12 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ 		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
+ 				     sizeof(struct rtl8xxxu_rxdesc16), 128);
+ 
+-		if (pkt_cnt > 1)
++		/*
++		 * Only clone the skb if there's enough data at the end to
++		 * at least cover the rx descriptor
++		 */
++		if (pkt_cnt > 1 &&
++		    urb_len > (pkt_offset + sizeof(struct rtl8xxxu_rxdesc16)))
+ 			next_skb = skb_clone(skb, GFP_ATOMIC);
+ 
+ 		rx_status = IEEE80211_SKB_RXCB(skb);
 -- 
-https://patchwork.kernel.org/patch/9362481/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
