@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34258 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754435AbcKVPBr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 22 Nov 2016 10:01:47 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Barry Day <briselec@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: Fix failure to reconnect to AP
-References: <20161113111705.GA2393@box64.home.org>
-        <wrfjoa1iyz1e.fsf@redhat.com> <wrfjbmx87oul.fsf@redhat.com>
-        <20161122125300.GB23278@testbox>
-Date: Tue, 22 Nov 2016 10:01:45 -0500
-In-Reply-To: <20161122125300.GB23278@testbox> (Barry Day's message of "Tue, 22
-        Nov 2016 22:53:01 +1000")
-Message-ID: <wrfjzikr4kyu.fsf@redhat.com> (sfid-20161122_160150_571444_E33F29B1)
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34231 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751689AbcKRIoL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 03:44:11 -0500
+Received: by mail-pg0-f67.google.com with SMTP id e9so19713755pgc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:44:11 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Fri, 18 Nov 2016 00:44:03 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH 1/7] mwifiex: Removed unused mwifiex_private* 'priv' variable
+Message-ID: <ad72403d4d99a1b13ea7f99b0ea992b23aa2ea09.1479458373.git.kirtika@google.com> (sfid-20161118_094415_152192_5EDFF41C)
+References: <cover.1479458373.git.kirtika@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479458373.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Barry Day <briselec@gmail.com> writes:
-> On Mon, Nov 21, 2016 at 11:57:22AM -0500, Jes Sorensen wrote:
->> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->> >>  void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
->> >> @@ -4515,6 +4523,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->> >>  				sgi = 1;
->> >>  			rcu_read_unlock();
->> >>  
->> >> +			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
->> >> +
->> >>  			priv->fops->update_rate_mask(priv, ramask, sgi);
->> >>  
->> >>  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
->> 
->> I believe this change only matters because you disable RXFLTMAP2
->> above. If we really have to write to RXFLTMAP2 to make this work, I
->> suspect we need to keep some sort of state information.
->> 
->> I would also be curious if RXFLTMAP2 gets reset somehow by the firmware,
->> and we do not account for that.
->> 
->> Cheers,
->> Jes
->
-> I'll redo the patch without touching REG_RXFLTMAP2. I don't think it's needed
-> to fix the fail to reconnect issue.
->
-> I haven't had a proper look at the 8723 chips yet but the vendor drivers for
-> the others don't do a h2c cmd for disconnect but I'll test leaving it in to see
-> if it makes any difference. A 8723bu arrived in the mail today so now I can
-> test it too and I discovered yesterday I have a 8723au but it's in a cheap
-> Android tablet.
+Commit bec568ff5107 removed the last remaining usage of struct
+mwifiex_private* priv in mwifiex_fw_dpc(), by removing the call to
+mwifiex_del_virtual_intf().
+Compiling mwifiex/ with W=1 gives the following warning, fix it.
+mwifiex/main.c: In function ‘mwifiex_fw_dpc’:
+mwifiex/main.c:520:26: warning: variable ‘priv’ set but not used [-Wunused-but-set-variable]
 
-Let me know what you find out - if the h2c command causes the failure
-that would be very bizarre but certainly interesting to learn.
+Fixes: bec568ff5107 ("mwifiex: failure path handling in mwifiex_add_virtual_intf()")
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 2478ccd..fff96be 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -517,7 +517,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ {
+ 	int ret;
+ 	char fmt[64];
+-	struct mwifiex_private *priv;
+ 	struct mwifiex_adapter *adapter = context;
+ 	struct mwifiex_fw_image fw;
+ 	struct semaphore *sem = adapter->card_sem;
+@@ -575,8 +574,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 			goto err_init_fw;
+ 	}
+
+-	priv = adapter->priv[MWIFIEX_BSS_ROLE_STA];
+-
+ 	if (!adapter->wiphy) {
+ 		if (mwifiex_register_cfg80211(adapter)) {
+ 			mwifiex_dbg(adapter, ERROR,
+--
+2.8.0.rc3.226.g39d4020
