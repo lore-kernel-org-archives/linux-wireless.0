@@ -1,71 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35970 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753387AbcKRTYV (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47905 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752702AbcKRODu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 14:24:21 -0500
-Received: by mail-qk0-f194.google.com with SMTP id h201so34194356qke.3
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:21 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 10/11] ath10k: Added more host_interest members
-Date: Fri, 18 Nov 2016 20:22:50 +0100
-Message-Id: <1479496971-19174-11-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202426_912140_860F17E1)
-In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 18 Nov 2016 09:03:50 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v4 10/11] mwifiex: stop checking for NULL drvata/intfdata
+Date: Fri, 18 Nov 2016 19:30:33 +0530
+Message-ID: <1479477634-27841-10-git-send-email-akarwar@marvell.com> (sfid-20161118_150356_102634_BF2E7202)
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Augmented struct host_interest with more members.
+From: Brian Norris <briannorris@chromium.org>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+These are never NULL, so stop making people think they might be.
+
+I don't change this for SDIO because SDIO has a racy card-reset handler
+that reallocates this struct. I'd rather not touch that mess right now.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+v4: Same as v1, v2, v3
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 14 +++++---------
+ drivers/net/wireless/marvell/mwifiex/usb.c  | 15 +++------------
+ 2 files changed, 8 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index a47cab4..58e0541 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -205,6 +205,24 @@ struct host_interest {
- 	 */
- 	/* Bit 1 - unused */
- 	u32 hi_fw_swap;					/* 0x104 */
-+
-+	/* global arenas pointer address, used by host driver debug */
-+	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
-+
-+	/* allocated bytes of DRAM use by allocated */
-+	u32 hi_dynamic_mem_allocated;			/* 0x10C */
-+
-+	/* remaining bytes of DRAM */
-+	u32 hi_dynamic_mem_remaining;			/* 0x110 */
-+
-+	/* memory track count, configured by host */
-+	u32 hi_dynamic_mem_track_max;			/* 0x114 */
-+
-+	/* minidump buffer */
-+	u32 hi_minidump;				/* 0x118 */
-+
-+	/* bdata's sig and key addr */
-+	u32 hi_bd_sig_key;				/* 0x11c */
- } __packed;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index f6d28d9..98299a1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -118,10 +118,6 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
- #define HI_ITEM(item)  offsetof(struct host_interest, item)
-@@ -319,6 +337,12 @@ struct host_interest {
- #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
- /* Use test VAP */
- #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
-+/* SDIO/mailbox ACS flag definitions */
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
-+#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
+ 	card = pci_get_drvdata(pdev);
+-	if (!card) {
+-		dev_err(dev, "card structure is not valid\n");
+-		return 0;
+-	}
  
- /*
-  * CONSOLE FLAGS
+ 	/* Might still be loading firmware */
+ 	wait_for_completion(&card->fw_done);
+@@ -166,8 +162,9 @@ static int mwifiex_pcie_resume(struct device *dev)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
+-		dev_err(dev, "Card or adapter structure is not valid\n");
++
++	if (!card->adapter) {
++		dev_err(dev, "adapter structure is not valid\n");
+ 		return 0;
+ 	}
+ 
+@@ -249,8 +246,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	struct mwifiex_private *priv;
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card)
+-		return;
+ 
+ 	wait_for_completion(&card->fw_done);
+ 
+@@ -2243,7 +2238,8 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 	}
+ 
+ 	card = pci_get_drvdata(pdev);
+-	if (!card || !card->adapter) {
++
++	if (!card->adapter) {
+ 		pr_err("info: %s: card=%p adapter=%p\n", __func__, card,
+ 		       card ? card->adapter : NULL);
+ 		goto exit;
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 55e3a01..c3f696a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -503,11 +503,6 @@ static int mwifiex_usb_suspend(struct usb_interface *intf, pm_message_t message)
+ 	struct usb_tx_data_port *port;
+ 	int i, j;
+ 
+-	if (!card) {
+-		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+-		return 0;
+-	}
+-
+ 	/* Might still be loading firmware */
+ 	wait_for_completion(&card->fw_done);
+ 
+@@ -574,8 +569,9 @@ static int mwifiex_usb_resume(struct usb_interface *intf)
+ 	struct mwifiex_adapter *adapter;
+ 	int i;
+ 
+-	if (!card || !card->adapter) {
+-		pr_err("%s: card or card->adapter is NULL\n", __func__);
++	if (!card->adapter) {
++		dev_err(&intf->dev, "%s: card->adapter is NULL\n",
++			__func__);
+ 		return 0;
+ 	}
+ 	adapter = card->adapter;
+@@ -617,11 +613,6 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	struct usb_card_rec *card = usb_get_intfdata(intf);
+ 	struct mwifiex_adapter *adapter;
+ 
+-	if (!card) {
+-		dev_err(&intf->dev, "%s: card is NULL\n", __func__);
+-		return;
+-	}
+-
+ 	wait_for_completion(&card->fw_done);
+ 
+ 	adapter = card->adapter;
 -- 
-1.7.9.5
+1.9.1
