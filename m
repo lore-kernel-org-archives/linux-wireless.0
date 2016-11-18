@@ -1,56 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34053 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754383AbcKCKva (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 06:51:30 -0400
-Received: by mail-oi0-f65.google.com with SMTP id 62so5899920oif.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 03:51:29 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P0xv4a1O7tqBYABsXbRvRQm_3Va888EopKDz433cwjXew@mail.gmail.com>
-References: <20161103095938.84054-1-nbd@nbd.name> <CANUX_P0xv4a1O7tqBYABsXbRvRQm_3Va888EopKDz433cwjXew@mail.gmail.com>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Thu, 3 Nov 2016 12:51:29 +0200
-Message-ID: <CANUX_P1vktccTAQZOFRdVS9ndg4XEZNw0Ec=0sFL+n7SL2g+dQ@mail.gmail.com> (sfid-20161103_115134_679301_FD6B7DE6)
-Subject: Re: [PATCH] mac80211: fix broken AP mode handling of powersave clients
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:49104 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752758AbcKRJsX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 04:48:23 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH v2 8/9] rt2800: tune *_PROT_CFG parameters
+Date: Fri, 18 Nov 2016 10:44:00 +0100
+Message-Id: <1479462241-9299-9-git-send-email-sgruszka@redhat.com> (sfid-20161118_104828_692161_5A9CF999)
+In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 3, 2016 at 12:51 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> On Thu, Nov 3, 2016 at 11:59 AM, Felix Fietkau <nbd@nbd.name> wrote:
->> Commit c68df2e7be0c ("mac80211: allow using AP_LINK_PS with
->> mac80211-generated TIM IE") introduced a logic error, where
->> __sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
->> set. This prevents the beacon TIM bit from being set for all drivers
->> that do not implement this op (almost all of them), thus thoroughly
->> essential AP mode powersave functionality.
->>
->> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> ---
->>  net/mac80211/sta_info.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
->> index 236d47e..621734e 100644
->> --- a/net/mac80211/sta_info.c
->> +++ b/net/mac80211/sta_info.c
->> @@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
->>         }
->>
->>         /* No need to do anything if the driver does all */
->> -       if (!local->ops->set_tim)
->> +       if (local->ops->set_tim)
->>                 return;
->
-> but ... then, you'll need call to drv_set_tim below...
+Use RTS/CTS protection for TXOP on all rates modes as default and
+disable CCK rates (this cause performance problems).
 
-s/need/never/
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-> Apparently, we can't rely on the ops pointer to enter or not enter this flow.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 57bfec4..8d35b2e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4771,9 +4771,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_RATE, 0x4004);
+-	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_CTRL, 0);
++	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_CTRL, 1);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_PROTECT_NAV_SHORT, 1);
+-	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_CCK, 1);
++	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_CCK, 0);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+ 	rt2x00_set_field32(&reg, MM20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+@@ -4784,9 +4784,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_register_read(rt2x00dev, MM40_PROT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_RATE, 0x4084);
+-	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 0);
++	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_CTRL, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_PROTECT_NAV_SHORT, 1);
+-	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
++	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_CCK, 0);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+ 	rt2x00_set_field32(&reg, MM40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
+@@ -4797,9 +4797,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_register_read(rt2x00dev, GF20_PROT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_RATE, 0x4004);
+-	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_CTRL, 0);
++	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_CTRL, 1);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_PROTECT_NAV_SHORT, 1);
+-	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_CCK, 1);
++	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_CCK, 0);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+ 	rt2x00_set_field32(&reg, GF20_PROT_CFG_TX_OP_ALLOW_MM40, 0);
+@@ -4810,9 +4810,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_register_read(rt2x00dev, GF40_PROT_CFG, &reg);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_RATE, 0x4084);
+-	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_CTRL, 0);
++	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_CTRL, 1);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_PROTECT_NAV_SHORT, 1);
+-	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_CCK, 1);
++	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_CCK, 0);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_OFDM, 1);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_MM20, 1);
+ 	rt2x00_set_field32(&reg, GF40_PROT_CFG_TX_OP_ALLOW_MM40, 1);
+-- 
+1.8.3.1
