@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57964 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750724AbcKIB3f (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 20:29:35 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] rt2x00: add support for mac addr from device tree
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1472195813-30471-1-git-send-email-dev@kresin.me>
-References: <1472195813-30471-1-git-send-email-dev@kresin.me>
-To: Mathias Kresin <dev@kresin.me>
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <20161109012935.0C8706135E@smtp.codeaurora.org> (sfid-20161109_022939_228419_94723492)
-Date: Wed,  9 Nov 2016 01:29:35 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:39390 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752563AbcKRJsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 18 Nov 2016 04:48:18 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH v2 5/9] rt2800: correct AUTO_RSP_CFG
+Date: Fri, 18 Nov 2016 10:43:57 +0100
+Message-Id: <1479462241-9299-6-git-send-email-sgruszka@redhat.com> (sfid-20161118_104822_275211_57E351ED)
+In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mathias Kresin <dev@kresin.me> wrote:
-> On some devices the EEPROMs of Ralink Wi-Fi chips have a default Ralink
-> MAC address set (RT3062F: 00:0C:43:30:62:00, RT3060F:
-> 00:0C:43:30:60:00). Using multiple of these devices in the same network
-> can cause nasty issues.
-> 
-> Allow to override the MAC in the EEPROM with (a known good) one set in
-> the device tree to bypass the issue.
-> 
-> Signed-off-by: Mathias Kresin <dev@kresin.me>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Initialize AUTO_RSP_CFG register to similar value as vendor driver does.
 
-Patch applied to wireless-drivers-next.git, thanks.
+Do not set BAC_ACK_POLICY based on short preamble setting, those are
+unrelated.
 
-9766cb709089 rt2x00: add support for mac addr from device tree
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 9ecdc4c..ff4a7c3 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1691,8 +1691,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
+ 
+ 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
+ 		rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+-		rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
+-				   !!erp->short_preamble);
+ 		rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE,
+ 				   !!erp->short_preamble);
+ 		rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
+@@ -4735,9 +4733,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AUTORESPONDER, 1);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY, 1);
+-	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 0);
++	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 1);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MREF, 0);
+-	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 1);
++	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 0);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_DUAL_CTS_EN, 0);
+ 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_ACK_CTS_PSM_BIT, 0);
+ 	rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
 -- 
-https://patchwork.kernel.org/patch/9300893/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.3.1
