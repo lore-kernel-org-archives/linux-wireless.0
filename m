@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm15-vm5.bullet.mail.ir2.yahoo.com ([212.82.96.202]:59688 "EHLO
-        nm15-vm5.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932354AbcKNLjh (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56099 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752301AbcKRRN7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 06:39:37 -0500
-Date: Mon, 14 Nov 2016 11:34:13 +0000 (UTC)
-From: Gianfranco Costamagna <locutusofborg@debian.org>
-Reply-To: Gianfranco Costamagna <locutusofborg@debian.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Cc: "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
-        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
-Message-ID: <233918815.6357602.1479123253455@mail.yahoo.com> (sfid-20161114_123940_802702_73FA0D90)
-In-Reply-To: <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com> <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com> <690669269.1124561.1477671348137@mail.yahoo.com> <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com> <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
-Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
- regulatory domain frequency value
+        Fri, 18 Nov 2016 12:13:59 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: cleanup wake-IRQ handling if suspend fails
+Date: Fri, 18 Nov 2016 22:43:24 +0530
+Message-ID: <1479489205-30288-1-git-send-email-akarwar@marvell.com> (sfid-20161118_181402_565214_C4000B9D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+From: Brian Norris <briannorris@chromium.org>
 
+We don't want to leave the wake IRQ enabled.
 
->Finally response. As it turns out the range was explcitly changed
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+ 2 files changed, 2 insertions(+)
 
->enabling channels 12 and 13 to be used where applicable. They forgot to
->update the comment.
-
-
-so, the struct in net/wireless/reg.c is actually used in that case?
-
-static const struct ieee80211_regdomain world_regdom = {
-
-do you plan to update the comment?
-
-thanks!
-
-Gianfranco
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 62ec141..32fa4ed 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -137,6 +137,7 @@ static int mwifiex_pcie_suspend(struct device *dev)
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "cmd: failed to suspend\n");
+ 		adapter->hs_enabling = false;
++		mwifiex_disable_wake(adapter);
+ 		return -EFAULT;
+ 	}
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index c219671..78f2cc9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -308,6 +308,7 @@ static int mwifiex_sdio_suspend(struct device *dev)
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "cmd: failed to suspend\n");
+ 		adapter->hs_enabling = false;
++		mwifiex_disable_wake(adapter);
+ 		return -EFAULT;
+ 	}
+ 
+-- 
+1.9.1
