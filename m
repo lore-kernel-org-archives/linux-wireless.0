@@ -1,158 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60242 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752761AbcKRVob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:44:31 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 5/7] rtl8xxxu: Obtain RTS rates from mac80211
-Date: Fri, 18 Nov 2016 16:44:26 -0500
-Message-Id: <1479505468-29383-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224444_282789_F9EA0005)
-In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47190 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751152AbcKSHTp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 19 Nov 2016 02:19:45 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4,
+ 01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+References: <1479477634-27841-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Shengzhen Li <szli@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161119071944.C049C614C3@smtp.codeaurora.org> (sfid-20161119_081949_456949_C37A7322)
+Date: Sat, 19 Nov 2016 07:19:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Shengzhen Li <szli@marvell.com>
+> 
+> We may get SLEEP event from firmware even if TXDone interrupt
+> for last Tx packet is still pending. In this case, we may
+> end up accessing PCIe memory for handling TXDone after power
+> save handshake is completed. This causes kernel crash with
+> external abort.
+> 
+> This patch will only allow downloading sleep confirm
+> when no tx done interrupt is pending in the hardware.
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Tested-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
 
-Use the mac80211 provided rate for RTS rather than the hard coded
-24Mbps as suggested by the vendor drivers.
+11 patches applied to wireless-drivers-next.git, thanks.
 
-Reported-by: Andrea Merello <andrea.merello@gmail.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  6 +--
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 46 ++++++++++++++--------
- 2 files changed, 32 insertions(+), 20 deletions(-)
+eb2428fb1a21 mwifiex: check tx_hw_pending before downloading sleep confirm
+6712076883ca mwifiex: complete blocked power save handshake in main process
+4a79aa17d53e mwifiex: resolve races between async FW init (failure) and device removal
+a1beec4b2c6f mwifiex: remove redundant pdev check in suspend/resume handlers
+7ccdf72f9128 mwifiex: don't pretend to resume while remove()'ing
+b42dbb27e326 mwifiex: resolve suspend() race with async FW init failure
+bcf28a2f2846 mwifiex: reset card->adapter during device unregister
+58b7033551cd mwifiex: usb: handle HS failures
+6caf34cb3a92 mwifiex: sdio: don't check for NULL sdio_func
+e98fb11ffa0a mwifiex: stop checking for NULL drvata/intfdata
+97489c284d9f mwifiex: pcie: stop checking for NULL adapter->card
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 08d587a..bc3c990 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1340,7 +1340,7 @@ struct rtl8xxxu_fileops {
- 	void (*fill_txdesc) (struct ieee80211_hdr *hdr,
- 			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
- 			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable);
-+			     bool ampdu_enable, u32 rts_rate);
- 	int writeN_block_size;
- 	int rx_agg_buf_size;
- 	char tx_desc_size;
-@@ -1437,11 +1437,11 @@ bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
- void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
- 			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
- 			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable);
-+			     bool ampdu_enable, u32 rts_rate);
- void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
- 			     struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
- 			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable);
-+			     bool ampdu_enable, u32 rts_rate);
- 
- extern struct rtl8xxxu_fileops rtl8192cu_fops;
- extern struct rtl8xxxu_fileops rtl8192eu_fops;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a5e6ec2..a4ac557 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4762,7 +4762,7 @@ void
- rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
- 			struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
- 			u16 rate_flag, bool sgi, bool short_preamble,
--			bool ampdu_enable)
-+			bool ampdu_enable, u32 rts_rate)
- {
- 	u16 seq_number;
- 
-@@ -4796,15 +4796,16 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
- 	if (sgi)
- 		tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
- 
-+	/*
-+	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
-+	 */
-+	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
- 	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
--		/*
--		 * Use RTS rate 24M - does the mac80211 tell
--		 * us which to use?
--		 */
--		tx_desc->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
--					      TXDESC32_RTS_RATE_SHIFT);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
-+	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
-+		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
- 	}
- }
- 
-@@ -4816,7 +4817,7 @@ void
- rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
- 			struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
- 			u16 rate_flag, bool sgi, bool short_preamble,
--			bool ampdu_enable)
-+			bool ampdu_enable, u32 rts_rate)
- {
- 	struct rtl8xxxu_txdesc40 *tx_desc40;
- 	u16 seq_number;
-@@ -4849,15 +4850,19 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
- 	if (short_preamble)
- 		tx_desc40->txdw5 |= cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
- 
-+	tx_desc40->txdw4 |= cpu_to_le32(rts_rate << TXDESC40_RTS_RATE_SHIFT);
-+	/*
-+	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
-+	 */
- 	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
--		/*
--		 * Use RTS rate 24M - does the mac80211 tell
--		 * us which to use?
--		 */
--		tx_desc40->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
--						TXDESC40_RTS_RATE_SHIFT);
- 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
- 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
-+	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+		/*
-+		 * For some reason the vendor driver doesn't set
-+		 * TXDESC40_HW_RTS_ENABLE for CTS to SELF
-+		 */
-+		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_CTS_SELF_ENABLE);
- 	}
- }
- 
-@@ -4874,7 +4879,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_sta *sta = NULL;
- 	struct ieee80211_vif *vif = tx_info->control.vif;
- 	struct device *dev = &priv->udev->dev;
--	u32 queue, rate;
-+	u32 queue, rate, rts_rate;
- 	u16 pktlen = skb->len;
- 	u16 seq_number;
- 	u16 rate_flag = tx_info->control.rates[0].flags;
-@@ -4974,10 +4979,17 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	    (sta && vif && vif->bss_conf.use_short_preamble))
- 		short_preamble = true;
- 
-+	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS)
-+		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
-+	else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT)
-+		rts_rate = ieee80211_get_rts_cts_rate(hw, tx_info)->hw_value;
-+	else
-+		rts_rate = 0;
-+
- 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 
--	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag,
--				sgi, short_preamble, ampdu_enable);
-+	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag, sgi,
-+				short_preamble, ampdu_enable, rts_rate);
- 
- 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
- 
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9436513/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
