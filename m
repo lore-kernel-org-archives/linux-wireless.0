@@ -1,60 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33199 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752044AbcKRIpo (ORCPT
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:36684 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753966AbcKUM5N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 03:45:44 -0500
-Received: by mail-pf0-f196.google.com with SMTP id 144so13206218pfv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:45:44 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Fri, 18 Nov 2016 00:45:37 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH 4/7] mwifiex: Remove unused 'adapter'variable
-Message-ID: <5a001da4fa5bc1365c7d463e7ce9f96b4a029d90.1479458373.git.kirtika@google.com> (sfid-20161118_094547_438938_36790B04)
-References: <cover.1479458373.git.kirtika@google.com>
+        Mon, 21 Nov 2016 07:57:13 -0500
+Received: by mail-pg0-f47.google.com with SMTP id f188so130092907pgc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:57:13 -0800 (PST)
+Subject: Re: [PATCH] nl80211: fix logic inversion in start_nan()
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20161121125548.4730-1-johannes@sipsolutions.net>
+Cc: Johannes Berg <johannes.berg@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <576a08f1-3246-4e59-57a1-704e429674bd@broadcom.com> (sfid-20161121_135717_594028_9E3AD900)
+Date: Mon, 21 Nov 2016 13:57:08 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479458373.git.kirtika@google.com>
+In-Reply-To: <20161121125548.4730-1-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 3935ccc14d2c introduced mwifiex_tm_cmd() which initializes
-struct mwifiex_adapter* adapter, but doesn't use it.
-Compiling with W=1 gives the following warning, fix it.
-mwifiex/cfg80211.c: In function ‘mwifiex_tm_cmd’:
-mwifiex/cfg80211.c:3973:26: warning: variable ‘adapter’ set but not used [-Wunused-but-set-variable]
+On 21-11-2016 13:55, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Arend inadvertedly inverted the logic while converting to
+> wdev_running(), fix that.
 
-Fixes: 3935ccc14d2c ("mwifiex: add cfg80211 testmode support")
-Cc: Xinming Hu <huxm@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 --
- 1 file changed, 2 deletions(-)
+It was indeed inadvertedly.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 39ce76a..dd93cda 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3970,13 +3970,11 @@ static int mwifiex_tm_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
- 	struct mwifiex_ds_misc_cmd *hostcmd;
- 	struct nlattr *tb[MWIFIEX_TM_ATTR_MAX + 1];
--	struct mwifiex_adapter *adapter;
- 	struct sk_buff *skb;
- 	int err;
+Thanks,
+Arend
 
- 	if (!priv)
- 		return -EINVAL;
--	adapter = priv->adapter;
-
- 	err = nla_parse(tb, MWIFIEX_TM_ATTR_MAX, data, len,
- 			mwifiex_tm_policy);
---
-2.8.0.rc3.226.g39d4020
+> Fixes: 73c7da3dae1e ("cfg80211: add generic helper to check interface is running")
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/nl80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 4e9bda49e957..e4f718e956d7 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -10625,7 +10625,7 @@ static int nl80211_start_nan(struct sk_buff *skb, struct genl_info *info)
+>  	if (wdev->iftype != NL80211_IFTYPE_NAN)
+>  		return -EOPNOTSUPP;
+>  
+> -	if (!wdev_running(wdev))
+> +	if (wdev_running(wdev))
+>  		return -EEXIST;
+>  
+>  	if (rfkill_blocked(rdev->rfkill))
+> 
