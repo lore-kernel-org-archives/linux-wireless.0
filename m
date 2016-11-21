@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:35690 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752790AbcKPKiJ (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:36213 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752075AbcKUMDG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 16 Nov 2016 05:38:09 -0500
-Received: by mail-pf0-f178.google.com with SMTP id i88so42300957pfk.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Nov 2016 02:38:09 -0800 (PST)
-Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
- regulatory domain frequency value
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Gianfranco Costamagna <locutusofborg@debian.org>
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
- <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
- <690669269.1124561.1477671348137@mail.yahoo.com>
- <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
- <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
- <233918815.6357602.1479123253455@mail.yahoo.com>
- <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
- <810879191.6335567.1479124065921@mail.yahoo.com>
- <87r36dov6u.fsf@purkki.adurom.net>
-Cc: "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
-        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
+        Mon, 21 Nov 2016 07:03:06 -0500
+Received: by mail-pg0-f53.google.com with SMTP id f188so129690459pgc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:03:06 -0800 (PST)
+Subject: Re: scheduled scan interval
+To: Johannes Berg <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+ <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f00a3e1d-acf5-fc6a-e3b6-ab687a359dd2@broadcom.com> (sfid-20161116_113813_600601_DB88423F)
-Date: Wed, 16 Nov 2016 11:38:03 +0100
+Message-ID: <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com> (sfid-20161121_130310_372274_1F3939B9)
+Date: Mon, 21 Nov 2016 13:03:01 +0100
 MIME-Version: 1.0
-In-Reply-To: <87r36dov6u.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-11-2016 12:10, Kalle Valo wrote:
-> Gianfranco Costamagna <locutusofborg@debian.org> writes:
-> 
->>> Well, not before you pointed it out ;-). You are welcome to send a patch
->>> fixing it. Otherwise, I will take care of it.
+On 21-11-2016 12:30, Arend Van Spriel wrote:
+> On 21-11-2016 12:19, Arend Van Spriel wrote:
+>> Hi Johannes, Luca,
 >>
->> attaching a format-patch like version.
->> I don't think we need a Tested-by or whatever, because it is just a typo in a comment.
->> (this is my first contribution, feel free to rebase or change whatever you prefer
->> to make it in line with other styles)
+>> The gscan work made me look at scheduled scan and the implementation of
+>> it in brcmfmac. The driver ignored the interval parameter from
+>> user-space. Now I am fixing that. One thing is that our firmware has a
+>> minimum interval which can not be indicated in struct wiphy. The other
+>> issue is how the maximum interval is used in the nl80211.c.
 >>
->> (I gave authorship to Marco, the first one who discovered such typo)
+>> In nl80211_parse_sched_scan_plans() it is used against value passed in
+>> NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
+>> For the first one it caps the value to the maximum, but for the second
+>> one it returns -EINVAL. I suspect this is done because maximum interval
+>> was introduced with schedule scan plans, but it feels inconsistent.
 > 
-> [...]
+> It also maybe simply wrong to cap. At least brcmfmac does not set the
+> maximum so it will always get interval being zero. Maybe better to do:
 > 
->> Signed-off-by: Gianfranco Costamagna <gianfranco.costamagna@abinsula.com>
->> Signed-off-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
->> Signed-off-by: Arlone Marco <marco.arlone@roj.com>
+> 		if (wiphy->max_sched_scan_plan_interval &&
+> 		    request->scan_plans[0].interval >
+> 		    wiphy->max_sched_scan_plan_interval)
+> 			return -EINVAL;
 > 
-> Please note that you cannot add Signed-off-by for other people without
-> their explicit approval (see Documentation/SubmittingPatches). I don't
-> know if they did it in this case or not, but wanted to point out this
-> anyway.
+>> Thoughts?
 
-Thanks, Kalle
+Digging deeper. Looking at v4.3 before introduction of sched_scan_plans.
+struct sched_scan_request::interval was specified in milliseconds! Below
+the drivers that I see having scheduled scan support:
 
-It was on my list to give a contrib boot camp here. So let's go over
-things here albeit it late.
+iwlmvm: cap interval, convert to seconds.
+ath6kl: cap to 1sec minimum, no max check, convert to seconds.
+wl12xx: no checking in driver, fw need milliseconds.
+wl18xx: no checking in driver, fw need milliseconds.
 
-Hi Gianfrance,
+The milliseconds conversion seems to be taken care of by multiplying
+with MSEC_PER_SEC in wl{12,18}xx drivers.
 
-A couple of things from which you may benefit for future contributions.
-Basic info can be found in Documentation/SubmittingPatches as Kalle
-indicated.
-
-Patches should not be submitted as attachments. After doing 'git
-format-patch' the easiest way is using 'git send-email' (which requires
-you to have sendmail on your system properly setup). I tend to send
-patches to Kalle and Cc: linux-wireless, but that is my personal
-preference. Sending it to the list should be sufficient as patchwork
-will pick it up [1].
-
-When it comes to attribution of others you should have their approval
-for Signed-off-by. However, reading your remarks it seems a proper way
-is below:
-
-Reported-by: Arlone Marco <marco.arlone@roj.com>
-Tested-by: Nicola Smaldone <nicola.smaldone@tierraservice.com>
-Signed-off-by: Gianfranco Costamagna <gianfranco.costamagna@abinsula.com>
+It seems in 4.8 only iwlmvm set wiphy->max_sched_scan_plan_interval so
+other drivers will get interval of zero which only ath6kl handles.
 
 Regards,
 Arend
-
-[1] https://patchwork.kernel.org/project/linux-wireless/list/
