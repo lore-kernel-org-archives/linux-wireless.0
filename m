@@ -1,46 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53620 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932261AbcKQR0N (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:26:13 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v7] mwifiex: parse device tree node for PCIe
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479215662-631-1-git-send-email-akarwar@marvell.com>
-References: <1479215662-631-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20161117123920.D085B615BD@smtp.codeaurora.org> (sfid-20161117_182618_870978_78C766D6)
-Date: Thu, 17 Nov 2016 12:39:20 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:34684 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754494AbcKUMuz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 07:50:55 -0500
+Message-ID: <1479732652.8662.21.camel@sipsolutions.net> (sfid-20161121_135101_038818_641757AB)
+Subject: Re: [PATCH v7 1/2] nl80211: multicast_to_unicast can be changed
+ while IFF_UP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michael Braun <michael-dev@fami-braun.de>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        projekt-wlan@fem.tu-ilmenau.de
+Date: Mon, 21 Nov 2016 13:50:52 +0100
+In-Reply-To: <1477921260-24556-1-git-send-email-michael-dev@fami-braun.de>
+References: <1477921260-24556-1-git-send-email-michael-dev@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> This patch derives device tree node from pcie bus layer framework.
-> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> marvell-8xxx.txt) to accommodate PCIe changes.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On Mon, 2016-10-31 at 14:40 +0100, Michael Braun wrote:
+> There is no need to prevent toggling multicast_to_unicast while
+> interface is already up. This change simplifies reconfiguration
+> from hostapd.
 
-You should CC the device tree list when making changes to the bindings.
+Applied. This check never should've been there anyway, if desired,
+NEED_NETDEV_UP should've been used.
 
-Patch set to Changes Requested.
-
--- 
-https://patchwork.kernel.org/patch/9429723/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
