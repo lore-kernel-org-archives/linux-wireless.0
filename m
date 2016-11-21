@@ -1,232 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41846 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752653AbcKRVob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:44:31 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 6/7] rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count
-Date: Fri, 18 Nov 2016 16:44:27 -0500
-Message-Id: <1479505468-29383-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224439_700997_C4B8CE5E)
-In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34513 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754561AbcKUN3b (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 08:29:31 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g23so2017580wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 05:29:30 -0800 (PST)
+From: Tobias Regnery <tobias.regnery@gmail.com>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, brcm80211-dev-list.pdl@broadcom.com
+Cc: Tobias Regnery <tobias.regnery@gmail.com>
+Subject: [PATCH] brcmsmac: fix array out-of-bounds access in qm_log10
+Date: Mon, 21 Nov 2016 14:29:09 +0100
+Message-Id: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com> (sfid-20161121_142941_975563_017C17E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+I get the following UBSAN warning during boot on my laptop:
 
-In order to obtain retry count for a given rate we need to pass the
-full struct ieee80211_tx_info to the function setting the rate in he
-TX descriptor.
+================================================================================
+UBSAN: Undefined behaviour in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c:280:21
+index 32 is out of range for type 's16 [32]'
+CPU: 0 PID: 879 Comm: NetworkManager Not tainted 4.9.0-rc4 #28
+Hardware name: LENOVO Lenovo IdeaPad N581/INVALID, BIOS 5ECN96WW(V9.01) 03/14/2013
+ffff8800b74a6478 ffffffff828e59d2 0000000041b58ab3 ffffffff8398330c
+ffffffff828e5920 ffff8800b74a64a0 ffff8800b74a6450 0000000000000020
+1ffffffff845848c ffffed0016e94bf1 ffffffffc22c2460 000000006b9c0514
+Call Trace:
+[<ffffffff828e59d2>] dump_stack+0xb2/0x110
+[<ffffffff828e5920>] ? _atomic_dec_and_lock+0x150/0x150
+[<ffffffff82968c9d>] ubsan_epilogue+0xd/0x4e
+[<ffffffff82969875>] __ubsan_handle_out_of_bounds+0xfa/0x13e
+[<ffffffff8296977b>] ? __ubsan_handle_shift_out_of_bounds+0x241/0x241
+[<ffffffffc0d48379>] ? bcma_host_pci_read16+0x59/0xa0 [bcma]
+[<ffffffffc0d48388>] ? bcma_host_pci_read16+0x68/0xa0 [bcma]
+[<ffffffffc212ad78>] ? read_phy_reg+0xe8/0x180 [brcmsmac]
+[<ffffffffc2184714>] qm_log10+0x2e4/0x350 [brcmsmac]
+[<ffffffffc2142eb8>] wlc_phy_init_lcnphy+0x538/0x1f20 [brcmsmac]
+[<ffffffffc2142980>] ? wlc_lcnphy_periodic_cal+0x5c0/0x5c0 [brcmsmac]
+[<ffffffffc1ba0c93>] ? ieee80211_open+0xb3/0x110 [mac80211]
+[<ffffffff82f73a02>] ? sk_busy_loop+0x1e2/0x840
+[<ffffffff82f7a6ce>] ? __dev_change_flags+0xae/0x220
+...
 
-This uncovered a huge bug where the old code would use struct
-ieee80211_rate.flags to test for rate parameters, which is always
-zero, instead of the flags value from struct ieee80211_tx_rate.
+The report is valid: doing the math in this function, with an input value
+N=63 the variable s16tableIndex gets a value of 31. This value is used as
+an index in the array log_table with 32 entries. But the next line is:
 
-Time to find a brown paper bag :(
+	s16errorApproximation = (s16) qm_mulu16(u16offset,
+				(u16) (log_table[s16tableIndex + 1] -
+				       log_table[s16tableIndex]));
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+With s16tableIndex + 1 we are trying an out-of-bounds access to the array.
+
+The log_table array provides log2 values in q.15 format and the above
+statement tries an error approximation with the next value. To fix this
+issue add the next value to the array and update the comment accordingly.
+
+Signed-off-by: Tobias Regnery <tobias.regnery@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   | 27 ++++----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 71 ++++++++++++++--------
- 2 files changed, 60 insertions(+), 38 deletions(-)
+I am not that familiar with wireless drivers and thus don't know if this
+is the right way to fix the issue. But the UBSAN warning goes away with
+this patch and I don't see a regression with my wireless adapter afterwards.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index bc3c990..df551b2 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1337,10 +1337,11 @@ struct rtl8xxxu_fileops {
- 				  u32 ramask, int sgi);
- 	void (*report_connect) (struct rtl8xxxu_priv *priv,
- 				u8 macid, bool connect);
--	void (*fill_txdesc) (struct ieee80211_hdr *hdr,
--			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
--			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable, u32 rts_rate);
-+	void (*fill_txdesc) (struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
-+			     struct ieee80211_tx_info *tx_info,
-+			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
-+			     bool short_preamble, bool ampdu_enable,
-+			     u32 rts_rate);
- 	int writeN_block_size;
- 	int rx_agg_buf_size;
- 	char tx_desc_size;
-@@ -1434,14 +1435,16 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb);
- int rtl8xxxu_gen2_channel_to_group(int channel);
- bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
- 				      int result[][8], int c1, int c2);
--void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
--			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
--			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable, u32 rts_rate);
--void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
--			     struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
--			     u16 rate_flag, bool sgi, bool short_preamble,
--			     bool ampdu_enable, u32 rts_rate);
-+void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
-+			     struct ieee80211_tx_info *tx_info,
-+			     struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
-+			     bool short_preamble, bool ampdu_enable,
-+			     u32 rts_rate);
-+void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
-+			     struct ieee80211_tx_info *tx_info,
-+			     struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
-+			     bool short_preamble, bool ampdu_enable,
-+			     u32 rts_rate);
+As far as I can tell, this bug is present since the introduction of the
+driver in mainline.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
+index faf1ebe76068..b9672da24a9d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c
+@@ -179,7 +179,7 @@ s16 qm_norm32(s32 op)
+ 	return u16extraSignBits;
+ }
  
- extern struct rtl8xxxu_fileops rtl8192cu_fops;
- extern struct rtl8xxxu_fileops rtl8192eu_fops;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a4ac557..04141e5 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4759,13 +4759,28 @@ static void rtl8xxxu_dump_action(struct device *dev,
-  * This format is used on 8188cu/8192cu/8723au
-  */
- void
--rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
--			struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
--			u16 rate_flag, bool sgi, bool short_preamble,
--			bool ampdu_enable, u32 rts_rate)
-+rtl8xxxu_fill_txdesc_v1(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
-+			struct ieee80211_tx_info *tx_info,
-+			struct rtl8xxxu_txdesc32 *tx_desc, bool sgi,
-+			bool short_preamble, bool ampdu_enable, u32 rts_rate)
- {
-+	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
-+	struct rtl8xxxu_priv *priv = hw->priv;
-+	struct device *dev = &priv->udev->dev;
-+	u32 rate;
-+	u16 rate_flags = tx_info->control.rates[0].flags;
- 	u16 seq_number;
+-/* This table is log2(1+(i/32)) where i=[0:1:31], in q.15 format */
++/* This table is log2(1+(i/32)) where i=[0:1:32], in q.15 format */
+ static const s16 log_table[] = {
+ 	0,
+ 	1455,
+@@ -212,7 +212,8 @@ static const s16 log_table[] = {
+ 	29717,
+ 	30498,
+ 	31267,
+-	32024
++	32024,
++	32768
+ };
  
-+	if (rate_flags & IEEE80211_TX_RC_MCS &&
-+	    !ieee80211_is_mgmt(hdr->frame_control))
-+		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
-+	else
-+		rate = tx_rate->hw_value;
-+
-+	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
-+		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
-+			 __func__, rate, cpu_to_le16(tx_desc->pkt_size));
-+
- 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 
- 	tx_desc->txdw5 = cpu_to_le32(rate);
-@@ -4800,10 +4815,10 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
- 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
- 	 */
- 	tx_desc->txdw4 |= cpu_to_le32(rts_rate << TXDESC32_RTS_RATE_SHIFT);
--	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
-+	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
--	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_CTS_SELF_ENABLE);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
- 	}
-@@ -4814,16 +4829,31 @@ rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
-  * This format is used on 8192eu/8723bu
-  */
- void
--rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
--			struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
--			u16 rate_flag, bool sgi, bool short_preamble,
--			bool ampdu_enable, u32 rts_rate)
-+rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
-+			struct ieee80211_tx_info *tx_info,
-+			struct rtl8xxxu_txdesc32 *tx_desc32, bool sgi,
-+			bool short_preamble, bool ampdu_enable, u32 rts_rate)
- {
-+	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
-+	struct rtl8xxxu_priv *priv = hw->priv;
-+	struct device *dev = &priv->udev->dev;
- 	struct rtl8xxxu_txdesc40 *tx_desc40;
-+	u32 rate;
-+	u16 rate_flags = tx_info->control.rates[0].flags;
- 	u16 seq_number;
- 
- 	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
- 
-+	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
-+		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
-+			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
-+
-+	if (rate_flags & IEEE80211_TX_RC_MCS &&
-+	    !ieee80211_is_mgmt(hdr->frame_control))
-+		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
-+	else
-+		rate = tx_rate->hw_value;
-+
- 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 
- 	tx_desc40->txdw4 = cpu_to_le32(rate);
-@@ -4854,10 +4884,10 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
- 	/*
- 	 * rts_rate is zero if RTS/CTS or CTS to SELF are not enabled
- 	 */
--	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
-+	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
- 		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
--	} else if (rate_flag & IEEE80211_TX_RC_USE_CTS_PROTECT) {
-+	} else if (rate_flags & IEEE80211_TX_RC_USE_CTS_PROTECT) {
- 		/*
- 		 * For some reason the vendor driver doesn't set
- 		 * TXDESC40_HW_RTS_ENABLE for CTS to SELF
-@@ -4872,14 +4902,13 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
--	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	struct rtl8xxxu_txdesc32 *tx_desc;
- 	struct rtl8xxxu_tx_urb *tx_urb;
- 	struct ieee80211_sta *sta = NULL;
- 	struct ieee80211_vif *vif = tx_info->control.vif;
- 	struct device *dev = &priv->udev->dev;
--	u32 queue, rate, rts_rate;
-+	u32 queue, rts_rate;
- 	u16 pktlen = skb->len;
- 	u16 seq_number;
- 	u16 rate_flag = tx_info->control.rates[0].flags;
-@@ -4906,10 +4935,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 		goto error;
- 	}
- 
--	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
--		dev_info(dev, "%s: TX rate: %d (%d), pkt size %d\n",
--			 __func__, tx_rate->bitrate, tx_rate->hw_value, pktlen);
--
- 	if (ieee80211_is_action(hdr->frame_control))
- 		rtl8xxxu_dump_action(dev, hdr);
- 
-@@ -4963,12 +4988,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 		}
- 	}
- 
--	if (rate_flag & IEEE80211_TX_RC_MCS &&
--	    !ieee80211_is_mgmt(hdr->frame_control))
--		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
--	else
--		rate = tx_rate->hw_value;
--
- 	if (rate_flag & IEEE80211_TX_RC_SHORT_GI ||
- 	    (ieee80211_is_data_qos(hdr->frame_control) &&
- 	     sta && sta->ht_cap.cap &
-@@ -4988,8 +5007,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 
- 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 
--	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag, sgi,
--				short_preamble, ampdu_enable, rts_rate);
-+	priv->fops->fill_txdesc(hw, hdr, tx_info, tx_desc, sgi, short_preamble,
-+				ampdu_enable, rts_rate);
- 
- 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
- 
+ #define LOG_TABLE_SIZE 32       /* log_table size */
 -- 
 2.7.4
