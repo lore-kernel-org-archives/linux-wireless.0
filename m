@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:38570 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752414AbcKRV6m (ORCPT
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:35056 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752075AbcKULTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:58:42 -0500
+        Mon, 21 Nov 2016 06:19:21 -0500
+Received: by mail-pg0-f50.google.com with SMTP id p66so129688510pga.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 03:19:21 -0800 (PST)
+To: Johannes Berg <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: scheduled scan interval
+Message-ID: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com> (sfid-20161121_121925_232061_A6D5C8A4)
+Date: Mon, 21 Nov 2016 12:19:16 +0100
 MIME-Version: 1.0
-From: Iago Abal <iago.abal@gmail.com>
-Date: Fri, 18 Nov 2016 22:58:00 +0100
-Message-ID: <CAGbDTvrA85Qao_y0FxCFR_cE26WejoLLrA=PA1qhTButiDp3xg@mail.gmail.com> (sfid-20161118_225846_312367_C2141747)
-Subject: Potential deadlock BUG in drivers/net/wireless/st/cw1200/sta.c (Linux 4.9)
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Solomon Peachy <pizza@shaftnet.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johannes, Luca,
 
-With the help of a static bug finder (EBA -
-https://github.com/models-team/eba) I have found a potential deadlock
-in drivers/net/wireless/st/cw1200/
-sta.c. This happens due to a recursive mutex_lock on `priv->conf_mutex'.
+The gscan work made me look at scheduled scan and the implementation of
+it in brcmfmac. The driver ignored the interval parameter from
+user-space. Now I am fixing that. One thing is that our firmware has a
+minimum interval which can not be indicated in struct wiphy. The other
+issue is how the maximum interval is used in the nl80211.c.
 
-If this is indeed a bug, I will be happy to help with a patch.
+In nl80211_parse_sched_scan_plans() it is used against value passed in
+NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
+For the first one it caps the value to the maximum, but for the second
+one it returns -EINVAL. I suspect this is done because maximum interval
+was introduced with schedule scan plans, but it feels inconsistent.
 
-A quick (not elegant) fix could be to unlock before the call to
-`cw1200_do_unjoin' in line 1174, and lock again afterwards. It seems
-that `cw1200_join_complete' is always called with `priv->conf_mutex'
-held. Another option could be to add a Boolean parameter to
-`cw1200_do_unjoin' to choose whether this function should take the
-lock itself. Yet another option would be to have a
-`__cw1200_do_unjoin' that does not lock, and make `cw1200_do_unjoin' a
-wrapper over this that adds the locking; `cw1200_join_complete' would
-call `__cw1200_do_unjoin' instead.
+Thoughts?
 
-Someone who is actually familiar with this code may have a better
-proposal though.
-
-The trace is as follows:
-
-1. Function `cw1200_join_complete_work' takes the first lock in line 1189:
-
-    // see https://github.com/torvalds/linux/blob/v4.9-rc5/drivers/net/wireless/st/cw1200/sta.c#L1189
-    mutex_lock(& priv->conf_mutex);
-
-2. and subsequently calls `cw1200_join_complete';
-3. which calls `cw1200_do_unjoin' in line 1174;
-4. and this latter function takes the lock for the second time in line 1387:
-
-    // see https://github.com/torvalds/linux/blob/v4.9-rc5/drivers/net/wireless/st/cw1200/sta.c#L1387
-    mutex_lock(& priv->conf_mutex);
-
-Hope it helps!
-
---
-iago
+Regards,
+Arend
