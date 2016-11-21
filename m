@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52516 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751750AbcKRLLJ (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34651 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753534AbcKUPv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 06:11:09 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 21 Nov 2016 10:51:57 -0500
+Date: Mon, 21 Nov 2016 16:51:53 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: wl1251 & mac address & calibration data
+Message-ID: <20161121155153.GM13735@pali> (sfid-20161121_165230_017164_7F2FBA71)
+References: <201611111820.52072@pali>
 MIME-Version: 1.0
-Subject: Re: mwifiex: add power save parameters in hs_cfg cmd
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1476440409-7227-1-git-send-email-akarwar@marvell.com>
-References: <1476440409-7227-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Shengzhen Li <szli@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20161118111108.E205B6265D@smtp.codeaurora.org> (sfid-20161118_121113_316829_0E708166)
-Date: Fri, 18 Nov 2016 11:11:08 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201611111820.52072@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Shengzhen Li <szli@marvell.com>
+On Friday 11 November 2016 18:20:50 Pali Rohár wrote:
+> Hi! I will open discussion about mac address and calibration data for 
+> wl1251 wireless chip again...
 > 
-> This patch adds power save parameters(hs_wake_interval and
-> hs_inactivity_timeout) in host sleep cfg cmd.
+> Problem: Mac address & calibration data for wl1251 chip on Nokia N900 
+> are stored on second nand partition (mtd1) in special proprietary format 
+> which is used only for Nokia N900 (probably on N8x0 and N9 too). 
+> Wireless driver wl1251.ko cannot work without mac address and 
+> calibration data.
 > 
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Absence of mac address cause that driver generates random mac address at 
+> every kernel boot which has couple of problems (unstable identifier of 
+> wireless device due to udev permanent storage rules; unpredictable 
+> behaviour for dhcp mac address assignment, mac address filtering, ...).
+> 
+> Currently there is no way to set (permanent) mac address for network 
+> interface from userspace. And it does not make sense to implement in 
+> linux kernel large parser for proprietary format of second nand 
+> partition where is mac address stored only for one device -- Nokia N900.
+> 
+> Driver wl1251.ko loads calibration data via request_firmware() for file 
+> wl1251-nvs.bin. There are some "example" calibration file in linux-
+> firmware repository, but it is not suitable for normal usage as real 
+> calibration data are per-device specific.
+> 
+> So questions are:
+> 
+> 1) How to set mac address from userspace for that wl1251 interface? In 
+> userspace I can write parser for that proprietary format of nand 
+> partition and extract mac address from it
 
-Patch applied to wireless-drivers-next.git, thanks.
+Proposed solutions for 1)
 
-6a7b1910c3c6 mwifiex: add power save parameters in hs_cfg cmd
+* Introduce new IOCL for setting that permanent mac address from
+  userspace. Currently we have IOCL for get request
+
+* Use request_firmware() (with flag from 2)) to ask for mac address from
+  userspace. This is already used by wl12xx driver (as mac address is
+  part of calibration data firmware file)
+
+* Allow to set mac address via sysfs file, e.g.
+  /sys/class/ieee80211/phy0/macaddress
+
+> 2) How to send calibration data to wl1251 driver? Those are again stored 
+> in proprietary format and I can write userspace parser for it.
+
+Proposed solution for 2)
+
+Introduce new flag for request_firmware(), so it first try to use
+userspace helper for loading firmware file with possibility to fallback
+to direct VFS access.
+
+
+So... what do you think about it?
 
 -- 
-https://patchwork.kernel.org/patch/9376379/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pali Rohár
+pali.rohar@gmail.com
