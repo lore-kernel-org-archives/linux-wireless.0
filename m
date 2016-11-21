@@ -1,66 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32132 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932526AbcKGSL3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 13:11:29 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: voncken <cedric.voncken@acksys.fr>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: ATH10K VLAN firmware issue
-Date: Mon, 7 Nov 2016 18:06:03 +0000
-Message-ID: <871syn5fnb.fsf@qca.qualcomm.com> (sfid-20161107_191133_323357_5AC5E95C)
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
-        <566849DB.9040901@candelatech.com>
-        <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
-        <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
-        <87twbnueqv.fsf@kamboji.qca.qualcomm.com>
-        <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>
-In-Reply-To: <CABUTiXW5QSh2KkD+sQ-6QOD5zTce0dun+nyfAMnvL580U=OVNw@mail.gmail.com>       (Bruno
- Antunes's message of "Mon, 7 Nov 2016 12:01:01 +0000")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:54130 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754548AbcKUQ7t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 11:59:49 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Barry Day <briselec@gmail.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 0/7] rtl8xxxu: Pending patches
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+        <20161119014648.GA7140@testbox> <wrfjbmxcb55h.fsf@redhat.com>
+        <20161119023830.GA7324@testbox> <wrfj37inauwp.fsf@redhat.com>
+        <20161120024257.GA13169@testbox>
+Date: Mon, 21 Nov 2016 11:59:47 -0500
+In-Reply-To: <20161120024257.GA13169@testbox> (Barry Day's message of "Sun, 20
+        Nov 2016 12:42:59 +1000")
+Message-ID: <wrfj7f7w7oqk.fsf@redhat.com> (sfid-20161121_175957_614777_BD34A140)
 MIME-Version: 1.0
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bruno Antunes <baantunes@gmail.com> writes:
-
-> On 4 November 2016 at 21:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Bruno Antunes <baantunes@gmail.com> writes:
->>
->>> Old thread but I think the issue is still present.
->>>
->>> I'm running a setup with VLANs with WDS and ath10k cards.
->>>
->>> To make it work both cards must be loaded in rawmode, AP
->>> and Sta, and with no security.
->>>
->>> I'm using a OpenWrt trunk r49941 and the most recent firmware,
->>> 10.2.4.70.58, from Kalle ath10k firmware tree.
->>>
->>> Although it works the throughput is very bad.
->>> Are there any alternatives to improve the throughput.
->>
->> Can someone file a bug to bugzilla about this so that all the info is
->> properly stored? The more comprehensive the report is the better.
->>
->> https://bugzilla.kernel.org/
+Barry Day <briselec@gmail.com> writes:
+> On Sat, Nov 19, 2016 at 06:53:42PM -0500, Jes Sorensen wrote:
+>> Barry Day <briselec@gmail.com> writes:
+>> > On Fri, Nov 18, 2016 at 09:00:10PM -0500, Jes Sorensen wrote:
+>> >> Barry Day <briselec@gmail.com> writes:
+>> >> > On Fri, Nov 18, 2016 at 04:44:21PM -0500, Jes.Sorensen@redhat.com wrote:
+>> >> >> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> >> >> 
+>> >> >> Kalle,
+>> >> >> 
+>> >> >> Please find attached a number of patches for the rtl8xxxu
+>> >> >> driver.
+>> >> >> 
+>> >> >> The issues reported with wpa_supplicant on 8723bu still needs further
+>> >> >> investigation.
+>> >> >> 
+>> >> >
+>> >> > The patch I posted that you want tested more will also fix the
+>> >> > wpa_supplicant issue.  Currently I'm looking at why the tx rate is not
+>> >> > what it should be. I feel fixing that first will be beneficial for
+>> >> > fixing any other issues.
+>> >> 
+>> >> Interesting, I was thinking that might be the case. I do want to dig
+>> >> into this further to understand it better. If we use your solution I
+>> >> will want to make sure we cover both gen1 and gen2 parts.
+>> >> 
+>> >> > The recent merge has made my local branch of rtl8xxxu-devel 14
+>> >> > commits ahead.
+>> >> > Do I need to do a reset and submit a new patch for the DWA-131 dongle?
+>> >> 
+>> >> In general you need to use 'git pull --rebase' on my tree. I rebase it
+>> >> to stay in sync with Kalle's tree.
+>> >> 
+>> >> The DWA-131 is the 8192eu? Sorry a bit behind and my mind is losing
+>> >> bits. If it's the patch you posted earlier I can dig it out and play
+>> >> with it - I am still catching up though, so please be patient.
+>> >
+>> > yes it's an 8192eu.
+>> 
+>> Gotcha - how do you do your testing to reproduce the problem btw? Most
+>> of my testing is using the 8723au as a primary device and the next
+>> device as a follow-on, so I may not see as long a run with the device
+>> active as you see.
+>> 
 >
-> I will file a bug report.
+> Testing is simple. Connect to an AP in the usual
+> manner..disconnect..reconnect.  The 8192eu will fail to reconnect and
+> John Heenan reported the 8723bu also fails to reconnect. Even though
+> he was directly stopping and restarting wpa_supplicant, it's the same
+> thing to the driver - connect..disconnect..reconnect.
 
-Thanks, it's good to store all in one place so that it's easier to find
-the relevant info.
+Thanks for the details - I'll have a look shortly.
 
-> But since it appears to be a firmware related issue
-> under what category can fill in the bug?
+> With using a usb_device pointer, each message starts with the usb bus
+> address.  Plug it into a different port and that address could
+> change. By using a pointer to the device associated with the wiphy
+> each message will begin with the driver name. Just makes it easier for
+> the average user to report what's in the log because he can just grep
+> for "rtl8xxxu".
 
-You can file it under Drivers/network-wireless, AFAIK we don't have any
-separate components for firmware bugs. Here's one example to follow:
+I see - that would be problematic for me as I quite often have 3-4 of
+these things plugged in at the same time. Not knowing which port spits
+out the message would make it a lot harder to track. In fact my primary
+devel box for this (Lenovo Yoga 13) has an rtl8723au soldered on the
+motherboard, so the moment I plug in any other dongle I'll have two.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D186161
+The alternative would be to add a prefer to the individual messages.
 
---=20
-Kalle Valo=
+Cheers,
+Jes
