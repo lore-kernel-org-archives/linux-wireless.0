@@ -1,71 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41996 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750785AbcKQIvH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 03:51:07 -0500
-Message-ID: <1479372663.1463.9.camel@sipsolutions.net> (sfid-20161117_095110_737064_34CD76C5)
-Subject: Re: [PATCH V3] qtnfmac: announcement of new FullMAC driver for
- Quantenna chipsets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
-        linux-wireless@vger.kernel.org
-Date: Thu, 17 Nov 2016 09:51:03 +0100
-In-Reply-To: <c6655668-f433-c784-0098-a94a61874e43@quantenna.com> (sfid-20161116_175111_132947_47E19850)
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <1478700000-11624-2-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <1479117120.9766.8.camel@sipsolutions.net>
-         <62102ba6-cae0-f00d-f989-3f2e9ea43d9b@quantenna.com>
-         <c6655668-f433-c784-0098-a94a61874e43@quantenna.com>
-         (sfid-20161116_175111_132947_47E19850)
+Received: from paleale.coelho.fi ([176.9.41.70]:41120 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932311AbcKUPIo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 10:08:44 -0500
+Message-ID: <1479740918.2517.28.camel@coelho.fi> (sfid-20161121_160848_289918_6D425CCB)
+From: Luca Coelho <luca@coelho.fi>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 21 Nov 2016 17:08:38 +0200
+In-Reply-To: <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+         <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
+         <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: scheduled scan interval
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Arend,
 
-> > > It's probably worth having a discussion about this behaviour
-> > > difference - not necessarily in the context of this driver
-> > > submission though.
+On Mon, 2016-11-21 at 13:03 +0100, Arend Van Spriel wrote:
+> On 21-11-2016 12:30, Arend Van Spriel wrote:
+> > On 21-11-2016 12:19, Arend Van Spriel wrote:
+> > > Hi Johannes, Luca,
+> > > 
+> > > The gscan work made me look at scheduled scan and the implementation of
+> > > it in brcmfmac. The driver ignored the interval parameter from
+> > > user-space. Now I am fixing that. One thing is that our firmware has a
+> > > minimum interval which can not be indicated in struct wiphy. The other
+> > > issue is how the maximum interval is used in the nl80211.c.
+> > > 
+> > > In nl80211_parse_sched_scan_plans() it is used against value passed in
+> > > NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
+> > > For the first one it caps the value to the maximum, but for the second
+> > > one it returns -EINVAL. I suspect this is done because maximum interval
+> > > was introduced with schedule scan plans, but it feels inconsistent.
 > > 
-> > Do you mean that default is to allow to dynamically allocate
-> > resources (add_interface) for as much interfaces as memory allows,
-> > but only use (allow to open) a limited number of them? 
+> > It also maybe simply wrong to cap. At least brcmfmac does not set the
+> > maximum so it will always get interval being zero. Maybe better to do:
+> > 
+> > 		if (wiphy->max_sched_scan_plan_interval &&
+> > 		    request->scan_plans[0].interval >
+> > 		    wiphy->max_sched_scan_plan_interval)
+> > 			return -EINVAL;
+> > 
+> > > Thoughts?
+> 
+> Digging deeper. Looking at v4.3 before introduction of sched_scan_plans.
+> struct sched_scan_request::interval was specified in milliseconds! Below
+> the drivers that I see having scheduled scan support:
+> 
+> iwlmvm: cap interval, convert to seconds.
+> ath6kl: cap to 1sec minimum, no max check, convert to seconds.
+> wl12xx: no checking in driver, fw need milliseconds.
+> wl18xx: no checking in driver, fw need milliseconds.
+> 
+> The milliseconds conversion seems to be taken care of by multiplying
+> with MSEC_PER_SEC in wl{12,18}xx drivers.
+> 
+> It seems in 4.8 only iwlmvm set wiphy->max_sched_scan_plan_interval so
+> other drivers will get interval of zero which only ath6kl handles.
 
-Correct, this is how mac80211 works.
+With the introduction of scheduled scan plans, we sort of deprecated
+the "generic" scheduled scan interval.  It doesn't make sense to have
+both passed at the same time, so nl80211 forbids
+NL80211_ATTR_SCHED_SCAN_INTERVAL if we pass
+NL80211_ATTR_SCHED_SCAN_PLANS.
 
-> > This seems like unnecessary complication, 
+The original NL80211_ATTR_SCHED_SCAN_INTERVAL was specified in msecs,
+which is silly because we can never get millisecond accuracy in this. 
+Thus, in the plans API, we decided to use seconds instead (because it
+makes much more sense).  Additionally, the interval is considered
+"advisory", because the FW may not be able guarantee the exact
+intervals (for instance, the iwlwifi driver actually starts the
+interval timer after scan completion, so if you specify 10 seconds
+intervals, in practice they'll be 13-14 seconds).
 
-Well, I don't really know where this came from. I suspect some types of
-mode switching cases could benefit from it, say (completely
-constructed) your hardware supports either two AP or two clients, but
-not AP+client - then to switch from 2xAP to 2xclient you'd have to
-destroy one of the interfaces, since you can't mode-switch both at the
-same time.
+I'm not sure I'm answering your question, because I'm also not sure I
+understood the question. :)
 
-Also, interfaces that are down (should!) have no runtime impact on the
-device whatsoever, so it's just a little bit more software complexity
-to handle.
-
-I think there may also be cases of cfg80211 doing partial interface
-combination enforcement only on interfaces that are up.
-
-> > I can see only one relevant comment in documentation to "struct
-> > ieee80211_iface_combination" that does not clarify what should be
-> > the behavior:
-
-Agree, we never thought about it since for mac80211 it was always
-obvious, and for other drivers the other way seemed obvious - I only
-found out about it after the fact :)
-
-
-I think the mode-switching I outlined above is a slight advantage to
-the mac80211 scheme, so I wouldn't want to switch mac80211 to this
-other scheme, risking that being seen as an API/ABI regression.
-
-At the same time, having all drivers behave the same way seems somewhat
-useful, but the consequence would be all drivers having to adopt the
-mac80211 scheme. I can't say how difficult that would be - might be
-more difficult than it seems since you couldn't statically allocate
-your interface pointers etc. as you do now.
-
-johannes
+--
+Cheers,
+Luca.
