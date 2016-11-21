@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46980 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941393AbcKOJbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 04:31:32 -0500
-Message-ID: <1479202288.12007.25.camel@sipsolutions.net> (sfid-20161115_103145_088880_1D339265)
-Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
- associated
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Raj Nagarajan <arnagara@codeaurora.org>,
-        Ben Greear <greearb@candelatech.com>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Tue, 15 Nov 2016 10:31:28 +0100
-In-Reply-To: <8908f6e7bb8ca043fbeb07ee8b004e8f@codeaurora.org>
-References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
-         <1467110918.2493.9.camel@sipsolutions.net>
-         <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org>
-         <1470043740.3389.10.camel@sipsolutions.net>
-         <579F4E4E.80103@candelatech.com>
-         <8908f6e7bb8ca043fbeb07ee8b004e8f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:37759 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753972AbcKUKxi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 05:53:38 -0500
+Received: by mail-wm0-f50.google.com with SMTP id t79so136963652wmt.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 02:53:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAHdg3xZMJw47Zyh9ubawysGqo6N2qcNUXX1o19GyFYOHv8GivA@mail.gmail.com>
+References: <CAHdg3xaCnAp8rgMs3mVYvV6TFadNjwBtCo+rpHgH_-L8JUo-dw@mail.gmail.com>
+ <20161120010740.GB3581@localhost> <CA+BoTQm9DBc_tkQnXwLVuV6dbsEixn73t_TRk1akktTiwRm_0w@mail.gmail.com>
+ <CAHdg3xZMJw47Zyh9ubawysGqo6N2qcNUXX1o19GyFYOHv8GivA@mail.gmail.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 21 Nov 2016 11:53:36 +0100
+Message-ID: <CA+BoTQ=xCmYtqrMZpoqtNUTN8e_WE=AFpqU3LQdopiSik5eODA@mail.gmail.com> (sfid-20161121_115342_389796_29EEA965)
+Subject: Re: ath10k stuck in mesh mode
+To: Matteo Grandi <iu5bdp@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+        LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 21 November 2016 at 10:46, Matteo Grandi <iu5bdp@gmail.com> wrote:
+> Dear Bob, Michal, all,
+>
+> I've just tried your advices (actually I already tried it following
+> the wireless.wiki.kernel web pages) and I had a look at the syslog
+> while I was typing the commands
+> At the beginning I have this
+[...]
+> Other (hopefully) useful info:
+> root@MrProper:~# iw reg get
+> global
+> country US: DFS-UNSET
+>     (2402 - 2472 @ 40), (3, 27), (N/A)
+>     (5170 - 5250 @ 40), (3, 17), (N/A)
+>     (5250 - 5330 @ 40), (3, 20), (0 ms), DFS
+>     (5490 - 5600 @ 40), (3, 20), (0 ms), DFS
+>     (5650 - 5710 @ 40), (3, 20), (0 ms), DFS
+>     (5735 - 5835 @ 40), (3, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#2
+> country US: DFS-UNSET
+>     (2402 - 2472 @ 40), (3, 27), (N/A)
+>     (5170 - 5250 @ 40), (3, 17), (N/A)
+>     (5250 - 5330 @ 40), (3, 20), (0 ms), DFS
+>     (5490 - 5600 @ 40), (3, 20), (0 ms), DFS
+>     (5650 - 5710 @ 40), (3, 20), (0 ms), DFS
+>     (5735 - 5835 @ 40), (3, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#0
+> country US: DFS-UNSET
+>     (2402 - 2472 @ 40), (3, 27), (N/A)
+>     (5170 - 5250 @ 40), (3, 17), (N/A)
+>     (5250 - 5330 @ 40), (3, 20), (0 ms), DFS
+>     (5490 - 5600 @ 40), (3, 20), (0 ms), DFS
+>     (5650 - 5710 @ 40), (3, 20), (0 ms), DFS
+>     (5735 - 5835 @ 40), (3, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#1
+> country US: DFS-UNSET
+>     (2402 - 2472 @ 40), (3, 27), (N/A)
+>     (5170 - 5250 @ 40), (3, 17), (N/A)
+>     (5250 - 5330 @ 40), (3, 20), (0 ms), DFS
+>     (5490 - 5600 @ 40), (3, 20), (0 ms), DFS
+>     (5650 - 5710 @ 40), (3, 20), (0 ms), DFS
+>     (5735 - 5835 @ 40), (3, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>[...]
+>
+> Checking on Internet I didn't find a working solution, and the data
+> rate stucks to 120Mbps MCS7.
+> For me it still a mistery, I hope in your help.
 
-> In the case of manual intervention by user, the firmware will check 
-> three
-> values - regulatory domain, automatic tx power and user entered
-> value. 
-> System
-> will always cap to the minimum of these values and see to that we do
-> not 
-> exceed
-> the regulatory power limits.
+Note the "@ 40" for all frequency ranges (except 60GHz band). Your
+regulatory database seems to be limiting you to 40 MHz (it's probably
+very old/ out of date). You'll need to update it to be able to use 80
+MHz.
 
-Fair enough.
 
-> If there are no more comments I will resent this patch series after 
-> rebase.
-
-I suspect we should also have some kind of capability for all of this,
-so it can be used reliably?
-
-johannes
+Michal
