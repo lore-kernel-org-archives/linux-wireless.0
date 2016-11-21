@@ -1,107 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:33527 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754166AbcK3SeL (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:34653 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753250AbcKUTfn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 13:34:11 -0500
-Received: by mail-pg0-f47.google.com with SMTP id 3so84781195pgd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 10:33:43 -0800 (PST)
-Date: Wed, 30 Nov 2016 10:33:40 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card
- remove process
-Message-ID: <20161130183339.GA11358@google.com> (sfid-20161130_193414_698147_BD1BE05B)
-References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
- <1479301749-14803-4-git-send-email-akarwar@marvell.com>
- <20161121173602.GA147125@google.com>
- <ad60355f7feb465199f4dace37e47238@SC-EXCH04.marvell.com>
- <20161128212706.GA45985@google.com>
- <8e65d20f643a4c7f9a242c145ec8f24f@SC-EXCH04.marvell.com>
+        Mon, 21 Nov 2016 14:35:43 -0500
+Received: by mail-qt0-f180.google.com with SMTP id n6so211940586qtd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 11:34:43 -0800 (PST)
+Subject: Re: scheduled scan interval
+To: Luca Coelho <luca@coelho.fi>,
+        Johannes Berg <johannes.berg@intel.com>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+ <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
+ <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
+ <1479740918.2517.28.camel@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a222d5d1-408d-fd96-4cb9-896f6a9dab59@broadcom.com> (sfid-20161121_203547_688592_31C08963)
+Date: Mon, 21 Nov 2016 20:34:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8e65d20f643a4c7f9a242c145ec8f24f@SC-EXCH04.marvell.com>
+In-Reply-To: <1479740918.2517.28.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 30, 2016 at 12:39:11PM +0000, Amitkumar Karwar wrote:
-
-> > Ugh, yet another band-aid? You might do better to still cancel any
-> > pending work, just don't do it synchronously. i.e., do cancel_work()
-> > after you've removed the card. It doesn't make sense to do a FW dump on
-> > the "new" adapter when it was requested for the old one.
+On 21-11-2016 16:08, Luca Coelho wrote:
+> Hi Arend,
 > 
-> I could not find async version of cancel_work().
-
-cancel_work() *is* asynchronous. It does not synchronize with the last
-event, so you won't have the deadlock. (Remember: the synchronous
-version is cancel_work_sync().)
-
-> We can fix this problem with below change at the end of
-> mwifiex_sdio_work(). All pending work requests would be ignored.
+> On Mon, 2016-11-21 at 13:03 +0100, Arend Van Spriel wrote:
+>> On 21-11-2016 12:30, Arend Van Spriel wrote:
+>>> On 21-11-2016 12:19, Arend Van Spriel wrote:
+>>>> Hi Johannes, Luca,
+>>>>
+>>>> The gscan work made me look at scheduled scan and the implementation of
+>>>> it in brcmfmac. The driver ignored the interval parameter from
+>>>> user-space. Now I am fixing that. One thing is that our firmware has a
+>>>> minimum interval which can not be indicated in struct wiphy. The other
+>>>> issue is how the maximum interval is used in the nl80211.c.
+>>>>
+>>>> In nl80211_parse_sched_scan_plans() it is used against value passed in
+>>>> NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
+>>>> For the first one it caps the value to the maximum, but for the second
+>>>> one it returns -EINVAL. I suspect this is done because maximum interval
+>>>> was introduced with schedule scan plans, but it feels inconsistent.
+>>>
+>>> It also maybe simply wrong to cap. At least brcmfmac does not set the
+>>> maximum so it will always get interval being zero. Maybe better to do:
+>>>
+>>> 		if (wiphy->max_sched_scan_plan_interval &&
+>>> 		    request->scan_plans[0].interval >
+>>> 		    wiphy->max_sched_scan_plan_interval)
+>>> 			return -EINVAL;
+>>>
+>>>> Thoughts?
+>>
+>> Digging deeper. Looking at v4.3 before introduction of sched_scan_plans.
+>> struct sched_scan_request::interval was specified in milliseconds! Below
+>> the drivers that I see having scheduled scan support:
+>>
+>> iwlmvm: cap interval, convert to seconds.
+>> ath6kl: cap to 1sec minimum, no max check, convert to seconds.
+>> wl12xx: no checking in driver, fw need milliseconds.
+>> wl18xx: no checking in driver, fw need milliseconds.
+>>
+>> The milliseconds conversion seems to be taken care of by multiplying
+>> with MSEC_PER_SEC in wl{12,18}xx drivers.
+>>
+>> It seems in 4.8 only iwlmvm set wiphy->max_sched_scan_plan_interval so
+>> other drivers will get interval of zero which only ath6kl handles.
 > 
-> --------
-> @ -2571,6 +2571,8 @@ static void mwifiex_sdio_work(struct work_struct *work)
->         if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
->                                &iface_work_flags))
->                 mwifiex_sdio_card_reset_work(save_adapter);
-> +       clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
-> +       clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &iface_work_flags);
->  }
-> ----------
+> With the introduction of scheduled scan plans, we sort of deprecated
+> the "generic" scheduled scan interval.  It doesn't make sense to have
+> both passed at the same time, so nl80211 forbids
+> NL80211_ATTR_SCHED_SCAN_INTERVAL if we pass
+> NL80211_ATTR_SCHED_SCAN_PLANS.
 
-I don't think that's exactly what you want. That might lose events,
-won't it? I'd rather this sort of hack go into
-mwifiex_recreate_adapter(), in between the remove() and probe() calls,
-where you don't expect any new events to trigger. And maybe include a
-comment as to why.
+Indeed, but if no plans are passed it is still allowed.
 
-> > I think I've asked elsewhere but didn't receive an answer: why is
-> > SDIO's mwifiex_recreate_adapter() so much different from PCIe's
-> > mwifiex_do_flr()? It seems like the latter should be refactored to
-> > remove some of the PCIe-specific cruft from main.c and then reused for
-> > SDIO.
-> 
-> Our initial SDIO card reset implementation was based on MMC APIs where
-> remove() and probe() would automatically get called by MMC subsystem
-> after power cycle.
-> https://www.spinics.net/lists/linux-wireless/msg98435.html
-> Later it was improved by Andreas Fenkart by replacing those power
-> cycle APIs with mmc_hw_reset().
+> The original NL80211_ATTR_SCHED_SCAN_INTERVAL was specified in msecs,
+> which is silly because we can never get millisecond accuracy in this. 
+> Thus, in the plans API, we decided to use seconds instead (because it
+> makes much more sense).  Additionally, the interval is considered
+> "advisory", because the FW may not be able guarantee the exact
+> intervals (for instance, the iwlwifi driver actually starts the
+> interval timer after scan completion, so if you specify 10 seconds
+> intervals, in practice they'll be 13-14 seconds).
 
-Right.
+Agree. Our firmware wants to have it in seconds as well.
 
-> For PCIe, function level reset is standard feature. We implemented
-> ".reset_notify" handler which gets called after and before FLR.
+> I'm not sure I'm answering your question, because I'm also not sure I
+> understood the question. :)
 
-OK.
+The question is this: Why is the interval capped at
+max_sched_scan_plan_interval if it exceeds it and no plans are provided
+(so continue to setup the scheduled scan request) whereas when plans are
+provided and an interval exceeds max_sched_scan_plan_interval it aborts
+with -EINVAL.
 
-> You are right. We can have SDIO's handling similar to PCIe and avoid
-> destroying+recreating adapter/card.
+And a follow-up question for this snippet of code in
+nl80211_parse_sched_scan_plans():
 
-So all in all, you're saying it's just an artifact of history, and
-there's no good reason they are so different? If so, then this looks
-like another instance where you would have done well to refactor and
-improve the existing mechanisms at the same time as you added new
-features (i.e., PCIe FLR). I've seen this problem already several times,
-where it seems development for your SDIO/PCIe/USB interface drivers
-occur almost in isolation. IMO, it'd do you well to notice these
-patterns while implementing features in the first place. The more code
-you can share, the fewer bugs you (or I) will have to chase down.
+	if (!attrs[NL80211_ATTR_SCHED_SCAN_PLANS]) {
+		u32 interval;
 
-> We have started working on this. We will get rid of global
-> save_adapter, sdio_work etc.
+		/*
+		 * If scan plans are not specified,
+		 * %NL80211_ATTR_SCHED_SCAN_INTERVAL must be specified. In this
+		 * case one scan plan will be set with the specified scan
+		 * interval and infinite number of iterations.
+		 */
+		if (!attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL])
+			return -EINVAL;
 
-Great!
+		interval = nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_INTERVAL]);
+		if (!interval)
+			return -EINVAL;
 
-> Meanwhile I will post above mentioned change if it looks good to you.
+		request->scan_plans[0].interval =
+			DIV_ROUND_UP(interval, MSEC_PER_SEC);
+		if (!request->scan_plans[0].interval)
+			return -EINVAL;
 
-It's not perfect, but it's a start.
+		if (request->scan_plans[0].interval >
+		    wiphy->max_sched_scan_plan_interval)
+			request->scan_plans[0].interval =
+				wiphy->max_sched_scan_plan_interval;
 
-Brian
+		return 0;
+	}
+
+So in v4.3 the interval was only validated to be non-zero. Now the
+interval is validated and capped to wiphy->max_sched_scan_plan_interval
+but apart from iwlmvm there are no driver specifying that so
+max_sched_scan_plan_interval = 0 for those and interval is unsigned int
+not equal to zero. So the last if statement above is true setting the
+interval to zero. I think the if statement should be extended to assure
+max_sched_scan_interval is non-zero, ie. set explicitly by the driver:
+
+		if (wiphy->max_sched_scan_plan_interval &&
+		    request->scan_plans[0].interval >
+		    wiphy->max_sched_scan_plan_interval)
+			request->scan_plans[0].interval =
+				wiphy->max_sched_scan_plan_interval;
+
+Regards,
+Arend
