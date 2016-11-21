@@ -1,226 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60889 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755187AbcK3JuU (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:36028 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753933AbcKUM6j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 04:50:20 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix Tx DMA alloc failure during continuous wifi down/up
-Date: Wed, 30 Nov 2016 15:20:14 +0530
-Message-ID: <1480499414-19543-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161130_105237_281592_A22620D1)
+        Mon, 21 Nov 2016 07:58:39 -0500
+Received: by mail-pf0-f170.google.com with SMTP id 189so64656284pfz.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:58:39 -0800 (PST)
+Subject: Re: [PATCH] nl80211: fix logic inversion in start_nan()
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20161121125548.4730-1-johannes@sipsolutions.net>
+ <576a08f1-3246-4e59-57a1-704e429674bd@broadcom.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3abd1827-62aa-b274-ace1-859a9a225127@broadcom.com> (sfid-20161121_135843_330854_500354E4)
+Date: Mon, 21 Nov 2016 13:58:35 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <576a08f1-3246-4e59-57a1-704e429674bd@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On 21-11-2016 13:57, Arend Van Spriel wrote:
+> On 21-11-2016 13:55, Johannes Berg wrote:
+>> From: Johannes Berg <johannes.berg@intel.com>
+>>
+>> Arend inadvertedly inverted the logic while converting to
+>> wdev_running(), fix that.
+> 
+> It was indeed inadvertedly.
 
-With maximum number of vap's configured in a two radio supported
-systems of ~256 Mb RAM, doing a continuous wifi down/up and
-intermittent traffic streaming from the connected stations results
-in failure to allocate contiguous memory for tx buffers. This results
-in the disappearance of all VAP's and a manual reboot is needed as
-this is not a crash (or) OOM(for OOM killer to be invoked). To address
-this allocate contiguous memory for tx buffers one time and re-use them
-until the modules are unloaded but this results in a slight increase in
-memory footprint of ath10k when the wifi is down, but the modules are
-still loaded. Also as of now we use a separate bool 'tx_mem_allocated'
-to keep track of the one time memory allocation, as we cannot come up
-with something like 'ath10k_tx_{register,unregister}' before
-'ath10k_probe_fw' is called as 'ath10k_htt_tx_alloc_cont_frag_desc'
-memory allocation is dependent on the hw_param 'continuous_frag_desc'
+Actually spelling checker complains. Should be 'inadvertently'.
 
-a) memory footprint of ath10k without the change
+Regards,
+Arend
 
-lsmod | grep ath10k
-ath10k_core           414498  1 ath10k_pci
-ath10k_pci             38236  0
-
-b) memory footprint of ath10k with the change
-
-ath10k_core           414980  1 ath10k_pci
-ath10k_pci             38236  0
-
-Memory Failure Call trace:
-
-hostapd: page allocation failure: order:6, mode:0xd0
- [<c021f150>] (__dma_alloc_buffer.isra.23) from
-[<c021f23c>] (__alloc_remap_buffer.isra.26+0x14/0xb8)
-[<c021f23c>] (__alloc_remap_buffer.isra.26) from
-[<c021f664>] (__dma_alloc+0x224/0x2b8)
-[<c021f664>] (__dma_alloc) from [<c021f810>]
-(arm_dma_alloc+0x84/0x90)
-[<c021f810>] (arm_dma_alloc) from [<bf954764>]
-(ath10k_htt_tx_alloc+0xe0/0x2e4 [ath10k_core])
-[<bf954764>] (ath10k_htt_tx_alloc [ath10k_core]) from
-[<bf94e6ac>] (ath10k_core_start+0x538/0xcf8 [ath10k_core])
-[<bf94e6ac>] (ath10k_core_start [ath10k_core]) from
-[<bf947eec>] (ath10k_start+0xbc/0x56c [ath10k_core])
-[<bf947eec>] (ath10k_start [ath10k_core]) from
-[<bf8a7a04>] (drv_start+0x40/0x5c [mac80211])
-[<bf8a7a04>] (drv_start [mac80211]) from [<bf8b7cf8>]
-(ieee80211_do_open+0x170/0x82c [mac80211])
-[<bf8b7cf8>] (ieee80211_do_open [mac80211]) from
-[<c056afc8>] (__dev_open+0xa0/0xf4)
-[21053.491752] Normal: 641*4kB (UEMR) 505*8kB (UEMR) 330*16kB (UEMR)
-126*32kB (UEMR) 762*64kB (UEMR) 237*128kB (UEMR) 1*256kB (M) 0*512kB
-0*1024kB 0*2048kB 0*4096kB = 95276kB
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c   |  5 +--
- drivers/net/wireless/ath/ath10k/htt.h    |  6 +++-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 54 +++++++++++++++++++++++++-------
- 3 files changed, 51 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 5bc6847..f7ea4de 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1857,7 +1857,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		goto err_wmi_detach;
- 	}
- 
--	status = ath10k_htt_tx_alloc(&ar->htt);
-+	status = ath10k_htt_tx_start(&ar->htt);
- 	if (status) {
- 		ath10k_err(ar, "failed to alloc htt tx: %d\n", status);
- 		goto err_wmi_detach;
-@@ -2052,7 +2052,7 @@ void ath10k_core_stop(struct ath10k *ar)
- 		ath10k_wait_for_suspend(ar, WMI_PDEV_SUSPEND_AND_DISABLE_INTR);
- 
- 	ath10k_hif_stop(ar);
--	ath10k_htt_tx_free(&ar->htt);
-+	ath10k_htt_tx_stop(&ar->htt);
- 	ath10k_htt_rx_free(&ar->htt);
- 	ath10k_wmi_detach(ar);
- }
-@@ -2385,6 +2385,7 @@ void ath10k_core_destroy(struct ath10k *ar)
- 	destroy_workqueue(ar->workqueue_aux);
- 
- 	ath10k_debug_destroy(ar);
-+	ath10k_htt_tx_destroy(&ar->htt);
- 	ath10k_wmi_free_host_mem(ar);
- 	ath10k_mac_destroy(ar);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 0d2ed09..96bf7bf 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1692,6 +1692,8 @@ struct ath10k_htt {
- 		enum htt_tx_mode_switch_mode mode;
- 		enum htt_q_depth_type type;
- 	} tx_q_state;
-+
-+	bool tx_mem_allocated;
- };
- 
- #define RX_HTT_HDR_STATUS_LEN 64
-@@ -1754,7 +1756,9 @@ struct htt_rx_desc {
- int ath10k_htt_init(struct ath10k *ar);
- int ath10k_htt_setup(struct ath10k_htt *htt);
- 
--int ath10k_htt_tx_alloc(struct ath10k_htt *htt);
-+int ath10k_htt_tx_start(struct ath10k_htt *htt);
-+void ath10k_htt_tx_stop(struct ath10k_htt *htt);
-+void ath10k_htt_tx_destroy(struct ath10k_htt *htt);
- void ath10k_htt_tx_free(struct ath10k_htt *htt);
- 
- int ath10k_htt_rx_alloc(struct ath10k_htt *htt);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index ccbc8c03..27e49db 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -350,21 +350,15 @@ static int ath10k_htt_tx_alloc_txdone_fifo(struct ath10k_htt *htt)
- 	return ret;
- }
- 
--int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
-+static int ath10k_htt_tx_alloc_buf(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
- 	int ret;
- 
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
--		   htt->max_num_pending_tx);
--
--	spin_lock_init(&htt->tx_lock);
--	idr_init(&htt->pending_tx);
--
- 	ret = ath10k_htt_tx_alloc_cont_txbuf(htt);
- 	if (ret) {
- 		ath10k_err(ar, "failed to alloc cont tx buffer: %d\n", ret);
--		goto free_idr_pending_tx;
-+		return ret;
- 	}
- 
- 	ret = ath10k_htt_tx_alloc_cont_frag_desc(htt);
-@@ -396,6 +390,31 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
- free_txbuf:
- 	ath10k_htt_tx_free_cont_txbuf(htt);
- 
-+	return ret;
-+}
-+
-+int ath10k_htt_tx_start(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	int ret;
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "htt tx max num pending tx %d\n",
-+		   htt->max_num_pending_tx);
-+
-+	spin_lock_init(&htt->tx_lock);
-+	idr_init(&htt->pending_tx);
-+
-+	if (htt->tx_mem_allocated)
-+		return 0;
-+
-+	ret = ath10k_htt_tx_alloc_buf(htt);
-+	if (ret)
-+		goto free_idr_pending_tx;
-+
-+	htt->tx_mem_allocated = true;
-+
-+	return 0;
-+
- free_idr_pending_tx:
- 	idr_destroy(&htt->pending_tx);
- 
-@@ -418,15 +437,28 @@ static int ath10k_htt_tx_clean_up_pending(int msdu_id, void *skb, void *ctx)
- 	return 0;
- }
- 
--void ath10k_htt_tx_free(struct ath10k_htt *htt)
-+void ath10k_htt_tx_destroy(struct ath10k_htt *htt)
- {
--	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
--	idr_destroy(&htt->pending_tx);
-+	if (!htt->tx_mem_allocated)
-+		return;
- 
- 	ath10k_htt_tx_free_cont_txbuf(htt);
- 	ath10k_htt_tx_free_txq(htt);
- 	ath10k_htt_tx_free_cont_frag_desc(htt);
- 	ath10k_htt_tx_free_txdone_fifo(htt);
-+	htt->tx_mem_allocated = false;
-+}
-+
-+void ath10k_htt_tx_stop(struct ath10k_htt *htt)
-+{
-+	idr_for_each(&htt->pending_tx, ath10k_htt_tx_clean_up_pending, htt->ar);
-+	idr_destroy(&htt->pending_tx);
-+}
-+
-+void ath10k_htt_tx_free(struct ath10k_htt *htt)
-+{
-+	ath10k_htt_tx_stop(htt);
-+	ath10k_htt_tx_destroy(htt);
- }
- 
- void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
--- 
-1.9.1
+> Thanks,
+> Arend
+> 
+>> Fixes: 73c7da3dae1e ("cfg80211: add generic helper to check interface is running")
+>> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>> ---
+>>  net/wireless/nl80211.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index 4e9bda49e957..e4f718e956d7 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -10625,7 +10625,7 @@ static int nl80211_start_nan(struct sk_buff *skb, struct genl_info *info)
+>>  	if (wdev->iftype != NL80211_IFTYPE_NAN)
+>>  		return -EOPNOTSUPP;
+>>  
+>> -	if (!wdev_running(wdev))
+>> +	if (wdev_running(wdev))
+>>  		return -EEXIST;
+>>  
+>>  	if (rfkill_blocked(rdev->rfkill))
+>>
