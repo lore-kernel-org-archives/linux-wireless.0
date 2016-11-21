@@ -1,71 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34807 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933551AbcKNQfl (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:35:41 -0500
-Received: by mail-lf0-f66.google.com with SMTP id o141so7513862lff.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:40 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 11/12] ath10k: Added more host_interest members
-Date: Mon, 14 Nov 2016 17:33:41 +0100
-Message-Id: <1479141222-8493-12-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173600_590070_EAF11AEE)
-In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from ni.piap.pl ([195.187.100.4]:58970 "EHLO ni.piap.pl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753975AbcKUNy5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 08:54:57 -0500
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: miaoqing@codeaurora.org
+Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 4.9.0-rc5] AR9300 calibration problems with antenna selected
+References: <m3wpg52hii.fsf@t19.piap.pl>
+        <61055e757c5645dfb69da3fc555cbcf5@aptaiexm02f.ap.qualcomm.com>
+        <2ea016e563f5db553f201a7d4205c2c0@codeaurora.org>
+Date: Mon, 21 Nov 2016 14:54:52 +0100
+In-Reply-To: <2ea016e563f5db553f201a7d4205c2c0@codeaurora.org>
+        (miaoqing@codeaurora.org's message of "Mon, 21 Nov 2016 13:48:03
+        +0800")
+Message-ID: <m3d1hp2b0z.fsf@t19.piap.pl> (sfid-20161121_145519_340001_1F371DC6)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Augmented struct host_interest with more members.
+miaoqing@codeaurora.org writes:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+>> rmmod ath9k
+>> modprobe ath9k
+>> iw dev wlan0 set type ibss
+>> iw phy phyX set antenna 2
+>
+> 2 is a bad mask. We use bitmap, the valid masks are 1, 3, 7.
 
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index a47cab4..58e0541 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -205,6 +205,24 @@ struct host_interest {
- 	 */
- 	/* Bit 1 - unused */
- 	u32 hi_fw_swap;					/* 0x104 */
-+
-+	/* global arenas pointer address, used by host driver debug */
-+	u32 hi_dynamic_mem_arenas_addr;			/* 0x108 */
-+
-+	/* allocated bytes of DRAM use by allocated */
-+	u32 hi_dynamic_mem_allocated;			/* 0x10C */
-+
-+	/* remaining bytes of DRAM */
-+	u32 hi_dynamic_mem_remaining;			/* 0x110 */
-+
-+	/* memory track count, configured by host */
-+	u32 hi_dynamic_mem_track_max;			/* 0x114 */
-+
-+	/* minidump buffer */
-+	u32 hi_minidump;				/* 0x118 */
-+
-+	/* bdata's sig and key addr */
-+	u32 hi_bd_sig_key;				/* 0x11c */
- } __packed;
- 
- #define HI_ITEM(item)  offsetof(struct host_interest, item)
-@@ -319,6 +337,12 @@ struct host_interest {
- #define HI_ACS_FLAGS_USE_WWAN       (1 << 1)
- /* Use test VAP */
- #define HI_ACS_FLAGS_TEST_VAP       (1 << 2)
-+/* SDIO/mailbox ACS flag definitions */
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_SET       (1 << 0)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_SET    (1 << 1)
-+#define HI_ACS_FLAGS_ALT_DATA_CREDIT_SIZE        (1 << 2)
-+#define HI_ACS_FLAGS_SDIO_SWAP_MAILBOX_FW_ACK    (1 << 16)
-+#define HI_ACS_FLAGS_SDIO_REDUCE_TX_COMPL_FW_ACK (1 << 17)
- 
- /*
-  * CONSOLE FLAGS
+Thanks for your response.
+
+I have two antenna connections (and a single antenna). Is it possible to
+select the secondary antenna connector only? How?
 -- 
-1.7.9.5
+Krzysztof Halasa
+
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
