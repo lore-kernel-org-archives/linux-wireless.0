@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47888 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934354AbcKWTmS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 14:42:18 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from hupie.dyndns.org ([80.101.237.101]:59929 "EHLO hupie.dyndns.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752318AbcKUJP2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 21 Nov 2016 04:15:28 -0500
+Subject: Re: [ath9k-devel] [RFC v2 2/2] ath9k: Reset chip on potential deaf
+ state
+To: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+References: <20161117083614.19188-1-sven.eckelmann@open-mesh.com>
+ <20161117083614.19188-2-sven.eckelmann@open-mesh.com>
+ <d23407cb-a1c0-860a-3436-5e72402a080b@hupie.com>
+ <2358985.PI5q6nxgha@bentobox>
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+        ath9k-devel@qca.qualcomm.com,
+        Simon Wunderlich <simon.wunderlich@open-mesh.com>
+From: Ferry Huberts <mailings@hupie.com>
+Message-ID: <e5b088be-c0e5-e749-6696-c407abb614a7@hupie.com> (sfid-20161121_101531_357483_1538269E)
+Date: Mon, 21 Nov 2016 10:15:25 +0100
 MIME-Version: 1.0
-Subject: Re: ath10k: fix monitor vdev for receiving other bss frames
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1479510658-8326-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1479510658-8326-1-git-send-email-rmanohar@qca.qualcomm.com>
-To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Rajkumar Manoharan" <rmanohar@qca.qualcomm.com>,
-        <rmanohar@codeaurora.org>
-Message-ID: <8167e14b023b48af8cf8f277c36415d3@euamsexm01a.eu.qualcomm.com> (sfid-20161123_204221_108672_4D82E0F8)
-Date: Wed, 23 Nov 2016 20:42:10 +0100
+In-Reply-To: <2358985.PI5q6nxgha@bentobox>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com> wrote:
-> In order to receive other BSS entries in mesh mode, Monitor vdev
-> is created whenever filter flag is set with OTHER_BSS. Recently
-> it is root caused that setting promisc filter for Mesh interface
-> is causing performance and stability issues. To fix this issue,
-> firmware will configure appropriate rxfilters by default for mesh
-> vdev during vdev creation. This change fixes monitor vdev creation
-> based on firmware IE
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
 
-705d7aa06220 ath10k: fix monitor vdev for receiving other bss frames
+On 21/11/16 10:10, Sven Eckelmann wrote:
+> On Montag, 21. November 2016 10:07:43 CET Ferry Huberts wrote:
+> [...]
+>>> v2:
+>>>  - reduce amount of possible goto-raptor attacks by one (thanks Kalle Valo)
+>>>
+>>> This problem was discovered in mesh setups. It was noticed that some nodes
+>>
+>>
+>> What kind of setup?
+>> Using 802.11s?
+>
+> Unencrypted IBSS.
+>
 
--- 
-https://patchwork.kernel.org/patch/9437519/
+ok, thanks. that is different then.
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+I _can_ tell you that using the high priority queue (EF class traffic) 
+seems to somehow 'unwedge' the chip during/after rekeying. Still have to 
+verify this again, but that is what I saw last week.
