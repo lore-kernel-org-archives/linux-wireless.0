@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:53216 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751474AbcKCC6t (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:35810 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754166AbcKULaT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 22:58:49 -0400
-Date: Wed, 02 Nov 2016 22:58:42 -0400 (EDT)
-Message-Id: <20161102.225842.248777008402902889.davem@davemloft.net> (sfid-20161103_035921_886354_56FD81D8)
-To: Larry.Finger@lwfinger.net
-Cc: john@zgus.com, Jes.Sorensen@redhat.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
- macpower
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net>
-References: <cover.1477769750.git.john@zgus.com>
-        <20161030102112.GA5789@cube>
-        <10e32bb4-fe16-6a0f-eaf4-1142c23e7b56@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Mon, 21 Nov 2016 06:30:19 -0500
+Received: by mail-pf0-f182.google.com with SMTP id i88so64112333pfk.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 03:30:18 -0800 (PST)
+Subject: Re: scheduled scan interval
+To: Johannes Berg <johannes.berg@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com> (sfid-20161121_123032_428396_2FF63892)
+Date: Mon, 21 Nov 2016 12:30:13 +0100
+MIME-Version: 1.0
+In-Reply-To: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Wed, 2 Nov 2016 20:00:03 -0500
-
-> On 10/30/2016 05:21 AM, John Heenan wrote:
->> Code tests show data returned by rtl8xxxu_read8(priv, REG_CR), used to
->> set
->> macpower, is never 0xea. It is only ever 0x01 (first time after
->> modprobe)
->> using wpa_supplicant and 0x00 thereafter using wpa_supplicant. These
->> results
->> occurs with 'Fix for authentication failure' [PATCH 1/2] in place.
->>
->> Whatever was returned, code tests always showed that at least
->> rtl8xxxu_init_queue_reserved_page(priv);
->> is always required. Not called if macpower set to true.
->>
->> Please see cover letter, [PATCH 0/2], for more information from tests.
+On 21-11-2016 12:19, Arend Van Spriel wrote:
+> Hi Johannes, Luca,
 > 
-> That cover letter will NOT be included in the commit message, thus
-> referring to it here is totally pointless.
+> The gscan work made me look at scheduled scan and the implementation of
+> it in brcmfmac. The driver ignored the interval parameter from
+> user-space. Now I am fixing that. One thing is that our firmware has a
+> minimum interval which can not be indicated in struct wiphy. The other
+> issue is how the maximum interval is used in the nl80211.c.
+> 
+> In nl80211_parse_sched_scan_plans() it is used against value passed in
+> NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
+> For the first one it caps the value to the maximum, but for the second
+> one it returns -EINVAL. I suspect this is done because maximum interval
+> was introduced with schedule scan plans, but it feels inconsistent.
 
-This is why when a patch series is added to GIT, the cover letter
-must be added to the merge commit that adds that series.
+It also maybe simply wrong to cap. At least brcmfmac does not set the
+maximum so it will always get interval being zero. Maybe better to do:
 
-It is therefore perfectly valid to refer to such text from a
-commit contained by that merge commit.
+		if (wiphy->max_sched_scan_plan_interval &&
+		    request->scan_plans[0].interval >
+		    wiphy->max_sched_scan_plan_interval)
+			return -EINVAL;
+
+> Thoughts?
+> 
+> Regards,
+> Arend
+> 
