@@ -1,93 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:35236 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933453AbcKWTva (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:35336 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753962AbcKUQ7P (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 14:51:30 -0500
-Date: Wed, 23 Nov 2016 19:51:20 +0000
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: linux-wireless@vger.kernel.org,
-        Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>,
-        ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Gregory CLEMENT <gregory.clement@free-electrons.com>,
-        Kalle Valo <kvalo@codeaurora.org>, Andrew Lunn <andrew@lunn.ch>
-Subject: Re: ath9k ARMv7 OOPS in v4.8.6, v4.2.8
-Message-ID: <20161123195120.GE14217@n2100.armlinux.org.uk> (sfid-20161123_205133_311050_01AD1235)
-References: <20161123191539.GF2799@io.lakedaemon.net>
+        Mon, 21 Nov 2016 11:59:15 -0500
+Received: by mail-qk0-f195.google.com with SMTP id n204so48337699qke.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 08:59:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161123191539.GF2799@io.lakedaemon.net>
+In-Reply-To: <1479740918.2517.28.camel@coelho.fi>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+ <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com> <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
+ <1479740918.2517.28.camel@coelho.fi>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Mon, 21 Nov 2016 08:59:13 -0800
+Message-ID: <CAA93jw5hkLWCCKdabEyKWTF_kFs8xWKC-kjUeFNh9os+zEuxJw@mail.gmail.com> (sfid-20161121_175945_351164_72012065)
+Subject: Re: scheduled scan interval
+To: Luca Coelho <luca@coelho.fi>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 23, 2016 at 07:15:39PM +0000, Jason Cooper wrote:
-> ------- oops from v4.8.6 #2 ------------------------------------------
-> [42059.303625] Unable to handle kernel NULL pointer dereference at virtual address 00000020
-> [42059.311799] pgd = c0004000
-> [42059.314522] [00000020] *pgd=00000000
-> [42059.318162] Internal error: Oops: 17 [#1] SMP ARM
-> [42059.322889] Modules linked in: ath9k ath9k_common ath9k_hw ath
-> [42059.328809] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.6 #37
-> [42059.334755] Hardware name: Marvell Armada 370/XP (Device Tree)
-> [42059.340613] task: c0b091c0 task.stack: c0b00000
-> [42059.345176] PC is at ath_cmn_process_fft+0xa0/0x578 [ath9k_common]
-> [42059.351388] LR is at ath_cmn_process_fft+0xc4/0x578 [ath9k_common]
-> [42059.357598] pc : [<bf07bec4>]    lr : [<bf07bee8>]    psr: 80000153
-> [42059.357598] sp : c0b01cd0  ip : 00000000  fp : 00000000
-> [42059.369127] r10: c0b034d4  r9 : 00000069  r8 : 0000006c
-> [42059.374374] r7 : 00000000  r6 : dcfbd340  r5 : c0b03da0  r4 : 00000000
-> [42059.380930] r3 : 00000001  r2 : 00000008  r1 : 00000004  r0 : 00000000
+On Mon, Nov 21, 2016 at 7:08 AM, Luca Coelho <luca@coelho.fi> wrote:
+> Hi Arend,
+>
+> On Mon, 2016-11-21 at 13:03 +0100, Arend Van Spriel wrote:
+>> On 21-11-2016 12:30, Arend Van Spriel wrote:
+>> > On 21-11-2016 12:19, Arend Van Spriel wrote:
+>> > > Hi Johannes, Luca,
+>> > >
+>> > > The gscan work made me look at scheduled scan and the implementation=
+ of
+>> > > it in brcmfmac. The driver ignored the interval parameter from
+>> > > user-space. Now I am fixing that. One thing is that our firmware has=
+ a
+>> > > minimum interval which can not be indicated in struct wiphy. The oth=
+er
+>> > > issue is how the maximum interval is used in the nl80211.c.
+>> > >
+>> > > In nl80211_parse_sched_scan_plans() it is used against value passed =
+in
+>> > > NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVA=
+L.
+>> > > For the first one it caps the value to the maximum, but for the seco=
+nd
+>> > > one it returns -EINVAL. I suspect this is done because maximum inter=
+val
+>> > > was introduced with schedule scan plans, but it feels inconsistent.
+>> >
+>> > It also maybe simply wrong to cap. At least brcmfmac does not set the
+>> > maximum so it will always get interval being zero. Maybe better to do:
+>> >
+>> >             if (wiphy->max_sched_scan_plan_interval &&
+>> >                 request->scan_plans[0].interval >
+>> >                 wiphy->max_sched_scan_plan_interval)
+>> >                     return -EINVAL;
+>> >
+>> > > Thoughts?
+>>
+>> Digging deeper. Looking at v4.3 before introduction of sched_scan_plans.
+>> struct sched_scan_request::interval was specified in milliseconds! Below
+>> the drivers that I see having scheduled scan support:
+>>
+>> iwlmvm: cap interval, convert to seconds.
+>> ath6kl: cap to 1sec minimum, no max check, convert to seconds.
+>> wl12xx: no checking in driver, fw need milliseconds.
+>> wl18xx: no checking in driver, fw need milliseconds.
+>>
+>> The milliseconds conversion seems to be taken care of by multiplying
+>> with MSEC_PER_SEC in wl{12,18}xx drivers.
+>>
+>> It seems in 4.8 only iwlmvm set wiphy->max_sched_scan_plan_interval so
+>> other drivers will get interval of zero which only ath6kl handles.
+>
+> With the introduction of scheduled scan plans, we sort of deprecated
+> the "generic" scheduled scan interval.  It doesn't make sense to have
+> both passed at the same time, so nl80211 forbids
+> NL80211_ATTR_SCHED_SCAN_INTERVAL if we pass
+> NL80211_ATTR_SCHED_SCAN_PLANS.
+>
+> The original NL80211_ATTR_SCHED_SCAN_INTERVAL was specified in msecs,
+> which is silly because we can never get millisecond accuracy in this.
+> Thus, in the plans API, we decided to use seconds instead (because it
+> makes much more sense).  Additionally, the interval is considered
+> "advisory", because the FW may not be able guarantee the exact
+> intervals (for instance, the iwlwifi driver actually starts the
+> interval timer after scan completion, so if you specify 10 seconds
+> intervals, in practice they'll be 13-14 seconds).
+>
+> I'm not sure I'm answering your question, because I'm also not sure I
+> understood the question. :)
 
-Well, the good news is that it's reproducable.
+I'm not sure if I understand the discussion and hooks myself, but
+recently fixes for doing channel scans saner from userspace ended up
+here, after some discussion.
 
-It looks like it could be this:
+https://bugzilla.gnome.org/show_bug.cgi?id=3D766482
 
-static int
-ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
-{
-        for_each_online_cpu(i)
-                ret += relay_buf_full(rc->buf[i]);
+Anything that can reduce the impact of this behavior, I'm for!
 
-where i = 8 (r2) and rc->buf is r7.  That's just a guess though, as
-there's precious little to go on with the Code: line - modern GCCs
-don't give us much with the Code: line anymore to figure out what's
-going on without the exact object files.
+http://www.taht.net/~d/channel_scans_destroying_latency_under_load_for_10s.=
+png
 
-        e5933000        ldr     r3, [r3]
-        e1d330b4        ldrh    r3, [r3, #4]
-        e58d3030        str     r3, [sp, #48]   ; 0x30
-        ea000002        b       1c <foo+0x1c>
-        e7970102        ldr     r0, [r7, r2, lsl #2]
 
-What makes me wonder though is that if i=8, that means you must have a
-system with 9 online CPUs, which is probably unlikely - or maybe that's
-the problem, for_each_online_cpu() is going wrong...
 
-If it's not that line of code, I don't see what else it would be based
-on the output of my compiler - there's only one case in my disassembly
-that corresponds with the single code line that we have to go on, and
-it's this:
+>
+> --
+> Cheers,
+> Luca.
 
-     a44:       e5983020        ldr     r3, [r8, #32]
-     a48:       e793010a        ldr     r0, [r3, sl, lsl #2] <===
-     a4c:       ebfffffe        bl      0 <relay_buf_full>
-     a50:       e0844000        add     r4, r4, r0
-     a54:       e59f9434        ldr     r9, [pc, #1076]
-     a58:       e28a2001        add     r2, sl, #1
-     a5c:       e3a01004        mov     r1, #4
-     a60:       e1a00009        mov     r0, r9
-     a64:       ebfffffe        bl      0 <_find_next_bit_le>
-     a68:       e5953000        ldr     r3, [r5]
-     a6c:       e1500003        cmp     r0, r3
-     a70:       e1a0a000        mov     sl, r0
-     a74:       bafffff2        blt     a44 <ath_cmn_process_fft+0xa8>
 
-I'm debating now about whether we need to dump more of the code in the
-oops - both before and after the faulting instruction...
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+--=20
+Dave T=C3=A4ht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
