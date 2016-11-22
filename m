@@ -1,56 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49496 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755288AbcKYPQS (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34691 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932577AbcKVNBT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 10:16:18 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: Introduce airtime fairness scheduling between
- stations
-Date: Fri, 25 Nov 2016 15:16:13 +0000
-Message-ID: <87wpfr8u9v.fsf@kamboji.qca.qualcomm.com> (sfid-20161125_161638_530558_8F9BF1F6)
-References: <20160617090929.31606-1-toke@toke.dk>
-        <20161124135455.29327-1-toke@toke.dk>
-In-Reply-To: <20161124135455.29327-1-toke@toke.dk> ("Toke =?utf-8?Q?H?=
- =?utf-8?Q?=C3=B8iland-J=C3=B8rgensen=22's?=    message of "Thu, 24 Nov 2016
- 14:54:55 +0100")
-Content-Type: text/plain; charset="utf-8"
+        Tue, 22 Nov 2016 08:01:19 -0500
+Received: by mail-pg0-f65.google.com with SMTP id e9so2088866pgc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 05:01:19 -0800 (PST)
+Date: Tue, 22 Nov 2016 22:53:01 +1000
+From: Barry Day <briselec@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Fix failure to reconnect to AP
+Message-ID: <20161122125300.GB23278@testbox> (sfid-20161122_140124_397903_F08EE3DD)
+References: <20161113111705.GA2393@box64.home.org>
+ <wrfjoa1iyz1e.fsf@redhat.com>
+ <wrfjbmx87oul.fsf@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfjbmx87oul.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KFRoZSBtYWtlLXdpZmktZmFzdCBsaXN0IGlzIGFubm95aW5nIGFzIGl0IGFsd2F5cyBzcGFtcyBt
-ZSB3aGVuIGl0J3Mgb24NCkNDLCBzbyBkcm9wcGVkIGl0LikNCg0KVG9rZSBIw7hpbGFuZC1Kw7hy
-Z2Vuc2VuIDx0b2tlQHRva2UuZGs+IHdyaXRlczoNCg0KPiBUaGlzIHJld29ya3MgdGhlIGF0aDlr
-IGRyaXZlciB0byBzY2hlZHVsZSB0cmFuc21pc3Npb25zIHRvIGNvbm5lY3RlZA0KPiBzdGF0aW9u
-cyBpbiBhIHdheSB0aGF0IGVuZm9yY2VzIGFpcnRpbWUgZmFpcm5lc3MgYmV0d2VlbiB0aGVtLiBJ
-dA0KPiBhY2NvbXBsaXNoZXMgdGhpcyBieSBtZWFzdXJpbmcgdGhlIHRpbWUgc3BlbnQgdHJhbnNt
-aXR0aW5nIHRvIG9yDQo+IHJlY2VpdmluZyBmcm9tIGEgc3RhdGlvbiBhdCBUWCBhbmQgUlggY29t
-cGxldGlvbiwgYW5kIGFjY291bnRpbmcgdGhpcyB0bw0KPiBhIHBlci1zdGF0aW9uLCBwZXItUW9T
-IGxldmVsIGFpcnRpbWUgZGVmaWNpdC4gVGhlbiwgYW4gRlEtQ29EZWwgYmFzZWQNCj4gZGVmaWNp
-dCBzY2hlZHVsZXIgaXMgZW1wbG95ZWQgYXQgcGFja2V0IGRlcXVldWUgdGltZSwgdG8gY29udHJv
-bCB3aGljaA0KPiBzdGF0aW9uIGdldHMgdGhlIG5leHQgdHJhbnNtaXNzaW9uIG9wcG9ydHVuaXR5
-Lg0KPg0KPiBBaXJ0aW1lIGZhaXJuZXNzIGNhbiBzaWduaWZpY2FudGx5IGltcHJvdmUgdGhlIGVm
-ZmljaWVuY3kgb2YgdGhlIG5ldHdvcmsNCj4gd2hlbiBzdGF0aW9uIHJhdGVzIHZhcnkuIFRoZSBm
-b2xsb3dpbmcgdGhyb3VnaHB1dCB2YWx1ZXMgYXJlIGZyb20gYQ0KPiBzaW1wbGUgdGhyZWUtc3Rh
-dGlvbiB0ZXN0IHNjZW5hcmlvLCB3aGVyZSB0d28gc3RhdGlvbnMgb3BlcmF0ZSBhdCB0aGUNCj4g
-aGlnaGVzdCBIVDIwIHJhdGUsIGFuZCBvbmUgc3RhdGlvbiBhdCB0aGUgbG93ZXN0LCBhbmQgdGhl
-IHNjaGVkdWxlciBpcw0KPiBlbXBsb3llZCBhdCB0aGUgYWNjZXNzIHBvaW50Og0KPg0KPiAgICAg
-ICAgICAgICAgICAgICBCZWZvcmUgICAvICAgQWZ0ZXINCj4gRmFzdCBzdGF0aW9uIDE6ICAgIDE5
-LjE3ICAgLyAgIDI1LjA5IE1icHMNCj4gRmFzdCBzdGF0aW9uIDI6ICAgIDE5LjgzICAgLyAgIDI1
-LjIxIE1icHMNCj4gU2xvdyBzdGF0aW9uOiAgICAgICAyLjU4ICAgLyAgICAxLjc3IE1icHMNCj4g
-VG90YWw6ICAgICAgICAgICAgIDQxLjU4ICAgLyAgIDUyLjA3IE1icHMNCj4NCj4gVGhlIGJlbmVm
-aXQgb2YgYWlydGltZSBmYWlybmVzcyBnb2VzIHVwIHRoZSBtb3JlIHN0YXRpb25zIGFyZSBwcmVz
-ZW50Lg0KPiBJbiBhIDMwLXN0YXRpb24gdGVzdCB3aXRoIG9uZSBzdGF0aW9uIGFydGlmaWNpYWxs
-eSBsaW1pdGVkIHRvIDEgTWJwcywNCj4gd2UgaGF2ZSBzZWVuIGFnZ3JlZ2F0ZSB0aHJvdWdocHV0
-IGdvIGZyb20gMi4xNCB0byAxNy43NiBNYnBzLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBUb2tlIEjD
-uGlsYW5kLUrDuHJnZW5zZW4gPHRva2VAdG9rZS5kaz4NCg0KWy4uLl0NCg0KPiArdm9pZCBhdGhf
-YWNxX2xvY2soc3RydWN0IGF0aF9zb2Z0YyAqc2MsIHN0cnVjdCBhdGhfYWNxICphY3EpDQo+ICsJ
-X19hY3F1aXJlcygmYWNxLT5sb2NrKQ0KPiArew0KPiArCXNwaW5fbG9ja19iaCgmYWNxLT5sb2Nr
-KTsNCj4gK30NCj4gKw0KPiArdm9pZCBhdGhfYWNxX3VubG9jayhzdHJ1Y3QgYXRoX3NvZnRjICpz
-Yywgc3RydWN0IGF0aF9hY3EgKmFjcSkNCj4gKwlfX3JlbGVhc2VzKCZhY3EtPmxvY2spDQo+ICt7
-DQo+ICsJc3Bpbl91bmxvY2tfYmgoJmFjcS0+bG9jayk7DQo+ICt9DQoNCldoeSB0aGVzZT8gVG8g
-bWUgaXQgbG9va3MgbGlrZSB0aGV5IGp1c3QgYWRkIGFuIGV4dHJhIGZ1bmN0aW9uIGp1bXAgYW5k
-DQp1bm5lY2Nlc3NhcnkgZXh0cmEgbGF5ZXIuDQoNCi0tIA0KS2FsbGUgVmFsbw==
+On Mon, Nov 21, 2016 at 11:57:22AM -0500, Jes Sorensen wrote:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+> > Barry Day <briselec@gmail.com> writes:
+> >> The rtl8192e and rtl8723 fail to reconnect to an AP after being
+> >> disconnected. Ths patch fixes that without affecting the rtl8192cu.
+> >> I don't have a rtl8723 to test but it has been tested on a rtl8192eu.
+> >> After going through the orginal realtek code for the rtl8723, I am
+> >> confident the patch is applicable to both.
+> >>
+> >> Signed-off-by: Barry Day <briselec@gmail.com>
+> >> ---
+> >>  rtl8xxxu_core.c | 18 ++++++++++++++----
+> >>  1 file changed, 14 insertions(+), 4 deletions(-)
+> >
+> > Hi Barry,
+> >
+> > Thank you for the patch. There are a couple of items which I am not
+> > 100% sure about the order of.
+> >
+> >> diff --git a/rtl8xxxu_core.c b/rtl8xxxu_core.c
+> >> index 04141e5..6ac10d2 100644
+> >> --- a/rtl8xxxu_core.c
+> >> +++ b/rtl8xxxu_core.c
+> >> @@ -4372,17 +4372,25 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
+> >>  void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+> >>  				  u8 macid, bool connect)
+> >>  {
+> >> +	u8 val8;
+> >>  	struct h2c_cmd h2c;
+> >>  
+> >>  	memset(&h2c, 0, sizeof(struct h2c_cmd));
+> >>  
+> >>  	h2c.media_status_rpt.cmd = H2C_8723B_MEDIA_STATUS_RPT;
+> >> -	if (connect)
+> >> +	if (connect) {
+> >>  		h2c.media_status_rpt.parm |= BIT(0);
+> >> -	else
+> >> -		h2c.media_status_rpt.parm &= ~BIT(0);
+> >> +		rtl8xxxu_gen2_h2c_cmd(priv, &h2c,
+> >> +					sizeof(h2c.media_status_rpt));
+> >> +	} else {
+> >> +		val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
+> >> +		val8 &= ~BEACON_FUNCTION_ENABLE;
+> >> +
+> >> +		rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
+> >> +		rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x00);
+> >> +		rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, (BIT(0) | BIT(1)));
+> >> +	}
+> >>  
+> >> -	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
+> >>  }
+> 
+> Barry,
+> 
+> So looking at this again, I am pretty sure you will break monitor mode
+> with this. By setting REG_RXFLTMAP2 to 0x0000 you stop reception of all
+> data frames.
+> 
+> The other thing here is that you change removes the part notifying the
+> firmware that we disconnected since you now only send the
+> media_start_rpt command on connect, but not on disconnect.
+> 
+> I am curious if the problem goes away if you simply add the BEACON_CTRL
+> and REG_DUAL_TSF_RST parts?
+> 
+> >
+> > This only affects 8192eu and not 8192cu - we left RXFLTMAP2 out of here
+> > on purpose for monitor mode, but you now disable it for 8192eu/8723bu.
+> >
+> >>  void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+> >> @@ -4515,6 +4523,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+> >>  				sgi = 1;
+> >>  			rcu_read_unlock();
+> >>  
+> >> +			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
+> >> +
+> >>  			priv->fops->update_rate_mask(priv, ramask, sgi);
+> >>  
+> >>  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
+> 
+> I believe this change only matters because you disable RXFLTMAP2
+> above. If we really have to write to RXFLTMAP2 to make this work, I
+> suspect we need to keep some sort of state information.
+> 
+> I would also be curious if RXFLTMAP2 gets reset somehow by the firmware,
+> and we do not account for that.
+> 
+> Cheers,
+> Jes
+> 
+
+I'll redo the patch without touching REG_RXFLTMAP2. I don't think it's needed
+to fix the fail to reconnect issue.
+
+I haven't had a proper look at the 8723 chips yet but the vendor drivers for
+the others don't do a h2c cmd for disconnect but I'll test leaving it in to see
+if it makes any difference. A 8723bu arrived in the mail today so now I can
+test it too and I discovered yesterday I have a 8723au but it's in a cheap
+Android tablet.
+
+Barry
