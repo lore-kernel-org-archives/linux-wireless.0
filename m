@@ -1,41 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39382 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752563AbcKRJsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 04:48:17 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 4/9] rt2800: do not overwrite WPDMA_GLO_CFG_WP_DMA_BURST_SIZE
-Date: Fri, 18 Nov 2016 10:43:56 +0100
-Message-Id: <1479462241-9299-5-git-send-email-sgruszka@redhat.com> (sfid-20161118_104819_705703_C3FCA959)
-In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:36748 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932480AbcKVNM3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 08:12:29 -0500
+Received: by mail-qk0-f175.google.com with SMTP id n21so22663073qka.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 05:12:28 -0800 (PST)
+Subject: Re: [PATCH] nl80211: change validation of scheduled scan interval
+ values
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1479810126-28492-1-git-send-email-arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9fa76f2c-44b2-9782-8636-09afd1d59927@broadcom.com> (sfid-20161122_141232_064753_D73C55AC)
+Date: Tue, 22 Nov 2016 14:12:25 +0100
+MIME-Version: 1.0
+In-Reply-To: <1479810126-28492-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We already initlized WPDMA_GLO_CFG_WP_DMA_BURST_SIZE to 3 on
-rt2800_init_registers() for USB devices. For PCI devices we will use
-HW default setting, which is 2, so patch does not change behaviour
-on PCI devices.
+On 22-11-2016 11:22, Arend van Spriel wrote:
+> When user-space does not provide scheduled scan plans, ie. uses the
+> old scheduled scan API containing NL80211_ATTR_SCHED_SCAN_INTERVAL.
+> The interval value passed by user-space is validated against
+> struct wiphy::max_sched_scan_plan_interval and if it is exceeding
+> it the interval is set to struct wiphy::max_sched_scan_plan_interval.
+> However, when the driver does not set this limit the interval the
+> interval in the request will always be zero. Hence add a check to
+> see whether the driver set struct wiphy::max_sched_scan_plan_interval.
+> 
+> For the new API, ie. for scheduled scan plans, the interval validation
+> has been simalarly adjusted to assure the limit is non-zero.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 1 -
- 1 file changed, 1 deletion(-)
+Actually turns out that max_sched_scan_plan_interval is always set in
+wiphy_new_nm() which is used by all drivers so please drop this patch.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index feceb13..9ecdc4c 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -6756,7 +6756,6 @@ int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 1);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 1);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_WP_DMA_BURST_SIZE, 2);
- 	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
- 	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
- 
--- 
-1.8.3.1
+Regards,
+Arend
+
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+>  net/wireless/nl80211.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 24ab199..e621554 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6777,7 +6777,8 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+>  		if (!request->scan_plans[0].interval)
+>  			return -EINVAL;
+>  
+> -		if (request->scan_plans[0].interval >
+> +		if (wiphy->max_sched_scan_plan_interval &&
+> +		    request->scan_plans[0].interval >
+>  		    wiphy->max_sched_scan_plan_interval)
+>  			request->scan_plans[0].interval =
+>  				wiphy->max_sched_scan_plan_interval;
+> @@ -6801,7 +6802,10 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+>  
+>  		request->scan_plans[i].interval =
+>  			nla_get_u32(plan[NL80211_SCHED_SCAN_PLAN_INTERVAL]);
+> -		if (!request->scan_plans[i].interval ||
+> +		if (!request->scan_plans[i].interval)
+> +			return -EINVAL;
+> +
+> +		if (wiphy->max_sched_scan_plan_interval &&
+>  		    request->scan_plans[i].interval >
+>  		    wiphy->max_sched_scan_plan_interval)
+>  			return -EINVAL;
+> 
