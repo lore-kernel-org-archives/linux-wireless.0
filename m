@@ -1,94 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f41.google.com ([74.125.83.41]:35864 "EHLO
-        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933341AbcKWIY6 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 03:24:58 -0500
-Received: by mail-pg0-f41.google.com with SMTP id f188so3564803pgc.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 00:24:57 -0800 (PST)
-Subject: Re: wl1251 & mac address & calibration data
-To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-References: <201611111820.52072@pali> <20161122153141.GT13735@pali>
- <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com>
- <201611221805.13606@pali>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <479c8380-82f7-f5c9-814d-dc3378feec5b@broadcom.com> (sfid-20161123_092520_414374_7321C5B7)
-Date: Wed, 23 Nov 2016 09:24:50 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:34258 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754435AbcKVPBr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 10:01:47 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Barry Day <briselec@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Fix failure to reconnect to AP
+References: <20161113111705.GA2393@box64.home.org>
+        <wrfjoa1iyz1e.fsf@redhat.com> <wrfjbmx87oul.fsf@redhat.com>
+        <20161122125300.GB23278@testbox>
+Date: Tue, 22 Nov 2016 10:01:45 -0500
+In-Reply-To: <20161122125300.GB23278@testbox> (Barry Day's message of "Tue, 22
+        Nov 2016 22:53:01 +1000")
+Message-ID: <wrfjzikr4kyu.fsf@redhat.com> (sfid-20161122_160150_571444_E33F29B1)
 MIME-Version: 1.0
-In-Reply-To: <201611221805.13606@pali>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-11-2016 18:05, Pali Rohár wrote:
-> On Tuesday 22 November 2016 17:14:28 Michal Kazior wrote:
->> On 22 November 2016 at 16:31, Pali Rohár <pali.rohar@gmail.com> wrote:
->>> On Tuesday 22 November 2016 16:22:57 Michal Kazior wrote:
->>>> On 21 November 2016 at 16:51, Pali Rohár <pali.rohar@gmail.com>
->>>> wrote:
->>>>> On Friday 11 November 2016 18:20:50 Pali Rohár wrote:
->>>>>> Hi! I will open discussion about mac address and calibration
->>>>>> data for wl1251 wireless chip again...
->>>>>>
->>>>>> Problem: Mac address & calibration data for wl1251 chip on
->>>>>> Nokia N900 are stored on second nand partition (mtd1) in
->>>>>> special proprietary format which is used only for Nokia N900
->>>>>> (probably on N8x0 and N9 too). Wireless driver wl1251.ko
->>>>>> cannot work without mac address and calibration data.
->>>>
->>>> Same problem applies to some ath9k/ath10k supported routers. Some
->>>> even carry mac address as implicit offset from ethernet mac
->>>> address. As far as I understand OpenWRT cooks cal blobs on first
->>>> boot prior to loading modules.
->>>
->>> So... wl1251 on Nokia N900 is not alone and this problem is there
->>> for more drivers and devices. Which means we should come up with
->>> some generic solution.
->>
->> This isn't particularly a problem for ath9k/ath10k.
->>
->> Let me give you more background on ath10k.
->>
->> ath10k devices can come with caldata and macaddr stored in their
->> OTP/EEPROM. In that case a generic "template" board file is used.
->> Userspace doesn't need to do anything special.
->>
->> Some vendors however decide to use flash partition to store caldata.
->> In that case ath10k expects userspace to prepare
->> cal-$bus-$devname.bin files, each for a different radio (you can
->> have multiple radios on a system).
->>
->> Now translating this for wl1251 I would expect it should also use
->> something like wl1251-nvs-sdio-0x0001.bin for devices like N900 that
->> have caldata on flash partition (instead of the generic
->> wl1251-nvs.bin). I'm not sure if wl1251-nvs.bin is something
->> comparable to (the generic) board.bin ath10k has though. Maybe the
->> entire idea behind wl1251-nvs.bin is flawed as it's supposed to be
->> device specific and is oblivious to possibility of having multiple
->> wl1251 radios on one system (probably sane assumption from practical
->> standpoint but still).
-> 
-> Basically nvs data are device specific, in ideal case they should be 
-> generated in factory by some calibration process (or so).
+Barry Day <briselec@gmail.com> writes:
+> On Mon, Nov 21, 2016 at 11:57:22AM -0500, Jes Sorensen wrote:
+>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>> >>  void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+>> >> @@ -4515,6 +4523,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>> >>  				sgi = 1;
+>> >>  			rcu_read_unlock();
+>> >>  
+>> >> +			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
+>> >> +
+>> >>  			priv->fops->update_rate_mask(priv, ramask, sgi);
+>> >>  
+>> >>  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
+>> 
+>> I believe this change only matters because you disable RXFLTMAP2
+>> above. If we really have to write to RXFLTMAP2 to make this work, I
+>> suspect we need to keep some sort of state information.
+>> 
+>> I would also be curious if RXFLTMAP2 gets reset somehow by the firmware,
+>> and we do not account for that.
+>> 
+>> Cheers,
+>> Jes
+>
+> I'll redo the patch without touching REG_RXFLTMAP2. I don't think it's needed
+> to fix the fail to reconnect issue.
+>
+> I haven't had a proper look at the 8723 chips yet but the vendor drivers for
+> the others don't do a h2c cmd for disconnect but I'll test leaving it in to see
+> if it makes any difference. A 8723bu arrived in the mail today so now I can
+> test it too and I discovered yesterday I have a 8723au but it's in a cheap
+> Android tablet.
 
-For brcmfmac we have what we call nvram data, which is determined during
-manufacturing. We use the firmware_class API to obtain that file, but on
-router it may be stored in flash. So an API was created for that router
-architecture and brcmfmac calls that API [1]. Not a generic solution but
-it gets the job done. Personally, I would have liked this to be handled
-behind the firmware_class API to hide the storage details from the driver.
+Let me know what you find out - if the h2c command causes the failure
+that would be very bizarre but certainly interesting to learn.
 
-Regards,
-Arend
-
-[1]
-http://lxr.free-electrons.com/source/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c#L449
+Cheers,
+Jes
