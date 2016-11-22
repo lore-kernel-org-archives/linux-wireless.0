@@ -1,160 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0020.hostedemail.com ([216.40.44.20]:56022 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S965298AbcKADCD (ORCPT
+Received: from mail-wj0-f195.google.com ([209.85.210.195]:36738 "EHLO
+        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932807AbcKVKaP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 31 Oct 2016 23:02:03 -0400
-Message-ID: <1477969314.23018.24.camel@perches.com> (sfid-20161101_040220_444513_9A89795D)
-Subject: Re: [PATCH] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-From: Joe Perches <joe@perches.com>
-To: John Heenan <john@zgus.com>, Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 31 Oct 2016 20:01:54 -0700
-In-Reply-To: <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
-References: <20161031183522.GA13315@cube> <wrfj1sywrz2f.fsf@redhat.com>
-         <CAAye0QNtcb28q1HY-xAr=bQ0s_nEQuv1TM+Ax5i99Eds7xOb=Q@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 22 Nov 2016 05:30:15 -0500
+Received: by mail-wj0-f195.google.com with SMTP id jb2so5936480wjb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 02:30:14 -0800 (PST)
+Received: from localhost.localdomain (199.red-88-21-51.staticip.rima-tde.net. [88.21.51.199])
+        by smtp.gmail.com with ESMTPSA id d8sm2148772wmi.21.2016.11.22.02.30.12
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Tue, 22 Nov 2016 02:30:12 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3][RESEND] mac80211: Pass new RSSI level in CQM RSSI notification
+Date: Tue, 22 Nov 2016 11:29:50 +0100
+Message-Id: <1479810592-2474-2-git-send-email-andrew.zaborowski@intel.com> (sfid-20161122_113018_983914_85D6012E)
+In-Reply-To: <1479810592-2474-1-git-send-email-andrew.zaborowski@intel.com>
+References: <1479810592-2474-1-git-send-email-andrew.zaborowski@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-11-01 at 08:15 +1000, John Heenan wrote:
-> > On 1 November 2016 at 07:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> > > > John Heenan <john@zgus.com> writes:
-> > > The rtl8723bu wireless IC shows evidence of a more agressive approach to
-> > > power saving, powering down its RF side when there is no wireless
-> > > interfacing but leaving USB interfacing intact. This makes the wireless
-> > > IC more suitable for use in devices which need to keep their power use
-> > > as low as practical, such as tablets and Surface Pro type devices.
-> > > 
-> > > In effect this means that a full initialisation must be performed
-> > > whenever a wireless interface is brought up. It also means that
-> > > interpretations of power status from general wireless registers should
-> > > not be relied on to influence an init sequence.
-> > > 
-> > > The patch works by forcing a fuller initialisation and forcing it to
-> > > occur more often in code paths (such as occurs during a low level
-> > > authentication that initiates wireless interfacing).
-> > > 
-> > > The initialisation sequence is now more consistent with code based
-> > > directly on vendor code. For example while the vendor derived code
-> > > interprets a register as indcating a particular powered state, it does
-> > > not use this information to influence its init sequence.
-> > > 
-> > > The rtl8723bu device has a unique USB VID and PID. This is taken
-> > > advantage of for the patch to ensure only rtl8723bu devices are affected
-> > > by this patch.
-> > > 
-> > > With this patch wpa_supplicant reliably and consistently connects with
-> > > an AP. Before a workaround such as executing rmmod and modprobe before
-> > > each call to wpa_supplicant worked with some distributions.
-> > > 
-> > > > > > Signed-off-by: John Heenan <john@zgus.com>
-> > > ---
-> > >  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 24 ++++++++++++++++++----
-> > >  1 file changed, 20 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > > index 04141e5..f36e674 100644
-> > > --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > > +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-> > > @@ -79,6 +79,8 @@ MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to di
-> > >  #define RTL8XXXU_TX_URB_LOW_WATER    25
-> > >  #define RTL8XXXU_TX_URB_HIGH_WATER   32
-> > > 
-> > > +#define USB_PRODUCT_ID_RTL8723BU 0xb720
-> > > +
-> > 
-> > Absolutely not! You have no guarantee that this is the only id used for
-> > 8723bu devices, and adding a #define for each is not going to happen.
-> 
-> Thanks for you reply.
-> 
-> I have no problem with that. However the patch does get the point
-> across in a minimalist and efficient way of what the issues are.
-> 
-> Currently there is no property available to determine the information required.
-> 
-> > 
-> > >  static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
-> > >                                 struct rtl8xxxu_rx_urb *rx_urb);
-> > > 
-> > > @@ -3892,6 +3894,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
-> > >       u8 val8;
-> > >       u16 val16;
-> > >       u32 val32;
-> > > +  struct usb_device_descriptor *udesc = &priv->udev->descriptor;
-> > 
-> > Indentaiton
-> 
-> OK. Missed that one.
-> 
-> > 
-> > >       /* Check if MAC is already powered on */
-> > >       val8 = rtl8xxxu_read8(priv, REG_CR);
-> > > @@ -3900,7 +3903,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
-> > >        * Fix 92DU-VC S3 hang with the reason is that secondary mac is not
-> > >        * initialized. First MAC returns 0xea, second MAC returns 0x00
-> > >        */
-> > > -     if (val8 == 0xea)
-> > > +     if (val8 == 0xea
-> > > +                     || (udesc->idVendor == USB_VENDOR_ID_REALTEK
-> > > +                     &&  udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
-> > >               macpower = false;
-> > >       else
-> > >               macpower = true;
-> > 
-> > Please respect proper kernel coding style!
-> 
-> I don't know what you mean. Your code has real tabs. My code has real
-> tabs. The kernel style goes on about tabs being 8 spaces. So do you
-> want: real tabs or real spaces?
-> 
-> You said no lines over 80 columns long. This is what i have done.
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c        |  2 +-
+ drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
+ drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
+ include/net/mac80211.h                      |  2 ++
+ net/mac80211/mlme.c                         |  7 ++++---
+ net/mac80211/trace.h                        | 11 +++++++----
+ 8 files changed, 21 insertions(+), 12 deletions(-)
 
-Typical kernel style would be:
-
-	if (val == 0xea ||
-	    (udesc->idVendor == USB_VENDOR_ID_REALTEK &&
-	     udesc->idProduct == USB_PRODUCT_ID_RTL8723BU))
-		macpower = false;
-	else
-		macpower = true;
-
-ie: logical continuations at EOL and indentation aligned to parentheses
-    using as many leading tabs as possible, then spaces where necessary
-
-or maybe:
-
-	macpower = !(val == 0xea ||
-		     (idesc->idVendor == USB_VENDOR_ID_REALTEK &&
-		      udesc->idProduct == USB_PRODUCT_ID_RTL8723BU));
-
-but the first one seems easier to read.
-
-> > > @@ -6080,9 +6093,12 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
-> > >               goto exit;
-> > >       }
-> > > 
-> > > -     ret = rtl8xxxu_init_device(hw);
-> > > -     if (ret)
-> > > +     if(!(id->idVendor == USB_VENDOR_ID_REALTEK
-> > > +                     && id->idProduct == USB_PRODUCT_ID_RTL8723BU)) {
-> > > +             ret = rtl8xxxu_init_device(hw);
-> > > +             if (ret)
-> > >               goto exit;
-> > > +     }
-> > 
-> > Again, this coding style abuse will never go into this driver,
-> 
-> As above, what abuse? I am not being facetious. Just puzzled.
-
-Same logical continuation and indentation alignment.
-
->  Again have a nice day!
-
-That's pleasant of you but Jen's rarely seems pleasant in return via
-email.  I trust he's more personable over a beer though.  Perhaps one
-day we'll all have one together.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 0e60e38..e06a2e3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++			sig,
+ 			GFP_KERNEL);
+ 	} else if (sig > thold &&
+ 		   (last_event == 0 || sig > last_event + hyst)) {
+@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++			sig,
+ 			GFP_KERNEL);
+ 	}
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dbb2389..3e260b4 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -818,7 +818,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
+ 
+ 	common->cqm_info.last_cqm_event_rssi = rssi;
+ 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
+-	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
++	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
+ 
+ 	return;
+ }
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index daf06a4..a522248 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
+ 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
+-			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
++			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
+ 						  GFP_KERNEL);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
+index d0593bc..f5acd24 100644
+--- a/drivers/net/wireless/ti/wl1251/event.c
++++ b/drivers/net/wireless/ti/wl1251/event.c
+@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
+ 		}
+ 
+ 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
+@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 4b59f67..f2e90d2 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
+ 
+ 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 		if (event != wlvif->last_rssi_event)
+-			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
++			ieee80211_cqm_rssi_notify(vif, event, metric,
++						  GFP_KERNEL);
+ 		wlvif->last_rssi_event = event;
+ 	}
+ }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a810dfc..33026e1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5244,6 +5244,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @rssi_event: the RSSI trigger event type
++ * @rssi_level: new RSSI level value or 0 if not available
+  * @gfp: context flags
+  *
+  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
+@@ -5252,6 +5253,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  */
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp);
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 7486f2d..a55cdd7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3405,14 +3405,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		} else if (sig > thold &&
+ 			   (last_event == 0 || sig > last_event + hyst)) {
+ 			ifmgd->last_cqm_event_signal = sig;
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		}
+ 	}
+ 
+@@ -5000,11 +5000,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	trace_api_cqm_rssi_notify(sdata, rssi_event);
++	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
+ 
+ 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
+ }
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 92a47af..f78d9f4 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
+ 
+ TRACE_EVENT(api_cqm_rssi_notify,
+ 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
+-		 enum nl80211_cqm_rssi_threshold_event rssi_event),
++		 enum nl80211_cqm_rssi_threshold_event rssi_event,
++		 s32 rssi_level),
+ 
+-	TP_ARGS(sdata, rssi_event),
++	TP_ARGS(sdata, rssi_event, rssi_level),
+ 
+ 	TP_STRUCT__entry(
+ 		VIF_ENTRY
+ 		__field(u32, rssi_event)
++		__field(s32, rssi_level)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		VIF_ASSIGN;
+ 		__entry->rssi_event = rssi_event;
++		__entry->rssi_level = rssi_level;
+ 	),
+ 
+ 	TP_printk(
+-		VIF_PR_FMT " event:%d",
+-		VIF_PR_ARG, __entry->rssi_event
++		VIF_PR_FMT " event:%d rssi:%d",
++		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
+ 	)
+ );
+ 
+-- 
+2.7.4
