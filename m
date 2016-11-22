@@ -1,324 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:52758 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934354AbcKWK1E (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33092 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755644AbcKVMeb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:27:04 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 06/12] brcmfmac: make internal escan more generic
-Date: Wed, 23 Nov 2016 10:25:25 +0000
-Message-Id: <1479896731-5091-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_112730_792301_E29E7B73)
-In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+        Tue, 22 Nov 2016 07:34:31 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 144so1358330pfv.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 04:34:31 -0800 (PST)
+Date: Tue, 22 Nov 2016 22:26:12 +1000
+From: Barry Day <briselec@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 0/7] rtl8xxxu: Pending patches
+Message-ID: <20161122122610.GA23278@testbox> (sfid-20161122_133443_816305_08EABB0F)
+References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+ <20161119014648.GA7140@testbox>
+ <wrfjbmxcb55h.fsf@redhat.com>
+ <20161119023830.GA7324@testbox>
+ <wrfj37inauwp.fsf@redhat.com>
+ <20161120024257.GA13169@testbox>
+ <wrfj7f7w7oqk.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <wrfj7f7w7oqk.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For scheduled scan we initiate an escan in firmware to obtain more
-info missing from the scheduled scan notification we get from firmware.
-For upcoming functionality this is also required so make it a bit
-more generic.
+On Mon, Nov 21, 2016 at 11:59:47AM -0500, Jes Sorensen wrote:
+> Barry Day <briselec@gmail.com> writes:
+> > On Sat, Nov 19, 2016 at 06:53:42PM -0500, Jes Sorensen wrote:
+> >> Barry Day <briselec@gmail.com> writes:
+> >> > On Fri, Nov 18, 2016 at 09:00:10PM -0500, Jes Sorensen wrote:
+> >> >> Barry Day <briselec@gmail.com> writes:
+> >> >> > On Fri, Nov 18, 2016 at 04:44:21PM -0500, Jes.Sorensen@redhat.com wrote:
+> >> >> >> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> >> >> >> 
+> >> >> >> Kalle,
+> >> >> >> 
+> >> >> >> Please find attached a number of patches for the rtl8xxxu
+> >> >> >> driver.
+> >> >> >> 
+> >> >> >> The issues reported with wpa_supplicant on 8723bu still needs further
+> >> >> >> investigation.
+> >> >> >> 
+> >> >> >
+> >> >> > The patch I posted that you want tested more will also fix the
+> >> >> > wpa_supplicant issue.  Currently I'm looking at why the tx rate is not
+> >> >> > what it should be. I feel fixing that first will be beneficial for
+> >> >> > fixing any other issues.
+> >> >> 
+> >> >> Interesting, I was thinking that might be the case. I do want to dig
+> >> >> into this further to understand it better. If we use your solution I
+> >> >> will want to make sure we cover both gen1 and gen2 parts.
+> >> >> 
+> >> >> > The recent merge has made my local branch of rtl8xxxu-devel 14
+> >> >> > commits ahead.
+> >> >> > Do I need to do a reset and submit a new patch for the DWA-131 dongle?
+> >> >> 
+> >> >> In general you need to use 'git pull --rebase' on my tree. I rebase it
+> >> >> to stay in sync with Kalle's tree.
+> >> >> 
+> >> >> The DWA-131 is the 8192eu? Sorry a bit behind and my mind is losing
+> >> >> bits. If it's the patch you posted earlier I can dig it out and play
+> >> >> with it - I am still catching up though, so please be patient.
+> >> >
+> >> > yes it's an 8192eu.
+> >> 
+> >> Gotcha - how do you do your testing to reproduce the problem btw? Most
+> >> of my testing is using the 8723au as a primary device and the next
+> >> device as a follow-on, so I may not see as long a run with the device
+> >> active as you see.
+> >> 
+> >
+> > Testing is simple. Connect to an AP in the usual
+> > manner..disconnect..reconnect.  The 8192eu will fail to reconnect and
+> > John Heenan reported the 8723bu also fails to reconnect. Even though
+> > he was directly stopping and restarting wpa_supplicant, it's the same
+> > thing to the driver - connect..disconnect..reconnect.
+> 
+> Thanks for the details - I'll have a look shortly.
+> 
+> > With using a usb_device pointer, each message starts with the usb bus
+> > address.  Plug it into a different port and that address could
+> > change. By using a pointer to the device associated with the wiphy
+> > each message will begin with the driver name. Just makes it easier for
+> > the average user to report what's in the log because he can just grep
+> > for "rtl8xxxu".
+> 
+> I see - that would be problematic for me as I quite often have 3-4 of
+> these things plugged in at the same time. Not knowing which port spits
+> out the message would make it a lot harder to track. In fact my primary
+> devel box for this (Lenovo Yoga 13) has an rtl8723au soldered on the
+> motherboard, so the moment I plug in any other dongle I'll have two.
+> 
+> The alternative would be to add a prefer to the individual messages.
+> 
+> Cheers,
+> Jes
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 187 ++++++++++++---------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   4 +-
- 2 files changed, 109 insertions(+), 82 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 70eca76..3d87055 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -757,12 +757,12 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 	brcmf_scan_config_mpc(ifp, 1);
- 
- 	/*
--	 * e-scan can be initiated by scheduled scan
-+	 * e-scan can be initiated internally
- 	 * which takes precedence.
- 	 */
--	if (cfg->sched_escan) {
-+	if (cfg->internal_escan) {
- 		brcmf_dbg(SCAN, "scheduled scan completed\n");
--		cfg->sched_escan = false;
-+		cfg->internal_escan = false;
- 		if (!aborted)
- 			cfg80211_sched_scan_results(cfg_to_wiphy(cfg));
- 	} else if (scan_request) {
-@@ -3013,7 +3013,7 @@ void brcmf_abort_scanning(struct brcmf_cfg80211_info *cfg)
- 	struct escan_info *escan = &cfg->escan_info;
- 
- 	set_bit(BRCMF_SCAN_STATUS_ABORT, &cfg->scan_status);
--	if (cfg->scan_request) {
-+	if (cfg->internal_escan || cfg->scan_request) {
- 		escan->escan_state = WL_ESCAN_STATE_IDLE;
- 		brcmf_notify_escan_complete(cfg, escan->ifp, true, true);
- 	}
-@@ -3036,7 +3036,7 @@ static void brcmf_escan_timeout(unsigned long data)
- 	struct brcmf_cfg80211_info *cfg =
- 			(struct brcmf_cfg80211_info *)data;
- 
--	if (cfg->scan_request) {
-+	if (cfg->internal_escan || cfg->scan_request) {
- 		brcmf_err("timer expired\n");
- 		schedule_work(&cfg->escan_timeout_work);
- 	}
-@@ -3119,7 +3119,7 @@ static void brcmf_escan_timeout(unsigned long data)
- 		if (brcmf_p2p_scan_finding_common_channel(cfg, bss_info_le))
- 			goto exit;
- 
--		if (!cfg->scan_request) {
-+		if (!cfg->internal_escan && !cfg->scan_request) {
- 			brcmf_dbg(SCAN, "result without cfg80211 request\n");
- 			goto exit;
- 		}
-@@ -3165,7 +3165,7 @@ static void brcmf_escan_timeout(unsigned long data)
- 		cfg->escan_info.escan_state = WL_ESCAN_STATE_IDLE;
- 		if (brcmf_p2p_scan_finding_common_channel(cfg, NULL))
- 			goto exit;
--		if (cfg->scan_request) {
-+		if (cfg->internal_escan || cfg->scan_request) {
- 			brcmf_inform_bss(cfg);
- 			aborted = status != BRCMF_E_STATUS_SUCCESS;
- 			brcmf_notify_escan_complete(cfg, ifp, aborted, false);
-@@ -3190,6 +3190,73 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
- 		  brcmf_cfg80211_escan_timeout_worker);
- }
- 
-+static struct cfg80211_scan_request *
-+brcmf_alloc_internal_escan_request(struct wiphy *wiphy, u32 n_netinfo) {
-+	struct cfg80211_scan_request *req;
-+	size_t req_size;
-+
-+	req_size = sizeof(*req) +
-+		   n_netinfo * sizeof(req->channels[0]) +
-+		   n_netinfo * sizeof(*req->ssids);
-+
-+	req = kzalloc(req_size, GFP_KERNEL);
-+	if (req) {
-+		req->wiphy = wiphy;
-+		req->ssids = (void *)(&req->channels[0]) +
-+			     n_netinfo * sizeof(req->channels[0]);
-+	}
-+	return req;
-+}
-+
-+static int brcmf_internal_escan_add_info(struct cfg80211_scan_request *req,
-+					 u8 *ssid, u8 ssid_len, u8 channel)
-+{
-+	struct ieee80211_channel *chan;
-+	enum nl80211_band band;
-+	int freq;
-+
-+	if (channel <= CH_MAX_2G_CHANNEL)
-+		band = NL80211_BAND_2GHZ;
-+	else
-+		band = NL80211_BAND_5GHZ;
-+
-+	freq = ieee80211_channel_to_frequency(channel, band);
-+	if (!freq)
-+		return -EINVAL;
-+
-+	chan = ieee80211_get_channel(req->wiphy, freq);
-+	if (!chan)
-+		return -EINVAL;
-+
-+	req->channels[req->n_channels++] = chan;
-+	memcpy(req->ssids[req->n_ssids].ssid, ssid, ssid_len);
-+	req->ssids[req->n_ssids++].ssid_len = ssid_len;
-+
-+	return 0;
-+}
-+
-+static int brcmf_start_internal_escan(struct brcmf_if *ifp,
-+				      struct cfg80211_scan_request *request)
-+{
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
-+	int err;
-+
-+	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
-+		/* Abort any on-going scan */
-+		brcmf_abort_scanning(cfg);
-+	}
-+
-+	set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+	cfg->escan_info.run = brcmf_run_escan;
-+	err = brcmf_do_escan(ifp, request);
-+	if (err) {
-+		clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+		return err;
-+	}
-+	cfg->internal_escan = true;
-+	return 0;
-+}
-+
- /* PFN result doesn't have all the info which are required by the supplicant
-  * (For e.g IEs) Do a target Escan so that sched scan results are reported
-  * via wl_inform_single_bss in the required format. Escan does require the
-@@ -3203,12 +3270,8 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
- 	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	struct brcmf_pno_net_info_le *netinfo, *netinfo_start;
- 	struct cfg80211_scan_request *request = NULL;
--	struct cfg80211_ssid *ssid = NULL;
--	struct ieee80211_channel *channel = NULL;
- 	struct wiphy *wiphy = cfg_to_wiphy(cfg);
--	int err = 0;
--	int channel_req = 0;
--	int band = 0;
-+	int i, err = 0;
- 	struct brcmf_pno_scanresults_le *pfn_result;
- 	u32 result_count;
- 	u32 status;
-@@ -3234,83 +3297,47 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
- 	 */
- 	WARN_ON(status != BRCMF_PNO_SCAN_COMPLETE);
- 	brcmf_dbg(SCAN, "PFN NET FOUND event. count: %d\n", result_count);
--	if (result_count > 0) {
--		int i;
--
--		request = kzalloc(sizeof(*request), GFP_KERNEL);
--		ssid = kcalloc(result_count, sizeof(*ssid), GFP_KERNEL);
--		channel = kcalloc(result_count, sizeof(*channel), GFP_KERNEL);
--		if (!request || !ssid || !channel) {
--			err = -ENOMEM;
--			goto out_err;
--		}
--
--		request->wiphy = wiphy;
--		data += sizeof(struct brcmf_pno_scanresults_le);
--		netinfo_start = (struct brcmf_pno_net_info_le *)data;
--
--		for (i = 0; i < result_count; i++) {
--			netinfo = &netinfo_start[i];
--			if (!netinfo) {
--				brcmf_err("Invalid netinfo ptr. index: %d\n",
--					  i);
--				err = -EINVAL;
--				goto out_err;
--			}
--
--			brcmf_dbg(SCAN, "SSID:%s Channel:%d\n",
--				  netinfo->SSID, netinfo->channel);
--			memcpy(ssid[i].ssid, netinfo->SSID, netinfo->SSID_len);
--			ssid[i].ssid_len = netinfo->SSID_len;
--			request->n_ssids++;
--
--			channel_req = netinfo->channel;
--			if (channel_req <= CH_MAX_2G_CHANNEL)
--				band = NL80211_BAND_2GHZ;
--			else
--				band = NL80211_BAND_5GHZ;
--			channel[i].center_freq =
--				ieee80211_channel_to_frequency(channel_req,
--							       band);
--			channel[i].band = band;
--			channel[i].flags |= IEEE80211_CHAN_NO_HT40;
--			request->channels[i] = &channel[i];
--			request->n_channels++;
--		}
-+	if (!result_count) {
-+		brcmf_err("FALSE PNO Event. (pfn_count == 0)\n");
-+		goto out_err;
-+	}
-+	request = brcmf_alloc_internal_escan_request(wiphy,
-+						     result_count);
-+	if (!request) {
-+		err = -ENOMEM;
-+		goto out_err;
-+	}
- 
--		/* assign parsed ssid array */
--		if (request->n_ssids)
--			request->ssids = &ssid[0];
-+	data += sizeof(struct brcmf_pno_scanresults_le);
-+	netinfo_start = (struct brcmf_pno_net_info_le *)data;
- 
--		if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
--			/* Abort any on-going scan */
--			brcmf_abort_scanning(cfg);
-+	for (i = 0; i < result_count; i++) {
-+		netinfo = &netinfo_start[i];
-+		if (!netinfo) {
-+			brcmf_err("Invalid netinfo ptr. index: %d\n",
-+				  i);
-+			err = -EINVAL;
-+			goto out_err;
- 		}
- 
--		set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
--		cfg->escan_info.run = brcmf_run_escan;
--		err = brcmf_do_escan(ifp, request);
--		if (err) {
--			clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
-+		brcmf_dbg(SCAN, "SSID:%.32s Channel:%d\n",
-+			  netinfo->SSID, netinfo->channel);
-+		err = brcmf_internal_escan_add_info(request,
-+						    netinfo->SSID,
-+						    netinfo->SSID_len,
-+						    netinfo->channel);
-+		if (err)
- 			goto out_err;
--		}
--		cfg->sched_escan = true;
--		cfg->scan_request = request;
--	} else {
--		brcmf_err("FALSE PNO Event. (pfn_count == 0)\n");
--		goto out_err;
- 	}
- 
--	kfree(ssid);
--	kfree(channel);
--	kfree(request);
--	return 0;
-+	err = brcmf_start_internal_escan(ifp, request);
-+	if (!err)
-+		goto free_req;
- 
- out_err:
--	kfree(ssid);
--	kfree(channel);
--	kfree(request);
- 	cfg80211_sched_scan_stopped(wiphy);
-+free_req:
-+	kfree(request);
- 	return err;
- }
- 
-@@ -3405,7 +3432,7 @@ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
- 
- 	brcmf_dbg(SCAN, "enter\n");
- 	brcmf_pno_clean(ifp);
--	if (cfg->sched_escan)
-+	if (cfg->internal_escan)
- 		brcmf_notify_escan_complete(cfg, ifp, true, true);
- 	return 0;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 8889832..0c9a708 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -271,7 +271,7 @@ struct brcmf_cfg80211_wowl {
-  * @pub: common driver information.
-  * @channel: current channel.
-  * @active_scan: current scan mode.
-- * @sched_escan: e-scan for scheduled scan support running.
-+ * @internal_escan: indicates internally initiated e-scan is running.
-  * @ibss_starter: indicates this sta is ibss starter.
-  * @pwr_save: indicate whether dongle to support power save mode.
-  * @dongle_up: indicate whether dongle up or not.
-@@ -303,7 +303,7 @@ struct brcmf_cfg80211_info {
- 	struct brcmf_pub *pub;
- 	u32 channel;
- 	bool active_scan;
--	bool sched_escan;
-+	bool internal_escan;
- 	bool ibss_starter;
- 	bool pwr_save;
- 	bool dongle_up;
--- 
-1.9.1
+I should have mentioned it also places the usb address after the driver name.
