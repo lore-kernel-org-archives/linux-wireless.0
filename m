@@ -1,132 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34776 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933528AbcKNQfk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:35:40 -0500
-Received: by mail-lf0-f68.google.com with SMTP id o141so7513497lff.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:34 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 04/12] ath10k: htc: refactorization
-Date: Mon, 14 Nov 2016 17:33:34 +0100
-Message-Id: <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173601_176327_7F047927)
-In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from mail-bl2nam02on0053.outbound.protection.outlook.com ([104.47.38.53]:44004
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932949AbcKVOok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 09:44:40 -0500
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+To: Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com> (sfid-20161122_154445_024869_1300FC71)
+Date: Tue, 22 Nov 2016 17:44:10 +0300
+MIME-Version: 1.0
+In-Reply-To: <1478864146.4129.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code refactorization:
+Hi Ben, Kyle,
+could you please share what is the position of linux-firmware regarding 
+firmware binaries that include GPL components? Does it require entire 
+GPL components codebase be present in linux-firmware tree, or maybe 
+having this clause in license file is enough:
++Open Source Software. The Software may include components that are licensed
++pursuant to open source software (“Open Source Components”). Information
++regarding the Open Source Components included with the Software is 
+available
++upon request to oslegal@quantenna.com. To the extent such Open Source
++Components are required to be licensed to you under the terms of a separate
++license (such as an open source license) then such other terms shall 
+apply, and
++nothing herein shall be deemed or interpreted to limit any rights you 
+may have
++under any such applicable license.
 
-Moved the code for ep 0 in ath10k_htc_rx_completion_handler
-to ath10k_htc_control_rx_complete.
+ From technical perspective, size of the codebase used to build 
+Quantenna firmware is a few hundred MBs, it seems too much to include 
+into linux-firmware tree.
 
-This eases the implementation of SDIO/mbox significantly since
-the ep_rx_complete cb is invoked directly from the SDIO/mbox
-hif layer.
-
-Since the ath10k_htc_control_rx_complete already is present
-(only containing a warning message) there is no reason for not
-using it (instead of having a special case for ep 0 in
-ath10k_htc_rx_completion_handler).
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   73 +++++++++++++++------------------
- 1 file changed, 34 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 7257366..a5a2f78 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -457,42 +457,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- 		/* zero length packet with trailer data, just drop these */
- 		goto out;
- 
--	if (eid == ATH10K_HTC_EP_0) {
--		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
--
--		switch (__le16_to_cpu(msg->hdr.message_id)) {
--		case ATH10K_HTC_MSG_READY_ID:
--		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
--			/* handle HTC control message */
--			if (completion_done(&htc->ctl_resp)) {
--				/*
--				 * this is a fatal error, target should not be
--				 * sending unsolicited messages on the ep 0
--				 */
--				ath10k_warn(ar, "HTC rx ctrl still processing\n");
--				complete(&htc->ctl_resp);
--				goto out;
--			}
--
--			htc->control_resp_len =
--				min_t(int, skb->len,
--				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
--
--			memcpy(htc->control_resp_buffer, skb->data,
--			       htc->control_resp_len);
--
--			complete(&htc->ctl_resp);
--			break;
--		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
--			htc->htc_ops.target_send_suspend_complete(ar);
--			break;
--		default:
--			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
--			break;
--		}
--		goto out;
--	}
--
- 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
- 		   eid, skb);
- 	ep->ep_ops.ep_rx_complete(ar, skb);
-@@ -507,9 +471,40 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- static void ath10k_htc_control_rx_complete(struct ath10k *ar,
- 					   struct sk_buff *skb)
- {
--	/* This is unexpected. FW is not supposed to send regular rx on this
--	 * endpoint. */
--	ath10k_warn(ar, "unexpected htc rx\n");
-+	struct ath10k_htc *htc = &ar->htc;
-+	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
-+
-+	switch (__le16_to_cpu(msg->hdr.message_id)) {
-+	case ATH10K_HTC_MSG_READY_ID:
-+	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
-+		/* handle HTC control message */
-+		if (completion_done(&htc->ctl_resp)) {
-+			/* this is a fatal error, target should not be
-+			 * sending unsolicited messages on the ep 0
-+			 */
-+			ath10k_warn(ar, "HTC rx ctrl still processing\n");
-+			complete(&htc->ctl_resp);
-+			goto out;
-+		}
-+
-+		htc->control_resp_len =
-+			min_t(int, skb->len,
-+			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
-+
-+		memcpy(htc->control_resp_buffer, skb->data,
-+		       htc->control_resp_len);
-+
-+		complete(&htc->ctl_resp);
-+		break;
-+	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
-+		htc->htc_ops.target_send_suspend_complete(ar);
-+		break;
-+	default:
-+		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
-+		break;
-+	}
-+
-+out:
- 	kfree_skb(skb);
- }
- 
--- 
-1.7.9.5
+On 11/11/2016 02:35 PM, Johannes Berg wrote:
+> Adding linux-firmware people to Cc, since presumably they don't
+> necessarily read linux-wireless...
+>
+>> Johannes, from that perspective, who are the "redistributors"?
+>> Specifically, is linux-firmware git repository considered a
+>> redistributor or its just hosting files? I mean, at what moment
+>> someone else other then Quantenna will start to be legally obliged to
+>> make GPL code used in firmware available for others?
+> Look, I don't know. I'd assume people who ship it, like any regular
+> distro, would be (re)distributors thereof. "Normal" (non-GPL) firmware
+> images come with a redistribution license, but that obviously can't
+> work here.
+>
+> There's some info from Ben here regarding the carl9170 case:
+> http://lkml.iu.edu/hypermail/linux/kernel/1605.3/01176.html
+>
+>> Personally I still hope that linux-firmware itself is not legally
+>> concerned with what is the content of firmware its hosting, but looks
+>> like there already was a precedent case  with carl9170 driver and
+>> we have to somehow deal with it.
+> That's really all I wanted to bring up. I'm not involved with the
+> linux-firmware git tree.
+>
+>> There still may be a difference though: Quantenna is semiconductor
+>> company only, software
+>> used on actual products based on Quantenna chipsets is released by
+>> other
+>> companies.
+>> I just want to present our legal team with a clear case (and position
+>> of
+>> Linux maintainers) so that they can
+>> work with it and make decision on how to proceed.
+>>
+>>   From technical perspective, as I mentioned, SDK is quite huge and
+>> include a lot of opensource
+>> components including full Linux, I don't think its reasonable to have
+>> it
+>> inside linux-firmware tree.
+>> What are the options to share it other then providing it on request
+>> basis:
+>> - git repository
+>> - store tarball somewhere on official website
+> Clearly that wasn't deemed appropriate for carl9170, so I don't see why
+> it'd be different here.
+>
+> johannes
