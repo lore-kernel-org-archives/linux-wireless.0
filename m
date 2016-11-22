@@ -1,62 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41712 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752818AbcKRJsW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 04:48:22 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 7/9] rt2800: use RTS/CTS protection instead of CTS-to-self
-Date: Fri, 18 Nov 2016 10:43:59 +0100
-Message-Id: <1479462241-9299-8-git-send-email-sgruszka@redhat.com> (sfid-20161118_104828_006186_03B3E083)
-In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:59944 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756270AbcKVQ7l (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 11:59:41 -0500
+Message-ID: <5834797B.2090805@candelatech.com> (sfid-20161122_175956_917370_D80F5512)
+Date: Tue, 22 Nov 2016 08:59:39 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Break-it testing for wifi
+References: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>       (sfid-20161121_171042_142074_00CD9837) <1479812215.9021.3.camel@sipsolutions.net>
+In-Reply-To: <1479812215.9021.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change default to RTS/CTS protection. This has a cost of transmitting
-one more control frame (RTS) however protect us from traffic from
-hidden node.
 
-On station mode will use CTS-to-self if AP will configure that
-for the network.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On 11/22/2016 02:56 AM, Johannes Berg wrote:
+> On Mon, 2016-11-21 at 08:10 -0800, Ben Greear wrote:
+>
+>> I am thinking about adding some sort of framework to wpa_supplicant
+>> and/or the mac80211 stack to allow purposefully creating bad station
+>> behaviour in order to test robustness of APs.
+>
+> I'm interested in this.
+>
+> Have you seen the fuzzer stuff in wpa_s/hostapd?
+>
+> See
+>
+> https://w1.fi/cgit/hostap/commit/?id=7d3f18d72c3c883112ee927fc402c0eaed09ff65
+>
+> for example for something Jouni did after our discussions recently.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 812f8e7..57bfec4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1621,7 +1621,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 		 * => Protect all HT40 transmissions.
- 		 */
- 		mm20_mode = gf20_mode = 0;
--		mm40_mode = gf40_mode = 2;
-+		mm40_mode = gf40_mode = 1;
- 
- 		break;
- 	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-@@ -1644,7 +1644,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 		 * Legacy STAs are present
- 		 * => Protect all HT transmissions.
- 		 */
--		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 2;
-+		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 1;
- 
- 		/*
- 		 * If erp protection is needed we have to protect HT
-@@ -1660,7 +1660,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 
- 	/* check for STAs not supporting greenfield mode */
- 	if (any_sta_nongf)
--		gf20_mode = gf40_mode = 2;
-+		gf20_mode = gf40_mode = 1;
- 
- 	/* Update HT protection config */
- 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
+I have not seen that yet.  I'll look at that more closely soon.
+
+>
+>> Some ideas so far:
+>>
+>> 1)  Allow supplicant to do bad state-machine transitions (start 4-way
+>> before associating, for instance).
+>
+> Why would you do that? In order to test the AP implementation?
+
+Yes.  And really, you should be able to do similar things on the AP to test stations,
+or on IBSS/Mesh devices, etc.  hostapd already has some options to corrupt or
+drop a percentage of various management frames.  Supplicant does not as far
+as I know.
+
+>
+>> 2)  Randomly corrupt mgt frames in driver and/or mac80211 stack
+>> and/or supplicant.
+>
+> I think fuzzing the input path for those frames would be more useful
+> than just corrupting things.
+
+Random corruptions, especially by code that had at least some understanding
+of management frames should be fast and easy to use.  It would not be as good
+as a really clever fuzzer or hand-crafted frames, but for many users, hand-crafting
+attacks would be well beyond what they could ever accomplish.
+
+>
+>> 3)  Possibly allow user to make specific corruptions.  This would
+>> probably be in supplicant
+>>       only, and I am not sure how this would be configured.  Maybe
+>> allow user to over-ride
+>>       existing IEs and add bogus ones of their own choosing.
+>
+> No idea what you really mean by this :)
+
+Currently, supplicant can (at least with some small patches that I carry),
+add custom information elements to probe requests and similar.  But, some things
+are built by mac80211 (rate-sets advertised, for instance).  So, I was thinking of slightly extending
+the API so that user-space could over-ride whatever mac80211 might normally
+build itself.  That lets you more properly fuzz things from user space.
+
+>
+>> 4)  Maybe some specific tests like putting in over-flow sized lengths
+>> of IEs.
+>
+> Again, fuzzing would cover this?
+
+Yes, but for ease of use, and to cover frames generated by mac80211, I
+was thinking:
+
+echo 0.25 > /debug/.../wlan0/mgt_fuzzer
+
+The fuzzer would then corrupt 25% of the management frames.  And instead of just randomly
+scribbling, it could also parse the frames and do some more clever (and still pseudo-random)
+modifications to the frames, like re-writing IEs with bad lengths, flipping bits in specific portions of the
+frame we feel might find problems, etc.
+
+I think if the tool became useful, then it could grow more clever over time.
+
+>
+>> Has anyone done anything similar they would like to share?
+>>
+>> Johannes:  Any interest in having such a framework in upstream
+>> kernels?
+>
+> I suspect you have something entirely different in mind, like testing a
+> (remote) AP implementation?
+
+Yes.
+
+>
+> All of the local testing is probably better done via hwsim?
+
+Well, there is a decent chance you could crash some firmware if you sent
+corrupted EAPOL frames to it.  And just possibly some drivers inspect packets as well,
+so I was thinking that fully transmitting the frames out of the system might
+have some use.  And specifically for me, I am trying to test remote systems,
+so hwsim would not be useful for that.
+
+But, if local Linux (and local userspace) itself is the test target, then hwsim should give some very good
+test coverage.
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
 -- 
-1.8.3.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
