@@ -1,130 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:48302 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750922AbcK3MjQ (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37485 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756081AbcKVQOf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 07:39:16 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card
- remove process
-Date: Wed, 30 Nov 2016 12:39:11 +0000
-Message-ID: <8e65d20f643a4c7f9a242c145ec8f24f@SC-EXCH04.marvell.com> (sfid-20161130_133920_300015_F34881B5)
-References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
- <1479301749-14803-4-git-send-email-akarwar@marvell.com>
- <20161121173602.GA147125@google.com>
- <ad60355f7feb465199f4dace37e47238@SC-EXCH04.marvell.com>
- <20161128212706.GA45985@google.com>
-In-Reply-To: <20161128212706.GA45985@google.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 22 Nov 2016 11:14:35 -0500
+Received: by mail-wm0-f43.google.com with SMTP id t79so33138988wmt.0
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 08:14:34 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20161122153141.GT13735@pali>
+References: <201611111820.52072@pali> <20161121155153.GM13735@pali>
+ <CA+BoTQm5yZYccMherMnmxZ0_b2PqkCWf_0nBoRLzsro-Ujz1eQ@mail.gmail.com> <20161122153141.GT13735@pali>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 22 Nov 2016 17:14:28 +0100
+Message-ID: <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com> (sfid-20161122_171449_707783_80BB5AE7)
+Subject: Re: wl1251 & mac address & calibration data
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+On 22 November 2016 at 16:31, Pali Roh=C3=A1r <pali.rohar@gmail.com> wrote:
+> On Tuesday 22 November 2016 16:22:57 Michal Kazior wrote:
+>> On 21 November 2016 at 16:51, Pali Roh=C3=A1r <pali.rohar@gmail.com> wro=
+te:
+>> > On Friday 11 November 2016 18:20:50 Pali Roh=C3=A1r wrote:
+>> >> Hi! I will open discussion about mac address and calibration data for
+>> >> wl1251 wireless chip again...
+>> >>
+>> >> Problem: Mac address & calibration data for wl1251 chip on Nokia N900
+>> >> are stored on second nand partition (mtd1) in special proprietary for=
+mat
+>> >> which is used only for Nokia N900 (probably on N8x0 and N9 too).
+>> >> Wireless driver wl1251.ko cannot work without mac address and
+>> >> calibration data.
+>>
+>> Same problem applies to some ath9k/ath10k supported routers. Some even
+>> carry mac address as implicit offset from ethernet mac address. As far
+>> as I understand OpenWRT cooks cal blobs on first boot prior to loading
+>> modules.
+>
+> So... wl1251 on Nokia N900 is not alone and this problem is there for
+> more drivers and devices. Which means we should come up with some
+> generic solution.
 
-> > > >   *
-> > > > @@ -2227,7 +2237,7 @@ static void mwifiex_recreate_adapter(struct
-> > > sdio_mmc_card *card)
-> > > >  	 * discovered and initializes them from scratch.
-> > > >  	 */
-> > > >
-> > > > -	mwifiex_sdio_remove(func);
-> > > > +	__mwifiex_sdio_remove(func);
-> > >
-> > > ^^ So here, you're trying to avoid syncing with the card-reset work
-> > > event, except that function will free up all your resources
-> > > (including the static save_adapter). Thus, you're explicitly
-> > > allowing a use-after- free error here. That seems unwise.
-> >
-> > Even if firmware dump is triggered after card reset is started, it
-> > will execute after card reset is completed as discussed above. Only
-> > problem I can see is with "save_adapter". We can put new_adapter
-> > pointer in "save_adapter" at the end of mwifiex_recreate_adapter() to
-> > solve the issue.
-> 
-> Ugh, yet another band-aid? You might do better to still cancel any
-> pending work, just don't do it synchronously. i.e., do cancel_work()
-> after you've removed the card. It doesn't make sense to do a FW dump on
-> the "new" adapter when it was requested for the old one.
+This isn't particularly a problem for ath9k/ath10k.
 
-I could not find async version of cancel_work().
-We can fix this problem with below change at the end of mwifiex_sdio_work(). All pending work requests would be ignored.
+Let me give you more background on ath10k.
 
---------
-@ -2571,6 +2571,8 @@ static void mwifiex_sdio_work(struct work_struct *work)
-        if (test_and_clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET,
-                               &iface_work_flags))
-                mwifiex_sdio_card_reset_work(save_adapter);
-+       clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
-+       clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &iface_work_flags);
- }
-----------
+ath10k devices can come with caldata and macaddr stored in their
+OTP/EEPROM. In that case a generic "template" board file is used.
+Userspace doesn't need to do anything special.
 
-> 
-> > > Instead, you should actually retain the invariant that you're doing
-> > > a full remove/reinitialize here, which includes doing the *same*
-> > > cancel_work_sync() here in mwifiex_recreate_adapter() as you would
-> > > in any other remove().
-> >
-> > We are executing mwifiex_recreate_adapter() as a part of sdio_work().
-> > Calling
-> > cancel_work_sync() here would cause deadlock. The API is supposed to
-> > waits until sdio_work() is finished.
-> 
-> You are correct. So using the _sync() version would be wrong.
-> 
-> > >
-> > > IOW, kill the __mwifiex_sdio_remove() and just call
-> > > mwifiex_sdio_remove() as you were.
-> > >
-> > > That also means that you can do the same per-adapter cleanup in the
-> > > following patch as you do for PCIe.
-> >
-> > Currently as sdio_work recreates "card", the work structure can't be
-> moved inside card structure.
-> > Let me know your suggestions.
-> 
-> If you address the TODO in mwifiex_create_adapter() instead, you can
-> get past this problem:
-> 
->         /* TODO mmc_hw_reset does not require destroying and re-probing
-> the
->          * whole adapter. Hence there was no need to for this rube-
-> goldberg
->          * design to reload the fw from an external workqueue. If we
-> don't
->          * destroy the adapter we could reload the fw from
->          * mwifiex_main_work_queue directly.
-> 
-> The "save_adapter" is an abomination that should be terminated swiftly,
-> but it is perpetuated in part by the hacks noted in the TODO.
-> 
-> So I'd recommend addressing the TODO ASAP, but in the meantime, a hack
-> like my suggestion (cancel the FW dump work w/o synchronizing) or --
-> less preferably -- yours (manually set 'save_adapter' again) might be
-> OK.
-> 
-> I think I've asked elsewhere but didn't receive an answer: why is
-> SDIO's mwifiex_recreate_adapter() so much different from PCIe's
-> mwifiex_do_flr()? It seems like the latter should be refactored to
-> remove some of the PCIe-specific cruft from main.c and then reused for
-> SDIO.
+Some vendors however decide to use flash partition to store caldata.
+In that case ath10k expects userspace to prepare cal-$bus-$devname.bin
+files, each for a different radio (you can have multiple radios on a
+system).
 
-Our initial SDIO card reset implementation was based on MMC APIs where remove() and probe() would automatically get called by MMC subsystem after power cycle.
-https://www.spinics.net/lists/linux-wireless/msg98435.html
-Later it was improved by Andreas Fenkart by replacing those power cycle APIs with mmc_hw_reset().
+Now translating this for wl1251 I would expect it should also use
+something like wl1251-nvs-sdio-0x0001.bin for devices like N900 that
+have caldata on flash partition (instead of the generic
+wl1251-nvs.bin). I'm not sure if wl1251-nvs.bin is something
+comparable to (the generic) board.bin ath10k has though. Maybe the
+entire idea behind wl1251-nvs.bin is flawed as it's supposed to be
+device specific and is oblivious to possibility of having multiple
+wl1251 radios on one system (probably sane assumption from practical
+standpoint but still).
 
-For PCIe, function level reset is standard feature. We implemented ".reset_notify" handler which gets called after and before FLR.
 
-You are right. We can have SDIO's handling similar to PCIe and avoid destroying+recreating adapter/card.
-We have started working on this. We will get rid of global save_adapter, sdio_work etc. Meanwhile I will post above mentioned change if it looks good to you.
+>> >> Absence of mac address cause that driver generates random mac address=
+ at
+>> >> every kernel boot which has couple of problems (unstable identifier o=
+f
+>> >> wireless device due to udev permanent storage rules; unpredictable
+>> >> behaviour for dhcp mac address assignment, mac address filtering, ...=
+).
+>> >>
+>> >> Currently there is no way to set (permanent) mac address for network
+>> >> interface from userspace. And it does not make sense to implement in
+>> >> linux kernel large parser for proprietary format of second nand
+>> >> partition where is mac address stored only for one device -- Nokia N9=
+00.
+>> >>
+>> >> Driver wl1251.ko loads calibration data via request_firmware() for fi=
+le
+>> >> wl1251-nvs.bin. There are some "example" calibration file in linux-
+>> >> firmware repository, but it is not suitable for normal usage as real
+>> >> calibration data are per-device specific.
+>>
+>> You could hook up a script that cooks up the cal/mac file via
+>> modprobe's install hook, no?
+>
+> Via modprobe hook I can either pass custom module parameter or call any
+> other system (shell) commands.
+>
+> As wl1251.ko does not accept mac_address as module parameter, such
+> modprobe hook does not help -- as there is absolutely no way from
+> userspace to set or change (permanent) mac address.
 
-Regards,
-Amitkumar
+Quoting modprobe.d manual:
+
+>       install modulename command...
+>           This command instructs modprobe to run your
+>           command instead of inserting the module in the
+>           kernel as normal. The command can be any shell
+>           command: this allows you to do any kind of
+>           complex processing you might wish. [...]
+
+You can hook up a script that cooks up wl1251-nvs.bin (caldata,
+macaddr) and then insmod the actual wl1251.ko module. Or you can just
+cook up the nvs on first device boot and store it in /lib/firmware
+(possibly overwriting the "generic" wl1251 from linux-firmware).
+
+
+Michal
