@@ -1,38 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39412 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752758AbcKRJsZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 04:48:25 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 9/9] rt2800: disable CCK rates on HT
-Date: Fri, 18 Nov 2016 10:44:01 +0100
-Message-Id: <1479462241-9299-10-git-send-email-sgruszka@redhat.com> (sfid-20161118_104829_857734_D966B228)
-In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38790 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933052AbcKVPXE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 10:23:04 -0500
+Received: by mail-wm0-f41.google.com with SMTP id f82so30819367wmf.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 07:22:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20161121155153.GM13735@pali>
+References: <201611111820.52072@pali> <20161121155153.GM13735@pali>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 22 Nov 2016 16:22:57 +0100
+Message-ID: <CA+BoTQm5yZYccMherMnmxZ0_b2PqkCWf_0nBoRLzsro-Ujz1eQ@mail.gmail.com> (sfid-20161122_162323_840309_4365072D)
+Subject: Re: wl1251 & mac address & calibration data
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sending frames in CCK rates on HT can cause performance problems.
+On 21 November 2016 at 16:51, Pali Roh=C3=A1r <pali.rohar@gmail.com> wrote:
+> On Friday 11 November 2016 18:20:50 Pali Roh=C3=A1r wrote:
+>> Hi! I will open discussion about mac address and calibration data for
+>> wl1251 wireless chip again...
+>>
+>> Problem: Mac address & calibration data for wl1251 chip on Nokia N900
+>> are stored on second nand partition (mtd1) in special proprietary format
+>> which is used only for Nokia N900 (probably on N8x0 and N9 too).
+>> Wireless driver wl1251.ko cannot work without mac address and
+>> calibration data.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 1 -
- 1 file changed, 1 deletion(-)
+Same problem applies to some ath9k/ath10k supported routers. Some even
+carry mac address as implicit offset from ethernet mac address. As far
+as I understand OpenWRT cooks cal blobs on first boot prior to loading
+modules.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 8d35b2e..2515702 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7475,7 +7475,6 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Initialize all hw fields.
- 	 */
--	ieee80211_hw_set(rt2x00dev->hw, SUPPORTS_HT_CCK_RATES);
- 	ieee80211_hw_set(rt2x00dev->hw, REPORTS_TX_ACK_STATUS);
- 	ieee80211_hw_set(rt2x00dev->hw, AMPDU_AGGREGATION);
- 	ieee80211_hw_set(rt2x00dev->hw, PS_NULLFUNC_STACK);
--- 
-1.8.3.1
+
+>> Absence of mac address cause that driver generates random mac address at
+>> every kernel boot which has couple of problems (unstable identifier of
+>> wireless device due to udev permanent storage rules; unpredictable
+>> behaviour for dhcp mac address assignment, mac address filtering, ...).
+>>
+>> Currently there is no way to set (permanent) mac address for network
+>> interface from userspace. And it does not make sense to implement in
+>> linux kernel large parser for proprietary format of second nand
+>> partition where is mac address stored only for one device -- Nokia N900.
+>>
+>> Driver wl1251.ko loads calibration data via request_firmware() for file
+>> wl1251-nvs.bin. There are some "example" calibration file in linux-
+>> firmware repository, but it is not suitable for normal usage as real
+>> calibration data are per-device specific.
+
+You could hook up a script that cooks up the cal/mac file via
+modprobe's install hook, no?
+
+
+Micha=C5=82
