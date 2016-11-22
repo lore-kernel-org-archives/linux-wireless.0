@@ -1,33 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0145.hostedemail.com ([216.40.44.145]:53854 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755857AbcKCIlm (ORCPT
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:36582 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755344AbcKVJa7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 04:41:42 -0400
-Message-ID: <1478162497.1924.16.camel@perches.com> (sfid-20161103_094210_313464_C837DE34)
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
- macpower
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>, John Heenan <john@zgus.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 03 Nov 2016 01:41:37 -0700
-In-Reply-To: <wrfjzillsan3.fsf@redhat.com>
-References: <cover.1477769750.git.john@zgus.com>
-         <20161030102112.GA5789@cube> <wrfjpomidp1v.fsf@redhat.com>
-         <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
-         <wrfjzillsan3.fsf@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 22 Nov 2016 04:30:59 -0500
+Received: by mail-qt0-f175.google.com with SMTP id w33so6959546qtc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 01:30:58 -0800 (PST)
+Subject: Re: scheduled scan interval
+To: Luca Coelho <luca@coelho.fi>,
+        Johannes Berg <johannes.berg@intel.com>
+References: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com>
+ <dffc5408-3337-32e7-0998-3ae8a5199fa9@broadcom.com>
+ <e176de78-6ab3-ad83-5e9d-082ceb85d786@broadcom.com>
+ <1479740918.2517.28.camel@coelho.fi>
+ <a222d5d1-408d-fd96-4cb9-896f6a9dab59@broadcom.com>
+ <1479794340.2517.34.camel@coelho.fi>
+ <006ec2b0-9659-49ed-40f7-b8980b7e3ec7@broadcom.com>
+ <1479806342.2517.44.camel@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a8508059-f04b-bc75-87f7-9d0906565d9d@broadcom.com> (sfid-20161122_103105_957362_155B2516)
+Date: Tue, 22 Nov 2016 10:30:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <1479806342.2517.44.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-10-30 at 19:02 -0400, Jes Sorensen wrote:
-> Code is 80 characters wide, and comments are /* */ never the ugly C++
-> crap.
+On 22-11-2016 10:19, Luca Coelho wrote:
+> On Tue, 2016-11-22 at 10:10 +0100, Arend Van Spriel wrote:
+>> On 22-11-2016 6:59, Luca Coelho wrote:
+>>> Oh, I see.  The problem is that the "max_sched_scan_plan_interval" was
+>>> introduced later.  If the userspace passes
+>>> NL80211__ATTR_SCHED_SCAN_INTERVAL, it probably means that it doesn't
+>>> know about NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL (i.e. it's only using an
+>>> old API).  If it is also, for some reason, passing a very large number,
+>>> we shouldn't suddenly make it fail with -EINVALID, because that would
+>>> be a break of UABI.  And since we know the driver cannot support such a
+>>> large number, we cap it because it's the best we can do.
+>>>
+>>> Now, if the userspace uses NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL, it
+>>> means that it knows the new API (and was written after the new API was
+>>> introduced), so we can be stricter and assume it must have checked
+>>> NL80211_ATTR_MAX_SCAN_PLAN_INTERVAL.
+>>>
+>>> Makes sense?
+>>
+>> Not really. As you say if user-space passes
+>> NL80211_ATTR_SCHED_SCAN_INTERVAL it is using old API. Otherwise it
+>> should pass NL80211_ATTR_SCHED_SCAN_PLANS.
+> 
+> Errr... I meant "if the userspace uses NL80211_ATTR_SCHED_SCAN_PLANS",
+> pasted the wrong thing. ;)
+> 
+> 
+>> If the driver doesn't set the max_sched_scan_plan_interval, mac80211's
+>>> default of MAX_U32 will be used:
+>>>
+>>> struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
+>>> 			   const char *requested_name)
+>>> {
+>>> [...]
+>>> 	rdev->wiphy.max_sched_scan_plans = 1;
+>>> 	rdev->wiphy.max_sched_scan_plan_interval = U32_MAX;
+>>>
+>>> 	return &rdev->wiphy;
+>>> }
+>>> EXPORT_SYMBOL(wiphy_new_nm);
+>>>
+>>> ...so max_sched_scan_plan_interval will never be zero, unless the
+>>> driver explicitly sets it to zero.
+>>
+>> I think you are overlooking the cfg80211-based drivers here. According
+>> to lxr at least brcmfmac, mwifiex, and ath6kl are not specifying it.
+>> "Funny" detail is that scheduled scan support in mwifiex seems to be
+>> introduced after the scan plan API change.
+> 
+> You're right, I did overlook non-mac80211 drivers.
+> 
+> 
+>> With the old API nl80211 only assured it to be non-zero. The only one
+>> capping the value was iwlmvm. The only one setting the
+>> max_sched_scan_plan_interval (overriding mac80211 value) now is iwlmvm.
+>> So I think checking if it is set before capping it retains the old API
+>> behaviour.
+> 
+> Fair enough.  The change you propose, to also check whether the value
+> is set (since 0 interval doesn't make sense), is valid.  :)
 
-You might look at the recent Linus Torvalds authored commit
-5e467652ffef (?printk: re-organize log_output() to be more legible")
-which does both of those: c99 // comments and > 80 columns.
+Thanks. Patch coming up.
 
-Absolutes are for zealots.
+Gr. AvS
