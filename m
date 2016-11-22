@@ -1,79 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45806 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753405AbcKKNJd (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36458 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbcKVUlc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:09:33 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Xinming Hu <huxinming820@gmail.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-        Brian Norris <briannorris@google.com>,
-        Dmitry Torokhov <dtor@google.com>,
-        Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH RESEND v2 01/11] mwifiex: check tx_hw_pending before
- downloading sleep confirm
-Date: Fri, 11 Nov 2016 13:09:29 +0000
-Message-ID: <8c711f44123245f995cc5be54c325d73@SC-EXCH04.marvell.com> (sfid-20161111_140936_025263_B7D33232)
-References: <1478779032-5165-1-git-send-email-huxinming820@marvell.com>
- <87y40rpgz0.fsf@purkki.adurom.net>
-In-Reply-To: <87y40rpgz0.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 22 Nov 2016 15:41:32 -0500
+Received: by mail-wm0-f46.google.com with SMTP id g23so45629738wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Nov 2016 12:41:31 -0800 (PST)
+Subject: Re: [PATCH] RFC: Universal scan proposal
+To: Dmitry Shmidt <dimitrysh@google.com>, Luca Coelho <luca@coelho.fi>
+References: <94eb2c110db85c2379054172dad0@google.com>
+ <1479799452.2517.39.camel@coelho.fi>
+ <CAH7ZN-z+QytCTHDs3dkU172hMio=T2Mhr8y=mXKXu=DRA1vA3A@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <b81eaa82-8b03-1ac7-0130-e617c5a0904e@broadcom.com> (sfid-20161122_214136_444079_82EDBEBE)
+Date: Tue, 22 Nov 2016 21:41:28 +0100
 MIME-Version: 1.0
+In-Reply-To: <CAH7ZN-z+QytCTHDs3dkU172hMio=T2Mhr8y=mXKXu=DRA1vA3A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On 22-11-2016 18:29, Dmitry Shmidt wrote:
+> Hi Luca,
+> 
+> On Mon, Nov 21, 2016 at 11:24 PM, Luca Coelho <luca@coelho.fi> wrote:
+>> Hi Dmitry,
+>> On Wed, 2016-11-16 at 22:47 +0000, dimitrysh@google.com wrote:
+>>>  From 68a9d37a4c7e9dc7a90a6e922cdea52737a98d66 Mon Sep 17 00:00:00 2001
+>>> From: Dmitry Shmidt <dimitrysh@google.com>
+>>> Date: Wed, 16 Nov 2016 14:27:26 -0800
+>>> Subject: [PATCH] RFC: Universal scan proposal
+>>>
+>>>    Currently we have sched scan with possibility of various
+>>> intervals. We would like to extend it to support also
+>>> different types of scan.
+>>>    In case of powerful wlan CPU, all this functionality
+>>> can be offloaded.
+>>>    In general case FW processes additional scan requests
+>>> and puts them into queue based on start time and interval.
+>>> Once current request is fulfilled, FW adds it (if interval != 0)
+>>> again to the queue with proper interval. If requests are
+>>> overlapping, new request can be combined with either one before,
+>>> or one after, assuming that requests are not mutually exclusive.
+>>>    Combining requests is done by combining scan channels, ssids,
+>>> bssids and types of scan result. Once combined request was fulfilled
+>>> it will be reinserted as two (or three) different requests based on
+>>> their type and interval.
+>>>    Each request has attribute:
+>>> Type: connectivity / location
+>>> Report: none / batch / immediate
+>>>    Request may have priority and can be inserted into
+>>> the head of the queue.
+>>>    Types of scans:
+>>> - Normal scan
+>>> - Scheduled scan
+>>> - Hotlist (BSSID scan)
+>>> - Roaming
+>>> - AutoJoin
+>>>
+>>> Change-Id: I9f3e4c975784f1c1c5156887144d80fc5a26bffa
+>>> Signed-off-by: Dmitry Shmidt <dimitrysh@google.com>
+>>> ---
+>>
+>> I like the initiative and I think this is definitely something that can
+>> improve concurrent scanning instances.  But IMHO the most important is
+>> to discuss the semantics of this change, such as which scans can be
+>> combined, who makes the decisions of combining them, how priorities are
+>> sorted out etc.  I think the types of scan are not relevant in the
+>> nl80211 API, but the characteristics of the scans are.  For instance,
+>> "urgent scan" (for initial connection), best-effort scan for roaming...
+>> and latency requirements, such as low-latency for location and initial
+>> connection and high-latency for scheduled scan.  Then we decided, in
+>> the kernel, how to combine and prioritize them according to their
+>> characteristics, instead of having to map scan types to these
+>> characteristics.
+>>
+>> What do you think?
+> 
+> 1. Combining scans.
+> There are two scenarios in general: combine scans that can be offload
+> and scans that can not be offload due to "weak" FW / wlan SoC. In last
+> case this approach maybe not attractive at all - non-mobile device
+> may not need all these different types of scan.
+> In case of offload - it will be FW code decision - I just wanted to propose
+> the way how to do this efficiently.
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Kalle Valo
-> Sent: Thursday, November 10, 2016 7:36 PM
-> To: Xinming Hu
-> Cc: Linux Wireless; Brian Norris; Dmitry Torokhov; Amitkumar Karwar;
-> Cathy Luo; Shengzhen Li; Xinming Hu
-> Subject: Re: [PATCH RESEND v2 01/11] mwifiex: check tx_hw_pending
-> before downloading sleep confirm
-> 
-> Xinming Hu <huxinming820@gmail.com> writes:
-> 
-> > From: Shengzhen Li <szli@marvell.com>
-> >
-> > We may get SLEEP event from firmware even if TXDone interrupt for
-> last
-> > Tx packet is still pending. In this case, we may end up accessing
-> PCIe
-> > memory for handling TXDone after power save handshake is completed.
-> > This causes kernel crash with external abort.
-> >
-> > This patch will only allow downloading sleep confirm when no tx done
-> > interrupt is pending in the hardware.
-> >
-> > Signed-off-by: Cathy Luo <cluo@marvell.com>
-> > Signed-off-by: Shengzhen Li <szli@marvell.com>
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > ---
-> > v2: address format issues(Brain)
-> > RESEND v2(Applicable for complete patch series):
-> >     1) Fixed syntax issue "changelog not placed after the  Sign-offs"
-> >        pointed by Brian.
-> >     2) Dropped "[v2,03/12] mwifiex: don't do unbalanced free()'ing in
-> >        cleanup_if()" patch in this series. It was already sent by
-> Brian
-> >        separately.
-> 
-> I do not know where this "v2 RESEND" practise is coming from but I very
-> much prefer that people would not use it. If you need to resend
-> something keep things simple, just increase the version number and
-> document in the changelog that nothing changed. I don't care what the
-> patchset version number is, I always look at the latest version and
-> discard the older ones.
-> 
-> This is just for the future, no need resend anything because of this.
+I think Luca is looking at it as a way to deal with multiple user-space
+entities request the device to perform a scan. Ignoring the scan types
+on android it can be wifi-hal and wpa_supplicant.
 
-Got it. We will avoid "RESEND" and increase version number for our future submissions.
-There is an improvement pointed out by Brian for "RESEND v2 03/11" patch. I will include it in v3.
+> 2. Priority - very good point, we need to have it. I am just not sure
+> that we need like scale priority - maybe just flag - urgent / not urgent.
+> Urgent one will be inserted in queue as is and conflicting request
+> should be postponed or combined.
+
+What if we get another urgent one?
+
+> 3. Scan types - I am not sure I fully understood your question, but
+> if the idea is for kernel to decide about type of scan based on its
+> characteristics instead of specific type request performance may
+> cause confusion to wifi manager.
+> However, it would definitely simplify kernel API. Still I am not sure
+> if userspace wifi manager will "like" it.
+
+Actually the idea is to hide the notion of scan type entirely from the
+API and kernel code. If you add the scan type as an attribute in the
+API, you still need to provide additional attributes for that scan type
+so the question is what the scan type itself provides, ie. how does it
+affect the scan itself.
+
+> 4. There is an interesting question: to separate scan results for
+> connection and location or not? The problem is how to "trust" them.
+> I mean scan results are scan results, but for location we may decide
+> to look for fewer channels and even maybe specific BSSIDs, i.e. not
+> full scan results, and we may need to indicate that right now
+> scan results are not full in order not to confuse wifi manager.
 
 Regards,
-Amitkumar
+Arend
+
+>> --
+>> Cheers,
+>> Luca.
