@@ -1,91 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smsin.roj.com ([89.96.160.179]:44201 "EHLO smsin.roj.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752774AbcKONgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 08:36:39 -0500
-From: Arlone Marco <Marco.Arlone@roj.com>
-To: 'Nicola Smaldone' <nsmaldone@tierratelematics.com>,
-        Gianfranco Costamagna <locutusofborg@debian.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 15 Nov 2016 14:21:21 +0100
-Subject: R: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
- regulatory domain frequency value
-Message-ID: <9D40A4E69516DE4886301D513BE518D8015AE2C98914@rojmail2007> (sfid-20161115_143654_469317_E50659EE)
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
- <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
- <690669269.1124561.1477671348137@mail.yahoo.com>
- <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
- <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
- <233918815.6357602.1479123253455@mail.yahoo.com>
- <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com>
- <810879191.6335567.1479124065921@mail.yahoo.com>
- <87r36dov6u.fsf@purkki.adurom.net>
- <1967239621.630327.1479215628178@mail.yahoo.com>
- <8947AB956BCA3E4E9A143D07C3F63F22D6A0B215@LIV-EXCHMBX1.TOPCON.com>
-In-Reply-To: <8947AB956BCA3E4E9A143D07C3F63F22D6A0B215@LIV-EXCHMBX1.TOPCON.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:35976 "EHLO
+        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932274AbcKVKw2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 22 Nov 2016 05:52:28 -0500
+From: Michael Braun <michael-dev@fami-braun.de>
+To: johannes@sipsolutions.net
+Cc: Michael Braun <michael-dev@fami-braun.de>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        projekt-wlan@fem.tu-ilmenau.de
+Subject: [PATCH v8] mac80211: multicast to unicast conversion
+Date: Tue, 22 Nov 2016 11:52:18 +0100
+Message-Id: <1479811938-728-1-git-send-email-michael-dev@fami-braun.de> (sfid-20161122_115244_355108_C33B1F29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tm8gcHJvYmxlbSBmb3IgbWUsIGFsc28uDQoNCk1hcmNvIEFybG9uZQ0KDQotLS0tLU1lc3Nh
-Z2dpbyBvcmlnaW5hbGUtLS0tLQ0KRGE6IE5pY29sYSBTbWFsZG9uZSBbbWFpbHRvOm5zbWFs
-ZG9uZUB0aWVycmF0ZWxlbWF0aWNzLmNvbV0gDQpJbnZpYXRvOiBtYXJ0ZWTDrCAxNSBub3Zl
-bWJyZSAyMDE2IDE0OjE4DQpBOiBHaWFuZnJhbmNvIENvc3RhbWFnbmE7IEthbGxlIFZhbG8N
-CkNjOiBBcmVuZCBWYW4gU3ByaWVsOyBicmNtODAyMTEtZGV2LWxpc3RAYnJvYWRjb20uY29t
-OyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFybG9uZSBNYXJjbw0KT2dnZXR0
-bzogUkU6IFtQQVRDSF0gYnJvYWRjb20vYnJjbTgwMjExL2JyY21mbWFjL2NmZzgwMjExIGRy
-aXZlciwgYmFkIHJlZ3VsYXRvcnkgZG9tYWluIGZyZXF1ZW5jeSB2YWx1ZQ0KDQpObyBwcm9i
-bGVtIGZvciBtZSwgdGhhbmtzLg0KDQpOaWNvbGEgU01BTERPTkUNCnd3dy50aWVycmF0ZWxl
-bWF0aWNzLmNvbQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogR2lhbmZy
-YW5jbyBDb3N0YW1hZ25hIFttYWlsdG86bG9jdXR1c29mYm9yZ0BkZWJpYW4ub3JnXQ0KU2Vu
-dDogbWFydGVkw6wgMTUgbm92ZW1icmUgMjAxNiAxNDoxNA0KVG86IEthbGxlIFZhbG8gPGt2
-YWxvQGNvZGVhdXJvcmEub3JnPg0KQ2M6IEFyZW5kIFZhbiBTcHJpZWwgPGFyZW5kLnZhbnNw
-cmllbEBicm9hZGNvbS5jb20+OyBicmNtODAyMTEtZGV2LWxpc3RAYnJvYWRjb20uY29tOyBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE5pY29sYSBTbWFsZG9uZSA8bnNtYWxk
-b25lQHRpZXJyYXRlbGVtYXRpY3MuY29tPjsgTWFyY28uQXJsb25lQHJvai5jb20NClN1Ympl
-Y3Q6IFJlOiBbUEFUQ0hdIGJyb2FkY29tL2JyY204MDIxMS9icmNtZm1hYy9jZmc4MDIxMSBk
-cml2ZXIsIGJhZCByZWd1bGF0b3J5IGRvbWFpbiBmcmVxdWVuY3kgdmFsdWUNCg0KSGksDQoN
-Cg0KPiBTaWduZWQtb2ZmLWJ5OiBOaWNvbGEgU21hbGRvbmUgPG5pY29sYS5zbWFsZG9uZUB0
-aWVycmFzZXJ2aWNlLmNvbT4NCg0KPiBTaWduZWQtb2ZmLWJ5OiBBcmxvbmUgTWFyY28gPG1h
-cmNvLmFybG9uZUByb2ouY29tPg0KDQo+UGxlYXNlIG5vdGUgdGhhdCB5b3UgY2Fubm90IGFk
-ZCBTaWduZWQtb2ZmLWJ5IGZvciBvdGhlciBwZW9wbGUgd2l0aG91dCANCj50aGVpciBleHBs
-aWNpdCBhcHByb3ZhbCAoc2VlIERvY3VtZW50YXRpb24vU3VibWl0dGluZ1BhdGNoZXMpLiBJ
-IGRvbid0IA0KPmtub3cgaWYgdGhleSBkaWQgaXQgaW4gdGhpcyBjYXNlIG9yIG5vdCwgYnV0
-IHdhbnRlZCB0byBwb2ludCBvdXQgdGhpcyANCj5hbnl3YXkuDQoNCg0KVGhlIGZpcnN0IHNp
-Z25vZmYgaXMgbXlzZWxmLCB3aXRoIHRoZSBjb21wYW55IGVtYWlsLCB0aGUgb3RoZXIgdHdv
-IHNpZ25vZmZzIGFyZSBmcm9tOiB0aGUgYXV0aG9yLCBhbmQgTmljb2xhLCB3aG8gZGlkIHdv
-cmsgd2l0aCBtZSB0byB0ZXN0IGl0IChldmVuIGlmIGEgdHlwbyBmaXggaXMgbm90ICJ0ZXN0
-YWJsZSIpLg0KDQpOaWNvbGEsIE1hcmNvLCBpcyBpdCBvayB0byBhZGQgeW91ciB0d28gbmFt
-ZXMgaW4gdGhlIHNpZ25vZmYgcGFydD8NCih0aGF0IHdhcyBhIHZlcmJhbCB0YWxrLCBJIGRv
-bid0IGhhdmUgYW55dGhpbmcgd3JpdHRlbikNCg0KR2lhbmZyYW5jbw0KDQpDb25maWRlbnRp
-YWxpdHkgTm90aWNlOiBUaGlzIG1lc3NhZ2UgKGluY2x1ZGluZyBhdHRhY2htZW50cykgaXMg
-YSBwcml2YXRlIGNvbW11bmljYXRpb24gc29sZWx5IGZvciB1c2Ugb2YgdGhlIGludGVuZGVk
-IHJlY2lwaWVudChzKS4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVkIHJlY2lwaWVudChz
-KSBvciBiZWxpZXZlIHlvdSByZWNlaXZlZCB0aGlzIG1lc3NhZ2UgaW4gZXJyb3IsIG5vdGlm
-eSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGFuZCB0aGVuIGRlbGV0ZSB0aGlzIG1lc3NhZ2Uu
-IEFueSBvdGhlciB1c2UsIHJldGVudGlvbiwgZGlzc2VtaW5hdGlvbiBvciBjb3B5aW5nIGlz
-IHByb2hpYml0ZWQgYW5kIG1heSBiZSBhIHZpb2xhdGlvbiBvZiBsYXcsIGluY2x1ZGluZyB0
-aGUgRWxlY3Ryb25pYyBDb21tdW5pY2F0aW9uIFByaXZhY3kgQWN0IG9mIDE5ODYuDQoNCkZv
-bGxvdyB1cyBvbiBZb3VUdWJlOiBodHRwczovL3d3dy55b3V0dWJlLmNvbS9jaGFubmVsL1VD
-OW5US2plcThVZHhFeEtuQ05YRFBtQQ0KDQpQcmltYSBkaSBzdGFtcGFyZSwgcGVuc2EgYWxs
-J2FtYmllbnRlICoqIFRoaW5rIGFib3V0IHRoZSBlbnZpcm9ubWVudCBiZWZvcmUgcHJpbnRp
-bmcNCg0KDQpST0ogUy5yLmwuIC0gQmllbGxhIC0gSXRhbHkgICh3d3cucm9qLmNvbSkgDQpU
-ZWw6ICszOS4wMTUuODQ4MDExMSAgIEZheDogKzM5LjAxNS40MDU4MTUvODQ4MDIwOQ0KDQpU
-aGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgaXMgY29uZmlk
-ZW50aWFsIGFuZCBpbnRlbmRlZCBvbmx5IGZvciB0aGUgc3RhdGVkIGFkZHJlc3NlZShzKS4g
-QW55IHVuYXV0aG9yaXNlZCBkaXNjbG9zdXJlLCB1c2Ugb3IgZGlzc2VtaW5hdGlvbiwgZWl0
-aGVyIHdob2xlIG9yIHBhcnRpYWwsIGJ5IHBlcnNvbiBvciBlbnRpdGllcyBvdGhlciB0aGFu
-IHRoZSBhZGRyZXNzZWUocykgaXMgcHJvaGliaXRlZC4gUGxlYXNlIG5vdGlmeSB0aGUgc2Vu
-ZGVyIGltbWVkaWF0ZWx5IGJ5IGUtbWFpbCBpZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIGUt
-bWFpbCBieSBtaXN0YWtlIGFuZCBkZWxldGUgdGhpcyBlLW1haWwgZnJvbSB5b3VyIHN5c3Rl
-bS4gDQpQbGVhc2Ugbm90ZSB0aGF0IGFueSB2aWV3cyBvciBvcGluaW9ucyBwcmVzZW50ZWQg
-aW4gdGhpcyBlLW1haWwgYXJlIHNvbGVseSB0aG9zZSBvZiB0aGUgYXV0aG9yIGFuZCBhcmUg
-bm90IG5lY2Vzc2FyaWx5IGVuZG9yc2VkIGJ5IHRoZSBjb21wYW55LiBBbHRob3VnaCB0aGUg
-Y29tcGFueSBoYXMgdGFrZW4gcmVhc29uYWJsZSBwcmVjYXV0aW9ucyB0byBlbnN1cmUgbm8g
-dmlydXNlcyBhcmUgcHJlc2VudCBpbiB0aGlzIGUtbWFpbCwgdGhlIGNvbXBhbnkgY2Fubm90
-IGFjY2VwdCByZXNwb25zaWJpbGl0eSBmb3IgYW55IGxvc3Mgb3IgZGFtYWdlIGFyaXNpbmcg
-ZnJvbSB0aGUgdXNlIG9mIHRoaXMgZS1tYWlsIG9yIGF0dGFjaG1lbnRzLiANCg0K
+Add the ability for an AP (and associated VLANs) to perform
+multicast-to-unicast conversion for ARP, IPv4 and IPv6 frames
+(possibly within 802.1Q). If enabled, such frames are to be sent
+to each station separately, with the DA replaced by their own
+MAC address rather than the group address.
+
+Note that this may break certain expectations of the receiver,
+such as the ability to drop unicast IP packets received within
+multicast L2 frames, or the ability to not send ICMP destination
+unreachable messages for packets received in L2 multicast (which
+is required, but the receiver can't tell the difference if this
+new option is enabled.)
+
+This also doesn't implement the 802.11 DMS (directed multicast
+service).
+
+Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
+
+--
+v8:
+  - remove superflous check
+  - change return type to bool
+v7:
+  - avoid recursion
+  - style and description
+v5:
+  - rename bss->unicast to bss->multicast_to_unicast
+  - access sdata->bss only after checking iftype
+v4:
+  - rename MULTICAST_TO_UNICAST to MULTICAST_TO_UNICAST
+v3: fix compile error for trace.h
+v2: add nl80211 toggle
+    rename tx_dnat to change_da
+    change int to bool unicast
+---
+ net/mac80211/cfg.c            |  12 +++++
+ net/mac80211/debugfs_netdev.c |   3 ++
+ net/mac80211/ieee80211_i.h    |   1 +
+ net/mac80211/tx.c             | 122 +++++++++++++++++++++++++++++++++++++++++-
+ 4 files changed, 137 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 1edb017..7de342a 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3345,6 +3345,17 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
+ }
+ 
++static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
++					      struct net_device *dev,
++					      const bool enabled)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++
++	sdata->u.ap.multicast_to_unicast = enabled;
++
++	return 0;
++}
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3430,4 +3441,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.set_multicast_to_unicast = ieee80211_set_multicast_to_unicast,
+ };
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index ed7bff4..509c6c3 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -487,6 +487,8 @@ static ssize_t ieee80211_if_fmt_num_buffered_multicast(
+ }
+ IEEE80211_IF_FILE_R(num_buffered_multicast);
+ 
++IEEE80211_IF_FILE(multicast_to_unicast, u.ap.multicast_to_unicast, HEX);
++
+ /* IBSS attributes */
+ static ssize_t ieee80211_if_fmt_tsf(
+ 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+@@ -642,6 +644,7 @@ static void add_ap_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+ 	DEBUGFS_ADD_MODE(tkip_mic_test, 0200);
++	DEBUGFS_ADD_MODE(multicast_to_unicast, 0600);
+ }
+ 
+ static void add_vlan_files(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 70c0963..84374ed 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -293,6 +293,7 @@ struct ieee80211_if_ap {
+ 			 driver_smps_mode; /* smps mode request */
+ 
+ 	struct work_struct request_smps_work;
++	bool multicast_to_unicast;
+ };
+ 
+ struct ieee80211_if_wds {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index c3ce86e..5effffd 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -16,6 +16,7 @@
+ #include <linux/kernel.h>
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
++#include <linux/if_vlan.h>
+ #include <linux/etherdevice.h>
+ #include <linux/bitmap.h>
+ #include <linux/rcupdate.h>
+@@ -3418,6 +3419,115 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	rcu_read_unlock();
+ }
+ 
++static int ieee80211_change_da(struct sk_buff *skb, struct sta_info *sta)
++{
++	struct ethhdr *eth;
++	int err;
++
++	err = skb_ensure_writable(skb, ETH_HLEN);
++	if (unlikely(err))
++		return err;
++
++	eth = (void *)skb->data;
++	ether_addr_copy(eth->h_dest, sta->sta.addr);
++
++	return 0;
++}
++
++static inline bool
++ieee80211_multicast_to_unicast(struct sk_buff *skb, struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	const struct ethhdr *eth = (void *)skb->data;
++	const struct vlan_ethhdr *ethvlan = (void *)skb->data;
++	u16 ethertype;
++
++	if (likely(!is_multicast_ether_addr(eth->h_dest)))
++		return 0;
++
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_AP_VLAN:
++		if (sdata->u.vlan.sta)
++			return 0;
++		if (sdata->wdev.use_4addr)
++			return 0;
++		/* fall through */
++	case NL80211_IFTYPE_AP:
++		/* check runtime toggle for this bss */
++		if (!sdata->bss->multicast_to_unicast)
++			return 0;
++		break;
++	default:
++		return 0;
++	}
++
++	/* multicast to unicast conversion only for some payload */
++	ethertype = ntohs(eth->h_proto);
++	if (ethertype == ETH_P_8021Q && skb->len >= VLAN_ETH_HLEN)
++		ethertype = ntohs(ethvlan->h_vlan_encapsulated_proto);
++	switch (ethertype) {
++	case ETH_P_ARP:
++	case ETH_P_IP:
++	case ETH_P_IPV6:
++		break;
++	default:
++		return 0;
++	}
++
++	return 1;
++}
++
++static void
++ieee80211_convert_to_unicast(struct sk_buff *skb, struct net_device *dev,
++			     struct sk_buff_head *queue)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	const struct ethhdr *eth = (struct ethhdr *)skb->data;
++	struct sta_info *sta, *first = NULL;
++	struct sk_buff *cloned_skb;
++
++	rcu_read_lock();
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		if (sdata != sta->sdata)
++			/* AP-VLAN mismatch */
++			continue;
++		if (unlikely(ether_addr_equal(eth->h_source, sta->sta.addr)))
++			/* do not send back to source */
++			continue;
++		if (!first) {
++			first = sta;
++			continue;
++		}
++		cloned_skb = skb_clone(skb, GFP_ATOMIC);
++		if (!cloned_skb)
++			goto unicast;
++		if (unlikely(ieee80211_change_da(cloned_skb, sta))) {
++			dev_kfree_skb(cloned_skb);
++			goto unicast;
++		}
++		__skb_queue_tail(queue, cloned_skb);
++	}
++
++	if (likely(first)) {
++		if (unlikely(ieee80211_change_da(skb, first)))
++			goto unicast;
++		__skb_queue_tail(queue, skb);
++	} else {
++		/* no STA connected, drop */
++		kfree_skb(skb);
++		skb = NULL;
++	}
++
++	goto out;
++unicast:
++	__skb_queue_purge(queue);
++	__skb_queue_tail(queue, skb);
++out:
++	rcu_read_unlock();
++}
++
+ /**
+  * ieee80211_subif_start_xmit - netif start_xmit function for 802.3 vifs
+  * @skb: packet to be sent
+@@ -3428,7 +3538,17 @@ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				       struct net_device *dev)
+ {
+-	__ieee80211_subif_start_xmit(skb, dev, 0);
++	if (unlikely(ieee80211_multicast_to_unicast(skb, dev))) {
++		struct sk_buff_head queue;
++
++		__skb_queue_head_init(&queue);
++		ieee80211_convert_to_unicast(skb, dev, &queue);
++		while ((skb = __skb_dequeue(&queue)))
++			__ieee80211_subif_start_xmit(skb, dev, 0);
++	} else {
++		__ieee80211_subif_start_xmit(skb, dev, 0);
++	}
++
+ 	return NETDEV_TX_OK;
+ }
+ 
+-- 
+2.1.4
