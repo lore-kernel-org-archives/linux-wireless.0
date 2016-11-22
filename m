@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from chaos.universe-factory.net ([37.72.148.22]:40796 "EHLO
-        chaos.universe-factory.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751736AbcKORyc (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33771 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932355AbcKVPbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 12:54:32 -0500
-From: Matthias Schiffer <mschiffer@universe-factory.net>
-To: kvalo@codeaurora.org
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath9k-devel@lists.ath9k.org, miaoqing@codeaurora.org
-Subject: [PATCH] ath9k: fix ath9k_hw_gpio_get() to return 0 or 1 on success
-Date: Tue, 15 Nov 2016 18:47:21 +0100
-Message-Id: <44116a7bca8524a187083916bdea535145e7a23a.1479232041.git.mschiffer@universe-factory.net> (sfid-20161115_185435_416633_AB04835C)
+        Tue, 22 Nov 2016 10:31:46 -0500
+Date: Tue, 22 Nov 2016 16:31:41 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: wl1251 & mac address & calibration data
+Message-ID: <20161122153141.GT13735@pali> (sfid-20161122_163211_306078_FA7CB81B)
+References: <201611111820.52072@pali>
+ <20161121155153.GM13735@pali>
+ <CA+BoTQm5yZYccMherMnmxZ0_b2PqkCWf_0nBoRLzsro-Ujz1eQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+BoTQm5yZYccMherMnmxZ0_b2PqkCWf_0nBoRLzsro-Ujz1eQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit b2d70d4944c1 ("ath9k: make GPIO API to support both of WMAC and
-SOC") refactored ath9k_hw_gpio_get() to support both WMAC and SOC GPIOs,
-changing the return on success from 1 to BIT(gpio). This broke some callers
-like ath_is_rfkill_set().
+On Tuesday 22 November 2016 16:22:57 Michal Kazior wrote:
+> On 21 November 2016 at 16:51, Pali Rohár <pali.rohar@gmail.com> wrote:
+> > On Friday 11 November 2016 18:20:50 Pali Rohár wrote:
+> >> Hi! I will open discussion about mac address and calibration data for
+> >> wl1251 wireless chip again...
+> >>
+> >> Problem: Mac address & calibration data for wl1251 chip on Nokia N900
+> >> are stored on second nand partition (mtd1) in special proprietary format
+> >> which is used only for Nokia N900 (probably on N8x0 and N9 too).
+> >> Wireless driver wl1251.ko cannot work without mac address and
+> >> calibration data.
+> 
+> Same problem applies to some ath9k/ath10k supported routers. Some even
+> carry mac address as implicit offset from ethernet mac address. As far
+> as I understand OpenWRT cooks cal blobs on first boot prior to loading
+> modules.
 
-Instead of fixing all callers, change ath9k_hw_gpio_get() back to only
-return 0 or 1.
+So... wl1251 on Nokia N900 is not alone and this problem is there for
+more drivers and devices. Which means we should come up with some
+generic solution.
 
-Fixes: b2d70d4944c1 ("ath9k: make GPIO API to support both of WMAC and SOC")
-Cc: <stable@vger.kernel.org> # v4.7+
-Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
----
- drivers/net/wireless/ath/ath9k/hw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> >> Absence of mac address cause that driver generates random mac address at
+> >> every kernel boot which has couple of problems (unstable identifier of
+> >> wireless device due to udev permanent storage rules; unpredictable
+> >> behaviour for dhcp mac address assignment, mac address filtering, ...).
+> >>
+> >> Currently there is no way to set (permanent) mac address for network
+> >> interface from userspace. And it does not make sense to implement in
+> >> linux kernel large parser for proprietary format of second nand
+> >> partition where is mac address stored only for one device -- Nokia N900.
+> >>
+> >> Driver wl1251.ko loads calibration data via request_firmware() for file
+> >> wl1251-nvs.bin. There are some "example" calibration file in linux-
+> >> firmware repository, but it is not suitable for normal usage as real
+> >> calibration data are per-device specific.
+> 
+> You could hook up a script that cooks up the cal/mac file via
+> modprobe's install hook, no?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 14b13f0..a35f78b 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2792,7 +2792,7 @@ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
- 		WARN_ON(1);
- 	}
- 
--	return val;
-+	return !!val;
- }
- EXPORT_SYMBOL(ath9k_hw_gpio_get);
- 
+Via modprobe hook I can either pass custom module parameter or call any
+other system (shell) commands.
+
+As wl1251.ko does not accept mac_address as module parameter, such
+modprobe hook does not help -- as there is absolutely no way from
+userspace to set or change (permanent) mac address.
+
 -- 
-2.10.2
+Pali Rohár
+pali.rohar@gmail.com
