@@ -1,40 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:35038 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758258AbcKCXzi (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:46114 "EHLO
+        li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933302AbcKWWhZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 19:55:38 -0400
-Received: by mail-oi0-f41.google.com with SMTP id x4so119465147oix.2
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 16:55:38 -0700 (PDT)
+        Wed, 23 Nov 2016 17:37:25 -0500
+Date: Thu, 24 Nov 2016 00:29:17 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Break-it testing for wifi
+Message-ID: <20161123222917.GA1974@w1.fi> (sfid-20161123_233729_420327_B2025290)
+References: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>
+ <1479812215.9021.3.camel@sipsolutions.net>
+ <5834797B.2090805@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
-References: <CAHqTa-07wpAYdwTFKBm7QT6mn3PBOY5PiuSo6iZ6T9GgDd75ig@mail.gmail.com>
-From: Kathy Giori <kathy.giori@gmail.com>
-Date: Thu, 3 Nov 2016 16:55:36 -0700
-Message-ID: <CAMowtuMeCYGY09SG-CrYYtgPAg3=P6sufBHLZdWmY3eodW0RwQ@mail.gmail.com> (sfid-20161104_005542_986673_18C87661)
-Subject: Re: Avery's notes from LPC2016 wireless track (Santa Fe)
-To: Avery Pennarun <apenwarr@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5834797B.2090805@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 3, 2016 at 1:43 PM, Avery Pennarun <apenwarr@gmail.com> wrote:
-> Hi all,
->
-> We talked about many topics at the Linux Plumbers' Conference in Santa
-> Fe on Tuesday.  I took fairly detailed notes, which you can find at
-> the links below.
+On Tue, Nov 22, 2016 at 08:59:39AM -0800, Ben Greear wrote:
+> On 11/22/2016 02:56 AM, Johannes Berg wrote:
+> >On Mon, 2016-11-21 at 08:10 -0800, Ben Greear wrote:
+> >>1)  Allow supplicant to do bad state-machine transitions (start 4-way
+> >>before associating, for instance).
+> >
+> >Why would you do that? In order to test the AP implementation?
+> 
+> Yes.  And really, you should be able to do similar things on the AP to test stations,
+> or on IBSS/Mesh devices, etc.  hostapd already has some options to corrupt or
+> drop a percentage of various management frames.  Supplicant does not as far
+> as I know.
 
-Great notes Avery. Did you happen to take note of how many
-participants there were? Or was the attendee list posted on the wiki
-beforehand fairly accurate?
-https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
+I'm not sure adding a specific option to corrupt or drop a management
+frame is the best approach here. Both hostapd and wpa_supplicant have
+multiple mechanisms to enable testing in CONFIG_TESTING_OPTIONS=y builds
+and the most flexible cases allow the management and EAPOL frame
+processing to be handled by a test script through the control interface.
+This provides much more control on how to misbehave and allows that to
+be done at higher layer components without having to hardcode stuff in
+hostapd/wpa_supplicant (or kernel for that matter). In case of
+mac80211_hwsim tests, this is done in the python scripts (see
+tests/hwsim directory in hostap.git).
 
-Was there any talk about having more frequent "live" discussions of
-these topics (via video conf or conf call or scheduled IRC), to help
-overall collaboration without having to wait for the next f2f summit?
-Mailing list interaction doesn't seem to elicit the same energy as
-occurs over live dialog. Quarterly?
+> Currently, supplicant can (at least with some small patches that I carry),
+> add custom information elements to probe requests and similar.  But, some things
+> are built by mac80211 (rate-sets advertised, for instance).  So, I was thinking of slightly extending
+> the API so that user-space could over-ride whatever mac80211 might normally
+> build itself.  That lets you more properly fuzz things from user space.
 
-kathy
+For many cases, I'd expect it to be more flexible to override full frame
+payload from a test script rather than come up with more detailed (and
+more complex to implement) APIs.. As far as cfg80211/mac80211 is
+concerned, it might be convenient to have a command that allows user
+space to force a STA entry to a specific state when working in station
+mode (hostapd can already do this in AP mode). This would allow the
+existing offchannel management frame TX/RX operations to be used to
+perform arbitrary exchanges and with the forced state changes, this
+could cover more cases related to negotiating unexpected combinations or
+exchanges frames in unexpected sequence, etc.
+
+> >>4)  Maybe some specific tests like putting in over-flow sized lengths
+> >>of IEs.
+> >
+> >Again, fuzzing would cover this?
+> 
+> Yes, but for ease of use, and to cover frames generated by mac80211, I
+> was thinking:
+> 
+> echo 0.25 > /debug/.../wlan0/mgt_fuzzer
+> 
+> The fuzzer would then corrupt 25% of the management frames.  And instead of just randomly
+> scribbling, it could also parse the frames and do some more clever (and still pseudo-random)
+> modifications to the frames, like re-writing IEs with bad lengths, flipping bits in specific portions of the
+> frame we feel might find problems, etc.
+
+Why would this be in mac80211? I would much rather handle this type of
+fuzzing operations in user space and just provide generic interfaces in
+cfg80211 to allow the messages to be exchanged. For most parts, this
+capability exists already today..
+
+> >>Has anyone done anything similar they would like to share?
+> >>
+> >>Johannes:  Any interest in having such a framework in upstream
+> >>kernels?
+
+hostap.git tests/hwsim has quite a few such functions in testing use. I
+don't think I'd support kernel changes in the style that you are
+thinking of here, but I would very much support providing more generic
+interfaces, where required, to allow this type of testing to be
+performed from user space scripts.
+
+> Well, there is a decent chance you could crash some firmware if you sent
+> corrupted EAPOL frames to it.  And just possibly some drivers inspect packets as well,
+> so I was thinking that fully transmitting the frames out of the system might
+> have some use.  And specifically for me, I am trying to test remote systems,
+> so hwsim would not be useful for that.
+> 
+
+Lots of this capability is already there in mac80211, cfg80211, hostapd,
+and wpa_supplicant.. While mac80211_hwsim tests are one of the main use
+cases for this, this works fine with any mac80211-based driver for
+over-the-air testing as well. For AP mode, it is possible to override
+most of management frame and EAPOL processing. For STA mode, EAPOL
+processing can be fully overridden and quite a few management frame
+exchanges can also be handled from test scripts through wpa_supplicant
+control interface, but there may still exists some more constraints on
+preventing some testing combinations.
+
+> But, if local Linux (and local userspace) itself is the test target, then hwsim should give some very good
+> test coverage.
+
+Please keep in mind that almost anything that can tested with
+mac80211_hwsim can also be used with real WLAN hardware when using
+mac80211-based drivers..
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
