@@ -1,960 +1,428 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.smtp.broadcom.com ([192.19.211.62]:50623 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935255AbcKQSFk (ORCPT
+Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:12623 "EHLO
+        outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753438AbcKWVPZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 13:05:40 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC V2 4/5] nl80211: add support for gscan
-Date: Thu, 17 Nov 2016 13:18:45 +0000
-Message-Id: <1479388726-3288-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161117_190548_111868_D82710D6)
-In-Reply-To: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 23 Nov 2016 16:15:25 -0500
+Date: Wed, 23 Nov 2016 20:59:17 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: linux-wireless@vger.kernel.org,
+        Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>,
+        ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Gregory CLEMENT <gregory.clement@free-electrons.com>,
+        Kalle Valo <kvalo@codeaurora.org>, Andrew Lunn <andrew@lunn.ch>
+Subject: Re: ath9k ARMv7 OOPS in v4.8.6, v4.2.8
+Message-ID: <20161123205917.GI2799@io.lakedaemon.net> (sfid-20161123_221529_912661_A1D35137)
+References: <20161123191539.GF2799@io.lakedaemon.net>
+ <20161123195120.GE14217@n2100.armlinux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161123195120.GE14217@n2100.armlinux.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for GScan which is a scan offload feature
-used in Android.
+On Wed, Nov 23, 2016 at 07:51:20PM +0000, Russell King - ARM Linux wrote:
+> On Wed, Nov 23, 2016 at 07:15:39PM +0000, Jason Cooper wrote:
+> > ------- oops from v4.8.6 #2 ------------------------------------------
+> > [42059.303625] Unable to handle kernel NULL pointer dereference at virtual address 00000020
+> > [42059.311799] pgd = c0004000
+> > [42059.314522] [00000020] *pgd=00000000
+> > [42059.318162] Internal error: Oops: 17 [#1] SMP ARM
+> > [42059.322889] Modules linked in: ath9k ath9k_common ath9k_hw ath
+> > [42059.328809] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.8.6 #37
+> > [42059.334755] Hardware name: Marvell Armada 370/XP (Device Tree)
+> > [42059.340613] task: c0b091c0 task.stack: c0b00000
+> > [42059.345176] PC is at ath_cmn_process_fft+0xa0/0x578 [ath9k_common]
+> > [42059.351388] LR is at ath_cmn_process_fft+0xc4/0x578 [ath9k_common]
+> > [42059.357598] pc : [<bf07bec4>]    lr : [<bf07bee8>]    psr: 80000153
+> > [42059.357598] sp : c0b01cd0  ip : 00000000  fp : 00000000
+> > [42059.369127] r10: c0b034d4  r9 : 00000069  r8 : 0000006c
+> > [42059.374374] r7 : 00000000  r6 : dcfbd340  r5 : c0b03da0  r4 : 00000000
+> > [42059.380930] r3 : 00000001  r2 : 00000008  r1 : 00000004  r0 : 00000000
+> 
+> Well, the good news is that it's reproducable.
+> 
+> It looks like it could be this:
+> 
+> static int
+> ath_cmn_is_fft_buf_full(struct ath_spec_scan_priv *spec_priv)
+> {
+>         for_each_online_cpu(i)
+>                 ret += relay_buf_full(rc->buf[i]);
+> 
+> where i = 8 (r2) and rc->buf is r7.  That's just a guess though, as
+> there's precious little to go on with the Code: line - modern GCCs
+> don't give us much with the Code: line anymore to figure out what's
+> going on without the exact object files.
+> 
+>         e5933000        ldr     r3, [r3]
+>         e1d330b4        ldrh    r3, [r3, #4]
+>         e58d3030        str     r3, [sp, #48]   ; 0x30
+>         ea000002        b       1c <foo+0x1c>
+>         e7970102        ldr     r0, [r7, r2, lsl #2]
+> 
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-V2:
- - removed pr_err() statements.
----
- include/net/cfg80211.h       |  91 ++++++++++-
- include/uapi/linux/nl80211.h | 146 ++++++++++++++++++
- net/wireless/core.c          |  31 ++++
- net/wireless/core.h          |   4 +
- net/wireless/nl80211.c       | 351 ++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      |  25 +++
- net/wireless/scan.c          |  28 ++++
- net/wireless/trace.h         |   9 ++
- 8 files changed, 678 insertions(+), 7 deletions(-)
+As requested on irc:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c77bb08..b4b0536 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2464,6 +2464,90 @@ struct cfg80211_nan_func {
- };
- 
- /**
-+ * struct cfg80211_gscan_channel - GScan channel parameters.
-+ *
-+
-+ * @ch: specific channel.
-+ * @dwell_time: hint for dwell time in milliseconds.
-+ * @passive: indicates passive scan is requested.
-+ */
-+struct cfg80211_gscan_channel {
-+    struct ieee80211_channel *ch;
-+    int dwell_time;
-+    bool passive;
-+};
-+
-+/**
-+ * struct cfg80211_gscan_bucket - GScan bucket parameters.
-+ *
-+ * @idx: unique bucket index.
-+ * @band: bit flags for band(s) to use, see %enum nl80211_bucket_band.
-+ * @period: period in which the bucket is scheduled to be scanned. If the
-+ *	period is too small for driver it should not fail but report results
-+ *	as fast as it can. For exponential backoff bucket this is the minimum
-+ *	period.
-+ * @report_events: This is a bit field according %enum nl80211_bucket_report_event.
-+ * @max_period: used only for the exponential backoff bucket whose scan period will
-+ *	grow exponentially to a maximum period of max_period.
-+ * @exponent: used only for the exponential backoff bucket.
-+ * @step_count: used only for the exponential backoff bucket.
-+ * @n_channels: number of channels in @channels array.
-+ * @channels: channels to scan which may include DFS channels.
-+ */
-+struct cfg80211_gscan_bucket {
-+	int idx;
-+	u32 band;
-+	int period;
-+	u8 report_events;
-+	int max_period;
-+	int exponent;
-+	int step_count;
-+	int n_channels;
-+	struct cfg80211_gscan_channel *channels;
-+};
-+
-+/**
-+ * struct cfg80211_gscan_request - GScan request parameters.
-+ *
-+ * @flags: scan request flags according %enum nl80211_scan_flags.
-+ * @base_period: base timer period in milliseconds.
-+ * @max_ap_per_scan: number of APs to store in each scan entry in the BSSID/RSSI
-+ *	history buffer (keep APS with highest RSSI).
-+ * @report_threshold_percent: wake up system when scan buffer is filled to this
-+ *	percentage.
-+ * @report_threshold_num_scans: wake up system when this many scans are stored
-+ *	in scan buffer.
-+ * @mac: MAC address used for randomisation.
-+ * @mac_mask: MAC address mask. bits that are 0 in the mask should be
-+ *	randomised, bits that are 1 should be taken as is from @mac.
-+ * @n_buckets: number of entries in @buckets array.
-+ * @buckets: array of GScan buckets.
-+ *
-+ * @dev: net device for which GScan is requested.
-+ * @rcu_head: RCU callback used to free the struct.
-+ * @owner_nlportid: netlink port which initiated this request.
-+ */
-+struct cfg80211_gscan_request {
-+	u32 flags;
-+	int base_period;
-+	int max_ap_per_scan;
-+	u8 report_threshold_percent;
-+	int report_threshold_num_scans;
-+	u8 mac[ETH_ALEN];
-+	u8 mac_mask[ETH_ALEN];
-+
-+	int n_buckets;
-+
-+	/* internal */
-+	struct net_device *dev;
-+	struct rcu_head rcu_head;
-+	u32 owner_nlportid;
-+
-+	/* keep last */
-+	struct cfg80211_gscan_bucket buckets[0];
-+};
-+
-+/**
-  * struct cfg80211_ops - backend description for wireless configuration
-  *
-  * This struct is registered by fullmac card drivers and/or wireless stacks
-@@ -2773,8 +2857,9 @@ struct cfg80211_nan_func {
-  * @nan_change_conf: changes NAN configuration. The changed parameters must
-  *	be specified in @changes (using &enum cfg80211_nan_conf_changes);
-  *	All other parameters must be ignored.
-- *
-  * @set_multicast_to_unicast: configure multicast to unicast conversion for BSS
-+ * @start_gscan: start the GSCAN scanning offload.
-+ * @stop_gscan: stop the GSCAN scanning offload.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -3055,10 +3140,12 @@ struct cfg80211_ops {
- 				   struct wireless_dev *wdev,
- 				   struct cfg80211_nan_conf *conf,
- 				   u32 changes);
--
- 	int	(*set_multicast_to_unicast)(struct wiphy *wiphy,
- 					    struct net_device *dev,
- 					    const bool enabled);
-+	int	(*start_gscan)(struct wiphy *wiphy, struct net_device *dev,
-+			       struct cfg80211_gscan_request *gscan_req);
-+	int	(*stop_gscan)(struct wiphy *wiphy, struct net_device *dev);
- };
- 
- /*
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 232a792..8071dae 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -894,6 +894,12 @@
-  *	does not result in a change for the current association. Currently,
-  *	only the %NL80211_ATTR_IE data is used and updated with this command.
-  *
-+ * @NL80211_CMD_START_GSCAN: start GScan.
-+ * @NL80211_CMD_STOP_GSCAN: request to stop current GScan.
-+ * @NL80211_CMD_GSCAN_STOPPED: indicates that the currently running GScan
-+ *	has stopped. This event is generated upon @NL80211_CMD_STOP_GSCAN and
-+ *	the driver may issue this event at any time when a GScan is running.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -1093,6 +1099,10 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_UPDATE_CONNECT_PARAMS,
- 
-+	NL80211_CMD_START_GSCAN,
-+	NL80211_CMD_STOP_GSCAN,
-+	NL80211_CMD_GSCAN_STOPPED,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -2385,6 +2395,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
- 
- 	NL80211_ATTR_GSCAN_CAPS,
-+	NL80211_ATTR_GSCAN_PARAMS,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -4779,12 +4790,15 @@ enum nl80211_connect_failed_reason {
-  *	locally administered 1, multicast 0) is assumed.
-  *	This flag must not be requested when the feature isn't supported, check
-  *	the nl80211 feature flags for the device.
-+ * @NL80211_SCAN_FLAGS_IE_DATA: request the device to supply IE data in the
-+ *	request.
-  */
- enum nl80211_scan_flags {
- 	NL80211_SCAN_FLAG_LOW_PRIORITY			= 1<<0,
- 	NL80211_SCAN_FLAG_FLUSH				= 1<<1,
- 	NL80211_SCAN_FLAG_AP				= 1<<2,
- 	NL80211_SCAN_FLAG_RANDOM_ADDR			= 1<<3,
-+	NL80211_SCAN_FLAG_IE_DATA			= 1<<4,
- };
- 
- /**
-@@ -5246,4 +5260,136 @@ enum nl80211_gscan_caps_attr {
- 	NL80211_GSCAN_CAPS_ATTR_MAX = __NL80211_GSCAN_CAPS_ATTR_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_gscan_attr - common GScan parameters.
-+ *
-+ * @__NL80211_GSCAN_ATTR_INVALID: reserved.
-+ * @NL80211_GSCAN_ATTR_BASE_PERIOD: base timer period in milliseconds.
-+ * @NL80211_GSCAN_ATTR_MAX_AP_PER_SCAN: number of APs that are kept per
-+ *	scan. The kept APs are the ones with strongest RSSI level.
-+ * @NL80211_GSCAN_ATTR_REPORT_PERC: threshold specifying percentage of
-+ *	scan cache filled that should trigger event for scan results.
-+ * @NL80211_GSCAN_ATTR_REPORT_SCANS: threshold specifying number of scans
-+ *	after which an event is expected for scan results.
-+ * @NL80211_GSCAN_ATTR_BUCKETS: nested attribute specifying
-+ *	per-bucket parameters for GScan. See %enum nl80211_gscan_bucket_attr
-+ *	for description.
-+ * @NL80211_GSCAN_ATTR_MAX: highest GScan attribute.
-+ * @__NL80211_GSCAN_ATTR_AFTER_LAST: internal use.
-+ */
-+enum nl80211_gscan_attr {
-+	__NL80211_GSCAN_ATTR_INVALID,
-+	NL80211_GSCAN_ATTR_BASE_PERIOD,
-+	NL80211_GSCAN_ATTR_MAX_AP_PER_SCAN,
-+	NL80211_GSCAN_ATTR_REPORT_PERC,
-+	NL80211_GSCAN_ATTR_REPORT_SCANS,
-+	NL80211_GSCAN_ATTR_BUCKETS,
-+
-+	/* keep last */
-+	__NL80211_GSCAN_ATTR_AFTER_LAST,
-+	NL80211_GSCAN_ATTR_MAX = __NL80211_GSCAN_ATTR_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_gscan_bucket_attr - per-bucket GScan parameters.
-+ *
-+ * @__NL80211_GSCAN_BUCKET_ATTR_INVALID,
-+ * @NL80211_GSCAN_BUCKET_ATTR_ID: unique bucket id.
-+ * @NL80211_GSCAN_BUCKET_ATTR_BAND: specifies the band to be scanned
-+ *	according %enum nl80211_bucket_band. If specified
-+ *	@NL80211_GSCAN_BUCKET_ATTR_CHANNELS is ignored.
-+ * @NL80211_GSCAN_BUCKET_ATTR_PERIOD: specifies the period between
-+ *	consecutive scans of this bucket. For backoff bucket this
-+ *	is period(0).
-+ * @NL80211_GSCAN_BUCKET_ATTR_REPORT: specifies reporting flags according
-+ *	%enum nl80211_bucket_report_event.
-+ * @NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD: maximum period between
-+ *	consecutive scans. If specified this is a backoff bucket in
-+ *	which the period increases according formula:
-+ *	period(N) = period(0) * (base ^ (N/step_count))
-+ * @NL80211_GSCAN_BUCKET_ATTR_EXPONENT: exponential base value as used
-+ *	in given formula. This attribute is required when
-+ *	@NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD is specified.
-+ * @NL80211_GSCAN_BUCKET_ATTR_STEPS: step count as used in given formula.
-+ *	This attribute is required when @NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD
-+ *	is specified.
-+ * @NL80211_GSCAN_BUCKET_ATTR_CHANNELS: nested attribute specifying the
-+ *	channels that are to be scanned for this bucket.
-+ * @NL80211_GSCAN_BUCKET_ATTR_MAX: highest GScan bucket attribute.
-+ * @__NL80211_GSCAN_BUCKET_ATTR_AFTER_LAST: internal use.
-+ */
-+enum nl80211_gscan_bucket_attr {
-+	__NL80211_GSCAN_BUCKET_ATTR_INVALID,
-+	NL80211_GSCAN_BUCKET_ATTR_ID,
-+	NL80211_GSCAN_BUCKET_ATTR_BAND,
-+	NL80211_GSCAN_BUCKET_ATTR_PERIOD,
-+	NL80211_GSCAN_BUCKET_ATTR_REPORT,
-+	NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD,
-+	NL80211_GSCAN_BUCKET_ATTR_EXPONENT,
-+	NL80211_GSCAN_BUCKET_ATTR_STEPS,
-+	NL80211_GSCAN_BUCKET_ATTR_CHANNELS,
-+
-+	/* keep last */
-+	__NL80211_GSCAN_BUCKET_ATTR_AFTER_LAST,
-+	NL80211_GSCAN_BUCKET_ATTR_MAX = __NL80211_GSCAN_BUCKET_ATTR_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_gscan_chan_attr - GScan bucket channel parameters.
-+ *
-+ * @__NL80211_GSCAN_CHAN_ATTR_INVALID: reserved.
-+ * @NL80211_GSCAN_CHAN_ATTR_FREQ: frequency of channel.
-+ * @NL80211_GSCAN_CHAN_ATTR_DWELL_TIME: dwell time to be used for scanning
-+ *	this channel.
-+ * @NL80211_GSCAN_CHAN_ATTR_NO_IR: scanning should be done passive.
-+ * @NL80211_GSCAN_CHAN_ATTR_MAX: highest GScan channel attribute.
-+ * @__NL80211_GSCAN_CHAN_ATTR_AFTER_LAST: internal use.
-+ */
-+enum nl80211_gscan_chan_attr {
-+	__NL80211_GSCAN_CHAN_ATTR_INVALID,
-+	NL80211_GSCAN_CHAN_ATTR_FREQ,
-+	NL80211_GSCAN_CHAN_ATTR_DWELL_TIME,
-+	NL80211_GSCAN_CHAN_ATTR_NO_IR,
-+
-+	/* keep last */
-+	__NL80211_GSCAN_CHAN_ATTR_AFTER_LAST,
-+	NL80211_GSCAN_CHAN_ATTR_MAX = __NL80211_GSCAN_CHAN_ATTR_AFTER_LAST - 1
-+};
-+
-+/**
-+ * enum nl80211_bucket_band - GScan bucket band selection.
-+ *
-+ * @NL80211_BUCKET_BAND_2GHZ: consider all device supported channels
-+ *	in 2G band.
-+ * @NL80211_BUCKET_BAND_5GHZ: consider all device supported channels
-+ *	in 5G band, ie. both DFS and non-DFS when @NL80211_BUCKET_BAND_NODFS
-+ *	and @NL80211_BUCKET_BAND_DFS_ONLY are not set.
-+ * @NL80211_BUCKET_BAND_NODFS: only consider non-DFS channels. Only
-+ *	applicable when 5G band is selected, otherwise ignored.
-+ * @NL80211_BUCKET_BAND_DFS_ONLY: only consider DFS channels. Only
-+ *	applicable when 5G band is selected, otherwise ignored.
-+ *
-+ * Setting both @NL80211_BUCKET_BAND_NODFS and @NL80211_BUCKET_BAND_DFS_ONLY
-+ * is considerd invalid.
-+ */
-+enum nl80211_bucket_band {
-+	NL80211_BUCKET_BAND_2GHZ	= (1 << 0),
-+	NL80211_BUCKET_BAND_5GHZ	= (1 << 1),
-+	NL80211_BUCKET_BAND_NODFS	= (1 << 2),
-+	NL80211_BUCKET_BAND_DFS_ONLY	= (1 << 3),
-+};
-+
-+/**
-+ * enum nl80211_bucket_report_event - GScan bucket report flags.
-+ *
-+ * @NL80211_BUCKET_REPORT_EACH_SCAN: trigger event after each scan.
-+ * @NL80211_BUCKET_REPORT_FULL_RESULTS: report full scan results.
-+ * @NL80211_BUCKET_REPORT_NO_BATCH: no batching required.
-+ */
-+enum nl80211_bucket_report_event {
-+	NL80211_BUCKET_REPORT_EACH_SCAN		= (1 << 0),
-+	NL80211_BUCKET_REPORT_FULL_RESULTS	= (1 << 1),
-+	NL80211_BUCKET_REPORT_NO_BATCH		= (1 << 2),
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 158c59e..760a2fb 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -357,6 +357,20 @@ static void cfg80211_sched_scan_stop_wk(struct work_struct *work)
- 	rtnl_unlock();
- }
- 
-+static void cfg80211_gscan_stop_wk(struct work_struct *work)
-+{
-+	struct cfg80211_registered_device *rdev;
-+
-+	rdev = container_of(work, struct cfg80211_registered_device,
-+			    gscan_stop_wk);
-+
-+	rtnl_lock();
-+
-+	__cfg80211_stop_gscan(rdev, false);
-+
-+	rtnl_unlock();
-+}
-+
- /* exported functions */
- 
- struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
-@@ -383,6 +397,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	WARN_ON(ops->remain_on_channel && !ops->cancel_remain_on_channel);
- 	WARN_ON(ops->tdls_channel_switch && !ops->tdls_cancel_channel_switch);
- 	WARN_ON(ops->add_tx_ts && !ops->del_tx_ts);
-+	WARN_ON(ops->start_gscan && !ops->stop_gscan);
- 
- 	alloc_size = sizeof(*rdev) + sizeof_priv;
- 
-@@ -456,6 +471,7 @@ struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int sizeof_priv,
- 	spin_lock_init(&rdev->destroy_list_lock);
- 	INIT_WORK(&rdev->destroy_work, cfg80211_destroy_iface_wk);
- 	INIT_WORK(&rdev->sched_scan_stop_wk, cfg80211_sched_scan_stop_wk);
-+	INIT_WORK(&rdev->gscan_stop_wk, cfg80211_gscan_stop_wk);
- 
- #ifdef CONFIG_CFG80211_DEFAULT_PS
- 	rdev->wiphy.flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT;
-@@ -690,6 +706,12 @@ int wiphy_register(struct wiphy *wiphy)
- 		    (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
- 		return -EINVAL;
- 
-+	/* buckets must have unique index and in nl80211 parsing
-+	 * a u32 is used to verify that hence this limit.
-+	 */
-+	if (WARN_ON(wiphy->gscan && wiphy->gscan->max_scan_buckets > 32))
-+		return -EINVAL;
-+
- 	if (wiphy->addresses)
- 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
- 
-@@ -1001,6 +1023,7 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- {
- 	struct net_device *dev = wdev->netdev;
- 	struct cfg80211_sched_scan_request *sched_scan_req;
-+	struct cfg80211_gscan_request *gscan_req;
- 
- 	ASSERT_RTNL();
- 	ASSERT_WDEV_LOCK(wdev);
-@@ -1014,6 +1037,9 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
- 		sched_scan_req = rtnl_dereference(rdev->sched_scan_req);
- 		if (sched_scan_req && dev == sched_scan_req->dev)
- 			__cfg80211_stop_sched_scan(rdev, false);
-+		gscan_req = rtnl_dereference(rdev->gscan_req);
-+		if (gscan_req && dev == gscan_req->dev)
-+			__cfg80211_stop_gscan(rdev, false);
- 
- #ifdef CONFIG_CFG80211_WEXT
- 		kfree(wdev->wext.ie);
-@@ -1089,6 +1115,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev;
- 	struct cfg80211_sched_scan_request *sched_scan_req;
-+	struct cfg80211_gscan_request *gscan_req;
- 
- 	if (!wdev)
- 		return NOTIFY_DONE;
-@@ -1160,6 +1187,10 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
- 			    sched_scan_req->dev == wdev->netdev)) {
- 			__cfg80211_stop_sched_scan(rdev, false);
- 		}
-+		gscan_req = rtnl_dereference(rdev->gscan_req);
-+		if (WARN_ON(gscan_req && gscan_req->dev == wdev->netdev)) {
-+			__cfg80211_stop_gscan(rdev, false);
-+		}
- 
- 		rdev->opencount--;
- 		wake_up(&rdev->dev_wait);
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index fb2fcd5..b0f2519 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -74,6 +74,7 @@ struct cfg80211_registered_device {
- 	struct cfg80211_scan_request *scan_req; /* protected by RTNL */
- 	struct sk_buff *scan_msg;
- 	struct cfg80211_sched_scan_request __rcu *sched_scan_req;
-+	struct cfg80211_gscan_request __rcu *gscan_req;
- 	unsigned long suspend_at;
- 	struct work_struct scan_done_wk;
- 	struct work_struct sched_scan_results_wk;
-@@ -95,6 +96,7 @@ struct cfg80211_registered_device {
- 	struct work_struct destroy_work;
- 
- 	struct work_struct sched_scan_stop_wk;
-+	struct work_struct gscan_stop_wk;
- 
- 	/* must be last because of the way we do wiphy_priv(),
- 	 * and it should at least be aligned to NETDEV_ALIGN */
-@@ -421,6 +423,8 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- void __cfg80211_sched_scan_results(struct work_struct *wk);
- int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 			       bool driver_initiated);
-+int __cfg80211_stop_gscan(struct cfg80211_registered_device *rdev,
-+			  bool driver_initiated);
- void cfg80211_upload_connect_keys(struct wireless_dev *wdev);
- int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
- 			  struct net_device *dev, enum nl80211_iftype ntype,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 073280d..7ec4bd5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -404,6 +404,7 @@ enum nl80211_multicast_groups {
- 				    .len = FILS_MAX_KEK_LEN },
- 	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
- 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
-+	[NL80211_ATTR_GSCAN_PARAMS] = { .type = NLA_NESTED },
- };
- 
- /* policy for the key attributes */
-@@ -11860,6 +11861,318 @@ static int nl80211_set_multicast_to_unicast(struct sk_buff *skb,
- 	return rdev_set_multicast_to_unicast(rdev, dev, enabled);
- }
- 
-+static const
-+struct nla_policy nl80211_gscan_policy[NL80211_GSCAN_ATTR_MAX + 1] = {
-+	[NL80211_GSCAN_ATTR_BASE_PERIOD] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_ATTR_MAX_AP_PER_SCAN] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_ATTR_REPORT_PERC] = { .type = NLA_U8 },
-+	[NL80211_GSCAN_ATTR_REPORT_SCANS] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_ATTR_BUCKETS] = { .type = NLA_NESTED },
-+};
-+
-+static const struct nla_policy
-+nl80211_gscan_bucket_policy[NL80211_GSCAN_BUCKET_ATTR_MAX + 1] = {
-+	[NL80211_GSCAN_BUCKET_ATTR_ID] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_BAND] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_PERIOD] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_REPORT] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_EXPONENT] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_STEPS] = { .type = NLA_U32 },
-+	[NL80211_GSCAN_BUCKET_ATTR_CHANNELS] = { .type = NLA_NESTED },
-+};
-+
-+static const struct nla_policy
-+nl80211_gscan_channel_policy[NL80211_GSCAN_CHAN_ATTR_MAX + 1] = {
-+        [NL80211_GSCAN_CHAN_ATTR_FREQ] = { .type = NLA_U32 },
-+        [NL80211_GSCAN_CHAN_ATTR_DWELL_TIME] = { .type = NLA_U32 },
-+        [NL80211_GSCAN_CHAN_ATTR_NO_IR] = { .type = NLA_FLAG },
-+};
-+
-+static int nl80211_parse_gscan_channel(struct cfg80211_registered_device *rdev,
-+				       struct nlattr *nattr,
-+				       struct cfg80211_gscan_channel *chan)
-+{
-+	struct nlattr *tb[NL80211_GSCAN_CHAN_ATTR_MAX + 1];
-+	struct ieee80211_channel *ch;
-+	int err;
-+
-+	err = nla_parse(tb, NL80211_GSCAN_CHAN_ATTR_MAX, nla_data(nattr),
-+			nla_len(nattr), nl80211_gscan_channel_policy);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_GSCAN_CHAN_ATTR_FREQ])
-+		return -EINVAL;
-+
-+	ch = ieee80211_get_channel(&rdev->wiphy,
-+				   nla_get_u32(tb[NL80211_GSCAN_CHAN_ATTR_FREQ]));
-+	if (!ch || (ch->flags & IEEE80211_CHAN_DISABLED))
-+		return -EINVAL;
-+
-+	chan->ch = ch;
-+
-+	if (tb[NL80211_GSCAN_CHAN_ATTR_DWELL_TIME])
-+		chan->dwell_time = nla_get_u32(tb[NL80211_GSCAN_CHAN_ATTR_DWELL_TIME]);
-+	if (tb[NL80211_GSCAN_CHAN_ATTR_NO_IR])
-+		chan->passive = true;
-+	return 0;
-+}
-+
-+static int nl80211_parse_gscan_bucket(struct cfg80211_registered_device *rdev,
-+				      struct nlattr *nattr,
-+				      struct cfg80211_gscan_bucket *bucket,
-+				      struct cfg80211_gscan_channel *channels)
-+{
-+	struct nlattr *tb[NL80211_GSCAN_BUCKET_ATTR_MAX + 1];
-+	struct nlattr *chan;
-+	struct cfg80211_gscan_channel *ch;
-+	int err, rem;
-+	int num_chans = 0;
-+	u32 band_select = 0;
-+	u32 dfs_invalid_mask;
-+
-+	err = nla_parse(tb, NL80211_GSCAN_BUCKET_ATTR_MAX, nla_data(nattr),
-+			nla_len(nattr), nl80211_gscan_bucket_policy);
-+	if (err)
-+		return err;
-+
-+	if (!tb[NL80211_GSCAN_BUCKET_ATTR_ID] ||
-+	    !tb[NL80211_GSCAN_BUCKET_ATTR_PERIOD])
-+		return -EINVAL;
-+
-+	bucket->idx = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_ID]);
-+	if (tb[NL80211_GSCAN_BUCKET_ATTR_BAND]) {
-+		band_select = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_BAND]);
-+
-+		/* only makes sense if a band is selected */
-+		if (!(band_select & (NL80211_BUCKET_BAND_2GHZ | NL80211_BUCKET_BAND_5GHZ)))
-+			return -EINVAL;
-+	}
-+
-+	dfs_invalid_mask = NL80211_BUCKET_BAND_5GHZ | NL80211_BUCKET_BAND_NODFS |
-+			   NL80211_BUCKET_BAND_DFS_ONLY;
-+	if ((band_select & dfs_invalid_mask) == dfs_invalid_mask)
-+		return -EINVAL;
-+
-+	bucket->band = band_select;
-+	bucket->period = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_PERIOD]);
-+
-+	if (tb[NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD])
-+		bucket->max_period = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_MAX_PERIOD]);
-+
-+	if (bucket->max_period) {
-+		if (bucket->max_period < bucket->period)
-+			return -EINVAL;
-+		/* additional attributes required for backoff bucket */
-+		if (bucket->max_period > bucket->period) {
-+			if (!tb[NL80211_GSCAN_BUCKET_ATTR_EXPONENT] ||
-+			    !tb[NL80211_GSCAN_BUCKET_ATTR_STEPS])
-+				return -EINVAL;
-+
-+			bucket->exponent = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_EXPONENT]);
-+			bucket->step_count = nla_get_u32(tb[NL80211_GSCAN_BUCKET_ATTR_STEPS]);
-+		}
-+	}
-+
-+	/* ignore channels if band is specified */
-+	if (band_select)
-+		return 0;
-+
-+        nla_for_each_nested(chan, tb[NL80211_GSCAN_BUCKET_ATTR_CHANNELS], rem) {
-+                num_chans++;
-+        }
-+	if (num_chans > 16)
-+		return -EINVAL;
-+
-+	bucket->n_channels = num_chans;
-+	if (!num_chans)
-+		return 0;
-+
-+	bucket->channels = channels;
-+	ch = &bucket->channels[0];
-+        nla_for_each_nested(chan, tb[NL80211_GSCAN_BUCKET_ATTR_CHANNELS], rem) {
-+		err = nl80211_parse_gscan_channel(rdev, chan, ch);
-+		if (err) {
-+			return err;
-+		}
-+		ch++;
-+        }
-+
-+	return 0;
-+}
-+
-+static struct cfg80211_gscan_request *
-+nl80211_alloc_gscan_request(struct cfg80211_registered_device *rdev,
-+			    struct nlattr *buckets_attr)
-+{
-+	struct cfg80211_gscan_request *req;
-+	struct cfg80211_gscan_bucket *b;
-+	struct cfg80211_gscan_channel *ch;
-+	int n_buckets, n_channels;
-+	struct nlattr *attr, *bucket, *channel;
-+	int rem, rem_b, rem_c;
-+	size_t reqsize;
-+
-+	if (!buckets_attr)
-+		return ERR_PTR(-EINVAL);
-+
-+	n_buckets = 0;
-+	n_channels = 0;
-+	nla_for_each_nested(bucket, buckets_attr, rem) {
-+		n_buckets++;
-+		if (n_buckets > rdev->wiphy.gscan->max_scan_buckets)
-+			return ERR_PTR(-EINVAL);
-+
-+		nla_for_each_nested(attr, bucket, rem_b) {
-+			if (nla_type(attr) == NL80211_GSCAN_BUCKET_ATTR_CHANNELS) {
-+				nla_for_each_nested(channel, attr, rem_c)
-+					n_channels++;
-+			}
-+		}
-+	}
-+
-+	reqsize = sizeof(*req) +
-+		  sizeof(*b) * n_buckets +
-+		  sizeof(*ch) * n_channels;
-+
-+	req = kzalloc(reqsize, GFP_KERNEL);
-+	if (!req)
-+		return ERR_PTR(-ENOMEM);
-+
-+	req->n_buckets = n_buckets;
-+	return req;
-+}
-+
-+static int nl80211_parse_gscan_params(struct cfg80211_registered_device *rdev,
-+				      struct nlattr *attrs[],
-+				      struct cfg80211_gscan_request **request)
-+{
-+	struct cfg80211_gscan_request *req;
-+	struct nlattr *tb[NL80211_GSCAN_ATTR_MAX + 1];
-+	struct nlattr *bucket;
-+	struct cfg80211_gscan_bucket *b;
-+	struct cfg80211_gscan_channel *ch;
-+	int err, rem, i;
-+	u32 bucket_map;
-+
-+	if (!attrs[NL80211_ATTR_GSCAN_PARAMS])
-+		return -EINVAL;
-+
-+	err = nla_parse(tb, NL80211_GSCAN_ATTR_MAX,
-+			nla_data(attrs[NL80211_ATTR_GSCAN_PARAMS]),
-+			nla_len(attrs[NL80211_ATTR_GSCAN_PARAMS]),
-+			nl80211_gscan_policy);
-+	if (err)
-+		return err;
-+
-+	req = nl80211_alloc_gscan_request(rdev, tb[NL80211_GSCAN_ATTR_BUCKETS]);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+
-+	if (!tb[NL80211_GSCAN_ATTR_BASE_PERIOD])
-+		return -EINVAL;
-+
-+	req->base_period = nla_get_u32(tb[NL80211_GSCAN_ATTR_BASE_PERIOD]);
-+
-+	if (tb[NL80211_GSCAN_ATTR_MAX_AP_PER_SCAN])
-+		req->max_ap_per_scan = nla_get_u32(tb[NL80211_GSCAN_ATTR_MAX_AP_PER_SCAN]);
-+	if (tb[NL80211_GSCAN_ATTR_REPORT_PERC])
-+		req->report_threshold_percent = nla_get_u8(tb[NL80211_GSCAN_ATTR_REPORT_PERC]);
-+	if (tb[NL80211_GSCAN_ATTR_REPORT_SCANS])
-+		req->report_threshold_num_scans = nla_get_u32(tb[NL80211_GSCAN_ATTR_REPORT_SCANS]);
-+	if (attrs[NL80211_ATTR_MAC])
-+		memcpy(req->mac, nla_data(attrs[NL80211_ATTR_MAC]), ETH_ALEN);
-+	if (attrs[NL80211_ATTR_MAC_MASK])
-+		memcpy(req->mac_mask, nla_data(attrs[NL80211_ATTR_MAC_MASK]),
-+		       ETH_ALEN);
-+	if (attrs[NL80211_ATTR_SCAN_FLAGS])
-+		req->flags = nla_get_u32(attrs[NL80211_ATTR_SCAN_FLAGS]);
-+
-+	b = &req->buckets[0];
-+	ch = (struct cfg80211_gscan_channel *)(&req->buckets[req->n_buckets]);
-+	nla_for_each_nested(bucket, tb[NL80211_GSCAN_ATTR_BUCKETS], rem) {
-+		err = nl80211_parse_gscan_bucket(rdev, bucket, b, ch);
-+		if (err)
-+			goto free_req;
-+		ch += b->n_channels;
-+		b++;
-+	}
-+	bucket_map = 0;
-+	for (i = 0; i < req->n_buckets; i++) {
-+		if (BIT(req->buckets[i].idx) & bucket_map) {
-+			err = -EINVAL;
-+			goto free_req;
-+		}
-+		bucket_map |= BIT(req->buckets[i].idx);
-+
-+		if (req->buckets[i].period % req->base_period) {
-+			err = -EINVAL;
-+			goto free_req;
-+		}
-+		if (req->buckets[i].max_period &&
-+		    (req->buckets[i].max_period % req->base_period)) {
-+			err = -EINVAL;
-+			goto free_req;
-+		}
-+	}
-+	*request = req;
-+	return 0;
-+
-+free_req:
-+	kfree(req);
-+	return err;
-+}
-+
-+static int nl80211_start_gscan(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_gscan_request *request;
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	struct wireless_dev *wdev = dev->ieee80211_ptr;
-+	int err;
-+
-+	if (!rdev->wiphy.gscan ||
-+	    !rdev->ops->start_gscan)
-+		return -EOPNOTSUPP;
-+
-+	if (rdev->gscan_req)
-+		return -EINPROGRESS;
-+
-+	err = nl80211_parse_gscan_params(rdev, info->attrs, &request);
-+	if (err)
-+		return err;
-+
-+	wdev_lock(wdev);
-+	err = rdev_start_gscan(rdev, dev, request);
-+	wdev_unlock(wdev);
-+	if (err) {
-+		kfree(request);
-+		return err;
-+	}
-+
-+	request->dev = dev;
-+	if (info->attrs[NL80211_ATTR_SOCKET_OWNER])
-+		request->owner_nlportid = info->snd_portid;
-+
-+	rcu_assign_pointer(rdev->gscan_req, request);
-+
-+	nl80211_send_scan_event(rdev, dev,
-+				NL80211_CMD_START_GSCAN);
-+	return 0;
-+}
-+
-+static int nl80211_stop_gscan(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+
-+	if (!rdev->wiphy.gscan ||
-+	    !rdev->ops->stop_gscan)
-+		return -EOPNOTSUPP;
-+
-+	return __cfg80211_stop_gscan(rdev, false);
-+}
-+
- #define NL80211_FLAG_NEED_WIPHY		0x01
- #define NL80211_FLAG_NEED_NETDEV	0x02
- #define NL80211_FLAG_NEED_RTNL		0x04
-@@ -12735,6 +13048,22 @@ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_START_GSCAN,
-+		.doit = nl80211_start_gscan,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+	{
-+		.cmd = NL80211_CMD_STOP_GSCAN,
-+		.doit = nl80211_stop_gscan,
-+		.policy = nl80211_policy,
-+		.flags = GENL_UNS_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
- };
- 
- static struct genl_family nl80211_fam __ro_after_init = {
-@@ -14540,12 +14869,18 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 	list_for_each_entry_rcu(rdev, &cfg80211_rdev_list, list) {
- 		bool schedule_destroy_work = false;
- 		bool schedule_scan_stop = false;
-+		bool schedule_gscan_stop = false;
- 		struct cfg80211_sched_scan_request *sched_scan_req =
- 			rcu_dereference(rdev->sched_scan_req);
-+		struct cfg80211_gscan_request *gscan_req =
-+			rcu_dereference(rdev->gscan_req);
- 
- 		if (sched_scan_req && notify->portid &&
- 		    sched_scan_req->owner_nlportid == notify->portid)
- 			schedule_scan_stop = true;
-+		if (gscan_req && notify->portid &&
-+		    gscan_req->owner_nlportid == notify->portid)
-+			schedule_gscan_stop = true;
- 
- 		list_for_each_entry_rcu(wdev, &rdev->wiphy.wdev_list, list) {
- 			cfg80211_mlme_unregister_socket(wdev, notify->portid);
-@@ -14576,12 +14911,18 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
- 				spin_unlock(&rdev->destroy_list_lock);
- 				schedule_work(&rdev->destroy_work);
- 			}
--		} else if (schedule_scan_stop) {
--			sched_scan_req->owner_nlportid = 0;
-+		} else {
-+			if (schedule_scan_stop) {
-+				sched_scan_req->owner_nlportid = 0;
- 
--			if (rdev->ops->sched_scan_stop &&
--			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
--				schedule_work(&rdev->sched_scan_stop_wk);
-+				if (rdev->ops->sched_scan_stop &&
-+				    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
-+					schedule_work(&rdev->sched_scan_stop_wk);
-+			}
-+			if (schedule_gscan_stop) {
-+				gscan_req->owner_nlportid = 0;
-+				schedule_work(&rdev->gscan_stop_wk);
-+			}
- 		}
- 	}
- 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 2f42507..196e6a7 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1153,4 +1153,29 @@ static inline int rdev_set_qos_map(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int
-+rdev_start_gscan(struct cfg80211_registered_device *rdev,
-+		 struct net_device *dev,
-+		 struct cfg80211_gscan_request *request)
-+{
-+	int ret;
-+
-+	trace_rdev_start_gscan(&rdev->wiphy, dev);
-+	ret = rdev->ops->start_gscan(&rdev->wiphy, dev, request);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
-+
-+static inline int
-+rdev_stop_gscan(struct cfg80211_registered_device *rdev,
-+		struct net_device *dev)
-+{
-+	int ret;
-+
-+	trace_rdev_stop_gscan(&rdev->wiphy, dev);
-+	ret = rdev->ops->stop_gscan(&rdev->wiphy, dev);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index dbdb53f..327b23c 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -335,6 +335,34 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 	return 0;
- }
- 
-+int __cfg80211_stop_gscan(struct cfg80211_registered_device *rdev,
-+			  bool driver_initiated)
-+{
-+	struct cfg80211_gscan_request *gscan_req;
-+	struct net_device *dev;
-+
-+	ASSERT_RTNL();
-+
-+	if (!rdev->gscan_req)
-+		return -ENOENT;
-+
-+	gscan_req = rtnl_dereference(rdev->gscan_req);
-+	dev = gscan_req->dev;
-+
-+	if (!driver_initiated) {
-+		int err = rdev_stop_gscan(rdev, dev);
-+		if (err)
-+			return err;
-+	}
-+
-+	nl80211_send_scan_event(rdev, dev, NL80211_CMD_GSCAN_STOPPED);
-+
-+	RCU_INIT_POINTER(rdev->gscan_req, NULL);
-+	kfree_rcu(gscan_req, rcu_head);
-+
-+	return 0;
-+}
-+
- void cfg80211_bss_age(struct cfg80211_registered_device *rdev,
-                       unsigned long age_secs)
- {
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index ea1b47e..1d0fde9 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -3067,6 +3067,15 @@
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG,
- 		  BOOL_TO_STR(__entry->enabled))
- );
-+
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_start_gscan,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
-+DEFINE_EVENT(wiphy_netdev_evt, rdev_stop_gscan,
-+	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
-+	TP_ARGS(wiphy, netdev)
-+);
- #endif /* !__RDEV_OPS_TRACE || TRACE_HEADER_MULTI_READ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-1.9.1
+
+-------------->8--------------------------------------------------------
+drivers/net/wireless/ath/ath9k/common-spectral.o:     file format elf32-littlearm
+
+
+Disassembly of section .text:
+
+...
+
+00000754 <ath_cmn_process_fft>:
+     754:	e92d4ff0 	push	{r4, r5, r6, r7, r8, r9, sl, fp, lr}
+     758:	e24dd0d4 	sub	sp, sp, #212	; 0xd4
+     75c:	e1a04002 	mov	r4, r2
+     760:	e1a06001 	mov	r6, r1
+     764:	e58d0024 	str	r0, [sp, #36]	; 0x24
+     768:	e3a01000 	mov	r1, #0
+     76c:	e58d2018 	str	r2, [sp, #24]
+     770:	e28d0049 	add	r0, sp, #73	; 0x49
+     774:	e3a02087 	mov	r2, #135	; 0x87
+     778:	ebfffffe 	bl	0 <memset>
+     77c:	e5d44007 	ldrb	r4, [r4, #7]
+     780:	e20430fd 	and	r3, r4, #253	; 0xfd
+     784:	e3530024 	cmp	r3, #36	; 0x24
+     788:	13540005 	cmpne	r4, #5
+     78c:	13a04001 	movne	r4, #1
+     790:	03a04000 	moveq	r4, #0
+     794:	13a00000 	movne	r0, #0
+     798:	0a000001 	beq	7a4 <ath_cmn_process_fft+0x50>
+     79c:	e28dd0d4 	add	sp, sp, #212	; 0xd4
+     7a0:	e8bd8ff0 	pop	{r4, r5, r6, r7, r8, r9, sl, fp, pc}
+     7a4:	e59d3018 	ldr	r3, [sp, #24]
+     7a8:	e1d380b4 	ldrh	r8, [r3, #4]
+     7ac:	e2489003 	sub	r9, r8, #3
+     7b0:	e0863009 	add	r3, r6, r9
+     7b4:	e5d30002 	ldrb	r0, [r3, #2]
+     7b8:	e2000010 	and	r0, r0, #16
+     7bc:	e21000ff 	ands	r0, r0, #255	; 0xff
+     7c0:	0afffff5 	beq	79c <ath_cmn_process_fft+0x48>
+     7c4:	e59d3024 	ldr	r3, [sp, #36]	; 0x24
+     7c8:	e3005000 	movw	r5, #0
+     7cc:	e3405000 	movt	r5, #0
+     7d0:	e3e0b000 	mvn	fp, #0
+     7d4:	e5932000 	ldr	r2, [r3]
+     7d8:	e5937004 	ldr	r7, [r3, #4]
+     7dc:	e5923438 	ldr	r3, [r2, #1080]	; 0x438
+     7e0:	e58d2010 	str	r2, [sp, #16]
+     7e4:	e5933000 	ldr	r3, [r3]
+     7e8:	e1d330b4 	ldrh	r3, [r3, #4]
+     7ec:	e58d3030 	str	r3, [sp, #48]	; 0x30
+     7f0:	ea000002 	b	800 <ath_cmn_process_fft+0xac>
+     7f4:	e7970102 	ldr	r0, [r7, r2, lsl #2]
+     7f8:	ebfffffe 	bl	0 <relay_buf_full>
+     7fc:	e0844000 	add	r4, r4, r0
+     800:	e300a000 	movw	sl, #0
+     804:	e28b2001 	add	r2, fp, #1
+     808:	e340a000 	movt	sl, #0
+     80c:	e3a01004 	mov	r1, #4
+     810:	e1a0000a 	mov	r0, sl
+     814:	ebfffffe 	bl	0 <_find_next_bit_le>
+     818:	e5953000 	ldr	r3, [r5]
+     81c:	e1500003 	cmp	r0, r3
+     820:	e1a0b000 	mov	fp, r0
+     824:	e2802008 	add	r2, r0, #8
+     828:	bafffff1 	blt	7f4 <ath_cmn_process_fft+0xa0>
+     82c:	e59a0000 	ldr	r0, [sl]
+     830:	e200000f 	and	r0, r0, #15
+     834:	ebfffffe 	bl	0 <__sw_hweight32>
+     838:	e1540000 	cmp	r4, r0
+     83c:	0a000092 	beq	a8c <ath_cmn_process_fft+0x338>
+     840:	e59d3010 	ldr	r3, [sp, #16]
+     844:	e5932030 	ldr	r2, [r3, #48]	; 0x30
+     848:	e5923018 	ldr	r3, [r2, #24]
+     84c:	e3530001 	cmp	r3, #1
+     850:	0a000090 	beq	a98 <ath_cmn_process_fft+0x344>
+     854:	3a000119 	bcc	cc0 <ath_cmn_process_fft+0x56c>
+     858:	e3530002 	cmp	r3, #2
+     85c:	1a000110 	bne	ca4 <ath_cmn_process_fft+0x550>
+     860:	e3003000 	movw	r3, #0
+     864:	e5921014 	ldr	r1, [r2, #20]
+     868:	e1a00003 	mov	r0, r3
+     86c:	e592301c 	ldr	r3, [r2, #28]
+     870:	e3002000 	movw	r2, #0
+     874:	e3a0b087 	mov	fp, #135	; 0x87
+     878:	e1a0c002 	mov	ip, r2
+     87c:	e1a02000 	mov	r2, r0
+     880:	e3402000 	movt	r2, #0
+     884:	e58d2034 	str	r2, [sp, #52]	; 0x34
+     888:	e1a0200c 	mov	r2, ip
+     88c:	e3a0a08a 	mov	sl, #138	; 0x8a
+     890:	e3402000 	movt	r2, #0
+     894:	e58d2044 	str	r2, [sp, #68]	; 0x44
+     898:	e1d120b4 	ldrh	r2, [r1, #4]
+     89c:	e3a01080 	mov	r1, #128	; 0x80
+     8a0:	e58d1020 	str	r1, [sp, #32]
+     8a4:	e1520003 	cmp	r2, r3
+     8a8:	33a03003 	movcc	r3, #3
+     8ac:	23a03002 	movcs	r3, #2
+     8b0:	e58d3038 	str	r3, [sp, #56]	; 0x38
+     8b4:	e2483002 	sub	r3, r8, #2
+     8b8:	e58d3014 	str	r3, [sp, #20]
+     8bc:	e3530000 	cmp	r3, #0
+     8c0:	da000071 	ble	a8c <ath_cmn_process_fft+0x338>
+     8c4:	e3a03000 	mov	r3, #0
+     8c8:	e28aa002 	add	sl, sl, #2
+     8cc:	e1a04003 	mov	r4, r3
+     8d0:	e58d3028 	str	r3, [sp, #40]	; 0x28
+     8d4:	e1a05004 	mov	r5, r4
+     8d8:	e24b3001 	sub	r3, fp, #1
+     8dc:	e1a07006 	mov	r7, r6
+     8e0:	e58d302c 	str	r3, [sp, #44]	; 0x2c
+     8e4:	e58db01c 	str	fp, [sp, #28]
+     8e8:	e1a03009 	mov	r3, r9
+     8ec:	e58d8010 	str	r8, [sp, #16]
+     8f0:	e1a09004 	mov	r9, r4
+     8f4:	ea00002c 	b	9ac <ath_cmn_process_fft+0x258>
+     8f8:	e3520007 	cmp	r2, #7
+     8fc:	e1a05003 	mov	r5, r3
+     900:	e086b004 	add	fp, r6, r4
+     904:	8a00006f 	bhi	ac8 <ath_cmn_process_fft+0x374>
+     908:	e59d202c 	ldr	r2, [sp, #44]	; 0x2c
+     90c:	e1530002 	cmp	r3, r2
+     910:	a3a09001 	movge	r9, #1
+     914:	ba0000dd 	blt	c90 <ath_cmn_process_fft+0x53c>
+     918:	e59d101c 	ldr	r1, [sp, #28]
+     91c:	e2812002 	add	r2, r1, #2
+     920:	e1520005 	cmp	r2, r5
+     924:	ba000058 	blt	a8c <ath_cmn_process_fft+0x338>
+     928:	e1510005 	cmp	r1, r5
+     92c:	aa000092 	bge	b7c <ath_cmn_process_fft+0x428>
+     930:	e5d7001f 	ldrb	r0, [r7, #31]
+     934:	e5d71020 	ldrb	r1, [r7, #32]
+     938:	e1500001 	cmp	r0, r1
+     93c:	1a000052 	bne	a8c <ath_cmn_process_fft+0x338>
+     940:	e58d3040 	str	r3, [sp, #64]	; 0x40
+     944:	e1a01004 	mov	r1, r4
+     948:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+     94c:	e1a0000b 	mov	r0, fp
+     950:	e58d203c 	str	r2, [sp, #60]	; 0x3c
+     954:	e12fff33 	blx	r3
+     958:	e3500000 	cmp	r0, #0
+     95c:	e59d203c 	ldr	r2, [sp, #60]	; 0x3c
+     960:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+     964:	1a00008e 	bne	ba4 <ath_cmn_process_fft+0x450>
+     968:	e59d2010 	ldr	r2, [sp, #16]
+     96c:	e152000a 	cmp	r2, sl
+     970:	da0000c9 	ble	c9c <ath_cmn_process_fft+0x548>
+     974:	e59d9028 	ldr	r9, [sp, #40]	; 0x28
+     978:	e2842001 	add	r2, r4, #1
+     97c:	e0867002 	add	r7, r6, r2
+     980:	e3590000 	cmp	r9, #0
+     984:	13a09000 	movne	r9, #0
+     988:	1a000003 	bne	99c <ath_cmn_process_fft+0x248>
+     98c:	e59d2020 	ldr	r2, [sp, #32]
+     990:	e2425002 	sub	r5, r2, #2
+     994:	e0844005 	add	r4, r4, r5
+     998:	e2842001 	add	r2, r4, #1
+     99c:	e1a04002 	mov	r4, r2
+     9a0:	e59d2014 	ldr	r2, [sp, #20]
+     9a4:	e1540002 	cmp	r4, r2
+     9a8:	aa000037 	bge	a8c <ath_cmn_process_fft+0x338>
+     9ac:	e59d2010 	ldr	r2, [sp, #16]
+     9b0:	e152000a 	cmp	r2, sl
+     9b4:	e7d62004 	ldrb	r2, [r6, r4]
+     9b8:	daffffce 	ble	8f8 <ath_cmn_process_fft+0x1a4>
+     9bc:	e3520007 	cmp	r2, #7
+     9c0:	e2855001 	add	r5, r5, #1
+     9c4:	e086b004 	add	fp, r6, r4
+     9c8:	8a000002 	bhi	9d8 <ath_cmn_process_fft+0x284>
+     9cc:	e59d202c 	ldr	r2, [sp, #44]	; 0x2c
+     9d0:	e1550002 	cmp	r5, r2
+     9d4:	aaffffcf 	bge	918 <ath_cmn_process_fft+0x1c4>
+     9d8:	e3590000 	cmp	r9, #0
+     9dc:	0affffed 	beq	998 <ath_cmn_process_fft+0x244>
+     9e0:	e59d201c 	ldr	r2, [sp, #28]
+     9e4:	e1520005 	cmp	r2, r5
+     9e8:	1affffe1 	bne	974 <ath_cmn_process_fft+0x220>
+     9ec:	ea00007e 	b	bec <ath_cmn_process_fft+0x498>
+     9f0:	e597e000 	ldr	lr, [r7]
+     9f4:	e24b201f 	sub	r2, fp, #31
+     9f8:	e597c004 	ldr	ip, [r7, #4]
+     9fc:	e2871021 	add	r1, r7, #33	; 0x21
+     a00:	e5973008 	ldr	r3, [r7, #8]
+     a04:	e28d0068 	add	r0, sp, #104	; 0x68
+     a08:	e58de049 	str	lr, [sp, #73]	; 0x49
+     a0c:	e58dc04d 	str	ip, [sp, #77]	; 0x4d
+     a10:	e597e010 	ldr	lr, [r7, #16]
+     a14:	e597c014 	ldr	ip, [r7, #20]
+     a18:	e58d3051 	str	r3, [sp, #81]	; 0x51
+     a1c:	e597300c 	ldr	r3, [r7, #12]
+     a20:	e58de059 	str	lr, [sp, #89]	; 0x59
+     a24:	e58dc05d 	str	ip, [sp, #93]	; 0x5d
+     a28:	e58d3055 	str	r3, [sp, #85]	; 0x55
+     a2c:	e1d7c1bc 	ldrh	ip, [r7, #28]
+     a30:	e5973018 	ldr	r3, [r7, #24]
+     a34:	e5d7e01f 	ldrb	lr, [r7, #31]
+     a38:	e1cdc6b5 	strh	ip, [sp, #101]	; 0x65
+     a3c:	e58d3061 	str	r3, [sp, #97]	; 0x61
+     a40:	e5cde067 	strb	lr, [sp, #103]	; 0x67
+     a44:	ebfffffe 	bl	0 <memcpy>
+     a48:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+     a4c:	e59d1024 	ldr	r1, [sp, #36]	; 0x24
+     a50:	e59d0018 	ldr	r0, [sp, #24]
+     a54:	e58d300c 	str	r3, [sp, #12]
+     a58:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+     a5c:	e58d3008 	str	r3, [sp, #8]
+     a60:	e1cd2fd8 	ldrd	r2, [sp, #248]	; 0xf8
+     a64:	e1cd20f0 	strd	r2, [sp]
+     a68:	e28d2049 	add	r2, sp, #73	; 0x49
+     a6c:	e59d3034 	ldr	r3, [sp, #52]	; 0x34
+     a70:	e12fff33 	blx	r3
+     a74:	e3a01087 	mov	r1, #135	; 0x87
+     a78:	e28d0049 	add	r0, sp, #73	; 0x49
+     a7c:	ebfffffe 	bl	0 <__memzero>
+     a80:	e59d1020 	ldr	r1, [sp, #32]
+     a84:	e28d0049 	add	r0, sp, #73	; 0x49
+     a88:	ebfffffe 	bl	0 <add_device_randomness>
+     a8c:	e3a00001 	mov	r0, #1
+     a90:	e28dd0d4 	add	sp, sp, #212	; 0xd4
+     a94:	e8bd8ff0 	pop	{r4, r5, r6, r7, r8, r9, sl, fp, pc}
+     a98:	e58d3038 	str	r3, [sp, #56]	; 0x38
+     a9c:	e3003000 	movw	r3, #0
+     aa0:	e3002000 	movw	r2, #0
+     aa4:	e3403000 	movt	r3, #0
+     aa8:	e3402000 	movt	r2, #0
+     aac:	e58d3034 	str	r3, [sp, #52]	; 0x34
+     ab0:	e3a0b03c 	mov	fp, #60	; 0x3c
+     ab4:	e3a03038 	mov	r3, #56	; 0x38
+     ab8:	e58d2044 	str	r2, [sp, #68]	; 0x44
+     abc:	e3a0a03f 	mov	sl, #63	; 0x3f
+     ac0:	e58d3020 	str	r3, [sp, #32]
+     ac4:	eaffff7a 	b	8b4 <ath_cmn_process_fft+0x160>
+     ac8:	e59db01c 	ldr	fp, [sp, #28]
+     acc:	e153000b 	cmp	r3, fp
+     ad0:	0a00005e 	beq	c50 <ath_cmn_process_fft+0x4fc>
+     ad4:	e06b5005 	rsb	r5, fp, r5
+     ad8:	e2855001 	add	r5, r5, #1
+     adc:	e3550003 	cmp	r5, #3
+     ae0:	979ff105 	ldrls	pc, [pc, r5, lsl #2]
+     ae4:	eaffffd7 	b	a48 <ath_cmn_process_fft+0x2f4>
+     ae8:	00000b0c 	andeq	r0, r0, ip, lsl #22
+     aec:	00000af8 	strdeq	r0, [r0], -r8
+     af0:	00000b20 	andeq	r0, r0, r0, lsr #22
+     af4:	000009f0 	strdeq	r0, [r0], -r0	; <UNPREDICTABLE>
+     af8:	e1a0200b 	mov	r2, fp
+     afc:	e1a01007 	mov	r1, r7
+     b00:	e28d0049 	add	r0, sp, #73	; 0x49
+     b04:	ebfffffe 	bl	0 <memcpy>
+     b08:	eaffffce 	b	a48 <ath_cmn_process_fft+0x2f4>
+     b0c:	e24b2001 	sub	r2, fp, #1
+     b10:	e1a01007 	mov	r1, r7
+     b14:	e28d004a 	add	r0, sp, #74	; 0x4a
+     b18:	ebfffffe 	bl	0 <memcpy>
+     b1c:	eaffffc9 	b	a48 <ath_cmn_process_fft+0x2f4>
+     b20:	e597e000 	ldr	lr, [r7]
+     b24:	e24b2020 	sub	r2, fp, #32
+     b28:	e597c004 	ldr	ip, [r7, #4]
+     b2c:	e2871021 	add	r1, r7, #33	; 0x21
+     b30:	e5973008 	ldr	r3, [r7, #8]
+     b34:	e28d0069 	add	r0, sp, #105	; 0x69
+     b38:	e58de04a 	str	lr, [sp, #74]	; 0x4a
+     b3c:	e58dc04e 	str	ip, [sp, #78]	; 0x4e
+     b40:	e597e010 	ldr	lr, [r7, #16]
+     b44:	e597c014 	ldr	ip, [r7, #20]
+     b48:	e58d3052 	str	r3, [sp, #82]	; 0x52
+     b4c:	e597300c 	ldr	r3, [r7, #12]
+     b50:	e58de05a 	str	lr, [sp, #90]	; 0x5a
+     b54:	e58dc05e 	str	ip, [sp, #94]	; 0x5e
+     b58:	e5d7e01f 	ldrb	lr, [r7, #31]
+     b5c:	e1d7c1bc 	ldrh	ip, [r7, #28]
+     b60:	e58d3056 	str	r3, [sp, #86]	; 0x56
+     b64:	e5973018 	ldr	r3, [r7, #24]
+     b68:	e1cdc6b6 	strh	ip, [sp, #102]	; 0x66
+     b6c:	e5cde068 	strb	lr, [sp, #104]	; 0x68
+     b70:	e58d3062 	str	r3, [sp, #98]	; 0x62
+     b74:	ebfffffe 	bl	0 <memcpy>
+     b78:	eaffffb2 	b	a48 <ath_cmn_process_fft+0x2f4>
+     b7c:	e58d3040 	str	r3, [sp, #64]	; 0x40
+     b80:	e1a01004 	mov	r1, r4
+     b84:	e59d3044 	ldr	r3, [sp, #68]	; 0x44
+     b88:	e1a0000b 	mov	r0, fp
+     b8c:	e58d203c 	str	r2, [sp, #60]	; 0x3c
+     b90:	e12fff33 	blx	r3
+     b94:	e3500000 	cmp	r0, #0
+     b98:	e59d203c 	ldr	r2, [sp, #60]	; 0x3c
+     b9c:	e59d3040 	ldr	r3, [sp, #64]	; 0x40
+     ba0:	0a00000e 	beq	be0 <ath_cmn_process_fft+0x48c>
+     ba4:	e5d7101f 	ldrb	r1, [r7, #31]
+     ba8:	e5d70020 	ldrb	r0, [r7, #32]
+     bac:	e59dc01c 	ldr	ip, [sp, #28]
+     bb0:	e15c0005 	cmp	ip, r5
+     bb4:	d1510000 	cmple	r1, r0
+     bb8:	03a01001 	moveq	r1, #1
+     bbc:	13a01000 	movne	r1, #0
+     bc0:	e1520005 	cmp	r2, r5
+     bc4:	d3a02000 	movle	r2, #0
+     bc8:	c2012001 	andgt	r2, r1, #1
+     bcc:	e3520000 	cmp	r2, #0
+     bd0:	0a00001a 	beq	c40 <ath_cmn_process_fft+0x4ec>
+     bd4:	e5db2001 	ldrb	r2, [fp, #1]
+     bd8:	e3520007 	cmp	r2, #7
+     bdc:	9affff6d 	bls	998 <ath_cmn_process_fft+0x244>
+     be0:	e59d201c 	ldr	r2, [sp, #28]
+     be4:	e1520005 	cmp	r2, r5
+     be8:	1affff5e 	bne	968 <ath_cmn_process_fft+0x214>
+     bec:	e58d303c 	str	r3, [sp, #60]	; 0x3c
+     bf0:	e1a02007 	mov	r2, r7
+     bf4:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+     bf8:	e1cd8fd8 	ldrd	r8, [sp, #248]	; 0xf8
+     bfc:	e59d1024 	ldr	r1, [sp, #36]	; 0x24
+     c00:	e58d300c 	str	r3, [sp, #12]
+     c04:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+     c08:	e1cd80f0 	strd	r8, [sp]
+     c0c:	e59d0018 	ldr	r0, [sp, #24]
+     c10:	e58d3008 	str	r3, [sp, #8]
+     c14:	e59d3034 	ldr	r3, [sp, #52]	; 0x34
+     c18:	e12fff33 	blx	r3
+     c1c:	e58d0028 	str	r0, [sp, #40]	; 0x28
+     c20:	e1a00007 	mov	r0, r7
+     c24:	e59d1020 	ldr	r1, [sp, #32]
+     c28:	ebfffffe 	bl	0 <add_device_randomness>
+     c2c:	e59d3010 	ldr	r3, [sp, #16]
+     c30:	e153000a 	cmp	r3, sl
+     c34:	e59d303c 	ldr	r3, [sp, #60]	; 0x3c
+     c38:	caffff4d 	bgt	974 <ath_cmn_process_fft+0x220>
+     c3c:	eaffff92 	b	a8c <ath_cmn_process_fft+0x338>
+     c40:	e59d202c 	ldr	r2, [sp, #44]	; 0x2c
+     c44:	e1520005 	cmp	r2, r5
+     c48:	1affffe4 	bne	be0 <ath_cmn_process_fft+0x48c>
+     c4c:	eaffffe0 	b	bd4 <ath_cmn_process_fft+0x480>
+     c50:	e59d3038 	ldr	r3, [sp, #56]	; 0x38
+     c54:	e59d1024 	ldr	r1, [sp, #36]	; 0x24
+     c58:	e59d0018 	ldr	r0, [sp, #24]
+     c5c:	e58d300c 	str	r3, [sp, #12]
+     c60:	e59d3030 	ldr	r3, [sp, #48]	; 0x30
+     c64:	e58d3008 	str	r3, [sp, #8]
+     c68:	e1cd2fd8 	ldrd	r2, [sp, #248]	; 0xf8
+     c6c:	e1cd20f0 	strd	r2, [sp]
+     c70:	e1a02007 	mov	r2, r7
+     c74:	e59d3034 	ldr	r3, [sp, #52]	; 0x34
+     c78:	e12fff33 	blx	r3
+     c7c:	e1a00007 	mov	r0, r7
+     c80:	e59d1020 	ldr	r1, [sp, #32]
+     c84:	ebfffffe 	bl	0 <add_device_randomness>
+     c88:	e3a00001 	mov	r0, #1
+     c8c:	eaffff7f 	b	a90 <ath_cmn_process_fft+0x33c>
+     c90:	e59d201c 	ldr	r2, [sp, #28]
+     c94:	e1530002 	cmp	r3, r2
+     c98:	0affffd3 	beq	bec <ath_cmn_process_fft+0x498>
+     c9c:	e59db01c 	ldr	fp, [sp, #28]
+     ca0:	eaffff8b 	b	ad4 <ath_cmn_process_fft+0x380>
+     ca4:	e3000000 	movw	r0, #0
+     ca8:	e300119a 	movw	r1, #410	; 0x19a
+     cac:	e3400000 	movt	r0, #0
+     cb0:	e3a03000 	mov	r3, #0
+     cb4:	e58d3038 	str	r3, [sp, #56]	; 0x38
+     cb8:	ebfffffe 	bl	0 <warn_slowpath_null>
+     cbc:	eaffff76 	b	a9c <ath_cmn_process_fft+0x348>
+     cc0:	e3a03000 	mov	r3, #0
+     cc4:	e58d3038 	str	r3, [sp, #56]	; 0x38
+     cc8:	eaffff73 	b	a9c <ath_cmn_process_fft+0x348>
