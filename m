@@ -1,73 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36360 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbcKIFuy (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19956 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932758AbcKWWIC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 00:50:54 -0500
-Received: by mail-pf0-f194.google.com with SMTP id n85so22252461pfi.3
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2016 21:50:54 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Tue, 8 Nov 2016 21:50:48 -0800
-To: Luca Coelho <luciano.coelho@intel.com>
-Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Eran Harary <eran.harary@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Eyal Shapira <eyal@wizery.com>,
-        Alexander Bondar <alexander.bondar@intel.com>
-Subject: [PATCH v2 3/3] iwlwifi: pcie: trans: Remove unused 'shift_param'
-Message-ID: <20161109055048.GA27520@google.com> (sfid-20161109_065059_019575_CBE6729A)
+        Wed, 23 Nov 2016 17:08:02 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vamsi Krishna <vamsin@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH 1/2] nl80211: Use different attrs for BSSID and random MAC addr in scan req
+Date: Thu, 24 Nov 2016 00:07:36 +0200
+Message-ID: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161123_230806_184950_D7CAB7A4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-shift_param is defined and set in iwl_pcie_load_cpu_sections
-but not used. Fix this to avoid -Wunused-but-set-variable
-warning.
-The code using it turned into dead code with commit dcab8ecd5617
-which added a separate function iwl_pcie_load_given_ucode_8000
-(then 8000b) for IWL_DEVICE_FAMILY_8000. Commit 76f8c0e17edc
-removed the dead code but left shift_param as is.
+From: Vamsi Krishna <vamsin@qti.qualcomm.com>
 
-iwlwifi/pcie/trans.c: In function ‘iwl_pcie_load_cpu_sections’:
-iwlwifi/pcie/trans.c:871:6: warning: variable ‘shift_param’ set but not used [-Wunused-but-set-variable]
+NL80211_ATTR_MAC was used to set both the specific BSSID to be scanned
+and the random MAC address to be used when privacy is enabled. When both
+the features are enabled, both the BSSID and the local MAC address were
+getting same value causing Probe Request frames to go with unintended
+DA. Hence, this has been fixed by using a different NL80211_ATTR_BSSID
+attribute to set the specific BSSID (which was the more recent addition
+in cfg80211) for a scan.
 
-Fixes: dcab8ecd5617 (iwlwifi: mvm: support ucode load for family_8000 B0 only)
-Fixes: 76f8c0e17edc (iwlwifi: pcie: remove dead code)
+Backwards compatibility with old userspace software is maintained to
+some extend by allowing NL80211_ATTR_MAC to be used to set the specific
+BSSID when scanning without enabling random MAC address use.
 
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
-Cc: Sara Sharon <sara.sharon@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Eran Harary <eran.harary@intel.com>
-Cc: Liad Kaufman <liad.kaufman@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Scanning with random source MAC address was introduced by commit
+ad2b26abc157 ("cfg80211: allow drivers to support random MAC addresses
+for scan") and the issue was introduced with the addition of the second
+user for the same attribute in commit 818965d39177 ("cfg80211: Allow a
+scan request for a specific BSSID").
+
+Fixes: 818965d39177 ("cfg80211: Allow a scan request for a specific BSSID")
+Signed-off-by: Vamsi Krishna <vamsin@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 3 ---
- 1 file changed, 3 deletions(-)
+ include/uapi/linux/nl80211.h |  8 +++++++-
+ net/wireless/nl80211.c       | 16 +++++++++++++++-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index ae95533..1b27a39 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -868,15 +868,12 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
- 				      int cpu,
- 				      int *first_ucode_section)
- {
--	int shift_param;
- 	int i, ret = 0;
- 	u32 last_read_idx = 0;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 259c9c7..984a35ac 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -323,7 +323,7 @@
+  * @NL80211_CMD_GET_SCAN: get scan results
+  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
+  *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
+- *	probe requests at CCK rate or not. %NL80211_ATTR_MAC can be used to
++ *	probe requests at CCK rate or not. %NL80211_ATTR_BSSID can be used to
+  *	specify a BSSID to scan for; if not included, the wildcard BSSID will
+  *	be used.
+  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
+@@ -1977,6 +1977,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED: Indicates whether or not multicast
+  *	packets should be send out as unicast to all stations (flag attribute).
+  *
++ * @NL80211_ATTR_BSSID: The BSSID of the AP (various uses). Note that
++ *	%NL80211_ATTR_MAC has also been used in various commands/events for
++ *	specifying the BSSID.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2381,6 +2385,8 @@ enum nl80211_attrs {
  
- 	if (cpu == 1) {
--		shift_param = 0;
- 		*first_ucode_section = 0;
- 	} else {
--		shift_param = 16;
- 		(*first_ucode_section)++;
- 	}
+ 	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
  
++	NL80211_ATTR_BSSID,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e4f718e..8db5cb1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -404,6 +404,7 @@ enum nl80211_multicast_groups {
+ 				    .len = FILS_MAX_KEK_LEN },
+ 	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
+ 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
++	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
+ };
+ 
+ /* policy for the key attributes */
+@@ -6703,7 +6704,20 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	if (info->attrs[NL80211_ATTR_MAC])
++	/* Initial implementation used NL80211_ATTR_MAC to set the specific
++	 * BSSID to scan for. This was problematic because that same attribute
++	 * was already used for another purpose (local random MAC address). The
++	 * NL80211_ATTR_BSSID attribute was added to fix this. For backwards
++	 * compatibility with older userspace components, also use the
++	 * NL80211_ATTR_MAC value here if it can be determined to be used for
++	 * the specific BSSID use case instead of the random MAC address
++	 * (NL80211_ATTR_SCAN_FLAGS is used to enable random MAC address use).
++	 */
++	if (info->attrs[NL80211_ATTR_BSSID])
++		memcpy(request->bssid,
++		       nla_data(info->attrs[NL80211_ATTR_BSSID]), ETH_ALEN);
++	else if (!info->attrs[NL80211_ATTR_SCAN_FLAGS] &&
++		 info->attrs[NL80211_ATTR_MAC])
+ 		memcpy(request->bssid, nla_data(info->attrs[NL80211_ATTR_MAC]),
+ 		       ETH_ALEN);
+ 	else
 -- 
-2.8.0.rc3.226.g39d4020
+1.9.1
