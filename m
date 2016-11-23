@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50110 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752021AbcKDOG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 10:06:28 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: John Heenan <john@zgus.com>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine macpower
-References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
-        <wrfjpomidp1v.fsf@redhat.com>
-        <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
-        <wrfjzillsan3.fsf@redhat.com> <1478162497.1924.16.camel@perches.com>
-Date: Fri, 04 Nov 2016 09:56:00 -0400
-In-Reply-To: <1478162497.1924.16.camel@perches.com> (Joe Perches's message of
-        "Thu, 03 Nov 2016 01:41:37 -0700")
-Message-ID: <wrfjshr7mjrj.fsf@redhat.com> (sfid-20161104_150643_535063_5B8FEEB3)
+Received: from smtp.codeaurora.org ([198.145.29.96]:56110 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965222AbcKWPZO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Nov 2016 10:25:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+        <1478706966.18306.1.camel@sipsolutions.net>
+        <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+        <1478725543.21403.4.camel@sipsolutions.net>
+        <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+        <1478864146.4129.4.camel@sipsolutions.net>
+        <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
+Date: Wed, 23 Nov 2016 17:25:08 +0200
+In-Reply-To: <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
+        (IgorMitsyanko's message of "Mon, 14 Nov 2016 11:26:04 +0300")
+Message-ID: <87d1hmnrqj.fsf@purkki.adurom.net> (sfid-20161123_162518_361073_C81F4FCB)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Sun, 2016-10-30 at 19:02 -0400, Jes Sorensen wrote:
->> Code is 80 characters wide, and comments are /* */ never the ugly C++
->> crap.
->
-> You might look at the recent Linus Torvalds authored commit
-> 5e467652ffef (?printk: re-organize log_output() to be more legible")
-> which does both of those: c99 // comments and > 80 columns.
->
-> Absolutes are for zealots.
+IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
 
-What Linus does in his code, is totally up to him. What I pull into the
-driver that *I* maintain, is up to me. It is perfectly normal to expect
-submitters to respect the coding style of the piece of code they are
-trying to edit.
+> To clarify with you and Kalle, as persons involved with
+> linux-wireless: is my understanding correct that submitting firmware
+> into linux-fimware repository is a prerequisite to accepting new
+> driver into linux-wireless?
 
-Jes
+In my opinion the most important is that the device is usable with an
+upstream driver so that anyone can start using the driver (if they have
+the hardware).
+
+> There is an option to start Quantenna device from internal flash
+> memory, no external binary files involved. If we will introduce this
+> functionality and remove code handling external firmware for now
+> (until firmware problem resolved), would that allow driver to be
+> reviewed/accepted?
+
+Do all the publically available hardware contain the firmware in
+internal flash (flashed in the factory)? Or is this something which must
+be installed separately for each board's internal flash by the user?
+
+BTW, the original mail with the firmware image didn't make it to the
+list, I guess it was too big? It would be good if you could post the
+license separately so that people can see it.
+
+-- 
+Kalle Valo
