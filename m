@@ -1,106 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f181.google.com ([209.85.210.181]:32865 "EHLO
-        mail-wj0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756303AbcKWWrb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 17:47:31 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: wl1251 & mac address & calibration data
-Date: Wed, 23 Nov 2016 23:39:59 +0100
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-References: <201611111820.52072@pali> <201611221805.13606@pali> <20161123222335.GA4788@amd>
-In-Reply-To: <20161123222335.GA4788@amd>
+Received: from mail-by2nam03on0059.outbound.protection.outlook.com ([104.47.42.59]:53193
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751774AbcKWRJt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Nov 2016 12:09:49 -0500
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+ <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
+ <87d1hmnrqj.fsf@purkki.adurom.net>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <a5fa00c7-f8db-708a-cd21-4d5b0fbdf49b@quantenna.com> (sfid-20161123_180953_552746_B92B1BED)
+Date: Wed, 23 Nov 2016 20:09:32 +0300
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1899648.o0QrnXPIW8";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201611232339.59411@pali> (sfid-20161123_234758_209356_6D1EF690)
+In-Reply-To: <87d1hmnrqj.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1899648.o0QrnXPIW8
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On 11/23/2016 06:25 PM, Kalle Valo wrote:
+> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+>
+>> To clarify with you and Kalle, as persons involved with
+>> linux-wireless: is my understanding correct that submitting firmware
+>> into linux-fimware repository is a prerequisite to accepting new
+>> driver into linux-wireless?
+> In my opinion the most important is that the device is usable with an
+> upstream driver so that anyone can start using the driver (if they have
+> the hardware).
+>
+>> There is an option to start Quantenna device from internal flash
+>> memory, no external binary files involved. If we will introduce this
+>> functionality and remove code handling external firmware for now
+>> (until firmware problem resolved), would that allow driver to be
+>> reviewed/accepted?
+> Do all the publically available hardware contain the firmware in
+> internal flash (flashed in the factory)? Or is this something which must
+> be installed separately for each board's internal flash by the user?
 
-On Wednesday 23 November 2016 23:23:35 Pavel Machek wrote:
-> Hi!
->=20
-> > > > As wl1251.ko does not accept mac_address as module parameter,
-> > > > such modprobe hook does not help -- as there is absolutely no
-> > > > way from userspace to set or change (permanent) mac address.
-> > >=20
-> > > Quoting modprobe.d manual:
-> > > >       install modulename command...
-> > > >      =20
-> > > >           This command instructs modprobe to run your
-> > > >           command instead of inserting the module in the
-> > > >           kernel as normal. The command can be any shell
-> > > >           command: this allows you to do any kind of
-> > > >           complex processing you might wish. [...]
-> >=20
-> > I know. But this do not allow me to send mac address to kernel --
-> > as kernel does not support such command yet (reason for my first
-> > question).
->=20
-> Plus, this does not really work for cases where wl1251 is not a
-> module.
+Each board must have flash installed on it, preflashed in the factory 
+with uboot and firmware binary, otherwise board won't boot (won't boot 
+without uboot, firmware itself is not mandatory).
+Booting from flash is default behavior on boards that are currently on 
+the market, but for developemnt purpuses it's not very convenient and 
+harder to upgrade.
 
-Yes, this is another problem.
+>
+> BTW, the original mail with the firmware image didn't make it to the
+> list, I guess it was too big? It would be good if you could post the
+> license separately so that people can see it.
+>
 
-> > > You can hook up a script that cooks up wl1251-nvs.bin (caldata,
-> > > macaddr) and then insmod the actual wl1251.ko module. Or you can
-> > > just cook up the nvs on first device boot and store it in
-> > > /lib/firmware (possibly overwriting the "generic" wl1251 from
-> > > linux-firmware).
-> >=20
-> > This is what I would like to prevent -- overwriting (possible
-> > readonly) system files with some device specific. It is really bad
-> > idea!
->=20
-> Agreed.
->=20
-> "ifconfig hw ether XX" normally sets the address. I guess that's
-> ioctl?
-
-This sets temporary address and it is ioctl. IIRC same as what ethtool=20
-uses. (ifconfig is already deprecated).
-
-> And I guess we should use similar mechanism for permanent
-> address.
-
-I'm not sure here... Above ioctl =E2=86=91=E2=86=91=E2=86=91 is for changin=
-g temporary mac=20
-address. But here we do not want to change permanent mac address. We=20
-want to tell kernel driver current permanent mac address which is stored=20
-in permanent mac address storage (in N900 case in mtd). Just like=20
-userspace helper as kernel driver do not have code which can read=20
-permanent mac address.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1899648.o0QrnXPIW8
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlg2Gr8ACgkQi/DJPQPkQ1Lw+gCfYwK6iix0CZcSwcpJ/7HdXVGb
-qyMAnAnJehbMk6Td3DxVcyWOA0CNV67q
-=sPWc
------END PGP SIGNATURE-----
-
---nextPart1899648.o0QrnXPIW8--
+I resent the email without binary patch to linux-wireless. Yes, it was 
+big, I guess next time we better use pull requests on github.
