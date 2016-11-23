@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:56034 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754392AbcK2SF6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33758 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933977AbcKWKUX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 13:05:58 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/2] mac80211:  put upper bound on txqi queue length.
-Date: Tue, 29 Nov 2016 10:05:53 -0800
-Message-Id: <1480442753-6830-2-git-send-email-greearb@candelatech.com> (sfid-20161129_190601_774406_10D2EEDF)
-In-Reply-To: <1480442753-6830-1-git-send-email-greearb@candelatech.com>
-References: <1480442753-6830-1-git-send-email-greearb@candelatech.com>
+        Wed, 23 Nov 2016 05:20:23 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 23 Nov 2016 15:50:17 +0530
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+To: Rob Herring <robh@kernel.org>
+Cc: c_traja@qti.qualcomm.com, ath10k@lists.infradead.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCHv2 3/4] dt: bindings: add new dt entry for BTCOEX feature
+ in qcom,ath10k.txt
+In-Reply-To: <20161118144406.3se7gnckhcmwqytp@rob-hp-laptop>
+References: <1479383064-25718-1-git-send-email-c_traja@qti.qualcomm.com>
+ <1479383064-25718-4-git-send-email-c_traja@qti.qualcomm.com>
+ <20161118144406.3se7gnckhcmwqytp@rob-hp-laptop>
+Message-ID: <df0313af8ab0ed1e7bddcfeca8429632@codeaurora.org> (sfid-20161123_112106_288918_538B53EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Thanks for the comments.
 
-This fixes OOM when using pktgen to drive a wifi station at more than
-the station can transmit.  pktgen uses ndo_start_xmit instead of going
-through the queue layer, so it will not back off when the queues are
-stopped, and would thus cause packets to be added to the txqi->queue
-until the system goes OOM and crashes.
+On 2016-11-18 20:14, Rob Herring wrote:
+> On Thu, Nov 17, 2016 at 05:14:23PM +0530, c_traja@qti.qualcomm.com 
+> wrote:
+>> From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+>> 
+>> There two things done in this patch.
+>> 
+>> 1) 'btcoex_support' flag for BTCOEX feature support by the hardware.
+>> 2) 'wlan_btcoex_gpio' is used to fill wlan priority pin number for
+>>    BTCOEX priority feature support.
+>> 
+>> Signed-off-by: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+>> ---
+>>  .../bindings/net/wireless/qcom,ath10k.txt          |    4 ++++
+>>  1 file changed, 4 insertions(+)
+>> 
+>> diff --git 
+>> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt 
+>> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> index 74d7f0a..08150e2d 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+>> @@ -46,6 +46,10 @@ Optional properties:
+>>  				 hw versions.
+>>  - qcom,ath10k-pre-calibration-data : pre calibration data as an 
+>> array,
+>>  				     the length can vary between hw versions.
+>> +- btcoex_support  : should contain eithr "0" or "1" to indicate 
+>> btcoex
+>> +		    support by the hardware.
+> 
+> This is BT coexistence? Make this boolean and n
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+Yes, this is BT coexistence. And I didn't get what are you trying to say 
+in this "Make this boolean and n"
+> 
+>> +- btcoex_gpio_pin :  btcoex gpio pin number for the device which
+>> +		     supports BTCOEX.
+> 
+> This is a pin number on the chip, not any pin number Linux GPIO subsys
+> cares about, right? Is there a connection to the host too, or this is
+> internal between BT and WiFi?
 
-This is against 4.7.10+, not sure if it is actually needed in latest kernel.
+This is internal between BT and wifi.
+> 
+> Do you really need 2 properties? Does supporting this feature require
+> the GPIO? If so, then the first property is redundant.
+> 
+Target/driver can hard copy this gpio pin for some chipsets and there we 
+will need btcoex_support flag to find the btcoex support.
 
- net/mac80211/tx.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index fbcb5fc..0573ab9 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1293,6 +1293,16 @@ static void ieee80211_drv_tx(struct ieee80211_local *local,
- 		goto tx_normal;
- 
- 	ac = txq->ac;
-+
-+	if (atomic_read(&sdata->txqs_len[ac]) >=
-+	    (local->hw.txq_ac_max_pending * 2)) {
-+		/* Must be that something is not paying attention to
-+		 * max-pending, like pktgen, so just drop this frame.
-+		 */
-+		ieee80211_free_txskb(&local->hw, skb);
-+		return;
-+	}
-+
- 	txqi = to_txq_info(txq);
- 	atomic_inc(&sdata->txqs_len[ac]);
- 	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
--- 
-2.4.11
+> Needs vendor prefix and don't use '_'. Should be something like
+> 'qcom,bt-coexist-gpio-pin'.
+> 
+Sure I'll update this and send in v3 patch
