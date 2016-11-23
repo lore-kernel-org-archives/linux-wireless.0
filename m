@@ -1,145 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53615 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754366AbcKUMTj (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:53050 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935357AbcKWKfe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 07:19:39 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uALCFFcc003271
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:19:38 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 26tq4neub2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 04:19:38 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Karthik D A <karthida@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: Disable adhoc feature based on firmware capability
-Date: Mon, 21 Nov 2016 17:49:04 +0530
-Message-ID: <1479730744-8964-1-git-send-email-akarwar@marvell.com> (sfid-20161121_132002_928558_B532A9D4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 23 Nov 2016 05:35:34 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 04/12] brcmfmac: fix handling ssids in .sched_scan_start() callback
+Date: Wed, 23 Nov 2016 10:25:23 +0000
+Message-Id: <1479896731-5091-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_113547_366127_2A71CB78)
+In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik D A <karthida@marvell.com>
+The ssids list in the scheduled scan request were not properly taken
+into account when configuring in firmware. The hidden bit was set for
+any ssid resulting in active scanning for all. Only set it for ssids
+that are in the ssids list.
 
-We will read fw_cap_info filled by firmware to check whether to
-skip ADHOC related commands or not. Also, IBSS_COALESCING_STATUS
-command has been moved from init path to adhoc network creation
-path.
-
-Signed-off-by: Karthik D A <karthida@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 +++++++
- drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c  | 36 +++++++++++++++++--------
- 3 files changed, 36 insertions(+), 11 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 103 ++++++++++-----------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c |  18 ++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  12 ++-
+ 3 files changed, 76 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index a231f09..a7d359e 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2143,6 +2143,16 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 	ret = mwifiex_set_encode(priv, NULL, NULL, 0, 0, NULL, 1);
- 
- 	if (mode == NL80211_IFTYPE_ADHOC) {
-+		u16 enable = true;
-+
-+		/* set ibss coalescing_status */
-+		ret = mwifiex_send_cmd(
-+				priv,
-+				HostCmd_CMD_802_11_IBSS_COALESCING_STATUS,
-+				HostCmd_ACT_GEN_SET, 0, &enable, true);
-+		if (ret)
-+			return ret;
-+
- 		/* "privacy" is set only for ad-hoc mode */
- 		if (privacy) {
- 			/*
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 9b3ccea..ea45594 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -219,6 +219,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define ISSUPP_TDLS_ENABLED(FwCapInfo) (FwCapInfo & BIT(14))
- #define ISSUPP_DRCS_ENABLED(FwCapInfo) (FwCapInfo & BIT(15))
- #define ISSUPP_SDIO_SPA_ENABLED(FwCapInfo) (FwCapInfo & BIT(16))
-+#define ISSUPP_ADHOC_ENABLED(FwCapInfo) (FwCapInfo & BIT(25))
- 
- #define MWIFIEX_DEF_HT_CAP	(IEEE80211_HT_CAP_DSSSCCK40 | \
- 				 (1 << IEEE80211_HT_CAP_RX_STBC_SHIFT) | \
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 768c519..125e448 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1900,6 +1900,24 @@ static int mwifiex_cmd_get_wakeup_reason(struct mwifiex_private *priv,
- 	return 0;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ee27095..096e214 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3314,19 +3314,37 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
+ 	return err;
  }
  
-+/* This function check if the command is supported by firmware */
-+static int mwifiex_is_cmd_supported(struct mwifiex_private *priv, u16 cmd_no)
++static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
++				 struct cfg80211_sched_scan_request *req)
 +{
-+	if (!ISSUPP_ADHOC_ENABLED(priv->adapter->fw_cap_info)) {
-+		switch (cmd_no) {
-+		case HostCmd_CMD_802_11_IBSS_COALESCING_STATUS:
-+		case HostCmd_CMD_802_11_AD_HOC_START:
-+		case HostCmd_CMD_802_11_AD_HOC_JOIN:
-+		case HostCmd_CMD_802_11_AD_HOC_STOP:
-+			return -EOPNOTSUPP;
-+		default:
-+			break;
++	int i;
++
++	if (!ssid || !req->ssids || !req->n_ssids)
++		return false;
++
++	for (i = 0; i < req->n_ssids; i++) {
++		if (ssid->ssid_len == req->ssids[i].ssid_len) {
++			if (!strncmp(ssid->ssid, req->ssids[i].ssid,
++				     ssid->ssid_len))
++				return true;
 +		}
 +	}
-+
-+	return 0;
++	return false;
 +}
 +
- /*
-  * This function prepares the commands before sending them to the firmware.
-  *
-@@ -1913,6 +1931,13 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 	struct host_cmd_ds_command *cmd_ptr = cmd_buf;
+ static int
+ brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
+ 				struct net_device *ndev,
+-				struct cfg80211_sched_scan_request *request)
++				struct cfg80211_sched_scan_request *req)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+-	struct brcmf_pno_net_param_le pfn;
++	struct cfg80211_ssid *ssid;
+ 	int i;
  	int ret = 0;
  
-+	if (mwifiex_is_cmd_supported(priv, cmd_no)) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "0x%x command not supported by firmware\n",
-+			    cmd_no);
-+			return -EOPNOTSUPP;
-+		}
-+
- 	/* Prepare command */
- 	switch (cmd_no) {
- 	case HostCmd_CMD_GET_HW_SPEC:
-@@ -2206,7 +2231,6 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 	int ret;
--	u16 enable = true;
- 	struct mwifiex_ds_11n_amsdu_aggr_ctrl amsdu_aggr_ctrl;
- 	struct mwifiex_ds_auto_ds auto_ds;
- 	enum state_11d_t state_11d;
-@@ -2319,16 +2343,6 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 	if (ret)
- 		return -1;
+ 	brcmf_dbg(SCAN, "Enter n_match_sets:%d n_ssids:%d\n",
+-		  request->n_match_sets, request->n_ssids);
++		  req->n_match_sets, req->n_ssids);
+ 	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status)) {
+ 		brcmf_err("Scanning already: status (%lu)\n", cfg->scan_status);
+ 		return -EAGAIN;
+@@ -3337,71 +3355,46 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
+ 		return -EAGAIN;
+ 	}
  
--	if (priv->bss_type == MWIFIEX_BSS_TYPE_STA) {
--		/* set ibss coalescing_status */
--		ret = mwifiex_send_cmd(
--				priv,
--				HostCmd_CMD_802_11_IBSS_COALESCING_STATUS,
--				HostCmd_ACT_GEN_SET, 0, &enable, true);
--		if (ret)
--			return -1;
--	}
+-	if (!request->n_ssids || !request->n_match_sets) {
+-		brcmf_dbg(SCAN, "Invalid sched scan req!! n_ssids:%d\n",
+-			  request->n_ssids);
++	if (req->n_match_sets <= 0) {
++		brcmf_dbg(SCAN, "invalid number of matchsets specified: %d\n",
++			  req->n_match_sets);
+ 		return -EINVAL;
+ 	}
+ 
+-	if (request->n_ssids > 0) {
+-		for (i = 0; i < request->n_ssids; i++) {
+-			/* Active scan req for ssids */
+-			brcmf_dbg(SCAN, ">>> Active scan req for ssid (%s)\n",
+-				  request->ssids[i].ssid);
 -
- 	memset(&amsdu_aggr_ctrl, 0, sizeof(amsdu_aggr_ctrl));
- 	amsdu_aggr_ctrl.enable = true;
- 	/* Send request to firmware */
+-			/* match_set ssids is a supert set of n_ssid list,
+-			 * so we need not add these set separately.
+-			 */
+-		}
++	/* clean up everything */
++	ret = brcmf_pno_clean(ifp);
++	if  (ret < 0) {
++		brcmf_err("failed error=%d\n", ret);
++		return ret;
+ 	}
+ 
+-	if (request->n_match_sets > 0) {
+-		/* clean up everything */
+-		ret = brcmf_pno_clean(ifp);
+-		if  (ret < 0) {
+-			brcmf_err("failed error=%d\n", ret);
+-			return ret;
+-		}
++	/* configure pno */
++	ret = brcmf_pno_config(ifp, req);
++	if (ret < 0)
++		return ret;
+ 
+-		/* configure pno */
+-		ret = brcmf_pno_config(ifp, request);
+-		if (ret < 0)
+-			return ret;
++	/* configure each match set */
++	for (i = 0; i < req->n_match_sets; i++) {
+ 
+-		/* configure each match set */
+-		for (i = 0; i < request->n_match_sets; i++) {
+-			struct cfg80211_ssid *ssid;
+-			u32 ssid_len;
++		ssid = &req->match_sets[i].ssid;
+ 
+-			ssid = &request->match_sets[i].ssid;
+-			ssid_len = ssid->ssid_len;
++		if (!ssid->ssid_len) {
++			brcmf_err("skip broadcast ssid\n");
++			continue;
++		}
+ 
+-			if (!ssid_len) {
+-				brcmf_err("skip broadcast ssid\n");
+-				continue;
+-			}
+-			pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
+-			pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
+-			pfn.wsec = cpu_to_le32(0);
+-			pfn.infra = cpu_to_le32(1);
+-			pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
+-			pfn.ssid.SSID_len = cpu_to_le32(ssid_len);
+-			memcpy(pfn.ssid.SSID, ssid->ssid, ssid_len);
+-			ret = brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn,
+-						       sizeof(pfn));
++		ret = brcmf_pno_add_ssid(ifp, ssid,
++					 brcmf_is_ssid_active(ssid, req));
++		if (ret < 0)
+ 			brcmf_dbg(SCAN, ">>> PNO filter %s for ssid (%s)\n",
+ 				  ret == 0 ? "set" : "failed", ssid->ssid);
+-		}
+-		/* Enable the PNO */
+-		if (brcmf_fil_iovar_int_set(ifp, "pfn", 1) < 0) {
+-			brcmf_err("PNO enable failed!! ret=%d\n", ret);
+-			return -EINVAL;
+-		}
+-	} else {
+-		return -EINVAL;
+ 	}
++	/* Enable the PNO */
++	ret = brcmf_fil_iovar_int_set(ifp, "pfn", 1);
++	if (ret < 0)
++		brcmf_err("PNO enable failed!! ret=%d\n", ret);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index 2f6a4e0..c7967d9e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -28,6 +28,8 @@
+ #define BRCMF_PNO_FREQ_EXPO_MAX		3
+ #define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
+ #define BRCMF_PNO_SCAN_INCOMPLETE	0
++#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
++#define BRCMF_PNO_HIDDEN_BIT		2
+ 
+ int brcmf_pno_clean(struct brcmf_if *ifp)
+ {
+@@ -98,3 +100,19 @@ int brcmf_pno_config(struct brcmf_if *ifp,
+ 	return err;
+ }
+ 
++int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
++		       bool active)
++{
++	struct brcmf_pno_net_param_le pfn;
++
++	pfn.auth = cpu_to_le32(WLAN_AUTH_OPEN);
++	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
++	pfn.wsec = cpu_to_le32(0);
++	pfn.infra = cpu_to_le32(1);
++	if (active)
++		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
++	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
++	memcpy(pfn.ssid.SSID, ssid->ssid, ssid->ssid_len);
++	return brcmf_fil_iovar_data_set(ifp, "pfn_add", &pfn, sizeof(pfn));
++}
++
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+index 08d701e..a4a23fc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+@@ -17,8 +17,6 @@
+ #define _BRCMF_PNO_H
+ 
+ #define BRCMF_PNO_SCAN_COMPLETE		1
+-#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
+-#define BRCMF_PNO_HIDDEN_BIT		2
+ #define BRCMF_PNO_MAX_PFN_COUNT		16
+ 
+ /**
+@@ -37,4 +35,14 @@
+ int brcmf_pno_config(struct brcmf_if *ifp,
+ 		     struct cfg80211_sched_scan_request *request);
+ 
++/**
++ * brcmf_pno_add_ssid - add ssid for pno in firmware.
++ *
++ * @ifp: interface object used.
++ * @ssid: ssid information.
++ * @active: indicate this ssid needs to be actively probed.
++ */
++int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
++		       bool active);
++
+ #endif /* _BRCMF_PNO_H */
 -- 
 1.9.1
