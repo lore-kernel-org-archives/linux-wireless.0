@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:34735 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752344AbcKNLgz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20065 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933490AbcKWTlt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 06:36:55 -0500
-Received: by mail-pf0-f177.google.com with SMTP id c4so17557845pfb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 03:36:54 -0800 (PST)
-Subject: Re: [PATCH] broadcom/brcm80211/brcmfmac/cfg80211 driver, bad
- regulatory domain frequency value
-To: Gianfranco Costamagna <locutusofborg@debian.org>,
-        "brcm80211-dev-list@broadcom.com" <brcm80211-dev-list@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <CACJOhtL-oFTJC5j0_+fdecWExZBKvDy13o+UBzw47tyrvD_SJQ@mail.gmail.com>
- <CACJOhtKej4EZ3ufGGUr=Rf1X=hufmKtPLQH3y4x0kK4nNg5U0w@mail.gmail.com>
- <690669269.1124561.1477671348137@mail.yahoo.com>
- <5474e850-1c52-c896-da9e-45720ed6d6ff@broadcom.com>
- <0812c8f2-f0ce-c62c-5f09-fa46dafd630f@broadcom.com>
- <233918815.6357602.1479123253455@mail.yahoo.com>
-Cc: "nsmaldone@tierratelematics.com" <nsmaldone@tierratelematics.com>,
-        "Marco.Arlone@roj.com" <Marco.Arlone@roj.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <fba3cf06-917f-f1c9-6735-f166a18aa222@broadcom.com> (sfid-20161114_123738_360333_F3885D50)
-Date: Mon, 14 Nov 2016 12:36:50 +0100
+        Wed, 23 Nov 2016 14:41:49 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <233918815.6357602.1479123253455@mail.yahoo.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCHv3,1/2] ath10k: add per peer htt tx stats support for 10.4
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1479227849-10042-1-git-send-email-akolli@qti.qualcomm.com>
+References: <1479227849-10042-1-git-send-email-akolli@qti.qualcomm.com>
+To: <akolli@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Anilkumar Kolli <akolli@qti.qualcomm.com>,
+        <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <49fc279bffdf4ff2bd613044a7325cb4@euamsexm01a.eu.qualcomm.com> (sfid-20161123_204212_635345_F451E773)
+Date: Wed, 23 Nov 2016 20:40:41 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-11-2016 12:34, Gianfranco Costamagna wrote:
-> Hi Arend,
+akolli@qti.qualcomm.com wrote:
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 > 
+> Per peer tx stats are part of 'HTT_10_4_T2H_MSG_TYPE_PEER_STATS'
+> event, Firmware sends one HTT event for every four PPDUs.
+> HTT payload has success pkts/bytes, failed pkts/bytes, retry
+> pkts/bytes and rate info per ppdu.
+> Peer stats are enabled through 'WMI_SERVICE_PEER_STATS',
+> which are nowadays enabled by default.
 > 
->> Finally response. As it turns out the range was explcitly changed
+> Parse peer stats and update the tx rate information per STA.
 > 
->> enabling channels 12 and 13 to be used where applicable. They forgot to
->> update the comment.
+> tx rate, Peer stats are tested on QCA4019 with Firmware version
+> 10.4-3.2.1-00028.
 > 
-> 
-> so, the struct in net/wireless/reg.c is actually used in that case?
-> 
-> static const struct ieee80211_regdomain world_regdom = {
-> 
-> do you plan to update the comment?
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Well, not before you pointed it out ;-). You are welcome to send a patch
-fixing it. Otherwise, I will take care of it.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-Regards,
-Arend
+cec17c382140 ath10k: add per peer htt tx stats support for 10.4
+5608eaf7b086 ath10k: add support for per sta tx bitrate
+
+-- 
+https://patchwork.kernel.org/patch/9430197/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
