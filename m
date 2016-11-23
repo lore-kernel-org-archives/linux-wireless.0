@@ -1,39 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:36263 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752194AbcKPAL2 (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:52760 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935178AbcKWK1E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 19:11:28 -0500
-Received: by mail-it0-f51.google.com with SMTP id l8so35898877iti.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 16:11:28 -0800 (PST)
-MIME-Version: 1.0
-From: Matthew Stanger <matthew_stanger@trimble.com>
-Date: Tue, 15 Nov 2016 17:11:27 -0700
-Message-ID: <CANr77M17c7CtA_bzzVzPDHwsFU4+qmJtsci6jBLozNp9gcEyEA@mail.gmail.com> (sfid-20161116_011132_538208_35780A91)
-Subject: crda not triggering kernel udev event
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Wed, 23 Nov 2016 05:27:04 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 09/12] brcmfmac: use provided channels for scheduled scan
+Date: Wed, 23 Nov 2016 10:25:28 +0000
+Message-Id: <1479896731-5091-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_112747_127488_D3200E96)
+In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+User-space can provide list of channels in the schedule scan request.
+This was ignored so all channels supported and allowed by the device
+were used. This patch configures the device to use the channels as
+listed in the request.
 
-I'm trying to troubleshoot not being able to set the Regulator Domain
-on a custom Yocto 3.14 kernel with a Marvell 88W8887/at91_mci driver
-on ARM. Running 'udevadm monitor --environment kernel'  there are no
-kernel udev events being triggered. I've checked the following common
-items, crda is installed in '/usr/sbin' (version 3.18), wireless-regdb
-is installed at '/usr/lib/crda/regulatory.bin',
-'/etc/modeprobe.d/cfg80211.conf' has 'options cfg80211
-ieee80211_regdom=US' & I have udev rules pointing to '/usr/sbin/crda'
-in both '/etc/udev/rules.d/' & '/lib/udev/rules.d/'. I have
-'COUNTRY=US' set and when I run crda I get 'Failed to set regulatory
-domain: -7' and with no kernel udev events in the background and no
-cfg80211 messages in dmesg. Oddly if I use wpa_supplicant to connect
-to an AP and then stop the wpa_sup service then cfg80211 shows up and
-kenel udev messages fire and I'm able to set the reg domain via 'iw
-reg set'.  Any idea's on what may be going on here or what I could
-check would be most appreciated.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 16 +++++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 26 +++++++++++++++++++++-
+ 2 files changed, 41 insertions(+), 1 deletion(-)
 
-Thanks,
-Matt
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index a4118c0..64aed2d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -131,6 +131,7 @@
+ #define BRCMF_TXBF_MU_BFR_CAP		BIT(1)
+ 
+ #define	BRCMF_MAXPMKID			16	/* max # PMKID cache entries */
++#define BRCMF_NUMCHANNELS		64
+ 
+ #define BRCMF_PFN_MACADDR_CFG_VER	1
+ #define BRCMF_PFN_MAC_OUI_ONLY		BIT(0)
+@@ -719,6 +720,21 @@ struct brcmf_pno_param_le {
+ };
+ 
+ /**
++ * struct brcmf_pno_config_le - PNO channel configuration.
++ *
++ * @reporttype: determines what is reported.
++ * @channel_num: number of channels specified in @channel_list.
++ * @channel_list: channels to use in PNO scan.
++ * @flags: reserved.
++ */
++struct brcmf_pno_config_le {
++	__le32  reporttype;
++	__le32  channel_num;
++	__le16  channel_list[BRCMF_NUMCHANNELS];
++	__le32  flags;
++};
++
++/**
+  * struct brcmf_pno_net_param_le - scan parameters per preferred network.
+  *
+  * @ssid: ssid name and its length.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index d16e89e..bc33bdc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -18,9 +18,10 @@
+ 
+ #include "core.h"
+ #include "debug.h"
+-#include "pno.h"
+ #include "fwil.h"
+ #include "fwil_types.h"
++#include "cfg80211.h"
++#include "pno.h"
+ 
+ #define BRCMF_PNO_VERSION		2
+ #define BRCMF_PNO_REPEAT		4
+@@ -34,6 +35,15 @@
+ #define BRCMF_PNO_HIDDEN_BIT		2
+ #define BRCMF_PNO_SCHED_SCAN_PERIOD	30
+ 
++static int brcmf_pno_channel_config(struct brcmf_if *ifp,
++				    struct brcmf_pno_config_le *cfg)
++{
++	cfg->reporttype = 0;
++	cfg->flags = 0;
++
++	return brcmf_fil_iovar_data_set(ifp, "pfn_cfg", cfg, sizeof(*cfg));
++}
++
+ static int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
+ 			    u32 mscan, u32 bestn)
+ {
+@@ -167,7 +177,10 @@ int brcmf_pno_clean(struct brcmf_if *ifp)
+ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 			       struct cfg80211_sched_scan_request *req)
+ {
++	struct brcmu_d11inf *d11inf;
++	struct brcmf_pno_config_le pno_cfg;
+ 	struct cfg80211_ssid *ssid;
++	u16 chan;
+ 	int i, ret;
+ 
+ 	/* clean up everything */
+@@ -190,6 +203,17 @@ int brcmf_pno_start_sched_scan(struct brcmf_if *ifp,
+ 			return ret;
+ 	}
+ 
++	/* configure channels to use */
++	d11inf = &ifp->drvr->config->d11inf;
++	for (i = 0; i < req->n_channels; i++) {
++		chan = req->channels[i]->hw_value;
++		pno_cfg.channel_list[i] = cpu_to_le16(chan);
++	}
++	if (req->n_channels) {
++		pno_cfg.channel_num = cpu_to_le32(req->n_channels);
++		brcmf_pno_channel_config(ifp, &pno_cfg);
++	}
++
+ 	/* configure each match set */
+ 	for (i = 0; i < req->n_match_sets; i++) {
+ 		ssid = &req->match_sets[i].ssid;
+-- 
+1.9.1
