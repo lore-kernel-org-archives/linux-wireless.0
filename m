@@ -1,80 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50530 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752168AbcKRXRP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59542 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965259AbcKWPgn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 18:17:15 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH] ath10k: fix monitor vdev for receiving other bss frames
-Date: Fri, 18 Nov 2016 15:10:58 -0800
-Message-ID: <1479510658-8326-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20161119_001719_538562_7B1381F4)
+        Wed, 23 Nov 2016 10:36:43 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/7] mwifiex: Removed unused mwifiex_private* 'priv' variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <ad72403d4d99a1b13ea7f99b0ea992b23aa2ea09.1479458373.git.kirtika@google.com>
+References: <ad72403d4d99a1b13ea7f99b0ea992b23aa2ea09.1479458373.git.kirtika@google.com>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Message-Id: <20161123153637.63104605B6@smtp.codeaurora.org> (sfid-20161123_163658_825380_DD10EC3C)
+Date: Wed, 23 Nov 2016 15:36:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In order to receive other BSS entries in mesh mode, Monitor vdev
-is created whenever filter flag is set with OTHER_BSS. Recently
-it is root caused that setting promisc filter for Mesh interface
-is causing performance and stability issues. To fix this issue,
-firmware will configure appropriate rxfilters by default for mesh
-vdev during vdev creation. This change fixes monitor vdev creation
-based on firmware IE
+Kirtika Ruchandani <kirtika.ruchandani@gmail.com> wrote:
+> Commit bec568ff5107 removed the last remaining usage of struct
+> mwifiex_private* priv in mwifiex_fw_dpc(), by removing the call to
+> mwifiex_del_virtual_intf().
+> Compiling mwifiex/ with W=1 gives the following warning, fix it.
+> mwifiex/main.c: In function ‘mwifiex_fw_dpc’:
+> mwifiex/main.c:520:26: warning: variable ‘priv’ set but not used [-Wunused-but-set-variable]
+> 
+> Fixes: bec568ff5107 ("mwifiex: failure path handling in mwifiex_add_virtual_intf()")
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
- drivers/net/wireless/ath/ath10k/mac.c  | 4 +++-
- 3 files changed, 11 insertions(+), 1 deletion(-)
+Failed to apply to wireless-drivers-next:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7005e2a98726..b796be1d6318 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -326,6 +326,7 @@
- 	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
- 	[ATH10K_FW_FEATURE_BTCOEX_PARAM] = "btcoex-param",
- 	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
-+	[ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST] = "allows-mesh-bcast",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index e8decfaba5b6..179e52fbad55 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -562,6 +562,13 @@ enum ath10k_fw_features {
- 	 */
- 	ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR = 15,
- 
-+	/* Firmware allow other BSS mesh broadcast/multicast frames without
-+	 * creating monitor interface. Appropriate rxfilters are programmed for
-+	 * mesh vdev by firmware itself. This feature flags will be used for
-+	 * not creating monitor vdev while configuring mesh node.
-+	 */
-+	ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST = 16,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 717b2fad9a8a..56b8859d4a72 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1167,7 +1167,9 @@ static bool ath10k_mac_monitor_vdev_is_needed(struct ath10k *ar)
- 		return false;
- 
- 	return ar->monitor ||
--	       ar->filter_flags & FIF_OTHER_BSS ||
-+	       (!test_bit(ATH10K_FW_FEATURE_ALLOWS_MESH_BCAST,
-+			  ar->running_fw->fw_file.fw_features) &&
-+		(ar->filter_flags & FIF_OTHER_BSS)) ||
- 	       test_bit(ATH10K_CAC_RUNNING, &ar->dev_flags);
- }
- 
+Applying: mwifiex: Remove unused 'pm_flag' variable
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/marvell/mwifiex/sdio.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/marvell/mwifiex/sdio.c
+Failed to merge in the changes.
+Patch failed at 0001 mwifiex: Remove unused 'pm_flag' variable
+
+7 patches set to Changes Requested.
+
+9435943 [1/7] mwifiex: Removed unused mwifiex_private* 'priv' variable
+9435945 [2/7] mwifiex: Remove unused 'chan_num' variable
+9435947 [3/7] mwifiex: Remove unused 'sta_ptr' variable
+9435949 [4/7] mwifiex: Remove unused 'adapter'variable
+9435951 [5/7] mwifiex: Remove unused 'pm_flag' variable
+9435953 [6/7] mwifiex: Removed unused 'pkt_type' variable
+9435955 [7/7] mwifiex: Remove unused 'bcd_usb' variable
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9435943/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
