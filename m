@@ -1,83 +1,343 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35443 "EHLO
-        mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751990AbcK1SGH (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:53048 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935249AbcKWKfe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 13:06:07 -0500
-Received: by mail-io0-f171.google.com with SMTP id a124so243738957ioe.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 10:06:07 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1480347358.8107.65.camel@sipsolutions.net>
-References: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
- <1478398113-14966-4-git-send-email-andrew.zaborowski@intel.com>
- <1480344479.8107.60.camel@sipsolutions.net> <CAOq732LFeKRjPdQ6xMx_d1cHmQmYp50NJ4MDsdf=mPXMs685PQ@mail.gmail.com>
- <1480347358.8107.65.camel@sipsolutions.net>
-From: Andrew Zaborowski <balrogg@googlemail.com>
-Date: Mon, 28 Nov 2016 19:06:06 +0100
-Message-ID: <CAOq732K88CygXBmDfGmU21AcQHurcWx081Q3SM-b0ecm+848gA@mail.gmail.com> (sfid-20161128_190611_098952_CF153525)
-Subject: Re: [PATCH 3/3][RFC] nl80211/mac80211: Accept multiple RSSI
- thresholds for CQM
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Wed, 23 Nov 2016 05:35:34 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 03/12] brcmfmac: move pno helper functions in separate source file
+Date: Wed, 23 Nov 2016 10:25:22 +0000
+Message-Id: <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_113547_966405_93FB1D26)
+In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 November 2016 at 16:35, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2016-11-28 at 16:29 +0100, Andrew Zaborowski wrote:
->> In order to keep the hardware offload feature when working with
->> hardware that can only offload the old single-thresholds method, but
->> where the kernel also wants to support the new method by looking at
->> all the beacons in software.  IIRC I identified just one driver that
->> would be in this situation: wl1271.
->
-> IMHO it would be better to not allow that. I'd think that wl1271 is
-> only used in devices where power consumption will be far more
-> interesting than providing this kind of API.
+Introducing new source file for pno related functionality. Moving
+existing pno functions.
 
-Ok.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |   3 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  93 ++-----------------
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 100 +++++++++++++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h |  40 +++++++++
+ 4 files changed, 150 insertions(+), 86 deletions(-)
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+ create mode 100644 drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
 
->
->> This is a specific case and the semantics implemented by the wl1271
->> may be a little different from those in the rest of the drivers so
->> this may be worth very little.  I can change the comment to imply
->> only one method should be implemented.
->
-> We might still have to allow both to be present for mac80211 though.
->
->> > Seems there still should be a hysteresis? Or am I misunderstanding
->> > the
->> > intent here? I.e. isn't it meant to report low/medium/high later?
->>
->> This isn't exposed directly to users, instead it's used by the code
->> in
->> nl80211.c which will always reset the thresholds when either
->> threshold
->> is crossed.  The hysteresis can then be either handled in nl80211.c
->> (factored into the threshold values) or in the firmware/driver, this
->> won't change the number of wakeups.
->
-> That's only if you assume you can actually react to this fast enough
-> though, no? If I offload this, I'd want to also offload a hysteresis to
-> firmware, I'd think.
-
-I wasn't clear: nl80211 sets the thresholds so that "high" is higher
-than last known value and "low" is lower than last known value, also
-the distance is at least 2 x hysteresis.  There's no purpose for
-reporting "middle" rssi events because we have to set a new range as
-soon as we receive a high or a low event.  I realize I need to
-document better.
-
-So I don't think this can result in additional events that wouldn't
-occur if the firmware handled rssi hysteresis.  I think this is
-generic enough that you can implement any monitoring logic on top of
-it and squeeze the same number of wakeup in all scenarios as if the
-driver handled it.  But it shouldn't discriminate hardware that
-doesn't have the hysteresis parameter from offloading this.
-
-BTW I fear if you wanted to have the hysteresis parameter handled by
-firmware you'd end up with slightly differing semantics depending of
-what the firmware does the moment you change you threshold values,
-whether the rssi tracking is reset.
-
-Best regards
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index 9e4b505..d1568be 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -35,7 +35,8 @@ brcmfmac-objs += \
+ 		firmware.o \
+ 		feature.o \
+ 		btcoex.o \
+-		vendor.o
++		vendor.o \
++		pno.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
+ 		bcdc.o
+ brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 1e7c6f0..ee27095 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -32,6 +32,7 @@
+ #include "fwil_types.h"
+ #include "p2p.h"
+ #include "btcoex.h"
++#include "pno.h"
+ #include "cfg80211.h"
+ #include "feature.h"
+ #include "fwil.h"
+@@ -41,16 +42,6 @@
+ #include "common.h"
+ 
+ #define BRCMF_SCAN_IE_LEN_MAX		2048
+-#define BRCMF_PNO_VERSION		2
+-#define BRCMF_PNO_TIME			30
+-#define BRCMF_PNO_REPEAT		4
+-#define BRCMF_PNO_FREQ_EXPO_MAX		3
+-#define BRCMF_PNO_MAX_PFN_COUNT		16
+-#define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
+-#define BRCMF_PNO_HIDDEN_BIT		2
+-#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
+-#define BRCMF_PNO_SCAN_COMPLETE		1
+-#define BRCMF_PNO_SCAN_INCOMPLETE	0
+ 
+ #define WPA_OUI				"\x00\x50\xF2"	/* WPA OUI */
+ #define WPA_OUI_TYPE			1
+@@ -3323,76 +3314,6 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
+ 	return err;
+ }
+ 
+-static int brcmf_dev_pno_clean(struct net_device *ndev)
+-{
+-	int ret;
+-
+-	/* Disable pfn */
+-	ret = brcmf_fil_iovar_int_set(netdev_priv(ndev), "pfn", 0);
+-	if (ret == 0) {
+-		/* clear pfn */
+-		ret = brcmf_fil_iovar_data_set(netdev_priv(ndev), "pfnclear",
+-					       NULL, 0);
+-	}
+-	if (ret < 0)
+-		brcmf_err("failed code %d\n", ret);
+-
+-	return ret;
+-}
+-
+-static int brcmf_dev_pno_config(struct brcmf_if *ifp,
+-				struct cfg80211_sched_scan_request *request)
+-{
+-	struct brcmf_pno_param_le pfn_param;
+-	struct brcmf_pno_macaddr_le pfn_mac;
+-	s32 err;
+-	u8 *mac_mask;
+-	int i;
+-
+-	memset(&pfn_param, 0, sizeof(pfn_param));
+-	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
+-
+-	/* set extra pno params */
+-	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
+-	pfn_param.repeat = BRCMF_PNO_REPEAT;
+-	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
+-
+-	/* set up pno scan fr */
+-	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
+-
+-	err = brcmf_fil_iovar_data_set(ifp, "pfn_set", &pfn_param,
+-				       sizeof(pfn_param));
+-	if (err) {
+-		brcmf_err("pfn_set failed, err=%d\n", err);
+-		return err;
+-	}
+-
+-	/* Find out if mac randomization should be turned on */
+-	if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR))
+-		return 0;
+-
+-	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
+-	pfn_mac.flags = BRCMF_PFN_MAC_OUI_ONLY | BRCMF_PFN_SET_MAC_UNASSOC;
+-
+-	memcpy(pfn_mac.mac, request->mac_addr, ETH_ALEN);
+-	mac_mask = request->mac_addr_mask;
+-	for (i = 0; i < ETH_ALEN; i++) {
+-		pfn_mac.mac[i] &= mac_mask[i];
+-		pfn_mac.mac[i] |= get_random_int() & ~(mac_mask[i]);
+-	}
+-	/* Clear multi bit */
+-	pfn_mac.mac[0] &= 0xFE;
+-	/* Set locally administered */
+-	pfn_mac.mac[0] |= 0x02;
+-
+-	err = brcmf_fil_iovar_data_set(ifp, "pfn_macaddr", &pfn_mac,
+-				       sizeof(pfn_mac));
+-	if (err)
+-		brcmf_err("pfn_macaddr failed, err=%d\n", err);
+-
+-	return err;
+-}
+-
+ static int
+ brcmf_cfg80211_sched_scan_start(struct wiphy *wiphy,
+ 				struct net_device *ndev,
+@@ -3436,15 +3357,16 @@ static int brcmf_dev_pno_config(struct brcmf_if *ifp,
+ 
+ 	if (request->n_match_sets > 0) {
+ 		/* clean up everything */
+-		ret = brcmf_dev_pno_clean(ndev);
++		ret = brcmf_pno_clean(ifp);
+ 		if  (ret < 0) {
+ 			brcmf_err("failed error=%d\n", ret);
+ 			return ret;
+ 		}
+ 
+ 		/* configure pno */
+-		if (brcmf_dev_pno_config(ifp, request))
+-			return -EINVAL;
++		ret = brcmf_pno_config(ifp, request);
++		if (ret < 0)
++			return ret;
+ 
+ 		/* configure each match set */
+ 		for (i = 0; i < request->n_match_sets; i++) {
+@@ -3486,11 +3408,12 @@ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+ 					  struct net_device *ndev)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct brcmf_if *ifp = netdev_priv(ndev);
+ 
+ 	brcmf_dbg(SCAN, "enter\n");
+-	brcmf_dev_pno_clean(ndev);
++	brcmf_pno_clean(ifp);
+ 	if (cfg->sched_escan)
+-		brcmf_notify_escan_complete(cfg, netdev_priv(ndev), true, true);
++		brcmf_notify_escan_complete(cfg, ifp, true, true);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+new file mode 100644
+index 0000000..2f6a4e0
+--- /dev/null
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -0,0 +1,100 @@
++/*
++ * Copyright (c) 2016 Broadcom
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#include <linux/netdevice.h>
++#include <net/cfg80211.h>
++
++#include "core.h"
++#include "debug.h"
++#include "pno.h"
++#include "fwil.h"
++#include "fwil_types.h"
++
++#define BRCMF_PNO_VERSION		2
++#define BRCMF_PNO_TIME			30
++#define BRCMF_PNO_REPEAT		4
++#define BRCMF_PNO_FREQ_EXPO_MAX		3
++#define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
++#define BRCMF_PNO_SCAN_INCOMPLETE	0
++
++int brcmf_pno_clean(struct brcmf_if *ifp)
++{
++	int ret;
++
++	/* Disable pfn */
++	ret = brcmf_fil_iovar_int_set(ifp, "pfn", 0);
++	if (ret == 0) {
++		/* clear pfn */
++		ret = brcmf_fil_iovar_data_set(ifp, "pfnclear", NULL, 0);
++	}
++	if (ret < 0)
++		brcmf_err("failed code %d\n", ret);
++
++	return ret;
++}
++
++int brcmf_pno_config(struct brcmf_if *ifp,
++		     struct cfg80211_sched_scan_request *request)
++{
++	struct brcmf_pno_param_le pfn_param;
++	struct brcmf_pno_macaddr_le pfn_mac;
++	s32 err;
++	u8 *mac_mask;
++	int i;
++
++	memset(&pfn_param, 0, sizeof(pfn_param));
++	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
++
++	/* set extra pno params */
++	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
++	pfn_param.repeat = BRCMF_PNO_REPEAT;
++	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
++
++	/* set up pno scan fr */
++	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
++
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_set", &pfn_param,
++				       sizeof(pfn_param));
++	if (err) {
++		brcmf_err("pfn_set failed, err=%d\n", err);
++		return err;
++	}
++
++	/* Find out if mac randomization should be turned on */
++	if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR))
++		return 0;
++
++	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
++	pfn_mac.flags = BRCMF_PFN_MAC_OUI_ONLY | BRCMF_PFN_SET_MAC_UNASSOC;
++
++	memcpy(pfn_mac.mac, request->mac_addr, ETH_ALEN);
++	mac_mask = request->mac_addr_mask;
++	for (i = 0; i < ETH_ALEN; i++) {
++		pfn_mac.mac[i] &= mac_mask[i];
++		pfn_mac.mac[i] |= get_random_int() & ~(mac_mask[i]);
++	}
++	/* Clear multi bit */
++	pfn_mac.mac[0] &= 0xFE;
++	/* Set locally administered */
++	pfn_mac.mac[0] |= 0x02;
++
++	err = brcmf_fil_iovar_data_set(ifp, "pfn_macaddr", &pfn_mac,
++				       sizeof(pfn_mac));
++	if (err)
++		brcmf_err("pfn_macaddr failed, err=%d\n", err);
++
++	return err;
++}
++
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+new file mode 100644
+index 0000000..08d701e
+--- /dev/null
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
+@@ -0,0 +1,40 @@
++/*
++ * Copyright (c) 2016 Broadcom
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
++ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
++ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
++ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++#ifndef _BRCMF_PNO_H
++#define _BRCMF_PNO_H
++
++#define BRCMF_PNO_SCAN_COMPLETE		1
++#define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
++#define BRCMF_PNO_HIDDEN_BIT		2
++#define BRCMF_PNO_MAX_PFN_COUNT		16
++
++/**
++ * brcmf_pno_clean - disable and clear pno in firmware.
++ *
++ * @ifp: interface object used.
++ */
++int brcmf_pno_clean(struct brcmf_if *ifp);
++
++/**
++ * brcmf_pno_config - configure pno parameters.
++ *
++ * @ifp: interface object used.
++ * @request: scheduled scan parameters.
++ */
++int brcmf_pno_config(struct brcmf_if *ifp,
++		     struct cfg80211_sched_scan_request *request);
++
++#endif /* _BRCMF_PNO_H */
+-- 
+1.9.1
