@@ -1,76 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:34558 "EHLO www.osadl.org"
+Received: from erley.org ([97.107.129.9]:46170 "EHLO remote.erley.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751764AbcKFNaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 6 Nov 2016 08:30:18 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Joe Perches <joe@perches.com>, Arnd Bergmann <arnd@arndb.de>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH RFC] rtlwifi: btcoexist: fix port assignment
-Date: Sun,  6 Nov 2016 13:56:59 +0100
-Message-Id: <1478437019-24689-1-git-send-email-hofrat@osadl.org> (sfid-20161106_143026_574087_7A2D3E14)
+        id S1753822AbcKWHrw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Nov 2016 02:47:52 -0500
+Subject: Re: [PATCH 3/3][RESEND][RFC] nl80211/mac80211: Accept multiple RSSI
+ thresholds for CQM
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <1479810592-2474-1-git-send-email-andrew.zaborowski@intel.com>
+ <1479810592-2474-4-git-send-email-andrew.zaborowski@intel.com>
+From: Pat Erley <pat-lkml@erley.org>
+Message-ID: <225569a5-5f54-fe1b-035a-e449b611a8bb@erley.org> (sfid-20161123_084756_142846_AB08E6CC)
+Date: Tue, 22 Nov 2016 23:38:43 -0800
+MIME-Version: 1.0
+In-Reply-To: <1479810592-2474-4-git-send-email-andrew.zaborowski@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The port assignment in the if case should be to AUX not MAIN.
 
-Fixes: commit baa170229095 ("rtlwifi: btcoexist: Implement antenna selection")
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
-problem located by coccinelle
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -502,6 +502,10 @@ struct ieee80211_mu_group_data {
+>   *	implies disabled. As with the cfg80211 callback, a change here should
+>   *	cause an event to be sent indicating where the current value is in
+>   *	relation to the newly configured threshold.
+> + * @cqm_rssi_low: Connection quality monitor RSSI lower threshold, a zero value
+> + *	implies disabled.  This is an alternative mechanism to the single
+> + *	threshold event and can't be enabled simultaneously.
+> + * @cqm_rssi_low: Connection quality monitor RSSI upper threshold.
 
-in:
-drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c:exhalbtc_set_ant_num()
-973       /* The antenna position:
-974        * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
-975        * The antenna position should be determined by
-976        * auto-detect mechanism.
-977        * The following is assumed to main,
-978        * and those must be modified
-979        * if y auto-detect mechanism is ready
-980        */
-981       if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
-982           (gl_bt_coexist.board_info.btdm_ant_num == 1))
-983               gl_bt_coexist.board_info.btdm_ant_pos =
-984                                              BTC_ANTENNA_AT_MAIN_PORT;
-985       else
-986               gl_bt_coexist.board_info.btdm_ant_pos =
-987                                              BTC_ANTENNA_AT_MAIN_PORT;
-(line number from 4.9.0-rc2 linux-next 20161028)
-
-the if and else branch here are the same but the comment seems to indicate
-that the first case should be the AUX port and not the MAIN port here (the
-second sentence in the comment though is not really clear to me). If the 
-intent is to set it to MAIN unconditionally and then let autodetect fix it
-then the if/else construct is useless.
-
-Looks like a cut&past bug, but this needs a check by someone who knows the
-details of the device.
-
-Patch was compile tested with: x86_64_defconfig + RTL8723AE=m 
-(implies CONFIG_RTLBTCOEXIST)
-
-Patch is against 4.9.0-rc2 (localversion-next is next-20161028)
-
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 91cc139..588c8ed 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -981,7 +981,7 @@ void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
- 		if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
- 		    (gl_bt_coexist.board_info.btdm_ant_num == 1))
- 			gl_bt_coexist.board_info.btdm_ant_pos =
--						       BTC_ANTENNA_AT_MAIN_PORT;
-+						       BTC_ANTENNA_AT_AUX_PORT;
- 		else
- 			gl_bt_coexist.board_info.btdm_ant_pos =
- 						       BTC_ANTENNA_AT_MAIN_PORT;
--- 
-2.1.4
+cqm_rssi_high
