@@ -1,38 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:33913 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753586AbcKURYO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37370 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935089AbcKWNzB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 12:24:14 -0500
-Received: by mail-pg0-f42.google.com with SMTP id x23so129655095pgx.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 09:24:14 -0800 (PST)
-Date: Mon, 21 Nov 2016 09:24:10 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com, Shengzhen Li <szli@marvell.com>
-Subject: Re: [PATCH v3 01/11] mwifiex: check tx_hw_pending before downloading
- sleep confirm
-Message-ID: <20161121172409.GA144604@google.com> (sfid-20161121_182417_975187_36EB26F7)
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
- <20161114194049.GA131593@google.com>
- <877f82mg7s.fsf@kamboji.qca.qualcomm.com>
+        Wed, 23 Nov 2016 08:55:01 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <877f82mg7s.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: [2/4] ath10k: implement offset_tsf ieee80211_op
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160928235631.9197-3-twp@qca.qualcomm.com>
+References: <20160928235631.9197-3-twp@qca.qualcomm.com>
+To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
+CC: ath10k <ath10k@lists.infradead.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <5d001697eeb847e887d282d63af3cd40@euamsexm01a.eu.qualcomm.com> (sfid-20161123_145505_222316_2B6E9CE3)
+Date: Wed, 23 Nov 2016 14:54:54 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 02:41:11PM +0200, Kalle Valo wrote:
-> Patchwork link for the same:
+"Pedersen, Thomas" <twp@qca.qualcomm.com> wrote:
+> Current set_tsf is implemented in terms of TSF_INCREMENT
+> only. Instead support new WMI command TSF_DECREMENT and
+> export these through offset_tsf. Advantage is we get
+> more accurate TSF adjustments, and don't calculate wrong
+> offset in case absolute TSF was calculated from rx_mactime
+> (actual TSF).
 > 
-> https://patchwork.kernel.org/project/linux-wireless/list/?state=2&q=mwifiex
+> The new WMI command is available in firmware
+> 10.4-3.2.1-00033 for QCA4019 chips. Old drivers on new
+> firmware or vice versa shouldn't  be a problem since
+> get/set tsf logic was already broken.
 > 
-> Does that look ok?
+> Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
 
-FWIW, your merges (since you made the above comments) look sane to me.
-Thanks!
+2 patches applied to ath-next branch of ath.git, thanks.
 
-Brian
+973324fff154 ath10k: implement offset_tsf ieee80211_op
+f6f64cfb966d ath10k: remove set/get_tsf ieee80211_ops
+
+-- 
+https://patchwork.kernel.org/patch/9355377/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
