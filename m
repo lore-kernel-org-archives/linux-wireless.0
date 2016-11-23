@@ -1,85 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:35655 "EHLO
-        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751522AbcKNNXt (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:52755 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934314AbcKWK1E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 08:23:49 -0500
-Received: by mail-lf0-f43.google.com with SMTP id b14so57966116lfg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 05:23:47 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: fix null deref on wmi-tlv when trying spectral scan
-Date: Mon, 14 Nov 2016 14:25:23 +0100
-Message-Id: <1479129923-11083-1-git-send-email-michal.kazior@tieto.com> (sfid-20161114_142434_380890_F6A14A29)
+        Wed, 23 Nov 2016 05:27:04 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 12/12] brcmfmac: fix scheduled scan result handling for newer chips
+Date: Wed, 23 Nov 2016 10:25:31 +0000
+Message-Id: <1479896731-5091-13-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_112731_402756_8449C93A)
+In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMI ops wrappers did not properly check for null
-function pointers for spectral scan. This caused
-null dereference crash with WMI-TLV based firmware
-which doesn't implement spectral scan.
+The scan results for scheduled scan as retrieved from the device
+have changed. A field has been added which is not needed. However,
+the appended info is. Luckily they are versioned so check that to
+find out the location of the appended data.
 
-The crash could be triggered with:
-
-  ip link set dev wlan0 up
-  echo background > /sys/kernel/debug/ieee80211/phy0/ath10k/spectral_scan_ctl
-
-The crash looked like this:
-
-  [  168.031989] BUG: unable to handle kernel NULL pointer dereference at           (null)
-  [  168.037406] IP: [<          (null)>]           (null)
-  [  168.040395] PGD cdd4067 PUD fa0f067 PMD 0
-  [  168.043303] Oops: 0010 [#1] SMP
-  [  168.045377] Modules linked in: ath10k_pci(O) ath10k_core(O) ath mac80211 cfg80211 [last unloaded: cfg80211]
-  [  168.051560] CPU: 1 PID: 1380 Comm: bash Tainted: G        W  O    4.8.0 #78
-  [  168.054336] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.7.5-20140531_083030-gandalf 04/01/2014
-  [  168.059183] task: ffff88000c460c00 task.stack: ffff88000d4bc000
-  [  168.061736] RIP: 0010:[<0000000000000000>]  [<          (null)>]           (null)
-  ...
-  [  168.100620] Call Trace:
-  [  168.101910]  [<ffffffffa03b9566>] ? ath10k_spectral_scan_config+0x96/0x200 [ath10k_core]
-  [  168.104871]  [<ffffffff811386e2>] ? filemap_fault+0xb2/0x4a0
-  [  168.106696]  [<ffffffffa03b97e6>] write_file_spec_scan_ctl+0x116/0x280 [ath10k_core]
-  [  168.109618]  [<ffffffff812da3a1>] full_proxy_write+0x51/0x80
-  [  168.111443]  [<ffffffff811957b8>] __vfs_write+0x28/0x120
-  [  168.113090]  [<ffffffff812f1a2d>] ? security_file_permission+0x3d/0xc0
-  [  168.114932]  [<ffffffff8109b912>] ? percpu_down_read+0x12/0x60
-  [  168.116680]  [<ffffffff811965f8>] vfs_write+0xb8/0x1a0
-  [  168.118293]  [<ffffffff81197966>] SyS_write+0x46/0xa0
-  [  168.119912]  [<ffffffff818f2972>] entry_SYSCALL_64_fastpath+0x1a/0xa4
-  [  168.121737] Code:  Bad RIP value.
-  [  168.123318] RIP  [<          (null)>]           (null)
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 24 +++++++++++++++++++++-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  7 +++++++
+ 2 files changed, 30 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-index c9a8bb1186f2..c7956e181f80 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
-@@ -660,6 +660,9 @@ ath10k_wmi_vdev_spectral_conf(struct ath10k *ar,
- 	struct sk_buff *skb;
- 	u32 cmd_id;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 38b1563..23795f4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3257,6 +3257,28 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
+ 	return 0;
+ }
  
-+	if (!ar->wmi.ops->gen_vdev_spectral_conf)
-+		return -EOPNOTSUPP;
++static struct brcmf_pno_net_info_le *
++brcmf_get_netinfo_array(struct brcmf_pno_scanresults_le *pfn_v1)
++{
++	struct brcmf_pno_scanresults_v2_le *pfn_v2;
++	struct brcmf_pno_net_info_le *netinfo;
 +
- 	skb = ar->wmi.ops->gen_vdev_spectral_conf(ar, arg);
- 	if (IS_ERR(skb))
- 		return PTR_ERR(skb);
-@@ -675,6 +678,9 @@ ath10k_wmi_vdev_spectral_enable(struct ath10k *ar, u32 vdev_id, u32 trigger,
- 	struct sk_buff *skb;
- 	u32 cmd_id;
++	switch (pfn_v1->version) {
++	default:
++		WARN_ON(1);
++		/* fall-thru */
++	case cpu_to_le32(1):
++		netinfo = (struct brcmf_pno_net_info_le *)(pfn_v1 + 1);
++		break;
++	case cpu_to_le32(2):
++		pfn_v2 = (struct brcmf_pno_scanresults_v2_le *)pfn_v1;
++		netinfo = (struct brcmf_pno_net_info_le *)(pfn_v2 + 1);
++		break;
++	}
++
++	return netinfo;
++}
++
+ /* PFN result doesn't have all the info which are required by the supplicant
+  * (For e.g IEs) Do a target Escan so that sched scan results are reported
+  * via wl_inform_single_bss in the required format. Escan does require the
+@@ -3309,7 +3331,7 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
+ 	}
  
-+	if (!ar->wmi.ops->gen_vdev_spectral_enable)
-+		return -EOPNOTSUPP;
+ 	data += sizeof(struct brcmf_pno_scanresults_le);
+-	netinfo_start = (struct brcmf_pno_net_info_le *)data;
++	netinfo_start = brcmf_get_netinfo_array(pfn_result);
+ 
+ 	for (i = 0; i < result_count; i++) {
+ 		netinfo = &netinfo_start[i];
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 64aed2d..9a1eb5a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -785,6 +785,13 @@ struct brcmf_pno_scanresults_le {
+ 	__le32 count;
+ };
+ 
++struct brcmf_pno_scanresults_v2_le {
++	__le32 version;
++	__le32 status;
++	__le32 count;
++	__le32 scan_ch_bucket;
++};
 +
- 	skb = ar->wmi.ops->gen_vdev_spectral_enable(ar, vdev_id, trigger,
- 						    enable);
- 	if (IS_ERR(skb))
+ /**
+  * struct brcmf_pno_macaddr_le - to configure PNO macaddr randomization.
+  *
 -- 
-2.1.4
+1.9.1
