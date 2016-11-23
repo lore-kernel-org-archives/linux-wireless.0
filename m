@@ -1,42 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33226 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758401AbcKCPn3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37206 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933945AbcKWPrz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 11:43:29 -0400
-Subject: Re: [PATCH 2/2] rtl8xxxu: Fix for bogus data used to determine
- macpower
-To: Joe Perches <joe@perches.com>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        John Heenan <john@zgus.com>
-References: <cover.1477769750.git.john@zgus.com> <20161030102112.GA5789@cube>
- <wrfjpomidp1v.fsf@redhat.com>
- <CAAye0QN0s1S25tDPNWdM6fsVNaO-wLuSy_RoOSoXeuSMeD4oNA@mail.gmail.com>
- <wrfjzillsan3.fsf@redhat.com> <1478162497.1924.16.camel@perches.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <73535909-c15e-a8c1-00e3-02b490ab2b1a@lwfinger.net> (sfid-20161103_164353_273994_8FEBE7DF)
-Date: Thu, 3 Nov 2016 10:43:27 -0500
+        Wed, 23 Nov 2016 10:47:55 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1478162497.1924.16.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: brcmsmac: fix array out-of-bounds access in qm_log10
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
+References: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
+To: Tobias Regnery <tobias.regnery@gmail.com>
+Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Tobias Regnery <tobias.regnery@gmail.com>
+Message-Id: <20161123154754.B7C8C612EE@smtp.codeaurora.org> (sfid-20161123_164800_155227_FECE0246)
+Date: Wed, 23 Nov 2016 15:47:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/03/2016 03:41 AM, Joe Perches wrote:
-> On Sun, 2016-10-30 at 19:02 -0400, Jes Sorensen wrote:
->> Code is 80 characters wide, and comments are /* */ never the ugly C++
->> crap.
->
-> You might look at the recent Linus Torvalds authored commit
-> 5e467652ffef (?printk: re-organize log_output() to be more legible")
-> which does both of those: c99 // comments and > 80 columns.
->
-> Absolutes are for zealots.
+Tobias Regnery <tobias.regnery@gmail.com> wrote:
+> I get the following UBSAN warning during boot on my laptop:
+> 
+> ================================================================================
+> UBSAN: Undefined behaviour in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c:280:21
+> index 32 is out of range for type 's16 [32]'
+> CPU: 0 PID: 879 Comm: NetworkManager Not tainted 4.9.0-rc4 #28
+> Hardware name: LENOVO Lenovo IdeaPad N581/INVALID, BIOS 5ECN96WW(V9.01) 03/14/2013
+> ffff8800b74a6478 ffffffff828e59d2 0000000041b58ab3 ffffffff8398330c
+> ffffffff828e5920 ffff8800b74a64a0 ffff8800b74a6450 0000000000000020
+> 1ffffffff845848c ffffed0016e94bf1 ffffffffc22c2460 000000006b9c0514
+> Call Trace:
+> [<ffffffff828e59d2>] dump_stack+0xb2/0x110
+> [<ffffffff828e5920>] ? _atomic_dec_and_lock+0x150/0x150
+> [<ffffffff82968c9d>] ubsan_epilogue+0xd/0x4e
+> [<ffffffff82969875>] __ubsan_handle_out_of_bounds+0xfa/0x13e
+> [<ffffffff8296977b>] ? __ubsan_handle_shift_out_of_bounds+0x241/0x241
+> [<ffffffffc0d48379>] ? bcma_host_pci_read16+0x59/0xa0 [bcma]
+> [<ffffffffc0d48388>] ? bcma_host_pci_read16+0x68/0xa0 [bcma]
+> [<ffffffffc212ad78>] ? read_phy_reg+0xe8/0x180 [brcmsmac]
+> [<ffffffffc2184714>] qm_log10+0x2e4/0x350 [brcmsmac]
+> [<ffffffffc2142eb8>] wlc_phy_init_lcnphy+0x538/0x1f20 [brcmsmac]
+> [<ffffffffc2142980>] ? wlc_lcnphy_periodic_cal+0x5c0/0x5c0 [brcmsmac]
+> [<ffffffffc1ba0c93>] ? ieee80211_open+0xb3/0x110 [mac80211]
+> [<ffffffff82f73a02>] ? sk_busy_loop+0x1e2/0x840
+> [<ffffffff82f7a6ce>] ? __dev_change_flags+0xae/0x220
+> ...
+> 
+> The report is valid: doing the math in this function, with an input value
+> N=63 the variable s16tableIndex gets a value of 31. This value is used as
+> an index in the array log_table with 32 entries. But the next line is:
+> 
+> 	s16errorApproximation = (s16) qm_mulu16(u16offset,
+> 				(u16) (log_table[s16tableIndex + 1] -
+> 				       log_table[s16tableIndex]));
+> 
+> With s16tableIndex + 1 we are trying an out-of-bounds access to the array.
+> 
+> The log_table array provides log2 values in q.15 format and the above
+> statement tries an error approximation with the next value. To fix this
+> issue add the next value to the array and update the comment accordingly.
+> 
+> Signed-off-by: Tobias Regnery <tobias.regnery@gmail.com>
 
-Of course, but who is going to criticize Linus? I have gently chided him when an 
-untested patch of his was inserted just before the final release, and broke my 
-laptop. At least the bisection was pretty quick. :)
+A note to myself: this patch seems to be corrupted in patchwork web interface,
+need to check that when commiting the formatting is ok.
 
-Larry
+-- 
+https://patchwork.kernel.org/patch/9439423/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
