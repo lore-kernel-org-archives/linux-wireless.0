@@ -1,38 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:35056 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752075AbcKULTV (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33033 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932909AbcKWWXj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 06:19:21 -0500
-Received: by mail-pg0-f50.google.com with SMTP id p66so129688510pga.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 03:19:21 -0800 (PST)
-To: Johannes Berg <johannes.berg@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: scheduled scan interval
-Message-ID: <bc071499-a8ef-2b0b-bfb7-42c96f1d369c@broadcom.com> (sfid-20161121_121925_232061_A6D5C8A4)
-Date: Mon, 21 Nov 2016 12:19:16 +0100
+        Wed, 23 Nov 2016 17:23:39 -0500
+Date: Wed, 23 Nov 2016 23:23:35 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: wl1251 & mac address & calibration data
+Message-ID: <20161123222335.GA4788@amd> (sfid-20161123_232402_768932_C4932B19)
+References: <201611111820.52072@pali>
+ <20161122153141.GT13735@pali>
+ <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com>
+ <201611221805.13606@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
+In-Reply-To: <201611221805.13606@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes, Luca,
 
-The gscan work made me look at scheduled scan and the implementation of
-it in brcmfmac. The driver ignored the interval parameter from
-user-space. Now I am fixing that. One thing is that our firmware has a
-minimum interval which can not be indicated in struct wiphy. The other
-issue is how the maximum interval is used in the nl80211.c.
+--ZGiS0Q5IWpPtfppv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-In nl80211_parse_sched_scan_plans() it is used against value passed in
-NL80211_ATTR_SCHED_SCAN_INTERVAL and NL80211_SCHED_SCAN_PLAN_INTERVAL.
-For the first one it caps the value to the maximum, but for the second
-one it returns -EINVAL. I suspect this is done because maximum interval
-was introduced with schedule scan plans, but it feels inconsistent.
+Hi!
 
-Thoughts?
+> > > As wl1251.ko does not accept mac_address as module parameter, such
+> > > modprobe hook does not help -- as there is absolutely no way from
+> > > userspace to set or change (permanent) mac address.
+> >=20
+> > Quoting modprobe.d manual:
+> > >       install modulename command...
+> > >      =20
+> > >           This command instructs modprobe to run your
+> > >           command instead of inserting the module in the
+> > >           kernel as normal. The command can be any shell
+> > >           command: this allows you to do any kind of
+> > >           complex processing you might wish. [...]
+>=20
+> I know. But this do not allow me to send mac address to kernel -- as=20
+> kernel does not support such command yet (reason for my first
+> question).
 
-Regards,
-Arend
+Plus, this does not really work for cases where wl1251 is not a
+module.
+
+> > You can hook up a script that cooks up wl1251-nvs.bin (caldata,
+> > macaddr) and then insmod the actual wl1251.ko module. Or you can just
+> > cook up the nvs on first device boot and store it in /lib/firmware
+> > (possibly overwriting the "generic" wl1251 from linux-firmware).
+>=20
+> This is what I would like to prevent -- overwriting (possible readonly)=
+=20
+> system files with some device specific. It is really bad idea!
+
+Agreed.
+
+"ifconfig hw ether XX" normally sets the address. I guess that's
+ioctl? And I guess we should use similar mechanism for permanent
+address.
+
+Best regards,
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--ZGiS0Q5IWpPtfppv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlg2FucACgkQMOfwapXb+vIcGACgjENv4xLN8EJGdCGycJou4Gzd
+U6QAn0XrkW6/p2NecQtidQwEX5Rs0lYL
+=o1Xt
+-----END PGP SIGNATURE-----
+
+--ZGiS0Q5IWpPtfppv--
