@@ -1,90 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35588 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932297AbcKNQf0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:35:26 -0500
-Received: by mail-lf0-f68.google.com with SMTP id p100so7512449lfg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:25 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 00/12] ath10k sdio support
-Date: Mon, 14 Nov 2016 17:33:30 +0100
-Message-Id: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173536_875382_03748614)
+Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:10941
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932792AbcKWQqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Nov 2016 11:46:18 -0500
+From: <igor.mitsyanko.os@quantenna.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Subject: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+Date: Wed, 23 Nov 2016 19:45:47 +0300
+Message-ID: <1479919547-26628-1-git-send-email-igor.mitsyanko.os@quantenna.com> (sfid-20161123_174628_255598_404C7DB2)
+MIME-Version: 1.0
+In-Reply-To: <87d1hmnrqj.fsf@purkki.adurom.net>
+References: <87d1hmnrqj.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds sdio support to ath10k.
+From: Igor Mitsyanko <imitsyanko@quantenna.com>
 
-Some of the patches affect the existing pcie/ahb code as well.
-Those are patches 3 and 4 in the series.
+QSR10G is Quantenna's 8x8, 160M, 11ac WiFi card.
 
-Overview:
-A new HIF layer: sdio/mailbox.
-The current HIF ops are unaltered even though some ops
-are not applicable for sdio.
+Signed-off-by: Kamlesh Rath <krath@quantenna.com>
+Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
+Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+---
+ LICENCE.Quantenna_fmac |  74 +++++++++++++++++++++++++++++++++++++++++++++++++
+ WHENCE                 |   9 ++++++
+ qtn/fmac_qsr10g.img    | Bin 0 -> 9559676 bytes
+ 3 files changed, 83 insertions(+)
+ create mode 100644 LICENCE.Quantenna_fmac
+ create mode 100644 qtn/fmac_qsr10g.img
 
-The HTC layer has only suffered minor modifications:
-- A few new functions for handling the mailbox specific
-  RX trailers (lookahead reports)
-- Some minor refactorization of the existing code
-  (patches 3 and 4)
-
-This is not included in this patch series:
-
-- HTT High latency RX and TX support
-- Full integration in core.c
-
-The following basic tests have been made so far:
-
-BMI fw load and firmware startup (all the steps in ath10k_core_start).
-This means:
-
-- HTT service connect
-- WMI control service connect
-- WMI unified init
-
-The above mentioned bullets where verified with a QCA6584 chipset.
-
-I have not been able to test the patch series together with
-ath10k pcie hardware, but I will do so as soon as I can get
-my hands on some hardware.
-
-The patches have been built and tested against the ath tree:
-git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git
-branch/tag: master/ath-201611090123
-
-Erik Stromdahl (12):
-  ath10k: htc: made static function public
-  ath10k: htc: rx trailer lookahead support
-  ath10k: htc: Changed order of wait target and ep connect
-  ath10k: htc: refactorization
-  ath10k: htc: Added ATH10K_HTC_FLAG_BUNDLE_LSB
-  ath10k: bmi: Added SOC reg read/write functions
-  ath10k: Added SDIO dbg masks
-  ath10k: Added ATH10K_BUS_SDIO enum
-  ath10k: Mailbox address definitions
-  ath10k: Added QCA65XX hw definition
-  ath10k: Added more host_interest members
-  ath10k: Added sdio support
-
- drivers/net/wireless/ath/ath10k/Kconfig     |    6 +
- drivers/net/wireless/ath/ath10k/Makefile    |    3 +
- drivers/net/wireless/ath/ath10k/bmi.c       |   79 +-
- drivers/net/wireless/ath/ath10k/bmi.h       |    4 +
- drivers/net/wireless/ath/ath10k/core.h      |    3 +
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +
- drivers/net/wireless/ath/ath10k/htc.c       |  208 ++-
- drivers/net/wireless/ath/ath10k/htc.h       |   36 +-
- drivers/net/wireless/ath/ath10k/hw.h        |   54 +
- drivers/net/wireless/ath/ath10k/sdio.c      | 1855 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/sdio.h      |  276 ++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 +
- 12 files changed, 2484 insertions(+), 66 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
-
+diff --git a/LICENCE.Quantenna_fmac b/LICENCE.Quantenna_fmac
+new file mode 100644
+index 0000000..e6f9f72
+--- /dev/null
++++ b/LICENCE.Quantenna_fmac
+@@ -0,0 +1,74 @@
++Copyright (c) 2016, Quantenna, Inc.
++All rights reserved.
++
++Redistribution. Reproduction and redistribution in binary form, without
++modification, for use solely in conjunction with a Quantenna, Inc. chipset, is
++permitted provided that the following conditions are met:
++
++  - Redistributions must reproduce the above copyright notice and the
++    following disclaimer in the documentation and/or other materials provided
++    with the distribution.
++
++  - Neither the name of Quantenna, Inc. nor the names of its suppliers may be
++    used to endorse or promote products derived from this Software without
++    specific prior written permission.
++
++  - No reverse engineering, decompilation, or disassembly of this Software is
++    permitted, except and solely to the extent that such a restriction is
++    impermissible pursuant to applicable law or third party license.
++
++  - Your reproduction and distribution must comply with all applicable laws,
++    including without limitation all applicable U.S., European, and other
++    export laws.
++
++Limited Patent License. Subject to your compliance with all terms of this
++license, Quantenna, Inc. (“Licensor”) grants you (“Licensee”) a limited,
++worldwide, royalty-free, non-exclusive license under the Licensed Patents to
++make, have made, use, import, offer to sell and sell the Software solely in
++conjunction with a validly purchased Quantenna, Inc. chipset. No hardware
++per se is licensed hereunder.
++
++The term “Licensed Patents” as used in this agreement means only those patents
++or patent applications owned solely and exclusively by Licensor as of the date
++of Licensor’s submission of the Software that would necessarily be infringed by
++the operation of the Software, alone, or in combination with a supported
++version of the Linux operating system. The patent license shall not apply to
++any other combinations which include the Software. The term “Licensed Patents”
++expressly excludes any patent or patent application owned by any current or
++future affiliate of Quantenna, Inc. The term “Software” as used in this
++agreement means the unmodified firmware image submitted by Licensor, under the
++terms of this license, to
++git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git.
++
++Notwithstanding anything to the contrary herein, Licensor does not grant and
++Licensee does not receive, by virtue of this agreement or the Licensor’s
++submission of any Software, any license or other rights under any patent or
++patent application owned by any current or future affiliate of Licensor or any
++other entity (other than Licensor), whether expressly, impliedly, by virtue of
++estoppel or exhaustion, or otherwise. If Licensee has a separate agreement with
++Licensor covering use of the Software, then that separate agreement shall
++control.
++
++Open Source Software. The Software may include components that are licensed
++pursuant to open source software (“Open Source Components”). Information
++regarding the Open Source Components included with the Software is available
++upon request to oslegal@quantenna.com. To the extent such Open Source
++Components are required to be licensed to you under the terms of a separate
++license (such as an open source license) then such other terms shall apply, and
++nothing herein shall be deemed or interpreted to limit any rights you may have
++under any such applicable license.
++
++DISCLAIMER. THIS SOFTWARE (INCLUDING ANY APPLICABLE OPEN SOURCE COMPONENTS) IS
++PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND  ANY EXPRESS OR
++IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
++MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFREINGEMENT ARE
++EXPRESSLY DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNERS, AUTHORS, OR
++CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
++OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
++IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
++OF SUCH DAMAGE, AND REGARDLESS OF ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
++LIMITED REMEDY PROVIDED HEREIN.
++
+diff --git a/WHENCE b/WHENCE
+index 534c2da..78f6b73 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -3347,3 +3347,12 @@ File: rockchip/dptx.bin
+ Version: 2.9
+ 
+ Licence: Redistributable. See LICENCE.rockchip for details.
++
++--------------------------------------------------------------------------
++
++Driver: qtnfmac - FullMAC driver for Quantenna QSR10G wireless card
++
++File: qtn/fmac_qsr10g.img
++
++Licence: Redistributable. See LICENCE.Quantenna_fmac for details.
++
+diff --git a/qtn/fmac_qsr10g.img b/qtn/fmac_qsr10g.img
+new file mode 100644
+index 0000000..a65e6ec
+Binary files /dev/null and b/qtn/fmac_qsr10g.img differ
 -- 
-1.7.9.5
+2.7.4
