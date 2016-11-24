@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:34030 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966199AbcKOGHF (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34822 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754726AbcKXEp3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 01:07:05 -0500
-Received: by mail-pg0-f42.google.com with SMTP id x23so60152988pgx.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 22:07:05 -0800 (PST)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, Andy Gross <andy.gross@linaro.org>
-Subject: [PATCH v5 5/5] wcn36xx: Don't use the destroyed hal_mutex
-Date: Mon, 14 Nov 2016 22:06:54 -0800
-Message-Id: <1479190014-11297-5-git-send-email-bjorn.andersson@linaro.org> (sfid-20161115_070727_669454_57361AF5)
-In-Reply-To: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
+        Wed, 23 Nov 2016 23:45:29 -0500
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 20:45:23 -0800
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+        David Spinadel <david.spinadel@intel.com>,
+        Alexander Bondar <alexander.bondar@intel.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/4] Fix -Wunused-but-set-variable in net/mac80211/
+Message-ID: <cover.1479962513.git.kirtika@chromium.org> (sfid-20161124_054535_974361_648CC55D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_unregister_hw() might invoke operations to stop the interface,
-that uses the hal_mutex. So don't destroy it until after we're done
-using it.
+This patchset is part of the effort led by Arnd Bergmann to clean up
+warnings in the kernel. This and following patchsets will focus on
+"-Wunused-but-set-variable" as it among the noisier ones. These were
+found compiling with W=1.
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+Kirtika Ruchandani (4):
+  mac80211: Removed unused 'i' variable
+  mac80211: Remove unused 'len' variable
+  mac80211: Removed unused 'struct ieee80211_supported_band*' variable
+  mac80211: Remove unused 'beaconint_us' variable
 
-With this patch I can successfully (although with a SMD send timeout in the
-shutdown path) start and stop the WCNSS PIL/remoteproc multiple times and the
-wlan0 interface will come and go accordingly.
+ net/mac80211/chan.c | 4 +---
+ net/mac80211/mlme.c | 4 ----
+ net/mac80211/scan.c | 8 +++-----
+ net/mac80211/vht.c  | 4 ----
+ 4 files changed, 4 insertions(+), 16 deletions(-)
 
-Will submit the necessary DT patches soon as well.
-
-Changes since v4:
-- New patch
-
- drivers/net/wireless/ath/wcn36xx/main.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 96a9584edcbb..0002190c9041 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1241,7 +1241,6 @@ static int wcn36xx_remove(struct platform_device *pdev)
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "platform remove\n");
- 
- 	release_firmware(wcn->nv);
--	mutex_destroy(&wcn->hal_mutex);
- 
- 	ieee80211_unregister_hw(hw);
- 
-@@ -1250,6 +1249,8 @@ static int wcn36xx_remove(struct platform_device *pdev)
- 
- 	iounmap(wcn->dxe_base);
- 	iounmap(wcn->ccu_base);
-+
-+	mutex_destroy(&wcn->hal_mutex);
- 	ieee80211_free_hw(hw);
- 
- 	return 0;
 -- 
-2.5.0
+2.8.0.rc3.226.g39d4020
