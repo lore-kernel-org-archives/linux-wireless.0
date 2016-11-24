@@ -1,82 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:49440 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S932343AbcKNIMz (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:39734 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755197AbcKXHzl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 03:12:55 -0500
-Message-ID: <1479109023.2561.6.camel@coelho.fi> (sfid-20161114_091259_164944_B90773C7)
-From: Luca Coelho <luca@coelho.fi>
-To: Gary Bisson <gary.bisson@boundarydevices.com>,
-        linux-firmware@kernel.org, Maxim Altshul <maxim.altshul@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 14 Nov 2016 09:37:03 +0200
-In-Reply-To: <CAAMH-yvdCMMqMc5HBGtPTEYFS5s48hyRaBtQdEiM-GCDwbFcrA@mail.gmail.com>
-References: <CAAMH-ytch0sbtjfp8rjUCNbEkj4euBES7a4n9niS1DtMZk2EKA@mail.gmail.com>
-         <CAAMH-yvdCMMqMc5HBGtPTEYFS5s48hyRaBtQdEiM-GCDwbFcrA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Outdated wl12xx firmwares
+        Thu, 24 Nov 2016 02:55:41 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+CC: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Nishant Sarmukadam" <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v2 0/7] Fix -Wunused-but-set-variable in mwifiex/
+Date: Thu, 24 Nov 2016 07:44:58 +0000
+Message-ID: <cf27dd85b1ed4ea2a5c1f5e288f49470@SC-EXCH04.marvell.com> (sfid-20161124_085544_484436_8458517E)
+References: <cover.1479950323.git.kirtika@google.com>
+In-Reply-To: <cover.1479950323.git.kirtika@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I'm CCing Maxim, since he seems to be the last developer from TI to
-post patches for the WiLink drivers here.
-
-
-On Thu, 2016-10-27 at 12:45 +0200, Gary Bisson wrote:
-> Hi,
+> From: Kirtika Ruchandani [mailto:kirtika.ruchandani@gmail.com]
+> Sent: Thursday, November 24, 2016 6:54 AM
+> To: Amitkumar Karwar
+> Cc: Arnd Bergmann; Kalle Valo; linux-wireless@vger.kernel.org; Nishant
+> Sarmukadam; Zhaoyang Liu; Bing Zhao; Xinming Hu; Avinash Patil
+> Subject: [PATCH v2 0/7] Fix -Wunused-but-set-variable in mwifiex/
 > 
-> Adding linux-wireless in CC, hoping to get more traction.
+> This patchset is part of the effort led by Arnd Bergmann to clean up
+> warnings in the kernel. This and following patchsets will focus on "-
+> Wunused-but-set-variable" as it among the noisier ones. These were
+> found compiling with W=1.
 > 
-> Just checked the MAINTAINERS file of this driver and it is listed as
-> 'Orphan', so is it ok if a non-TI person submits the up-to-date
-> firmware files?
-
-AFAICT, the license text in the github repository you pointed to is not
-exactly the same as the one in linux-firmware.git.  So, not being a
-lawyer, I don't know how you could handle that, since the license in
-github explicitly says that you need to reproduce that license.
-
-
-> Regards,
-> Gary
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
 > 
-> On Fri, Oct 14, 2016 at 7:32 PM, Gary Bisson
-> <gary.bisson@boundarydevices.com> wrote:
-> > Hi,
-> > 
-> > I am wondering why the w127x and wl128x firmware files have not been
-> > updated to their latest version (since Jan 2014)?
-> > 
-> > The current version in the linux-firmware repo are:
-> > - 6.3.10.0.133 for single-role
-> > - 6.5.7.0.42 for multi-role
-> > 
-> > Looking at TI's forum[1], they recommend using the latest one to avoid
-> > issues like firmware reload:
-> > - 6.3.10.0.139 for single-role
-> > - 6.5.7.0.47 for multi-role
-> > 
-> > The up-to-date firmware files can be found in the following repo:
-> > https://github.com/TI-OpenLink/ti-utils/tree/master/hw/firmware
-> > 
-> > What is the procedure to update them, does it need to be a TI employee
-> > that sends the patch? The former wl12xx maintainer (Luciano Coelho)
-> > seems to work for Intel now.
+> ---
+> Changes in v2:
+> - Reapplied patches on top of wireless-drivers-next.
+> - Patch 5/7 ("mwifiex: Remove unused 'pm_flag' variable") had to be
+>   redone slightly. The others applied cleanly with 'patch -p1'.
+> 
+> Kirtika Ruchandani (7):
+>   mwifiex: Removed unused mwifiex_private* 'priv' variable
+>   mwifiex: Remove unused  'chan_num' variable
+>   mwifiex: Remove unused 'sta_ptr' variable
+>   mwifiex: Remove unused 'adapter'variable
+>   mwifiex: Remove unused 'pm_flag' variable
+>   mwifiex: Removed unused 'pkt_type' variable
+>   mwifiex: Remove unused 'bcd_usb' variable
+> 
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 --
+>  drivers/net/wireless/marvell/mwifiex/main.c     | 3 ---
+>  drivers/net/wireless/marvell/mwifiex/scan.c     | 8 +++-----
+>  drivers/net/wireless/marvell/mwifiex/sdio.c     | 5 -----
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c  | 2 --
+>  drivers/net/wireless/marvell/mwifiex/usb.c      | 3 +--
+>  6 files changed, 4 insertions(+), 19 deletions(-)
+> 
+> --
 
-Right, I'm not working for TI anymore, so there's nothing that I can do
-for you.  If I were you, I'd keep poking at current TI developers to
-see if they can send these new FW versions to linux-firmware.git.  They
-probably even have newer versions than the ones published in github.
+Thanks for this cleanup work.
+Patch series looks fine to me.
 
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-> > Regards,
-> > Gary
-> > 
-> > [1] https://e2e.ti.com/support/wireless_connectivity/wilink_wifi_bluetooth/f/307/p/350832/1236099#1236099
-
-
---
-Cheers,
-Luca.
+Regards,
+Amitkumar
