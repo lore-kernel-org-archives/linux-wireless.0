@@ -1,65 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37306 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752452AbcKUJLC (ORCPT
+Received: from pmta2.delivery5.ore.mailhop.org ([54.186.218.12]:18645 "EHLO
+        pmta2.delivery5.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S964853AbcKXM2b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 04:11:02 -0500
-Received: by mail-wm0-f50.google.com with SMTP id t79so132063296wmt.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Nov 2016 01:11:02 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
-To: Ferry Huberts <mailings@hupie.com>
-Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com,
-        Simon Wunderlich <simon.wunderlich@open-mesh.com>
-Subject: Re: [ath9k-devel] [RFC v2 2/2] ath9k: Reset chip on potential deaf state
-Date: Mon, 21 Nov 2016 10:10:59 +0100
-Message-ID: <2358985.PI5q6nxgha@bentobox> (sfid-20161121_101106_171187_3C45F212)
-In-Reply-To: <d23407cb-a1c0-860a-3436-5e72402a080b@hupie.com>
-References: <20161117083614.19188-1-sven.eckelmann@open-mesh.com> <20161117083614.19188-2-sven.eckelmann@open-mesh.com> <d23407cb-a1c0-860a-3436-5e72402a080b@hupie.com>
+        Thu, 24 Nov 2016 07:28:31 -0500
+Date: Thu, 24 Nov 2016 12:28:24 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: miaoqing@codeaurora.org
+Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
+        linux-wireless@vger.kernel.org,
+        Linux ARM Kernel <linux-arm-kernel@lists.infradead.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        ath9k-devel@lists.ath9k.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Gregory CLEMENT <gregory.clement@free-electrons.com>,
+        Kalle Valo <kvalo@codeaurora.org>, Andrew Lunn <andrew@lunn.ch>
+Subject: Re: ath9k ARMv7 OOPS in v4.8.6, v4.2.8
+Message-ID: <20161124122824.GL2799@io.lakedaemon.net> (sfid-20161124_132855_249918_800AE712)
+References: <20161123191539.GF2799@io.lakedaemon.net>
+ <20161123195120.GE14217@n2100.armlinux.org.uk>
+ <20161123205917.GI2799@io.lakedaemon.net>
+ <20161123211745.GF14217@n2100.armlinux.org.uk>
+ <20161123214053.GJ2799@io.lakedaemon.net>
+ <aaba8b1e30dd4c22be52e50befb202b2@aptaiexm02f.ap.qualcomm.com>
+ <7aba95bdf0d562f3c9640d533c33e1ca@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart18973506.RstdKfy8q0"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7aba95bdf0d562f3c9640d533c33e1ca@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart18973506.RstdKfy8q0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-
-On Montag, 21. November 2016 10:07:43 CET Ferry Huberts wrote:
-[...]
-> > v2:
-> >  - reduce amount of possible goto-raptor attacks by one (thanks Kalle Valo)
+On Thu, Nov 24, 2016 at 02:06:57PM +0800, miaoqing@codeaurora.org wrote:
+> 
+> >>Okay, so i was 0, so running UP probably isn't going to help.  r7 is
+> >>also spec_priv->rfs_chan_spec_scan.
+> >>
+> >>So, I think the question is... how is this NULL - and has it always
+> >>been NULL...
 > >
-> > This problem was discovered in mesh setups. It was noticed that some nodes
+> >The problem appears to be that ath_cmn_process_fft() isn't called that
+> >often.  When it is, it crashes in ath_cmn_is_fft_buf_full() because
+> >spec_priv->rfs_chan_spec_scan is NULL when ATH9K_DEBUGFS=n. :-(
+> >
+> >I'm running with ATH9K_DEBUGFS=y now.  If it goes a couple of days
+> >without crashing, I'll gin up a patch.
+> >
 > 
-> 
-> What kind of setup?
-> Using 802.11s?
+> A similar patch was applied to ath-next branch:
+> https://patchwork.kernel.org/patch/9431163/.
 
-Unencrypted IBSS.
+Hmm.  Ok, I'm giving it a spin on my board with SMP=y, ATH9K_DEBUGFS=n
+(so the only change from known crashing is the patch) and we'll see how
+it goes.
 
-Kind regards,
-	Sven
---nextPart18973506.RstdKfy8q0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Honestly, though, I think the real problem is when kernels are built
+without ATH9K_DEBUGFS.  Did the reporter of the crash say if that was
+enabled on his system or not?
 
------BEGIN PGP SIGNATURE-----
+I'm concerned that there may be other code lurking that secretly depends
+on ATH9K_DEBUGFS being enabled.
 
-iQIcBAABCgAGBQJYMrojAAoJEF2HCgfBJntGeFwQALq11OBtpPz6x/XouOj5xOZ0
-9GOGkWS6W+eILCXp9C5naHYFtGiy/3cphCD5DFIY56DCkxGYjUXcPruaukdNM0CS
-mWfSUpgo6XufDbRayMEe+m/Ulp+Q6ss9SmTCl2eVlt5PVcKp5AFOs1Ag3tWbx879
-RrX4Elri6OkGVCtzms+lmAseSAp1Ltza3QtL5S+pQpxbg0G4EOdl5lIxPKDbMin2
-/wdsLV996GTd5WMVk8oib2HP26aqxVKYqk9iIrz+5ED2m+XkqoI8TxnzSYnTCoTJ
-epevZm4+LJK3SulR6K/BZ03lLHs8rcMLAOLsc/Nq/BgvmoU6HC4NiN3iFLbtGhCd
-prBys8rABBbG7yVuxmXmbtGrjHNq6fzFD+Npf3j/jfEjg5NcDwv+V7LBJpzsH2Xt
-XnTyE7NBLj5dt6yp5aH95qK7Nx5/nBLD7+EqmcFS82TQ2mRQU6jlNtksRCfK7PNM
-nJvPO7umCVLYyLDYOcam4tvf3uXeY8omPrvSAf/4qzGhXV6qJKFQ5IrY5cPeqAIi
-pWIw7bURj/hW+dbraYPE4I+9ISpngEk2bjEG3Dd3dELb3qLaJO2QM56gR9fysEo1
-P9DjvOvWaoLhwZUQkvP3BJr/ZFyNyT3N+RiPN1br/ajEcx0IagQTjJKhblJ6hbtM
-cAo+EFz0gsuN6JUcVwB1
-=NbX3
------END PGP SIGNATURE-----
+thx,
 
---nextPart18973506.RstdKfy8q0--
+Jason.
