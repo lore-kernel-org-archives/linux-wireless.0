@@ -1,68 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:64363 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753352AbcKTKgk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 20 Nov 2016 05:36:40 -0500
-From: Oleksij Rempel <linux@rempel-privat.de>
-Subject: open-ath9k-htc-firmware as DFSG debian package
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        ath9k-devel@qca.qualcomm.com,
-        ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-Message-ID: <4096b92e-2e67-0882-7bb5-9e6f4c055b12@rempel-privat.de> (sfid-20161120_113644_529088_D825407C)
-Date: Sun, 20 Nov 2016 11:35:34 +0100
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34335 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934630AbcKXBZk (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 23 Nov 2016 20:25:40 -0500
+Received: by mail-pf0-f194.google.com with SMTP id y68so1177369pfb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:25:39 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 17:25:29 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 3/7] mwifiex: Remove unused 'sta_ptr' variable
+Message-ID: <3d66358c2079a1aa0e756a516f4daa3bc54a62b8.1479950323.git.kirtika@google.com> (sfid-20161124_022550_550643_8CCD80EE)
+References: <cover.1479950323.git.kirtika@google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="cLc9FnroeWUCIw0X0KB1pLSwgJj7H3Fc7"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479950323.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---cLc9FnroeWUCIw0X0KB1pLSwgJj7H3Fc7
-Content-Type: multipart/mixed; boundary="3n4IiAtk2g1XRScgNM44t762L63NrgtMS";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
- ath9k-devel@qca.qualcomm.com, ath9k_htc_fw <ath9k_htc_fw@lists.infradead.org>
-Message-ID: <4096b92e-2e67-0882-7bb5-9e6f4c055b12@rempel-privat.de>
-Subject: open-ath9k-htc-firmware as DFSG debian package
+Commit 429d90d2212b introduced mwifiex_cmd_tdls_oper() which initializes
+struct mwifiex_sta_node* sta_ptr, but does not use it. Compiling with W=1 gives
+the following warning, fix it.
+mwifiex/sta_cmd.c: In function ‘mwifiex_cmd_tdls_oper’:
+mwifiex/sta_cmd.c:1732:27: warning: variable ‘sta_ptr’ set but not used [-Wunused-but-set-variable]
 
---3n4IiAtk2g1XRScgNM44t762L63NrgtMS
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Fixes: 429d90d2212b ("mwifiex: add cfg80211 tdls_oper handler support")
+Cc: Avinash Patil <patila@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Hallo all,
-
-finally we managed to provide debian package for main repository:
-
-https://ftp-master.debian.org/new/open-ath9k-htc-firmware_1.4.0-81-gf206e=
-56+dfsg-1.html
-
-- It is made according Debian Free Software Guideline
-- providing debug and source packages
-- can be build just in the repository
-
-Have fun by using it :)
-Thank to all who helped to make this happening :D
-
---=20
-Regards,
-Oleksij
-
-
---3n4IiAtk2g1XRScgNM44t762L63NrgtMS--
-
---cLc9FnroeWUCIw0X0KB1pLSwgJj7H3Fc7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlgxfIYACgkQHwImuRkmbWlyPAD+MSg33eRFnPU5JyHDWy2MYpll
-P7IAMtm2UTvxLtKX4cwA/3J+YuUj4gFAQzkwPZY0qcQGTucnE+pxZXlqQOOu5u16
-=x0Bf
------END PGP SIGNATURE-----
-
---cLc9FnroeWUCIw0X0KB1pLSwgJj7H3Fc7--
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index bcd6408..768c519 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1746,7 +1746,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ {
+ 	struct host_cmd_ds_tdls_oper *tdls_oper = &cmd->params.tdls_oper;
+ 	struct mwifiex_ds_tdls_oper *oper = data_buf;
+-	struct mwifiex_sta_node *sta_ptr;
+ 	struct host_cmd_tlv_rates *tlv_rates;
+ 	struct mwifiex_ie_types_htcap *ht_capab;
+ 	struct mwifiex_ie_types_qos_info *wmm_qos_info;
+@@ -1764,7 +1763,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
+ 
+ 	tdls_oper->reason = 0;
+ 	memcpy(tdls_oper->peer_mac, oper->peer_mac, ETH_ALEN);
+-	sta_ptr = mwifiex_get_sta_entry(priv, oper->peer_mac);
+ 
+ 	pos = (u8 *)tdls_oper + sizeof(struct host_cmd_ds_tdls_oper);
+ 
+-- 
+2.8.0.rc3.226.g39d4020
