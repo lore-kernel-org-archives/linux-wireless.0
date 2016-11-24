@@ -1,61 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35487 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752320AbcKRIpZ (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35283 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754522AbcKXEpz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 03:45:25 -0500
-Received: by mail-pf0-f195.google.com with SMTP id i88so13155987pfk.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:45:25 -0800 (PST)
+        Wed, 23 Nov 2016 23:45:55 -0500
 From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Fri, 18 Nov 2016 00:45:16 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+Date: Wed, 23 Nov 2016 20:45:49 -0800
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
         linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH 3/7] mwifiex: Remove unused 'sta_ptr' variable
-Message-ID: <a061a166bddcf6cc060594512674934ad2979790.1479458373.git.kirtika@google.com> (sfid-20161118_094530_323091_D8723CBF)
-References: <cover.1479458373.git.kirtika@google.com>
+        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+        David Spinadel <david.spinadel@intel.com>,
+        Alexander Bondar <alexander.bondar@intel.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/4] mac80211: Remove unused 'len' variable
+Message-ID: <dfe71b8260fee9c0fa850ba5fdd29d7d5ca6cb2b.1479962513.git.kirtika@chromium.org> (sfid-20161124_054600_763612_8E4FD568)
+References: <cover.1479962513.git.kirtika@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479458373.git.kirtika@google.com>
+In-Reply-To: <cover.1479962513.git.kirtika@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 429d90d2212b introduced mwifiex_cmd_tdls_oper() which initializes
-struct mwifiex_sta_node* sta_ptr, but does not use it. Compiling with W=1 gives
-the following warning, fix it.
-mwifiex/sta_cmd.c: In function ‘mwifiex_cmd_tdls_oper’:
-mwifiex/sta_cmd.c:1732:27: warning: variable ‘sta_ptr’ set but not used [-Wunused-but-set-variable]
+Commit 633e27132625 (mac80211: split sched scan IEs) introduced the
+len variable to keep track of the return value of
+ieee80211_build_preq_ies() but did not use it. Compiling with W=1
+gives the following warning, fix it.
 
-Fixes: 429d90d2212b ("mwifiex: add cfg80211 tdls_oper handler support")
-Cc: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+net/mac80211/scan.c: In function ‘__ieee80211_request_sched_scan_start’:
+net/mac80211/scan.c:1123:9: warning: variable ‘len’ set but not used [-Wunused-but-set-variable]
+
+This is a harmless warning and is only being fixed to reduce the noise
+with W=1 in the kernel.
+
+Fixes: 633e27132625 ("mac80211: split sched scan IEs")
+Cc: David Spinadel <david.spinadel@intel.com>
+Cc: Alexander Bondar <alexander.bondar@intel.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 2 --
- 1 file changed, 2 deletions(-)
+ net/mac80211/scan.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 2a162c3..d5aa1b7 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1729,7 +1729,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
- {
- 	struct host_cmd_ds_tdls_oper *tdls_oper = &cmd->params.tdls_oper;
- 	struct mwifiex_ds_tdls_oper *oper = data_buf;
--	struct mwifiex_sta_node *sta_ptr;
- 	struct host_cmd_tlv_rates *tlv_rates;
- 	struct mwifiex_ie_types_htcap *ht_capab;
- 	struct mwifiex_ie_types_qos_info *wmm_qos_info;
-@@ -1747,7 +1746,6 @@ mwifiex_cmd_tdls_oper(struct mwifiex_private *priv,
-
- 	tdls_oper->reason = 0;
- 	memcpy(tdls_oper->peer_mac, oper->peer_mac, ETH_ALEN);
--	sta_ptr = mwifiex_get_sta_entry(priv, oper->peer_mac);
-
- 	pos = (u8 *)tdls_oper + sizeof(struct host_cmd_ds_tdls_oper);
-
---
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 23d8ac8..faab3c4 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1120,7 +1120,6 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 	u32 rate_masks[NUM_NL80211_BANDS] = {};
+ 	u8 bands_used = 0;
+ 	u8 *ie;
+-	size_t len;
+ 
+ 	iebufsz = local->scan_ies_len + req->ie_len;
+ 
+@@ -1145,10 +1144,9 @@ int __ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_prepare_scan_chandef(&chandef, req->scan_width);
+ 
+-	len = ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
+-				       &sched_scan_ies, req->ie,
+-				       req->ie_len, bands_used,
+-				       rate_masks, &chandef);
++	ieee80211_build_preq_ies(local, ie, num_bands * iebufsz,
++				 &sched_scan_ies, req->ie,
++				 req->ie_len, bands_used, rate_masks, &chandef);
+ 
+ 	ret = drv_sched_scan_start(local, sdata, req, &sched_scan_ies);
+ 	if (ret == 0) {
+-- 
 2.8.0.rc3.226.g39d4020
