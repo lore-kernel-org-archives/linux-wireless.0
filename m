@@ -1,143 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:34122 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752737AbcKGOOj (ORCPT
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33627 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965316AbcKXN6y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:14:39 -0500
-Received: by mail-qk0-f178.google.com with SMTP id q130so177233128qke.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Nov 2016 06:14:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <58208A6A.5040307@candelatech.com>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
- <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
- <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net> <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com>
- <CAGJdtRCKidEfDF7sc4BRGSfOTmcGJUJ4KZt0xU1vj4bGAnuu1Q@mail.gmail.com>
- <c58ffbe0-c305-3282-34e9-98814c6f0d14@candelatech.com> <68bd7ebd-b12a-5dbf-a267-5913127718a1@candelatech.com>
- <CABUTiXXvqQ=yrrK3wp0fck=Mcb0LSrE7_Jw6KisYOuADvo3sdQ@mail.gmail.com> <58208A6A.5040307@candelatech.com>
-From: Bruno Antunes <baantunes@gmail.com>
-Date: Mon, 7 Nov 2016 14:13:48 +0000
-Message-ID: <CABUTiXX06fRkayycjg6+PuJu5_9HNqaFVxXHXbnubd9es+_wuA@mail.gmail.com> (sfid-20161107_151443_668121_ED652954)
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-To: Ben Greear <greearb@candelatech.com>
-Cc: yu-chieh kung <jay0607@gmail.com>,
-        Mauro Mozzarelli <openwrt@ezplanet.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+        Thu, 24 Nov 2016 08:58:54 -0500
+From: Geliang Tang <geliangtang@gmail.com>
+To: Jiri Slaby <jirislaby@gmail.com>,
+        Nick Kossifidis <mickflemm@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: Geliang Tang <geliangtang@gmail.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ath5k: drop duplicate header vmalloc.h
+Date: Thu, 24 Nov 2016 21:58:28 +0800
+Message-Id: <15299de49216a2360976ca37ff774cae9d27d88b.1479991297.git.geliangtang@gmail.com> (sfid-20161124_150025_221577_B66EB3D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 November 2016 at 14:06, Ben Greear <greearb@candelatech.com> wrote:
-> On 11/07/2016 03:54 AM, Bruno Antunes wrote:
->>
->> On 4 November 2016 at 22:23, Ben Greear <greearb@candelatech.com> wrote:
->>>
->>> The bug appears that vlan-tx-stripping is unconditionally enabled in
->>> at least my firmware.  I have re-compiled w/out that flag set, and it
->>> appears
->>> to work for me.
->>>
->>> Please download this firmware, rename it firmware-2.bin, make sure you
->>> remove/rename
->>> any firmware-5.bin (etc) so mine will load, and see if that fixes your
->>> problem.
->>
->>
->> Thanks for the fast reply but it only solves "half"  the problem.
->>
->> Now the connection between the AP and the Sta can be secure and the
->> driver doesn't need to be loaded in rawmode.
->>
->> Unfortunatly the the throughput is still bad.
->>
->> iperf3 -c 10.10.4.15
->> Connecting to host 10.10.4.15, port 5201
->> [  4] local 10.10.4.16 port 44893 connected to 10.10.4.15 port 5201
->> [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
->> [  4]   0.00-1.01   sec  42.4 KBytes   345 Kbits/sec    6   1.41 KBytes
->> [  4]   1.01-2.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
->> [  4]   2.01-3.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
->> [  4]   3.01-4.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  4]   4.01-5.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  4]   5.01-6.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  4]   6.01-7.01   sec  0.00 Bytes  0.00 bits/sec    1   1.41 KBytes
->> [  4]   7.01-8.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  4]   8.01-9.01   sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> [  4]   9.01-10.01  sec  0.00 Bytes  0.00 bits/sec    0   1.41 KBytes
->> - - - - - - - - - - - - - - - - - - - - - - - - -
->> [ ID] Interval           Transfer     Bandwidth       Retr
->> [  4]   0.00-10.01  sec  42.4 KBytes  34.7 Kbits/sec    9
->> sender
->> [  4]   0.00-10.01  sec  0.00 Bytes  0.00 bits/sec
->> receiver
->
->
-> You have a complex setup, so I think it would be best if you could break it
-> into
-> simpler parts to test.
+Drop duplicate header vmalloc.h from ath5k/debug.c.
 
-Some of the parts I already tested and are working
->
-> First, try just STA to AP, no vlans, and see if you get useful throughput.
->
-Works fine
+Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+---
+ drivers/net/wireless/ath/ath5k/debug.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> Then try with VLANs
->
-To Do
-
-> Then, try with WDS.
-
-Works fine
->
-> Then try with WDS and vlans.
->
-The ultimate goal...
-
-> In STA to AP mode with VLANs, it performed well for me.
->
-> Thanks,
-> Ben
->
->
->>
->> iperf Done.
->>
->>>
->>> Please note that it is very likely you will have to use same MAC address
->>> for the VLAN devices that the underlying station uses in order for this
->>> to
->>> work.
->>
->>
->> Can you please elaborate more?
->> My setup  is the folowing.
->> The connection between the AP and Sta is in WDS
->> For the moment all devices are in the same VLAN.
->>
->> client1 --- SW1 ---- AP ...... Sta ---- SW2 --- client2
->>
->>
->> Thanks,
->> Bruno
->>
->>>
->>> https://www.candelatech.com/downloads/tmp/firmware-2-full-community.bin
->>>
->>>
->>> Thanks,
->>> Ben
->>>
->>>
->>>
->>
->>> Ben Greear <greearb@candelatech.com>
->>> Candela Technologies Inc  http://www.candelatech.com
->>>
->>
->
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
+diff --git a/drivers/net/wireless/ath/ath5k/debug.c b/drivers/net/wireless/ath/ath5k/debug.c
+index 4f8d9ed..d068df5 100644
+--- a/drivers/net/wireless/ath/ath5k/debug.c
++++ b/drivers/net/wireless/ath/ath5k/debug.c
+@@ -66,7 +66,6 @@
+ 
+ #include <linux/seq_file.h>
+ #include <linux/list.h>
+-#include <linux/vmalloc.h>
+ #include "debug.h"
+ #include "ath5k.h"
+ #include "reg.h"
+-- 
+2.9.3
