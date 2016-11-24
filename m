@@ -1,95 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:33033 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932909AbcKWWXj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 17:23:39 -0500
-Date: Wed, 23 Nov 2016 23:23:35 +0100
-From: Pavel Machek <pavel@ucw.cz>
+Received: from mail.kernel.org ([198.145.29.136]:56258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965842AbcKXPPg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Nov 2016 10:15:36 -0500
+Date: Thu, 24 Nov 2016 16:13:17 +0100
+From: Sebastian Reichel <sre@kernel.org>
 To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
+Cc: Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
         Kalle Valo <kvalo@codeaurora.org>,
         Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Sebastian Reichel <sre@kernel.org>,
         Aaro Koskinen <aaro.koskinen@iki.fi>,
         Tony Lindgren <tony@atomide.com>,
         linux-wireless <linux-wireless@vger.kernel.org>,
         Network Development <netdev@vger.kernel.org>,
         linux-kernel@vger.kernel.org
 Subject: Re: wl1251 & mac address & calibration data
-Message-ID: <20161123222335.GA4788@amd> (sfid-20161123_232402_768932_C4932B19)
+Message-ID: <20161124151317.34yoza3dzuh46oa4@earth> (sfid-20161124_161543_023462_F6F6AFFD)
 References: <201611111820.52072@pali>
- <20161122153141.GT13735@pali>
- <CA+BoTQkSOJ85PiT=pjmH234sviCj-LVWWM=64KbCe4AG9CMNUg@mail.gmail.com>
  <201611221805.13606@pali>
+ <20161123222335.GA4788@amd>
+ <201611232339.59411@pali>
+ <20161124075104.GA26721@amd>
+ <20161124083329.GB13735@pali>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
-In-Reply-To: <201611221805.13606@pali>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="6hqdupe46ykut2ut"
+In-Reply-To: <20161124083329.GB13735@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---ZGiS0Q5IWpPtfppv
-Content-Type: text/plain; charset=us-ascii
+--6hqdupe46ykut2ut
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi!
+Hi,
 
-> > > As wl1251.ko does not accept mac_address as module parameter, such
-> > > modprobe hook does not help -- as there is absolutely no way from
-> > > userspace to set or change (permanent) mac address.
+On Thu, Nov 24, 2016 at 09:33:29AM +0100, Pali Roh=C3=A1r wrote:
+> On Thursday 24 November 2016 08:51:04 Pavel Machek wrote:
+> > Hi!
 > >=20
-> > Quoting modprobe.d manual:
-> > >       install modulename command...
-> > >      =20
-> > >           This command instructs modprobe to run your
-> > >           command instead of inserting the module in the
-> > >           kernel as normal. The command can be any shell
-> > >           command: this allows you to do any kind of
-> > >           complex processing you might wish. [...]
->=20
-> I know. But this do not allow me to send mac address to kernel -- as=20
-> kernel does not support such command yet (reason for my first
-> question).
-
-Plus, this does not really work for cases where wl1251 is not a
-module.
-
-> > You can hook up a script that cooks up wl1251-nvs.bin (caldata,
-> > macaddr) and then insmod the actual wl1251.ko module. Or you can just
-> > cook up the nvs on first device boot and store it in /lib/firmware
-> > (possibly overwriting the "generic" wl1251 from linux-firmware).
->=20
-> This is what I would like to prevent -- overwriting (possible readonly)=
+> > > > "ifconfig hw ether XX" normally sets the address. I guess that's
+> > > > ioctl?
+> > >=20
+> > > This sets temporary address and it is ioctl. IIRC same as what ethtoo=
+l=20
+> > > uses. (ifconfig is already deprecated).
+> > >=20
+> > > > And I guess we should use similar mechanism for permanent
+> > > > address.
+> > >=20
+> > > I'm not sure here... Above ioctl =E2=86=91=E2=86=91=E2=86=91 is for c=
+hanging temporary mac=20
+> > > address. But here we do not want to change permanent mac address. We=
 =20
-> system files with some device specific. It is really bad idea!
+> > > want to tell kernel driver current permanent mac address which is
+> > > stored
+> >=20
+> > Well... I'd still use similar mechanism :-).
+>=20
+> Thats problematic, because in time when wlan0 interface is registered
+> into system and visible in ifconfig output it already needs to have
+> permanent mac address assigned.
+>=20
+> We should assign permanent mac address before wlan0 of wl1251 is
+> registered into system.
 
-Agreed.
+You can just add the MAC address to the NVS data, which is also
+required for the device initialization.
 
-"ifconfig hw ether XX" normally sets the address. I guess that's
-ioctl? And I guess we should use similar mechanism for permanent
-address.
+I wonder if those information could be put into DT. Iirc some
+network devices get their MAC address from DT. Maybe we can add
+all NVS info to DT? How much data is it?
 
-Best regards,
+Userspace application can add all those information to the DT
+using a DT overlay. Also the u-boot could parse and add it at
+some point in the future.
 
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+-- Sebastian
 
---ZGiS0Q5IWpPtfppv
+--6hqdupe46ykut2ut
 Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
 
-iEYEARECAAYFAlg2FucACgkQMOfwapXb+vIcGACgjENv4xLN8EJGdCGycJou4Gzd
-U6QAn0XrkW6/p2NecQtidQwEX5Rs0lYL
-=o1Xt
+iQIzBAABCgAdFiEE72YNB0Y/i3JqeVQT2O7X88g7+poFAlg3A4kACgkQ2O7X88g7
++povvg//ag54t+LwzgNFcz4vf8XT2HmiBxreOCW4pehhTugDXURt05Z6gCQA5Smb
+f+1aB4SyyG+KcZHVnrryOq1OYTMSASjYCu/kUrjnynGRapyGBvTAJMUwsGAdaexV
+UWyPxV3ph/3D17CUBXuo95bE+vAX0KK01U9mY9RVcaWHlSrdlj4RRJTKb/okMDN7
+tX+eiK5/lAeHz+Y2eiNlMuIKkuO4IGqEGo+WcCnGUK6VRw2q1YqWYhjmTlXawQC7
+OUw2luZhDSSnuErvbcM4QugA8uTUq67ZfBocH9CHr3to/AvPkC4taKAUJRo7w7mG
+5mDaymLDsxHMemZX/7vwTbX/haKQHMIVAXBCz2QWa2dvbsA+vMgLu1Bwvh2IpBF/
+W3KLQJY7BWMWia2sz0qj4f57s66Upw6deaU7vcfFcOCtCy8DVpD+yMwne8NI5esx
+18QAqz05hInQcH4VXCwd5ZIhKyZyss31TDy8UkoMZZW24x7XYVNzZxPM/aeu9qx5
+1qB+BNlrgtK1Vg9J0epn0sYSsxbKIaAtMu1wYJSMK2dHlcoIXurhyJjps960eh9c
+HJiZhrlZeK3aOSCinI5yGT1prtbhYb7n1fFv62VTkmUzZlED3A1lM0LPrhH6SGwr
+d1eR70kprmFX9i9dREGfDuw7bAtRgokap119VpCuh5JZEQlbybQ=
+=7qNW
 -----END PGP SIGNATURE-----
 
---ZGiS0Q5IWpPtfppv--
+--6hqdupe46ykut2ut--
