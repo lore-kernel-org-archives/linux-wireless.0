@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47574 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751512AbcKNNYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 08:24:47 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Barry Day <briselec@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: Fix failure to reconnect to AP
-References: <20161113111705.GA2393@box64.home.org>
-Date: Mon, 14 Nov 2016 08:24:45 -0500
-In-Reply-To: <20161113111705.GA2393@box64.home.org> (Barry Day's message of
-        "Sun, 13 Nov 2016 21:17:09 +1000")
-Message-ID: <wrfjoa1iyz1e.fsf@redhat.com> (sfid-20161114_142505_010959_52D10168)
+Received: from mail-wj0-f178.google.com ([209.85.210.178]:33061 "EHLO
+        mail-wj0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964794AbcKXJzi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Nov 2016 04:55:38 -0500
+Received: by mail-wj0-f178.google.com with SMTP id xy5so29358469wjc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2016 01:55:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
+References: <cover.1479974100.git.kirtika@chromium.org> <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Thu, 24 Nov 2016 10:50:19 +0100
+Message-ID: <CA+BoTQntqod=Aj7MzuU0KfmbTQb7A-zEcySWqVkycSYE-MqtDQ@mail.gmail.com> (sfid-20161124_105542_660741_D7709BDD)
+Subject: Re: [PATCH 3/5] ath10k: Remove unused wmi_p2p_noa_descriptor 'noa' in wmi-tlv
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Arnd Bergmann <arnd@arndb.de>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Raja Mani <rmani@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Barry Day <briselec@gmail.com> writes:
-> The rtl8192e and rtl8723 fail to reconnect to an AP after being
-> disconnected. Ths patch fixes that without affecting the rtl8192cu.
-> I don't have a rtl8723 to test but it has been tested on a rtl8192eu.
-> After going through the orginal realtek code for the rtl8723, I am
-> confident the patch is applicable to both.
+On 24 November 2016 at 09:01, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+> Commit ca996ec56608 (ath10k: implement wmi-tlv backend)
+> introduced ath10k_wmi_tlv_op_gen_vdev_start() where
+> 'struct wmi_p2p_noa_descriptor *noa' is defined and set but not used.
+> Compiling with W=3D1 gives the following warning, fix it.
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function =E2=80=98ath10k_wm=
+i_tlv_op_gen_vdev_start=E2=80=99:
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c:1647:33: warning: variable =E2=
+=80=98noa=E2=80=99 set but not used [-Wunused-but-set-variable]
 >
-> Signed-off-by: Barry Day <briselec@gmail.com>
+> Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
 > ---
->  rtl8xxxu_core.c | 18 ++++++++++++++----
->  1 file changed, 14 insertions(+), 4 deletions(-)
-
-Hi Barry,
-
-Thank you for the patch. There are a couple of items which I am not
-100% sure about the order of.
-
-> diff --git a/rtl8xxxu_core.c b/rtl8xxxu_core.c
-> index 04141e5..6ac10d2 100644
-> --- a/rtl8xxxu_core.c
-> +++ b/rtl8xxxu_core.c
-> @@ -4372,17 +4372,25 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
->  void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
->  				  u8 macid, bool connect)
+>  drivers/net/wireless/ath/ath10k/wmi-tlv.c | 2 --
+>  1 file changed, 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wire=
+less/ath/ath10k/wmi-tlv.c
+> index e64f593..0e4bd29 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+> @@ -1644,7 +1644,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
 >  {
-> +	u8 val8;
->  	struct h2c_cmd h2c;
->  
->  	memset(&h2c, 0, sizeof(struct h2c_cmd));
->  
->  	h2c.media_status_rpt.cmd = H2C_8723B_MEDIA_STATUS_RPT;
-> -	if (connect)
-> +	if (connect) {
->  		h2c.media_status_rpt.parm |= BIT(0);
-> -	else
-> -		h2c.media_status_rpt.parm &= ~BIT(0);
-> +		rtl8xxxu_gen2_h2c_cmd(priv, &h2c,
-> +					sizeof(h2c.media_status_rpt));
-> +	} else {
-> +		val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
-> +		val8 &= ~BEACON_FUNCTION_ENABLE;
-> +
-> +		rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
-> +		rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x00);
-> +		rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, (BIT(0) | BIT(1)));
-> +	}
->  
-> -	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
->  }
+>         struct wmi_tlv_vdev_start_cmd *cmd;
+>         struct wmi_channel *ch;
+> -       struct wmi_p2p_noa_descriptor *noa;
+>         struct wmi_tlv *tlv;
+>         struct sk_buff *skb;
+>         size_t len;
+> @@ -1702,7 +1701,6 @@ ath10k_wmi_tlv_op_gen_vdev_start(struct ath10k *ar,
+>         tlv =3D ptr;
+>         tlv->tag =3D __cpu_to_le16(WMI_TLV_TAG_ARRAY_STRUCT);
+>         tlv->len =3D 0;
+> -       noa =3D (void *)tlv->value;
+>
+>         /* Note: This is a nested TLV containing:
+>          * [wmi_tlv][wmi_p2p_noa_descriptor][wmi_tlv]..
 
-This only affects 8192eu and not 8192cu - we left RXFLTMAP2 out of here
-on purpose for monitor mode, but you now disable it for 8192eu/8723bu.
+I would rather keep this one as it serves as documentation. Would
+"(void) noa;" be enough satisfy the compiler?
 
->  void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
-> @@ -4515,6 +4523,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->  				sgi = 1;
->  			rcu_read_unlock();
->  
-> +			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
-> +
->  			priv->fops->update_rate_mask(priv, ramask, sgi);
->  
->  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
 
-Here you enable RXFLTMAP2 for all devices - this doesn't balance with
-the above.
-
-I am not against the aproach, but I think we need to investigate a
-little further what is going on.
-
-Cheers,
-Jes
+Micha=C5=82
