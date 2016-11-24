@@ -1,48 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37370 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935089AbcKWNzB (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33122 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755734AbcKXIU3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 08:55:01 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 24 Nov 2016 03:20:29 -0500
+Received: by mail-pf0-f194.google.com with SMTP id 144so1637931pfv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2016 00:19:56 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Thu, 24 Nov 2016 00:01:23 -0800
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Raja Mani <rmani@qti.qualcomm.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/5] ath10k: Remove unused 'buf_len' variable
+Message-ID: <196e46eee00fd3ebb56da1373c36f3dff66f2ae1.1479974100.git.kirtika@chromium.org> (sfid-20161124_092032_879736_5AE46DCA)
+References: <cover.1479974100.git.kirtika@chromium.org>
 MIME-Version: 1.0
-Subject: Re: [2/4] ath10k: implement offset_tsf ieee80211_op
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160928235631.9197-3-twp@qca.qualcomm.com>
-References: <20160928235631.9197-3-twp@qca.qualcomm.com>
-To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
-CC: ath10k <ath10k@lists.infradead.org>,
-        Thomas Pedersen <twp@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <5d001697eeb847e887d282d63af3cd40@euamsexm01a.eu.qualcomm.com> (sfid-20161123_145505_222316_2B6E9CE3)
-Date: Wed, 23 Nov 2016 14:54:54 +0100
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479974100.git.kirtika@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Pedersen, Thomas" <twp@qca.qualcomm.com> wrote:
-> Current set_tsf is implemented in terms of TSF_INCREMENT
-> only. Instead support new WMI command TSF_DECREMENT and
-> export these through offset_tsf. Advantage is we get
-> more accurate TSF adjustments, and don't calculate wrong
-> offset in case absolute TSF was calculated from rx_mactime
-> (actual TSF).
-> 
-> The new WMI command is available in firmware
-> 10.4-3.2.1-00033 for QCA4019 chips. Old drivers on new
-> firmware or vice versa shouldn't  be a problem since
-> get/set tsf logic was already broken.
-> 
-> Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
+Commit 32653cf19554 removed the call to 'skb_trim(skb, buf_len)'
+in ath10k_wmi_event_mgmt_rx(), leaving the buf_len variable set but
+unused. Compiling with W=1 gives the following warning, fix it.
+drivers/net/wireless/ath/ath10k/wmi.c: In function ‘ath10k_wmi_event_mgmt_rx’:
+drivers/net/wireless/ath/ath10k/wmi.c:2280:6: warning: variable ‘buf_len’ set but not used [-Wunused-but-set-variable]
 
-2 patches applied to ath-next branch of ath.git, thanks.
+This is a harmless warning, and is only being fixed to reduce the
+noise with W=1 in the kernel.
 
-973324fff154 ath10k: implement offset_tsf ieee80211_op
-f6f64cfb966d ath10k: remove set/get_tsf ieee80211_ops
+Fixes: 32653cf19554 ("ath10k: implement intermediate event args")
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 --
+ 1 file changed, 2 deletions(-)
 
--- 
-https://patchwork.kernel.org/patch/9355377/
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 387c4ee..1f28187 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2277,7 +2277,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+	u32 phy_mode;
+	u32 snr;
+	u32 rate;
+-	u32 buf_len;
+	u16 fc;
+	int ret;
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+@@ -2289,7 +2288,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+	}
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+	channel = __le32_to_cpu(arg.channel);
+-	buf_len = __le32_to_cpu(arg.buf_len);
+	rx_status = __le32_to_cpu(arg.status);
+	snr = __le32_to_cpu(arg.snr);
+	phy_mode = __le32_to_cpu(arg.phy_mode);
+--
+2.8.0.rc3.226.g39d4020
