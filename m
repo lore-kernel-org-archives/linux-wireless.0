@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:50187 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757237AbcKCLMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 07:12:50 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, emmanuel.grumbach@intel.com
-Subject: [PATCH] Revert "mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE"
-Date: Thu,  3 Nov 2016 12:12:47 +0100
-Message-Id: <20161103111247.18086-1-nbd@nbd.name> (sfid-20161103_121300_805741_0A656BBC)
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38063 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966569AbcKXPiX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Nov 2016 10:38:23 -0500
+Subject: Re: wl1251 & mac address & calibration data
+To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>
+References: <201611111820.52072@pali> <201611221805.13606@pali>
+ <20161123222335.GA4788@amd> <201611232339.59411@pali>
+ <20161124075104.GA26721@amd> <20161124083329.GB13735@pali>
+ <20161124151317.34yoza3dzuh46oa4@earth> <20161124152045.GK13735@pali>
+Cc: Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+From: Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Message-ID: <56cc60dc-f0f2-a9d4-75d1-da8f2f60531e@gmail.com> (sfid-20161124_164221_045253_2F21D5C2)
+Date: Thu, 24 Nov 2016 17:31:23 +0200
+MIME-Version: 1.0
+In-Reply-To: <20161124152045.GK13735@pali>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit c68df2e7be0c1238ea3c281fd744a204ef3b15a0.
+Hi,
 
-__sta_info_recalc_tim turns into a no-op if local->ops->set_tim is not
-set. This prevents the beacon TIM bit from being set for all drivers
-that do not implement this op (almost all of them), thus thoroughly
-essential AP mode powersave functionality.
+On 24.11.2016 17:20, Pali Rohár wrote:
+>
+> In case when wl1251 is statically linked into kernel image, it is loaded
+> and initialized before even userspace applications starts.
+>
 
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: c68df2e7be0c ("mac80211: allow using AP_LINK_PS with mac80211-generated TIM IE")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/sta_info.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Which leaves no option, but integrating libcal into kernel :).
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 236d47e..1711bae 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -688,7 +688,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
- 	}
- 
- 	/* No need to do anything if the driver does all */
--	if (!local->ops->set_tim)
-+	if (ieee80211_hw_check(&local->hw, AP_LINK_PS))
- 		return;
- 
- 	if (sta->dead)
--- 
-2.10.1
+Ivo
