@@ -1,77 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36826 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754459AbcKQO0x (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:33854 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934630AbcKXB0b (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 09:26:53 -0500
-Received: by mail-wm0-f49.google.com with SMTP id g23so314269438wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 06:26:52 -0800 (PST)
-Subject: Re: [PATCH 3/5] nl80211: add support for gscan
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <201611172006.xRJ9na1r%fengguang.wu@intel.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <014498fc-8f54-c07e-da5c-8dae0e577a7b@broadcom.com> (sfid-20161117_152818_249421_CA77E64F)
-Date: Thu, 17 Nov 2016 13:40:42 +0100
+        Wed, 23 Nov 2016 20:26:31 -0500
+Received: by mail-pg0-f67.google.com with SMTP id e9so2201532pgc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:26:31 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 17:26:06 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 5/7] mwifiex: Remove unused 'pm_flag' variable
+Message-ID: <56d02b0bc8845cf71da212aa006ee15eb95023c9.1479950323.git.kirtika@google.com> (sfid-20161124_022635_152738_C3583A7E)
+References: <cover.1479950323.git.kirtika@google.com>
 MIME-Version: 1.0
-In-Reply-To: <201611172006.xRJ9na1r%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479950323.git.kirtika@google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-11-2016 13:10, kbuild test robot wrote:
-> Hi Arend,
-> 
-> [auto build test ERROR on mac80211-next/master]
-> [also build test ERROR on next-20161117]
-> [cannot apply to v4.9-rc5]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Arend-van-Spriel/nl80211-add-support-for-g-scan/20161117-194818
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> config: i386-randconfig-x004-201646 (attached as .config)
-> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386 
+mwifiex_sdio_resume() intializes pm_flag, just like
+mwifiex_sdio_suspend(), but does not use it. Compiling with W=1 gives
+the following warning, fix it.
+mwifiex/sdio.c: In function ‘mwifiex_sdio_resume’:
+mwifiex/sdio.c:234:16: warning: variable ‘pm_flag’ set but not used [-Wunused-but-set-variable]
 
-Shuffled the patches while rebasing. Not nice. Will fix it.
+sdio_get_host_pm_caps() is just an acessor, so the call to it is safe
+to remove. The unused variable seems to be present since
+5e6e3a92b9a4 which introduced mwifiex_sdio_resume().
 
-Regards,
-Arend
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Cc: Bing Zhao <bzhao@marvell.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-> Note: the linux-review/Arend-van-Spriel/nl80211-add-support-for-g-scan/20161117-194818 HEAD 407f604bb543a049c99ae0f9974943f1c64ea880 builds fine.
->       It only hurts bisectibility.
-> 
-> All errors (new ones prefixed by >>):
-> 
->    net/wireless/scan.c: In function '__cfg80211_stop_gscan':
->>> net/wireless/scan.c:358:2: error: implicit declaration of function 'nl80211_send_scan_event' [-Werror=implicit-function-declaration]
->      nl80211_send_scan_event(rdev, dev, NL80211_CMD_GSCAN_STOPPED);
->      ^~~~~~~~~~~~~~~~~~~~~~~
->    cc1: some warnings being treated as errors
-> --
->    net/wireless/nl80211.c: In function 'nl80211_start_gscan':
->>> net/wireless/nl80211.c:12167:2: error: implicit declaration of function 'nl80211_send_scan_event' [-Werror=implicit-function-declaration]
->      nl80211_send_scan_event(rdev, dev,
->      ^~~~~~~~~~~~~~~~~~~~~~~
->    cc1: some warnings being treated as errors
-> 
-> vim +/nl80211_send_scan_event +358 net/wireless/scan.c
-> 
->    352		if (!driver_initiated) {
->    353			int err = rdev_stop_gscan(rdev, dev);
->    354			if (err)
->    355				return err;
->    356		}
->    357	
->  > 358		nl80211_send_scan_event(rdev, dev, NL80211_CMD_GSCAN_STOPPED);
->    359	
->    360		RCU_INIT_POINTER(rdev->gscan_req, NULL);
->    361		kfree_rcu(gscan_req, rcu_head);
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 0d00db5..6c9f16e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -186,9 +186,7 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 	struct sdio_func *func = dev_to_sdio_func(dev);
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+-	mmc_pm_flag_t pm_flag = 0;
+ 
+-	pm_flag = sdio_get_host_pm_caps(func);
+ 	card = sdio_get_drvdata(func);
+ 	if (!card || !card->adapter) {
+ 		dev_err(dev, "resume: invalid card or adapter\n");
+-- 
+2.8.0.rc3.226.g39d4020
