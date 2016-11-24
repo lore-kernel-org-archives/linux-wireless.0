@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38662 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750801AbcKYKA1 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33894 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933514AbcKXIQM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 05:00:27 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 24 Nov 2016 03:16:12 -0500
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Thu, 24 Nov 2016 00:02:13 -0800
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Raja Mani <rmani@qti.qualcomm.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/5] ath10k: Removed unused 'dev' in ath10k_ahb_clock_enable()
+Message-ID: <bef0ae334d0e58b26e826d295ad1a8d6c8fda639.1479974100.git.kirtika@chromium.org> (sfid-20161124_091618_214033_765AA736)
+References: <cover.1479974100.git.kirtika@chromium.org>
 MIME-Version: 1.0
-Subject: Re: [1/4] rsi: Add support to filter rx frames
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479465429-2412-1-git-send-email-prameela.j04cs@gmail.com>
-References: <1479465429-2412-1-git-send-email-prameela.j04cs@gmail.com>
-To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de,
-        prameela.garnepudi@redpinesignals.com,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Message-Id: <20161125094812.A2338613C2@smtp.codeaurora.org> (sfid-20161125_110051_167740_0F8AEEB4)
-Date: Fri, 25 Nov 2016 09:48:12 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479974100.git.kirtika@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prameela Rani Garnepudi <prameela.j04cs@gmail.com> wrote:
-> Filtering rx frames after connection in station mode avoids the
-> overhead of processing un-necessary frames. Hence rx filter frame
-> is added which can be configured to device at suitable times.
-> 
-> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Commit 8beff219c528 introduced ath10k_ahb_clock_enable() which
+defines and sets 'struct device* dev' but does not use it.
+Compiling with W=1 gives the following warning, fix it.
+drivers/net/wireless/ath/ath10k/ahb.c: In function ‘ath10k_ahb_clock_enable’:
+drivers/net/wireless/ath/ath10k/ahb.c:133:17: warning: variable ‘dev’ set but not used [-Wunused-but-set-variable]
 
-4 patches applied to wireless-drivers-next.git, thanks.
+This is a harmless warning, and is only being fixed to reduce the
+noise with W=1 in the kernel.
 
-e6d6428449c5 rsi: Add support to filter rx frames
-8b36de8cf5ab rsi: Add support for configuring tx power
-4edbcd1aa783 rsi: Add support for antenna selection
-61d108421422 rsi: Add support for 802.11d
+Fixes: 8beff219c528("ath10k: add clock ctrl related functions in ahb")
+Cc: Raja Mani <rmani@qti.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/ahb.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
--- 
-https://patchwork.kernel.org/patch/9436189/
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 766c63b..8078d64 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -130,11 +130,8 @@ static void ath10k_ahb_clock_deinit(struct ath10k *ar)
+ static int ath10k_ahb_clock_enable(struct ath10k *ar)
+ {
+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
+-	struct device *dev;
+	int ret;
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-	dev = &ar_ahb->pdev->dev;
+-
+	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk) ||
+	    IS_ERR_OR_NULL(ar_ahb->ref_clk) ||
+	    IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
+--
+2.8.0.rc3.226.g39d4020
