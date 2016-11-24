@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36008 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034678AbcKAHb7 (ORCPT
+Received: from mail-wj0-f179.google.com ([209.85.210.179]:32992 "EHLO
+        mail-wj0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965985AbcKXPVI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 03:31:59 -0400
-MIME-Version: 1.0
-In-Reply-To: <20161101072447.GA21575@cube>
-References: <20161101072447.GA21575@cube>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 1 Nov 2016 08:31:58 +0100
-Message-ID: <CACna6rx3yxkM8g7_cbuRg_LgH5BNN=cJKHsJ+gKD6+hX57_8-Q@mail.gmail.com> (sfid-20161101_083219_873251_A34EAA94)
-Subject: Re: [PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu
- wireless IC
-To: John Heenan <john@zgus.com>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Thu, 24 Nov 2016 10:21:08 -0500
+Date: Thu, 24 Nov 2016 16:20:45 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Sebastian Reichel <sre@kernel.org>
+Cc: Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
         Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        linux-kernel@vger.kernel.org
+Subject: Re: wl1251 & mac address & calibration data
+Message-ID: <20161124152045.GK13735@pali> (sfid-20161124_162156_741575_CF6908ED)
+References: <201611111820.52072@pali>
+ <201611221805.13606@pali>
+ <20161123222335.GA4788@amd>
+ <201611232339.59411@pali>
+ <20161124075104.GA26721@amd>
+ <20161124083329.GB13735@pali>
+ <20161124151317.34yoza3dzuh46oa4@earth>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20161124151317.34yoza3dzuh46oa4@earth>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 November 2016 at 08:24, John Heenan <john@zgus.com> wrote:
-> @@ -5779,6 +5779,12 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
->
->         ret =3D 0;
->
-> +       if(priv->fops =3D=3D &rtl8723bu_fops) {
+On Thursday 24 November 2016 16:13:17 Sebastian Reichel wrote:
+> Hi,
+> 
+> On Thu, Nov 24, 2016 at 09:33:29AM +0100, Pali Rohár wrote:
+> > On Thursday 24 November 2016 08:51:04 Pavel Machek wrote:
+> > > Hi!
+> > > 
+> > > > > "ifconfig hw ether XX" normally sets the address. I guess that's
+> > > > > ioctl?
+> > > > 
+> > > > This sets temporary address and it is ioctl. IIRC same as what ethtool 
+> > > > uses. (ifconfig is already deprecated).
+> > > > 
+> > > > > And I guess we should use similar mechanism for permanent
+> > > > > address.
+> > > > 
+> > > > I'm not sure here... Above ioctl ↑↑↑ is for changing temporary mac 
+> > > > address. But here we do not want to change permanent mac address. We 
+> > > > want to tell kernel driver current permanent mac address which is
+> > > > stored
+> > > 
+> > > Well... I'd still use similar mechanism :-).
+> > 
+> > Thats problematic, because in time when wlan0 interface is registered
+> > into system and visible in ifconfig output it already needs to have
+> > permanent mac address assigned.
+> > 
+> > We should assign permanent mac address before wlan0 of wl1251 is
+> > registered into system.
+> 
+> You can just add the MAC address to the NVS data, which is also
+> required for the device initialization.
 
-OK, let me be the first. Documentation/CodingStyle also says to use
-space between "if" and "(" ;)
+NVS data file has fixed size, there is IIRC no place for it.
 
+But one of my suggestion was to use another request_firmware for MAC
+address. So this is similar to what you are proposing, as NVS data are
+loaded by request_firmware too...
 
-> @@ -6080,9 +6086,11 @@ static int rtl8xxxu_probe(struct usb_interface *in=
-terface,
->                 goto exit;
->         }
->
-> -       ret =3D rtl8xxxu_init_device(hw);
-> -       if (ret)
-> -               goto exit;
-> +       if(priv->fops !=3D &rtl8723bu_fops) {
+> I wonder if those information could be put into DT. Iirc some
+> network devices get their MAC address from DT. Maybe we can add
+> all NVS info to DT? How much data is it?
 
-Same here.
+Proprietary, signed and closed bootloader NOLO does not support DT. So
+for booting you need to append DTS file to kernel image.
 
-I reviewed style only.
+U-Boot is optional and can be used as intermediate bootloader between
+NOLO and kernel. But still it has problems with reading from nand, so
+cannot read NVS data nor MAC address.
 
---=20
-Rafa=C5=82
+> Userspace application can add all those information to the DT
+> using a DT overlay. Also the u-boot could parse and add it at
+> some point in the future.
+
+In case when wl1251 is statically linked into kernel image, it is loaded
+and initialized before even userspace applications starts.
+
+So no... adding NVS data or MAC address into DT or DT overlay is not a
+solution.
+
+-- 
+Pali Rohár
+pali.rohar@gmail.com
