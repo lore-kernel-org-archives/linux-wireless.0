@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49908 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755878AbcKXGxk (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35243 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754622AbcKXEpm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 01:53:40 -0500
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 3/3] ath9k: disable ACK_CTS for SOC chips in PTA mode
-Date: Thu, 24 Nov 2016 14:53:22 +0800
-Message-Id: <1479970402-13796-3-git-send-email-miaoqing@codeaurora.org> (sfid-20161124_075343_561049_616D67AE)
-In-Reply-To: <1479970402-13796-1-git-send-email-miaoqing@codeaurora.org>
-References: <1479970402-13796-1-git-send-email-miaoqing@codeaurora.org>
+        Wed, 23 Nov 2016 23:45:42 -0500
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 20:45:36 -0800
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
+        David Spinadel <david.spinadel@intel.com>,
+        Alexander Bondar <alexander.bondar@intel.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/4] mac80211: Removed unused 'i' variable
+Message-ID: <c7cb0fc989545ddc3c3dd1fe29774ee3bf483623.1479962513.git.kirtika@chromium.org> (sfid-20161124_054550_177035_E99AD135)
+References: <cover.1479962513.git.kirtika@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cover.1479962513.git.kirtika@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Commit 5bcae31d9 (mac80211: implement multi-vif in-place reservations)
+introduced ieee80211_vif_use_reserved_switch() with a counter variable
+'i' that is set but not used. Compiling with W=1 gives the following
+warning, fix it.
+net/mac80211/chan.c: In function ‘ieee80211_vif_use_reserved_switch’:
+net/mac80211/chan.c:1273:6: warning: variable ‘i’ set but not used [-Wunused-but-set-variable]
 
-If the ACK_CTS is enabled, MAC will send an ACK or CTS in response
-to a received frame, but it is a interfering packet for the BT(or other)
-in the PTA cycle, which will sufficient corrupt the received packets.
+This is a harmless warning, and is only being fixed to reduce the
+noise obtained with W=1 in the kernel.
 
-Only disable it for SOC chips in PTA(slotted) mode.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Fixes: 5bcae31d9 ("mac80211: implement multi-vif in-place reservations")
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ net/mac80211/chan.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 6d15dd3..7e24640 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -290,6 +290,7 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex = &ah->btcoex_hw;
- 	u32  val;
- 	int i;
-+	int coex_mode = MS(btcoex->bt_coex_mode, AR_BT_MODE);
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index e75cbf6..7550fd2 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -1270,7 +1270,7 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 	struct ieee80211_sub_if_data *sdata, *sdata_tmp;
+ 	struct ieee80211_chanctx *ctx, *ctx_tmp, *old_ctx;
+ 	struct ieee80211_chanctx *new_ctx = NULL;
+-	int i, err, n_assigned, n_reserved, n_ready;
++	int err, n_assigned, n_reserved, n_ready;
+ 	int n_ctx = 0, n_vifs_switch = 0, n_vifs_assign = 0, n_vifs_ctxless = 0;
  
- 	/*
- 	 * Program coex mode and weight registers to
-@@ -319,7 +320,11 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 		REG_WRITE(ah, 0x50040, val);
- 	}
- 
--	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
-+	if (AR_SREV_SOC(ah) && (coex_mode == ATH_BT_COEX_MODE_SLOTTED))
-+		REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 0);
-+	else
-+		REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
-+
- 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
- 
- 	ath9k_hw_gpio_request_out(ah, btcoex->wlanactive_gpio,
+ 	lockdep_assert_held(&local->mtx);
+@@ -1391,8 +1391,6 @@ static int ieee80211_vif_use_reserved_switch(struct ieee80211_local *local)
+ 	 * Update all structures, values and pointers to point to new channel
+ 	 * context(s).
+ 	 */
+-
+-	i = 0;
+ 	list_for_each_entry(ctx, &local->chanctx_list, list) {
+ 		if (ctx->replace_state != IEEE80211_CHANCTX_REPLACES_OTHER)
+ 			continue;
 -- 
-1.9.1
+2.8.0.rc3.226.g39d4020
