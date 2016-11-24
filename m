@@ -1,28 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34658 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752865AbcKUMpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 07:45:20 -0500
-Message-ID: <1479732315.8662.19.camel@sipsolutions.net> (sfid-20161121_134523_568564_7900E547)
-Subject: Re: [PATCH V2] cfg80211: get rid of name indirection trick for
- ieee80211_get_channel()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 21 Nov 2016 13:45:15 +0100
-In-Reply-To: <1479386933-17834-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479386933-17834-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35337 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751123AbcKXGkv (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 24 Nov 2016 01:40:51 -0500
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 22:40:45 -0800
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] adm80211: Removed unused 'io_addr' 'mem_addr' variables
+Message-ID: <20161124064045.GA8836@google.com> (sfid-20161124_074057_572711_1656D8B0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-11-17 at 12:48 +0000, Arend van Spriel wrote:
-> The comment on the name indirection suggested an issue but turned out
-> to be untrue. Digging in older kernel version showed issue with
-> ipw2x00
-> but that is no longer true so get rid on the name indirection.
-> 
-Applied, thanks.
+Initial commit cc0b88cf5ecf ([PATCH] Add adm8211 802.11b wireless driver)
+introduced variables mem_addr and io_addr in adm80211_probe() that are
+set but not used. Compiling with W=1 gives the following warnings,
+fix them.
 
-johannes
+drivers/net/wireless/admtek/adm8211.c: In function ‘adm8211_probe’:
+drivers/net/wireless/admtek/adm8211.c:1769:15: warning: variable ‘io_addr’ set but not used [-Wunused-but-set-variable]
+  unsigned int io_addr, io_len;
+               ^
+drivers/net/wireless/admtek/adm8211.c:1768:16: warning: variable ‘mem_addr’ set but not used [-Wunused-but-set-variable]
+  unsigned long mem_addr, mem_len;
+                ^
+
+These are harmless warnings and are only being fixed to reduce the
+noise with W=1 in the kernel. The calls to pci_resource_start do not
+have any side-effects and are safe to remove.
+
+Fixes: cc0b88cf5ecf ("[PATCH] Add adm8211 802.11b wireless driver")
+Cc: Michael Wu <flamingice@sourmilk.net>
+Cc: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
+---
+ drivers/net/wireless/admtek/adm8211.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
+index 70ecd82..70b4da0 100644
+--- a/drivers/net/wireless/admtek/adm8211.c
++++ b/drivers/net/wireless/admtek/adm8211.c
+@@ -1765,8 +1765,8 @@ static int adm8211_probe(struct pci_dev *pdev,
+ {
+	struct ieee80211_hw *dev;
+	struct adm8211_priv *priv;
+-	unsigned long mem_addr, mem_len;
+-	unsigned int io_addr, io_len;
++	unsigned long mem_len;
++	unsigned int io_len;
+	int err;
+	u32 reg;
+	u8 perm_addr[ETH_ALEN];
+@@ -1778,9 +1778,7 @@ static int adm8211_probe(struct pci_dev *pdev,
+		return err;
+	}
+
+-	io_addr = pci_resource_start(pdev, 0);
+	io_len = pci_resource_len(pdev, 0);
+-	mem_addr = pci_resource_start(pdev, 1);
+	mem_len = pci_resource_len(pdev, 1);
+	if (io_len < 256 || mem_len < 1024) {
+		printk(KERN_ERR "%s (adm8211): Too short PCI resources\n",
+--
+2.8.0.rc3.226.g39d4020
