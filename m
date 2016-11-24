@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34618 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754036AbcK1Lou (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35546 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965723AbcKXN7W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 06:44:50 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Barry Day <briselec@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Wireless <linux-wireless@vger.kernel.org>,
-        linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: linux-next: build warning after merge of the wireless-drivers-next tree
-References: <20161128115814.2cabf139@canb.auug.org.au>
-        <87d1hg83rp.fsf@kamboji.qca.qualcomm.com>
-        <20161128081649.GA8403@testbox>
-Date: Mon, 28 Nov 2016 13:44:40 +0200
-In-Reply-To: <20161128081649.GA8403@testbox> (Barry Day's message of "Mon, 28
-        Nov 2016 18:16:51 +1000")
-Message-ID: <87oa0zygk7.fsf@kamboji.qca.qualcomm.com> (sfid-20161128_124515_597645_3EE30C93)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 24 Nov 2016 08:59:22 -0500
+From: Geliang Tang <geliangtang@gmail.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
+Cc: Geliang Tang <geliangtang@gmail.com>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: nfcmrvl: drop duplicate header gpio.h
+Date: Thu, 24 Nov 2016 21:58:34 +0800
+Message-Id: <b3d55dda173172b385d7e617cf07ec00efae9b49.1479991468.git.geliangtang@gmail.com> (sfid-20161124_145943_388229_A7C314A9)
+In-Reply-To: <15299de49216a2360976ca37ff774cae9d27d88b.1479991297.git.geliangtang@gmail.com>
+References: <15299de49216a2360976ca37ff774cae9d27d88b.1479991297.git.geliangtang@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Barry Day <briselec@gmail.com> writes:
+Drop duplicate header gpio.h from nfcmrvl/spi.c.
 
-> On Mon, Nov 28, 2016 at 09:25:30AM +0200, Kalle Valo wrote:
->> Stephen Rothwell <sfr@canb.auug.org.au> writes:
->> 
->> > Hi all,
->> >
->> > After merging the wireless-drivers-next tree, today's linux-next build
->> > (x86_64 allmodconfig) produced this warning:
->> >
->> > In file included from include/linux/usb/ch9.h:35:0,
->> >                  from include/linux/usb.h:5,
->> >                  from drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:32:
->> > drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
->> > include/linux/device.h:1214:36: warning: 'rate' may be used uninitialized in this function [-Wmaybe-uninitialized]
->> >  #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
->> >                                     ^
->> > drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4841:6: note: 'rate' was declared here
->> >   u32 rate;
->> >       ^
->> >
->> > Introduced by commit
->> >
->> >   b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
->> >
->> > This is a correct diagnosis.
->> 
->> Thanks for the report. Jes, can you send a patch to fix this? (Unless
->> someone else beats to it.)
->> 
->> -- 
->> Kalle Valo
->
-> I posted a patch on the 26th that fixes this
+Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+---
+ drivers/nfc/nfcmrvl/spi.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Thanks, I see it:
-
-https://patchwork.kernel.org/patch/9448225/
-
-The commit log doesn't mention anything about the compilation warning,
-I'll add that. Also a Fixes line is nice to have.
-
+diff --git a/drivers/nfc/nfcmrvl/spi.c b/drivers/nfc/nfcmrvl/spi.c
+index a7faa0b..e2881b15 100644
+--- a/drivers/nfc/nfcmrvl/spi.c
++++ b/drivers/nfc/nfcmrvl/spi.c
+@@ -26,7 +26,6 @@
+ #include <net/nfc/nci.h>
+ #include <net/nfc/nci_core.h>
+ #include <linux/spi/spi.h>
+-#include <linux/gpio.h>
+ #include "nfcmrvl.h"
+ 
+ #define SPI_WAIT_HANDSHAKE	1
 -- 
-Kalle Valo
+2.9.3
