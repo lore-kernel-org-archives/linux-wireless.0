@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41854 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751070AbcKYI2y (ORCPT
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34276 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935654AbcKXBYb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 25 Nov 2016 03:28:54 -0500
-Message-ID: <1480061086.2517.103.camel@coelho.fi> (sfid-20161125_092857_396079_9DB8C861)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 25 Nov 2016 10:04:46 +0200
-In-Reply-To: <1479821515-13261-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479821515-13261-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] nl80211: provide minimum scheduled scan (plan) interval
+        Wed, 23 Nov 2016 20:24:31 -0500
+Received: by mail-pg0-f67.google.com with SMTP id e9so2198407pgc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:24:31 -0800 (PST)
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Date: Wed, 23 Nov 2016 17:24:24 -0800
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Zhaoyang Liu <liuzy@marvell.com>,
+        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
+        Avinash Patil <patila@marvell.com>
+Subject: [PATCH v2 0/7] Fix -Wunused-but-set-variable in mwifiex/
+Message-ID: <cover.1479950323.git.kirtika@google.com> (sfid-20161124_022502_384717_B06E95E8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This patchset is part of the effort led by Arnd Bergmann to clean up
+warnings in the kernel. This and following patchsets will focus on
+"-Wunused-but-set-variable" as it among the noisier ones. These were
+found compiling with W=1.
 
-On Tue, 2016-11-22 at 13:31 +0000, Arend van Spriel wrote:
-> The interval for scheduled scan may have a minimum value for
-> the device. Allow drivers to specify a minimum value in the
-> struct wiphy so user-space interval values can be validated
-> against it.
-> 
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
 
-I'm not sure this is necessary, because the interval is a "soft"
-requirement, there being no guarantee on the accuracy of the intervals.
- The minimum interval a firmware can support is probably variable,
-depending on how long time it takes for a scan to complete.  Let's say
-it takes 1 second to scan a certain amount of channels.  In this case,
-the minimum interval is probably 1 second (i.e. you can start a new
-scan immediately after the first one completed).  Now, if you're
-scanning more channels and it takes, say, 4 seconds to complete, the
-minimum interval would be 4 seconds.
+---
+Changes in v2:
+- Reapplied patches on top of wireless-drivers-next.
+- Patch 5/7 ("mwifiex: Remove unused 'pm_flag' variable") had to be 
+  redone slightly. The others applied cleanly with 'patch -p1'.
 
-The iwlwifi firmware treats the interval as the amount of time to wait
-*after* one scan cycle completes before starting the cycle.  Since
-sched scan is mostly used while the system is suspended, the interval
-can be quite large and the accuracy really doesn't matter.  The
-absoulte time when the scan cycles occur will drift over time, but does
-it matter?
+Kirtika Ruchandani (7):
+  mwifiex: Removed unused mwifiex_private* 'priv' variable
+  mwifiex: Remove unused  'chan_num' variable
+  mwifiex: Remove unused 'sta_ptr' variable
+  mwifiex: Remove unused 'adapter'variable
+  mwifiex: Remove unused 'pm_flag' variable
+  mwifiex: Removed unused 'pkt_type' variable
+  mwifiex: Remove unused 'bcd_usb' variable
 
-So, for firmwares that really need to get a minimum value, I think
-bumping up to the minimum allowed if the provided value is too low,
-should be done in the driver.
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 --
+ drivers/net/wireless/marvell/mwifiex/main.c     | 3 ---
+ drivers/net/wireless/marvell/mwifiex/scan.c     | 8 +++-----
+ drivers/net/wireless/marvell/mwifiex/sdio.c     | 5 -----
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c  | 2 --
+ drivers/net/wireless/marvell/mwifiex/usb.c      | 3 +--
+ 6 files changed, 4 insertions(+), 19 deletions(-)
 
---
-Cheers,
-Luca.
+-- 
+2.8.0.rc3.226.g39d4020
