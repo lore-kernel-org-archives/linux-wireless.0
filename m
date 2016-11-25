@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39390 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752563AbcKRJsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 04:48:18 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH v2 5/9] rt2800: correct AUTO_RSP_CFG
-Date: Fri, 18 Nov 2016 10:43:57 +0100
-Message-Id: <1479462241-9299-6-git-send-email-sgruszka@redhat.com> (sfid-20161118_104822_275211_57E351ED)
-In-Reply-To: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
-References: <1479462241-9299-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38662 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750801AbcKYKA1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Nov 2016 05:00:27 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/4] rsi: Add support to filter rx frames
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479465429-2412-1-git-send-email-prameela.j04cs@gmail.com>
+References: <1479465429-2412-1-git-send-email-prameela.j04cs@gmail.com>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20161125094812.A2338613C2@smtp.codeaurora.org> (sfid-20161125_110051_167740_0F8AEEB4)
+Date: Fri, 25 Nov 2016 09:48:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize AUTO_RSP_CFG register to similar value as vendor driver does.
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> wrote:
+> Filtering rx frames after connection in station mode avoids the
+> overhead of processing un-necessary frames. Hence rx filter frame
+> is added which can be configured to device at suitable times.
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Do not set BAC_ACK_POLICY based on short preamble setting, those are
-unrelated.
+4 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+e6d6428449c5 rsi: Add support to filter rx frames
+8b36de8cf5ab rsi: Add support for configuring tx power
+4edbcd1aa783 rsi: Add support for antenna selection
+61d108421422 rsi: Add support for 802.11d
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 9ecdc4c..ff4a7c3 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1691,8 +1691,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
- 
- 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
- 		rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
--		rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
--				   !!erp->short_preamble);
- 		rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE,
- 				   !!erp->short_preamble);
- 		rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
-@@ -4735,9 +4733,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AUTORESPONDER, 1);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY, 1);
--	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 0);
-+	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 1);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MREF, 0);
--	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 1);
-+	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 0);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_DUAL_CTS_EN, 0);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_ACK_CTS_PSM_BIT, 0);
- 	rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
 -- 
-1.8.3.1
+https://patchwork.kernel.org/patch/9436189/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
