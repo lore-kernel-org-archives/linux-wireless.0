@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:34757 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753287AbcKRTYU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59286 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750850AbcKYJuZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 14:24:20 -0500
-Received: by mail-qk0-f196.google.com with SMTP id y205so858621qkb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:20 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 09/11] ath10k: Mailbox address definitions
-Date: Fri, 18 Nov 2016 20:22:49 +0100
-Message-Id: <1479496971-19174-10-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202429_580083_346DA1EA)
-In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 25 Nov 2016 04:50:25 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] mwifiex: cleanup wake-IRQ handling if suspend fails
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
+References: <1479489205-30288-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <rajatja@google.com>,
+        <briannorris@google.com>, <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161125095019.4BC32613D3@smtp.codeaurora.org> (sfid-20161125_105048_958496_87688B1A)
+Date: Fri, 25 Nov 2016 09:50:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Address definitions for SDIO/mbox based chipsets.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Brian Norris <briannorris@chromium.org>
+> 
+> We don't want to leave the wake IRQ enabled.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/hw.h |   53 ++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+2 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 883547f..46142e9 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -814,6 +814,59 @@ struct ath10k_hw_ops {
- #define QCA9887_EEPROM_ADDR_LO_MASK		0x00ff0000
- #define QCA9887_EEPROM_ADDR_LO_LSB		16
- 
-+#define MBOX_RESET_CONTROL_ADDRESS		0x00000000
-+#define MBOX_HOST_INT_STATUS_ADDRESS		0x00000800
-+#define MBOX_HOST_INT_STATUS_ERROR_LSB		7
-+#define MBOX_HOST_INT_STATUS_ERROR_MASK		0x00000080
-+#define MBOX_HOST_INT_STATUS_CPU_LSB		6
-+#define MBOX_HOST_INT_STATUS_CPU_MASK		0x00000040
-+#define MBOX_HOST_INT_STATUS_COUNTER_LSB	4
-+#define MBOX_HOST_INT_STATUS_COUNTER_MASK	0x00000010
-+#define MBOX_CPU_INT_STATUS_ADDRESS		0x00000801
-+#define MBOX_ERROR_INT_STATUS_ADDRESS		0x00000802
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_LSB	2
-+#define MBOX_ERROR_INT_STATUS_WAKEUP_MASK	0x00000004
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_LSB	1
-+#define MBOX_ERROR_INT_STATUS_RX_UNDERFLOW_MASK	0x00000002
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_LSB	0
-+#define MBOX_ERROR_INT_STATUS_TX_OVERFLOW_MASK	0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ADDRESS		0x00000803
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_COUNTER_MASK	0x000000ff
-+#define MBOX_RX_LOOKAHEAD_VALID_ADDRESS		0x00000805
-+#define MBOX_INT_STATUS_ENABLE_ADDRESS		0x00000828
-+#define MBOX_INT_STATUS_ENABLE_ERROR_LSB	7
-+#define MBOX_INT_STATUS_ENABLE_ERROR_MASK	0x00000080
-+#define MBOX_INT_STATUS_ENABLE_CPU_LSB		6
-+#define MBOX_INT_STATUS_ENABLE_CPU_MASK		0x00000040
-+#define MBOX_INT_STATUS_ENABLE_INT_LSB		5
-+#define MBOX_INT_STATUS_ENABLE_INT_MASK		0x00000020
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_LSB	4
-+#define MBOX_INT_STATUS_ENABLE_COUNTER_MASK	0x00000010
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_LSB	0
-+#define MBOX_INT_STATUS_ENABLE_MBOX_DATA_MASK	0x0000000f
-+#define MBOX_CPU_INT_STATUS_ENABLE_ADDRESS	0x00000819
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_CPU_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_ERROR_STATUS_ENABLE_ADDRESS	0x0000081a
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_LSB  1
-+#define MBOX_ERROR_STATUS_ENABLE_RX_UNDERFLOW_MASK 0x00000002
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_LSB   0
-+#define MBOX_ERROR_STATUS_ENABLE_TX_OVERFLOW_MASK  0x00000001
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_ADDRESS	0x0000081b
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_LSB	0
-+#define MBOX_COUNTER_INT_STATUS_ENABLE_BIT_MASK	0x000000ff
-+#define MBOX_COUNT_ADDRESS			0x00000820
-+#define MBOX_COUNT_DEC_ADDRESS			0x00000840
-+#define MBOX_WINDOW_DATA_ADDRESS		0x00000874
-+#define MBOX_WINDOW_WRITE_ADDR_ADDRESS		0x00000878
-+#define MBOX_WINDOW_READ_ADDR_ADDRESS		0x0000087c
-+#define MBOX_CPU_DBG_SEL_ADDRESS		0x00000883
-+#define MBOX_CPU_DBG_ADDRESS			0x00000884
-+#define MBOX_RTC_BASE_ADDRESS			0x00000000
-+#define MBOX_GPIO_BASE_ADDRESS			0x00005000
-+#define MBOX_MBOX_BASE_ADDRESS			0x00008000
-+
- #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
- 
- /* Register definitions for first generation ath10k cards. These cards include
+d96e39270ba5 mwifiex: cleanup wake-IRQ handling if suspend fails
+b9da4d223bda mwifiex: avoid double-disable_irq() race
+
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9437097/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
