@@ -1,170 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44675 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756489AbcKKNKv (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33041 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752737AbcKYXth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:10:51 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Shengzhen Li <szli@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
-Date: Fri, 11 Nov 2016 18:40:08 +0530
-Message-ID: <1478869818-4340-1-git-send-email-akarwar@marvell.com> (sfid-20161111_141057_037597_C45C3C12)
+        Fri, 25 Nov 2016 18:49:37 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <871sxza9al.fsf@kamboji.qca.qualcomm.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+ <87insxg0yc.fsf@kamboji.qca.qualcomm.com> <871sxza9al.fsf@kamboji.qca.qualcomm.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sat, 26 Nov 2016 00:49:14 +0100
+Message-ID: <CAFBinCC2r6zHJA15CaEDrMYJKPcaE6NfPXctOb3zYmnPctX8JA@mail.gmail.com> (sfid-20161126_005005_807492_7A2EFE76)
+Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+On Fri, Nov 25, 2016 at 4:06 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+>>
+>>> There are two types of swapping the EEPROM data in the ath9k driver.
+>>> Before this series one type of swapping could not be used without the
+>>> other.
+>>>
+>>> The first type of swapping looks at the "magic bytes" at the start of
+>>> the EEPROM data and performs swab16 on the EEPROM contents if needed.
+>>> The second type of swapping is EEPROM format specific and swaps
+>>> specific fields within the EEPROM itself (swab16, swab32 - depends on
+>>> the EEPROM format).
+>>>
+>>> With this series the second part now looks at the EEPMISC register
+>>> inside the EEPROM, which uses a bit to indicate if the EEPROM data
+>>> is Big Endian (this is also done by the FreeBSD kernel).
+>>> This has a nice advantage: currently there are some out-of-tree hacks
+>>> (in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
+>>> Big Endian system (= no swab16 is performed) but the EEPROM itself
+>>> indicates that it's data is Little Endian. Until now the out-of-tree
+>>> code simply did a swab16 before passing the data to ath9k, so ath9k
+>>> first did the swab16 - this also enabled the format specific swapping.
+>>> These out-of-tree hacks are still working with the new logic, but it
+>>> is recommended to remove them. This implementation is based on a
+>>> discussion with Arnd Bergmann who raised concerns about the
+>>> robustness and portability of the swapping logic in the original OF
+>>> support patch review, see [0].
+>>>
+>>> After a second round of patches (= v1 of this series) neither Arnd
+>>> Bergmann nor I were really happy with the complexity of the EEPROM
+>>> swapping logic. Based on a discussion (see [1] and [2]) we decided
+>>> that ath9k should use a defined format (specifying the endianness
+>>> of the data - I went with __le16 and __le32) when accessing the
+>>> EEPROM fields. A benefit of this is that we enable the EEPMISC based
+>>> swapping logic by default, just like the FreeBSD driver, see [3]. On
+>>> the devices which I have tested (see below) ath9k now works without
+>>> having to specify the "endian_check" field in ath9k_platform_data (or
+>>> a similar logic which could provide this via devicetree) as ath9k now
+>>> detects the endianness automatically. Only EEPROMs which are mangled
+>>> by some out-of-tree code still need the endian_check flag (or one can
+>>> simply remove that mangling from the out-of-tree code).
+>>>
+>>> Testing:
+>>> - tested by myself on AR9287 with Big Endian EEPROM
+>>> - tested by myself on AR9227 with Little Endian EEPROM
+>>> - tested by myself on AR9381 (using the ar9003_eeprom implementation,
+>>>   which did not suffer from this whole problem)
+>>> - how do we proceed with testing? maybe we could keep this in a
+>>>   feature-branch and add these patches to LEDE once we have an ACK to
+>>>   get more people to test this
+>>>
+>>> This series depends on my other series (v7):
+>>> "add devicetree support to ath9k" - see [4]
+>>
+>> I think this looks pretty good. If there's a bug somewhere it should be
+>> quite easy to fix so I'm not that worried and would be willing to take
+>> these as soon as I have applied the dependency series. IIRC your
+>> devicetree patches will have at least one more review round so that will
+>> take some time still. In the meantime it would be great if LEDE folks
+>> could take a look at these and comment (or test).
+>
+> So are everyone happy with this? I haven't seen any comments. If I don't
+> here anything I'm planning to take these, most likely for 4.11.
+after being busy due to <daytime job and other things in life> I'm
+currently trying to get the patches into LEDE: [0] (so far there are
+no major objections)
+once we get this into LEDE we'll see pretty soon if there are any
+problems or not -> 4.11 sounds good to me!
 
-We may get SLEEP event from firmware even if TXDone interrupt
-for last Tx packet is still pending. In this case, we may
-end up accessing PCIe memory for handling TXDone after power
-save handshake is completed. This causes kernel crash with
-external abort.
 
-This patch will only allow downloading sleep confirm
-when no tx done interrupt is pending in the hardware.
+Regards,
+Martin
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: address format issues(Brain)
-RESEND v2(Applicable for complete patch series):
-    1) Fixed syntax issue "changelog not placed after the  Sign-offs"
-       pointed by Brian.
-    2) Dropped "[v2,03/12] mwifiex: don't do unbalanced free()'ing in
-       cleanup_if()" patch in this series. It was already sent by Brian
-       separately.
-v3: Same as RESEND v2.
 
-Hi Kalle,
-
-There are multiple mwifiex patches under review. I want you consider them
-in following sequence(first being oldest) to avoid conflicts
-
-[v3] mwifiex: report wakeup for wowlan
-mwifiex: add power save parameters in hs_cfg cmd
-[2/2] mwifiex: ignore calibration data failure (Note: 1/2 has dropped)
-[v6] mwifiex: parse device tree node for PCIe
-[v2,1/3] mwifiex: Allow mwifiex early access to device structure
-[v2,2/3] mwifiex: Introduce mwifiex_probe_of() to parse common properties
-[v2,3/3] mwifiex: Enable WoWLAN for both sdio and pcie
-mwifiex: don't do unbalanced free()'ing in cleanup_if()
-mwifiex: printk() overflow with 32-byte SSIDs
-mwifiex: fix memory leak in mwifiex_save_hidden_ssid_channels()
-[v3,01/11] mwifiex: check tx_hw_pending before downloading sleep confirm
-[v3,02/11] mwifiex: complete blocked power save handshake in main process
-[v3,03/11] mwifiex: resolve races between async FW init (failure) and device removal
-[v3,04/11] mwifiex: remove redundant pdev check in suspend/resume handlers
-[v3,05/11] mwifiex: don't pretend to resume while remove()'ing
-[v3,06/11] mwifiex: resolve suspend() race with async FW init failure
-[v3,07/11] mwifiex: reset card->adapter during device unregister
-[v3,08/11] mwifiex: usb: handle HS failures
-[v3,09/11] mwifiex: sdio: don't check for NULL sdio_func
-[v3,10/11] mwifiex: stop checking for NULL drvata/intfdata
-[v3,11/11] mwifiex: pcie: stop checking for NULL adapter->card
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 5 +++--
- drivers/net/wireless/marvell/mwifiex/init.c   | 1 +
- drivers/net/wireless/marvell/mwifiex/main.h   | 1 +
- drivers/net/wireless/marvell/mwifiex/pcie.c   | 5 +++++
- 4 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 5347728..25a7475 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1118,13 +1118,14 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- void
- mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
- {
--	if (!adapter->cmd_sent &&
-+	if (!adapter->cmd_sent && !atomic_read(&adapter->tx_hw_pending) &&
- 	    !adapter->curr_cmd && !IS_CARD_RX_RCVD(adapter))
- 		mwifiex_dnld_sleep_confirm_cmd(adapter);
- 	else
- 		mwifiex_dbg(adapter, CMD,
--			    "cmd: Delay Sleep Confirm (%s%s%s)\n",
-+			    "cmd: Delay Sleep Confirm (%s%s%s%s)\n",
- 			    (adapter->cmd_sent) ? "D" : "",
-+			    atomic_read(&adapter->tx_hw_pending) ? "T" : "",
- 			    (adapter->curr_cmd) ? "C" : "",
- 			    (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 82839d9..b36cb3f 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -270,6 +270,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- 	adapter->adhoc_11n_enabled = false;
- 
- 	mwifiex_wmm_init(adapter);
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 
- 	sleep_cfm_buf = (struct mwifiex_opt_sleep_confirm *)
- 					adapter->sleep_cfm->data;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 11abc49..b0c501d 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -857,6 +857,7 @@ struct mwifiex_adapter {
- 	atomic_t rx_pending;
- 	atomic_t tx_pending;
- 	atomic_t cmd_pending;
-+	atomic_t tx_hw_pending;
- 	struct workqueue_struct *workqueue;
- 	struct work_struct main_work;
- 	struct workqueue_struct *rx_workqueue;
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ba1fa17..509c156 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -522,6 +522,7 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
- 		}
- 	}
- 
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 	return 0;
- }
- 
-@@ -721,6 +722,7 @@ static void mwifiex_cleanup_txq_ring(struct mwifiex_adapter *adapter)
- 		card->tx_buf_list[i] = NULL;
- 	}
- 
-+	atomic_set(&adapter->tx_hw_pending, 0);
- 	return;
- }
- 
-@@ -1158,6 +1160,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 							    -1);
- 			else
- 				mwifiex_write_data_complete(adapter, skb, 0, 0);
-+			atomic_dec(&adapter->tx_hw_pending);
- 		}
- 
- 		card->tx_buf_list[wrdoneidx] = NULL;
-@@ -1250,6 +1253,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- 		wrindx = (card->txbd_wrptr & reg->tx_mask) >> reg->tx_start_ptr;
- 		buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
- 		card->tx_buf_list[wrindx] = skb;
-+		atomic_inc(&adapter->tx_hw_pending);
- 
- 		if (reg->pfu_enabled) {
- 			desc2 = card->txbd_ring[wrindx];
-@@ -1327,6 +1331,7 @@ static int mwifiex_pcie_send_data_complete(struct mwifiex_adapter *adapter)
- done_unmap:
- 	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_TODEVICE);
- 	card->tx_buf_list[wrindx] = NULL;
-+	atomic_dec(&adapter->tx_hw_pending);
- 	if (reg->pfu_enabled)
- 		memset(desc2, 0, sizeof(*desc2));
- 	else
--- 
-1.9.1
+[0] http://lists.infradead.org/pipermail/lede-dev/2016-November/004231.html
