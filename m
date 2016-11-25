@@ -1,81 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:33397 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751328AbcKQRVo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34726 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751365AbcKYJzf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:21:44 -0500
-Date: Thu, 17 Nov 2016 18:21:34 +0100
-From: Henrik Eriksson <henrik.eriksson@axis.com>
-To: Benjamin Berg <benjamin@sipsolutions.net>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: Re: [PATCH 8/8] Print frequency of radar events.
-Message-ID: <20161117172134.GB14213@lnxhenriken2.se.axis.com> (sfid-20161117_182209_818204_71DE7DD0)
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
- <20161107145943.16761-9-benjamin@sipsolutions.net>
+        Fri, 25 Nov 2016 04:55:35 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20161107145943.16761-9-benjamin@sipsolutions.net>
+Subject: Re: mwifiex: Disable adhoc feature based on firmware capability
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479730744-8964-1-git-send-email-akarwar@marvell.com>
+References: <1479730744-8964-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Karthik D A <karthida@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161125095535.21E1D613D3@smtp.codeaurora.org> (sfid-20161125_105540_306773_90C161FF)
+Date: Fri, 25 Nov 2016 09:55:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 07, 2016 at 15:59:43 +0100, Benjamin Berg wrote:
-> From: Benjamin Berg <benjamin.berg@open-mesh.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Karthik D A <karthida@marvell.com>
 > 
-> Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-> Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
-> ---
->  event.c | 48 +++++++++++++++++++++++++-----------------------
->  1 file changed, 25 insertions(+), 23 deletions(-)
+> We will read fw_cap_info filled by firmware to check whether to
+> skip ADHOC related commands or not. Also, IBSS_COALESCING_STATUS
+> command has been moved from init path to adhoc network creation
+> path.
 > 
-> diff --git a/event.c b/event.c
-> index 446debb..8014d73 100644
-> --- a/event.c
-> +++ b/event.c
-> @@ -584,30 +584,32 @@ static int print_event(struct nl_msg *msg, void *arg)
->  				   nla_data(tb[NL80211_ATTR_VENDOR_DATA]),
->  				   nla_len(tb[NL80211_ATTR_VENDOR_DATA]));
->  		break;
-> -	case NL80211_CMD_RADAR_DETECT:
-> -		printf("radar event ");
-> -		if (tb[NL80211_ATTR_RADAR_EVENT]) {
-> -			switch (nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT])) {
-> -				case NL80211_RADAR_DETECTED:
-> -					printf("(radar detected)");
-> -					break;
-> -				case NL80211_RADAR_CAC_FINISHED:
-> -					printf("(cac finished)");
-> -					break;
-> -				case NL80211_RADAR_CAC_ABORTED:
-> -					printf("(cac aborted)");
-> -					break;
-> -				case NL80211_RADAR_NOP_FINISHED:
-> -					printf("(nop finished)");
-> -					break;
-> -				default:
-> -					printf("(unknown)");
-> -					break;
-> -			};
-> -		} else {
-> -			printf("(unknown)");
-> +	case NL80211_CMD_RADAR_DETECT: {
-> +			enum nl80211_radar_event event_type;
-> +			uint32_t freq;
-> +
-> +			if (!tb[NL80211_ATTR_RADAR_EVENT] || !tb[NL80211_ATTR_WIPHY_FREQ])
-> +				printf("BAD radar event");
+> Signed-off-by: Karthik D A <karthida@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Should not this end the parsing here or at least avoid getting the value of
-the NULL attributes below?  I do not know if libnl nla_get_u32() is
-intended to be NULL safe, but following
-https://www.infradead.org/~tgr/libnl/doc/api/attr_8c_source.html#l00624
-it seems like you will get whatever u32 value is at address
-(NULL+)NLA_HDRLEN, assuming it is readable.  The original behavior was to
-do nothing if tb[NL80211_ATTR_RADAR_EVENT] was not set.
+Patch applied to wireless-drivers-next.git, thanks.
 
-> +			freq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
-> +			event_type = nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT]);
+e267e71e68ae mwifiex: Disable adhoc feature based on firmware capability
 
-br,
-henrik
+-- 
+https://patchwork.kernel.org/patch/9439379/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
