@@ -1,62 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33122 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755734AbcKXIU3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 24 Nov 2016 03:20:29 -0500
-Received: by mail-pf0-f194.google.com with SMTP id 144so1637931pfv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 24 Nov 2016 00:19:56 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Thu, 24 Nov 2016 00:01:23 -0800
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Raja Mani <rmani@qti.qualcomm.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] ath10k: Remove unused 'buf_len' variable
-Message-ID: <196e46eee00fd3ebb56da1373c36f3dff66f2ae1.1479974100.git.kirtika@chromium.org> (sfid-20161124_092032_879736_5AE46DCA)
-References: <cover.1479974100.git.kirtika@chromium.org>
+Received: from mail-by2nam03on0079.outbound.protection.outlook.com ([104.47.42.79]:49664
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751644AbcKYKtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Nov 2016 05:49:13 -0500
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+ <a5075f50-25c6-18a1-bd5b-309927dacdab@quantenna.com>
+ <87d1hmnrqj.fsf@purkki.adurom.net>
+ <a5fa00c7-f8db-708a-cd21-4d5b0fbdf49b@quantenna.com>
+ <87shqhf5rs.fsf@kamboji.qca.qualcomm.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <4079db3d-ae29-28a3-9149-1d401ca38f06@quantenna.com> (sfid-20161125_114918_581387_D8206B74)
+Date: Fri, 25 Nov 2016 13:16:33 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479974100.git.kirtika@chromium.org>
+In-Reply-To: <87shqhf5rs.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 32653cf19554 removed the call to 'skb_trim(skb, buf_len)'
-in ath10k_wmi_event_mgmt_rx(), leaving the buf_len variable set but
-unused. Compiling with W=1 gives the following warning, fix it.
-drivers/net/wireless/ath/ath10k/wmi.c: In function ‘ath10k_wmi_event_mgmt_rx’:
-drivers/net/wireless/ath/ath10k/wmi.c:2280:6: warning: variable ‘buf_len’ set but not used [-Wunused-but-set-variable]
+On 11/24/2016 02:59 PM, Kalle Valo wrote:
+> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+>
+>> On 11/23/2016 06:25 PM, Kalle Valo wrote:
+>>> IgorMitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+>>>
+>>>> To clarify with you and Kalle, as persons involved with
+>>>> linux-wireless: is my understanding correct that submitting firmware
+>>>> into linux-fimware repository is a prerequisite to accepting new
+>>>> driver into linux-wireless?
+>>> In my opinion the most important is that the device is usable with an
+>>> upstream driver so that anyone can start using the driver (if they have
+>>> the hardware).
+>>>
+>>>> There is an option to start Quantenna device from internal flash
+>>>> memory, no external binary files involved. If we will introduce this
+>>>> functionality and remove code handling external firmware for now
+>>>> (until firmware problem resolved), would that allow driver to be
+>>>> reviewed/accepted?
+>>> Do all the publically available hardware contain the firmware in
+>>> internal flash (flashed in the factory)? Or is this something which must
+>>> be installed separately for each board's internal flash by the user?
+>> Each board must have flash installed on it, preflashed in the factory
+>> with uboot and firmware binary, otherwise board won't boot
+> Will the preflashed firmware binary will have all the normal
+> functionality needed by this driver? I mean that you can start an AP
+> interface etc.
 
-This is a harmless warning, and is only being fixed to reduce the
-noise with W=1 in the kernel.
+Yes, we tried to design system in a way that the same firmware will 
+support working as a FullMAC device with cfg80211 framework, as well as 
+working in a default mode of emulating ethernet card (when all wireless 
+rated components are hidden inside device itself); it's just a problem 
+of telling device which mode it should boot to.
 
-Fixes: 32653cf19554 ("ath10k: implement intermediate event args")
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 2 --
- 1 file changed, 2 deletions(-)
+>> (won't boot without uboot, firmware itself is not mandatory).
+> Are you expecting that there are devices on the field which have uboot
+> preflashed but not the firmware?
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 387c4ee..1f28187 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2277,7 +2277,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
-	u32 phy_mode;
-	u32 snr;
-	u32 rate;
--	u32 buf_len;
-	u16 fc;
-	int ret;
+For the new QSR10G chipset, there are no such devices right now. I think 
+it is possible for them to appear in the future: makes sense to have 
+designs with smaller flash sizes, to save a few cents on each device, 
+but hopefully by that time we will have firmware binary accepted in 
+linux-firmare.
 
-@@ -2289,7 +2288,6 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
-	}
 
-	channel = __le32_to_cpu(arg.channel);
--	buf_len = __le32_to_cpu(arg.buf_len);
-	rx_status = __le32_to_cpu(arg.status);
-	snr = __le32_to_cpu(arg.snr);
-	phy_mode = __le32_to_cpu(arg.phy_mode);
---
-2.8.0.rc3.226.g39d4020
+>
+>> Booting from flash is default behavior on boards that are currently on
+>> the market, but for developemnt purpuses it's not very convenient and
+>> harder to upgrade.
+> Sure, I understand.
+>
+>>> BTW, the original mail with the firmware image didn't make it to the
+>>> list, I guess it was too big? It would be good if you could post the
+>>> license separately so that people can see it.
+>>>
+>> I resent the email without binary patch to linux-wireless.
+> Saw it now, thanks.
+>
