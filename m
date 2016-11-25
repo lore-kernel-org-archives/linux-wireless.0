@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57872 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754872AbcKBOMd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 10:12:33 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 08/10] rt2800: use RTS/CTS protection instead of CTS-to-self
-Date: Wed,  2 Nov 2016 15:11:03 +0100
-Message-Id: <1478095865-8651-9-git-send-email-sgruszka@redhat.com> (sfid-20161102_151237_253006_B5998830)
-In-Reply-To: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
-References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49496 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755288AbcKYPQS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Nov 2016 10:16:18 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath9k: Introduce airtime fairness scheduling between
+ stations
+Date: Fri, 25 Nov 2016 15:16:13 +0000
+Message-ID: <87wpfr8u9v.fsf@kamboji.qca.qualcomm.com> (sfid-20161125_161638_530558_8F9BF1F6)
+References: <20160617090929.31606-1-toke@toke.dk>
+        <20161124135455.29327-1-toke@toke.dk>
+In-Reply-To: <20161124135455.29327-1-toke@toke.dk> ("Toke =?utf-8?Q?H?=
+ =?utf-8?Q?=C3=B8iland-J=C3=B8rgensen=22's?=    message of "Thu, 24 Nov 2016
+ 14:54:55 +0100")
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change default to RTS/CTS protection. This has a cost of transmitting
-one more control frame (RTS) however protect us from traffic from
-hidden node.
-
-On station mode will use CTS-to-self if AP will configure that
-for the network.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 812f8e7..57bfec4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1621,7 +1621,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 		 * => Protect all HT40 transmissions.
- 		 */
- 		mm20_mode = gf20_mode = 0;
--		mm40_mode = gf40_mode = 2;
-+		mm40_mode = gf40_mode = 1;
- 
- 		break;
- 	case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-@@ -1644,7 +1644,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 		 * Legacy STAs are present
- 		 * => Protect all HT transmissions.
- 		 */
--		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 2;
-+		mm20_mode = mm40_mode = gf20_mode = gf40_mode = 1;
- 
- 		/*
- 		 * If erp protection is needed we have to protect HT
-@@ -1660,7 +1660,7 @@ static void rt2800_config_ht_opmode(struct rt2x00_dev *rt2x00dev,
- 
- 	/* check for STAs not supporting greenfield mode */
- 	if (any_sta_nongf)
--		gf20_mode = gf40_mode = 2;
-+		gf20_mode = gf40_mode = 1;
- 
- 	/* Update HT protection config */
- 	rt2800_register_read(rt2x00dev, MM20_PROT_CFG, &reg);
--- 
-1.7.1
+KFRoZSBtYWtlLXdpZmktZmFzdCBsaXN0IGlzIGFubm95aW5nIGFzIGl0IGFsd2F5cyBzcGFtcyBt
+ZSB3aGVuIGl0J3Mgb24NCkNDLCBzbyBkcm9wcGVkIGl0LikNCg0KVG9rZSBIw7hpbGFuZC1Kw7hy
+Z2Vuc2VuIDx0b2tlQHRva2UuZGs+IHdyaXRlczoNCg0KPiBUaGlzIHJld29ya3MgdGhlIGF0aDlr
+IGRyaXZlciB0byBzY2hlZHVsZSB0cmFuc21pc3Npb25zIHRvIGNvbm5lY3RlZA0KPiBzdGF0aW9u
+cyBpbiBhIHdheSB0aGF0IGVuZm9yY2VzIGFpcnRpbWUgZmFpcm5lc3MgYmV0d2VlbiB0aGVtLiBJ
+dA0KPiBhY2NvbXBsaXNoZXMgdGhpcyBieSBtZWFzdXJpbmcgdGhlIHRpbWUgc3BlbnQgdHJhbnNt
+aXR0aW5nIHRvIG9yDQo+IHJlY2VpdmluZyBmcm9tIGEgc3RhdGlvbiBhdCBUWCBhbmQgUlggY29t
+cGxldGlvbiwgYW5kIGFjY291bnRpbmcgdGhpcyB0bw0KPiBhIHBlci1zdGF0aW9uLCBwZXItUW9T
+IGxldmVsIGFpcnRpbWUgZGVmaWNpdC4gVGhlbiwgYW4gRlEtQ29EZWwgYmFzZWQNCj4gZGVmaWNp
+dCBzY2hlZHVsZXIgaXMgZW1wbG95ZWQgYXQgcGFja2V0IGRlcXVldWUgdGltZSwgdG8gY29udHJv
+bCB3aGljaA0KPiBzdGF0aW9uIGdldHMgdGhlIG5leHQgdHJhbnNtaXNzaW9uIG9wcG9ydHVuaXR5
+Lg0KPg0KPiBBaXJ0aW1lIGZhaXJuZXNzIGNhbiBzaWduaWZpY2FudGx5IGltcHJvdmUgdGhlIGVm
+ZmljaWVuY3kgb2YgdGhlIG5ldHdvcmsNCj4gd2hlbiBzdGF0aW9uIHJhdGVzIHZhcnkuIFRoZSBm
+b2xsb3dpbmcgdGhyb3VnaHB1dCB2YWx1ZXMgYXJlIGZyb20gYQ0KPiBzaW1wbGUgdGhyZWUtc3Rh
+dGlvbiB0ZXN0IHNjZW5hcmlvLCB3aGVyZSB0d28gc3RhdGlvbnMgb3BlcmF0ZSBhdCB0aGUNCj4g
+aGlnaGVzdCBIVDIwIHJhdGUsIGFuZCBvbmUgc3RhdGlvbiBhdCB0aGUgbG93ZXN0LCBhbmQgdGhl
+IHNjaGVkdWxlciBpcw0KPiBlbXBsb3llZCBhdCB0aGUgYWNjZXNzIHBvaW50Og0KPg0KPiAgICAg
+ICAgICAgICAgICAgICBCZWZvcmUgICAvICAgQWZ0ZXINCj4gRmFzdCBzdGF0aW9uIDE6ICAgIDE5
+LjE3ICAgLyAgIDI1LjA5IE1icHMNCj4gRmFzdCBzdGF0aW9uIDI6ICAgIDE5LjgzICAgLyAgIDI1
+LjIxIE1icHMNCj4gU2xvdyBzdGF0aW9uOiAgICAgICAyLjU4ICAgLyAgICAxLjc3IE1icHMNCj4g
+VG90YWw6ICAgICAgICAgICAgIDQxLjU4ICAgLyAgIDUyLjA3IE1icHMNCj4NCj4gVGhlIGJlbmVm
+aXQgb2YgYWlydGltZSBmYWlybmVzcyBnb2VzIHVwIHRoZSBtb3JlIHN0YXRpb25zIGFyZSBwcmVz
+ZW50Lg0KPiBJbiBhIDMwLXN0YXRpb24gdGVzdCB3aXRoIG9uZSBzdGF0aW9uIGFydGlmaWNpYWxs
+eSBsaW1pdGVkIHRvIDEgTWJwcywNCj4gd2UgaGF2ZSBzZWVuIGFnZ3JlZ2F0ZSB0aHJvdWdocHV0
+IGdvIGZyb20gMi4xNCB0byAxNy43NiBNYnBzLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBUb2tlIEjD
+uGlsYW5kLUrDuHJnZW5zZW4gPHRva2VAdG9rZS5kaz4NCg0KWy4uLl0NCg0KPiArdm9pZCBhdGhf
+YWNxX2xvY2soc3RydWN0IGF0aF9zb2Z0YyAqc2MsIHN0cnVjdCBhdGhfYWNxICphY3EpDQo+ICsJ
+X19hY3F1aXJlcygmYWNxLT5sb2NrKQ0KPiArew0KPiArCXNwaW5fbG9ja19iaCgmYWNxLT5sb2Nr
+KTsNCj4gK30NCj4gKw0KPiArdm9pZCBhdGhfYWNxX3VubG9jayhzdHJ1Y3QgYXRoX3NvZnRjICpz
+Yywgc3RydWN0IGF0aF9hY3EgKmFjcSkNCj4gKwlfX3JlbGVhc2VzKCZhY3EtPmxvY2spDQo+ICt7
+DQo+ICsJc3Bpbl91bmxvY2tfYmgoJmFjcS0+bG9jayk7DQo+ICt9DQoNCldoeSB0aGVzZT8gVG8g
+bWUgaXQgbG9va3MgbGlrZSB0aGV5IGp1c3QgYWRkIGFuIGV4dHJhIGZ1bmN0aW9uIGp1bXAgYW5k
+DQp1bm5lY2Nlc3NhcnkgZXh0cmEgbGF5ZXIuDQoNCi0tIA0KS2FsbGUgVmFsbw==
