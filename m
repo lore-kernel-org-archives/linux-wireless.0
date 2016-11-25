@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35571 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752301AbcKRTYM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37106 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751350AbcKYJ5S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 14:24:12 -0500
-Received: by mail-qk0-f195.google.com with SMTP id n204so34262308qke.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 11:24:12 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v2 01/11] ath10k: htc: made static function public
-Date: Fri, 18 Nov 2016 20:22:41 +0100
-Message-Id: <1479496971-19174-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20161118_202416_911151_7868CE01)
-In-Reply-To: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 25 Nov 2016 04:57:18 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmsmac: fix array out-of-bounds access in qm_log10
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
+References: <1479734949-6300-1-git-send-email-tobias.regnery@gmail.com>
+To: Tobias Regnery <tobias.regnery@gmail.com>
+Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
+        franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        brcm80211-dev-list.pdl@broadcom.com,
+        Tobias Regnery <tobias.regnery@gmail.com>
+Message-Id: <20161125095717.EE565613A8@smtp.codeaurora.org> (sfid-20161125_105723_771536_BDDE26C3)
+Date: Fri, 25 Nov 2016 09:57:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed ath10k_htc_notify_tx_completion and
-ath10k_htc_process_trailer from static to non static.
+Tobias Regnery <tobias.regnery@gmail.com> wrote:
+> I get the following UBSAN warning during boot on my laptop:
+> 
+> ================================================================================
+> UBSAN: Undefined behaviour in drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_qmath.c:280:21
+> index 32 is out of range for type 's16 [32]'
+> CPU: 0 PID: 879 Comm: NetworkManager Not tainted 4.9.0-rc4 #28
+> Hardware name: LENOVO Lenovo IdeaPad N581/INVALID, BIOS 5ECN96WW(V9.01) 03/14/2013
+> ffff8800b74a6478 ffffffff828e59d2 0000000041b58ab3 ffffffff8398330c
+> ffffffff828e5920 ffff8800b74a64a0 ffff8800b74a6450 0000000000000020
+> 1ffffffff845848c ffffed0016e94bf1 ffffffffc22c2460 000000006b9c0514
+> Call Trace:
+> [<ffffffff828e59d2>] dump_stack+0xb2/0x110
+> [<ffffffff828e5920>] ? _atomic_dec_and_lock+0x150/0x150
+> [<ffffffff82968c9d>] ubsan_epilogue+0xd/0x4e
+> [<ffffffff82969875>] __ubsan_handle_out_of_bounds+0xfa/0x13e
+> [<ffffffff8296977b>] ? __ubsan_handle_shift_out_of_bounds+0x241/0x241
+> [<ffffffffc0d48379>] ? bcma_host_pci_read16+0x59/0xa0 [bcma]
+> [<ffffffffc0d48388>] ? bcma_host_pci_read16+0x68/0xa0 [bcma]
+> [<ffffffffc212ad78>] ? read_phy_reg+0xe8/0x180 [brcmsmac]
+> [<ffffffffc2184714>] qm_log10+0x2e4/0x350 [brcmsmac]
+> [<ffffffffc2142eb8>] wlc_phy_init_lcnphy+0x538/0x1f20 [brcmsmac]
+> [<ffffffffc2142980>] ? wlc_lcnphy_periodic_cal+0x5c0/0x5c0 [brcmsmac]
+> [<ffffffffc1ba0c93>] ? ieee80211_open+0xb3/0x110 [mac80211]
+> [<ffffffff82f73a02>] ? sk_busy_loop+0x1e2/0x840
+> [<ffffffff82f7a6ce>] ? __dev_change_flags+0xae/0x220
+> ...
+> 
+> The report is valid: doing the math in this function, with an input value
+> N=63 the variable s16tableIndex gets a value of 31. This value is used as
+> an index in the array log_table with 32 entries. But the next line is:
+> 
+> 	s16errorApproximation = (s16) qm_mulu16(u16offset,
+> 				(u16) (log_table[s16tableIndex + 1] -
+> 				       log_table[s16tableIndex]));
+> 
+> With s16tableIndex + 1 we are trying an out-of-bounds access to the array.
+> 
+> The log_table array provides log2 values in q.15 format and the above
+> statement tries an error approximation with the next value. To fix this
+> issue add the next value to the array and update the comment accordingly.
+> 
+> Signed-off-by: Tobias Regnery <tobias.regnery@gmail.com>
 
-These functions are needed by SDIO/mbox.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   14 ++++++++------
- drivers/net/wireless/ath/ath10k/htc.h |    6 ++++++
- 2 files changed, 14 insertions(+), 6 deletions(-)
+4c0bfeaae9f9 brcmsmac: fix array out-of-bounds access in qm_log10
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 175aae3..26b1e15 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
- 
--static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
--					    struct sk_buff *skb)
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb)
- {
- 	struct ath10k *ar = ep->htc->ar;
- 
-@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
-+EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
- 
- static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 				      struct sk_buff *skb)
-@@ -227,10 +228,10 @@ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- 	spin_unlock_bh(&htc->tx_lock);
- }
- 
--static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
--				      u8 *buffer,
--				      int length,
--				      enum ath10k_htc_ep_id src_eid)
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid)
- {
- 	struct ath10k *ar = htc->ar;
- 	int status = 0;
-@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 
- 	return status;
- }
-+EXPORT_SYMBOL(ath10k_htc_process_trailer);
- 
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 0c55cd9..858e19f 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -354,5 +354,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
- void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb);
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid);
- 
- #endif
 -- 
-1.7.9.5
+https://patchwork.kernel.org/patch/9439423/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
