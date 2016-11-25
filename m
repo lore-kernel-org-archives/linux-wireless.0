@@ -1,78 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36942 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932132AbcKQRyg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5810 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755083AbcKYPGr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:54:36 -0500
-Received: by mail-wm0-f42.google.com with SMTP id t79so160952391wmt.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 09:54:35 -0800 (PST)
-Subject: Re: [PATCH 1/2] cfg80211: get rid of name indirection trick for
- ieee80211_get_channel()
-To: kbuild test robot <lkp@intel.com>
-References: <201611172039.TxaaQE2O%fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c1c3e6e1-cb48-314e-021c-f1579c168ad9@broadcom.com> (sfid-20161117_185442_306479_09A3CF2D)
-Date: Thu, 17 Nov 2016 13:38:46 +0100
+        Fri, 25 Nov 2016 10:06:47 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+Date: Fri, 25 Nov 2016 15:06:27 +0000
+Message-ID: <871sxza9al.fsf@kamboji.qca.qualcomm.com> (sfid-20161125_160653_419502_416750E8)
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+        <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+        <87insxg0yc.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87insxg0yc.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Wed, 12 Oct 2016 16:18:35 +0300")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <201611172039.TxaaQE2O%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-11-2016 13:32, kbuild test robot wrote:
-> Hi Arend,
-> 
-> [auto build test ERROR on mac80211-next/master]
-> [also build test ERROR on v4.9-rc5 next-20161117]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Arend-van-Spriel/cfg80211-get-rid-of-name-indirection-trick-for-ieee80211_get_channel/20161117-175449
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> config: x86_64-allmodconfig (attached as .config)
-> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Ah. Two drivers that are not fooled by the indirection. Will create a V2.
+> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+>
+>> There are two types of swapping the EEPROM data in the ath9k driver.
+>> Before this series one type of swapping could not be used without the
+>> other.
+>>
+>> The first type of swapping looks at the "magic bytes" at the start of
+>> the EEPROM data and performs swab16 on the EEPROM contents if needed.
+>> The second type of swapping is EEPROM format specific and swaps
+>> specific fields within the EEPROM itself (swab16, swab32 - depends on
+>> the EEPROM format).
+>>
+>> With this series the second part now looks at the EEPMISC register
+>> inside the EEPROM, which uses a bit to indicate if the EEPROM data
+>> is Big Endian (this is also done by the FreeBSD kernel).
+>> This has a nice advantage: currently there are some out-of-tree hacks
+>> (in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
+>> Big Endian system (=3D no swab16 is performed) but the EEPROM itself
+>> indicates that it's data is Little Endian. Until now the out-of-tree
+>> code simply did a swab16 before passing the data to ath9k, so ath9k
+>> first did the swab16 - this also enabled the format specific swapping.
+>> These out-of-tree hacks are still working with the new logic, but it
+>> is recommended to remove them. This implementation is based on a
+>> discussion with Arnd Bergmann who raised concerns about the
+>> robustness and portability of the swapping logic in the original OF
+>> support patch review, see [0].
+>>
+>> After a second round of patches (=3D v1 of this series) neither Arnd
+>> Bergmann nor I were really happy with the complexity of the EEPROM
+>> swapping logic. Based on a discussion (see [1] and [2]) we decided
+>> that ath9k should use a defined format (specifying the endianness
+>> of the data - I went with __le16 and __le32) when accessing the
+>> EEPROM fields. A benefit of this is that we enable the EEPMISC based
+>> swapping logic by default, just like the FreeBSD driver, see [3]. On
+>> the devices which I have tested (see below) ath9k now works without
+>> having to specify the "endian_check" field in ath9k_platform_data (or
+>> a similar logic which could provide this via devicetree) as ath9k now
+>> detects the endianness automatically. Only EEPROMs which are mangled
+>> by some out-of-tree code still need the endian_check flag (or one can
+>> simply remove that mangling from the out-of-tree code).
+>>
+>> Testing:
+>> - tested by myself on AR9287 with Big Endian EEPROM
+>> - tested by myself on AR9227 with Little Endian EEPROM
+>> - tested by myself on AR9381 (using the ar9003_eeprom implementation,
+>>   which did not suffer from this whole problem)
+>> - how do we proceed with testing? maybe we could keep this in a
+>>   feature-branch and add these patches to LEDE once we have an ACK to
+>>   get more people to test this
+>>
+>> This series depends on my other series (v7):
+>> "add devicetree support to ath9k" - see [4]
+>
+> I think this looks pretty good. If there's a bug somewhere it should be
+> quite easy to fix so I'm not that worried and would be willing to take
+> these as soon as I have applied the dependency series. IIRC your
+> devicetree patches will have at least one more review round so that will
+> take some time still. In the meantime it would be great if LEDE folks
+> could take a look at these and comment (or test).
 
-Regards,
-Arend
+So are everyone happy with this? I haven't seen any comments. If I don't
+here anything I'm planning to take these, most likely for 4.11.
 
-> All error/warnings (new ones prefixed by >>):
-> 
->    drivers/net/wireless/ath/ath10k/htt_rx.c: In function 'ath10k_htt_t2h_msg_handler':
->>> drivers/net/wireless/ath/ath10k/htt_rx.c:2333:4: error: implicit declaration of function '__ieee80211_get_channel' [-Werror=implicit-function-declaration]
->        __ieee80211_get_channel(ar->hw->wiphy, freq);
->        ^~~~~~~~~~~~~~~~~~~~~~~
->>> drivers/net/wireless/ath/ath10k/htt_rx.c:2332:21: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
->       ar->tgt_oper_chan =
->                         ^
->    cc1: some warnings being treated as errors
-> 
-> vim +/__ieee80211_get_channel +2333 drivers/net/wireless/ath/ath10k/htt_rx.c
-> 
-> c545070e Michal Kazior      2015-01-24  2326  	case HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND:
-> 8348db29 Rajkumar Manoharan 2015-03-25  2327  		break;
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2328  	case HTT_T2H_MSG_TYPE_CHAN_CHANGE: {
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2329  		u32 phymode = __le32_to_cpu(resp->chan_change.phymode);
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2330  		u32 freq = __le32_to_cpu(resp->chan_change.freq);
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2331  
-> 2ce9b25c Rajkumar Manoharan 2016-03-08 @2332  		ar->tgt_oper_chan =
-> 2ce9b25c Rajkumar Manoharan 2016-03-08 @2333  			__ieee80211_get_channel(ar->hw->wiphy, freq);
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2334  		ath10k_dbg(ar, ATH10K_DBG_HTT,
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2335  			   "htt chan change freq %u phymode %s\n",
-> 2ce9b25c Rajkumar Manoharan 2016-03-08  2336  			   freq, ath10k_wmi_phymode_str(phymode));
-> 
-> :::::: The code at line 2333 was first introduced by commit
-> :::::: 2ce9b25cefa64f11bcb21b21cf4a5e8c58c6d0af ath10k: handle channel change htt event
-> 
-> :::::: TO: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> :::::: CC: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
+--=20
+Kalle Valo=
