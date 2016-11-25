@@ -1,84 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:34816 "EHLO
-        mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754499AbcKBJEj (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35473 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752441AbcKYKH2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 05:04:39 -0400
-Received: by mail-lf0-f47.google.com with SMTP id b14so6923345lfg.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Nov 2016 02:04:38 -0700 (PDT)
-From: Filip Matusiak <filip.matusiak@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: filip.matusiak@tieto.com, marek.kwaczynski@tieto.com,
-        johannes@sipsolutions.net, davem@davemloft.net,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V2] mac80211: Ignore VHT IE from peer with wrong rx_mcs_map
-Date: Wed,  2 Nov 2016 10:04:26 +0100
-Message-Id: <1478077466-4308-1-git-send-email-filip.matusiak@tieto.com> (sfid-20161102_100459_871063_86056CB7)
+        Fri, 25 Nov 2016 05:07:28 -0500
+Received: by mail-pf0-f178.google.com with SMTP id i88so14689824pfk.2
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2016 02:07:06 -0800 (PST)
+Subject: Re: [PATCH] nl80211: provide minimum scheduled scan (plan) interval
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1479821515-13261-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1479821915.9021.4.camel@sipsolutions.net>
+ <5c249c34-5e8c-093a-c5df-3507cabc8872@broadcom.com>
+ <1480062330.4317.2.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Luca Coelho <luca@coelho.fi>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3fa55a67-4447-9c41-23d2-689db818b60d@broadcom.com> (sfid-20161125_110741_699147_C851A4DF)
+Date: Fri, 25 Nov 2016 11:06:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <1480062330.4317.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a workaround for VHT-enabled STAs which break the spec
-and have the VHT-MCS Rx map filled in with value 3 for all eight
-spacial streams, an example is AR9462 in AP mode.
 
-As per spec, in section 22.1.1 Introduction to the VHT PHY
-A VHT STA shall support at least single spactial stream VHT-MCSs
-0 to 7 (transmit and receive) in all supported channel widths.
 
-Some devices in STA mode will get firmware assert when trying to
-associate, examples are QCA9377 & QCA6174.
+On 11/25/2016 9:25 AM, Johannes Berg wrote:
+> Sorry, forgot to reply to this until Luca's email bumped it up...
+>
+> On Tue, 2016-11-22 at 21:06 +0100, Arend Van Spriel wrote:
+>
+>> Are we? Currently, the minimum is not checked in nl80211, but that
+>> does not say anything about the driver which might validate the
+>> interval as well and return an error.
+>
+> Well, since drivers currently don't return an error (even if they
+> ignore the value!) that *does* change the API.
+>
+>> What made me start looking at this is that in brcmfmac the interval
+>> in the request was ignored and a fixed interval was provisioned in
+>> the device. I wanted to fix that but was not sure if I needed to
+>> check it against our firmware min..max range and what the appropriate
+>> error handling should be. If silently changing what user-space is
+>> requesting is fine for this, I am happy to make it so. Preferably in
+>> nl80211.
+>
+> I think (agreeing with Luca) bumping it up is fine.
 
-Packet example of broken VHT Cap IE of AR9462:
+Fine by me although the "drift over time" reason seems only more reason 
+to have minimum validation mainly because nowhere is nl80211.h it is 
+stated that the interval is a "soft" requirement. Now Luca proposes 
+bumping to minimum should be done in the driver. What is your opinion?
 
-Tag: VHT Capabilities (IEEE Std 802.11ac/D3.1)
-    Tag Number: VHT Capabilities (IEEE Std 802.11ac/D3.1) (191)
-    Tag length: 12
-    VHT Capabilities Info: 0x00000000
-    VHT Supported MCS Set
-        Rx MCS Map: 0xffff
-            .... .... .... ..11 = Rx 1 SS: Not Supported (0x0003)
-            .... .... .... 11.. = Rx 2 SS: Not Supported (0x0003)
-            .... .... ..11 .... = Rx 3 SS: Not Supported (0x0003)
-            .... .... 11.. .... = Rx 4 SS: Not Supported (0x0003)
-            .... ..11 .... .... = Rx 5 SS: Not Supported (0x0003)
-            .... 11.. .... .... = Rx 6 SS: Not Supported (0x0003)
-            ..11 .... .... .... = Rx 7 SS: Not Supported (0x0003)
-            11.. .... .... .... = Rx 8 SS: Not Supported (0x0003)
-        ...0 0000 0000 0000 = Rx Highest Long GI Data Rate (in Mb/s, 0 = subfield not in use): 0x0000
-        Tx MCS Map: 0xffff
-        ...0 0000 0000 0000 = Tx Highest Long GI Data Rate  (in Mb/s, 0 = subfield not in use): 0x0000
+I will update the kernel doc to clarify what can be expected from the 
+interval value.
 
-Signed-off-by: Filip Matusiak <filip.matusiak@tieto.com>
----
- net/mac80211/vht.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index ee71576..6832bf6 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -270,6 +270,22 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 		vht_cap->vht_mcs.tx_mcs_map |= cpu_to_le16(peer_tx << i * 2);
- 	}
- 
-+	/*
-+	 * This is a workaround for VHT-enabled STAs which break the spec
-+	 * and have the VHT-MCS Rx map filled in with value 3 for all eight
-+	 * spacial streams, an example is AR9462.
-+	 *
-+	 * As per spec, in section 22.1.1 Introduction to the VHT PHY
-+	 * A VHT STA shall support at least single spactial stream VHT-MCSs
-+	 * 0 to 7 (transmit and receive) in all supported channel widths.
-+	 */
-+	if (vht_cap->vht_mcs.rx_mcs_map == cpu_to_le16(0xFFFF)) {
-+		vht_cap->vht_supported = false;
-+		sdata_info(sdata, "Ignoring VHT IE from %pM due to invalid rx_mcs_map\n",
-+			   sta->addr);
-+		return;
-+	}
-+
- 	/* finally set up the bandwidth */
- 	switch (vht_cap->cap & IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_MASK) {
- 	case IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ:
--- 
-2.7.4
+Regards,
+Arend
