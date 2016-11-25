@@ -1,192 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16435 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752158AbcKHPEA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41874 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751021AbcKYJVV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 10:04:00 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
-        "Tamizh chelvam" <c_traja@qti.qualcomm.com>
-Subject: [PATCH 4/4] ath10k: Add support to read btcoex related data from DT
-Date: Tue, 8 Nov 2016 20:34:45 +0530
-Message-ID: <1478617485-28223-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_160403_405409_C9B5A5F4)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 25 Nov 2016 04:21:21 -0500
+Message-ID: <1480065675.2517.109.camel@coelho.fi> (sfid-20161125_102127_766956_D279492E)
+From: Luca Coelho <luca@coelho.fi>
+To: Jouni Malinen <jouni@qca.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Fri, 25 Nov 2016 11:21:15 +0200
+In-Reply-To: <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
+References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
+         <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+IMHO "report better BSSs" is vague in this context.  It would better to
+use something more concrete like "add relative RSSI attribute to sched
+scan".
 
-BTCOEX feature is not supported by all qca40xx chipsets.
-Since btcoex enabled by default in firmware, host needs to
-enable COEX support depends on the hardware. This patch is
-used to read btcoex_support flag and btcoex gpio pin
-number from DT. Depends on the btcoex_support flag value
-host will expose BTCOEX support and btcoex gpio pin
-number to target.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c  |   44 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/core.h  |    9 +++++++
- drivers/net/wireless/ath/ath10k/debug.c |    3 +++
- drivers/net/wireless/ath/ath10k/mac.c   |    4 ++-
- drivers/net/wireless/ath/ath10k/wmi.c   |    1 +
- drivers/net/wireless/ath/ath10k/wmi.h   |    2 ++
- 6 files changed, 61 insertions(+), 2 deletions(-)
+On Thu, 2016-11-24 at 00:07 +0200, Jouni Malinen wrote:
+> From: vamsi krishna <vamsin@qti.qualcomm.com>
+> 
+> Enhance sched scan to support option of finding a better BSS while in
+> connected state. Firmware scans the medium and reports when it finds
+a
+> known BSS which has a significantly better RSSI than the current
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 7005e2a..eec2436 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1439,6 +1439,39 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 	return 0;
- }
- 
-+static void ath10k_core_fetch_btcoex_dt(struct ath10k *ar)
-+{
-+	struct device_node *node;
-+	u32 btcoex_support = 0;
-+	int ret;
-+
-+	node = ar->dev->of_node;
-+	if (!node)
-+		goto out;
-+
-+	ret = of_property_read_u32(node, "btcoex_support", &btcoex_support);
-+	if (ret) {
-+		ar->btcoex_support = ATH10K_DT_BTCOEX_NOT_FOUND;
-+		goto out;
-+	}
-+
-+	if (btcoex_support)
-+		ar->btcoex_support = ATH10K_DT_BTCOEX_SUPPORTED;
-+	else
-+		ar->btcoex_support = ATH10K_DT_BTCOEX_NOT_SUPPORTED;
-+
-+	ret = of_property_read_u32(node, "btcoex_gpio_pin",
-+				   &ar->btcoex_gpio_pin);
-+	if (ret) {
-+		ar->btcoex_gpio_pin = -1;
-+		goto out;
-+	}
-+
-+out:
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "btcoex support flag :%d gpio %d\n",
-+		   ar->btcoex_support, ar->btcoex_gpio_pin);
-+}
-+
- static int ath10k_init_uart(struct ath10k *ar)
- {
- 	int ret;
-@@ -1920,14 +1953,23 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		if (test_bit(WMI_SERVICE_BSS_CHANNEL_INFO_64, ar->wmi.svc_map))
- 			val |= WMI_10_4_BSS_CHANNEL_INFO_64;
- 
-+		ath10k_core_fetch_btcoex_dt(ar);
-+
- 		/* 10.4 firmware supports BT-Coex without reloading firmware
- 		 * via pdev param. To support Bluetooth coexistence pdev param,
- 		 * WMI_COEX_GPIO_SUPPORT of extended resource config should be
- 		 * enabled always.
- 		 */
-+
-+		/* we can still enable BTCOEX if firmware has the support
-+		 * eventhough btceox_support value is
-+		 * ATH10K_DT_BTCOEX_NOT_FOUND
-+		 */
-+
- 		if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map) &&
- 		    test_bit(ATH10K_FW_FEATURE_BTCOEX_PARAM,
--			     ar->running_fw->fw_file.fw_features))
-+			     ar->running_fw->fw_file.fw_features) &&
-+		    ar->btcoex_support != ATH10K_DT_BTCOEX_NOT_SUPPORTED)
- 			val |= WMI_10_4_COEX_GPIO_SUPPORT;
- 
- 		status = ath10k_mac_ext_resource_config(ar, val);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index b7067cc..66824c73 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -658,6 +658,12 @@ enum ath10k_tx_pause_reason {
- 	ATH10K_TX_PAUSE_MAX,
- };
- 
-+enum ath10k_dt_btcoex_support_flag {
-+	ATH10K_DT_BTCOEX_NOT_FOUND,
-+	ATH10K_DT_BTCOEX_SUPPORTED,
-+	ATH10K_DT_BTCOEX_NOT_SUPPORTED,
-+};
-+
- struct ath10k_fw_file {
- 	const struct firmware *firmware;
- 
-@@ -926,6 +932,9 @@ struct ath10k {
- 		u32 reg_ack_cts_timeout_orig;
- 	} fw_coverage;
- 
-+	enum ath10k_dt_btcoex_support_flag btcoex_support;
-+	int btcoex_gpio_pin;
-+
- 	/* must be last */
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index ea30fbe..e0e316c 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2149,6 +2149,9 @@ static ssize_t ath10k_write_btcoex(struct file *file,
- 	if (strtobool(buf, &val) != 0)
- 		return -EINVAL;
- 
-+	if (ar->btcoex_support == ATH10K_DT_BTCOEX_NOT_SUPPORTED)
-+		return -EOPNOTSUPP;
-+
- 	mutex_lock(&ar->conf_mutex);
- 	ret = ath10k_mac_set_btcoex(ar, val);
- 	if (!ret)
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6b0f1ea..e021951 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4564,9 +4564,11 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 	}
- 
- 	param = ar->wmi.pdev_param->enable_btcoex;
-+
- 	if (test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map) &&
- 	    test_bit(ATH10K_FW_FEATURE_BTCOEX_PARAM,
--		     ar->running_fw->fw_file.fw_features)) {
-+		     ar->running_fw->fw_file.fw_features) &&
-+	    ar->btcoex_support != ATH10K_DT_BTCOEX_NOT_SUPPORTED) {
- 		ret = ath10k_wmi_pdev_set_param(ar, param, 0);
- 		if (ret) {
- 			ath10k_warn(ar,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index de35c17..1eb5678 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -7811,6 +7811,7 @@ static int ath10k_wmi_10_4_op_get_vdev_subtype(struct ath10k *ar,
- 	cmd = (struct wmi_ext_resource_config_10_4_cmd *)skb->data;
- 	cmd->host_platform_config = __cpu_to_le32(type);
- 	cmd->fw_feature_bitmap = __cpu_to_le32(fw_feature_bitmap);
-+	cmd->btcoex_gpio_pin = __cpu_to_le32(ar->btcoex_gpio_pin);
- 
- 	ath10k_dbg(ar, ATH10K_DBG_WMI,
- 		   "wmi ext resource config host type %d firmware feature bitmap %08x\n",
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 3a739e3..f83a21e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -2734,6 +2734,8 @@ struct wmi_ext_resource_config_10_4_cmd {
- 	__le32 host_platform_config;
- 	/* see enum wmi_10_4_feature_mask */
- 	__le32 fw_feature_bitmap;
-+	/* Contains btcoex gpio pin number */
-+	__le32 btcoex_gpio_pin;
- };
- 
- struct wmi_set_coex_param_10_4_cmd {
--- 
-1.7.9.5
+"Significantly" is dependent on the value you use. :)
+
+> connected BSS.
+> 
+> Signed-off-by: vamsi krishna <vamsin@qti.qualcomm.com>
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> ---
+>  include/net/cfg80211.h       | 17 +++++++++++++++++
+>  include/uapi/linux/nl80211.h | 17 +++++++++++++++++
+>  net/wireless/nl80211.c       | 32 ++++++++++++++++++++++++++++++--
+>  3 files changed, 64 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index ef42749..c62c42a 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1626,6 +1626,20 @@ struct cfg80211_sched_scan_plan {
+>   *	cycle.  The driver may ignore this parameter and start
+>   *	immediately (or at any other time), if this feature is not
+>   *	supported.
+> + * @relative_rssi: Relative RSSI threshold to restrict scan result
+reporting in
+> + *	connected state to cases where a matching BSS is
+determined to have a
+> + *	significantly better RSSI than the current connected BSS.
+
+What happens with this attribute if we're not connected? Also, I think
+you should specify the attribute type (int?) and the unit here.
+
+
+> + * @relative_rssi_5g_pref: The amount of RSSI preference that is given to a
+> + *	5 GHz BSS over 2.4 GHz BSS while looking for better BSSs in connected
+> + *	state.
+> + *	If the current connected BSS is in the 2.4 GHz band, other BSSs in the
+> + *	2.4 GHz band to be reported should have better RSSI by @relative_rssi
+> + *	and other BSSs in the 5 GHz band to be reported should have better RSSI
+> + *	by (@relative_rssi - @relative_rssi_5g_pref).
+> + *	If the current connected BSS is in the 5 GHz band, other BSSs in the
+> + *	2.4 GHz band to be reported should have better RSSI by
+> + *	(@relative_rssi + @relative_rssi_5g_pref) and other BSSs in the 5 GHz
+> + *	band to be reported should have better RSSI by by @relative_rssi.
+
+Could there be cases where you want the opposite? Meaning,
+relative_rssi_5g_pref being negative?
+
+>   */
+>  struct cfg80211_sched_scan_request {
+>  	struct cfg80211_ssid *ssids;
+> @@ -1645,6 +1659,9 @@ struct cfg80211_sched_scan_request {
+>  	u8 mac_addr[ETH_ALEN] __aligned(2);
+>  	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
+>  
+> +	int relative_rssi;
+> +	int relative_rssi_5g_pref;
+
+I'm not sure it was your intention, but for flexibility, it's good that
+both these attributes are ints so that you can find relative values on
+both sides (greater than and smaller than).
+
+It doesn't apply to the "better BSS" case, but maybe people find a
+different use for it in the future?
+
+
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 984a35ac..34b16a4 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1981,6 +1981,16 @@ enum nl80211_commands {
+>   *	%NL80211_ATTR_MAC has also been used in various commands/events for
+>   *	specifying the BSSID.
+>   *
+> + * @NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI: Relative RSSI threshold by which
+> + *	other BSSs has to be better than the current connected BSS so that they
+> + *	get reported to user space. This will give an opportunity to userspace
+> + *	to consider connecting to other matching BSSs which have better RSSI
+> + *	than the current connected BSS.
+
+The userspace can always do this, but the advantage here is that it
+doesn't need to be woken up and check the results itself, since it
+would only receive results that matter.
+
+
+> + *
+> + * @NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF: The amount of RSSI preference
+> + *	to be given to 5 GHz APs over 2.4 GHz APs while searching for better
+> + *	BSSs than the current connected BSS.
+> + *
+>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+> @@ -2387,6 +2397,9 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_BSSID,
+>  
+> +	NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI,
+> +	NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF,
+> +
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+>  	__NL80211_ATTR_AFTER_LAST,
+> @@ -4698,6 +4711,9 @@ enum nl80211_feature_flags {
+>   *	configuration (AP/mesh) with VHT rates.
+>   * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial Link Setup
+>   *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
+> + * @NL80211_EXT_FEATURE_SCHED_SCAN_BETTER_BSS: The driver supports sched_scan
+
+Should be "RELATIVE_RSSI" instead of "BETTER_BSS".
+
+[...]
+
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 8db5cb1..af018a5 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -405,6 +405,8 @@ enum nl80211_multicast_groups {
+>  	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
+>  	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
+>  	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
+> +	[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI] = { .type = NLA_U32 },
+> +	[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF] = { .type = NLA_U32 },
+
+This should probably be NLA_S32 (if we want to allow negative values as
+well).
+
+
+[...]
+
+> 
+@@ -7156,6 +7166,14 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+>  		request->delay =
+>  			nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_DELAY]);
+>  
+> +	if (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI])
+> +		request->relative_rssi = nla_get_s32(
+> +			attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI]);
+> +
+> +	if (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF])
+> +		request->relative_rssi_5g_pref = nla_get_s32(
+> +			attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF]);
+
+Good, I see you use s32 here. :)
+
+[...]
+
+> @@ -9649,7 +9667,8 @@ static int nl80211_send_wowlan_tcp(struct sk_buff *msg,
+>  	return 0;
+>  }
+>  
+> -static int nl80211_send_wowlan_nd(struct sk_buff *msg,
+> +static int nl80211_send_wowlan_nd(struct wiphy *wiphy,
+> +				  struct sk_buff *msg,
+>  				  struct cfg80211_sched_scan_request *req)
+>  {
+>  	struct nlattr *nd, *freqs, *matches, *match, *scan_plans, *scan_plan;
+> @@ -9670,6 +9689,15 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
+>  	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_DELAY, req->delay))
+>  		return -ENOBUFS;
+>  
+> +	if (wiphy_ext_feature_isset(
+> +		    wiphy, NL80211_EXT_FEATURE_SCHED_SCAN_BETTER_BSS) &&
+> +	    (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI,
+> +			 req->relative_rssi) ||
+> +	     nla_put_u32(msg,
+> +			 NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF,
+> +			 req->relative_rssi_5g_pref)))
+> +		return -ENOBUFS;
+> +
+
+Why did you add this to nl80211_send_wowlan_nd() function?
+
+
+[...]
+
+--
+Luca.
