@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34922 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753261AbcKUNYr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 21 Nov 2016 08:24:47 -0500
-Message-ID: <1479734683.8662.27.camel@sipsolutions.net> (sfid-20161121_142453_637219_9DD5C64B)
-Subject: Re: [PATCH v7 2/2] mac80211: multicast to unicast conversion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        projekt-wlan@fem.tu-ilmenau.de
-Date: Mon, 21 Nov 2016 14:24:43 +0100
-In-Reply-To: <1477921260-24556-2-git-send-email-michael-dev@fami-braun.de>
-References: <1477921260-24556-1-git-send-email-michael-dev@fami-braun.de>
-         <1477921260-24556-2-git-send-email-michael-dev@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35871 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752810AbcKZCPd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 25 Nov 2016 21:15:33 -0500
+Received: by mail-pg0-f67.google.com with SMTP id x23so6865291pgx.3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Nov 2016 18:15:33 -0800 (PST)
+Date: Sat, 26 Nov 2016 12:12:03 +1000
+From: Barry Day <briselec@gmail.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] rtl8xxxu: tx rate reported before set
+Message-ID: <20161126021158.GA12838@box64.home.org> (sfid-20161126_032134_643915_4C54A2C3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-10-31 at 14:41 +0100, Michael Braun wrote:
- 
-> +static int ieee80211_set_multicast_to_unicast(struct wiphy *wiphy,
-> +					      struct net_device
-> *dev,
-> +					      const bool enabled)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +
-> +	/* not supported with P2P_GO for now */
-> +	if (sdata->vif.type != NL80211_IFTYPE_AP)
-> +		return -EOPNOTSUPP;
+Move the dev_info call that attempts to show the rate used before it is set.
 
-This check is completely inefficient, since vif.type is == AP for GO.
+Signed-off-by: Barry Day <briselec@gmail.com>
+---
+ rtl8xxxu_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Also, I see no reason to restrict it that way, why not remove the
-check? There's no difference.
-
-> +static inline int
-> +ieee80211_multicast_to_unicast(struct sk_buff *skb, struct
-> net_device *dev)
-
-use bool return?
-
-johannes
+diff --git a/rtl8xxxu_core.c b/rtl8xxxu_core.c
+index 04141e5..a9137ab 100644
+--- a/rtl8xxxu_core.c
++++ b/rtl8xxxu_core.c
+@@ -4844,16 +4844,16 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 
+ 	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
+ 
+-	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+-		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
+-			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
+-
+ 	if (rate_flags & IEEE80211_TX_RC_MCS &&
+ 	    !ieee80211_is_mgmt(hdr->frame_control))
+ 		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
+ 	else
+ 		rate = tx_rate->hw_value;
+ 
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
++		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
++			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+ 	tx_desc40->txdw4 = cpu_to_le32(rate);
+-- 
+2.9.2
