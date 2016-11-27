@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37194 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754371AbcK2WAk (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36816 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752431AbcK0Th7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 17:00:40 -0500
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: ath10k: wmi-alloc-chunk should use DMA_BIDIRECTIONAL.
-Date: Tue, 29 Nov 2016 14:00:28 -0800
-Message-Id: <1480456828-13735-1-git-send-email-greearb@candelatech.com> (sfid-20161129_230217_165000_1D154F54)
+        Sun, 27 Nov 2016 14:37:59 -0500
+Received: by mail-lf0-f68.google.com with SMTP id o20so7524650lfg.3
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2016 11:37:58 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH] ath10k: fix TLV set regdomain command
+Date: Sun, 27 Nov 2016 20:37:20 +0100
+Message-Id: <1480275440-9919-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161127_203802_880211_E23AEBA8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+There is a typo bug in the current implementation of
+ath10k_wmi_tlv_op_gen_pdev_set_rd.
+The conformance test limits are not set up properly.
 
-These memory chunks are often used as 'swap' by the NIC,
-so it will be both reading and writing to these areas.
+The two arguments ctl2g and ctl5g were not used at all.
+Instead, the regdomain arguments rd2g and rd5g were used
+for the ctl settings as well.
 
-This seems to fix errors like this on my x86-64 machine:
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-kernel: DMAR: DMAR:[DMA Write] Request device [05:00.0] fault addr ff5de000
-        DMAR:[fault reason 05] PTE Write access is not set
-
-Tested-by: Marek Behun <kabel@blackhole.sk>
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9fcb249..c68278a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -4558,7 +4558,7 @@ static int ath10k_wmi_alloc_chunk(struct ath10k *ar, u32 req_id,
- 	if (!num_units)
- 		return -ENOMEM;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+index 97b536e..f304f66 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
++++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
+@@ -1313,8 +1313,8 @@ static int ath10k_wmi_tlv_op_pull_echo_ev(struct ath10k *ar,
+ 	cmd->regd = __cpu_to_le32(rd);
+ 	cmd->regd_2ghz = __cpu_to_le32(rd2g);
+ 	cmd->regd_5ghz = __cpu_to_le32(rd5g);
+-	cmd->conform_limit_2ghz = __cpu_to_le32(rd2g);
+-	cmd->conform_limit_5ghz = __cpu_to_le32(rd5g);
++	cmd->conform_limit_2ghz = __cpu_to_le32(ctl2g);
++	cmd->conform_limit_5ghz = __cpu_to_le32(ctl5g);
  
--	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_TO_DEVICE);
-+	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_BIDIRECTIONAL);
- 	if (dma_mapping_error(ar->dev, paddr)) {
- 		kfree(vaddr);
- 		return -ENOMEM;
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi tlv pdev set rd\n");
+ 	return skb;
+-- 
+1.7.9.5
