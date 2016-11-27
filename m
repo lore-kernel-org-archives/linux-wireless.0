@@ -1,74 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:52753 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934126AbcKWK1D (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34335 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751154AbcK0RDp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:27:03 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 05/12] brcmfmac: change prototype for brcmf_do_escan()
-Date: Wed, 23 Nov 2016 10:25:24 +0000
-Message-Id: <1479896731-5091-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_112731_708218_255E5C7E)
-In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sun, 27 Nov 2016 12:03:45 -0500
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, ath9k-devel@qca.qualcomm.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] wireless: ath: ath9k: constify ath_bus_ops structure
+Date: Sun, 27 Nov 2016 22:33:26 +0530
+Message-Id: <1480266206-26732-1-git-send-email-bhumirks@gmail.com> (sfid-20161127_180420_331303_DBB2576B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduce the number of parameters as the removed ones can be obtained
-through struct brcmf_if parameter.
+Declare the structure ath_bus_ops as const as it is only passed as an
+argument to the function ath9k_init_device. This argument is of type
+const struct ath_bus_ops *, so ath_bus_ops structures with this property
+can be declared as const.
+Done using Coccinelle:
+@r1 disable optional_qualifier @
+identifier i;
+position p;
+@@
+static struct ath_bus_ops i@p = {...};
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+@ok1@
+identifier r1.i;
+position p;
+expression e1,e2;
+@@
+ath9k_init_device(e1,e2,&i@p)
+
+@bad@
+position p!={r1.p,ok1.p};
+identifier r1.i;
+@@
+i@p
+
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
+static
++const
+struct ath_bus_ops i={...};
+
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
++const
+struct ath_bus_ops i;
+
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   1295	    232	      0	   1527	    5f7	ath/ath9k/ahb.o
+
+File size after:
+   text	   data	    bss	    dec	    hex	filename
+   1359	    176	      0	   1535	    5ff	ath/ath9k/ahb.o
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ahb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 096e214..70eca76 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1080,9 +1080,9 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index bea6186..2bd982c 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -62,7 +62,7 @@ static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+ 	return false;
  }
  
- static s32
--brcmf_do_escan(struct brcmf_cfg80211_info *cfg, struct wiphy *wiphy,
--	       struct brcmf_if *ifp, struct cfg80211_scan_request *request)
-+brcmf_do_escan(struct brcmf_if *ifp, struct cfg80211_scan_request *request)
- {
-+	struct brcmf_cfg80211_info *cfg = ifp->drvr->config;
- 	s32 err;
- 	u32 passive_scan;
- 	struct brcmf_scan_results *results;
-@@ -1090,7 +1090,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 
- 	brcmf_dbg(SCAN, "Enter\n");
- 	escan->ifp = ifp;
--	escan->wiphy = wiphy;
-+	escan->wiphy = cfg->wiphy;
- 	escan->escan_state = WL_ESCAN_STATE_SCANNING;
- 	passive_scan = cfg->active_scan ? 0 : 1;
- 	err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PASSIVE_SCAN,
-@@ -1170,7 +1170,7 @@ static void brcmf_escan_prep(struct brcmf_cfg80211_info *cfg,
- 		if (err)
- 			goto scan_out;
- 
--		err = brcmf_do_escan(cfg, wiphy, vif->ifp, request);
-+		err = brcmf_do_escan(vif->ifp, request);
- 		if (err)
- 			goto scan_out;
- 	} else {
-@@ -3289,7 +3289,7 @@ static void brcmf_init_escan(struct brcmf_cfg80211_info *cfg)
- 
- 		set_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
- 		cfg->escan_info.run = brcmf_run_escan;
--		err = brcmf_do_escan(cfg, wiphy, ifp, request);
-+		err = brcmf_do_escan(ifp, request);
- 		if (err) {
- 			clear_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status);
- 			goto out_err;
+-static struct ath_bus_ops ath_ahb_bus_ops  = {
++static const struct ath_bus_ops ath_ahb_bus_ops  = {
+ 	.ath_bus_type = ATH_AHB,
+ 	.read_cachesize = ath_ahb_read_cachesize,
+ 	.eeprom_read = ath_ahb_eeprom_read,
 -- 
 1.9.1
