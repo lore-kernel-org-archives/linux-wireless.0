@@ -1,41 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51666 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S948120AbcKAFZ0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 1 Nov 2016 01:25:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-10-30
-References: <87insaw5u9.fsf@kamboji.qca.qualcomm.com>
-        <20161031.153809.270896325416087100.davem@davemloft.net>
-Date: Tue, 01 Nov 2016 07:25:21 +0200
-In-Reply-To: <20161031.153809.270896325416087100.davem@davemloft.net> (David
-        Miller's message of "Mon, 31 Oct 2016 15:38:09 -0400 (EDT)")
-Message-ID: <87y413vkji.fsf@kamboji.qca.qualcomm.com> (sfid-20161101_062549_345138_0E3B43A6)
+Received: from mx1.redhat.com ([209.132.183.28]:56096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754312AbcK1M0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 07:26:11 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Barry Day <briselec@gmail.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        linux-next@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: linux-next: build warning after merge of the wireless-drivers-next tree
+References: <20161128115814.2cabf139@canb.auug.org.au>
+        <87d1hg83rp.fsf@kamboji.qca.qualcomm.com>
+        <20161128081649.GA8403@testbox>
+        <87oa0zygk7.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 28 Nov 2016 07:26:09 -0500
+In-Reply-To: <87oa0zygk7.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Mon, 28 Nov 2016 13:44:40 +0200")
+Message-ID: <wrfjr35vrdsu.fsf@redhat.com> (sfid-20161128_132615_501763_7941368F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Miller <davem@davemloft.net> writes:
-
-> From: Kalle Valo <kvalo@codeaurora.org>
-> Date: Sun, 30 Oct 2016 11:20:46 +0200
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Barry Day <briselec@gmail.com> writes:
 >
->> few fixes for 4.9. I tagged this on the plane over a slow mosh
->> connection while travelling to Plumbers so I might have done something
->> wrong, please check more carefully than usually. For example I had to
->> redo the signed tag because of some whitespace damage.
->> 
->> Please let me know if there are any problems.
+>> On Mon, Nov 28, 2016 at 09:25:30AM +0200, Kalle Valo wrote:
+>>> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+>>> 
+>>> > Hi all,
+>>> >
+>>> > After merging the wireless-drivers-next tree, today's linux-next build
+>>> > (x86_64 allmodconfig) produced this warning:
+>>> >
+>>> > In file included from include/linux/usb/ch9.h:35:0,
+>>> >                  from include/linux/usb.h:5,
+>>> >                  from drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:32:
+>>> > drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
+>>> > include/linux/device.h:1214:36: warning: 'rate' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>>> >  #define dev_info(dev, fmt, arg...) _dev_info(dev, fmt, ##arg)
+>>> >                                     ^
+>>> > drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4841:6: note: 'rate' was declared here
+>>> >   u32 rate;
+>>> >       ^
+>>> >
+>>> > Introduced by commit
+>>> >
+>>> >   b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
+>>> >
+>>> > This is a correct diagnosis.
+>>> 
+>>> Thanks for the report. Jes, can you send a patch to fix this? (Unless
+>>> someone else beats to it.)
+>>> 
+>>> -- 
+>>> Kalle Valo
+>>
+>> I posted a patch on the 26th that fixes this
 >
-> Your subject line says "-next" but clearly these are bug fixes for 'net'
-> so that's where I pulled this into.
+> Thanks, I see it:
+>
+> https://patchwork.kernel.org/patch/9448225/
+>
+> The commit log doesn't mention anything about the compilation warning,
+> I'll add that. Also a Fixes line is nice to have.
 
-Correct, that -next was a mistake. Sorry about that.
+I'm happy with this fix
 
--- 
-Kalle Valo
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
