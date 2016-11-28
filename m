@@ -1,147 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:60871 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934948AbcKONPH (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:36149 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751033AbcK1EZg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 08:15:07 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v7] mwifiex: parse device tree node for PCIe
-Date: Tue, 15 Nov 2016 18:44:22 +0530
-Message-ID: <1479215662-631-1-git-send-email-akarwar@marvell.com> (sfid-20161115_141522_883264_CEAF396A)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 27 Nov 2016 23:25:36 -0500
+Received: by mail-pg0-f42.google.com with SMTP id f188so52179014pgc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Nov 2016 20:25:35 -0800 (PST)
+From: Anthony Romano <anthony.romano@coreos.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k_htc: don't use HZ for usb msg timeouts
+Date: Sun, 27 Nov 2016 20:27:57 -0800
+Message-Id: <20161128042757.8609-1-anthony.romano@coreos.com> (sfid-20161128_052539_532508_33E84644)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+The usb_*_msg() functions expect a timeout in msecs but are given HZ,
+which is ticks per second. If HZ=100, firmware download often times out
+when there is modest USB utilization and the device fails to initialize.
 
-This patch derives device tree node from pcie bus layer framework.
-Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-marvell-8xxx.txt) to accommodate PCIe changes.
+Replaces HZ in usb_*_msg timeouts with 1000 msec since HZ is one second
+for timeouts in jiffies.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Anthony Romano <anthony.romano@coreos.com>
 ---
-v2: Included vendor and product IDs in compatible strings for PCIe
-chipsets(Rob Herring)
-v3: Patch is created using -M option so that it will only include diff of
-original and renamed files(Rob Herring)
-Resend v3: Resending the patch because I missed to include device tree mailing
-while sending v3.
-v4: Fix error handling, also move-on even if no device tree node is present.
-v5: Update commit log to include memory leak, return -EINVAL instead of -1.
-v6: Remove an unnecessary error print, fix typo in commit log
-v7: a) Earlier versions of this patch claims to have a change which fixes "memory
-       leak". But it actually introduces double-free problem. That change is removed
-       here(Brian Norris)
-    b) Cosmetic change in bindings documentation(Rob Herring)
-	s/marvell/Marvell/
-	s/sdio\/pcie/SDIO\/PCIE/
----
- .../{marvell-sd8xxx.txt => marvell-8xxx.txt}       |  8 +++++---
- drivers/net/wireless/marvell/mwifiex/pcie.c        | 24 ++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 ++-
- 3 files changed, 31 insertions(+), 4 deletions(-)
- rename Documentation/devicetree/bindings/net/wireless/{marvell-sd8xxx.txt => marvell-8xxx.txt} (91%)
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 9 +++++----
+ drivers/net/wireless/ath/ath9k/hif_usb.h | 2 ++
+ 2 files changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-similarity index 91%
-rename from Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-rename to Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index c421aba..980b16df 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,8 +1,8 @@
--Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index e1c338cb9cb5..de2d212f39ec 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -997,7 +997,8 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 		err = usb_control_msg(hif_dev->udev,
+ 				      usb_sndctrlpipe(hif_dev->udev, 0),
+ 				      FIRMWARE_DOWNLOAD, 0x40 | USB_DIR_OUT,
+-				      addr >> 8, 0, buf, transfer, HZ);
++				      addr >> 8, 0, buf, transfer,
++				      USB_MSG_TIMEOUT);
+ 		if (err < 0) {
+ 			kfree(buf);
+ 			return err;
+@@ -1020,7 +1021,7 @@ static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+ 	err = usb_control_msg(hif_dev->udev, usb_sndctrlpipe(hif_dev->udev, 0),
+ 			      FIRMWARE_DOWNLOAD_COMP,
+ 			      0x40 | USB_DIR_OUT,
+-			      firm_offset >> 8, 0, NULL, 0, HZ);
++			      firm_offset >> 8, 0, NULL, 0, USB_MSG_TIMEOUT);
+ 	if (err)
+ 		return -EIO;
  
--This node provides properties for controlling the marvell sdio wireless device.
--The node is expected to be specified as a child node to the SDIO controller that
-+This node provides properties for controlling the Marvell SDIO/PCIE wireless device.
-+The node is expected to be specified as a child node to the SDIO/PCIE controller that
- connects the device to the system.
+@@ -1249,7 +1250,7 @@ static int send_eject_command(struct usb_interface *interface)
  
- Required properties:
-@@ -10,6 +10,8 @@ Required properties:
-   - compatible : should be one of the following:
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
-+	* "pci11ab,2b42"
-+	* "pci1b4b,2b42"
+ 	dev_info(&udev->dev, "Ejecting storage device...\n");
+ 	r = usb_bulk_msg(udev, usb_sndbulkpipe(udev, bulk_out_ep),
+-		cmd, 31, NULL, 2000);
++		cmd, 31, NULL, 2 * USB_MSG_TIMEOUT);
+ 	kfree(cmd);
+ 	if (r)
+ 		return r;
+@@ -1314,7 +1315,7 @@ static void ath9k_hif_usb_reboot(struct usb_device *udev)
+ 		return;
  
- Optional properties:
+ 	ret = usb_interrupt_msg(udev, usb_sndintpipe(udev, USB_REG_OUT_PIPE),
+-			   buf, 4, NULL, HZ);
++			   buf, 4, NULL, USB_MSG_TIMEOUT);
+ 	if (ret)
+ 		dev_err(&udev->dev, "ath9k_htc: USB reboot failed\n");
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 063c707..83a41b5 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,6 +37,22 @@
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
+index 7c2ef7ecd98b..7846916aa01d 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.h
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
+@@ -71,6 +71,8 @@ extern int htc_use_dev_fw;
+ #define USB_REG_IN_PIPE   3
+ #define USB_REG_OUT_PIPE  4
  
- static struct semaphore add_remove_card_sem;
- 
-+static const struct of_device_id mwifiex_pcie_of_match_table[] = {
-+	{ .compatible = "pci11ab,2b42" },
-+	{ .compatible = "pci1b4b,2b42" },
-+	{ }
-+};
++#define USB_MSG_TIMEOUT 1000 /* (ms) */
 +
-+static int mwifiex_pcie_probe_of(struct device *dev)
-+{
-+	if (!of_match_node(mwifiex_pcie_of_match_table, dev->of_node)) {
-+		dev_err(dev, "required compatible string missing\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -185,6 +201,7 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 					const struct pci_device_id *ent)
- {
- 	struct pcie_service_card *card;
-+	int ret;
+ #define HIF_USB_MAX_RXPIPES 2
+ #define HIF_USB_MAX_TXPIPES 4
  
- 	pr_debug("info: vendor=0x%4.04X device=0x%4.04X rev=%d\n",
- 		 pdev->vendor, pdev->device, pdev->revision);
-@@ -206,6 +223,13 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
-+	/* device tree node parsing and platform specific configuration*/
-+	if (pdev->dev.of_node) {
-+		ret = mwifiex_pcie_probe_of(&pdev->dev);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	if (mwifiex_add_card(card, &add_remove_card_sem, &pcie_ops,
- 			     MWIFIEX_PCIE)) {
- 		pr_err("%s failed\n", __func__);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 0a54e21..b697b61 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2235,7 +2235,8 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		if (priv->adapter->iface_type == MWIFIEX_SDIO &&
-+		if ((priv->adapter->iface_type == MWIFIEX_SDIO ||
-+		    priv->adapter->iface_type == MWIFIEX_PCIE) &&
- 		    adapter->dev->of_node) {
- 			adapter->dt_node = adapter->dev->of_node;
- 			if (of_property_read_u32(adapter->dt_node,
 -- 
-1.9.1
+2.11.0.rc2
