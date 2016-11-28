@@ -1,60 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33013 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934176AbcKQRay (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35205 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932342AbcK1PTc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:30:54 -0500
-Received: by mail-wm0-f66.google.com with SMTP id u144so23298843wmu.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 09:30:53 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: Re: [RFC 04/12] ath10k: htc: refactorization
-To: Michal Kazior <michal.kazior@tieto.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
- <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
- <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Message-ID: <5b62d41b-7125-f1ce-b09f-29db7572a748@gmail.com> (sfid-20161117_183102_510839_5E3080F4)
-Date: Thu, 17 Nov 2016 17:32:17 +0100
+        Mon, 28 Nov 2016 10:19:32 -0500
+Received: by mail-oi0-f43.google.com with SMTP id b126so152991821oia.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 07:19:31 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+From: bruce m beach <brucembeach@gmail.com>
+Date: Mon, 28 Nov 2016 07:19:30 -0800
+Message-ID: <CAArymCm2O1wOKAU0Uj-jDvRttNiyvcEWOQ+hG79QDpTD5_k8xA@mail.gmail.com> (sfid-20161128_161934_738811_38ADA7E2)
+Subject: limiting times ath9k_htc devices are loaded
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello
 
+  When I plug in a ath9k_htc device, with a loaded driver, the driver
+attemps to attach itself to the device and load firmware etc. ( of
+course ). Does anyone know how I can tell the driver ( or kernel ) to
+do this process only once, and ignore additional insertions of
+ath9k_htc devices ?
 
-On 11/15/2016 11:19 AM, Michal Kazior wrote:
-> On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
->> Code refactorization:
->>
->> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
->> to ath10k_htc_control_rx_complete.
->>
->> This eases the implementation of SDIO/mbox significantly since
->> the ep_rx_complete cb is invoked directly from the SDIO/mbox
->> hif layer.
->>
->> Since the ath10k_htc_control_rx_complete already is present
->> (only containing a warning message) there is no reason for not
->> using it (instead of having a special case for ep 0 in
->> ath10k_htc_rx_completion_handler).
-> 
-> This should be squashed with Patch 3 since it's inseparable part of
-> the same refactorization.
-> 
-> 
-> Michał
-> 
-
-
-Hmm, I don't really see why this is an inseparable part of the previous
-patch.
-
-As far as I see this patch has nothing to do with patch 3, or am I
-missing anything?
-
-Are you really sure they should be squashed?
-
-Erik
+Bruce
