@@ -1,143 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:35403 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932696AbcKDR2F (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60660 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932094AbcK1LtN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 4 Nov 2016 13:28:05 -0400
-Received: by mail-oi0-f42.google.com with SMTP id x4so172202140oix.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Nov 2016 10:28:05 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com>
-References: <773DB8A82AB6A046AE0195C68612A31901C5B293@sbs2003.acksys.local>
- <566849DB.9040901@candelatech.com> <079401d132a6$7e7e2050$7b7a60f0$@acksys.fr>
- <CABUTiXWg3t5qK6O5ooDE+4=Xk3Msybs5mu9+tQm_Bb0wdSrfWQ@mail.gmail.com>
- <27f802e7-79c5-a17f-1883-88e62a6520ef@ezplanet.net> <CABUTiXUBfHB5RiZ8=ODzrK4-rCBJZ8QqZuZhMK_J7c7haFMEcw@mail.gmail.com>
-From: yu-chieh kung <jay0607@gmail.com>
-Date: Sat, 5 Nov 2016 01:28:04 +0800
-Message-ID: <CAGJdtRCKidEfDF7sc4BRGSfOTmcGJUJ4KZt0xU1vj4bGAnuu1Q@mail.gmail.com> (sfid-20161104_182809_872735_A9AF990E)
-Subject: Re: [OpenWrt-Devel] ATH10K VLAN firmware issue
-To: Bruno Antunes <baantunes@gmail.com>
-Cc: Mauro Mozzarelli <openwrt@ezplanet.net>,
-        OpenWrt Development List <openwrt-devel@lists.openwrt.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 28 Nov 2016 06:49:13 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 2/4] wil6210: validate wil_pmc_alloc parameters
+Date: Mon, 28 Nov 2016 13:49:01 +0200
+Message-Id: <1480333743-7306-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161128_124917_832865_2918F1C7)
+In-Reply-To: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I met the same problem before,
-if i modify the 1q header to other value (0xaa00) before go into firmware.
-I can capture the packet in the air
-I think the vlan packet is dropped in firmware.
+num_descriptors and descriptor_size needs to be
+checked for:
+1) not being negative values
+2) no overflow occurs when these are multiplied
+together as done in wil_pmc_read.
+An overflow of two signed integers is undefined
+behavior.
 
-2016-11-04 22:41 GMT+08:00 Bruno Antunes <baantunes@gmail.com>:
-> On 4 November 2016 at 14:18, Mauro Mozzarelli <openwrt@ezplanet.net> wrot=
-e:
->> Since the capability is implemented in software you might be testing the
->> limit of your router's CPU i/o speed.
->
-> By loading the module in rawmode?
->
-> The AP is an APU and Sta is an APU2.
->
->>
->>
->>
->> On 04/11/16 14:13, Bruno Antunes wrote:
->>>
->>> Hi all,
->>>
->>> Old thread but I think the issue is still present.
->>>
->>> I'm running a setup with VLANs with WDS and ath10k cards.
->>>
->>> To make it work both cards must be loaded in rawmode, AP
->>> and Sta, and with no security.
->>>
->>> I'm using a OpenWrt trunk r49941 and the most recent firmware,
->>> 10.2.4.70.58, from Kalle ath10k firmware tree.
->>>
->>> Although it works the throughput is very bad.
->>> Are there any alternatives to improve the throughput.
->>>
->>> Best Regards,
->>> Bruno
->>>
->>> On 9 December 2015 at 17:24, voncken <cedric.voncken@acksys.fr> wrote:
->>>>
->>>>
->>>>> -----Message d'origine-----
->>>>> De : Ben Greear [mailto:greearb@candelatech.com]
->>>>> Envoy=C3=A9 : mercredi 9 d=C3=A9cembre 2015 16:34
->>>>> =C3=80 : Cedric VONCKEN; ath10k@lists.infradead.org; linux-wireless
->>>>> Objet : Re: ATH10K VLAN firmware issue
->>>>>
->>>>> This only happens when you use STA  + WDS, or is .1q broken for you i=
-n
->>>>> other cases as well?
->>>>
->>>> No, this issue occurs in all modes (STA, STA + WDS, AP).
->>>>
->>>> Thanks
->>>>
->>>> Cedric.
->>>>
->>>>> Thanks,
->>>>> Ben
->>>>>
->>>>> On 12/08/2015 06:29 AM, Cedric VONCKEN wrote:
->>>>>>
->>>>>>      I'm testing to transmit frame with 802.1q tag (VLAN).
->>>>>>
->>>>>>      My client is set in STA + WDS and the netdev is bridged with et=
-h0.
->>>>>>      I have a computer with vlan configuration set connected to the =
-STA
->>>>>> eth0.
->>>>>>
->>>>>>      If I try to transmit frames with 802.1q tag, the frames are not
->>>>
->>>> sent.
->>>>>>
->>>>>>      I checked with wireless sniffer, and I don't see the frame with
->>>>>> VLAN
->>>>>> tag (the frames without VLAN tag are sent).
->>>>>>
->>>>>>      I tested with firmware 10.2.4.70.14-2 from kale github,
->>>>>> 10.1.467-ct-com-full-015 from candelatech and 10.2.4.70-2 from
->>>>>> openwrt, and in all cases I have the same issue.
->>>>>>
->>>>>>      Thanks for your help.
->>>>>>
->>>>>>
->>>>>> --
->>>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>>> linux-wireless" in the body of a message to majordomo@vger.kernel.or=
-g
->>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>>>
->>>>> --
->>>>> Ben Greear <greearb@candelatech.com>
->>>>> Candela Technologies Inc  http://www.candelatech.com
->>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-wirele=
-ss"
->>>> in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>> _______________________________________________
->>> openwrt-devel mailing list
->>> openwrt-devel@lists.openwrt.org
->>> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->>
->> _______________________________________________
->> openwrt-devel mailing list
->> openwrt-devel@lists.openwrt.org
->> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/pmc.c | 55 ++++++++++++++++++++++++++++++----
+ 1 file changed, 49 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/pmc.c b/drivers/net/wireless/ath/wil6210/pmc.c
+index 5ca0307..b9faae0 100644
+--- a/drivers/net/wireless/ath/wil6210/pmc.c
++++ b/drivers/net/wireless/ath/wil6210/pmc.c
+@@ -54,6 +54,7 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
+ 	struct pmc_ctx *pmc = &wil->pmc;
+ 	struct device *dev = wil_to_dev(wil);
+ 	struct wmi_pmc_cmd pmc_cmd = {0};
++	int last_cmd_err = -ENOMEM;
+ 
+ 	mutex_lock(&pmc->lock);
+ 
+@@ -62,6 +63,29 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
+ 		wil_err(wil, "%s: ERROR pmc is already allocated\n", __func__);
+ 		goto no_release_err;
+ 	}
++	if ((num_descriptors <= 0) || (descriptor_size <= 0)) {
++		wil_err(wil,
++			"Invalid params num_descriptors(%d), descriptor_size(%d)\n",
++			num_descriptors, descriptor_size);
++		last_cmd_err = -EINVAL;
++		goto no_release_err;
++	}
++
++	if (num_descriptors > (1 << WIL_RING_SIZE_ORDER_MAX)) {
++		wil_err(wil,
++			"num_descriptors(%d) exceeds max ring size %d\n",
++			num_descriptors, 1 << WIL_RING_SIZE_ORDER_MAX);
++		last_cmd_err = -EINVAL;
++		goto no_release_err;
++	}
++
++	if (num_descriptors > INT_MAX / descriptor_size) {
++		wil_err(wil,
++			"Overflow in num_descriptors(%d)*descriptor_size(%d)\n",
++			num_descriptors, descriptor_size);
++		last_cmd_err = -EINVAL;
++		goto no_release_err;
++	}
+ 
+ 	pmc->num_descriptors = num_descriptors;
+ 	pmc->descriptor_size = descriptor_size;
+@@ -189,7 +213,7 @@ void wil_pmc_alloc(struct wil6210_priv *wil,
+ 	pmc->descriptors = NULL;
+ 
+ no_release_err:
+-	pmc->last_cmd_status = -ENOMEM;
++	pmc->last_cmd_status = last_cmd_err;
+ 	mutex_unlock(&pmc->lock);
+ }
+ 
+@@ -295,7 +319,7 @@ ssize_t wil_pmc_read(struct file *filp, char __user *buf, size_t count,
+ 	size_t retval = 0;
+ 	unsigned long long idx;
+ 	loff_t offset;
+-	size_t pmc_size = pmc->descriptor_size * pmc->num_descriptors;
++	size_t pmc_size;
+ 
+ 	mutex_lock(&pmc->lock);
+ 
+@@ -306,6 +330,8 @@ ssize_t wil_pmc_read(struct file *filp, char __user *buf, size_t count,
+ 		return -EPERM;
+ 	}
+ 
++	pmc_size = pmc->descriptor_size * pmc->num_descriptors;
++
+ 	wil_dbg_misc(wil,
+ 		     "%s: size %u, pos %lld\n",
+ 		     __func__, (unsigned)count, *f_pos);
+@@ -345,7 +371,18 @@ loff_t wil_pmc_llseek(struct file *filp, loff_t off, int whence)
+ 	loff_t newpos;
+ 	struct wil6210_priv *wil = filp->private_data;
+ 	struct pmc_ctx *pmc = &wil->pmc;
+-	size_t pmc_size = pmc->descriptor_size * pmc->num_descriptors;
++	size_t pmc_size;
++
++	mutex_lock(&pmc->lock);
++
++	if (!wil_is_pmc_allocated(pmc)) {
++		wil_err(wil, "error, pmc is not allocated!\n");
++		pmc->last_cmd_status = -EPERM;
++		mutex_unlock(&pmc->lock);
++		return -EPERM;
++	}
++
++	pmc_size = pmc->descriptor_size * pmc->num_descriptors;
+ 
+ 	switch (whence) {
+ 	case 0: /* SEEK_SET */
+@@ -361,15 +398,21 @@ loff_t wil_pmc_llseek(struct file *filp, loff_t off, int whence)
+ 		break;
+ 
+ 	default: /* can't happen */
+-		return -EINVAL;
++		newpos = -EINVAL;
++		goto out;
+ 	}
+ 
+-	if (newpos < 0)
+-		return -EINVAL;
++	if (newpos < 0) {
++		newpos = -EINVAL;
++		goto out;
++	}
+ 	if (newpos > pmc_size)
+ 		newpos = pmc_size;
+ 
+ 	filp->f_pos = newpos;
+ 
++out:
++	mutex_unlock(&pmc->lock);
++
+ 	return newpos;
+ }
+-- 
+1.9.1
