@@ -1,47 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12128 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752172AbcKHPDi (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57914 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932532AbcK1POO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 10:03:38 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>
-Subject: [PATCH 3/4] dt: bindings: add new dt entry for BTCOEX feature in qcom,ath10k.txt
-Date: Tue, 8 Nov 2016 20:34:22 +0530
-Message-ID: <1478617462-28188-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_160341_059540_9F18B18E)
+        Mon, 28 Nov 2016 10:14:14 -0500
+Message-ID: <583C49C4.5080407@candelatech.com> (sfid-20161128_161424_454590_D1759834)
+Date: Mon, 28 Nov 2016 07:14:12 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Break-it testing for wifi
+References: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>               (sfid-20161121_171042_142074_00CD9837) <1479812215.9021.3.camel@sipsolutions.net>       <5834797B.2090805@candelatech.com> <1480343339.8107.49.camel@sipsolutions.net>
+In-Reply-To: <1480343339.8107.49.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
 
-There two things done in this patch.
 
-1) 'btcoex_support' flag for BTCOEX feature support by the hardware.
-2) 'wlan_btcoex_gpio' is used to fill wlan priority pin number for
-   BTCOEX priority feature support.
+On 11/28/2016 06:28 AM, Johannes Berg wrote:
+> On Tue, 2016-11-22 at 08:59 -0800, Ben Greear wrote:
+>>> Why would you do that? In order to test the AP implementation?
+>>
+>> Yes.  And really, you should be able to do similar things on the AP
+>> to test stations, or on IBSS/Mesh devices, etc.  hostapd already has
+>> some options to corrupt or drop a percentage of various management
+>> frames.  Supplicant does not as far as I know.
+>
+> Yes, but that's a far different focus. I'm far more interested in
+> testing *our* implementation(s), at which point I don't need to do it
+> over the air for most cases, and can be much more efficient that way,
+> etc.
+>
+> I also don't really see a point of doing anything over the air to test
+> our implementations, apart from hitting firmware (but even then ...)
 
-Signed-off-by: Tamizh chelvam <tamizhchelvam@codeaurora.org>
----
- .../bindings/net/wireless/qcom,ath10k.txt          |    4 ++++
- 1 file changed, 4 insertions(+)
+OTA is of primary importance to me, but I think any solution that works
+for OTA would work for hwsim as well.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 74d7f0a..08150e2d 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -46,6 +46,10 @@ Optional properties:
- 				 hw versions.
- - qcom,ath10k-pre-calibration-data : pre calibration data as an array,
- 				     the length can vary between hw versions.
-+- btcoex_support  : should contain eithr "0" or "1" to indicate btcoex
-+		    support by the hardware.
-+- btcoex_gpio_pin :  btcoex gpio pin number for the device which
-+		     supports BTCOEX.
- 
- Example (to supply the calibration data alone):
- 
+>
+>>>> 2)  Randomly corrupt mgt frames in driver and/or mac80211 stack
+>>>> and/or supplicant.
+>>>
+>>> I think fuzzing the input path for those frames would be more
+>>> useful than just corrupting things.
+>>
+>> Random corruptions, especially by code that had at least some
+>> understanding of management frames should be fast and easy to
+>> use.  It would not be as good as a really clever fuzzer or hand-
+>> crafted frames, but for many users, hand-crafting attacks would be
+>> well beyond what they could ever accomplish.
+>
+> Define "user"?
+
+System-test engineer in random company.  Like most of us, I am not working
+for pure charity purposes :)
+
+>
+>> Currently, supplicant can (at least with some small patches that I
+>> carry), add custom information elements to probe requests and
+>> similar.  But, some things are built by mac80211 (rate-sets
+>> advertised, for instance).  So, I was thinking of slightly extending
+>> the API so that user-space could over-ride whatever mac80211 might
+>> normally build itself.  That lets you more properly fuzz things from
+>> user space.
+>
+> Why bother though, at that point? If you hook up some state transitions
+> you can probably just send the frames from userspace. For these testing
+> scenarios you can make assumptions about the hardware or query it
+> beforehand, so there's no need to rely on mac80211 at all?
+
+I don't want to re-implement supplicant, nor heavily modify it for this
+effort.  I'm not sure exactly how important modifying IEs from user-space
+would be for my effort, maybe existing API is enough with in-kernel fuzzer
+I am thinking about writing.
+
+>
+>> Yes, but for ease of use, and to cover frames generated by mac80211,
+>> I was thinking:
+>>
+>> echo 0.25 > /debug/.../wlan0/mgt_fuzzer
+>>
+>> The fuzzer would then corrupt 25% of the management frames.  And
+>> instead of just randomly scribbling, it could also parse the frames
+>> and do some more clever (and still pseudo-random) modifications to
+>> the frames, like re-writing IEs with bad lengths, flipping bits in
+>> specific portions of the frame we feel might find problems, etc.
+>>
+>> I think if the tool became useful, then it could grow more clever
+>> over time.
+>
+> I'd be far more inclined to just add a tracepoint there at some spot
+> and allow attaching BPF programs to it ... Or perhaps allow attaching
+> BPF programs directly, if tracepoint BPF can't modify the data.
+>
+> Having any kind of logic here in the kernel space seems fairly useless
+> since you'll want to change it often, etc.
+
+Well, in-kernel seems best to me.  I will give it a try and see how
+it works.
+
+Thanks,
+Ben
+
+>
+> johannes
+>
+
 -- 
-1.7.9.5
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
