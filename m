@@ -1,82 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33758 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933977AbcKWKUX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:20:23 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 23 Nov 2016 15:50:17 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Rob Herring <robh@kernel.org>
-Cc: c_traja@qti.qualcomm.com, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCHv2 3/4] dt: bindings: add new dt entry for BTCOEX feature
- in qcom,ath10k.txt
-In-Reply-To: <20161118144406.3se7gnckhcmwqytp@rob-hp-laptop>
-References: <1479383064-25718-1-git-send-email-c_traja@qti.qualcomm.com>
- <1479383064-25718-4-git-send-email-c_traja@qti.qualcomm.com>
- <20161118144406.3se7gnckhcmwqytp@rob-hp-laptop>
-Message-ID: <df0313af8ab0ed1e7bddcfeca8429632@codeaurora.org> (sfid-20161123_112106_288918_538B53EF)
+Received: from s3.sipsolutions.net ([5.9.151.49]:44236 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932357AbcK1PgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 10:36:02 -0500
+Message-ID: <1480347358.8107.65.camel@sipsolutions.net> (sfid-20161128_163604_630327_3C267F1E)
+Subject: Re: [PATCH 3/3][RFC] nl80211/mac80211: Accept multiple RSSI
+ thresholds for CQM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <balrogg@googlemail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 28 Nov 2016 16:35:58 +0100
+In-Reply-To: <CAOq732LFeKRjPdQ6xMx_d1cHmQmYp50NJ4MDsdf=mPXMs685PQ@mail.gmail.com> (sfid-20161128_162954_738613_110F61FB)
+References: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
+         <1478398113-14966-4-git-send-email-andrew.zaborowski@intel.com>
+         <1480344479.8107.60.camel@sipsolutions.net>
+         <CAOq732LFeKRjPdQ6xMx_d1cHmQmYp50NJ4MDsdf=mPXMs685PQ@mail.gmail.com>
+         (sfid-20161128_162954_738613_110F61FB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the comments.
+On Mon, 2016-11-28 at 16:29 +0100, Andrew Zaborowski wrote:
 
-On 2016-11-18 20:14, Rob Herring wrote:
-> On Thu, Nov 17, 2016 at 05:14:23PM +0530, c_traja@qti.qualcomm.com 
-> wrote:
->> From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
->> 
->> There two things done in this patch.
->> 
->> 1) 'btcoex_support' flag for BTCOEX feature support by the hardware.
->> 2) 'wlan_btcoex_gpio' is used to fill wlan priority pin number for
->>    BTCOEX priority feature support.
->> 
->> Signed-off-by: Tamizh chelvam <tamizhchelvam@codeaurora.org>
->> ---
->>  .../bindings/net/wireless/qcom,ath10k.txt          |    4 ++++
->>  1 file changed, 4 insertions(+)
->> 
->> diff --git 
->> a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt 
->> b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->> index 74d7f0a..08150e2d 100644
->> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
->> @@ -46,6 +46,10 @@ Optional properties:
->>  				 hw versions.
->>  - qcom,ath10k-pre-calibration-data : pre calibration data as an 
->> array,
->>  				     the length can vary between hw versions.
->> +- btcoex_support  : should contain eithr "0" or "1" to indicate 
->> btcoex
->> +		    support by the hardware.
-> 
-> This is BT coexistence? Make this boolean and n
+> In order to keep the hardware offload feature when working with
+> hardware that can only offload the old single-thresholds method, but
+> where the kernel also wants to support the new method by looking at
+> all the beacons in software.  IIRC I identified just one driver that
+> would be in this situation: wl1271.
 
-Yes, this is BT coexistence. And I didn't get what are you trying to say 
-in this "Make this boolean and n"
-> 
->> +- btcoex_gpio_pin :  btcoex gpio pin number for the device which
->> +		     supports BTCOEX.
-> 
-> This is a pin number on the chip, not any pin number Linux GPIO subsys
-> cares about, right? Is there a connection to the host too, or this is
-> internal between BT and WiFi?
+IMHO it would be better to not allow that. I'd think that wl1271 is
+only used in devices where power consumption will be far more
+interesting than providing this kind of API.
 
-This is internal between BT and wifi.
-> 
-> Do you really need 2 properties? Does supporting this feature require
-> the GPIO? If so, then the first property is redundant.
-> 
-Target/driver can hard copy this gpio pin for some chipsets and there we 
-will need btcoex_support flag to find the btcoex support.
+> This is a specific case and the semantics implemented by the wl1271
+> may be a little different from those in the rest of the drivers so
+> this may be worth very little.  I can change the comment to imply
+> only one method should be implemented.
 
-> Needs vendor prefix and don't use '_'. Should be something like
-> 'qcom,bt-coexist-gpio-pin'.
+We might still have to allow both to be present for mac80211 though.
+
+> > Seems there still should be a hysteresis? Or am I misunderstanding
+> > the
+> > intent here? I.e. isn't it meant to report low/medium/high later?
 > 
-Sure I'll update this and send in v3 patch
+> This isn't exposed directly to users, instead it's used by the code
+> in
+> nl80211.c which will always reset the thresholds when either
+> threshold
+> is crossed.  The hysteresis can then be either handled in nl80211.c
+> (factored into the threshold values) or in the firmware/driver, this
+> won't change the number of wakeups.
+
+That's only if you assume you can actually react to this fast enough
+though, no? If I offload this, I'd want to also offload a hysteresis to
+firmware, I'd think.
+
+johannes
