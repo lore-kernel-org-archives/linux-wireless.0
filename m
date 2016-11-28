@@ -1,131 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3213 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbcKHNP3 (ORCPT
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:35359 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753352AbcK1V1L (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 8 Nov 2016 08:15:29 -0500
-From: <c_traja@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-        <tamizhchelvam@codeaurora.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH 3/4] mac80211: Add support to enable or disable btcoex
-Date: Tue, 8 Nov 2016 18:45:31 +0530
-Message-ID: <1478610932-21954-4-git-send-email-c_traja@qti.qualcomm.com> (sfid-20161108_141532_532516_C368E67D)
-In-Reply-To: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+        Mon, 28 Nov 2016 16:27:11 -0500
+Received: by mail-pg0-f45.google.com with SMTP id p66so60961958pga.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 13:27:11 -0800 (PST)
+Date: Mon, 28 Nov 2016 13:27:07 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v3 4/5] mwifiex: wait firmware dump complete during card
+ remove process
+Message-ID: <20161128212706.GA45985@google.com> (sfid-20161128_222722_334947_A017C787)
+References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
+ <1479301749-14803-4-git-send-email-akarwar@marvell.com>
+ <20161121173602.GA147125@google.com>
+ <ad60355f7feb465199f4dace37e47238@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ad60355f7feb465199f4dace37e47238@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Hi Amit,
 
-This patch introduces a new driver call back drv_set_btcoex
-This API will pass user space value to driver to
-enable or disabe btcoex.
+On Thu, Nov 24, 2016 at 12:14:07PM +0000, Amitkumar Karwar wrote:
+> > From: Brian Norris [mailto:briannorris@chromium.org]
+> > Sent: Monday, November 21, 2016 11:06 PM
+> > To: Amitkumar Karwar
+> > Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> > rajatja@google.com; dmitry.torokhov@gmail.com; Xinming Hu
+> > Subject: Re: [PATCH v3 4/5] mwifiex: wait firmware dump complete during
+> > card remove process
+> > 
+> > On Wed, Nov 16, 2016 at 06:39:08PM +0530, Amitkumar Karwar wrote:
+> > > From: Xinming Hu <huxm@marvell.com>
+> > >
+> > > Wait for firmware dump complete in card remove function.
+> > > For sdio interface, there are two diffenrent cases, card reset
+> > trigger
+> > > sdio_work and firmware dump trigger sdio_work.
+> > > Do code rearrangement for distinguish between these two cases.
+> > 
+> > On second review of the SDIO card reset code (which I'll repeat is
+> > quite ugly), you seem to be making a bad distinction here. What if
+> > there is a firmware dump happening concurrently with your card-reset
+> > handling?
+> > You *do* want to synchronize with the firmware dump before completing the
+> > card reset, or else you might be freeing up internal card resources
+> > that are still in use. See below.
+> 
+> I ran some tests and observed that if same work function is scheduled
+> by two threads, it won't have re-entrant calls. They will be executed
+> one after another. In SDIO work function, we have SDIO card reset call
+> after completing firmware dump. So firmware dump won't run
+> concurrently with card-reset as per my understanding.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- include/net/mac80211.h    |    4 ++++
- net/mac80211/cfg.c        |    8 ++++++++
- net/mac80211/driver-ops.h |   14 ++++++++++++++
- net/mac80211/trace.h      |   14 ++++++++++++++
- 4 files changed, 40 insertions(+)
+Ah, you're correct. It's somewhat obscure and potentially fragile, but
+correct AFAICT. As you noted though, you do still have a use-after-free
+bug, even if the concurrency isn't quite as high as I thought.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index b9b24ab..e7db763 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3453,6 +3453,9 @@ enum ieee80211_reconfig_type {
-  * @del_nan_func: Remove a NAN function. The driver must call
-  *	ieee80211_nan_func_terminated() with
-  *	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST reason code upon removal.
-+ *
-+ * @set_btcoex_: set_btcoex: Called when BTCOEX is enabled/disabled, use
-+ *	this callback to enable or disable btcoex.
-  */
- struct ieee80211_ops {
- 	void (*tx)(struct ieee80211_hw *hw,
-@@ -3705,6 +3708,7 @@ struct ieee80211_ops {
- 	void (*del_nan_func)(struct ieee80211_hw *hw,
- 			    struct ieee80211_vif *vif,
- 			    u8 instance_id);
-+	int (*set_btcoex)(struct ieee80211_hw *hw, bool enabled);
- };
- 
- /**
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index eb68add..a687056 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3562,6 +3562,13 @@ void ieee80211_nan_func_match(struct ieee80211_vif *vif,
- }
- EXPORT_SYMBOL(ieee80211_nan_func_match);
- 
-+static int ieee80211_set_btcoex(struct wiphy *wiphy, bool enabled)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+
-+	return drv_set_btcoex(local, enabled);
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3652,4 +3659,5 @@ void ieee80211_nan_func_match(struct ieee80211_vif *vif,
- 	.nan_change_conf = ieee80211_nan_change_conf,
- 	.add_nan_func = ieee80211_add_nan_func,
- 	.del_nan_func = ieee80211_del_nan_func,
-+	.set_btcoex = ieee80211_set_btcoex,
- };
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 09f77e4..16d9c98 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -1248,4 +1248,18 @@ static inline void drv_del_nan_func(struct ieee80211_local *local,
- 	trace_drv_return_void(local);
- }
- 
-+static inline int drv_set_btcoex(struct ieee80211_local *local,
-+				 bool enabled)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	trace_drv_set_btcoex(local, enabled);
-+	if (local->ops->set_btcoex)
-+		ret = local->ops->set_btcoex(&local->hw, enabled);
-+
-+	trace_drv_return_int(local, ret);
-+
-+	return ret;
-+}
-+
- #endif /* __MAC80211_DRIVER_OPS */
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 92a47af..760dfb6 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -742,6 +742,20 @@
- 	TP_ARGS(local, value)
- );
- 
-+TRACE_EVENT(drv_set_btcoex,
-+	TP_PROTO(struct ieee80211_local *local, bool enabled),
-+	TP_ARGS(local, enabled),
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		__field(bool, enabled)
-+	),
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		__entry->enabled = enabled;
-+	),
-+	TP_printk(LOCAL_PR_FMT " enabled:%d", LOCAL_PR_ARG, __entry->enabled)
-+);
-+
- TRACE_EVENT(drv_set_coverage_class,
- 	TP_PROTO(struct ieee80211_local *local, s16 value),
- 
--- 
-1.7.9.5
+> > > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > > ---
+
+...
+
+> > > --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > > +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> > > @@ -46,6 +46,9 @@
+> > >   */
+> > >  static u8 user_rmmod;
+> > >
+> > > +static void mwifiex_sdio_work(struct work_struct *work); static
+> > > +DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+> > > +
+> > >  static struct mwifiex_if_ops sdio_ops;  static unsigned long
+> > > iface_work_flags;
+> > >
+> > > @@ -220,7 +223,7 @@ static int mwifiex_sdio_resume(struct device
+> > *dev)
+> > >   * This function removes the interface and frees up the card
+> > structure.
+> > >   */
+> > >  static void
+> > > -mwifiex_sdio_remove(struct sdio_func *func)
+> > > +__mwifiex_sdio_remove(struct sdio_func *func)
+> > >  {
+> > >  	struct sdio_mmc_card *card;
+> > >  	struct mwifiex_adapter *adapter;
+> > > @@ -249,6 +252,13 @@ static int mwifiex_sdio_resume(struct device
+> > *dev)
+> > >  	mwifiex_remove_card(adapter);
+> > >  }
+> > >
+> > > +static void
+> > > +mwifiex_sdio_remove(struct sdio_func *func) {
+> > > +	cancel_work_sync(&sdio_work);
+> > > +	__mwifiex_sdio_remove(func);
+> > > +}
+> > > +
+> > >  /*
+> > >   * SDIO suspend.
+> > >   *
+> > > @@ -2227,7 +2237,7 @@ static void mwifiex_recreate_adapter(struct
+> > sdio_mmc_card *card)
+> > >  	 * discovered and initializes them from scratch.
+> > >  	 */
+> > >
+> > > -	mwifiex_sdio_remove(func);
+> > > +	__mwifiex_sdio_remove(func);
+> > 
+> > ^^ So here, you're trying to avoid syncing with the card-reset work
+> > event, except that function will free up all your resources (including
+> > the static save_adapter). Thus, you're explicitly allowing a use-after-
+> > free error here. That seems unwise.
+> 
+> Even if firmware dump is triggered after card reset is started, it
+> will execute after card reset is completed as discussed above. Only
+> problem I can see is with "save_adapter". We can put new_adapter
+> pointer in "save_adapter" at the end of mwifiex_recreate_adapter() to
+> solve the issue.
+
+Ugh, yet another band-aid? You might do better to still cancel any
+pending work, just don't do it synchronously. i.e., do cancel_work()
+after you've removed the card. It doesn't make sense to do a FW dump on
+the "new" adapter when it was requested for the old one.
+
+> > Instead, you should actually retain the invariant that you're doing a
+> > full remove/reinitialize here, which includes doing the *same*
+> > cancel_work_sync() here in mwifiex_recreate_adapter() as you would in
+> > any other remove().
+> 
+> We are executing mwifiex_recreate_adapter() as a part of sdio_work(). Calling
+> cancel_work_sync() here would cause deadlock. The API is supposed to waits
+> until sdio_work() is finished.
+
+You are correct. So using the _sync() version would be wrong.
+
+> > 
+> > IOW, kill the __mwifiex_sdio_remove() and just call
+> > mwifiex_sdio_remove() as you were.
+> > 
+> > That also means that you can do the same per-adapter cleanup in the
+> > following patch as you do for PCIe.
+> 
+> Currently as sdio_work recreates "card", the work structure can't be moved inside card structure.
+> Let me know your suggestions.
+
+If you address the TODO in mwifiex_create_adapter() instead, you can get
+past this problem:
+
+        /* TODO mmc_hw_reset does not require destroying and re-probing the
+         * whole adapter. Hence there was no need to for this rube-goldberg
+         * design to reload the fw from an external workqueue. If we don't
+         * destroy the adapter we could reload the fw from
+         * mwifiex_main_work_queue directly.
+
+The "save_adapter" is an abomination that should be terminated swiftly,
+but it is perpetuated in part by the hacks noted in the TODO.
+
+So I'd recommend addressing the TODO ASAP, but in the meantime, a hack
+like my suggestion (cancel the FW dump work w/o synchronizing) or --
+less preferably -- yours (manually set 'save_adapter' again) might be
+OK.
+
+I think I've asked elsewhere but didn't receive an answer: why is
+SDIO's mwifiex_recreate_adapter() so much different from PCIe's
+mwifiex_do_flr()? It seems like the latter should be refactored to
+remove some of the PCIe-specific cruft from main.c and then reused for
+SDIO.
+
+Brian
