@@ -1,73 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44679 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756539AbcKKNLD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 08:11:03 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Shengzhen Li <szli@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 02/11] mwifiex: complete blocked power save handshake in main process
-Date: Fri, 11 Nov 2016 18:40:09 +0530
-Message-ID: <1478869818-4340-2-git-send-email-akarwar@marvell.com> (sfid-20161111_141232_563945_638B59D8)
-In-Reply-To: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-References: <1478869818-4340-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:43234 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932761AbcK1O3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 09:29:02 -0500
+Message-ID: <1480343339.8107.49.camel@sipsolutions.net> (sfid-20161128_152906_338906_719420EB)
+Subject: Re: Break-it testing for wifi
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 28 Nov 2016 15:28:59 +0100
+In-Reply-To: <5834797B.2090805@candelatech.com>
+References: <a60dac22-655e-ea93-61c2-73db05a47572@candelatech.com>
+                 (sfid-20161121_171042_142074_00CD9837) <1479812215.9021.3.camel@sipsolutions.net>
+         <5834797B.2090805@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+On Tue, 2016-11-22 at 08:59 -0800, Ben Greear wrote:
+> > Why would you do that? In order to test the AP implementation?
+> 
+> Yes.  And really, you should be able to do similar things on the AP
+> to test stations, or on IBSS/Mesh devices, etc.  hostapd already has
+> some options to corrupt or drop a percentage of various management
+> frames.  Supplicant does not as far as I know.
 
-Power save handshake with firmware might be blocked by on-going
-data transfer.
-this patch check the PS status in main process and complete
-previous blocked PS handshake.
-this patch also remove redudant check before call
-mwifiex_check_ps_cond function.
+Yes, but that's a far different focus. I'm far more interested in
+testing *our* implementation(s), at which point I don't need to do it
+over the air for most cases, and can be much more efficient that way,
+etc.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Tested-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: 1. remove redudant check(Brain)
-        2. reorgnized to follow tx_hw_pending patch
-v3: Same as v2
----
- drivers/net/wireless/marvell/mwifiex/main.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+I also don't really see a point of doing anything over the air to test
+our implementations, apart from hitting firmware (but even then ...)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 20c9b77..c710d5e 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -308,6 +308,9 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 			/* We have tried to wakeup the card already */
- 			if (adapter->pm_wakeup_fw_try)
- 				break;
-+			if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-+				mwifiex_check_ps_cond(adapter);
-+
- 			if (adapter->ps_state != PS_STATE_AWAKE)
- 				break;
- 			if (adapter->tx_lock_flag) {
-@@ -355,10 +358,8 @@ int mwifiex_main_process(struct mwifiex_adapter *adapter)
- 
- 		/* Check if we need to confirm Sleep Request
- 		   received previously */
--		if (adapter->ps_state == PS_STATE_PRE_SLEEP) {
--			if (!adapter->cmd_sent && !adapter->curr_cmd)
--				mwifiex_check_ps_cond(adapter);
--		}
-+		if (adapter->ps_state == PS_STATE_PRE_SLEEP)
-+			mwifiex_check_ps_cond(adapter);
- 
- 		/* * The ps_state may have been changed during processing of
- 		 * Sleep Request event.
--- 
-1.9.1
+> > > 2)  Randomly corrupt mgt frames in driver and/or mac80211 stack
+> > > and/or supplicant.
+> > 
+> > I think fuzzing the input path for those frames would be more
+> > useful than just corrupting things.
+> 
+> Random corruptions, especially by code that had at least some
+> understanding of management frames should be fast and easy to
+> use.  It would not be as good as a really clever fuzzer or hand-
+> crafted frames, but for many users, hand-crafting attacks would be
+> well beyond what they could ever accomplish.
+
+Define "user"?
+
+> Currently, supplicant can (at least with some small patches that I
+> carry), add custom information elements to probe requests and
+> similar.  But, some things are built by mac80211 (rate-sets
+> advertised, for instance).  So, I was thinking of slightly extending
+> the API so that user-space could over-ride whatever mac80211 might
+> normally build itself.  That lets you more properly fuzz things from
+> user space.
+
+Why bother though, at that point? If you hook up some state transitions
+you can probably just send the frames from userspace. For these testing
+scenarios you can make assumptions about the hardware or query it
+beforehand, so there's no need to rely on mac80211 at all?
+
+> Yes, but for ease of use, and to cover frames generated by mac80211,
+> I was thinking:
+> 
+> echo 0.25 > /debug/.../wlan0/mgt_fuzzer
+> 
+> The fuzzer would then corrupt 25% of the management frames.  And
+> instead of just randomly scribbling, it could also parse the frames
+> and do some more clever (and still pseudo-random) modifications to
+> the frames, like re-writing IEs with bad lengths, flipping bits in
+> specific portions of the frame we feel might find problems, etc.
+> 
+> I think if the tool became useful, then it could grow more clever
+> over time.
+
+I'd be far more inclined to just add a tracepoint there at some spot
+and allow attaching BPF programs to it ... Or perhaps allow attaching
+BPF programs directly, if tracepoint BPF can't modify the data.
+
+Having any kind of logic here in the kernel space seems fairly useless
+since you'll want to change it often, etc.
+
+johannes
