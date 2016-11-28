@@ -1,152 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33916 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754383AbcKCHLA (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:56995 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753647AbcK1VI3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 3 Nov 2016 03:11:00 -0400
-Received: by mail-wm0-f65.google.com with SMTP id p190so6482264wmp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2016 00:10:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <8dba6346-332e-84e6-89b2-02033a449f25@lwfinger.net>
-References: <cover.1477769750.git.john@zgus.com> <20161030102046.GA5784@cube> <8dba6346-332e-84e6-89b2-02033a449f25@lwfinger.net>
-From: John Heenan <john@zgus.com>
-Date: Thu, 3 Nov 2016 17:10:58 +1000
-Message-ID: <CAAye0QNZYjg1NDmXmjMXNJqa7nsbvfgoX8et1g1+HT2S2O=L1w@mail.gmail.com> (sfid-20161103_081133_526545_09C16261)
-Subject: Re: [PATCH 1/2] rtl8xxxu: Fix for authentication failure
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
+        Mon, 28 Nov 2016 16:08:29 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
         linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH] rtl8xxxu: fix tx rate debug output
+Date: Mon, 28 Nov 2016 22:08:04 +0100
+Message-Id: <20161128210815.2368509-1-arnd@arndb.de> (sfid-20161128_220834_252187_6A1BBD28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 November 2016 at 11:00, Larry Finger <Larry.Finger@lwfinger.net> wrote=
-:
-> On 10/30/2016 05:20 AM, John Heenan wrote:
->>
->> This fix enables the same sequence of init behaviour as the alternative
->> working driver for the wireless rtl8723bu IC at
->> https://github.com/lwfinger/rtl8723bu
->>
->> For exampe rtl8xxxu_init_device is now called each time
->> userspace wpa_supplicant is executed instead of just once when
->> modprobe is executed.
->
->
-> After all the trouble you have had with your patches, I would expect you =
-to
-> use more care when composing the commit message. Note the typo in the
-> paragraph above.
->
+We accidentally print the rate before we know it for txdesc_v2:
 
-OK, the nasty games continue and the message is not getting through.
+wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
+wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4848:3: error: 'rate' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-An appropriate response by a maintainer would have been to request I
-revise the code according to the way it has currently and elegantly
-revised in.
+txdesc_v1 got it right, so let's do it the same way here.
 
-[PATCH v2] rtl8xxxu: Fix for agressive power saving by rtl8723bu wireless I=
-C
+Fixes: b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-where I use a simple pointer comparison of priv->fops with &rtl8723bu_fops.
-
-As far as I can see there is nothing more to be done on my part code
-wise. The supposed issue with matching functions, as far as I can see,
-is a non issue.
-
-If you want to comment on comments in patch messages please do so on
-the above current proposed patch instead of dragging up stale and
-irreelvant patch proposals to make a petty point.
-
-Jes has now moved the goal posts, indicating all drivers for rtl8xxxu
-need to be tested fro similar issues. If there are problems with other
-rtl8xxxu drives then it is not my problem and has nothing to do with
-me. My issue is only with the rtl8723bu driver.
-
-Such doubts also makes it look as if there was never any proper
-testing and there is no real interest in proper testing. After all
-that would involve cooperation and team work.
-
-Want concrete evidence? I actually did report problems to Jes in
-private emails, AS REQUESTED, in dmesg before I started tests and
-posting patches. In the emalI stated I was willing to test drivers
-with printk messages.  I did not even get the courtesy of a reply.
-
-Want even more concrete evidence? Jes has some very strange comments
-in his tree for his current last commit
-f958b1e0806c045830d78c4287fbcddf9e5fd9d0
-
-   " This uncovered a huge bug where the old code would use struct
-    ieee80211_rate.flags to test for rate parameters, which is always
-    zero, instead of the flags value from struct ieee80211_tx_rate.
-
-    "Time to find a brown paper bag :("
-
-John Heenan
-
-
->> Along with 'Fix for bogus data used to determine macpower',
->> wpa_supplicant now reliably and successfully authenticates.
->
->
-> I'm not sure this paragraph belongs in the permanent commit record.
->
->> For rtl8xxxu-devel branch of
->> git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git
->
->
-> I know this line does not belong. If you want to include information like
-> this, include it after a line containing "---". Those lines will be
-> available to reviewers and maintainers, but will be stripped before it ge=
-ts
-> included in the code base.
->
->
->> Signed-off-by: John Heenan <john@zgus.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 9 +++++----
->>  1 file changed, 5 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> index 04141e5..f25b4df 100644
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
->> @@ -5779,6 +5779,11 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw=
-)
->>
->>         ret =3D 0;
->>
->> +       ret =3D rtl8xxxu_init_device(hw);
->> +       if (ret)
->> +               goto error_out;
->> +
->> +
->>         init_usb_anchor(&priv->rx_anchor);
->>         init_usb_anchor(&priv->tx_anchor);
->>         init_usb_anchor(&priv->int_anchor);
->> @@ -6080,10 +6085,6 @@ static int rtl8xxxu_probe(struct usb_interface
->> *interface,
->>                 goto exit;
->>         }
->>
->> -       ret =3D rtl8xxxu_init_device(hw);
->> -       if (ret)
->> -               goto exit;
->> -
->>         hw->wiphy->max_scan_ssids =3D 1;
->>         hw->wiphy->max_scan_ie_len =3D IEEE80211_MAX_DATA_LEN;
->>         hw->wiphy->interface_modes =3D BIT(NL80211_IFTYPE_STATION);
->>
->
-> I will let Jes comment on any side effects of this code change.
->
-> Larry
->
-> --
-> If I was stranded on an island and the only way to get off
-> the island was to make a pretty UI, I=E2=80=99d die there.
->
-> Linus Torvalds
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 04141e57b8ae..a9137abc3ad9 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4844,16 +4844,16 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+ 
+ 	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
+ 
+-	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+-		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
+-			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
+-
+ 	if (rate_flags & IEEE80211_TX_RC_MCS &&
+ 	    !ieee80211_is_mgmt(hdr->frame_control))
+ 		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
+ 	else
+ 		rate = tx_rate->hw_value;
+ 
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
++		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
++			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 
+ 	tx_desc40->txdw4 = cpu_to_le32(rate);
+-- 
+2.9.0
