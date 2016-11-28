@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38134 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43996 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752301AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:44:30 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 2/7] rtl8xxxu: Fix big-endian problem reporting mactime
-Date: Fri, 18 Nov 2016 16:44:23 -0500
-Message-Id: <1479505468-29383-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224444_840093_37024BD7)
-In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+        id S932467AbcK1OwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 09:52:25 -0500
+Message-ID: <1480344742.8107.63.camel@sipsolutions.net> (sfid-20161128_155230_215996_5C772D67)
+Subject: Re: cfg80211: add set/get link loss profile
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 28 Nov 2016 15:52:22 +0100
+In-Reply-To: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-The full RX descriptor is converted so converting tsfl again would
-return it to it's original endian value.
+> Introduce NL80211_CMD_SET_LINK_LOSS_PROFILE and
+> NL80211_CMD_GET_LINK_LOSS_PROFILE as it required by the user space
+> to configure the link loss profile.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 4 ++--
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+I'm not convinced.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 10166289..08d587a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -238,7 +238,7 @@ struct rtl8xxxu_rxdesc16 {
- 	u32 pattern1match:1;
- 	u32 pattern0match:1;
- #endif
--	__le32 tsfl;
-+	u32 tsfl;
- #if 0
- 	u32 bassn:12;
- 	u32 bavld:1;
-@@ -368,7 +368,7 @@ struct rtl8xxxu_rxdesc24 {
- 	u32 ldcp:1;
- 	u32 splcp:1;
- #endif
--	__le32 tsfl;
-+	u32 tsfl;
- };
- 
- struct rtl8xxxu_txdesc32 {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a96ff17..a5e6ec2 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5220,7 +5220,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- 			rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
- 						   rx_desc->rxmcs);
- 
--		rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
-+		rx_status->mactime = rx_desc->tsfl;
- 		rx_status->flag |= RX_FLAG_MACTIME_START;
- 
- 		if (!rx_desc->swdec)
-@@ -5290,7 +5290,7 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- 		rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
- 					   rx_desc->rxmcs);
- 
--	rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
-+	rx_status->mactime = rx_desc->tsfl;
- 	rx_status->flag |= RX_FLAG_MACTIME_START;
- 
- 	if (!rx_desc->swdec)
--- 
-2.7.4
+> The link loss profile represents the priority of maintaining link up
+> in different link quality environments.
+> Three types of behavior for link loss defined:
+> LINK_LOSS_PROFILE_RELAXED: prefer maintaining link up even in poor
+> link quality environment.
+> LINK_LOSS_PROFILE_DEFAULT: The default behavior for maintaining link
+> up vs link quality.
+> LINK_LOSS_PROFILE_AGGRESSIVE: prefer losing link up in poor link
+> quality environment.
+
+What you're doing here is *extremely* vague. No definitions of what
+this means, no description of how it's intended to be implemented, no
+note even on whether or not this is for full-MAC chips or not, etc.
+
+At least for mac80211, we can define signals to userspace regarding
+"link quality" and make decisions in wpa_s then?
+
+
+> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
+
+Those changes obviously don't belong into this patch anyway.
+
+johannes
