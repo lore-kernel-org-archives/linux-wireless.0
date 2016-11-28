@@ -1,70 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36008 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935908AbcKXBZA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 20:25:00 -0500
-Received: by mail-pg0-f66.google.com with SMTP id x23so2200825pgx.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2016 17:25:00 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 17:24:54 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH v2 2/7] mwifiex: Remove unused  'chan_num' variable
-Message-ID: <fed073358e7196caa2f2742e30fb268690bb5ae2.1479950323.git.kirtika@google.com> (sfid-20161124_022503_519695_E2E1DA62)
-References: <cover.1479950323.git.kirtika@google.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51850 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755325AbcK1VMN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 16:12:13 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: fix tx rate debug output
+References: <20161128210815.2368509-1-arnd@arndb.de>
+Date: Mon, 28 Nov 2016 16:12:12 -0500
+In-Reply-To: <20161128210815.2368509-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Mon, 28 Nov 2016 22:08:04 +0100")
+Message-ID: <wrfj8ts3nwb7.fsf@redhat.com> (sfid-20161128_221246_654420_476A7EF3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479950323.git.kirtika@google.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit b5413e6b2228 removed all uses of chan_num in mwifiex_config_scan().
-Compiling mwifiex with W=1 gives the following warning, fix it.
+Arnd Bergmann <arnd@arndb.de> writes:
+> We accidentally print the rate before we know it for txdesc_v2:
 
-mwifiex/scan.c: In function ‘mwifiex_config_scan’:
-mwifiex/scan.c:830:6: warning: variable ‘chan_num’ set but not used [-Wunused-but-set-variable]
+Hi Arnd,
 
-Fixes: b5413e6b2228 ("mwifiex: increase the number of nodes in command pool")
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+Thanks for the patch - Barry Day already posted a patch for this which
+Kalle has applied to the wireless tree.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 98ce072..1816916 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -827,7 +827,6 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 	u32 num_probes;
- 	u32 ssid_len;
- 	u32 chan_idx;
--	u32 chan_num;
- 	u32 scan_type;
- 	u16 scan_dur;
- 	u8 channel;
-@@ -1105,13 +1104,12 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 			mwifiex_dbg(adapter, INFO,
- 				    "info: Scan: Scanning current channel only\n");
- 		}
--		chan_num = chan_idx;
- 	} else {
- 		mwifiex_dbg(adapter, INFO,
- 			    "info: Scan: Creating full region channel list\n");
--		chan_num = mwifiex_scan_create_channel_list(priv, user_scan_in,
--							    scan_chan_list,
--							    *filtered_scan);
-+		mwifiex_scan_create_channel_list(priv, user_scan_in,
-+						 scan_chan_list,
-+						 *filtered_scan);
- 	}
- 
- }
--- 
-2.8.0.rc3.226.g39d4020
+Cheers,
+Jes
+
+
+>
+> wireless/realtek/rtl8xxxu/rtl8xxxu_core.c: In function 'rtl8xxxu_fill_txdesc_v2':
+> wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:4848:3: error: 'rate' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+>
+> txdesc_v1 got it right, so let's do it the same way here.
+>
+> Fixes: b4c3d9cfb607 ("rtl8xxxu: Pass tx_info to fill_txdesc in order to have access to retry count")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> index 04141e57b8ae..a9137abc3ad9 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+> @@ -4844,16 +4844,16 @@ rtl8xxxu_fill_txdesc_v2(struct ieee80211_hw *hw, struct ieee80211_hdr *hdr,
+>  
+>  	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
+>  
+> -	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+> -		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
+> -			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
+> -
+>  	if (rate_flags & IEEE80211_TX_RC_MCS &&
+>  	    !ieee80211_is_mgmt(hdr->frame_control))
+>  		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
+>  	else
+>  		rate = tx_rate->hw_value;
+>  
+> +	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_TX)
+> +		dev_info(dev, "%s: TX rate: %d, pkt size %d\n",
+> +			 __func__, rate, cpu_to_le16(tx_desc40->pkt_size));
+> +
+>  	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+>  
+>  	tx_desc40->txdw4 = cpu_to_le32(rate);
