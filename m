@@ -1,45 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:37413 "EHLO
-        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933320AbcKQRi2 (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36100 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755100AbcK1Urk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:38:28 -0500
-Received: by mail-it0-f53.google.com with SMTP id y23so65325283itc.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Nov 2016 09:38:28 -0800 (PST)
-Date: Thu, 17 Nov 2016 09:38:25 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com, Xinming Hu <huxm@marvell.com>
-Subject: Re: [v7] mwifiex: parse device tree node for PCIe
-Message-ID: <20161117173824.GA129893@google.com> (sfid-20161117_183838_386715_877ECC15)
-References: <1479215662-631-1-git-send-email-akarwar@marvell.com>
- <20161117123920.E159F6162A@smtp.codeaurora.org>
+        Mon, 28 Nov 2016 15:47:40 -0500
+Received: by mail-qk0-f173.google.com with SMTP id n21so153463005qka.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 12:47:39 -0800 (PST)
+Subject: Re: [RFC V2 4/5] nl80211: add support for gscan
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1479388726-3288-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1479388726-3288-5-git-send-email-arend.vanspriel@broadcom.com>
+ <1480343886.8107.55.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <81830cfc-306a-f3f5-da7a-bef258c62e84@broadcom.com> (sfid-20161128_214743_559742_927A4779)
+Date: Mon, 28 Nov 2016 21:47:33 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161117123920.E159F6162A@smtp.codeaurora.org>
+In-Reply-To: <1480343886.8107.55.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Nov 17, 2016 at 12:39:20PM +0000, Kalle Valo wrote:
-> Amitkumar Karwar <akarwar@marvell.com> wrote:
-> > From: Xinming Hu <huxm@marvell.com>
-> > 
-> > This patch derives device tree node from pcie bus layer framework.
-> > Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
-> > marvell-8xxx.txt) to accommodate PCIe changes.
-> > 
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Rajat Jain <rajatja@google.com>
-> > Reviewed-by: Brian Norris <briannorris@chromium.org>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On 28-11-2016 15:38, Johannes Berg wrote:
 > 
-> You should CC the device tree list when making changes to the bindings.
+>>   *	the nl80211 feature flags for the device.
+>> + * @NL80211_SCAN_FLAGS_IE_DATA: request the device to supply IE data
+>> in the
+>> + *	request.
+> 
+> What does that mean?
 
-FWIW, Rajat had that right on v6...
+I meant "supply IE data in the result". So it informs the driver that
+user-space is interested in IE data, but I guess it does not need to be
+explicit. It is not today.
 
-> Patch set to Changes Requested.
+The result reporting is still something I am not sure about. I would
+prefer to use the bss list in cfg80211 like all other scan functions,
+but I am not sure if that is sufficient for user-space functionality. I
+did not get a clear answer on that for Android.
 
-Brian
+>> + * @NL80211_GSCAN_CHAN_ATTR_NO_IR: scanning should be done passive.
+> 
+> why not call that passive? No-IR is something we use in regulatory code
+> to be more generic than "passive" (since it's also about beaconing
+> etc.) but here?
+
+Ok. Makes sense as we are talking just probe requests here and passive
+scanning is familiar term.
+
+>> + * @NL80211_GSCAN_CHAN_ATTR_MAX: highest GScan channel attribute.
+> 
+> Generally, you should also document the attribute types here (and
+> everywhere else really)
+
+Will do.
+
+>> +	NL80211_BUCKET_BAND_2GHZ	= (1 << 0),
+> 
+> no need for parentheses with enums :)
+
+Ok.
+
+>> +	if (tb[NL80211_GSCAN_CHAN_ATTR_DWELL_TIME])
+>> +		chan->dwell_time =
+>> nla_get_u32(tb[NL80211_GSCAN_CHAN_ATTR_DWELL_TIME]);
+> 
+> Maybe that should have some kind of "reasonable range" limit?
+
+Agree.
+> So I mostly looked at this from a pure code POV - need to compare with
+> our implementation, but I guess the basis is the same ...
+
+Given its origin I would guess so too. What I propose here is minimal
+behavior so just the logic around the buckets. I wanted to add features
+like BSS hotlist and ePNO stuff in separate patches.
+
+Apart from that the iwlwifi implementation has some differences in
+details like attribute validation and there is no base period attribute
+as that must be the gcd of the bucket periods. So I might drop that as well.
+
+Regards,
+Arend
