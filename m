@@ -1,55 +1,433 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57746 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755173AbcK2X7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 18:59:09 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, briselec@gmail.com
-Subject: [PATCH 1/1] rtl8xxxu: Work around issue with 8192eu and 8723bu devices not reconnecting
-Date: Tue, 29 Nov 2016 18:59:02 -0500
-Message-Id: <20161129235902.11882-2-Jes.Sorensen@redhat.com> (sfid-20161130_005911_589832_0272B6C6)
-In-Reply-To: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
-References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60660 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932183AbcK1LtM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 06:49:12 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 1/4] wil6210: delay remain on channel when scan is active
+Date: Mon, 28 Nov 2016 13:49:00 +0200
+Message-Id: <1480333743-7306-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161128_124916_548271_E2128B66)
+In-Reply-To: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-The H2C MEDIA_STATUS_RPT command for some reason causes 8192eu and
-8723bu devices not being able to reconnect.
+Currently it was possible to call remain_on_channel(ROC)
+while scan was active and this caused a crash in the FW.
+In order to fix this problem and make the behavior
+consistent with other drivers, queue the ROC in case
+a scan is active and try it again when scan is done.
+As part of the fix, clean up some locking issues and
+return error if scan is called while ROC is active.
 
-Reported-by: Barry Day <briselec@gmail.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  45 ++++-----
+ drivers/net/wireless/ath/wil6210/main.c     |   2 +
+ drivers/net/wireless/ath/wil6210/p2p.c      | 150 +++++++++++++++++++++-------
+ drivers/net/wireless/ath/wil6210/wil6210.h  |   9 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      |   4 +
+ 5 files changed, 149 insertions(+), 61 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a9137ab..3a86675 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4372,6 +4372,13 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
- void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
- 				  u8 macid, bool connect)
- {
-+#ifdef RTL8XXXU_GEN2_REPORT_CONNECT
-+	/*
-+	 * Barry Day reports this causes issues with 8192eu and 8723bu
-+	 * devices reconnecting. The reason for this is unclear, but
-+	 * until it is better understood, leave the code in place but
-+	 * disabled, so it is not lost.
-+	 */
- 	struct h2c_cmd h2c;
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 22078b0..6aa3ff4 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -354,14 +354,6 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "%s(), wdev=0x%p iftype=%d\n",
+ 		     __func__, wdev, wdev->iftype);
  
- 	memset(&h2c, 0, sizeof(struct h2c_cmd));
-@@ -4383,6 +4390,7 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
- 		h2c.media_status_rpt.parm &= ~BIT(0);
+-	mutex_lock(&wil->p2p_wdev_mutex);
+-	if (wil->scan_request) {
+-		wil_err(wil, "Already scanning\n");
+-		mutex_unlock(&wil->p2p_wdev_mutex);
+-		return -EAGAIN;
+-	}
+-	mutex_unlock(&wil->p2p_wdev_mutex);
+-
+ 	/* check we are client side */
+ 	switch (wdev->iftype) {
+ 	case NL80211_IFTYPE_STATION:
+@@ -378,12 +370,24 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 		return -EBUSY;
+ 	}
  
- 	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
-+#endif
++	mutex_lock(&wil->mutex);
++
++	mutex_lock(&wil->p2p_wdev_mutex);
++	if (wil->scan_request || wil->p2p.discovery_started) {
++		wil_err(wil, "Already scanning\n");
++		mutex_unlock(&wil->p2p_wdev_mutex);
++		rc = -EAGAIN;
++		goto out;
++	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
++
+ 	/* social scan on P2P_DEVICE is handled as p2p search */
+ 	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
+ 	    wil_p2p_is_social_scan(request)) {
+ 		if (!wil->p2p.p2p_dev_started) {
+ 			wil_err(wil, "P2P search requested on stopped P2P device\n");
+-			return -EIO;
++			rc = -EIO;
++			goto out;
+ 		}
+ 		wil->scan_request = request;
+ 		wil->radio_wdev = wdev;
+@@ -392,7 +396,7 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 			wil->radio_wdev = wil_to_wdev(wil);
+ 			wil->scan_request = NULL;
+ 		}
+-		return rc;
++		goto out;
+ 	}
+ 
+ 	(void)wil_p2p_stop_discovery(wil);
+@@ -415,7 +419,7 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 
+ 	if (rc) {
+ 		wil_err(wil, "set SSID for scan request failed: %d\n", rc);
+-		return rc;
++		goto out;
+ 	}
+ 
+ 	wil->scan_request = request;
+@@ -448,7 +452,7 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 
+ 	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_REQ, request->ie_len, request->ie);
+ 	if (rc)
+-		goto out;
++		goto out_restore;
+ 
+ 	if (wil->discovery_mode && cmd.cmd.scan_type == WMI_ACTIVE_SCAN) {
+ 		cmd.cmd.discovery_mode = 1;
+@@ -459,13 +463,14 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	rc = wmi_send(wil, WMI_START_SCAN_CMDID, &cmd, sizeof(cmd.cmd) +
+ 			cmd.cmd.num_channels * sizeof(cmd.cmd.channel_list[0]));
+ 
+-out:
++out_restore:
+ 	if (rc) {
+ 		del_timer_sync(&wil->scan_timer);
+ 		wil->radio_wdev = wil_to_wdev(wil);
+ 		wil->scan_request = NULL;
+ 	}
+-
++out:
++	mutex_unlock(&wil->mutex);
+ 	return rc;
  }
  
- void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+@@ -988,16 +993,8 @@ static int wil_remain_on_channel(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "%s() center_freq=%d, duration=%d iftype=%d\n",
+ 		     __func__, chan->center_freq, duration, wdev->iftype);
+ 
+-	rc = wil_p2p_listen(wil, duration, chan, cookie);
+-	if (rc)
+-		return rc;
+-
+-	wil->radio_wdev = wdev;
+-
+-	cfg80211_ready_on_channel(wdev, *cookie, chan, duration,
+-				  GFP_KERNEL);
+-
+-	return 0;
++	rc = wil_p2p_listen(wil, wdev, duration, chan, cookie);
++	return rc;
+ }
+ 
+ static int wil_cancel_remain_on_channel(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 70f9c07..e2e021b 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -518,6 +518,7 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	INIT_WORK(&wil->wmi_event_worker, wmi_event_worker);
+ 	INIT_WORK(&wil->fw_error_worker, wil_fw_error_worker);
+ 	INIT_WORK(&wil->probe_client_worker, wil_probe_client_worker);
++	INIT_WORK(&wil->p2p.delayed_listen_work, wil_p2p_delayed_listen_work);
+ 
+ 	INIT_LIST_HEAD(&wil->pending_wmi_ev);
+ 	INIT_LIST_HEAD(&wil->probe_client_pending);
+@@ -579,6 +580,7 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 	cancel_work_sync(&wil->disconnect_worker);
+ 	cancel_work_sync(&wil->fw_error_worker);
+ 	cancel_work_sync(&wil->p2p.discovery_expired_work);
++	cancel_work_sync(&wil->p2p.delayed_listen_work);
+ 	mutex_lock(&wil->mutex);
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	mutex_unlock(&wil->mutex);
+diff --git a/drivers/net/wireless/ath/wil6210/p2p.c b/drivers/net/wireless/ath/wil6210/p2p.c
+index 4f0eab0..fbae995 100644
+--- a/drivers/net/wireless/ath/wil6210/p2p.c
++++ b/drivers/net/wireless/ath/wil6210/p2p.c
+@@ -22,6 +22,43 @@
+ #define P2P_SEARCH_DURATION_MS 500
+ #define P2P_DEFAULT_BI 100
+ 
++static int wil_p2p_start_listen(struct wil6210_priv *wil)
++{
++	struct wil_p2p_info *p2p = &wil->p2p;
++	u8 channel = p2p->listen_chan.hw_value;
++	int rc;
++
++	lockdep_assert_held(&wil->mutex);
++
++	rc = wmi_p2p_cfg(wil, channel, P2P_DEFAULT_BI);
++	if (rc) {
++		wil_err(wil, "wmi_p2p_cfg failed\n");
++		goto out;
++	}
++
++	rc = wmi_set_ssid(wil, strlen(P2P_WILDCARD_SSID), P2P_WILDCARD_SSID);
++	if (rc) {
++		wil_err(wil, "wmi_set_ssid failed\n");
++		goto out_stop;
++	}
++
++	rc = wmi_start_listen(wil);
++	if (rc) {
++		wil_err(wil, "wmi_start_listen failed\n");
++		goto out_stop;
++	}
++
++	INIT_WORK(&p2p->discovery_expired_work, wil_p2p_listen_expired);
++	mod_timer(&p2p->discovery_timer,
++		  jiffies + msecs_to_jiffies(p2p->listen_duration));
++out_stop:
++	if (rc)
++		wmi_stop_discovery(wil);
++
++out:
++	return rc;
++}
++
+ bool wil_p2p_is_social_scan(struct cfg80211_scan_request *request)
+ {
+ 	return (request->n_channels == 1) &&
+@@ -46,7 +83,7 @@ int wil_p2p_search(struct wil6210_priv *wil,
+ 	wil_dbg_misc(wil, "%s: channel %d\n",
+ 		     __func__, P2P_DMG_SOCIAL_CHANNEL);
+ 
+-	mutex_lock(&wil->mutex);
++	lockdep_assert_held(&wil->mutex);
+ 
+ 	if (p2p->discovery_started) {
+ 		wil_err(wil, "%s: search failed. discovery already ongoing\n",
+@@ -103,22 +140,19 @@ int wil_p2p_search(struct wil6210_priv *wil,
+ 		wmi_stop_discovery(wil);
+ 
+ out:
+-	mutex_unlock(&wil->mutex);
+ 	return rc;
+ }
+ 
+-int wil_p2p_listen(struct wil6210_priv *wil, unsigned int duration,
+-		   struct ieee80211_channel *chan, u64 *cookie)
++int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
++		   unsigned int duration, struct ieee80211_channel *chan,
++		   u64 *cookie)
+ {
+ 	struct wil_p2p_info *p2p = &wil->p2p;
+-	u8 channel = P2P_DMG_SOCIAL_CHANNEL;
+ 	int rc;
+ 
+ 	if (!chan)
+ 		return -EINVAL;
+ 
+-	channel = chan->hw_value;
+-
+ 	wil_dbg_misc(wil, "%s: duration %d\n", __func__, duration);
+ 
+ 	mutex_lock(&wil->mutex);
+@@ -129,35 +163,30 @@ int wil_p2p_listen(struct wil6210_priv *wil, unsigned int duration,
+ 		goto out;
+ 	}
+ 
+-	rc = wmi_p2p_cfg(wil, channel, P2P_DEFAULT_BI);
+-	if (rc) {
+-		wil_err(wil, "%s: wmi_p2p_cfg failed\n", __func__);
+-		goto out;
+-	}
+-
+-	rc = wmi_set_ssid(wil, strlen(P2P_WILDCARD_SSID), P2P_WILDCARD_SSID);
+-	if (rc) {
+-		wil_err(wil, "%s: wmi_set_ssid failed\n", __func__);
+-		goto out_stop;
+-	}
++	memcpy(&p2p->listen_chan, chan, sizeof(*chan));
++	*cookie = ++p2p->cookie;
++	p2p->listen_duration = duration;
+ 
+-	rc = wmi_start_listen(wil);
+-	if (rc) {
+-		wil_err(wil, "%s: wmi_start_listen failed\n", __func__);
+-		goto out_stop;
++	mutex_lock(&wil->p2p_wdev_mutex);
++	if (wil->scan_request) {
++		wil_dbg_misc(wil, "Delaying p2p listen until scan done\n");
++		p2p->pending_listen_wdev = wdev;
++		p2p->discovery_started = 1;
++		rc = 0;
++		mutex_unlock(&wil->p2p_wdev_mutex);
++		goto out;
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
+ 
+-	memcpy(&p2p->listen_chan, chan, sizeof(*chan));
+-	*cookie = ++p2p->cookie;
++	rc = wil_p2p_start_listen(wil);
++	if (rc)
++		goto out;
+ 
+ 	p2p->discovery_started = 1;
+-	INIT_WORK(&p2p->discovery_expired_work, wil_p2p_listen_expired);
+-	mod_timer(&p2p->discovery_timer,
+-		  jiffies + msecs_to_jiffies(duration));
++	wil->radio_wdev = wdev;
+ 
+-out_stop:
+-	if (rc)
+-		wmi_stop_discovery(wil);
++	cfg80211_ready_on_channel(wdev, *cookie, chan, duration,
++				  GFP_KERNEL);
+ 
+ out:
+ 	mutex_unlock(&wil->mutex);
+@@ -170,9 +199,14 @@ u8 wil_p2p_stop_discovery(struct wil6210_priv *wil)
+ 	u8 started = p2p->discovery_started;
+ 
+ 	if (p2p->discovery_started) {
+-		del_timer_sync(&p2p->discovery_timer);
++		if (p2p->pending_listen_wdev) {
++			/* discovery not really started, only pending */
++			p2p->pending_listen_wdev = NULL;
++		} else {
++			del_timer_sync(&p2p->discovery_timer);
++			wmi_stop_discovery(wil);
++		}
+ 		p2p->discovery_started = 0;
+-		wmi_stop_discovery(wil);
+ 	}
+ 
+ 	return started;
+@@ -257,11 +291,57 @@ void wil_p2p_search_expired(struct work_struct *work)
+ 		};
+ 
+ 		mutex_lock(&wil->p2p_wdev_mutex);
+-		cfg80211_scan_done(wil->scan_request, &info);
+-		wil->scan_request = NULL;
+-		wil->radio_wdev = wil->wdev;
++		if (wil->scan_request) {
++			cfg80211_scan_done(wil->scan_request, &info);
++			wil->scan_request = NULL;
++			wil->radio_wdev = wil->wdev;
++		}
++		mutex_unlock(&wil->p2p_wdev_mutex);
++	}
++}
++
++void wil_p2p_delayed_listen_work(struct work_struct *work)
++{
++	struct wil_p2p_info *p2p = container_of(work,
++			struct wil_p2p_info, delayed_listen_work);
++	struct wil6210_priv *wil = container_of(p2p,
++			struct wil6210_priv, p2p);
++	int rc;
++
++	mutex_lock(&wil->mutex);
++
++	wil_dbg_misc(wil, "Checking delayed p2p listen\n");
++	if (!p2p->discovery_started || !p2p->pending_listen_wdev)
++		goto out;
++
++	mutex_lock(&wil->p2p_wdev_mutex);
++	if (wil->scan_request) {
++		/* another scan started, wait again... */
+ 		mutex_unlock(&wil->p2p_wdev_mutex);
++		goto out;
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
++
++	rc = wil_p2p_start_listen(wil);
++
++	mutex_lock(&wil->p2p_wdev_mutex);
++	if (rc) {
++		cfg80211_remain_on_channel_expired(p2p->pending_listen_wdev,
++						   p2p->cookie,
++						   &p2p->listen_chan,
++						   GFP_KERNEL);
++		wil->radio_wdev = wil->wdev;
++	} else {
++		cfg80211_ready_on_channel(p2p->pending_listen_wdev, p2p->cookie,
++					  &p2p->listen_chan,
++					  p2p->listen_duration, GFP_KERNEL);
++		wil->radio_wdev = p2p->pending_listen_wdev;
++	}
++	p2p->pending_listen_wdev = NULL;
++	mutex_unlock(&wil->p2p_wdev_mutex);
++
++out:
++	mutex_unlock(&wil->mutex);
+ }
+ 
+ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b449f84..ef95db9 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -461,8 +461,11 @@ struct wil_p2p_info {
+ 	u8 discovery_started;
+ 	u8 p2p_dev_started;
+ 	u64 cookie;
++	struct wireless_dev *pending_listen_wdev;
++	unsigned int listen_duration;
+ 	struct timer_list discovery_timer; /* listen/search duration */
+ 	struct work_struct discovery_expired_work; /* listen/search expire */
++	struct work_struct delayed_listen_work; /* listen after scan done */
+ };
+ 
+ enum wil_sta_status {
+@@ -843,13 +846,15 @@ int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
+ void wil_p2p_discovery_timer_fn(ulong x);
+ int wil_p2p_search(struct wil6210_priv *wil,
+ 		   struct cfg80211_scan_request *request);
+-int wil_p2p_listen(struct wil6210_priv *wil, unsigned int duration,
+-		   struct ieee80211_channel *chan, u64 *cookie);
++int wil_p2p_listen(struct wil6210_priv *wil, struct wireless_dev *wdev,
++		   unsigned int duration, struct ieee80211_channel *chan,
++		   u64 *cookie);
+ u8 wil_p2p_stop_discovery(struct wil6210_priv *wil);
+ int wil_p2p_cancel_listen(struct wil6210_priv *wil, u64 cookie);
+ void wil_p2p_listen_expired(struct work_struct *work);
+ void wil_p2p_search_expired(struct work_struct *work);
+ void wil_p2p_stop_radio_operations(struct wil6210_priv *wil);
++void wil_p2p_delayed_listen_work(struct work_struct *work);
+ 
+ /* WMI for P2P */
+ int wmi_p2p_cfg(struct wil6210_priv *wil, int channel, int bi);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 2971ddf..d289a4d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -441,6 +441,10 @@ static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
+ 		wil->radio_wdev = wil->wdev;
+ 		wil->scan_request = NULL;
+ 		wake_up_interruptible(&wil->wq);
++		if (wil->p2p.pending_listen_wdev) {
++			wil_dbg_misc(wil, "Scheduling delayed listen\n");
++			schedule_work(&wil->p2p.delayed_listen_work);
++		}
+ 	} else {
+ 		wil_err(wil, "SCAN_COMPLETE while not scanning\n");
+ 	}
 -- 
-2.7.4
+1.9.1
