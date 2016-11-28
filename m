@@ -1,44 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:35701 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966504AbcKOKTW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 05:19:22 -0500
-Received: by mail-wm0-f49.google.com with SMTP id a197so156779985wmd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Nov 2016 02:19:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com> <1479141222-8493-5-git-send-email-erik.stromdahl@gmail.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Tue, 15 Nov 2016 11:19:20 +0100
-Message-ID: <CA+BoTQnTkwQjmNBdr8a+YauXffWGNBNyPTZ=RByoviTSp+1ZYQ@mail.gmail.com> (sfid-20161115_111932_665747_ECC4B5B6)
-Subject: Re: [RFC 04/12] ath10k: htc: refactorization
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:43134 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932283AbcK1OPA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 09:15:00 -0500
+Message-ID: <1480342496.8107.41.camel@sipsolutions.net> (sfid-20161128_151506_776348_0CC8F701)
+Subject: Re: [PATCH 1/2] nl80211: Use different attrs for BSSID and random
+ MAC addr in scan req
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Luca Coelho <luca@coelho.fi>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        Vamsi Krishna <vamsin@qti.qualcomm.com>
+Date: Mon, 28 Nov 2016 15:14:56 +0100
+In-Reply-To: <1480063462.2517.105.camel@coelho.fi>
+References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
+         <1480063462.2517.105.camel@coelho.fi>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 November 2016 at 17:33, Erik Stromdahl <erik.stromdahl@gmail.com> wro=
-te:
-> Code refactorization:
->
-> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
-> to ath10k_htc_control_rx_complete.
->
-> This eases the implementation of SDIO/mbox significantly since
-> the ep_rx_complete cb is invoked directly from the SDIO/mbox
-> hif layer.
->
-> Since the ath10k_htc_control_rx_complete already is present
-> (only containing a warning message) there is no reason for not
-> using it (instead of having a special case for ep 0 in
-> ath10k_htc_rx_completion_handler).
 
-This should be squashed with Patch 3 since it's inseparable part of
-the same refactorization.
+> > + * @NL80211_ATTR_BSSID: The BSSID of the AP (various uses). Note
+> > that
+> 
+> The BSSID may also be used for other things, like P2P GO, right? Also
+> "various uses" is probably unnecessary? Every command using this
+> attribute should describe it's use in their description.
+> 
+> 
+> > 
+> > + *	%NL80211_ATTR_MAC has also been used in various
+> > commands/events for
+> > + *	specifying the BSSID.
+> 
+> This can be a bit confusing.  Maybe you can specify which commands
+> *used* to use NL80211_ATTR_MAC but now use NL80211_ATTR_BSSID?
 
+I'd actually avoid that, let's not make the "compatibility quirks" part
+of the documentation people read through normally ... In the code,
+that's fine, but here, I think less so.
 
-Micha=C5=82
+With that, perhaps just rephrase this to
+
+"The BSSID of the AP. Note that %NL80211_ATTR_MAC is also used in
+various commands/events for specifying the BSSID."
+
+> > -	if (info->attrs[NL80211_ATTR_MAC])
+> > +	/* Initial implementation used NL80211_ATTR_MAC to set the
+> > specific
+> > +	 * BSSID to scan for. This was problematic because that
+> > same attribute
+> > +	 * was already used for another purpose (local random MAC
+> > address). The
+> > +	 * NL80211_ATTR_BSSID attribute was added to fix this. For
+> > backwards
+> > +	 * compatibility with older userspace components, also use
+> > the
+> > +	 * NL80211_ATTR_MAC value here if it can be determined to
+> > be used for
+> > +	 * the specific BSSID use case instead of the random MAC
+> > address
+> > +	 * (NL80211_ATTR_SCAN_FLAGS is used to enable random MAC
+> > address use).
+> > +	 */
+> 
+> You should probably add this information to the
+> NL80211_CMD_TRIGGER_SCAN description.
+
+It may need an update to refer to ATTR_BSSID, but again I don't think
+all the compatibility discussion should be there.
+
+> 
+> > 
+> > +	if (info->attrs[NL80211_ATTR_BSSID])
+> > +		memcpy(request->bssid,
+> > +		       nla_data(info->attrs[NL80211_ATTR_BSSID]),
+> > ETH_ALEN);
+> > +	else if (!info->attrs[NL80211_ATTR_SCAN_FLAGS] &&
+> 
+> You should actually check that the SCAN_FLAGS attribute either
+> doesn't
+> exist (as you already do) or, if it exists, that it doesn't have the
+> NL80211_SCAN_FLAG_RANDOM_ADDR flags.
+> 
+
+Agree with that, that would make sense.
+
+johannes
