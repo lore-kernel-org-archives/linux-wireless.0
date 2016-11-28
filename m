@@ -1,196 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:52754 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934274AbcKWK1E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 05:27:04 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 07/12] brcmfmac: split up brcmf_pno_config() function
-Date: Wed, 23 Nov 2016 10:25:26 +0000
-Message-Id: <1479896731-5091-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161123_112731_106651_3C7D5B2C)
-In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:43156 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932283AbcK1OUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 09:20:25 -0500
+Message-ID: <1480342821.8107.44.camel@sipsolutions.net> (sfid-20161128_152027_957954_3DB43816)
+Subject: Re: [PATCH 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Mon, 28 Nov 2016 15:20:21 +0100
+In-Reply-To: <ee0072cd-83b8-1264-d792-bcf4ce1a8940@broadcom.com> (sfid-20161127_215109_122180_ADB0DD12)
+References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
+         <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
+         <ee0072cd-83b8-1264-d792-bcf4ce1a8940@broadcom.com>
+         (sfid-20161127_215109_122180_ADB0DD12)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The brcmf_pno_config() function handles two configurations in
-firmware. Split it and have caller sort out what is needed.
+> It seems there has already
+> been taken a shot at this which may be used/extended [1].
+> 
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 11 +++-
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 60 ++++++++++++++++------
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.h | 17 ++++--
- 3 files changed, 68 insertions(+), 20 deletions(-)
+That's a good point - it's somewhat similar.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 3d87055..b3b2f6a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -42,6 +42,7 @@
- #include "common.h"
- 
- #define BRCMF_SCAN_IE_LEN_MAX		2048
-+#define BRCMF_SCHED_SCAN_PERIOD		30
- 
- #define WPA_OUI				"\x00\x50\xF2"	/* WPA OUI */
- #define WPA_OUI_TYPE			1
-@@ -3396,10 +3397,18 @@ static bool brcmf_is_ssid_active(struct cfg80211_ssid *ssid,
- 	}
- 
- 	/* configure pno */
--	ret = brcmf_pno_config(ifp, req);
-+	ret = brcmf_pno_config(ifp, BRCMF_SCHED_SCAN_PERIOD, 0, 0);
- 	if (ret < 0)
- 		return ret;
- 
-+	/* configure random mac */
-+	if (req->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
-+		ret = brcmf_pno_set_random(ifp, req->mac_addr,
-+					   req->mac_addr_mask);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
- 	/* configure each match set */
- 	for (i = 0; i < req->n_match_sets; i++) {
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index c7967d9e..72d9eef 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -23,10 +23,12 @@
- #include "fwil_types.h"
- 
- #define BRCMF_PNO_VERSION		2
--#define BRCMF_PNO_TIME			30
- #define BRCMF_PNO_REPEAT		4
- #define BRCMF_PNO_FREQ_EXPO_MAX		3
-+#define BRCMF_PNO_IMMEDIATE_SCAN_BIT	3
-+#define BRCMF_PNO_ENABLE_BD_SCAN_BIT	5
- #define BRCMF_PNO_ENABLE_ADAPTSCAN_BIT	6
-+#define BRCMF_PNO_REPORT_SEPARATELY_BIT	11
- #define BRCMF_PNO_SCAN_INCOMPLETE	0
- #define BRCMF_PNO_WPA_AUTH_ANY		0xFFFFFFFF
- #define BRCMF_PNO_HIDDEN_BIT		2
-@@ -47,42 +49,68 @@ int brcmf_pno_clean(struct brcmf_if *ifp)
- 	return ret;
- }
- 
--int brcmf_pno_config(struct brcmf_if *ifp,
--		     struct cfg80211_sched_scan_request *request)
-+int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
-+		     u32 mscan, u32 bestn)
- {
- 	struct brcmf_pno_param_le pfn_param;
--	struct brcmf_pno_macaddr_le pfn_mac;
-+	u16 flags;
-+	u32 pfnmem;
- 	s32 err;
--	u8 *mac_mask;
--	int i;
- 
- 	memset(&pfn_param, 0, sizeof(pfn_param));
- 	pfn_param.version = cpu_to_le32(BRCMF_PNO_VERSION);
- 
- 	/* set extra pno params */
--	pfn_param.flags = cpu_to_le16(1 << BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
-+	flags = BIT(BRCMF_PNO_IMMEDIATE_SCAN_BIT) |
-+		BIT(BRCMF_PNO_REPORT_SEPARATELY_BIT) |
-+		BIT(BRCMF_PNO_ENABLE_ADAPTSCAN_BIT);
- 	pfn_param.repeat = BRCMF_PNO_REPEAT;
- 	pfn_param.exp = BRCMF_PNO_FREQ_EXPO_MAX;
- 
- 	/* set up pno scan fr */
--	pfn_param.scan_freq = cpu_to_le32(BRCMF_PNO_TIME);
-+	pfn_param.scan_freq = cpu_to_le32(scan_freq);
-+
-+	if (mscan) {
-+		pfnmem = bestn;
-+
-+		/* set bestn in firmware */
-+		err = brcmf_fil_iovar_int_set(ifp, "pfnmem", pfnmem);
-+		if (err < 0) {
-+			brcmf_err("failed to set pfnmem\n");
-+			goto exit;
-+		}
-+		/* get max mscan which the firmware supports */
-+		err = brcmf_fil_iovar_int_get(ifp, "pfnmem", &pfnmem);
-+		if (err < 0) {
-+			brcmf_err("failed to get pfnmem\n");
-+			goto exit;
-+		}
-+		mscan = min_t(u32, mscan, pfnmem);
-+		pfn_param.mscan = mscan;
-+		pfn_param.bestn = bestn;
-+		flags |= BIT(BRCMF_PNO_ENABLE_BD_SCAN_BIT);
-+		brcmf_dbg(INFO, "mscan=%d, bestn=%d\n", mscan, bestn);
-+	}
- 
-+	pfn_param.flags = cpu_to_le16(flags);
- 	err = brcmf_fil_iovar_data_set(ifp, "pfn_set", &pfn_param,
- 				       sizeof(pfn_param));
--	if (err) {
-+	if (err)
- 		brcmf_err("pfn_set failed, err=%d\n", err);
--		return err;
--	}
- 
--	/* Find out if mac randomization should be turned on */
--	if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR))
--		return 0;
-+exit:
-+	return err;
-+}
-+
-+int brcmf_pno_set_random(struct brcmf_if *ifp, u8 *mac_addr, u8 *mac_mask)
-+{
-+	struct brcmf_pno_macaddr_le pfn_mac;
-+	int err, i;
- 
- 	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
- 	pfn_mac.flags = BRCMF_PFN_MAC_OUI_ONLY | BRCMF_PFN_SET_MAC_UNASSOC;
- 
--	memcpy(pfn_mac.mac, request->mac_addr, ETH_ALEN);
--	mac_mask = request->mac_addr_mask;
-+	memcpy(pfn_mac.mac, mac_addr, ETH_ALEN);
- 	for (i = 0; i < ETH_ALEN; i++) {
- 		pfn_mac.mac[i] &= mac_mask[i];
- 		pfn_mac.mac[i] |= get_random_int() & ~(mac_mask[i]);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
-index a4a23fc..f2c5a53 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.h
-@@ -30,10 +30,21 @@
-  * brcmf_pno_config - configure pno parameters.
-  *
-  * @ifp: interface object used.
-- * @request: scheduled scan parameters.
-+ * @scan_freq: scan frequency period in seconds.
-+ * @mscan: maximum number of scans stored in firmware.
-+ * @bestn: maximum number of APs per scan stored in firmware.
-  */
--int brcmf_pno_config(struct brcmf_if *ifp,
--		     struct cfg80211_sched_scan_request *request);
-+int brcmf_pno_config(struct brcmf_if *ifp, u32 scan_freq,
-+		     u32 mscan, u32 bestn);
-+
-+/**
-+ * brcmf_pno_set_random - setup randomisation mac address for pno.
-+ *
-+ * @ifp: interface object used.
-+ * @mac_addr: MAC address used with randomisation.
-+ * @mac_mask: MAC address mask used for randomisation.
-+ */
-+int brcmf_pno_set_random(struct brcmf_if *ifp, u8 *mac_addr, u8 *mac_mask);
- 
- /**
-  * brcmf_pno_add_ssid - add ssid for pno in firmware.
--- 
-1.9.1
+This is obviously a different context - offloaded BSS selection vs.
+scheduled scan (for host BSS selection), but perhaps the attribute &
+definitions could be reused?
+
+johannes
