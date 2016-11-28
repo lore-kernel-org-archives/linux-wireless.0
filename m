@@ -1,100 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33507 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753423AbcKNQNM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:13:12 -0500
-Received: by mail-pg0-f68.google.com with SMTP id 3so9312658pgd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:13:12 -0800 (PST)
-Date: Tue, 15 Nov 2016 02:05:05 +1000
-From: Barry Day <briselec@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: Fix failure to reconnect to AP
-Message-ID: <20161114160504.GA12996@testbox> (sfid-20161114_171316_474055_0BDEFB67)
-References: <20161113111705.GA2393@box64.home.org>
- <wrfjoa1iyz1e.fsf@redhat.com>
+Received: from mail-dm3nam03on0048.outbound.protection.outlook.com ([104.47.41.48]:26269
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755515AbcK1Wks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 28 Nov 2016 17:40:48 -0500
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+To: Kyle McMartin <kyle@mcmartin.ca>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+ <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com>
+ <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
+CC: Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>, <btherthala@quantenna.com>,
+        <hwang@quantenna.com>, <smaksimenko@quantenna.com>,
+        <dlebed@quantenna.com>, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        "Sergey Matyukevich" <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <15e3a2fd-7201-29d8-c0e8-b8ac9e943da2@quantenna.com> (sfid-20161128_234053_995814_D2655D5A)
+Date: Tue, 29 Nov 2016 01:07:09 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <wrfjoa1iyz1e.fsf@redhat.com>
+In-Reply-To: <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 14, 2016 at 08:24:45AM -0500, Jes Sorensen wrote:
-> Barry Day <briselec@gmail.com> writes:
-> > The rtl8192e and rtl8723 fail to reconnect to an AP after being
-> > disconnected. Ths patch fixes that without affecting the rtl8192cu.
-> > I don't have a rtl8723 to test but it has been tested on a rtl8192eu.
-> > After going through the orginal realtek code for the rtl8723, I am
-> > confident the patch is applicable to both.
-> >
-> > Signed-off-by: Barry Day <briselec@gmail.com>
-> > ---
-> >  rtl8xxxu_core.c | 18 ++++++++++++++----
-> >  1 file changed, 14 insertions(+), 4 deletions(-)
-> 
-> Hi Barry,
-> 
-> Thank you for the patch. There are a couple of items which I am not
-> 100% sure about the order of.
-> 
-> > diff --git a/rtl8xxxu_core.c b/rtl8xxxu_core.c
-> > index 04141e5..6ac10d2 100644
-> > --- a/rtl8xxxu_core.c
-> > +++ b/rtl8xxxu_core.c
-> > @@ -4372,17 +4372,25 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
-> >  void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
-> >  				  u8 macid, bool connect)
-> >  {
-> > +	u8 val8;
-> >  	struct h2c_cmd h2c;
-> >  
-> >  	memset(&h2c, 0, sizeof(struct h2c_cmd));
-> >  
-> >  	h2c.media_status_rpt.cmd = H2C_8723B_MEDIA_STATUS_RPT;
-> > -	if (connect)
-> > +	if (connect) {
-> >  		h2c.media_status_rpt.parm |= BIT(0);
-> > -	else
-> > -		h2c.media_status_rpt.parm &= ~BIT(0);
-> > +		rtl8xxxu_gen2_h2c_cmd(priv, &h2c,
-> > +					sizeof(h2c.media_status_rpt));
-> > +	} else {
-> > +		val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
-> > +		val8 &= ~BEACON_FUNCTION_ENABLE;
-> > +
-> > +		rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
-> > +		rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0x00);
-> > +		rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, (BIT(0) | BIT(1)));
-> > +	}
-> >  
-> > -	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
-> >  }
-> 
-> This only affects 8192eu and not 8192cu - we left RXFLTMAP2 out of here
-> on purpose for monitor mode, but you now disable it for 8192eu/8723bu.
-> 
+On 11/28/2016 07:34 PM, Kyle McMartin wrote:
+> On Tue, Nov 22, 2016 at 9:44 AM, IgorMitsyanko
+> <igor.mitsyanko.os@quantenna.com> wrote:
+>> Hi Ben, Kyle,
+>> could you please share what is the position of linux-firmware regarding
+>> firmware binaries that include GPL components? Does it require entire GPL
+>> components codebase be present in linux-firmware tree, or maybe having this
+>> clause in license file is enough:
+>> +Open Source Software. The Software may include components that are licensed
+>> +pursuant to open source software (“Open Source Components”). Information
+>> +regarding the Open Source Components included with the Software is
+>> available
+>> +upon request to oslegal@quantenna.com. To the extent such Open Source
+>> +Components are required to be licensed to you under the terms of a separate
+>> +license (such as an open source license) then such other terms shall apply,
+>> and
+>> +nothing herein shall be deemed or interpreted to limit any rights you may
+>> have
+>> +under any such applicable license.
+>>
+>>  From technical perspective, size of the codebase used to build Quantenna
+>> firmware is a few hundred MBs, it seems too much to include into
+>> linux-firmware tree.
+>>
+> I don't have strong feelings one way or another. I'd prefer not having
+> several hundred
+> MB of source that's unlikely to change included in the linux-firmware
+> git tree. I'm also not
+> a lawyer, so I can't help you decide what would satisfy the
+> distribution clause of the GPLv2.
+> We already have one GPL firmware (carl9170fw) which includes the
+> source, but just references
+> a seperate toolchain for downloading, so it's only approximately 1MB
+> in size in the tree.
+>
+> Is your firmware source really that large, or is it just including the
+> entire build toolchain with it?
 
-Even in monitor mode the interface has to brought up to use it which invokes
-rtl8xxxu_start which sets it back to accepting frames.
+It does include Linux environment with userspace tools, toolchain and 
+some other components that are not actually needed, you're right.
+Maybe its possible to skip providing entire build environment, but 
+simply provide GPL code and patches to 3-d party opensource components? 
+Just state which version the patch is based on: for example, patch  to 
+apply on top of Linux 3.14 sources, but no sources themselves. In this 
+case, it won't be possible to build firmware manually, but GPL code 
+modifications will be available.
 
 
-> >  void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
-> > @@ -4515,6 +4523,8 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> >  				sgi = 1;
-> >  			rcu_read_unlock();
-> >  
-> > +			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
-> > +
-> >  			priv->fops->update_rate_mask(priv, ramask, sgi);
-> >  
-> >  			rtl8xxxu_write8(priv, REG_BCN_MAX_ERR, 0xff);
-> 
-> Here you enable RXFLTMAP2 for all devices - this doesn't balance with
-> the above.
-> 
-
-The original realtek code I have for the 8192cu does the disconnect the
-same way as in this patch. I tested the 8192cu using the patched
-gen2_report connect and it works. That would make things consistent across
-all chipsets.
+>
+> regards,
+> --Kyle
+>
+>> On 11/11/2016 02:35 PM, Johannes Berg wrote:
+>>> Adding linux-firmware people to Cc, since presumably they don't
+>>> necessarily read linux-wireless...
+>>>
+>>>> Johannes, from that perspective, who are the "redistributors"?
+>>>> Specifically, is linux-firmware git repository considered a
+>>>> redistributor or its just hosting files? I mean, at what moment
+>>>> someone else other then Quantenna will start to be legally obliged to
+>>>> make GPL code used in firmware available for others?
+>>> Look, I don't know. I'd assume people who ship it, like any regular
+>>> distro, would be (re)distributors thereof. "Normal" (non-GPL) firmware
+>>> images come with a redistribution license, but that obviously can't
+>>> work here.
+>>>
+>>> There's some info from Ben here regarding the carl9170 case:
+>>> http://lkml.iu.edu/hypermail/linux/kernel/1605.3/01176.html
+>>>
+>>>> Personally I still hope that linux-firmware itself is not legally
+>>>> concerned with what is the content of firmware its hosting, but looks
+>>>> like there already was a precedent case  with carl9170 driver and
+>>>> we have to somehow deal with it.
+>>> That's really all I wanted to bring up. I'm not involved with the
+>>> linux-firmware git tree.
+>>>
+>>>> There still may be a difference though: Quantenna is semiconductor
+>>>> company only, software
+>>>> used on actual products based on Quantenna chipsets is released by
+>>>> other
+>>>> companies.
+>>>> I just want to present our legal team with a clear case (and position
+>>>> of
+>>>> Linux maintainers) so that they can
+>>>> work with it and make decision on how to proceed.
+>>>>
+>>>>    From technical perspective, as I mentioned, SDK is quite huge and
+>>>> include a lot of opensource
+>>>> components including full Linux, I don't think its reasonable to have
+>>>> it
+>>>> inside linux-firmware tree.
+>>>> What are the options to share it other then providing it on request
+>>>> basis:
+>>>> - git repository
+>>>> - store tarball somewhere on official website
+>>> Clearly that wasn't deemed appropriate for carl9170, so I don't see why
+>>> it'd be different here.
+>>>
+>>> johannes
+>>
