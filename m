@@ -1,48 +1,490 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11271 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35098 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751203AbcKIUHS (ORCPT
+        with ESMTP id S932094AbcK1LtR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 15:07:18 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: =?utf-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-CC: Tim Shepard <shep@alum.mit.edu>,
-        "make-wifi-fast@lists.bufferbloat.net"
-        <make-wifi-fast@lists.bufferbloat.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "nbd@nbd.name" <nbd@nbd.name>
-Subject: Re: [v5] ath9k: Switch to using mac80211 intermediate software
- queues.
-Date: Wed, 9 Nov 2016 20:07:12 +0000
-Message-ID: <87a8d8v2mo.fsf@qca.qualcomm.com> (sfid-20161109_210723_422479_1FAC4F57)
-References: <E1c4IsV-0003Rk-00@www.xplot.org> <87k2cd0waf.fsf@toke.dk>
-In-Reply-To: <87k2cd0waf.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
- =?utf-8?Q?=C3=B8rgensen=22's?= message of      "Wed, 09 Nov 2016 11:42:16 +0100")
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Mon, 28 Nov 2016 06:49:17 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 4/4] wil6210: align to latest auto generated wmi.h
+Date: Mon, 28 Nov 2016 13:49:03 +0200
+Message-Id: <1480333743-7306-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20161128_124922_584642_7A8323AF)
+In-Reply-To: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1480333743-7306-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2VuIDx0b2tlQHRva2UuZGs+IHdyaXRlczoNCg0KPiBUaW0g
-U2hlcGFyZCA8c2hlcEBhbHVtLm1pdC5lZHU+IHdyaXRlczoNCj4NCj4+PiBXaGlsZSBhdCBpdCwg
-Y291bGQgeW91IGFsc28gYWRkIHRvIHRoZSBjb21taXQgbG9nIHNvbWUgaW5mbyBob3cgYXdlc29t
-ZSB0aGlzDQo+Pj4gcGF0Y2ggaXMgZnJvbSB1c2VyJ3MgcG9pbnQgb2YgdmlldyBhbmQgaG93IGl0
-IGhlbHBzLiBGb3IgZXhhbXBsZSwgYmVmb3JlIGFuZA0KPj4+IGFuZCBhZnRlciBudW1iZXJzIGFu
-ZCBvdGhlciByZXN1bHRzLg0KPj4NCj4+IFRoYXQgdmFyaWVzIHdpbGRseSwgZGVwZW5kaW5nIG9u
-IG1hbnkgZGV0YWlscyBvZiB0aGUgc2NlbmFyaW8NCj4+IChpbmNsdWRpbmcgdGhlIHdpcmVsZXNz
-IGNhcGFiaWxpdGllcyBvZiB0aGUgY2xpZW50cyBjb25uZWN0ZWQgdG8gdGhlDQo+PiBBUCB1c2lu
-ZyB0aGlzIHBhdGNoLCBhbmQgaG93IGZhciBhd2F5IHRob3NlIGNsaWVudHMgYXJlKS4gVGhlcmUn
-cw0KPj4gcmVhbGx5IG5vdCBlbm91Z2ggcm9vbSBpbiBhIGNvbW1pdCBtZXNzYWdlIHRvIGV4cGxh
-aW4gZW5vdWdoIHRvIG1ha2UNCj4+IGFueSBzdWNoIGNsYWltZWQgbnVtYmVycyByZXByb2R1Y2li
-bGUuDQo+DQo+IEkgZGlzYWdyZWU7IGl0J3MgcXVpdGUgc3RyYWlnaHRmb3J3YXJkIHRvIGRlbW9u
-c3RyYXRlIGEgZ2FpbiBmcm9tIHRoaXMNCj4gb24gYW4gYXRoOWsgYWNjZXNzIHBvaW50LiBBbmQg
-d2hpbGUgb2YgY291cnNlIHRoZSBtYWM4MDIxMSBxdWV1ZXMgaXMgdGhlDQo+IHJlYXNvbiBmb3Ig
-dGhpcywgdGhlIGNvbW1pdCB0aGF0IHVzZXMgaXQgKGkuZS4gdGhpcyBvbmUpIGNhbiBleHBsYWlu
-DQo+IHRoYXQgYW5kIGluY2x1ZGUgc29tZSBudW1iZXJzLg0KDQpZZWFoLCBzbyB3aXRoIHRoYXQg
-eW91IGFyZSBiYXNpY2FsbHkgYW5zd2VyaW5nICJXaHk/IiBwYXJ0IGluIHRoZSBjb21taXQNCmxv
-ZyBzbyB0aGF0IG90aGVycyBjYW4gYWxzbyB1bmRlcnN0YW5kIHRoZSBtb3RpdmF0aW9uIGJlaGlu
-ZCBhbGwgdGhpcy4NCg0KPiBJJ2xsIGFkZCB0aGF0IGFuZCByZXNlbmQgOikNCg0KVGhhbmtzLiBB
-bmQgc29ycnkgZm9yIHRha2luZyBzbyBsb25nIHdpdGggdGhpcywgSSBoYXZlIGJlZW4gYmFzaWNh
-bGx5DQp0cmF2ZWxsaW5nIG1vc3Qgb2YgdGhlIGxhc3QgbW9udGguIEkgc2hvdWxkIGdldCBiYWNr
-IGhvbWUgb24gRnJpZGF5IGFuZA0KdGhpbmdzIHNob3VsZCBnZXQgbm9ybWFsIHNvb24uDQoNCi0t
-IA0KS2FsbGUgVmFsbw==
+From: Lior David <qca_liord@qca.qualcomm.com>
+
+Align to latest version of the auto generated wmi file
+describing the interface with FW.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.h | 392 ++++++++++++++++++++++-----------
+ 1 file changed, 264 insertions(+), 128 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 2cc7775..d93a4d4 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -35,6 +35,7 @@
+ #define WMI_MAC_LEN			(6)
+ #define WMI_PROX_RANGE_NUM		(3)
+ #define WMI_MAX_LOSS_DMG_BEACONS	(20)
++#define MAX_NUM_OF_SECTORS		(128)
+ 
+ /* Mailbox interface
+  * used for commands and events
+@@ -68,144 +69,149 @@ struct wmi_cmd_hdr {
+ 
+ /* List of Commands */
+ enum wmi_command_id {
+-	WMI_CONNECT_CMDID			= 0x01,
+-	WMI_DISCONNECT_CMDID			= 0x03,
+-	WMI_DISCONNECT_STA_CMDID		= 0x04,
+-	WMI_START_SCAN_CMDID			= 0x07,
+-	WMI_SET_BSS_FILTER_CMDID		= 0x09,
+-	WMI_SET_PROBED_SSID_CMDID		= 0x0A,
+-	WMI_SET_LISTEN_INT_CMDID		= 0x0B,
+-	WMI_BCON_CTRL_CMDID			= 0x0F,
+-	WMI_ADD_CIPHER_KEY_CMDID		= 0x16,
+-	WMI_DELETE_CIPHER_KEY_CMDID		= 0x17,
+-	WMI_PCP_CONF_CMDID			= 0x18,
+-	WMI_SET_APPIE_CMDID			= 0x3F,
+-	WMI_SET_WSC_STATUS_CMDID		= 0x41,
+-	WMI_PXMT_RANGE_CFG_CMDID		= 0x42,
+-	WMI_PXMT_SNR2_RANGE_CFG_CMDID		= 0x43,
+-	WMI_MEM_READ_CMDID			= 0x800,
+-	WMI_MEM_WR_CMDID			= 0x801,
+-	WMI_ECHO_CMDID				= 0x803,
+-	WMI_DEEP_ECHO_CMDID			= 0x804,
+-	WMI_CONFIG_MAC_CMDID			= 0x805,
+-	WMI_CONFIG_PHY_DEBUG_CMDID		= 0x806,
+-	WMI_ADD_DEBUG_TX_PCKT_CMDID		= 0x808,
+-	WMI_PHY_GET_STATISTICS_CMDID		= 0x809,
+-	WMI_FS_TUNE_CMDID			= 0x80A,
+-	WMI_CORR_MEASURE_CMDID			= 0x80B,
+-	WMI_READ_RSSI_CMDID			= 0x80C,
+-	WMI_TEMP_SENSE_CMDID			= 0x80E,
+-	WMI_DC_CALIB_CMDID			= 0x80F,
+-	WMI_SEND_TONE_CMDID			= 0x810,
+-	WMI_IQ_TX_CALIB_CMDID			= 0x811,
+-	WMI_IQ_RX_CALIB_CMDID			= 0x812,
+-	WMI_SET_UCODE_IDLE_CMDID		= 0x813,
+-	WMI_SET_WORK_MODE_CMDID			= 0x815,
+-	WMI_LO_LEAKAGE_CALIB_CMDID		= 0x816,
+-	WMI_MARLON_R_READ_CMDID			= 0x818,
+-	WMI_MARLON_R_WRITE_CMDID		= 0x819,
+-	WMI_MARLON_R_TXRX_SEL_CMDID		= 0x81A,
+-	MAC_IO_STATIC_PARAMS_CMDID		= 0x81B,
+-	MAC_IO_DYNAMIC_PARAMS_CMDID		= 0x81C,
+-	WMI_SILENT_RSSI_CALIB_CMDID		= 0x81D,
+-	WMI_RF_RX_TEST_CMDID			= 0x81E,
+-	WMI_CFG_RX_CHAIN_CMDID			= 0x820,
+-	WMI_VRING_CFG_CMDID			= 0x821,
+-	WMI_BCAST_VRING_CFG_CMDID		= 0x822,
+-	WMI_VRING_BA_EN_CMDID			= 0x823,
+-	WMI_VRING_BA_DIS_CMDID			= 0x824,
+-	WMI_RCP_ADDBA_RESP_CMDID		= 0x825,
+-	WMI_RCP_DELBA_CMDID			= 0x826,
+-	WMI_SET_SSID_CMDID			= 0x827,
+-	WMI_GET_SSID_CMDID			= 0x828,
+-	WMI_SET_PCP_CHANNEL_CMDID		= 0x829,
+-	WMI_GET_PCP_CHANNEL_CMDID		= 0x82A,
+-	WMI_SW_TX_REQ_CMDID			= 0x82B,
+-	WMI_READ_MAC_RXQ_CMDID			= 0x830,
+-	WMI_READ_MAC_TXQ_CMDID			= 0x831,
+-	WMI_WRITE_MAC_RXQ_CMDID			= 0x832,
+-	WMI_WRITE_MAC_TXQ_CMDID			= 0x833,
+-	WMI_WRITE_MAC_XQ_FIELD_CMDID		= 0x834,
+-	WMI_MLME_PUSH_CMDID			= 0x835,
+-	WMI_BEAMFORMING_MGMT_CMDID		= 0x836,
+-	WMI_BF_TXSS_MGMT_CMDID			= 0x837,
+-	WMI_BF_SM_MGMT_CMDID			= 0x838,
+-	WMI_BF_RXSS_MGMT_CMDID			= 0x839,
+-	WMI_BF_TRIG_CMDID			= 0x83A,
+-	WMI_LINK_MAINTAIN_CFG_WRITE_CMDID	= 0x842,
+-	WMI_LINK_MAINTAIN_CFG_READ_CMDID	= 0x843,
+-	WMI_SET_SECTORS_CMDID			= 0x849,
+-	WMI_MAINTAIN_PAUSE_CMDID		= 0x850,
+-	WMI_MAINTAIN_RESUME_CMDID		= 0x851,
+-	WMI_RS_MGMT_CMDID			= 0x852,
+-	WMI_RF_MGMT_CMDID			= 0x853,
+-	WMI_THERMAL_THROTTLING_CTRL_CMDID	= 0x854,
+-	WMI_THERMAL_THROTTLING_GET_STATUS_CMDID	= 0x855,
+-	WMI_OTP_READ_CMDID			= 0x856,
+-	WMI_OTP_WRITE_CMDID			= 0x857,
+-	WMI_LED_CFG_CMDID			= 0x858,
++	WMI_CONNECT_CMDID				= 0x01,
++	WMI_DISCONNECT_CMDID				= 0x03,
++	WMI_DISCONNECT_STA_CMDID			= 0x04,
++	WMI_START_SCAN_CMDID				= 0x07,
++	WMI_SET_BSS_FILTER_CMDID			= 0x09,
++	WMI_SET_PROBED_SSID_CMDID			= 0x0A,
++	WMI_SET_LISTEN_INT_CMDID			= 0x0B,
++	WMI_BCON_CTRL_CMDID				= 0x0F,
++	WMI_ADD_CIPHER_KEY_CMDID			= 0x16,
++	WMI_DELETE_CIPHER_KEY_CMDID			= 0x17,
++	WMI_PCP_CONF_CMDID				= 0x18,
++	WMI_SET_APPIE_CMDID				= 0x3F,
++	WMI_SET_WSC_STATUS_CMDID			= 0x41,
++	WMI_PXMT_RANGE_CFG_CMDID			= 0x42,
++	WMI_PXMT_SNR2_RANGE_CFG_CMDID			= 0x43,
++	WMI_MEM_READ_CMDID				= 0x800,
++	WMI_MEM_WR_CMDID				= 0x801,
++	WMI_ECHO_CMDID					= 0x803,
++	WMI_DEEP_ECHO_CMDID				= 0x804,
++	WMI_CONFIG_MAC_CMDID				= 0x805,
++	WMI_CONFIG_PHY_DEBUG_CMDID			= 0x806,
++	WMI_ADD_DEBUG_TX_PCKT_CMDID			= 0x808,
++	WMI_PHY_GET_STATISTICS_CMDID			= 0x809,
++	WMI_FS_TUNE_CMDID				= 0x80A,
++	WMI_CORR_MEASURE_CMDID				= 0x80B,
++	WMI_READ_RSSI_CMDID				= 0x80C,
++	WMI_TEMP_SENSE_CMDID				= 0x80E,
++	WMI_DC_CALIB_CMDID				= 0x80F,
++	WMI_SEND_TONE_CMDID				= 0x810,
++	WMI_IQ_TX_CALIB_CMDID				= 0x811,
++	WMI_IQ_RX_CALIB_CMDID				= 0x812,
++	WMI_SET_UCODE_IDLE_CMDID			= 0x813,
++	WMI_SET_WORK_MODE_CMDID				= 0x815,
++	WMI_LO_LEAKAGE_CALIB_CMDID			= 0x816,
++	WMI_MARLON_R_READ_CMDID				= 0x818,
++	WMI_MARLON_R_WRITE_CMDID			= 0x819,
++	WMI_MARLON_R_TXRX_SEL_CMDID			= 0x81A,
++	MAC_IO_STATIC_PARAMS_CMDID			= 0x81B,
++	MAC_IO_DYNAMIC_PARAMS_CMDID			= 0x81C,
++	WMI_SILENT_RSSI_CALIB_CMDID			= 0x81D,
++	WMI_RF_RX_TEST_CMDID				= 0x81E,
++	WMI_CFG_RX_CHAIN_CMDID				= 0x820,
++	WMI_VRING_CFG_CMDID				= 0x821,
++	WMI_BCAST_VRING_CFG_CMDID			= 0x822,
++	WMI_VRING_BA_EN_CMDID				= 0x823,
++	WMI_VRING_BA_DIS_CMDID				= 0x824,
++	WMI_RCP_ADDBA_RESP_CMDID			= 0x825,
++	WMI_RCP_DELBA_CMDID				= 0x826,
++	WMI_SET_SSID_CMDID				= 0x827,
++	WMI_GET_SSID_CMDID				= 0x828,
++	WMI_SET_PCP_CHANNEL_CMDID			= 0x829,
++	WMI_GET_PCP_CHANNEL_CMDID			= 0x82A,
++	WMI_SW_TX_REQ_CMDID				= 0x82B,
++	WMI_READ_MAC_RXQ_CMDID				= 0x830,
++	WMI_READ_MAC_TXQ_CMDID				= 0x831,
++	WMI_WRITE_MAC_RXQ_CMDID				= 0x832,
++	WMI_WRITE_MAC_TXQ_CMDID				= 0x833,
++	WMI_WRITE_MAC_XQ_FIELD_CMDID			= 0x834,
++	WMI_MLME_PUSH_CMDID				= 0x835,
++	WMI_BEAMFORMING_MGMT_CMDID			= 0x836,
++	WMI_BF_TXSS_MGMT_CMDID				= 0x837,
++	WMI_BF_SM_MGMT_CMDID				= 0x838,
++	WMI_BF_RXSS_MGMT_CMDID				= 0x839,
++	WMI_BF_TRIG_CMDID				= 0x83A,
++	WMI_LINK_MAINTAIN_CFG_WRITE_CMDID		= 0x842,
++	WMI_LINK_MAINTAIN_CFG_READ_CMDID		= 0x843,
++	WMI_SET_SECTORS_CMDID				= 0x849,
++	WMI_MAINTAIN_PAUSE_CMDID			= 0x850,
++	WMI_MAINTAIN_RESUME_CMDID			= 0x851,
++	WMI_RS_MGMT_CMDID				= 0x852,
++	WMI_RF_MGMT_CMDID				= 0x853,
++	WMI_THERMAL_THROTTLING_CTRL_CMDID		= 0x854,
++	WMI_THERMAL_THROTTLING_GET_STATUS_CMDID		= 0x855,
++	WMI_OTP_READ_CMDID				= 0x856,
++	WMI_OTP_WRITE_CMDID				= 0x857,
++	WMI_LED_CFG_CMDID				= 0x858,
+ 	/* Performance monitoring commands */
+-	WMI_BF_CTRL_CMDID			= 0x862,
+-	WMI_NOTIFY_REQ_CMDID			= 0x863,
+-	WMI_GET_STATUS_CMDID			= 0x864,
+-	WMI_GET_RF_STATUS_CMDID			= 0x866,
+-	WMI_GET_BASEBAND_TYPE_CMDID		= 0x867,
+-	WMI_UNIT_TEST_CMDID			= 0x900,
+-	WMI_HICCUP_CMDID			= 0x901,
+-	WMI_FLASH_READ_CMDID			= 0x902,
+-	WMI_FLASH_WRITE_CMDID			= 0x903,
++	WMI_BF_CTRL_CMDID				= 0x862,
++	WMI_NOTIFY_REQ_CMDID				= 0x863,
++	WMI_GET_STATUS_CMDID				= 0x864,
++	WMI_GET_RF_STATUS_CMDID				= 0x866,
++	WMI_GET_BASEBAND_TYPE_CMDID			= 0x867,
++	WMI_UNIT_TEST_CMDID				= 0x900,
++	WMI_HICCUP_CMDID				= 0x901,
++	WMI_FLASH_READ_CMDID				= 0x902,
++	WMI_FLASH_WRITE_CMDID				= 0x903,
+ 	/* Power management */
+-	WMI_TRAFFIC_DEFERRAL_CMDID		= 0x904,
+-	WMI_TRAFFIC_RESUME_CMDID		= 0x905,
++	WMI_TRAFFIC_DEFERRAL_CMDID			= 0x904,
++	WMI_TRAFFIC_RESUME_CMDID			= 0x905,
+ 	/* P2P */
+-	WMI_P2P_CFG_CMDID			= 0x910,
+-	WMI_PORT_ALLOCATE_CMDID			= 0x911,
+-	WMI_PORT_DELETE_CMDID			= 0x912,
+-	WMI_POWER_MGMT_CFG_CMDID		= 0x913,
+-	WMI_START_LISTEN_CMDID			= 0x914,
+-	WMI_START_SEARCH_CMDID			= 0x915,
+-	WMI_DISCOVERY_START_CMDID		= 0x916,
+-	WMI_DISCOVERY_STOP_CMDID		= 0x917,
+-	WMI_PCP_START_CMDID			= 0x918,
+-	WMI_PCP_STOP_CMDID			= 0x919,
+-	WMI_GET_PCP_FACTOR_CMDID		= 0x91B,
++	WMI_P2P_CFG_CMDID				= 0x910,
++	WMI_PORT_ALLOCATE_CMDID				= 0x911,
++	WMI_PORT_DELETE_CMDID				= 0x912,
++	WMI_POWER_MGMT_CFG_CMDID			= 0x913,
++	WMI_START_LISTEN_CMDID				= 0x914,
++	WMI_START_SEARCH_CMDID				= 0x915,
++	WMI_DISCOVERY_START_CMDID			= 0x916,
++	WMI_DISCOVERY_STOP_CMDID			= 0x917,
++	WMI_PCP_START_CMDID				= 0x918,
++	WMI_PCP_STOP_CMDID				= 0x919,
++	WMI_GET_PCP_FACTOR_CMDID			= 0x91B,
+ 	/* Power Save Configuration Commands */
+-	WMI_PS_DEV_PROFILE_CFG_CMDID		= 0x91C,
++	WMI_PS_DEV_PROFILE_CFG_CMDID			= 0x91C,
+ 	/* Not supported yet */
+-	WMI_PS_DEV_CFG_CMDID			= 0x91D,
++	WMI_PS_DEV_CFG_CMDID				= 0x91D,
+ 	/* Not supported yet */
+-	WMI_PS_DEV_CFG_READ_CMDID		= 0x91E,
++	WMI_PS_DEV_CFG_READ_CMDID			= 0x91E,
+ 	/* Per MAC Power Save Configuration commands
+ 	 * Not supported yet
+ 	 */
+-	WMI_PS_MID_CFG_CMDID			= 0x91F,
++	WMI_PS_MID_CFG_CMDID				= 0x91F,
+ 	/* Not supported yet */
+-	WMI_PS_MID_CFG_READ_CMDID		= 0x920,
+-	WMI_RS_CFG_CMDID			= 0x921,
+-	WMI_GET_DETAILED_RS_RES_CMDID		= 0x922,
+-	WMI_AOA_MEAS_CMDID			= 0x923,
+-	WMI_SET_MGMT_RETRY_LIMIT_CMDID		= 0x930,
+-	WMI_GET_MGMT_RETRY_LIMIT_CMDID		= 0x931,
+-	WMI_TOF_SESSION_START_CMDID		= 0x991,
+-	WMI_TOF_GET_CAPABILITIES_CMDID		= 0x992,
+-	WMI_TOF_SET_LCR_CMDID			= 0x993,
+-	WMI_TOF_SET_LCI_CMDID			= 0x994,
+-	WMI_TOF_CHANNEL_INFO_CMDID		= 0x995,
+-	WMI_GET_RF_SECTOR_PARAMS_CMDID		= 0x9A0,
+-	WMI_SET_RF_SECTOR_PARAMS_CMDID		= 0x9A1,
+-	WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID	= 0x9A2,
+-	WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID	= 0x9A3,
+-	WMI_SET_RF_SECTOR_ON_CMDID		= 0x9A4,
+-	WMI_SET_MAC_ADDRESS_CMDID		= 0xF003,
+-	WMI_ABORT_SCAN_CMDID			= 0xF007,
+-	WMI_SET_PROMISCUOUS_MODE_CMDID		= 0xF041,
+-	WMI_GET_PMK_CMDID			= 0xF048,
+-	WMI_SET_PASSPHRASE_CMDID		= 0xF049,
+-	WMI_SEND_ASSOC_RES_CMDID		= 0xF04A,
+-	WMI_SET_ASSOC_REQ_RELAY_CMDID		= 0xF04B,
+-	WMI_MAC_ADDR_REQ_CMDID			= 0xF04D,
+-	WMI_FW_VER_CMDID			= 0xF04E,
+-	WMI_PMC_CMDID				= 0xF04F,
++	WMI_PS_MID_CFG_READ_CMDID			= 0x920,
++	WMI_RS_CFG_CMDID				= 0x921,
++	WMI_GET_DETAILED_RS_RES_CMDID			= 0x922,
++	WMI_AOA_MEAS_CMDID				= 0x923,
++	WMI_SET_MGMT_RETRY_LIMIT_CMDID			= 0x930,
++	WMI_GET_MGMT_RETRY_LIMIT_CMDID			= 0x931,
++	WMI_TOF_SESSION_START_CMDID			= 0x991,
++	WMI_TOF_GET_CAPABILITIES_CMDID			= 0x992,
++	WMI_TOF_SET_LCR_CMDID				= 0x993,
++	WMI_TOF_SET_LCI_CMDID				= 0x994,
++	WMI_TOF_CHANNEL_INFO_CMDID			= 0x995,
++	WMI_TOF_SET_TX_RX_OFFSET_CMDID			= 0x997,
++	WMI_TOF_GET_TX_RX_OFFSET_CMDID			= 0x998,
++	WMI_GET_RF_SECTOR_PARAMS_CMDID			= 0x9A0,
++	WMI_SET_RF_SECTOR_PARAMS_CMDID			= 0x9A1,
++	WMI_GET_SELECTED_RF_SECTOR_INDEX_CMDID		= 0x9A2,
++	WMI_SET_SELECTED_RF_SECTOR_INDEX_CMDID		= 0x9A3,
++	WMI_SET_RF_SECTOR_ON_CMDID			= 0x9A4,
++	WMI_PRIO_TX_SECTORS_ORDER_CMDID			= 0x9A5,
++	WMI_PRIO_TX_SECTORS_NUMBER_CMDID		= 0x9A6,
++	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_CMDID	= 0x9A7,
++	WMI_SET_MAC_ADDRESS_CMDID			= 0xF003,
++	WMI_ABORT_SCAN_CMDID				= 0xF007,
++	WMI_SET_PROMISCUOUS_MODE_CMDID			= 0xF041,
++	WMI_GET_PMK_CMDID				= 0xF048,
++	WMI_SET_PASSPHRASE_CMDID			= 0xF049,
++	WMI_SEND_ASSOC_RES_CMDID			= 0xF04A,
++	WMI_SET_ASSOC_REQ_RELAY_CMDID			= 0xF04B,
++	WMI_MAC_ADDR_REQ_CMDID				= 0xF04D,
++	WMI_FW_VER_CMDID				= 0xF04E,
++	WMI_PMC_CMDID					= 0xF04F,
+ };
+ 
+ /* WMI_CONNECT_CMDID */
+@@ -959,6 +965,15 @@ struct wmi_tof_channel_info_cmd {
+ 	__le32 channel_info_report_request;
+ } __packed;
+ 
++/* WMI_TOF_SET_TX_RX_OFFSET_CMDID */
++struct wmi_tof_set_tx_rx_offset_cmd {
++	/* TX delay offset */
++	__le32 tx_offset;
++	/* RX delay offset */
++	__le32 rx_offset;
++	__le32 reserved[2];
++} __packed;
++
+ /* WMI Events
+  * List of Events (target to host)
+  */
+@@ -1060,11 +1075,16 @@ enum wmi_event_id {
+ 	WMI_TOF_SET_LCI_EVENTID				= 0x1994,
+ 	WMI_TOF_FTM_PER_DEST_RES_EVENTID		= 0x1995,
+ 	WMI_TOF_CHANNEL_INFO_EVENTID			= 0x1996,
++	WMI_TOF_SET_TX_RX_OFFSET_EVENTID		= 0x1997,
++	WMI_TOF_GET_TX_RX_OFFSET_EVENTID		= 0x1998,
+ 	WMI_GET_RF_SECTOR_PARAMS_DONE_EVENTID		= 0x19A0,
+ 	WMI_SET_RF_SECTOR_PARAMS_DONE_EVENTID		= 0x19A1,
+ 	WMI_GET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID	= 0x19A2,
+ 	WMI_SET_SELECTED_RF_SECTOR_INDEX_DONE_EVENTID	= 0x19A3,
+ 	WMI_SET_RF_SECTOR_ON_DONE_EVENTID		= 0x19A4,
++	WMI_PRIO_TX_SECTORS_ORDER_EVENTID		= 0x19A5,
++	WMI_PRIO_TX_SECTORS_NUMBER_EVENTID		= 0x19A6,
++	WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID	= 0x19A7,
+ 	WMI_SET_CHANNEL_EVENTID				= 0x9000,
+ 	WMI_ASSOC_REQ_EVENTID				= 0x9001,
+ 	WMI_EAPOL_RX_EVENTID				= 0x9002,
+@@ -1190,6 +1210,7 @@ enum baseband_type {
+ 	BASEBAND_SPARROW_M_B0	= 0x05,
+ 	BASEBAND_SPARROW_M_C0	= 0x06,
+ 	BASEBAND_SPARROW_M_D0	= 0x07,
++	BASEBAND_TALYN_M_A0	= 0x08,
+ };
+ 
+ /* WMI_GET_BASEBAND_TYPE_EVENTID */
+@@ -2224,6 +2245,25 @@ struct wmi_tof_channel_info_event {
+ 	u8 report[0];
+ } __packed;
+ 
++/* WMI_TOF_SET_TX_RX_OFFSET_EVENTID */
++struct wmi_tof_set_tx_rx_offset_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	u8 reserved[3];
++} __packed;
++
++/* WMI_TOF_GET_TX_RX_OFFSET_EVENTID */
++struct wmi_tof_get_tx_rx_offset_event {
++	/* enum wmi_fw_status */
++	u8 status;
++	u8 reserved1[3];
++	/* TX delay offset */
++	__le32 tx_offset;
++	/* RX delay offset */
++	__le32 rx_offset;
++	__le32 reserved2[2];
++} __packed;
++
+ /* Result status codes for WMI commands */
+ enum wmi_rf_sector_status {
+ 	WMI_RF_SECTOR_STATUS_SUCCESS			= 0x00,
+@@ -2388,4 +2428,100 @@ struct wmi_set_rf_sector_on_done_event {
+ 	u8 reserved[3];
+ } __packed;
+ 
++enum wmi_sector_sweep_type {
++	WMI_SECTOR_SWEEP_TYPE_TXSS		= 0x00,
++	WMI_SECTOR_SWEEP_TYPE_BCON		= 0x01,
++	WMI_SECTOR_SWEEP_TYPE_TXSS_AND_BCON	= 0x02,
++	WMI_SECTOR_SWEEP_TYPE_NUM		= 0x03,
++};
++
++/* WMI_PRIO_TX_SECTORS_ORDER_CMDID
++ *
++ * Set the order of TX sectors in TXSS and/or Beacon(AP).
++ *
++ * Returned event:
++ * - WMI_PRIO_TX_SECTORS_ORDER_EVENTID
++ */
++struct wmi_prio_tx_sectors_order_cmd {
++	/* tx sectors order to be applied, 0xFF for end of array */
++	u8 tx_sectors_priority_array[MAX_NUM_OF_SECTORS];
++	/* enum wmi_sector_sweep_type, TXSS and/or Beacon */
++	u8 sector_sweep_type;
++	/* needed only for TXSS configuration */
++	u8 cid;
++	/* alignment to 32b */
++	u8 reserved[2];
++} __packed;
++
++/* completion status codes */
++enum wmi_prio_tx_sectors_cmd_status {
++	WMI_PRIO_TX_SECT_CMD_STATUS_SUCCESS	= 0x00,
++	WMI_PRIO_TX_SECT_CMD_STATUS_BAD_PARAM	= 0x01,
++	/* other error */
++	WMI_PRIO_TX_SECT_CMD_STATUS_ERROR	= 0x02,
++};
++
++/* WMI_PRIO_TX_SECTORS_ORDER_EVENTID */
++struct wmi_prio_tx_sectors_order_event {
++	/* enum wmi_prio_tx_sectors_cmd_status */
++	u8 status;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
++
++struct wmi_prio_tx_sectors_num_cmd {
++	/* [0-128], 0 = No changes */
++	u8 beacon_number_of_sectors;
++	/* [0-128], 0 = No changes */
++	u8 txss_number_of_sectors;
++	/* [0-8] needed only for TXSS configuration */
++	u8 cid;
++} __packed;
++
++/* WMI_PRIO_TX_SECTORS_NUMBER_CMDID
++ *
++ * Set the number of active sectors in TXSS and/or Beacon.
++ *
++ * Returned event:
++ * - WMI_PRIO_TX_SECTORS_NUMBER_EVENTID
++ */
++struct wmi_prio_tx_sectors_number_cmd {
++	struct wmi_prio_tx_sectors_num_cmd active_sectors_num;
++	/* alignment to 32b */
++	u8 reserved;
++} __packed;
++
++/* WMI_PRIO_TX_SECTORS_NUMBER_EVENTID */
++struct wmi_prio_tx_sectors_number_event {
++	/* enum wmi_prio_tx_sectors_cmd_status */
++	u8 status;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
++
++/* WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_CMDID
++ *
++ * Set default sectors order and number (hard coded in board file)
++ * in TXSS and/or Beacon.
++ *
++ * Returned event:
++ * - WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID
++ */
++struct wmi_prio_tx_sectors_set_default_cfg_cmd {
++	/* enum wmi_sector_sweep_type, TXSS and/or Beacon */
++	u8 sector_sweep_type;
++	/* needed only for TXSS configuration */
++	u8 cid;
++	/* alignment to 32b */
++	u8 reserved[2];
++} __packed;
++
++/* WMI_PRIO_TX_SECTORS_SET_DEFAULT_CFG_EVENTID */
++struct wmi_prio_tx_sectors_set_default_cfg_event {
++	/* enum wmi_prio_tx_sectors_cmd_status */
++	u8 status;
++	/* alignment to 32b */
++	u8 reserved[3];
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
+-- 
+1.9.1
