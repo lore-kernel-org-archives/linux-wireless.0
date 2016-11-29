@@ -1,185 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36810 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.17.21]:54235 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932280AbcKGO74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:59:56 -0500
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH 5/8] Add cac command to allow clearing channels
-Date: Mon,  7 Nov 2016 15:59:40 +0100
-Message-Id: <20161107145943.16761-6-benjamin@sipsolutions.net> (sfid-20161107_160011_979101_D69B623F)
-In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
+        id S1757555AbcK2PNY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Nov 2016 10:13:24 -0500
+Subject: Re: [PATCH] ath9k_htc: don't use HZ for usb msg timeouts
+To: Anthony Romano <anthony.romano@coreos.com>
+References: <20161128042757.8609-1-anthony.romano@coreos.com>
+ <a433d14f-d762-fc53-ba7a-da616ac670ca@gmx.net>
+ <CAENtvd7sTN0HRkY4z+f8wozEk_AQDipX9nNV7r-Sbyzh4tt9pA@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <0a7eb9da-56e1-81fe-ea7c-f0e2eb4c9d00@rempel-privat.de> (sfid-20161129_161327_619296_38F05D94)
+Date: Tue, 29 Nov 2016 16:12:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAENtvd7sTN0HRkY4z+f8wozEk_AQDipX9nNV7r-Sbyzh4tt9pA@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="L6VBTU3H2Wf8BNI2wwvsunoGShrCtlr0N"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--L6VBTU3H2Wf8BNI2wwvsunoGShrCtlr0N
+Content-Type: multipart/mixed; boundary="In5s6upOjRfAWsh31fCancwlFUc8mTsiW";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: Anthony Romano <anthony.romano@coreos.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Message-ID: <0a7eb9da-56e1-81fe-ea7c-f0e2eb4c9d00@rempel-privat.de>
+Subject: Re: [PATCH] ath9k_htc: don't use HZ for usb msg timeouts
+References: <20161128042757.8609-1-anthony.romano@coreos.com>
+ <a433d14f-d762-fc53-ba7a-da616ac670ca@gmx.net>
+ <CAENtvd7sTN0HRkY4z+f8wozEk_AQDipX9nNV7r-Sbyzh4tt9pA@mail.gmail.com>
+In-Reply-To: <CAENtvd7sTN0HRkY4z+f8wozEk_AQDipX9nNV7r-Sbyzh4tt9pA@mail.gmail.com>
 
-Allow the user to start a CAC for clearing DFS channels.
+--In5s6upOjRfAWsh31fCancwlFUc8mTsiW
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Simon Wunderlich <sw@simonwunderlich.de>
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
----
- phy.c | 145 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 145 insertions(+)
+Am 29.11.2016 um 10:45 schrieb Anthony Romano:
+> Hi Oleksij,
+>=20
+> I put 4 ar9271's on a 4 port hub into monitor mode for you and all
+> interfaces are simultaneously collecting packets. My cheap USB power
+> meter reads 4.37v@650mA between the hub and the host, so it's pushing
+> the limit but appears stable.
 
-diff --git a/phy.c b/phy.c
-index 266de4d..be31820 100644
---- a/phy.c
-+++ b/phy.c
-@@ -226,6 +226,151 @@ COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
- COMMAND(set, channel, "<channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]",
- 	NL80211_CMD_SET_WIPHY, 0, CIB_NETDEV, handle_chan, NULL);
- 
-+
-+struct cac_event {
-+	int ret;
-+	uint32_t freq;
-+};
-+
-+static int print_cac_event(struct nl_msg *msg, void *arg)
-+{
-+	struct nlattr *tb[NL80211_ATTR_MAX + 1];
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	enum nl80211_radar_event event_type;
-+	struct cac_event *cac_event = arg;
-+	uint32_t freq;
-+
-+	if (gnlh->cmd != NL80211_CMD_RADAR_DETECT)
-+		return NL_SKIP;
-+
-+	nla_parse(tb, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0),
-+		  genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	if (!tb[NL80211_ATTR_RADAR_EVENT] || !tb[NL80211_ATTR_WIPHY_FREQ])
-+		return NL_SKIP;
-+
-+	freq = nla_get_u32(tb[NL80211_ATTR_WIPHY_FREQ]);
-+	event_type = nla_get_u32(tb[NL80211_ATTR_RADAR_EVENT]);
-+	if (freq != cac_event->freq)
-+		return NL_SKIP;
-+
-+	switch (event_type) {
-+	case NL80211_RADAR_DETECTED:
-+		printf("%d MHz: radar detected\n", freq);
-+		break;
-+	case NL80211_RADAR_CAC_FINISHED:
-+		printf("%d MHz: CAC finished\n", freq);
-+		break;
-+	case NL80211_RADAR_CAC_ABORTED:
-+		printf("%d MHz: CAC was aborted\n", freq);
-+		break;
-+	case NL80211_RADAR_NOP_FINISHED:
-+		printf("%d MHz: NOP finished\n", freq);
-+		break;
-+	default:
-+		printf("%d MHz: unknown radar event\n", freq);
-+	}
-+	cac_event->ret = 0;
-+
-+	return NL_SKIP;
-+}
-+
-+static int handle_cac_trigger(struct nl80211_state *state,
-+			    struct nl_msg *msg,
-+			    int argc, char **argv,
-+			    enum id_input id)
-+{
-+	struct chandef chandef;
-+	int res;
-+
-+	if (argc < 2)
-+		return 1;
-+
-+	if (strcmp(argv[0], "channel") == 0) {
-+		res = parse_freqchan(&chandef, true, argc - 1, argv + 1, NULL);
-+	} else if (strcmp(argv[0], "freq") == 0) {
-+		res = parse_freqchan(&chandef, false, argc - 1, argv + 1, NULL);
-+	} else {
-+		return 1;
-+	}
-+
-+	if (res)
-+		return res;
-+
-+	return put_chandef(msg, &chandef);
-+}
-+
-+static int no_seq_check(struct nl_msg *msg, void *arg)
-+{
-+	return NL_OK;
-+}
-+
-+static int handle_cac(struct nl80211_state *state,
-+		      struct nl_msg *msg,
-+		      int argc, char **argv,
-+		      enum id_input id)
-+{
-+	int err;
-+	struct nl_cb *radar_cb;
-+	struct chandef chandef;
-+	struct cac_event cac_event;
-+	char **cac_trigger_argv = NULL;
-+
-+	radar_cb = nl_cb_alloc(iw_debug ? NL_CB_DEBUG : NL_CB_DEFAULT);
-+	if (!radar_cb)
-+		return 1;
-+
-+	if (argc < 3)
-+		return 1;
-+
-+	if (strcmp(argv[2], "channel") == 0) {
-+		err = parse_freqchan(&chandef, true, argc - 3, argv + 3, NULL);
-+	} else if (strcmp(argv[2], "freq") == 0) {
-+		err = parse_freqchan(&chandef, false, argc - 3, argv + 3, NULL);
-+	} else {
-+		return 1;
-+	}
-+
-+	cac_trigger_argv = calloc(argc + 1, sizeof(char*));
-+	if (!cac_trigger_argv)
-+		return -ENOMEM;
-+
-+	cac_trigger_argv[0] = argv[0];
-+	cac_trigger_argv[1] = "cac";
-+	cac_trigger_argv[2] = "trigger";
-+	memcpy(&cac_trigger_argv[3], &argv[2], (argc - 2) * sizeof(char*));
-+
-+	err = handle_cmd(state, id, argc + 1, cac_trigger_argv);
-+	free(cac_trigger_argv);
-+	if (err)
-+		return err;
-+
-+	cac_event.ret = 1;
-+	cac_event.freq = chandef.control_freq;
-+
-+	__prepare_listen_events(state);
-+	nl_socket_set_cb(state->nl_sock, radar_cb);
-+
-+	/* need to turn off sequence number checking */
-+	nl_cb_set(radar_cb, NL_CB_SEQ_CHECK, NL_CB_CUSTOM, no_seq_check, NULL);
-+	nl_cb_set(radar_cb, NL_CB_VALID, NL_CB_CUSTOM, print_cac_event, &cac_event);
-+	while (cac_event.ret > 0)
-+		nl_recvmsgs(state->nl_sock, radar_cb);
-+
-+	return 0;
-+}
-+TOPLEVEL(cac, "channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	      "freq <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	      "freq <control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
-+	 0, 0, CIB_NETDEV, handle_cac, NULL);
-+COMMAND(cac, trigger,
-+	"channel <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	"freq <frequency> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]\n"
-+	"freq <frequency> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]",
-+	NL80211_CMD_RADAR_DETECT, 0, CIB_NETDEV, handle_cac_trigger,
-+	"Start or trigger a channel availability check (CAC) looking to look for\n"
-+	"radars on the given channel.");
-+
- static int handle_fragmentation(struct nl80211_state *state,
- 				struct nl_msg *msg,
- 				int argc, char **argv,
--- 
-2.10.2
+Great work, thank you!
+
+> On Mon, Nov 28, 2016 at 7:34 AM, Oleksij Rempel <fishor@gmx.net> wrote:=
+
+>> Hi Anthony,
+>>
+>> Am 28.11.2016 um 05:27 schrieb Anthony Romano:
+>>> The usb_*_msg() functions expect a timeout in msecs but are given HZ,=
+
+>>> which is ticks per second. If HZ=3D100, firmware download often times=
+ out
+>>> when there is modest USB utilization and the device fails to initiali=
+ze.
+>>
+>>> Replaces HZ in usb_*_msg timeouts with 1000 msec since HZ is one seco=
+nd
+>>> for timeouts in jiffies.
+>>
+>> wow..
+>> This fix allow you use 4 adapter at same time?
+>>> Signed-off-by: Anthony Romano <anthony.roman@coreos.com>
+
+Acked-by: Oleksij Rempel <linux@rempel-privat.de>
+
+
+
+--=20
+Regards,
+Oleksij
+
+
+--In5s6upOjRfAWsh31fCancwlFUc8mTsiW--
+
+--L6VBTU3H2Wf8BNI2wwvsunoGShrCtlr0N
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlg9mvcACgkQHwImuRkmbWnaLgD/dHdU8/4bBzVpSOzZaeu4xYTx
+u2t3cZGzqcXiwIqtk0wA/RkGVqsbWmlRsQPM3JK8Vm94/o1b/LE+0cK8+Ffn5zxL
+=LbL9
+-----END PGP SIGNATURE-----
+
+--L6VBTU3H2Wf8BNI2wwvsunoGShrCtlr0N--
