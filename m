@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:35759 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752017AbcKRVnH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46934 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934002AbcK2Pfb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:43:07 -0500
-Received: by mail-oi0-f41.google.com with SMTP id b126so65626130oia.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 13:43:07 -0800 (PST)
+        Tue, 29 Nov 2016 10:35:31 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-From: Matteo Grandi <iu5bdp@gmail.com>
-Date: Fri, 18 Nov 2016 22:43:06 +0100
-Message-ID: <CAHdg3xaCnAp8rgMs3mVYvV6TFadNjwBtCo+rpHgH_-L8JUo-dw@mail.gmail.com> (sfid-20161118_224311_107524_E54EED71)
-Subject: ath10k stuck in mesh mode
-To: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>,
-        me@bobcopeland.com
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: bcma: add Dell Inspiron 3148
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161128075712.10785-1-jslaby@suse.cz>
+References: <20161128075712.10785-1-jslaby@suse.cz>
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
+Message-Id: <20161129153530.6AF7F6134E@smtp.codeaurora.org> (sfid-20161129_163652_902767_A2928DEB)
+Date: Tue, 29 Nov 2016 15:35:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-I experimented a strange behavior during some data rate tests between
-two wireless interfaces in mesh mode. The data rate stuck on 120Mbps
-(iperf UDP test) and MCS7 that is the higher MCS of 80211n without
-using MIMO, even when the channel is completely free.
+Jiri Slaby <jslaby@suse.cz> wrote:
+> This is what is in the laptop:
+> 01:00.0 Network controller [0280]: Broadcom Limited BCM43142 802.11b/g/n [14e4:4365] (rev 01)
+>         Subsystem: Dell Device [1028:0018]
+>         Flags: bus master, fast devsel, latency 0, IRQ 18
+>         Memory at b0400000 (64-bit, non-prefetchable) [size=32K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [58] Vendor Specific Information: Len=78 <?>
+>         Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
+>         Capabilities: [d0] Express Endpoint, MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [13c] Virtual Channel
+>         Capabilities: [160] Device Serial Number 00-00-9a-ff-ff-f3-40-b8
+>         Capabilities: [16c] Power Budgeting <?>
+> 
+> With the patch, I can see:
+> bcma: bus0: Found chip with id 43142, rev 0x01 and package 0x08
+> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x28, class 0x0)
+> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x21, class 0x0)
+> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x16, class 0x0)
+> bcma: bus0: Core 3 found: UNKNOWN (manuf 0x43B, id 0x368, rev 0x00, class 0x0)
+> bcma: bus0: Bus registered
+> 
+> The wifi is not currently supported by brcmsmac yet:
+> brcmsmac bcma1:1: mfg 4bf core 812 rev 33 class 0 irq 18
+> brcmsmac: unknown device id 4365
+> 
+> So don't expect a working wifi from this patch :).
+> 
+> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+> Cc: Rafał Miłecki <zajec5@gmail.com>
+> Cc: <linux-wireless@vger.kernel.org>
 
-My configuration:
-two boards Gateworks Ventana 5410 running Ubuntu 14.04 kernel 3.14,
-each board has two miniPCIe WiFi adapter Compex WLE600V5-27, 2
-antennas each, ath10k drivers 802.11ac capabilities.
-Backports-4.4.2
-Firmware firmware-5.bin_10.2.4.70.58
+Patch applied to wireless-drivers-next.git, thanks.
 
-I set up a mesh configuring, on each board, one interface as mesh
-point, and I run an iperf UDP test, but even using channels free of
-any other communication (48 and 149 in particular) the max data rate
-achieved was 120Mbps on MCS7, and it stucked on that value and MIMO
-was not in use despite the two antennas.
-By sniffing the packets I discovered that only 802.11n was in use, and
-I didn't notice nothing clearly strange in the syslog.
-I tried on other channels but no MIMO nor 80MHz bandwidth (as expected
-from the capabilities) was never  used (at most 40MHz with SGI). I
-tried to have line of sight and play with the antennas position and
-distance, but the data rate stuck on that value.
-Note: I didn't the "@80" in any regulatoru domain by iw reg get (but
-only @40), as it's using the reg. domain from ath9k (used on a
-previous 802.11n miniPCIe adapter).
-Note: I also tried to set up an AP and STA, and in that case MIMO was used.
+59391a96dc73 bcma: add Dell Inspiron 3148
 
-So the question is: who decide if use MIMO and higher MCS hopefully on
-80MHz channel or not? Is the firmware? Is there a way to force the
-interface to use 80MHz and/or MIMO? (iw provide the possibility to
-choose between [HT20/HT40-/HT40+]).
+-- 
+https://patchwork.kernel.org/patch/9449165/
 
-Any advice is the welcome, this project is part of my master thesis
-and are weeks that I'm struggling with this problem.
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Thank you
-
-Matteo
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
