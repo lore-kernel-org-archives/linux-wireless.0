@@ -1,311 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36786 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753184AbcKGO7z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 7 Nov 2016 09:59:55 -0500
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, sw@simonwunderlich.de,
-        Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH 1/8] util: Add generic frequency/channel command line handler
-Date: Mon,  7 Nov 2016 15:59:36 +0100
-Message-Id: <20161107145943.16761-2-benjamin@sipsolutions.net> (sfid-20161107_160010_350072_834277BB)
-In-Reply-To: <20161107145943.16761-1-benjamin@sipsolutions.net>
-References: <20161107145943.16761-1-benjamin@sipsolutions.net>
+Received: from mail-wj0-f171.google.com ([209.85.210.171]:34895 "EHLO
+        mail-wj0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756317AbcK2JeX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Nov 2016 04:34:23 -0500
+Received: by mail-wj0-f171.google.com with SMTP id v7so139545615wjy.2
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 01:34:23 -0800 (PST)
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Oleksij Rempel <linux@rempel-privat.de>,
+        Kyle McMartin <kyle@mcmartin.ca>
+References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1478706966.18306.1.camel@sipsolutions.net>
+ <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
+ <1478725543.21403.4.camel@sipsolutions.net>
+ <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
+ <1478864146.4129.4.camel@sipsolutions.net>
+ <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com>
+ <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
+ <063b80df-9cfa-14f1-4695-4239b42dfccb@rempel-privat.de>
+ <217ac48f-d822-62d5-3def-744500821ac9@rempel-privat.de>
+ <f4bf1f6a-6f5a-ea85-0835-c6805afdcd04@quantenna.com>
+ <ad7935a1-735b-706a-9ac1-cd5076d8f307@rempel-privat.de>
+ <12af5088-f026-380a-333d-2a2bb2b7a248@quantenna.com>
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+        Kyle McMartin <kyle@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, btherthala@quantenna.com,
+        hwang@quantenna.com, smaksimenko@quantenna.com,
+        dlebed@quantenna.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5370cbc3-638f-8346-e8ae-ac247a03fb4f@broadcom.com> (sfid-20161129_103428_068936_BA1F2514)
+Date: Tue, 29 Nov 2016 10:34:19 +0100
+MIME-Version: 1.0
+In-Reply-To: <12af5088-f026-380a-333d-2a2bb2b7a248@quantenna.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-The ability to parse channel definitions is required in a lot of places
-inside iw. However, right now each of these duplicates a lot of code to
-handle it.
 
-So add a new helper which can be used everywhere.
+On 29-11-2016 10:10, IgorMitsyanko wrote:
+> On 11/29/2016 06:49 AM, Oleksij Rempel wrote:
+>> Am 28.11.2016 um 20:01 schrieb IgorMitsyanko:
+>>> On 11/28/2016 08:33 PM, Oleksij Rempel wrote:
+>>>> Am 28.11.2016 um 18:10 schrieb Oleksij Rempel:
 
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
----
- iw.h   |  10 +++
- util.c | 239 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 249 insertions(+)
+[...]
 
-diff --git a/iw.h b/iw.h
-index 2837bd3..7d56391 100644
---- a/iw.h
-+++ b/iw.h
-@@ -70,6 +70,14 @@ struct chanmode {
- 	int chantype; /* for older kernel */
- };
- 
-+struct chandef {
-+	enum nl80211_chan_width width;
-+
-+	unsigned int control_freq;
-+	unsigned int center_freq1;
-+	unsigned int center_freq2;
-+};
-+
- #define ARRAY_SIZE(ar) (sizeof(ar)/sizeof(ar[0]))
- #define DIV_ROUND_UP(x, y) (((x) + (y - 1)) / (y))
- 
-@@ -150,6 +158,8 @@ int parse_hex_mask(char *hexmask, unsigned char **result, size_t *result_len,
- unsigned char *parse_hex(char *hex, size_t *outlen);
- 
- int parse_keys(struct nl_msg *msg, char **argv, int argc);
-+int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv, int *parsed);
-+int put_chandef(struct nl_msg *msg, struct chandef *chandef);
- 
- void print_ht_mcs(const __u8 *mcs);
- void print_ampdu_length(__u8 exponent);
-diff --git a/util.c b/util.c
-index a338464..833b1ce 100644
---- a/util.c
-+++ b/util.c
-@@ -469,6 +469,245 @@ int parse_keys(struct nl_msg *msg, char **argv, int argc)
- 	return 2;
- }
- 
-+static int parse_freqs(struct chandef *chandef, int argc, char **argv,
-+		       int *parsed)
-+{
-+	static const struct {
-+		const char *name;
-+		unsigned int val;
-+	} bwmap[] = {
-+		{ .name = "5", .val = NL80211_CHAN_WIDTH_5, },
-+		{ .name = "10", .val = NL80211_CHAN_WIDTH_10, },
-+		{ .name = "20", .val = NL80211_CHAN_WIDTH_20, },
-+		{ .name = "40", .val = NL80211_CHAN_WIDTH_40, },
-+		{ .name = "80", .val = NL80211_CHAN_WIDTH_80, },
-+		{ .name = "80+80", .val = NL80211_CHAN_WIDTH_80P80, },
-+		{ .name = "160", .val = NL80211_CHAN_WIDTH_160, },
-+	};
-+	uint32_t freq;
-+	unsigned int i, bwval = NL80211_CHAN_WIDTH_20_NOHT;
-+	char *end;
-+
-+	if (argc < 1)
-+		return 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(bwmap); i++) {
-+		if (strcasecmp(bwmap[i].name, argv[0]) == 0) {
-+			bwval = bwmap[i].val;
-+			*parsed += 1;
-+			break;
-+		}
-+	}
-+	chandef->width = bwval;
-+
-+	/* First argument was not understood, give up gracefully. */
-+	if (bwval == NL80211_CHAN_WIDTH_20_NOHT)
-+		return 0;
-+
-+	if (argc < 2)
-+		return 0;
-+
-+	/* center freq 1 */
-+	if (!*argv[1])
-+		return 0;
-+	freq = strtoul(argv[1], &end, 10);
-+	if (*end)
-+		return 0;
-+	*parsed += 1;
-+
-+	chandef->center_freq1 = freq;
-+
-+	if (argc < 3)
-+		return 0;
-+
-+	/* center freq 2 */
-+	if (!*argv[2])
-+		return 0;
-+	freq = strtoul(argv[2], &end, 10);
-+	if (*end)
-+		return 0;
-+	chandef->center_freq2 = freq;
-+
-+	*parsed += 1;
-+
-+	return 0;
-+}
-+
-+
-+/**
-+ * parse_freqchan - Parse frequency or channel definition
-+ *
-+ * @chandef: chandef structure to be filled in
-+ * @chan: Boolean whether to parse a channel or frequency based specifier
-+ * @argc: Number of arguments
-+ * @argv: Array of string arguments
-+ * @parsed: Pointer to return the number of used arguments, or NULL to error
-+ *          out if any argument is left unused.
-+ *
-+ * The given chandef structure will be filled in from the command line
-+ * arguments. argc/argv will be updated so that further arguments from the
-+ * command line can be parsed.
-+ *
-+ * Note that no integer argument may follow a frequency definition to allow the
-+ * user to skip the center frequency definition(s).
-+ *
-+ * The working specifier if chan is set are:
-+ *   <channel> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]
-+ *
-+ * And if frequency is set:
-+ *   <freq> [NOHT|HT20|HT40+|HT40-|5MHz|10MHz|80MHz]
-+ *   <control freq> [5|10|20|40|80|80+80|160] [<center1_freq> [<center2_freq>]]
-+ *
-+ * If the mode/channel width is not given the NOHT is assumed.
-+ *
-+ * Return: Number of used arguments, zero or negative error number otherwise
-+ */
-+int parse_freqchan(struct chandef *chandef, bool chan, int argc, char **argv,
-+		   int *parsed)
-+{
-+	char *end;
-+	static const struct chanmode chanmode[] = {
-+		{ .name = "HT20",
-+		  .width = NL80211_CHAN_WIDTH_20,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_HT20 },
-+		{ .name = "HT40+",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = 10,
-+		  .chantype = NL80211_CHAN_HT40PLUS },
-+		{ .name = "HT40-",
-+		  .width = NL80211_CHAN_WIDTH_40,
-+		  .freq1_diff = -10,
-+		  .chantype = NL80211_CHAN_HT40MINUS },
-+		{ .name = "NOHT",
-+		  .width = NL80211_CHAN_WIDTH_20_NOHT,
-+		  .freq1_diff = 0,
-+		  .chantype = NL80211_CHAN_NO_HT },
-+		{ .name = "5MHz",
-+		  .width = NL80211_CHAN_WIDTH_5,
-+		  .freq1_diff = 0,
-+		  .chantype = -1 },
-+		{ .name = "10MHz",
-+		  .width = NL80211_CHAN_WIDTH_10,
-+		  .freq1_diff = 0,
-+		  .chantype = -1 },
-+		{ .name = "80MHz",
-+		  .width = NL80211_CHAN_WIDTH_80,
-+		  .freq1_diff = 0,
-+		  .chantype = -1 },
-+	};
-+	const struct chanmode *chanmode_selected = NULL;
-+	unsigned int freq;
-+	unsigned int i;
-+	int _parsed = 0;
-+	int res = 0;
-+
-+	if (argc < 1)
-+		return 1;
-+
-+	if (!argv[0])
-+		goto out;
-+	freq = strtoul(argv[0], &end, 10);
-+	if (*end) {
-+		res = 1;
-+		goto out;
-+	}
-+
-+	_parsed += 1;
-+
-+	memset(chandef, 0, sizeof(struct chandef));
-+
-+	if (chan) {
-+		enum nl80211_band band;
-+
-+		band = freq <= 14 ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
-+		freq = ieee80211_channel_to_frequency(freq, band);
-+	}
-+	chandef->control_freq = freq;
-+	/* Assume 20MHz NOHT channel for now. */
-+	chandef->center_freq1 = freq;
-+
-+	/* Try to parse HT mode definitions */
-+	if (argc > 1) {
-+		for (i = 0; i < ARRAY_SIZE(chanmode); i++) {
-+			if (strcasecmp(chanmode[i].name, argv[1]) == 0) {
-+				chanmode_selected = &chanmode[i];
-+				_parsed += 1;
-+				break;
-+			}
-+		}
-+	}
-+
-+	/* channel mode given, use it and return. */
-+	if (chanmode_selected) {
-+		chandef->center_freq1 = get_cf1(chanmode_selected, freq);
-+		chandef->width = chanmode_selected->width;
-+		goto out;
-+	}
-+
-+	/* This was a only a channel definition, nothing further may follow. */
-+	if (chan)
-+		goto out;
-+
-+	res = parse_freqs(chandef, argc - 1, argv + 1, &_parsed);
-+
-+ out:
-+	/* Error out if parsed is NULL. */
-+	if (!parsed && _parsed != argc)
-+		return 1;
-+
-+	if (parsed)
-+		*parsed = _parsed;
-+
-+	return res;
-+}
-+
-+int put_chandef(struct nl_msg *msg, struct chandef *chandef)
-+{
-+	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, chandef->control_freq);
-+	NLA_PUT_U32(msg, NL80211_ATTR_CHANNEL_WIDTH, chandef->width);
-+
-+	switch (chandef->width) {
-+	case NL80211_CHAN_WIDTH_20_NOHT:
-+		NLA_PUT_U32(msg,
-+			    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+			    NL80211_CHAN_NO_HT);
-+		break;
-+	case NL80211_CHAN_WIDTH_20:
-+		NLA_PUT_U32(msg,
-+			    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+			    NL80211_CHAN_HT20);
-+		break;
-+	case NL80211_CHAN_WIDTH_40:
-+		if (chandef->control_freq > chandef->center_freq1)
-+			NLA_PUT_U32(msg,
-+				    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+				    NL80211_CHAN_HT40MINUS);
-+		else
-+			NLA_PUT_U32(msg,
-+				    NL80211_ATTR_WIPHY_CHANNEL_TYPE,
-+				    NL80211_CHAN_HT40PLUS);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if (chandef->center_freq1)
-+		NLA_PUT_U32(msg,
-+			    NL80211_ATTR_CENTER_FREQ1,
-+			    chandef->center_freq1);
-+
-+	if (chandef->center_freq2)
-+		NLA_PUT_U32(msg,
-+			    NL80211_ATTR_CENTER_FREQ2,
-+			    chandef->center_freq2);
-+
-+	return 0;
-+
-+ nla_put_failure:
-+	return -ENOBUFS;
-+}
-+
- static void print_mcs_index(const __u8 *mcs)
- {
- 	int mcs_bit, prev_bit = -2, prev_cont = 0;
--- 
-2.10.2
+>>> Oleksij, yes, that's correct, it includes entire Linux environment; the
+>>> reasoning is that it allows to hide all WiFi-related logic inside device
+>>> itself, and emulate simple Ethernet device for external system
+>>> (therefore, freeing external system resources).
+>>>
+>>> This approach was working really well for us until recently, but now
+>>> that company is expanding, we want to have more flexible and standardize
+>>> interface available for external system to manage wireless connection,
+>>> and FullMAC driver seems to be the best solution here.
+>> you mean, this driver will not use mac80211 framework provided by kernel?
+> 
+> Yes, this driver is FullMAC - converting Quantenna drivers codebase to
+> mac80211 framework will require significant effort from developers and
+> QA, but I think in the future it will have to be done anyway.
+
+Why? The linux wireless subsystem supports both models, ie.
+cfg80211-based drivers and mac80211-based drivers, so there is no
+technical reason for making the effort. There are clearly benefits in
+using a generic and freely available 802.11 stack like mac80211.
+
+Regards,
+Arend
