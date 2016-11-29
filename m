@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:33014 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933302AbcK3MDf (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45232 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757116AbcK2P25 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 30 Nov 2016 07:03:35 -0500
-Received: by mail-wj0-f195.google.com with SMTP id kp2so21899053wjc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 04:03:34 -0800 (PST)
-From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] net: rfkill: Cleanup error handling in rfkill_init()
-Date: Wed, 30 Nov 2016 13:03:16 +0100
-Message-Id: <20161130120317.11851-1-kernel@kempniu.pl> (sfid-20161130_130438_092935_ED4024E9)
+        Tue, 29 Nov 2016 10:28:57 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: mwifiex: pcie: implement timeout loop for FW programming doorbell
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
+References: <1479868785-16263-1-git-send-email-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Cathy Luo <cluo@marvell.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>
+Message-Id: <20161129152856.ECB9A612BA@smtp.codeaurora.org> (sfid-20161129_162901_056780_6CA374FD)
+Date: Tue, 29 Nov 2016 15:28:56 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use a separate label per error condition in rfkill_init() to make it a
-bit cleaner and easier to extend.
+Brian Norris <briannorris@chromium.org> wrote:
+> Marvell Wifi PCIe modules don't always behave nicely for PCIe power
+> management when their firmware hasn't been loaded, particularly after
+> suspending the PCIe link one or more times. When this happens, we might
+> end up spinning forever in this status-polling tight loop. Let's make
+> this less tight by adding a timeout and by sleeping a bit in between
+> reads, as we do with the other similar loops.
+> 
+> This prevents us from hogging a CPU even in such pathological cases, and
+> allows the FW initialization to just fail gracefully instead.
+> 
+> I chose the same polling parameters as the earlier loop in this
+> function, and empirically, I found that this loop never makes it more
+> than about 12 cycles in a sane FW init sequence. I had no official
+> information on the actual intended latency for this portion of the
+> download.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Signed-off-by: Michał Kępień <kernel@kempniu.pl>
----
- net/rfkill/core.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 884027f..f28e441 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1266,24 +1266,25 @@ static int __init rfkill_init(void)
- 
- 	error = class_register(&rfkill_class);
- 	if (error)
--		goto out;
-+		goto error_class;
- 
- 	error = misc_register(&rfkill_miscdev);
--	if (error) {
--		class_unregister(&rfkill_class);
--		goto out;
--	}
-+	if (error)
-+		goto error_misc;
- 
- #ifdef CONFIG_RFKILL_INPUT
- 	error = rfkill_handler_init();
--	if (error) {
--		misc_deregister(&rfkill_miscdev);
--		class_unregister(&rfkill_class);
--		goto out;
--	}
-+	if (error)
-+		goto error_input;
- #endif
- 
-- out:
-+	return 0;
-+
-+error_input:
-+	misc_deregister(&rfkill_miscdev);
-+error_misc:
-+	class_unregister(&rfkill_class);
-+error_class:
- 	return error;
- }
- subsys_initcall(rfkill_init);
+22dde1ed5a48 mwifiex: pcie: implement timeout loop for FW programming doorbell
+
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9442499/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
