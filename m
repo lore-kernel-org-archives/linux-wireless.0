@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:56709 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932705AbcKIPGu (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33329 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752046AbcK2HhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 10:06:50 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-        Jouni Malinen <j@w1.fi>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wireless: fix bogus maybe-uninitialized warning
-Date: Wed, 09 Nov 2016 16:06:32 +0100
-Message-ID: <2654653.cBclyC49py@wuerfel> (sfid-20161109_160714_504745_0266CA58)
-In-Reply-To: <1478679046.4345.1.camel@sipsolutions.net>
-References: <20161024153918.2810634-1-arnd@arndb.de> <87mvh9qwhi.fsf@purkki.adurom.net> <1478679046.4345.1.camel@sipsolutions.net>
+        Tue, 29 Nov 2016 02:37:09 -0500
+Received: by mail-oi0-f67.google.com with SMTP id f201so17211695oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2016 23:37:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 29 Nov 2016 08:37:08 +0100
+Message-ID: <CACna6rxszuTY3g=brCkWmwX7mT0-ptjpQMG+YTrPzfoc=dJvcA@mail.gmail.com> (sfid-20161129_083713_104590_E769BFAF)
+Subject: Re: [PATCH 00/12] brcmfmac: scheduled scan cleanup and chip support
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, November 9, 2016 9:10:46 AM CET Johannes Berg wrote:
-> 
-> > Ideally we prefer that drivers/net/wireless and net/wireless changes
-> > are
-> > split into different patches as they get applied to different trees.
+On 23 November 2016 at 11:25, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> This patch series contains:
+> * cleanup of scheduled scan code.
+> * fix handling schedules scan results for newer chips.
+> * support for bcm43341 chipset with different chip id.
+> * support rev6 of PCIe device interface.
+>
+> The series is intended for 4.10 and applies to the master branch
+> of the wireless-drivers-next repository.
 
-Ok, good to know. I had split out the drivers/staging changes, but
-wasn't sure about the granularity you'd want here.
-
-> > Johannes, is it ok if I take this change through my tree this time?
-
-> Sure, please do, thanks.
-> 
-> (I don't particularly care about the lib80211 stuff anyway)
-
-Thanks!
-
-	Arnd
+Tested with BCM43602 on SR400ac router, it still initializes fine, I
+can create multiple AP interfaces and use them.
