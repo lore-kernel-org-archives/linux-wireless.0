@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33266 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754354AbcKXEqc (ORCPT
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:35883 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756488AbcK2JXf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 23 Nov 2016 23:46:32 -0500
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Wed, 23 Nov 2016 20:46:27 -0800
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Marek Kwaczynski <marek.kwaczynski@tieto.com>,
-        David Spinadel <david.spinadel@intel.com>,
-        Alexander Bondar <alexander.bondar@intel.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 4/4] mac80211: Remove unused 'beaconint_us' variable
-Message-ID: <9a09ca6fd5eeab860461b1692fdf5274dfa1aee8.1479962513.git.kirtika@chromium.org> (sfid-20161124_054638_254583_F3F10F18)
-References: <cover.1479962513.git.kirtika@chromium.org>
+        Tue, 29 Nov 2016 04:23:35 -0500
+Received: by mail-qt0-f169.google.com with SMTP id w33so148899366qtc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 01:23:35 -0800 (PST)
+Subject: Re: [PATCH 03/12] brcmfmac: move pno helper functions in separate
+ source file
+To: Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com>
+ <CACna6rwSDT1UeuexMpNhVMxKHWpZGdzDg7C1b5wVOhXzO3o=MA@mail.gmail.com>
+ <1480406267.10012.0.camel@sipsolutions.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f0329a78-abdc-020a-5362-7b3e6b772593@broadcom.com> (sfid-20161129_102352_605172_2DF54E74)
+Date: Tue, 29 Nov 2016 10:23:31 +0100
 MIME-Version: 1.0
+In-Reply-To: <1480406267.10012.0.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479962513.git.kirtika@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 4a733ef1bea7 (mac80211: remove PM-QoS listener) removed all use
-of 'beaconint_us' from ieee80211_recalc_ps() but left the variable
-intact. Compiling with W=1 gives the following warning, fix it.
-net/mac80211/mlme.c: In function ‘ieee80211_recalc_ps’:
-net/mac80211/mlme.c:1481:7: warning: variable ‘beaconint_us’ set but not used [-Wunused-but-set-variable]
+On 29-11-2016 8:57, Johannes Berg wrote:
+> On Tue, 2016-11-29 at 08:08 +0100, Rafał Miłecki wrote:
+>> On 23 November 2016 at 11:25, Arend van Spriel
+>> <arend.vanspriel@broadcom.com> wrote:
+>>>
+>>> Introducing new source file for pno related functionality. Moving
+>>> existing pno functions.
+>>
+>> Let me ask one basic question as I'm curious: what that PNO stands
+>> for? I couldn't find it explained in the code.
+> 
+> It's an Android term - Preferred Network Offload(ing?)
 
-iee80211_tu_to_usec has no side-effects and is safe to remove.
+Yeah. The module is called pfn in our firmware, which stands for
+preferred network. So not sure whether it was a BRCM term morphed into
+Android term or vice versa.
 
-Fixes: 4a733ef1bea7 ("mac80211: remove PM-QoS listener")
-Cc: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
----
- net/mac80211/mlme.c | 4 ----
- 1 file changed, 4 deletions(-)
+Kalle,
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7486f2d..e883345 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1478,10 +1478,6 @@ void ieee80211_recalc_ps(struct ieee80211_local *local)
- 
- 	if (count == 1 && ieee80211_powersave_allowed(found)) {
- 		u8 dtimper = found->u.mgd.dtim_period;
--		s32 beaconint_us;
--
--		beaconint_us = ieee80211_tu_to_usec(
--					found->vif.bss_conf.beacon_int);
- 
- 		timeout = local->dynamic_ps_forced_timeout;
- 		if (timeout < 0)
--- 
-2.8.0.rc3.226.g39d4020
+If needed I could drop the use of the term and resubmit the series.
+
+Regards,
+Arend
