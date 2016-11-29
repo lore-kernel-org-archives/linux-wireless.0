@@ -1,39 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35634 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932515AbcKNQff (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52478 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755322AbcK2Oyw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:35:35 -0500
-Received: by mail-lf0-f66.google.com with SMTP id p100so7513013lfg.2
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Nov 2016 08:35:34 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 10/12] ath10k: Added QCA65XX hw definition
-Date: Mon, 14 Nov 2016 17:33:40 +0100
-Message-Id: <1479141222-8493-11-git-send-email-erik.stromdahl@gmail.com> (sfid-20161114_173600_017637_98571078)
-In-Reply-To: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1479141222-8493-1-git-send-email-erik.stromdahl@gmail.com>
+        Tue, 29 Nov 2016 09:54:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 03/12] brcmfmac: move pno helper functions in separate source file
+References: <1479896731-5091-1-git-send-email-arend.vanspriel@broadcom.com>
+        <1479896731-5091-4-git-send-email-arend.vanspriel@broadcom.com>
+        <CACna6rwSDT1UeuexMpNhVMxKHWpZGdzDg7C1b5wVOhXzO3o=MA@mail.gmail.com>
+        <1480406267.10012.0.camel@sipsolutions.net>
+        <f0329a78-abdc-020a-5362-7b3e6b772593@broadcom.com>
+        <CACna6rx20tvodySME7+oeSbp_MmLDBta0C92tihEVK3GJkJ77w@mail.gmail.com>
+Date: Tue, 29 Nov 2016 16:54:46 +0200
+In-Reply-To: <CACna6rx20tvodySME7+oeSbp_MmLDBta0C92tihEVK3GJkJ77w@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Tue, 29 Nov 2016
+ 13:29:19 +0100")
+Message-ID: <87vav6tjyh.fsf@kamboji.qca.qualcomm.com> (sfid-20161129_155456_760993_CC164D11)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/hw.h |    1 +
- 1 file changed, 1 insertion(+)
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 46142e9..ef45ecf 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -224,6 +224,7 @@ enum ath10k_hw_rev {
- 	ATH10K_HW_QCA9377,
- 	ATH10K_HW_QCA4019,
- 	ATH10K_HW_QCA9887,
-+	ATH10K_HW_QCA65XX,
- };
- 
- struct ath10k_hw_regs {
--- 
-1.7.9.5
+> On 29 November 2016 at 10:23, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 29-11-2016 8:57, Johannes Berg wrote:
+>>> On Tue, 2016-11-29 at 08:08 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>> On 23 November 2016 at 11:25, Arend van Spriel
+>>>> <arend.vanspriel@broadcom.com> wrote:
+>>>>>
+>>>>> Introducing new source file for pno related functionality. Moving
+>>>>> existing pno functions.
+>>>>
+>>>> Let me ask one basic question as I'm curious: what that PNO stands
+>>>> for? I couldn't find it explained in the code.
+>>>
+>>> It's an Android term - Preferred Network Offload(ing?)
+>>
+>> Yeah. The module is called pfn in our firmware, which stands for
+>> preferred network. So not sure whether it was a BRCM term morphed into
+>> Android term or vice versa.
+>>
+>> Kalle,
+>>
+>> If needed I could drop the use of the term and resubmit the series.
+>
+> I don't have anything against it, I was just trying to understand that
+> part of driver (which makes more sense now, thanks).
+
+I don't have any problems as these are already implemented, you are only
+moving code around. But if you were adding a new feature to the driver
+when an explanation for the acronym is very much preferred.
+
+--=20
+Kalle Valo
