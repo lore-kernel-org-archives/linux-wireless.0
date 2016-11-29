@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49384 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751243AbcKRLF1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 06:05:27 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Lazar\, Alexei Avshalom" <ailizaro@codeaurora.org>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: cfg80211: add set/get link loss profile
-References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
-        <8737izqw0q.fsf@purkki.adurom.net>
-        <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org>
-Date: Fri, 18 Nov 2016 13:05:21 +0200
-In-Reply-To: <b1ab1406-d996-fc03-d0a2-b8028c7c0044@codeaurora.org> (Alexei
-        Avshalom Lazar's message of "Thu, 17 Nov 2016 15:50:35 +0200")
-Message-ID: <8737ipm4jy.fsf@kamboji.qca.qualcomm.com> (sfid-20161118_120531_381589_DB3DCAEB)
+Received: from mail.kernel.org ([198.145.29.136]:45570 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757357AbcK2OwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Nov 2016 09:52:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPDyKFr=TE+EuZ9rZV3ygsjBFN_mRrE2imkFa-wQs_ykM5d+cQ@mail.gmail.com>
+References: <1479434109-8745-1-git-send-email-matt@ranostay.consulting>
+ <20161128141513.agnkyz6ronigbukn@rob-hp-laptop> <CAPDyKFr=TE+EuZ9rZV3ygsjBFN_mRrE2imkFa-wQs_ykM5d+cQ@mail.gmail.com>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 29 Nov 2016 08:51:22 -0600
+Message-ID: <CAL_Jsq+80LAkCGEdP5T0AWFV2nRtZ8nrkBoNRB47CR9JN=9dog@mail.gmail.com> (sfid-20161129_155305_281331_A0DBD693)
+Subject: Re: [PATCH] mmc: pwrseq: add support for Marvell SD8787 chip
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Matt Ranostay <matt@ranostay.consulting>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexei,
+On Mon, Nov 28, 2016 at 9:54 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
+> [...]
+>
+>>> +
+>>> +Example:
+>>> +
+>>> +     wifi_pwrseq: wifi_pwrseq {
+>>> +             compatible = "mmc-pwrseq-sd8787";
+>>> +             pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
+>>> +             reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
+>>> +     }
+>>> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+>>> index c421aba0a5bc..08fd65d35725 100644
+>>> --- a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+>>> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+>>> @@ -32,6 +32,9 @@ Optional properties:
+>>>                so that the wifi chip can wakeup host platform under certain condition.
+>>>                during system resume, the irq will be disabled to make sure
+>>>                unnecessary interrupt is not received.
+>>> +  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
+>>
+>> This is why pwrseq is wrong. You have some properties in the card node
+>> and some in pwrseq node. Everything should be in the card node.
+>
+> Put "all" in the card node, just doesn't work for MMC. Particular in
+> cases when we have removable cards, as then it would be wrong to have
+> a card node.
 
-"Lazar, Alexei Avshalom" <ailizaro@codeaurora.org> writes:
+When is there a problem with removable cards? The connector is
+standard and everything needed (CD, VMMC, VDDIO, etc.) is defined in
+the host controller node. If that isn't sufficient, then we should
+start defining a connector node.
 
-> In this context the term "link" does mean connection to AP. There are
-> scenarios that require to lose connection faster once reduced link
-> quality detected in order maintain better user experience (from both
-> sides - AP and STA). Example case is FST (Fast Session Transfer),
-> where we have a fast 11ad connection but close-range and a backup 11ac
-> connection which is "always on". in such cases if we detect poor link
-> quality in the active band we prefer to disconnect and switch to the
-> backup connection with the good link quality. This will be reached by
-> setting "aggressive" profile that will cause more rapid disconnect in
-> such cases.
+> The mmc pwrseq DT bindings just follows the legacy approach for MMC
+> and that's why the pwrseq handle is at the controller node. Yes, would
+> could have done it differently, but this is the case now, so we will
+> have to accept that.
 
-The documentation should clearly document what this command is supposed,
-currently it only tells me "maintain/lose link" and does not specify in
-detail what this is supposed to do. Also there's no mention in what
-modes this can be used. (STA, P2P?)
+We're stuck with supporting the existing cases. That doesn't mean
+we're stuck with the same thing for new cases.
 
-Also please refrain from top posting in public mailing lists, the
-preferred way is to edit quotes and bottom post. It's much more natural
-way to have long detailed discussions.
-
--- 
-Kalle Valo
+Rob
