@@ -1,59 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40477 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932305AbcKNMp5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18254 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757698AbcK2OqK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 07:45:57 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Brian Norris <briannorris@chromium.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>
-Subject: RE: [PATCH v2 3/3] mwifiex: Enable WoWLAN for both sdio and pcie
-Date: Mon, 14 Nov 2016 12:45:54 +0000
-Message-ID: <5d7a50a21e384d098651d8e4b73a8934@SC-EXCH04.marvell.com> (sfid-20161114_134618_851534_5D8E0FF0)
-References: <1478862911-15498-1-git-send-email-akarwar@marvell.com>
- <1478862911-15498-3-git-send-email-akarwar@marvell.com>
- <20161111204235.GB111624@google.com>
-In-Reply-To: <20161111204235.GB111624@google.com>
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 29 Nov 2016 09:46:10 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: ath10k: Fix soft lockup during firmware crash/hw-restart
+Date: Tue, 29 Nov 2016 20:16:02 +0530
+Message-ID: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161129_154615_016002_679452E5)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-> From: Brian Norris [mailto:briannorris@chromium.org]
-> Sent: Saturday, November 12, 2016 2:13 AM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> rajatja@google.com; dmitry.torokhov@gmail.com
-> Subject: Re: [PATCH v2 3/3] mwifiex: Enable WoWLAN for both sdio and
-> pcie
-> 
-> On Fri, Nov 11, 2016 at 04:45:11PM +0530, Amitkumar Karwar wrote:
-> > From: Rajat Jain <rajatja@google.com>
-> >
-> > Commit ce4f6f0c353b ("mwifiex: add platform specific wakeup interrupt
-> > support") added WoWLAN feature only for sdio. This patch moves that
-> > code to the common module so that all the interface drivers can use
-> it
-> > for free. It enables pcie and sdio for its use currently.
-> >
-> > Signed-off-by: Rajat Jain <rajatja@google.com>
-> > ---
-> > v2: v1 doesn't apply smoothly on latest code due to recently merged
-> > patch "mwifiex: report error to PCIe for suspend failure". Minor
-> > conflict is resolved in v2
-> > ---
-> 
-> In case you haven't noticed my comments elsewhere, I'll repeat them
-> here: you're copy-and-pasting buggy code. That can be OK I suppose, but
-> please fix these issues, possibly in a follow-up patch.
+During firmware crash (or) user requested manual restart
+the system gets into a soft lock up state because of the
+below root cause.
 
-Thanks for pointing this. I will post separate follow-up patch which address this issue as per your suggestion.
+During user requested hardware restart / firmware crash
+the system goes into a soft lockup state as 'napi_synchronize'
+is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
+bit) and it sleeps into infinite loop as it waits for
+'NAPI_STATE_SCHED' to be cleared. This condition is hit because
+'ath10k_hif_stop' is called twice as below (resulting in calling
+'napi_synchronize' after 'napi_disable')
 
-Regards,
-Amitkumar
+'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
+-> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
+'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
+
+Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
+as it makes more sense before informing mac80211 to restart h/w
+Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[thanks to Kalle and Michal for their inputs]
+
+ drivers/net/wireless/ath/ath10k/core.c | 2 +-
+ drivers/net/wireless/ath/ath10k/mac.c  | 1 -
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 7005e2a..5bc6847 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
+ 	switch (ar->state) {
+ 	case ATH10K_STATE_ON:
+ 		ar->state = ATH10K_STATE_RESTARTING;
+-		ath10k_hif_stop(ar);
++		ath10k_halt(ar);
+ 		ath10k_scan_finish(ar);
+ 		ieee80211_restart_hw(ar->hw);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 717b2fa..481842b 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 		ar->state = ATH10K_STATE_ON;
+ 		break;
+ 	case ATH10K_STATE_RESTARTING:
+-		ath10k_halt(ar);
+ 		ar->state = ATH10K_STATE_RESTARTED;
+ 		break;
+ 	case ATH10K_STATE_ON:
+-- 
+1.9.1
