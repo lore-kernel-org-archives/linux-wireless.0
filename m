@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34583 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752497AbcKRIqB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45564 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757999AbcK2Paq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 03:46:01 -0500
-Received: by mail-pf0-f195.google.com with SMTP id y68so13208444pfb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Nov 2016 00:46:01 -0800 (PST)
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Date: Fri, 18 Nov 2016 00:45:54 -0800
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Subject: [PATCH 5/7] mwifiex: Remove unused 'pm_flag' variable
-Message-ID: <41391bae10a957d9146b25d6919a2d69f4b5e2f0.1479458373.git.kirtika@google.com> (sfid-20161118_094604_590773_FD7F59D0)
-References: <cover.1479458373.git.kirtika@google.com>
+        Tue, 29 Nov 2016 10:30:46 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cover.1479458373.git.kirtika@google.com>
+Subject: Re: [01/12] brcmfmac: add pcie host dongle interface rev6 support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1479896731-5091-2-git-send-email-arend.vanspriel@broadcom.com>
+References: <1479896731-5091-2-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20161129153045.68F126134E@smtp.codeaurora.org> (sfid-20161129_163107_984523_8E039032)
+Date: Tue, 29 Nov 2016 15:30:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mwifiex_sdio_resume() intializes pm_flag, just like mwifiex_sdio_suspend(), but
-does not use it. Compiling with W=1 gives the following warning, fix it.
-mwifiex/sdio.c: In function ‘mwifiex_sdio_resume’:
-mwifiex/sdio.c:234:16: warning: variable ‘pm_flag’ set but not used [-Wunused-but-set-variable]
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> From: Franky Lin <franky.lin@broadcom.com>
+> 
+> In rev6 of pcie host dongle interface protocol, host needs to maximum
+> supported ring number from dongle shared memory and set up ring buffer
+> and ring indices offset accordingly.
+> 
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-sdio_get_host_pm_caps() is just an acessor, so the call to it is safe to
-remove.
-The unused variable seems to be present since 5e6e3a92b9a4 which introduced
-mwifiex_sdio_resume().
+12 patches applied to wireless-drivers-next.git, thanks.
 
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Cc: Bing Zhao <bzhao@marvell.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 2 --
- 1 file changed, 2 deletions(-)
+be4b092cab84 brcmfmac: add pcie host dongle interface rev6 support
+dc630dc5c753 brcmfmac: add support for 43341 chip
+ac55136f43d3 brcmfmac: move pno helper functions in separate source file
+3e2e86ab19c2 brcmfmac: fix handling ssids in .sched_scan_start() callback
+ab5981c83033 brcmfmac: change prototype for brcmf_do_escan()
+fa85b30a9084 brcmfmac: make internal escan more generic
+fca6cb2f059e brcmfmac: split up brcmf_pno_config() function
+3e48611d31dd brcmfmac: move scheduled scan activation to pno source file
+331e78944361 brcmfmac: use provided channels for scheduled scan
+dfe5b0d52d58 brcmfmac: remove restriction from .sched_scan_start() callback
+c6989fd55ceb brcmfmac: use requested scan interval in scheduled scan
+53e3a80d80c8 brcmfmac: fix scheduled scan result handling for newer chips
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 8718950..41ec59d7 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -231,10 +231,8 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	struct sdio_func *func = dev_to_sdio_func(dev);
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
--	mmc_pm_flag_t pm_flag = 0;
+-- 
+https://patchwork.kernel.org/patch/9442895/
 
- 	if (func) {
--		pm_flag = sdio_get_host_pm_caps(func);
- 		card = sdio_get_drvdata(func);
- 		if (!card || !card->adapter) {
- 			pr_err("resume: invalid card or adapter\n");
---
-2.8.0.rc3.226.g39d4020
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
