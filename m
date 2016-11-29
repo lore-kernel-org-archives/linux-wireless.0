@@ -1,310 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:40622 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753791AbcKNMtu (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:56630 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751485AbcK2SQv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 14 Nov 2016 07:49:50 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>
-Subject: [PATCH v3 3/3] mwifiex: Enable WoWLAN for both sdio and pcie
-Date: Mon, 14 Nov 2016 18:19:12 +0530
-Message-ID: <1479127752-23745-3-git-send-email-akarwar@marvell.com> (sfid-20161114_134953_199233_3EBA5154)
-In-Reply-To: <1479127752-23745-1-git-send-email-akarwar@marvell.com>
-References: <1479127752-23745-1-git-send-email-akarwar@marvell.com>
+        Tue, 29 Nov 2016 13:16:51 -0500
+Subject: Re: ath10k: Fix soft lockup during firmware crash/hw-restart
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        ath10k@lists.infradead.org
+References: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
+Cc: mohammed@codeaurora.org, linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <1a44a3e9-3d67-30a5-0325-a65003ebe1fc@candelatech.com> (sfid-20161129_191654_827660_FCF4E998)
+Date: Tue, 29 Nov 2016 10:16:50 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rajat Jain <rajatja@google.com>
+Is this something for stable?  And if so, how far back should it be applied?
 
-Commit ce4f6f0c353b ("mwifiex: add platform specific wakeup interrupt
-support") added WoWLAN feature only for sdio. This patch moves that
-code to the common module so that all the interface drivers can use
-it for free. It enables pcie and sdio for its use currently.
+I'll add this patch to my 4.9 tree and test it...
 
-Signed-off-by: Rajat Jain <rajatja@google.com>
----
-v2: v1 doesn't apply smoothly on latest code due to recently merged
-patch "mwifiex: report error to PCIe for suspend failure". Minor
-conflict is resolved in v2
-v3: Same as v2 
----
- drivers/net/wireless/marvell/mwifiex/main.c | 41 ++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h | 25 ++++++++++
- drivers/net/wireless/marvell/mwifiex/pcie.c |  2 +
- drivers/net/wireless/marvell/mwifiex/sdio.c | 72 ++---------------------------
- drivers/net/wireless/marvell/mwifiex/sdio.h |  8 ----
- 5 files changed, 73 insertions(+), 75 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 835d330..948f5c2 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1552,14 +1552,55 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
- }
- EXPORT_SYMBOL_GPL(mwifiex_do_flr);
- 
-+static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
-+{
-+	struct mwifiex_adapter *adapter = priv;
-+
-+	if (adapter->irq_wakeup >= 0) {
-+		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-+		adapter->wake_by_wifi = true;
-+		disable_irq_nosync(irq);
-+	}
-+
-+	/* Notify PM core we are wakeup source */
-+	pm_wakeup_event(adapter->dev, 0);
-+
-+	return IRQ_HANDLED;
-+}
-+
- static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
- {
-+	int ret;
- 	struct device *dev = adapter->dev;
- 
- 	if (!dev->of_node)
- 		return;
- 
- 	adapter->dt_node = dev->of_node;
-+	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
-+	if (!adapter->irq_wakeup) {
-+		dev_info(dev, "fail to parse irq_wakeup from device tree\n");
-+		return;
-+	}
-+
-+	ret = devm_request_irq(dev, adapter->irq_wakeup,
-+			       mwifiex_irq_wakeup_handler, IRQF_TRIGGER_LOW,
-+			       "wifi_wake", adapter);
-+	if (ret) {
-+		dev_err(dev, "Failed to request irq_wakeup %d (%d)\n",
-+			adapter->irq_wakeup, ret);
-+		goto err_exit;
-+	}
-+
-+	disable_irq(adapter->irq_wakeup);
-+	if (device_init_wakeup(dev, true)) {
-+		dev_err(dev, "fail to init wakeup for mwifiex\n");
-+		goto err_exit;
-+	}
-+	return;
-+
-+err_exit:
-+	adapter->irq_wakeup = 0;
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 549e1ba..ae5afe5 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1011,6 +1011,10 @@ struct mwifiex_adapter {
- 	bool usb_mc_setup;
- 	struct cfg80211_wowlan_nd_info *nd_info;
- 	struct ieee80211_regdomain *regd;
-+
-+	/* Wake-on-WLAN (WoWLAN) */
-+	int irq_wakeup;
-+	bool wake_by_wifi;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-@@ -1410,6 +1414,27 @@ static inline u8 mwifiex_is_tdls_link_setup(u8 status)
- 	return false;
- }
- 
-+/* Disable platform specific wakeup interrupt */
-+static inline void mwifiex_disable_wake(struct mwifiex_adapter *adapter)
-+{
-+	if (adapter->irq_wakeup >= 0) {
-+		disable_irq_wake(adapter->irq_wakeup);
-+		if (!adapter->wake_by_wifi)
-+			disable_irq(adapter->irq_wakeup);
-+	}
-+}
-+
-+/* Enable platform specific wakeup interrupt */
-+static inline void mwifiex_enable_wake(struct mwifiex_adapter *adapter)
-+{
-+	/* Enable platform specific wakeup interrupt */
-+	if (adapter->irq_wakeup >= 0) {
-+		adapter->wake_by_wifi = false;
-+		enable_irq(adapter->irq_wakeup);
-+		enable_irq_wake(adapter->irq_wakeup);
-+	}
-+}
-+
- int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
- 			     u32 func_init_shutdown);
- int mwifiex_add_card(void *card, struct semaphore *sem,
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index de6939c..7942b28 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -131,6 +131,7 @@ static int mwifiex_pcie_suspend(struct device *dev)
- 	}
- 
- 	adapter = card->adapter;
-+	mwifiex_enable_wake(adapter);
- 
- 	/* Enable the Host Sleep */
- 	if (!mwifiex_enable_hs(adapter)) {
-@@ -186,6 +187,7 @@ static int mwifiex_pcie_resume(struct device *dev)
- 
- 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
- 			  MWIFIEX_ASYNC_CMD);
-+	mwifiex_disable_wake(adapter);
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index c95f41f..7055282 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -79,67 +79,18 @@
- 	{ }
- };
- 
--static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
--{
--	struct mwifiex_plt_wake_cfg *cfg = priv;
--
--	if (cfg->irq_wifi >= 0) {
--		pr_info("%s: wake by wifi", __func__);
--		cfg->wake_by_wifi = true;
--		disable_irq_nosync(irq);
--	}
--
--	/* Notify PM core we are wakeup source */
--	pm_wakeup_event(cfg->dev, 0);
--
--	return IRQ_HANDLED;
--}
--
- /* This function parse device tree node using mmc subnode devicetree API.
-  * The device node is saved in card->plt_of_node.
-  * if the device tree node exist and include interrupts attributes, this
-  * function will also request platform specific wakeup interrupt.
-  */
--static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
-+static int mwifiex_sdio_probe_of(struct device *dev)
- {
--	struct mwifiex_plt_wake_cfg *cfg;
--	int ret;
--
- 	if (!of_match_node(mwifiex_sdio_of_match_table, dev->of_node)) {
- 		dev_err(dev, "required compatible string missing\n");
- 		return -EINVAL;
- 	}
- 
--	card->plt_of_node = dev->of_node;
--	card->plt_wake_cfg = devm_kzalloc(dev, sizeof(*card->plt_wake_cfg),
--					  GFP_KERNEL);
--	cfg = card->plt_wake_cfg;
--	if (cfg && card->plt_of_node) {
--		cfg->dev = dev;
--		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
--		if (!cfg->irq_wifi) {
--			dev_dbg(dev,
--				"fail to parse irq_wifi from device tree\n");
--		} else {
--			ret = devm_request_irq(dev, cfg->irq_wifi,
--					       mwifiex_wake_irq_wifi,
--					       IRQF_TRIGGER_LOW,
--					       "wifi_wake", cfg);
--			if (ret) {
--				dev_dbg(dev,
--					"Failed to request irq_wifi %d (%d)\n",
--					cfg->irq_wifi, ret);
--				card->plt_wake_cfg = NULL;
--				return 0;
--			}
--			disable_irq(cfg->irq_wifi);
--		}
--	}
--
--	ret = device_init_wakeup(dev, true);
--	if (ret)
--		dev_err(dev, "fail to init wakeup for mwifiex");
--
- 	return 0;
- }
- 
-@@ -198,11 +149,9 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 
- 	/* device tree node parsing and platform specific configuration*/
- 	if (func->dev.of_node) {
--		ret = mwifiex_sdio_probe_of(&func->dev, card);
--		if (ret) {
--			dev_err(&func->dev, "SDIO dt node parse failed\n");
-+		ret = mwifiex_sdio_probe_of(&func->dev);
-+		if (ret)
- 			goto err_disable;
--		}
- 	}
- 
- 	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
-@@ -267,12 +216,7 @@ static int mwifiex_sdio_resume(struct device *dev)
- 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
- 			  MWIFIEX_SYNC_CMD);
- 
--	/* Disable platform specific wakeup interrupt */
--	if (card->plt_wake_cfg && card->plt_wake_cfg->irq_wifi >= 0) {
--		disable_irq_wake(card->plt_wake_cfg->irq_wifi);
--		if (!card->plt_wake_cfg->wake_by_wifi)
--			disable_irq(card->plt_wake_cfg->irq_wifi);
--	}
-+	mwifiex_disable_wake(adapter);
- 
- 	return 0;
- }
-@@ -352,13 +296,7 @@ static int mwifiex_sdio_suspend(struct device *dev)
- 	}
- 
- 	adapter = card->adapter;
--
--	/* Enable platform specific wakeup interrupt */
--	if (card->plt_wake_cfg && card->plt_wake_cfg->irq_wifi >= 0) {
--		card->plt_wake_cfg->wake_by_wifi = false;
--		enable_irq(card->plt_wake_cfg->irq_wifi);
--		enable_irq_wake(card->plt_wake_cfg->irq_wifi);
--	}
-+	mwifiex_enable_wake(adapter);
- 
- 	/* Enable the Host Sleep */
- 	if (!mwifiex_enable_hs(adapter)) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index 07cdd23..b9fbc5c 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -154,12 +154,6 @@
- 	a->mpa_rx.start_port = 0;					\
- } while (0)
- 
--struct mwifiex_plt_wake_cfg {
--	struct device *dev;
--	int irq_wifi;
--	bool wake_by_wifi;
--};
--
- /* data structure for SDIO MPA TX */
- struct mwifiex_sdio_mpa_tx {
- 	/* multiport tx aggregation buffer pointer */
-@@ -243,8 +237,6 @@ struct mwifiex_sdio_card_reg {
- struct sdio_mmc_card {
- 	struct sdio_func *func;
- 	struct mwifiex_adapter *adapter;
--	struct device_node *plt_of_node;
--	struct mwifiex_plt_wake_cfg *plt_wake_cfg;
- 
- 	const char *firmware;
- 	const struct mwifiex_sdio_card_reg *reg;
+On 11/29/2016 06:46 AM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> During firmware crash (or) user requested manual restart
+> the system gets into a soft lock up state because of the
+> below root cause.
+>
+> During user requested hardware restart / firmware crash
+> the system goes into a soft lockup state as 'napi_synchronize'
+> is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
+> bit) and it sleeps into infinite loop as it waits for
+> 'NAPI_STATE_SCHED' to be cleared. This condition is hit because
+> 'ath10k_hif_stop' is called twice as below (resulting in calling
+> 'napi_synchronize' after 'napi_disable')
+>
+> 'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
+> -> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
+> 'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
+>
+> Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
+> as it makes more sense before informing mac80211 to restart h/w
+> Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+> [thanks to Kalle and Michal for their inputs]
+>
+>  drivers/net/wireless/ath/ath10k/core.c | 2 +-
+>  drivers/net/wireless/ath/ath10k/mac.c  | 1 -
+>  2 files changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 7005e2a..5bc6847 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
+>  	switch (ar->state) {
+>  	case ATH10K_STATE_ON:
+>  		ar->state = ATH10K_STATE_RESTARTING;
+> -		ath10k_hif_stop(ar);
+> +		ath10k_halt(ar);
+>  		ath10k_scan_finish(ar);
+>  		ieee80211_restart_hw(ar->hw);
+>  		break;
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 717b2fa..481842b 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
+>  		ar->state = ATH10K_STATE_ON;
+>  		break;
+>  	case ATH10K_STATE_RESTARTING:
+> -		ath10k_halt(ar);
+>  		ar->state = ATH10K_STATE_RESTARTED;
+>  		break;
+>  	case ATH10K_STATE_ON:
+>
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
