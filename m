@@ -1,159 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:64890 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752526AbcK1Red (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 12:34:33 -0500
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-To: Kyle McMartin <kyle@mcmartin.ca>,
-        IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <1478706966.18306.1.camel@sipsolutions.net>
- <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
- <1478725543.21403.4.camel@sipsolutions.net>
- <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
- <1478864146.4129.4.camel@sipsolutions.net>
- <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com>
- <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
- <063b80df-9cfa-14f1-4695-4239b42dfccb@rempel-privat.de>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-        Kyle McMartin <kyle@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, btherthala@quantenna.com,
-        hwang@quantenna.com, smaksimenko@quantenna.com,
-        dlebed@quantenna.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <217ac48f-d822-62d5-3def-744500821ac9@rempel-privat.de> (sfid-20161128_183438_000425_0B8E6456)
-Date: Mon, 28 Nov 2016 18:33:56 +0100
+Received: from mail-wj0-f180.google.com ([209.85.210.180]:32769 "EHLO
+        mail-wj0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754663AbcK2NpI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 29 Nov 2016 08:45:08 -0500
+Received: by mail-wj0-f180.google.com with SMTP id xy5so145549120wjc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2016 05:44:19 -0800 (PST)
+Subject: Re: [PATCH] mac80211: fix Tx BA session stuck issue during sw
+ scanning
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Chris Chiu <chiu@endlessm.com>, linux-wireless@vger.kernel.org
+References: <1479887968-17473-1-git-send-email-chiu@endlessm.com>
+ <1480424369.10012.6.camel@sipsolutions.net>
+Cc: linux@endlessm.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0a225a3e-9338-0b16-d97a-01236df137af@broadcom.com> (sfid-20161129_144514_263145_FA908C61)
+Date: Tue, 29 Nov 2016 14:38:52 +0100
 MIME-Version: 1.0
-In-Reply-To: <063b80df-9cfa-14f1-4695-4239b42dfccb@rempel-privat.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="sDTgimvUScNJJjLqWkU7EXNQBKgNhV2MF"
+In-Reply-To: <1480424369.10012.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---sDTgimvUScNJJjLqWkU7EXNQBKgNhV2MF
-Content-Type: multipart/mixed; boundary="hblsm19253Q6TQ2Er4NfmPM9v4tjWKqkf";
- protected-headers="v1"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: Kyle McMartin <kyle@mcmartin.ca>,
- IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, Kyle McMartin <kyle@kernel.org>,
- Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org,
- btherthala@quantenna.com, hwang@quantenna.com, smaksimenko@quantenna.com,
- dlebed@quantenna.com, Igor Mitsyanko <imitsyanko@quantenna.com>,
- Kamlesh Rath <krath@quantenna.com>,
- Sergey Matyukevich <smatyukevich@quantenna.com>,
- Avinash Patil <avinashp@quantenna.com>
-Message-ID: <217ac48f-d822-62d5-3def-744500821ac9@rempel-privat.de>
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-References: <1478700000-11624-1-git-send-email-igor.mitsyanko.os@quantenna.com>
- <1478706966.18306.1.camel@sipsolutions.net>
- <2fcb5f28-808e-f296-7e91-e5185e7577c9@quantenna.com>
- <1478725543.21403.4.camel@sipsolutions.net>
- <d1cfaf8a-55a6-3a7c-9e9d-ec810fe5b80d@quantenna.com>
- <1478864146.4129.4.camel@sipsolutions.net>
- <ec6a249c-ef57-40d8-0cd2-31613f046e23@quantenna.com>
- <CANLJ0sm_iBfXB5TkjwTNO8RyYK3W7z8ecOrZo5f65qjb4WMXKQ@mail.gmail.com>
- <063b80df-9cfa-14f1-4695-4239b42dfccb@rempel-privat.de>
-In-Reply-To: <063b80df-9cfa-14f1-4695-4239b42dfccb@rempel-privat.de>
 
---hblsm19253Q6TQ2Er4NfmPM9v4tjWKqkf
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
 
-Am 28.11.2016 um 18:10 schrieb Oleksij Rempel:
-> Am 28.11.2016 um 17:34 schrieb Kyle McMartin:
->> On Tue, Nov 22, 2016 at 9:44 AM, IgorMitsyanko
->> <igor.mitsyanko.os@quantenna.com> wrote:
->>> Hi Ben, Kyle,
->>> could you please share what is the position of linux-firmware regardi=
-ng
->>> firmware binaries that include GPL components? Does it require entire=
- GPL
->>> components codebase be present in linux-firmware tree, or maybe havin=
-g this
->>> clause in license file is enough:
->>> +Open Source Software. The Software may include components that are l=
-icensed
->>> +pursuant to open source software (=E2=80=9COpen Source Components=E2=
-=80=9D). Information
->>> +regarding the Open Source Components included with the Software is
->>> available
->>> +upon request to oslegal@quantenna.com. To the extent such Open Sourc=
-e
->>> +Components are required to be licensed to you under the terms of a s=
-eparate
->>> +license (such as an open source license) then such other terms shall=
- apply,
->>> and
->>> +nothing herein shall be deemed or interpreted to limit any rights yo=
-u may
->>> have
->>> +under any such applicable license.
->>>
->>> From technical perspective, size of the codebase used to build Quante=
-nna
->>> firmware is a few hundred MBs, it seems too much to include into
->>> linux-firmware tree.
->>>
+On 29-11-2016 13:59, Johannes Berg wrote:
+> On Wed, 2016-11-23 at 15:59 +0800, Chris Chiu wrote:
+>> ieee80211_iface_work() will check if sw scanning is in progress
+>> before handling block ack session. In our case, the RTL8821AE
+>> operate in station mode, when tx session expired, DELBA packet
+>> stuck during sw scanning and so do other data packets.
 >>
->> I don't have strong feelings one way or another. I'd prefer not having=
-
->> several hundred
->> MB of source that's unlikely to change included in the linux-firmware
->> git tree. I'm also not
->> a lawyer, so I can't help you decide what would satisfy the
->> distribution clause of the GPLv2.
->> We already have one GPL firmware (carl9170fw) which includes the
->> source, but just references
->> a seperate toolchain for downloading, so it's only approximately 1MB
->> in size in the tree.
+>> ieee80211_scan_state_decision() will take lots of time in
+>> SCAN_SUSPEND/SCAN_RESUME state due to !tx_empty or bad_latency.
+>> Then the sw scanning mostly take > 20 seconds to finish or even
+>> worse in our case RTL8821AE have 37 channels for 2G+5G to scan
+>> and tx stalls ~300 seconds. AP side still thinks the connection
+>> is alive because it still receives the QoS NULL packet from STA.
+>> So the link state will never change but actually no data tx/rx
+>> during this long time.
 >>
->> Is your firmware source really that large, or is it just including the=
+>> This commit tries to send out packet in SCAN_SUSPEND state so the
+>> sw scanning can complete more efficiently and less affect on Block
+>> Ack session handling. Verified on RTL8821AE for > 30000 pings and
+>> no Tx BA session stuck observed.
+> 
+> The premise seems fairly reasonable, although I'm a little worried that
+> if so much new traffic is coming in we never finish the scan suspend?
+> Actually, the queues are still stopped, so it's only management frames
+> that can come in, so that should be ok?
 
->> entire build toolchain with it?
->>
->> regards,
->> --Kyle
->=20
-> We also have open BSD licensed open-ath9k-htc-firmware. Which is locate=
+So are pings a good way to verify block-ack session handling. How often
+was a scan issued within those 30000 pings or was that left to
+wpa_supplicant/network-manager/whatever?
 
-> out of source too.
-> https://github.com/qca/open-ath9k-htc-firmware
-> and here is location of carl firmware:
-> https://github.com/chunkeey/carl9170fw
->=20
-> So, what is actual problem with Quantenna QSR10G FW?
-> I would be really interesting to take a look on it. Is it somewhere
-> available? Are there some devices to get hand on?
-
-After seeing specs of this device i have strong feeling that "some open
-source part" is actual linux kernel.
-
-
---=20
 Regards,
-Oleksij
+Arend
 
-
---hblsm19253Q6TQ2Er4NfmPM9v4tjWKqkf--
-
---sDTgimvUScNJJjLqWkU7EXNQBKgNhV2MF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlg8aoQACgkQHwImuRkmbWnfowEAl/tohZvisJZ5CJNDhk356lEm
-r7TkydwXyE07HxdhsFsA/RPveXORTXA01JRFm5drRKRRGmy6/5cF5gYQGODvKfNN
-=okW5
------END PGP SIGNATURE-----
-
---sDTgimvUScNJJjLqWkU7EXNQBKgNhV2MF--
+>> +	test_and_clear_bit(SCAN_SUSPEND_SCANNING, &local->scanning);
+>>
+> 
+> That makes no sense, you're not checking the return value, just clear
+> the bit without test.
+>  
+>> @@ -844,6 +846,8 @@ static void ieee80211_scan_state_suspend(struct
+>> ieee80211_local *local,
+>>  	/* disable PS */
+>>  	ieee80211_offchannel_return(local);
+>>  
+>> +	__set_bit(SCAN_SUSPEND_SCANNING, &local->scanning);
+> 
+> Why are you using the non-atomic version here, vs. the atomic one
+> above?
+> 
+> johannes
+> 
