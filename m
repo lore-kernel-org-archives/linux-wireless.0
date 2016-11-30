@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49786 "EHLO mx1.redhat.com"
+Received: from mail.neratec.com ([46.140.151.2]:43877 "EHLO mail.neratec.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754872AbcKBOMa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 2 Nov 2016 10:12:30 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 06/10] rt2800: correct AUTO_RSP_CFG
-Date: Wed,  2 Nov 2016 15:11:01 +0100
-Message-Id: <1478095865-8651-7-git-send-email-sgruszka@redhat.com> (sfid-20161102_151234_126764_1BDCCCCF)
-In-Reply-To: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
-References: <1478095865-8651-1-git-send-email-sgruszka@redhat.com>
+        id S1161161AbcK3KyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Nov 2016 05:54:15 -0500
+Subject: Re: Atheros ETSI DFS pattern
+To: voncken <cedric.voncken@acksys.fr>, linux-wireless@vger.kernel.org
+References: <012101d24af3$40bb97f0$c232c7d0$@acksys.fr>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-ID: <2fe8be5d-9f34-7a2f-d825-ca39e5facaae@neratec.com> (sfid-20161130_115450_568638_67D0478E)
+Date: Wed, 30 Nov 2016 11:54:11 +0100
+MIME-Version: 1.0
+In-Reply-To: <012101d24af3$40bb97f0$c232c7d0$@acksys.fr>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Initialize AUTO_RSP_CFG register to similar value as vendor driver does.
+On 11/30/2016 11:19 AM, voncken wrote:
+> In the file drivers/net/wireless/ath/dfs_pattern_detector.c we can found the
+> ETSI pattern definition.
+> 
+> In this definition we can found 7 patterns (0 to 6).
+> 
+> The ETSI standard EN 301893 Annex D only specifies 6 patterns. Only the
+> pattern 1 to 6 defined in the ath dfs pattern match with the ETSI standard.
+> 
+> Why the pattern 0 is defined?
+> 
+> Is it possible to remove this pattern and keep compliant with the ETSI
+> standard?
+> 
+> Thanks for your help.
+> 
+> Cedric.
+> 
+Hi,
 
-Do not set BAC_ACK_POLICY based on short preamble setting, those are
-unrelated.
+pattern 0 is the 'reference DFS test signal', the 700Hz pattern with 18 pulses
+each 1us wide.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+At implementation time, EN301893 v1.5 was the current revision and the reference
+pattern is defined in Table D.3. I double checked that v1.8.1 has this one still
+defined, so it remains required.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 9ecdc4c..ff4a7c3 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1691,8 +1691,6 @@ void rt2800_config_erp(struct rt2x00_dev *rt2x00dev, struct rt2x00lib_erp *erp,
- 
- 	if (changed & BSS_CHANGED_ERP_PREAMBLE) {
- 		rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
--		rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY,
--				   !!erp->short_preamble);
- 		rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE,
- 				   !!erp->short_preamble);
- 		rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
-@@ -4735,9 +4733,9 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_read(rt2x00dev, AUTO_RSP_CFG, &reg);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AUTORESPONDER, 1);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_BAC_ACK_POLICY, 1);
--	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 0);
-+	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MMODE, 1);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_CTS_40_MREF, 0);
--	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 1);
-+	rt2x00_set_field32(&reg, AUTO_RSP_CFG_AR_PREAMBLE, 0);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_DUAL_CTS_EN, 0);
- 	rt2x00_set_field32(&reg, AUTO_RSP_CFG_ACK_CTS_PSM_BIT, 0);
- 	rt2800_register_write(rt2x00dev, AUTO_RSP_CFG, reg);
--- 
-1.7.1
+Given that most basic DFS features in certification labs are tested with this
+pattern, I don't expect it to be obsoleted any time.
+
+Out of curiosity: why would you like it removed? From the false-detection
+probability, pattern 0 is uncritical (the tricky one is pattern 1).
+
+
+Cheers,
+Zefir
