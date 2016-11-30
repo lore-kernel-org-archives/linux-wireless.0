@@ -1,41 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34696 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752305AbcKOO6U (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46350 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754171AbcK3R3B (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 15 Nov 2016 09:58:20 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 30 Nov 2016 12:29:01 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Luca Coelho <luca@coelho.fi>, linux-wireless@vger.kernel.org,
+        briselec@gmail.com
+Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not reconnecting
+References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
+        <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
+        <1480514067.29540.54.camel@coelho.fi> <wrfja8ch6l1o.fsf@redhat.com>
+Date: Wed, 30 Nov 2016 19:27:57 +0200
+In-Reply-To: <wrfja8ch6l1o.fsf@redhat.com> (Jes Sorensen's message of "Wed, 30
+        Nov 2016 10:32:03 -0500")
+Message-ID: <87inr4ubc2.fsf@kamboji.qca.qualcomm.com> (sfid-20161130_182905_669651_C95688A1)
 MIME-Version: 1.0
-Subject: Re: ath9k_htc: fix minor mistakes in dev_err messages
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161031151247.18127-1-colin.king@canonical.com>
-References: <20161031151247.18127-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-ID: <b7cc9960ad9d4227bf4388d05a6d8dad@euamsexm01a.eu.qualcomm.com> (sfid-20161115_155847_791505_F78E8001)
-Date: Tue, 15 Nov 2016 15:58:11 +0100
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Add missing space in a dev_err message and join wrapped text so
-> it does not span multiple lines.  Fix spelling mistake on "unknown".
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> Luca Coelho <luca@coelho.fi> writes:
+>> On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
+>>> Jes.Sorensen@redhat.com writes:
+>>> 
+>>> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>> > 
+>>> > Hi,
+>>> > 
+>>> > This patch works around the issue with 8192eu and 8723bu devices not
+>>> > being able to reconnect. It is still not clear why this fails, and
+>>> > looking at rtlwifi it does issue the command for 8192ee and 8723be
+>>> > devices.
+>>> > 
+>>> > Until we have a better idea of what is going on, I have commented out
+>>> > the offending code. I prefer not deleting it until we have a better
+>>> > understanding of why this is causing issues.
+>>> > 
+>>> > Credits to Barry Day for tracking down and isolating the issue.
+>>> > 
+>>> > Kalle, not sure if this can make it to 4.9, but if it's possible it
+>>> > would be ideal since this is causing real issues in the field.
+>>> 
+>>> For 4.9 this is too late, sorry. I'll queue this to 4.10.
+>>
+>> You should then CC stable so it gets into 4.9.x when it reaches 4.10.
+>
+> Yeah good idea - Kalle do you want me to repost it with the CC line or
+> are you happy to add it?
 
-14acebc33e6d ath9k_htc: fix minor mistakes in dev_err messages
+I can add it. To which stable releases should this go to?
 
 -- 
-https://patchwork.kernel.org/patch/9405663/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
