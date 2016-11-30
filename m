@@ -1,106 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35923 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932201AbcKIUhP (ORCPT
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:35994 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933319AbcK3MDg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 9 Nov 2016 15:37:15 -0500
-Received: by mail-pf0-f173.google.com with SMTP id 189so132445445pfz.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Nov 2016 12:37:15 -0800 (PST)
-Date: Wed, 9 Nov 2016 12:37:11 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
- remove_card
-Message-ID: <20161109203710.GA118631@google.com> (sfid-20161109_213721_300603_2CC72283)
-References: <1477318892-22877-1-git-send-email-akarwar@marvell.com>
- <1477318892-22877-5-git-send-email-akarwar@marvell.com>
- <20161025001405.GE15034@dtor-ws>
- <87d1imudwm.fsf@purkki.adurom.net>
- <20161102204537.GA27786@google.com>
- <271acd7f41694b09be6f4ad82846782a@SC-EXCH04.marvell.com>
+        Wed, 30 Nov 2016 07:03:36 -0500
+Received: by mail-wj0-f196.google.com with SMTP id jb2so21894113wjb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2016 04:03:35 -0800 (PST)
+From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] net: rfkill: Add rfkill-any LED trigger
+Date: Wed, 30 Nov 2016 13:03:17 +0100
+Message-Id: <20161130120317.11851-2-kernel@kempniu.pl> (sfid-20161130_130439_581427_87D5A971)
+In-Reply-To: <20161130120317.11851-1-kernel@kempniu.pl>
+References: <20161130120317.11851-1-kernel@kempniu.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <271acd7f41694b09be6f4ad82846782a@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 09, 2016 at 12:35:22PM +0000, Amitkumar Karwar wrote:
-> Hi Brian,
+This patch adds a new "global" (i.e. not per-rfkill device) LED trigger,
+rfkill-any, which may be useful for laptops with a single "radio LED"
+and multiple radio transmitters.  The trigger is meant to turn a LED on
+whenever there is at least one radio transmitter active and turn it off
+otherwise.
 
-Hi,
+Signed-off-by: Michał Kępień <kernel@kempniu.pl>
+---
+Note that the search for any active radio will have quadratic complexity
+whenever __rfkill_switch_all() is used (as it calls rfkill_set_block()
+for every affected rfkill device), but I intentionally refrained from
+implementing rfkill_any_led_trigger_event() using struct work_struct to
+keep things simple, given the average number of rfkill devices in
+hardware these days.  Please let me know in case this should be
+reworked.
 
-> > From: Brian Norris [mailto:briannorris@chromium.org]
-> > Sent: Thursday, November 03, 2016 2:16 AM
-> > To: Kalle Valo
-> > Cc: Dmitry Torokhov; Amitkumar Karwar; linux-wireless@vger.kernel.org;
-> > Cathy Luo; Nishant Sarmukadam; Xinming Hu
-> > Subject: Re: [PATCH 5/5] mwifiex: wait for firmware dump completion in
-> > remove_card
-> > 
-> > On Thu, Oct 27, 2016 at 04:20:25PM +0300, Kalle Valo wrote:
-> > > Dmitry Torokhov <dmitry.torokhov@gmail.com> writes:
-> > >
-> > > >> +/* reset_trigger variable is used to identify if
-> > > >> +mwifiex_sdio_remove()
-> > > >> + * is called by sdio_work during reset or the call is from sdio
-> > subsystem.
-> > > >> + * We will cancel sdio_work only if the call is from sdio
-> > subsystem.
-> > > >> + */
-> > > >> +static u8 reset_triggered;
-> > > >
-> > > > It would be really great if the driver supported multiple devices.
-> > > > IOW please avoid module-globals.
-> > >
-> > > Good catch, it's a hard requirement to support multiple devices at the
-> > > same time.
-> > 
-> > BTW, this problem is repeated in several places throughout this driver.
-> > For instance, look for 'user_rmmod' (why? you shouldn't need to treat
-> > module unload differently...)
-> 
-> We have 2 kinds of teardown cases.
-> 1) Chip is going to be powered off.
-> 	a) System reboot
-> 	b) Someone manually removed wifi card from system
-> 2) User unloaded the driver.
-> 
-> In case 1. b), we can't have logic to terminate WIFI connection and
-> download SHUTDOWN command to firmware, as hardware itself is not
-> present.
+ net/rfkill/core.c | 73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
 
-That seems like a poor way of determining the difference between hot
-unplug and clean shutdown. What if unplug happens concurrently with
-rmmod? Seems like it'd be better to identify hardware failures as such,
-and just skip talking to HW. Also, for interfaces that support unplug
-well (like USB), shouldn't you be able to get hotplug info from the
-driver core, instead of having to guess the inverse of that ("this was
-not a hotplug") from static variables like that?
-
-> This logic is useful when user just unloads and loads the driver.
-> Firmware download will be skipped in this case, as it's already
-> running. SHUTDOWN command sent during unload has cleared firmware's
-> state. 
-
-Why is that useful?
-
-> 'user_rmmod' flag doesn't create problem for supporting multiple
-> devices. The flag is true during module unload OR reboot. It's
-> applicable for all devices.
-> 
-> > and the work structs (and corresponding
-> > 'saved_adapter' and 'iface_flags') used for PCIe function-level reset
-> > and SDIO reset.
-> 
-> We are working on the v3 of this patch series. We will try to get rid
-> of these variables along with global "work_struct" as you suggested.
-
-Good, thanks.
-
-Brian
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index f28e441..5275f2f 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -176,6 +176,47 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ {
+ 	led_trigger_unregister(&rfkill->led_trigger);
+ }
++
++static struct led_trigger rfkill_any_led_trigger;
++
++static void __rfkill_any_led_trigger_event(void)
++{
++	enum led_brightness brightness = LED_OFF;
++	struct rfkill *rfkill;
++
++	list_for_each_entry(rfkill, &rfkill_list, node) {
++		if (!(rfkill->state & RFKILL_BLOCK_ANY)) {
++			brightness = LED_FULL;
++			break;
++		}
++	}
++
++	led_trigger_event(&rfkill_any_led_trigger, brightness);
++}
++
++static void rfkill_any_led_trigger_event(void)
++{
++	mutex_lock(&rfkill_global_mutex);
++	__rfkill_any_led_trigger_event();
++	mutex_unlock(&rfkill_global_mutex);
++}
++
++static void rfkill_any_led_trigger_activate(struct led_classdev *led_cdev)
++{
++	rfkill_any_led_trigger_event();
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	rfkill_any_led_trigger.name = "rfkill-any";
++	rfkill_any_led_trigger.activate = rfkill_any_led_trigger_activate;
++	return led_trigger_register(&rfkill_any_led_trigger);
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++	led_trigger_unregister(&rfkill_any_led_trigger);
++}
+ #else
+ static void rfkill_led_trigger_event(struct rfkill *rfkill)
+ {
+@@ -189,6 +230,19 @@ static inline int rfkill_led_trigger_register(struct rfkill *rfkill)
+ static inline void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ {
+ }
++
++static void rfkill_any_led_trigger_event(void)
++{
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	return 0;
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++}
+ #endif /* CONFIG_RFKILL_LEDS */
+ 
+ static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
+@@ -297,6 +351,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	__rfkill_any_led_trigger_event();
+ 
+ 	if (prev != curr)
+ 		rfkill_event(rfkill);
+@@ -477,6 +532,7 @@ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
+ 
+ 	if (!rfkill->registered)
+ 		return ret;
+@@ -523,6 +579,7 @@ bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
+ 		schedule_work(&rfkill->uevent_work);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
+ 
+ 	return blocked;
+ }
+@@ -572,6 +629,7 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
+ 			schedule_work(&rfkill->uevent_work);
+ 
+ 		rfkill_led_trigger_event(rfkill);
++		rfkill_any_led_trigger_event();
+ 	}
+ }
+ EXPORT_SYMBOL(rfkill_set_states);
+@@ -988,6 +1046,7 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+ #endif
+ 	}
+ 
++	__rfkill_any_led_trigger_event();
+ 	rfkill_send_events(rfkill, RFKILL_OP_ADD);
+ 
+ 	mutex_unlock(&rfkill_global_mutex);
+@@ -1020,6 +1079,7 @@ void rfkill_unregister(struct rfkill *rfkill)
+ 	mutex_lock(&rfkill_global_mutex);
+ 	rfkill_send_events(rfkill, RFKILL_OP_DEL);
+ 	list_del_init(&rfkill->node);
++	__rfkill_any_led_trigger_event();
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	rfkill_led_trigger_unregister(rfkill);
+@@ -1278,8 +1338,18 @@ static int __init rfkill_init(void)
+ 		goto error_input;
+ #endif
+ 
++#ifdef CONFIG_RFKILL_LEDS
++	error = rfkill_any_led_trigger_register();
++	if (error)
++		goto error_led_trigger;
++#endif
++
+ 	return 0;
+ 
++error_led_trigger:
++#ifdef CONFIG_RFKILL_INPUT
++	rfkill_handler_exit();
++#endif
+ error_input:
+ 	misc_deregister(&rfkill_miscdev);
+ error_misc:
+@@ -1291,6 +1361,9 @@ subsys_initcall(rfkill_init);
+ 
+ static void __exit rfkill_exit(void)
+ {
++#ifdef CONFIG_RFKILL_LEDS
++	rfkill_any_led_trigger_unregister();
++#endif
+ #ifdef CONFIG_RFKILL_INPUT
+ 	rfkill_handler_exit();
+ #endif
+-- 
+2.10.2
