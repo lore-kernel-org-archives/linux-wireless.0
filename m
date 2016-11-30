@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35674 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754084AbcK1L02 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:42674 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1757364AbcK3Nye (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 28 Nov 2016 06:26:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <20161128075712.10785-1-jslaby@suse.cz>
-References: <20161128075712.10785-1-jslaby@suse.cz>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 28 Nov 2016 12:26:26 +0100
-Message-ID: <CACna6ry+1DxU+3GfSqfKJSOy6Mw4MRsgE-nu3KDMxk8ktkxS5A@mail.gmail.com> (sfid-20161128_122654_994401_4904AD2B)
-Subject: Re: [PATCH] bcma: add Dell Inspiron 3148
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 30 Nov 2016 08:54:34 -0500
+Message-ID: <1480514067.29540.54.camel@coelho.fi> (sfid-20161130_145459_411120_990043AF)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>, Jes.Sorensen@redhat.com
+Cc: linux-wireless@vger.kernel.org, briselec@gmail.com
+Date: Wed, 30 Nov 2016 15:54:27 +0200
+In-Reply-To: <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
+References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
+         <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not
+ reconnecting
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 November 2016 at 08:57, Jiri Slaby <jslaby@suse.cz> wrote:
-> This is what is in the laptop:
-> 01:00.0 Network controller [0280]: Broadcom Limited BCM43142 802.11b/g/n =
-[14e4:4365] (rev 01)
->         Subsystem: Dell Device [1028:0018]
->         Flags: bus master, fast devsel, latency 0, IRQ 18
->         Memory at b0400000 (64-bit, non-prefetchable) [size=3D32K]
->         Capabilities: [40] Power Management version 3
->         Capabilities: [58] Vendor Specific Information: Len=3D78 <?>
->         Capabilities: [48] MSI: Enable- Count=3D1/1 Maskable- 64bit+
->         Capabilities: [d0] Express Endpoint, MSI 00
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [13c] Virtual Channel
->         Capabilities: [160] Device Serial Number 00-00-9a-ff-ff-f3-40-b8
->         Capabilities: [16c] Power Budgeting <?>
->
-> With the patch, I can see:
-> bcma: bus0: Found chip with id 43142, rev 0x01 and package 0x08
-> bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x28, cl=
-ass 0x0)
-> bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x21, c=
-lass 0x0)
-> bcma: bus0: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x16, class 0x=
-0)
-> bcma: bus0: Core 3 found: UNKNOWN (manuf 0x43B, id 0x368, rev 0x00, class=
- 0x0)
-> bcma: bus0: Bus registered
->
-> The wifi is not currently supported by brcmsmac yet:
-> brcmsmac bcma1:1: mfg 4bf core 812 rev 33 class 0 irq 18
-> brcmsmac: unknown device id 4365
->
-> So don't expect a working wifi from this patch :).
->
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>
-> Cc: <linux-wireless@vger.kernel.org>
+On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
+> Jes.Sorensen@redhat.com writes:
+> 
+> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> > 
+> > Hi,
+> > 
+> > This patch works around the issue with 8192eu and 8723bu devices not
+> > being able to reconnect. It is still not clear why this fails, and
+> > looking at rtlwifi it does issue the command for 8192ee and 8723be
+> > devices.
+> > 
+> > Until we have a better idea of what is going on, I have commented out
+> > the offending code. I prefer not deleting it until we have a better
+> > understanding of why this is causing issues.
+> > 
+> > Credits to Barry Day for tracking down and isolating the issue.
+> > 
+> > Kalle, not sure if this can make it to 4.9, but if it's possible it
+> > would be ideal since this is causing real issues in the field.
+> 
+> For 4.9 this is too late, sorry. I'll queue this to 4.10.
 
-Looks good, thanks.
+You should then CC stable so it gets into 4.9.x when it reaches 4.10.
 
---=20
-Rafa=C5=82
+--
+Luca.
