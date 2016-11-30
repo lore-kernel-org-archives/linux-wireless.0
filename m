@@ -1,182 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:34122 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935747AbcKKWFh (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:55714 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932242AbcK3Ox2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 11 Nov 2016 17:05:37 -0500
-Received: by mail-pg0-f51.google.com with SMTP id x23so14471048pgx.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Nov 2016 14:05:37 -0800 (PST)
-Date: Fri, 11 Nov 2016 14:05:34 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>, rajatja@google.com,
-        dmitry.torokhov@gmail.com
-Subject: Re: [PATCH v2 3/3] mwifiex: Enable WoWLAN for both sdio and pcie
-Message-ID: <20161111220530.GA142669@google.com> (sfid-20161111_230542_021559_5544F083)
-References: <1478862911-15498-1-git-send-email-akarwar@marvell.com>
- <1478862911-15498-3-git-send-email-akarwar@marvell.com>
- <20161111204235.GB111624@google.com>
+        Wed, 30 Nov 2016 09:53:28 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: get rid of global user_rmmod flag
+Date: Wed, 30 Nov 2016 20:22:17 +0530
+Message-ID: <1480517537-9920-2-git-send-email-akarwar@marvell.com> (sfid-20161130_155333_251055_725B5C35)
+In-Reply-To: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161111204235.GB111624@google.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Xinming Hu <huxm@marvell.com>
 
-One correction to my review:
+bus.remove() callback function is called when user removes this module
+from kernel space or ejects the card from the slot. The driver handles
+these 2 cases differently. Few commands (FUNC_SHUTDOWN etc.) are sent to
+the firmware only for module unload case.
 
-On Fri, Nov 11, 2016 at 12:42:36PM -0800, Brian Norris wrote:
-> On Fri, Nov 11, 2016 at 04:45:11PM +0530, Amitkumar Karwar wrote:
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> > @@ -1552,14 +1552,55 @@ void mwifiex_do_flr(struct mwifiex_adapter *adapter, bool prepare)
-> >  }
-> >  EXPORT_SYMBOL_GPL(mwifiex_do_flr);
-> >  
-> > +static irqreturn_t mwifiex_irq_wakeup_handler(int irq, void *priv)
-> > +{
-> > +	struct mwifiex_adapter *adapter = priv;
-> > +
-> > +	if (adapter->irq_wakeup >= 0) {
-> > +		dev_dbg(adapter->dev, "%s: wake by wifi", __func__);
-> > +		adapter->wake_by_wifi = true;
-> 
-> This flag is unecessary and buggy. IIUC, you're trying to avoid calling
-> disable_irq() in resume(), if you've called it here?
-> 
-> > +		disable_irq_nosync(irq);
-> 
-> ...but this is unnecessary, I think, unless you're trying to make up for
-> buggy wakeup interrupts that keep firing? See my suggestion below.
+The variable 'user_rmmod' is used to distinguish between these two
+scenarios.
 
-I think I figured out some of the logic here, and my suggestion was
-somewhat wrong. This 'wake_by_wifi' flag seems to be used here to assist
-with the fact that we're requesting a level-triggered interrupt, but
-the card doesn't deassert the interrupt until much later -- when we
-finish the wakeup handshake.
+This patch checks hardware status and get rid of global variable
+user_rmmod.
 
-So I guess it is necessary (or at least, expedient) to disable the
-interrupt here.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 23 ++++++++++++-----------
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 27 ++++-----------------------
+ drivers/net/wireless/marvell/mwifiex/usb.c  |  6 +-----
+ 3 files changed, 17 insertions(+), 39 deletions(-)
 
-> > +	}
-> > +
-> > +	/* Notify PM core we are wakeup source */
-> > +	pm_wakeup_event(adapter->dev, 0);
-> > +
-> > +	return IRQ_HANDLED;
-> > +}
-> > +
-> >  static void mwifiex_probe_of(struct mwifiex_adapter *adapter)
-> >  {
-> > +	int ret;
-> >  	struct device *dev = adapter->dev;
-> >  
-> >  	if (!dev->of_node)
-> >  		return;
-> >  
-> >  	adapter->dt_node = dev->of_node;
-> > +	adapter->irq_wakeup = irq_of_parse_and_map(adapter->dt_node, 0);
-> > +	if (!adapter->irq_wakeup) {
-> > +		dev_info(dev, "fail to parse irq_wakeup from device tree\n");
-> > +		return;
-> > +	}
-> > +
-> > +	ret = devm_request_irq(dev, adapter->irq_wakeup,
-> > +			       mwifiex_irq_wakeup_handler, IRQF_TRIGGER_LOW,
-> > +			       "wifi_wake", adapter);
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to request irq_wakeup %d (%d)\n",
-> > +			adapter->irq_wakeup, ret);
-> > +		goto err_exit;
-> > +	}
-> > +
-> > +	disable_irq(adapter->irq_wakeup);
-> > +	if (device_init_wakeup(dev, true)) {
-> > +		dev_err(dev, "fail to init wakeup for mwifiex\n");
-> > +		goto err_exit;
-> > +	}
-> > +	return;
-> > +
-> > +err_exit:
-> > +	adapter->irq_wakeup = 0;
-> >  }
-> >  
-> >  /*
-> > diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> > index 0c07434..11abc49 100644
-> > --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> > +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> > @@ -1011,6 +1011,10 @@ struct mwifiex_adapter {
-> >  	bool usb_mc_setup;
-> >  	struct cfg80211_wowlan_nd_info *nd_info;
-> >  	struct ieee80211_regdomain *regd;
-> > +
-> > +	/* Wake-on-WLAN (WoWLAN) */
-> > +	int irq_wakeup;
-> > +	bool wake_by_wifi;
-> >  };
-> >  
-> >  void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-> > @@ -1410,6 +1414,27 @@ static inline u8 mwifiex_is_tdls_link_setup(u8 status)
-> >  	return false;
-> >  }
-> >  
-> > +/* Disable platform specific wakeup interrupt */
-> > +static inline void mwifiex_disable_wake(struct mwifiex_adapter *adapter)
-> > +{
-> > +	if (adapter->irq_wakeup >= 0) {
-> > +		disable_irq_wake(adapter->irq_wakeup);
-> > +		if (!adapter->wake_by_wifi)
-> 
-> You're depending on the wake IRQ handler to set this flag, so you don't
-> disable the IRQ twice (the calls nest). But what if the IRQ is being
-> serviced concurrently with this? Then you'll double-disable the IRQ.
-> 
-> I believe you can just remove the disable_irq_nosync() from the handler,
-> kill the above flag, and just unconditionally disable the IRQ.
-
-So my suggestion here was wrong; we shouldn't completely kill the check
-for ->wake_by_wifi I don't think, but we *should* wait for the interrupt
-handler to complete before checking the flag. i.e., synchronize_irq():
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/util.c b/drivers/net/wireless/marvell/mwifiex/util.c
-index 4063086ab5b8..e9446eeafb9d 100644
---- a/drivers/net/wireless/marvell/mwifiex/util.c
-+++ b/drivers/net/wireless/marvell/mwifiex/util.c
-@@ -841,6 +841,11 @@ void mwifiex_disable_wake(struct mwifiex_plt_wake_cfg *wake_cfg)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 7aa16a5..079bb09 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -31,8 +31,6 @@
+ #define PCIE_VERSION	"1.0"
+ #define DRV_NAME        "Marvell mwifiex PCIe"
+ 
+-static u8 user_rmmod;
+-
+ static struct mwifiex_if_ops pcie_ops;
+ 
+ static const struct of_device_id mwifiex_pcie_of_match_table[] = {
+@@ -284,6 +282,9 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 	struct pcie_service_card *card;
+ 	struct mwifiex_adapter *adapter;
+ 	struct mwifiex_private *priv;
++	const struct mwifiex_pcie_card_reg *reg;
++	u32 fw_status;
++	int ret;
+ 
+ 	card = pci_get_drvdata(pdev);
+ 
+@@ -295,7 +296,11 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 
+ 	cancel_work_sync(&card->work);
+ 
+-	if (user_rmmod && !adapter->mfg_mode) {
++	reg = card->pcie.reg;
++	if (reg)
++		ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
++
++	if (fw_status == FIRMWARE_READY_PCIE && !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+@@ -310,7 +315,6 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+ 
+ static void mwifiex_pcie_shutdown(struct pci_dev *pdev)
  {
- 	if (wake_cfg && wake_cfg->irq_wifi >= 0) {
- 		disable_irq_wake(wake_cfg->irq_wifi);
-+		/*
-+		 * Disable the wake IRQ only if it didn't already fire (and
-+		 * disable itself).
-+		 */
-+		synchronize_irq(wake_cfg->irq_wifi);
- 		if (!wake_cfg->wake_by_wifi)
- 			disable_irq(wake_cfg->irq_wifi);
- 	}
-
-I'd appreciate if you bugfix this, either before or after this patch.
-
-Brian
-
-> > +			disable_irq(adapter->irq_wakeup);
-> > +	}
-> > +}
-> > +
-> > +/* Enable platform specific wakeup interrupt */
-> > +static inline void mwifiex_enable_wake(struct mwifiex_adapter *adapter)
-> > +{
-> > +	/* Enable platform specific wakeup interrupt */
-> > +	if (adapter->irq_wakeup >= 0) {
-> > +		adapter->wake_by_wifi = false;
-> > +		enable_irq(adapter->irq_wakeup);
-> > +		enable_irq_wake(adapter->irq_wakeup);
-> > +	}
-> > +}
-> > +
-> >  int mwifiex_init_shutdown_fw(struct mwifiex_private *priv,
-> >  			     u32 func_init_shutdown);
-> >  int mwifiex_add_card(void *, struct semaphore *, struct mwifiex_if_ops *, u8,
+-	user_rmmod = 1;
+ 	mwifiex_pcie_remove(pdev);
+ 
+ 	return;
+@@ -2864,8 +2868,11 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
+ 	struct pcie_service_card *card = adapter->card;
+ 	struct pci_dev *pdev = card->dev;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
++	int ret;
++	u32 fw_status;
+ 
+-	if (user_rmmod) {
++	ret = mwifiex_read_reg(adapter, reg->fw_status, &fw_status);
++	if (fw_status == FIRMWARE_READY_PCIE) {
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "Clearing driver ready signature\n");
+ 		if (mwifiex_write_reg(adapter, reg->drv_rdy, 0x00000000))
+@@ -3177,9 +3184,6 @@ static int mwifiex_pcie_init_module(void)
+ 
+ 	pr_debug("Marvell PCIe Driver\n");
+ 
+-	/* Clear the flag in case user removes the card. */
+-	user_rmmod = 0;
+-
+ 	ret = pci_register_driver(&mwifiex_pcie);
+ 	if (ret)
+ 		pr_err("Driver register failed!\n");
+@@ -3200,9 +3204,6 @@ static int mwifiex_pcie_init_module(void)
+  */
+ static void mwifiex_pcie_cleanup_module(void)
+ {
+-	/* Set the flag as user is removing this module. */
+-	user_rmmod = 1;
+-
+ 	pci_unregister_driver(&mwifiex_pcie);
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 6fcaf26..9a16e61 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -31,21 +31,6 @@
+ 
+ #define SDIO_VERSION	"1.0"
+ 
+-/* The mwifiex_sdio_remove() callback function is called when
+- * user removes this module from kernel space or ejects
+- * the card from the slot. The driver handles these 2 cases
+- * differently.
+- * If the user is removing the module, the few commands (FUNC_SHUTDOWN,
+- * HS_CANCEL etc.) are sent to the firmware.
+- * If the card is removed, there is no need to send these command.
+- *
+- * The variable 'user_rmmod' is used to distinguish these two
+- * scenarios. This flag is initialized as FALSE in case the card
+- * is removed, and will be set to TRUE for module removal when
+- * module_exit function is called.
+- */
+-static u8 user_rmmod;
+-
+ static void mwifiex_sdio_work(struct work_struct *work);
+ static DECLARE_WORK(sdio_work, mwifiex_sdio_work);
+ 
+@@ -391,6 +376,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+ 	struct mwifiex_private *priv;
++	int ret = 0;
++	u16 firmware_stat;
+ 
+ 	card = sdio_get_drvdata(func);
+ 	if (!card)
+@@ -404,7 +391,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ 
+-	if (user_rmmod && !adapter->mfg_mode) {
++	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
++	if (firmware_stat == FIRMWARE_READY_SDIO && !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+@@ -2718,9 +2706,6 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ static int
+ mwifiex_sdio_init_module(void)
+ {
+-	/* Clear the flag in case user removes the card. */
+-	user_rmmod = 0;
+-
+ 	return sdio_register_driver(&mwifiex_sdio);
+ }
+ 
+@@ -2736,10 +2721,6 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ static void
+ mwifiex_sdio_cleanup_module(void)
+ {
+-	/* Set the flag as user is removing this module. */
+-	user_rmmod = 1;
+-	cancel_work_sync(&sdio_work);
+-
+ 	sdio_unregister_driver(&mwifiex_sdio);
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index c563160..53881c4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -22,7 +22,6 @@
+ 
+ #define USB_VERSION	"1.0"
+ 
+-static u8 user_rmmod;
+ static struct mwifiex_if_ops usb_ops;
+ 
+ static struct usb_device_id mwifiex_usb_table[] = {
+@@ -618,7 +617,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
+-	if (user_rmmod && !adapter->mfg_mode) {
++	if (card->udev->state != USB_STATE_NOTATTACHED && !adapter->mfg_mode) {
+ 		mwifiex_deauthenticate_all(adapter);
+ 
+ 		mwifiex_init_shutdown_fw(mwifiex_get_priv(adapter,
+@@ -1230,9 +1229,6 @@ static int mwifiex_usb_init_module(void)
+  */
+ static void mwifiex_usb_cleanup_module(void)
+ {
+-	/* set the flag as user is removing this module */
+-	user_rmmod = 1;
+-
+ 	usb_deregister(&mwifiex_usb_driver);
+ }
+ 
+-- 
+1.9.1
