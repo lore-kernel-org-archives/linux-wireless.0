@@ -1,53 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45040 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757695AbcK2P2Q (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:41380 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752099AbcK3Ant (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 29 Nov 2016 10:28:16 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 29 Nov 2016 19:43:49 -0500
+Subject: Re: ath10k: Fix soft lockup during firmware crash/hw-restart
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+        ath10k@lists.infradead.org
+References: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
+Cc: mohammed@codeaurora.org, linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <ecb7e9d7-34c5-4ea8-62a9-b5b96409bb0b@candelatech.com> (sfid-20161130_014353_473963_F2E2B29A)
+Date: Tue, 29 Nov 2016 16:43:48 -0800
 MIME-Version: 1.0
-Subject: Re: [v2, 1/7] mwifiex: Removed unused mwifiex_private* 'priv' variable
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <fa8a77df4638cf21720d8c5094afb83475947843.1479950323.git.kirtika@google.com>
-References: <fa8a77df4638cf21720d8c5094afb83475947843.1479950323.git.kirtika@google.com>
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Zhaoyang Liu <liuzy@marvell.com>,
-        Bing Zhao <bzhao@marvell.com>, Xinming Hu <huxm@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Message-Id: <20161129152816.14B74612BA@smtp.codeaurora.org> (sfid-20161129_162820_462552_D856DFFB)
-Date: Tue, 29 Nov 2016 15:28:16 +0000 (UTC)
+In-Reply-To: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kirtika Ruchandani <kirtika.ruchandani@gmail.com> wrote:
-> Commit bec568ff5107 removed the last remaining usage of struct
-> mwifiex_private* priv in mwifiex_fw_dpc(), by removing the call to
-> mwifiex_del_virtual_intf().
-> Compiling mwifiex/ with W=1 gives the following warning, fix it.
-> mwifiex/main.c: In function ‘mwifiex_fw_dpc’:
-> mwifiex/main.c:520:26: warning: variable ‘priv’ set but not used [-Wunused-but-set-variable]
-> 
-> Fixes: bec568ff5107 ("mwifiex: failure path handling in mwifiex_add_virtual_intf()")
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+I have not seen this hang since adding this patch, so
+hopefully it has resolved the problem.
 
-7 patches applied to wireless-drivers-next.git, thanks.
+Thanks,
+Ben
 
-70d740598713 mwifiex: Removed unused mwifiex_private* 'priv' variable
-8ac9134161d9 mwifiex: Remove unused 'chan_num' variable
-2c2bcabf02e1 mwifiex: Remove unused 'sta_ptr' variable
-60261b266a84 mwifiex: Remove unused 'adapter'variable
-e9f1db8b6859 mwifiex: Remove unused 'pm_flag' variable
-67dd2a754906 mwifiex: Removed unused 'pkt_type' variable
-4133828c76c3 mwifiex: Remove unused 'bcd_usb' variable
+On 11/29/2016 06:46 AM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> During firmware crash (or) user requested manual restart
+> the system gets into a soft lock up state because of the
+> below root cause.
+>
+> During user requested hardware restart / firmware crash
+> the system goes into a soft lockup state as 'napi_synchronize'
+> is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
+> bit) and it sleeps into infinite loop as it waits for
+> 'NAPI_STATE_SCHED' to be cleared. This condition is hit because
+> 'ath10k_hif_stop' is called twice as below (resulting in calling
+> 'napi_synchronize' after 'napi_disable')
+>
+> 'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
+> -> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
+> 'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
+>
+> Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
+> as it makes more sense before informing mac80211 to restart h/w
+> Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+> [thanks to Kalle and Michal for their inputs]
+>
+>  drivers/net/wireless/ath/ath10k/core.c | 2 +-
+>  drivers/net/wireless/ath/ath10k/mac.c  | 1 -
+>  2 files changed, 1 insertion(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 7005e2a..5bc6847 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1536,7 +1536,7 @@ static void ath10k_core_restart(struct work_struct *work)
+>  	switch (ar->state) {
+>  	case ATH10K_STATE_ON:
+>  		ar->state = ATH10K_STATE_RESTARTING;
+> -		ath10k_hif_stop(ar);
+> +		ath10k_halt(ar);
+>  		ath10k_scan_finish(ar);
+>  		ieee80211_restart_hw(ar->hw);
+>  		break;
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 717b2fa..481842b 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4449,7 +4449,6 @@ static int ath10k_start(struct ieee80211_hw *hw)
+>  		ar->state = ATH10K_STATE_ON;
+>  		break;
+>  	case ATH10K_STATE_RESTARTING:
+> -		ath10k_halt(ar);
+>  		ar->state = ATH10K_STATE_RESTARTED;
+>  		break;
+>  	case ATH10K_STATE_ON:
+>
+
 
 -- 
-https://patchwork.kernel.org/patch/9444651/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
