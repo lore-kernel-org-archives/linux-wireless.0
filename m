@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60222 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46714 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752651AbcKRVoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 18 Nov 2016 16:44:30 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/7] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
-Date: Fri, 18 Nov 2016 16:44:22 -0500
-Message-Id: <1479505468-29383-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20161118_224442_662023_DE872AFE)
-In-Reply-To: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1479505468-29383-1-git-send-email-Jes.Sorensen@redhat.com>
+        id S1756946AbcK3PcF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 30 Nov 2016 10:32:05 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        briselec@gmail.com
+Subject: Re: [PATCH 0/1] rtl8xxxu: Workaround for 8192eu/8723bu not reconnecting
+References: <20161129235902.11882-1-Jes.Sorensen@redhat.com>
+        <87mvghtkwd.fsf@kamboji.qca.qualcomm.com>
+        <1480514067.29540.54.camel@coelho.fi>
+Date: Wed, 30 Nov 2016 10:32:03 -0500
+In-Reply-To: <1480514067.29540.54.camel@coelho.fi> (Luca Coelho's message of
+        "Wed, 30 Nov 2016 15:54:27 +0200")
+Message-ID: <wrfja8ch6l1o.fsf@redhat.com> (sfid-20161130_163207_983705_906FCEAF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Luca Coelho <luca@coelho.fi> writes:
+> On Wed, 2016-11-30 at 10:46 +0200, Kalle Valo wrote:
+>> Jes.Sorensen@redhat.com writes:
+>> 
+>> > From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> > 
+>> > Hi,
+>> > 
+>> > This patch works around the issue with 8192eu and 8723bu devices not
+>> > being able to reconnect. It is still not clear why this fails, and
+>> > looking at rtlwifi it does issue the command for 8192ee and 8723be
+>> > devices.
+>> > 
+>> > Until we have a better idea of what is going on, I have commented out
+>> > the offending code. I prefer not deleting it until we have a better
+>> > understanding of why this is causing issues.
+>> > 
+>> > Credits to Barry Day for tracking down and isolating the issue.
+>> > 
+>> > Kalle, not sure if this can make it to 4.9, but if it's possible it
+>> > would be ideal since this is causing real issues in the field.
+>> 
+>> For 4.9 this is too late, sorry. I'll queue this to 4.10.
+>
+> You should then CC stable so it gets into 4.9.x when it reaches 4.10.
 
-A device running without RX package aggregation could return more data
-in the USB packet than the actual network packet. In this case the
-could would clone the skb but then determine that that there was no
-packet to handle and exit without freeing the cloned skb first.
+Yeah good idea - Kalle do you want me to repost it with the CC line or
+are you happy to add it?
 
-This has so far only been observed with 8188eu devices, but could
-affect others.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index b2d7f6e..a96ff17 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5197,7 +5197,12 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- 		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
- 				     sizeof(struct rtl8xxxu_rxdesc16), 128);
- 
--		if (pkt_cnt > 1)
-+		/*
-+		 * Only clone the skb if there's enough data at the end to
-+		 * at least cover the rx descriptor
-+		 */
-+		if (pkt_cnt > 1 &&
-+		    urb_len > (pkt_offset + sizeof(struct rtl8xxxu_rxdesc16)))
- 			next_skb = skb_clone(skb, GFP_ATOMIC);
- 
- 		rx_status = IEEE80211_SKB_RXCB(skb);
--- 
-2.7.4
+Cheers,
+Jes
