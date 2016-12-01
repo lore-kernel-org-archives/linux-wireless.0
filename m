@@ -1,35 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55726 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751245AbcLTHrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 02:47:12 -0500
-Message-ID: <1482220026.16460.0.camel@sipsolutions.net> (sfid-20161220_084823_294700_E570CC91)
-Subject: Re: "rfkill: Add rfkill-any LED trigger" causes deadlock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>
-Cc: =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
-         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
-        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
-        davem@davemloft.net, netdev@vger.kernel.org
-Date: Tue, 20 Dec 2016 08:47:06 +0100
-In-Reply-To: <20161219140115.GA18194@kmp-mobile.hq.kempniu.pl> (sfid-20161219_150121_414538_6E38332A)
-References: <20161216163707.GA2629@gmail.com>
-         <CACpa5=_chGuU3zVcVR3nkNySwz1cGAQTs39v+BjwcDNSvOqhTw@mail.gmail.com>
-         <1482137772.31461.1.camel@sipsolutions.net>
-         <20161219140115.GA18194@kmp-mobile.hq.kempniu.pl>
-         (sfid-20161219_150121_414538_6E38332A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44265 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751148AbcLALSR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 06:18:17 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wireless: ath: ath9k: constify ath_bus_ops structure
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1480266206-26732-1-git-send-email-bhumirks@gmail.com>
+References: <1480266206-26732-1-git-send-email-bhumirks@gmail.com>
+To: Bhumika Goyal <bhumirks@gmail.com>
+CC: <julia.lawall@lip6.fr>, <ath9k-devel@qca.qualcomm.com>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <ath9k-devel@lists.ath9k.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Bhumika Goyal <bhumirks@gmail.com>
+Message-ID: <3afc412c6871406cb9f952c6a6f5c038@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121841_373137_EA549B3A)
+Date: Thu, 1 Dec 2016 12:18:07 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Bhumika Goyal <bhumirks@gmail.com> wrote:
+> Declare the structure ath_bus_ops as const as it is only passed as an
+> argument to the function ath9k_init_device. This argument is of type
+> const struct ath_bus_ops *, so ath_bus_ops structures with this property
+> can be declared as const.
+> Done using Coccinelle:
+> @r1 disable optional_qualifier @
+> identifier i;
+> position p;
+> @@
+> static struct ath_bus_ops i@p = {...};
+> 
+> @ok1@
+> identifier r1.i;
+> position p;
+> expression e1,e2;
+> @@
+> ath9k_init_device(e1,e2,&i@p)
+> 
+> @bad@
+> position p!={r1.p,ok1.p};
+> identifier r1.i;
+> @@
+> i@p
+> 
+> @depends on !bad disable optional_qualifier@
+> identifier r1.i;
+> @@
+> static
+> +const
+> struct ath_bus_ops i={...};
+> 
+> @depends on !bad disable optional_qualifier@
+> identifier r1.i;
+> @@
+> +const
+> struct ath_bus_ops i;
+> 
+> File size before:
+>    text	   data	    bss	    dec	    hex	filename
+>    1295	    232	      0	   1527	    5f7	ath/ath9k/ahb.o
+> 
+> File size after:
+>    text	   data	    bss	    dec	    hex	filename
+>    1359	    176	      0	   1535	    5ff	ath/ath9k/ahb.o
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-> Just to ensure things get cleaned up properly, as of now it looks
-> like you only reverted patch 2/2 of my v2 and Arnd's fix to patch
-> 1/2, not patch 1/2 itself.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Oops. I've fixed that up to only revert your patch - I wanted the
-revert in the tree to document the issue, rather than just dropping the
-patch entirely. Thanks for noticing that mistake.
+8ca5a6078d6d ath9k: constify ath_bus_ops structure
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9448851/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
