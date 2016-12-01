@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36440 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755909AbcLAKaF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47902 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755502AbcLAF2p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 05:30:05 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 1 Dec 2016 00:28:45 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2016-11-29
+References: <87r35utjq7.fsf@kamboji.qca.qualcomm.com>
+        <20161130.143444.242053190479060640.davem@davemloft.net>
+Date: Thu, 01 Dec 2016 07:19:19 +0200
+In-Reply-To: <20161130.143444.242053190479060640.davem@davemloft.net> (David
+        Miller's message of "Wed, 30 Nov 2016 14:34:44 -0500 (EST)")
+Message-ID: <87vav4rzu0.fsf@kamboji.qca.qualcomm.com> (sfid-20161201_062912_873417_70FECBCD)
 MIME-Version: 1.0
-Subject: Re: ath9k: feed only active spectral / dfs-detector
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1479812709-18875-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1479812709-18875-1-git-send-email-zefir.kurtisi@neratec.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-CC: <linux-wireless@vger.kernel.org>, <michal.kazior@tieto.com>,
-        <benjamin@sipsolutions.net>
-Message-ID: <b1143d3a8f804030a30e0470e7e02dff@euamsexm01a.eu.qualcomm.com> (sfid-20161201_113016_321429_9133D512)
-Date: Thu, 1 Dec 2016 11:29:54 +0100
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
-> Radar pulse and spectral scan reports are provided by the HW
-> with the ATH9K_RXERR_PHY flag set. Those are forwarded to
-> the dfs-detector and spectral module for further processing.
-> 
-> For some older chips, the pre-conditions checked in those
-> modules are ambiguous, since ATH9K_PHYERR_RADAR is used to
-> tag both types. As a result, spectral frames are fed into
-> the dfs-detector and vice versa.
-> 
-> This could lead to a false radar detection on a non-DFS
-> channel (which is uncritical), but more relevant it causes
-> useless CPU load for processing invalid frames.
-> 
-> This commit ensures that the dfs-detector and spectral
-> collector are only fed when they are active.
-> 
-> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+David Miller <davem@davemloft.net> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Tue, 29 Nov 2016 16:59:44 +0200
+>
+>> if there's still time here's one more patch to 3.9. I think this is good
+>> to have in 3.9 as it fixes an issue where we were printing uninitialised
+>> memory in mwifiex. I had this in wireless-drivers already for some time
+>> as I was waiting for other fixes and nothing serious actually came up.
+>> 
+>> If this doesn't make it to 3.9 that's not a problem, I'll just merge
+>> this to wireless-drivers-next. Let me know what you prefer.
+>
+> Unless you are in a time-machine of some sort I assume you mean "4.9" not
+> "3.9" :-)
+>
+> Pulled, thanks.
 
-87fedb974e0c ath9k: feed only active spectral / dfs-detector
+Hah, I have no idea where I came up with this "3.9" :) I was trying mean
+"4.9" of course, thanks for pulling.
 
 -- 
-https://patchwork.kernel.org/patch/9440817/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
