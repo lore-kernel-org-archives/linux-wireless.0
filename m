@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59162 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752149AbcL0JVt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 04:21:49 -0500
-Date: Tue, 27 Dec 2016 17:17:07 +0800
-From: Peter Xu <peterx@redhat.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Intel Wireless 7260 failed to work
-Message-ID: <20161227091706.GA20895@pxdev.xzpeter.org> (sfid-20161227_102204_794836_E025197E)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36440 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755909AbcLAKaF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 05:30:05 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath9k: feed only active spectral / dfs-detector
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1479812709-18875-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1479812709-18875-1-git-send-email-zefir.kurtisi@neratec.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: <linux-wireless@vger.kernel.org>, <michal.kazior@tieto.com>,
+        <benjamin@sipsolutions.net>
+Message-ID: <b1143d3a8f804030a30e0470e7e02dff@euamsexm01a.eu.qualcomm.com> (sfid-20161201_113016_321429_9133D512)
+Date: Thu, 1 Dec 2016 11:29:54 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Zefir Kurtisi <zefir.kurtisi@neratec.com> wrote:
+> Radar pulse and spectral scan reports are provided by the HW
+> with the ATH9K_RXERR_PHY flag set. Those are forwarded to
+> the dfs-detector and spectral module for further processing.
+> 
+> For some older chips, the pre-conditions checked in those
+> modules are ambiguous, since ATH9K_PHYERR_RADAR is used to
+> tag both types. As a result, spectral frames are fed into
+> the dfs-detector and vice versa.
+> 
+> This could lead to a false radar detection on a non-DFS
+> channel (which is uncritical), but more relevant it causes
+> useless CPU load for processing invalid frames.
+> 
+> This commit ensures that the dfs-detector and spectral
+> collector are only fed when they are active.
+> 
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
-with my wireless card, which is:
+Patch applied to ath-next branch of ath.git, thanks.
 
-  Intel Corporation Wireless 7260 (rev bb)
+87fedb974e0c ath9k: feed only active spectral / dfs-detector
 
-Boot message shows that no suitable firmware found:
+-- 
+https://patchwork.kernel.org/patch/9440817/
 
-    # journalctl -kp3
-    Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
-    Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
-    Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
-    Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
-    Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
-    Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
-further tests have been done yet.
-
-Is this a known issue? Please let me know if anyone wants more info or
-logs, since this error triggers easily (everytime I boot).
-
-Thanks,
-
--- peterx
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
