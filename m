@@ -1,60 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41902 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932375AbcL0Tq7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 14:46:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Peter Xu <peterx@redhat.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: Intel Wireless 7260 failed to work
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
-Date: Tue, 27 Dec 2016 21:46:55 +0200
-In-Reply-To: <20161227091706.GA20895@pxdev.xzpeter.org> (Peter Xu's message of
-        "Tue, 27 Dec 2016 17:17:07 +0800")
-Message-ID: <871swtkvdc.fsf@purkki.adurom.net> (sfid-20161227_204727_813922_D24B673F)
+Received: from mx1.redhat.com ([209.132.183.28]:41348 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933747AbcLAMcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 07:32:46 -0500
+Subject: [PATCH 23/39] Annotate hardware config module parameters in
+ drivers/net/wireless/
+From: David Howells <dhowells@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: gnomes@lxorguk.ukuu.org.uk, minyard@acm.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        dhowells@redhat.com, linux-security-module@vger.kernel.org,
+        keyrings@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 01 Dec 2016 12:32:43 +0000
+Message-ID: <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk> (sfid-20161201_133851_300262_C776F684)
+In-Reply-To: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
+References: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Xu <peterx@redhat.com> writes:
+When the kernel is running in secure boot mode, we lock down the kernel to
+prevent userspace from modifying the running kernel image.  Whilst this
+includes prohibiting access to things like /dev/mem, it must also prevent
+access by means of configuring driver modules in such a way as to cause a
+device to access or modify the kernel image.
 
-> Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
-> with my wireless card, which is:
->
->   Intel Corporation Wireless 7260 (rev bb)
->
-> Boot message shows that no suitable firmware found:
->
->     # journalctl -kp3
->     Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
->     Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
->     Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
->     Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
->     Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
->     Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
->
-> Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
-> further tests have been done yet.
->
-> Is this a known issue? Please let me know if anyone wants more info or
-> logs, since this error triggers easily (everytime I boot).
+To this end, annotate module_param* statements that refer to hardware
+configuration and indicate for future reference what type of parameter they
+specify.  The parameter parser in the core sees this information and can
+skip such parameters with an error message if the kernel is locked down.
+The module initialisation then runs as normal, but just sees whatever the
+default values for those parameters is.
 
-The error message isn't really telling much to the user (hint hint) but
-I suspect this is by design:
+Note that we do still need to do the module initialisation because some
+drivers have viable defaults set in case parameters aren't specified and
+some drivers support automatic configuration (e.g. PNP or PCI) in addition
+to manually coded parameters.
 
-"iwlwifi: remove support for fw older than -17 and -22
+This patch annotates drivers in drivers/net/wireless/.
 
-FW versions older than -17 for 3160 and 7260 and older than -22 for
-newer NICs are not supported anymore.  Don't load these versions
-and remove code that handles them."
+Suggested-by: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Signed-off-by: David Howells <dhowells@redhat.com>
+cc: Kalle Valo <kvalo@codeaurora.org>
+cc: linux-wireless@vger.kernel.org
+cc: netdev@vger.kernel.org
+---
 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4b87e5af638b6056bd6c20b0954d09a5a58633be
+ drivers/net/wireless/cisco/airo.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Adding luca.
-
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 69b826d229c5..53d43c93a284 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -246,8 +246,8 @@ MODULE_DESCRIPTION("Support for Cisco/Aironet 802.11 wireless ethernet cards.  "
+ 		   "Direct support for ISA/PCI/MPI cards and support for PCMCIA when used with airo_cs.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ MODULE_SUPPORTED_DEVICE("Aironet 4500, 4800 and Cisco 340/350");
+-module_param_array(io, int, NULL, 0);
+-module_param_array(irq, int, NULL, 0);
++module_param_hw_array(io, int, ioport, NULL, 0);
++module_param_hw_array(irq, int, irq, NULL, 0);
+ module_param_array(rates, int, NULL, 0);
+ module_param_array(ssids, charp, NULL, 0);
+ module_param(auto_wep, int, 0);
