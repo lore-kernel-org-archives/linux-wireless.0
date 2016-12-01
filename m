@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38163 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932215AbcLGRIM (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41428 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750812AbcLANLK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 12:08:12 -0500
-Received: by mail-wm0-f42.google.com with SMTP id f82so177089964wmf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 09:08:12 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 2/5] ath10k: override CE5 config for QCA9377
-Date: Wed,  7 Dec 2016 18:07:31 +0100
-Message-Id: <1481130454-27244-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20161207_180817_182703_29E11F41)
-In-Reply-To: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
+        Thu, 1 Dec 2016 08:11:10 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "briannorris@google.com" <briannorris@google.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH 2/2] mwifiex: get rid of global user_rmmod flag
+Date: Thu, 1 Dec 2016 13:11:07 +0000
+Message-ID: <f7feb7c9b515451787321fda912188c8@SC-EXCH04.marvell.com> (sfid-20161201_141113_792642_2BBD5F4A)
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+ <1480517537-9920-2-git-send-email-akarwar@marvell.com>
+ <20161130183853.GD31934@dtor-ws>
+In-Reply-To: <20161130183853.GD31934@dtor-ws>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similarly to QCA6174, QCA9377 requires the CE5 configuration to be
-available for other feature. Use the ath10k_pci_override_ce_config()
-for it as well.
+Hi Dmitry,
 
-This is required for TF2.0 firmware. Previous FW revisions were
-working fine without this patch.
+> From: Dmitry Torokhov [mailto:dmitry.torokhov@gmail.com]
+> Sent: Thursday, December 01, 2016 12:09 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> rajatja@google.com; briannorris@google.com; Xinming Hu
+> Subject: Re: [PATCH 2/2] mwifiex: get rid of global user_rmmod flag
+> 
+> Hi Amitkumar,
+> 
+> On Wed, Nov 30, 2016 at 08:22:17PM +0530, Amitkumar Karwar wrote:
+> > @@ -3177,9 +3184,6 @@ static int mwifiex_pcie_init_module(void)
+> >
+> >  	pr_debug("Marvell PCIe Driver\n");
+> >
+> > -	/* Clear the flag in case user removes the card. */
+> > -	user_rmmod = 0;
+> > -
+> >  	ret = pci_register_driver(&mwifiex_pcie);
+> >  	if (ret)
+> >  		pr_err("Driver register failed!\n"); @@ -3200,9 +3204,6 @@
+> static
+> > int mwifiex_pcie_init_module(void)
+> >   */
+> >  static void mwifiex_pcie_cleanup_module(void)  {
+> > -	/* Set the flag as user is removing this module. */
+> > -	user_rmmod = 1;
+> > -
+> >  	pci_unregister_driver(&mwifiex_pcie);
+> >  }
+> 
+> Now that your module init/exit code turns into wrapper around bus
+> driver registration calls, please consider using module_pci_driver(),
+> module_usb_driver(). Note that I do not see module_sdio_driver, but you
+> could still use
+> 
+> module_driver(mwifiex_sdio, sdio_register_driver,
+> sdio_unregister_driver);
+> 
 
-Fixes: a70587b3389a ("ath10k: configure copy engine 5 for HTT messages")
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks for review.
+I just submitted a separate patch which handles this cleanup.
+https://patchwork.kernel.org/patch/9456135/
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 983f65bbb7fb..85367006a80a 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3132,7 +3132,7 @@ int ath10k_pci_setup_resource(struct ath10k *ar)
- 	setup_timer(&ar_pci->rx_post_retry, ath10k_pci_rx_replenish_retry,
- 		    (unsigned long)ar);
- 
--	if (QCA_REV_6174(ar))
-+	if (QCA_REV_6174(ar) || QCA_REV_9377(ar))
- 		ath10k_pci_override_ce_config(ar);
- 
- 	ret = ath10k_pci_alloc_pipes(ar);
--- 
-2.1.2
+Regards,
+Amitkumar
