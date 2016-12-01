@@ -1,33 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43982 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751905AbcLGONX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 09:13:23 -0500
-Subject: Re: [v3,3/3] mt76: add driver code for MT76x2e
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20160905095128.80560-4-nbd@nbd.name>
- <20161004164509.4DC5B61AF5@smtp.codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <ce55fc90-0555-c5d3-d0d1-f2748df0e875@nbd.name> (sfid-20161207_151326_159268_B59D34D5)
-Date: Wed, 7 Dec 2016 15:13:21 +0100
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57581 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754661AbcLALRB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 06:17:01 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20161004164509.4DC5B61AF5@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath10k: wmi-alloc-chunk should use DMA_BIDIRECTIONAL.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1480456828-13735-1-git-send-email-greearb@candelatech.com>
+References: <1480456828-13735-1-git-send-email-greearb@candelatech.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <4391889d7b9f4329a2edfdc29ae42ecc@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121710_354558_29172B88)
+Date: Thu, 1 Dec 2016 12:16:49 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-10-04 18:45, Kalle Valo wrote:
-> Felix Fietkau <nbd@nbd.name> wrote:
->> From: Felix Fietkau <nbd@openwrt.org>
->> 
->> This is a 2x2 PCIe 802.11ac chipset by MediaTek
->> 
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Ben Greear <greearb@candelatech.com> wrote:
+> From: Ben Greear <greearb@candelatech.com>
 > 
-> I already asked this in v2, but what about firmware images? Will they be
-> available from linux-firmware.git?
-Seems that I forgot to submit it to linux-firmware@. I already had
-permission from MediaTek to do so, so I just took sent it out.
+> These memory chunks are often used as 'swap' by the NIC,
+> so it will be both reading and writing to these areas.
+> 
+> This seems to fix errors like this on my x86-64 machine:
+> 
+> kernel: DMAR: DMAR:[DMA Write] Request device [05:00.0] fault addr ff5de000
+>         DMAR:[fault reason 05] PTE Write access is not set
+> 
+> Tested-by: Marek Behun <kabel@blackhole.sk>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index 9fcb249..c68278a 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -4558,7 +4558,7 @@ static int ath10k_wmi_alloc_chunk(struct ath10k *ar, u32 req_id,
+>  	if (!num_units)
+>  		return -ENOMEM;
+>  
+> -	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_TO_DEVICE);
+> +	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_BIDIRECTIONAL);
+>  	if (dma_mapping_error(ar->dev, paddr)) {
+>  		kfree(vaddr);
+>  		return -ENOMEM;
 
-- Felix
+Patch applied to ath-next branch of ath.git, thanks.
+
+43ca92d380a8 ath10k: wmi-alloc-chunk should use DMA_BIDIRECTIONAL
+
+-- 
+https://patchwork.kernel.org/patch/9453173/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
