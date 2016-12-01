@@ -1,66 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31864 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16216 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750927AbcLTIEa (ORCPT
+        with ESMTP id S1750847AbcLALV1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 03:04:30 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: Fix crash during rmmod when probe firmware fails
-Date: Tue, 20 Dec 2016 13:35:35 +0530
-Message-ID: <1482221135-23960-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161220_090529_475166_C1909042)
+        Thu, 1 Dec 2016 06:21:27 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [1/4] wil6210: delay remain on channel when scan is active
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1480333743-7306-2-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1480333743-7306-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Lior David <qca_liord@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <96827ed01af84a799edbc477652ca1c2@euamsexm01a.eu.qualcomm.com> (sfid-20161201_122131_158623_A3F96614)
+Date: Thu, 1 Dec 2016 12:21:20 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Lior David <qca_liord@qca.qualcomm.com>
+> 
+> Currently it was possible to call remain_on_channel(ROC)
+> while scan was active and this caused a crash in the FW.
+> In order to fix this problem and make the behavior
+> consistent with other drivers, queue the ROC in case
+> a scan is active and try it again when scan is done.
+> As part of the fix, clean up some locking issues and
+> return error if scan is called while ROC is active.
+> 
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-This fixes the below crash when ath10k probe firmware fails,
-NAPI polling tries to access a rx ring resource which was never
-allocated, fix this by disabling NAPI right away once the probe
-firmware fails by calling 'ath10k_hif_stop'. Its good to note
-that the error is never propogated to 'ath10k_pci_probe' when
-ath10k_core_register fails, so calling 'ath10k_hif_stop' to cleanup
-PCI related things seems to be ok
+4 patches applied to ath-next branch of ath.git, thanks.
 
-BUG: unable to handle kernel NULL pointer dereference at (null)
-IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
-__ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+bb6743f7c2ff wil6210: delay remain on channel when scan is active
+1db226ffe1c2 wil6210: validate wil_pmc_alloc parameters
+615788200557 wil6210: add debugfs blobs for UCODE code and data
+8ae5d62c7eba wil6210: align to latest auto generated wmi.h
 
-Call Trace:
-
-[<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
-[ath10k_core]
-[<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
-[ath10k_core]
-[<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
-[<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
-[<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
-[<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
-[<ffffffff817863af>] net_rx_action+0x20f/0x370
-
-Reported-by: Ben Greear <greearb@candelatech.com>
-Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index f7ea4de..15bccc9 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2164,6 +2164,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 	ath10k_core_free_firmware_files(ar);
- 
- err_power_down:
-+	ath10k_hif_stop(ar);
- 	ath10k_hif_power_down(ar);
- 
- 	return ret;
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9449393/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
