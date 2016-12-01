@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54813 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751544AbcLLMAU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56992 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbcLAMZU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 07:00:20 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC V3 06/11] brcmfmac: fix uninitialized field in scheduled scan ssid configuration
-Date: Mon, 12 Dec 2016 11:59:52 +0000
-Message-Id: <1481543997-24624-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130022_852424_A1B85C18)
-In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 1 Dec 2016 07:25:20 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/1] rtl8xxxu: Work around issue with 8192eu and 8723bu devices
+ not reconnecting
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161129235902.11882-2-Jes.Sorensen@redhat.com>
+References: <20161129235902.11882-2-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, briselec@gmail.com
+Message-Id: <20161201122445.DBFAD6155C@smtp.codeaurora.org> (sfid-20161201_132524_085121_09D530BE)
+Date: Thu,  1 Dec 2016 12:24:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scheduled scan ssid configuration in firmware has a flags field that
-was not initialized resulting in unexpected behaviour.
+Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> The H2C MEDIA_STATUS_RPT command for some reason causes 8192eu and
+> 8723bu devices not being able to reconnect.
+> 
+> Reported-by: Barry Day <briselec@gmail.com>
+> Cc: <stable@vger.kernel.org> #4.8+
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Fixes: e3bdb7cc0300 ("brcmfmac: fix handling ssids in .sched_scan_start() callback")
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 1 +
- 1 file changed, 1 insertion(+)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index f273cab..9a25e79 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -137,6 +137,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
- 	pfn.wsec = cpu_to_le32(0);
- 	pfn.infra = cpu_to_le32(1);
-+	pfn.flags = 0;
- 	if (active)
- 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
- 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
---
-1.9.1
+c59f13bbead4 rtl8xxxu: Work around issue with 8192eu and 8723bu devices not reconnecting
+
+-- 
+https://patchwork.kernel.org/patch/9453251/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
