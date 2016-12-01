@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:34309 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764273AbcLTQLO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58577 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756421AbcLAKe5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 11:11:14 -0500
-Received: by mail-qt0-f173.google.com with SMTP id n6so181214372qtd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:14 -0800 (PST)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
-        justin@kuvee.com, Geoff Lansberry <glansberry@gmail.com>,
-        Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 4/4] mod of frequency
-Date: Tue, 20 Dec 2016 11:10:50 -0500
-Message-Id: <1482250250-4192-7-git-send-email-glansberry@gmail.com> (sfid-20161220_171443_592008_CF686FA8)
-In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
-References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+        Thu, 1 Dec 2016 05:34:57 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+CC: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+        <mohammed@qti.qualcomm.com>
+Subject: Re: ath10k: Fix soft lockup during firmware crash/hw-restart
+Date: Thu, 1 Dec 2016 10:34:50 +0000
+Message-ID: <87mvggrl87.fsf@kamboji.qca.qualcomm.com> (sfid-20161201_113513_521162_4E3D8077)
+References: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
+        <1a44a3e9-3d67-30a5-0325-a65003ebe1fc@candelatech.com>
+        <20161201060612.GA8611@atheros-ThinkPad-T61>
+In-Reply-To: <20161201060612.GA8611@atheros-ThinkPad-T61> (Mohammed Shafi
+        Shajakhan's message of "Thu, 1 Dec 2016 11:36:31 +0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/nfc/trf7970a.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index e9e93ea..5916737 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2076,10 +2076,10 @@ static int trf7970a_probe(struct spi_device *spi)
- 	of_property_read_u32(np, "clock-frequency", &clk_freq);
- 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
- 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
--	        dev_err(trf->dev,
--	                "clock-frequency (%u Hz) unsupported\n",
--	                clk_freq);
--	        return -EINVAL;
-+		dev_err(trf->dev,
-+			"clock-frequency (%u Hz) unsupported\n",
-+			clk_freq);
-+		return -EINVAL;
- 	}
- 
- 	if (of_property_read_bool(np, "en2-rf-quirk"))
--- 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+> On Tue, Nov 29, 2016 at 10:16:50AM -0800, Ben Greear wrote:
+>> Is this something for stable?  And if so, how far back should it be appl=
+ied?
+>
+> @Kalle,
+>
+> [shafi] kindly suggest. If i am not wrong this is only needed for 4.9
+
+Correct, commit 3c97f5de1f28 went to 4.9-rc1, it was not in 4.8. I'll
+add CC stable to the commit log.
+
+--=20
+Kalle Valo=
