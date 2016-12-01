@@ -1,48 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1618 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751769AbcLMNK6 (ORCPT
+Received: from mail-ua0-f181.google.com ([209.85.217.181]:35017 "EHLO
+        mail-ua0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757299AbcLAO27 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 08:10:58 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v2 11/11] ath10k: Added sdio support
-Date: Tue, 13 Dec 2016 13:10:53 +0000
-Message-ID: <87pokwynxf.fsf@kamboji.qca.qualcomm.com> (sfid-20161213_141102_504952_151ED6EC)
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-        <1479496971-19174-12-git-send-email-erik.stromdahl@gmail.com>
-In-Reply-To: <1479496971-19174-12-git-send-email-erik.stromdahl@gmail.com>
-        (Erik Stromdahl's message of "Fri, 18 Nov 2016 20:22:51 +0100")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 1 Dec 2016 09:28:59 -0500
+Received: by mail-ua0-f181.google.com with SMTP id 12so249405933uas.2
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 06:28:52 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <87r35srm0c.fsf@kamboji.qca.qualcomm.com>
+References: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
+ <a4095c49fe5a42c4a405b1faf6c0f3b7@euamsexm01a.eu.qualcomm.com>
+ <20161118183541.GI28340@tuxbot> <877f7vimyg.fsf@kamboji.qca.qualcomm.com>
+ <878ts0u7z3.fsf@kamboji.qca.qualcomm.com> <874m2otenv.fsf@kamboji.qca.qualcomm.com>
+ <87r35srm0c.fsf@kamboji.qca.qualcomm.com>
+From: Andy Gross <andy.gross@linaro.org>
+Date: Thu, 1 Dec 2016 08:21:51 -0600
+Message-ID: <CAPBZ5Qf8Z7-0Bvsuj88=jY8ZULU9ntCAAOqV_a0OGL4oYSTdWQ@mail.gmail.com> (sfid-20161201_152904_183207_010C10B9)
+Subject: Re: [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
+        "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
+        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
-
-> Initial HIF sdio/mailbox implementation.
+On 1 December 2016 at 04:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Kalle Valo <kvalo@qca.qualcomm.com> writes:
 >
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>>
+>>> "Valo, Kalle" <kvalo@qca.qualcomm.com> writes:
+>>>
+>>>> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+>>>>
+>>>>> On Wed 16 Nov 10:49 PST 2016, Kalle Valo wrote:
+>>>>>
+>>>>>> Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
+>>>>>> > The correct include file for getting errno constants and ERR_PTR() is
+>>>>>> > linux/err.h, rather than linux/errno.h, so fix the include.
+>>>>>> >
+>>>>>> > Fixes: e8b123e60084 ("soc: qcom: smem_state: Add stubs for disabled smem_state")
+>>>>>> > Acked-by: Andy Gross <andy.gross@linaro.org>
+>>>>>> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>>>>>>
+>>>>>> For some reason this fails to compile now. Can you take a look, please?
+>>>>>>
+>>>>>> ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn36xx.ko] undefined!
+>>>>>> make[1]: *** [__modpost] Error 1
+>>>>>> make: *** [modules] Error 2
+>>>>>>
+>>>>>> 5 patches set to Changes Requested.
+>>>>>>
+>>>>>> 9429045 [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
+>>>>>> 9429047 [v5,2/5] wcn36xx: Transition driver to SMD client
+>>>>>
+>>>>> This patch was updated with the necessary depends in Kconfig to catch
+>>>>> this exact issue and when I pull in your .config (which has QCOM_SMD=n,
+>>>>> QCOM_WCNSS_CTRL=n and WCN36XX=y) I can build this just fine.
+>>>>>
+>>>>> I've tested the various combinations and it seems to work fine. Do you
+>>>>> have any other patches in your tree?
+>>>>
+>>>> This was with the pending branch of my ath.git tree. There are other
+>>>> wireless patches (ath10k etc) but I would guess they don't affect here.
+>>>>
+>>>>> Any stale objects?
+>>>>
+>>>> Not sure what you mean with this question, but I didn't run 'make clean'
+>>>> if that's what you are asking.
+>>>>
+>>>>> Would you mind retesting this, before I invest more time in trying to
+>>>>> reproduce the issue you're seeing?
+>>>>
+>>>> Sure, I'll take a look but that might take few days.
+>>>
+>>> I didn't find enough time to look at this in detail. I applied this to
+>>> my ath.git pending branch, let's see what the kbuild bot finds.
+>>
+>> It found the same problem. Interestingly I'm also building x86 with 32
+>> bit, maybe it's related?
+>>
+>> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git pending
+>> head:   1ea16a1c457939b4564643f7637d5cc639a8d3b7
+>> commit: 5eb09c672b01460804fd49b1c9cc7d1072a102f0 [96/99] wcn36xx: Transition driver to SMD client
+>> config: i386-allmodconfig (attached as .config)
+>> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+>> reproduce:
+>>         git checkout 5eb09c672b01460804fd49b1c9cc7d1072a102f0
+>>         # save the attached .config to linux build tree
+>>         make ARCH=i386
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>>>> ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn36xx.ko] undefined!
+>
+> Bjorn mentioned me on IRC that this is because of a missing commit in my
+> tree:
+>
+> daa6e41ce2b5 soc: qcom: wcnss_ctrl: Stub wcnss_ctrl API
+>
+> When I pull the tag below (which contains the above commit) wcn36xx
+> builds fine for me:
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/agross/linux.git tags/qcom-drivers-for-4.10
+>
+> Andy, is it ok if I pull your tag also to my ath.git tree to solve the
+> wcn36xx build problem? My trees go to Linus via net-next and I don't
+> know when exactly Dave would send a pull request to Linus, before or
+> after the arm trees, but as the tag seems to contain only few patches I
+> hope it doesn't matter.
 
-While testing this I noticed few new warnings:
+The qcom-drivers-for-4.10 tag was already merged into arm-soc.  But
+having you pull it as well won't cause issues so long as you are using
+the tag (which you are).  I don't see any issues with this approach.
 
-drivers/net/wireless/ath/ath10k/sdio.c: In function ath10k_sdio_probe:
-drivers/net/wireless/ath/ath10k/sdio.c:1723:6: warning: 'ret' may be used u=
-ninitialized in this function [-Wuninitialized]
-drivers/net/wireless/ath/ath10k/sdio.c:375:5: warning: symbol 'ath10k_sdio_=
-mbox_rxmsg_pending_handler' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/sdio.c:1018:5: warning: symbol 'ath10k_sdio=
-_hif_tx_sg' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/sdio.c:1415:5: warning: symbol 'ath10k_sdio=
-_hif_exchange_bmi_msg' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/sdio.c:1555:5: warning: symbol 'ath10k_sdio=
-_hif_map_service_to_pipe' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/sdio.c:1635:6: warning: symbol 'ath10k_sdio=
-_hif_get_default_pipe' was not declared. Should it be static?
-drivers/net/wireless/ath/ath10k/htc.c:265: line over 90 characters
-drivers/net/wireless/ath/ath10k/htc.c:355: line over 90 characters
-
---=20
-Kalle Valo=
+Andy
