@@ -1,119 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35972 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752674AbcLLUGQ (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34320 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933945AbcLAUII (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 15:06:16 -0500
+        Thu, 1 Dec 2016 15:08:08 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g23so36000380wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 12:08:08 -0800 (PST)
+Date: Thu, 1 Dec 2016 21:08:04 +0100
+From: =?utf-8?B?TWljaGHFgiBLxJlwaWXFhA==?= <kernel@kempniu.pl>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] net: rfkill: Add rfkill-any LED trigger
+Message-ID: <20161201200804.GA3872@kmp-mobile.hq.kempniu.pl> (sfid-20161201_210833_386801_EC27D316)
+References: <20161130120317.11851-2-kernel@kempniu.pl>
+ <201612020131.aDbI7Mq9%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <871sxza9al.fsf@kamboji.qca.qualcomm.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
- <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
- <87insxg0yc.fsf@kamboji.qca.qualcomm.com> <871sxza9al.fsf@kamboji.qca.qualcomm.com>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Mon, 12 Dec 2016 21:05:53 +0100
-Message-ID: <CAFBinCC6JWBhZwma=66fBi3_to2SaHOMNDQS23jHNhcc+RUcYQ@mail.gmail.com> (sfid-20161212_210621_273960_4AF30FFD)
-Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "chunkeey@googlemail.com" <chunkeey@googlemail.com>,
-        "nbd@nbd.name" <nbd@nbd.name>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <201612020131.aDbI7Mq9%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+> Hi Michał,
+> 
+> [auto build test ERROR on mac80211-next/master]
+> [also build test ERROR on v4.9-rc7 next-20161201]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Micha-K-pie/net-rfkill-Cleanup-error-handling-in-rfkill_init/20161202-002119
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+> config: i386-randconfig-x004-201648 (attached as .config)
+> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    net/rfkill/core.c: In function 'rfkill_set_block':
+> >> net/rfkill/core.c:354:2: error: implicit declaration of function '__rfkill_any_led_trigger_event' [-Werror=implicit-function-declaration]
+>      __rfkill_any_led_trigger_event();
+>      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    net/rfkill/core.c: In function 'rfkill_init':
+>    net/rfkill/core.c:1349:1: warning: label 'error_led_trigger' defined but not used [-Wunused-label]
+>     error_led_trigger:
+>     ^~~~~~~~~~~~~~~~~
+>    At top level:
+>    net/rfkill/core.c:243:13: warning: 'rfkill_any_led_trigger_unregister' defined but not used [-Wunused-function]
+>     static void rfkill_any_led_trigger_unregister(void)
+>                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    net/rfkill/core.c:238:12: warning: 'rfkill_any_led_trigger_register' defined but not used [-Wunused-function]
+>     static int rfkill_any_led_trigger_register(void)
+>                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
+> 
+> vim +/__rfkill_any_led_trigger_event +354 net/rfkill/core.c
+> 
+>    348		rfkill->state &= ~RFKILL_BLOCK_SW_SETCALL;
+>    349		rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
+>    350		curr = rfkill->state & RFKILL_BLOCK_SW;
+>    351		spin_unlock_irqrestore(&rfkill->lock, flags);
+>    352	
+>    353		rfkill_led_trigger_event(rfkill);
+>  > 354		__rfkill_any_led_trigger_event();
+>    355	
+>    356		if (prev != curr)
+>    357			rfkill_event(rfkill);
 
-On Fri, Nov 25, 2016 at 4:06 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
->>
->>> There are two types of swapping the EEPROM data in the ath9k driver.
->>> Before this series one type of swapping could not be used without the
->>> other.
->>>
->>> The first type of swapping looks at the "magic bytes" at the start of
->>> the EEPROM data and performs swab16 on the EEPROM contents if needed.
->>> The second type of swapping is EEPROM format specific and swaps
->>> specific fields within the EEPROM itself (swab16, swab32 - depends on
->>> the EEPROM format).
->>>
->>> With this series the second part now looks at the EEPMISC register
->>> inside the EEPROM, which uses a bit to indicate if the EEPROM data
->>> is Big Endian (this is also done by the FreeBSD kernel).
->>> This has a nice advantage: currently there are some out-of-tree hacks
->>> (in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
->>> Big Endian system (= no swab16 is performed) but the EEPROM itself
->>> indicates that it's data is Little Endian. Until now the out-of-tree
->>> code simply did a swab16 before passing the data to ath9k, so ath9k
->>> first did the swab16 - this also enabled the format specific swapping.
->>> These out-of-tree hacks are still working with the new logic, but it
->>> is recommended to remove them. This implementation is based on a
->>> discussion with Arnd Bergmann who raised concerns about the
->>> robustness and portability of the swapping logic in the original OF
->>> support patch review, see [0].
->>>
->>> After a second round of patches (= v1 of this series) neither Arnd
->>> Bergmann nor I were really happy with the complexity of the EEPROM
->>> swapping logic. Based on a discussion (see [1] and [2]) we decided
->>> that ath9k should use a defined format (specifying the endianness
->>> of the data - I went with __le16 and __le32) when accessing the
->>> EEPROM fields. A benefit of this is that we enable the EEPMISC based
->>> swapping logic by default, just like the FreeBSD driver, see [3]. On
->>> the devices which I have tested (see below) ath9k now works without
->>> having to specify the "endian_check" field in ath9k_platform_data (or
->>> a similar logic which could provide this via devicetree) as ath9k now
->>> detects the endianness automatically. Only EEPROMs which are mangled
->>> by some out-of-tree code still need the endian_check flag (or one can
->>> simply remove that mangling from the out-of-tree code).
->>>
->>> Testing:
->>> - tested by myself on AR9287 with Big Endian EEPROM
->>> - tested by myself on AR9227 with Little Endian EEPROM
->>> - tested by myself on AR9381 (using the ar9003_eeprom implementation,
->>>   which did not suffer from this whole problem)
->>> - how do we proceed with testing? maybe we could keep this in a
->>>   feature-branch and add these patches to LEDE once we have an ACK to
->>>   get more people to test this
->>>
->>> This series depends on my other series (v7):
->>> "add devicetree support to ath9k" - see [4]
->>
->> I think this looks pretty good. If there's a bug somewhere it should be
->> quite easy to fix so I'm not that worried and would be willing to take
->> these as soon as I have applied the dependency series. IIRC your
->> devicetree patches will have at least one more review round so that will
->> take some time still. In the meantime it would be great if LEDE folks
->> could take a look at these and comment (or test).
->
-> So are everyone happy with this? I haven't seen any comments. If I don't
-> here anything I'm planning to take these, most likely for 4.11.
-the patches have been in LEDE for almost two weeks now and I did not
-see any reports of ath9k breakage (footnote below).
+Thanks, these are obviously all valid concerns.  Sorry for being sloppy
+with the ifdefs.  If I get positive feedback on the proposed feature
+itself, all these issues (and the warning pointed out in the other
+message) will be resolved in v2.
 
-It seems that there are a few devices out there where the whole EEPROM
-is swab16'ed which switches the position of the 1-byte fields
-opCapFlags and eepMisc.
-those still work fine with the new code, however I had a second patch
-in LEDE [0] which results in ath9k_platform_data.endian_check NOT
-being set anymore.
-that endian_check flag was used before to swab16 the whole EEPROM, to
-correct the position of the 1-byte fields again.
-Currently we are fixing this in the firmware hotplug script: [1]
-This is definitely not a blocker for this series though (if we want to
-have a devicetree replacement for "ath9k_platform_data.endian_check"
-then I'd work on that within a separate series, but I somewhat
-consider these EEPROMs as "broken" so fixing them in
-userspace/firmware hotplug script is fine for me)
-
-
-Regards,
-Martin
-
-
-[0] https://git.lede-project.org/?p=source.git;a=commitdiff;h=a20616863d32d91163043b6657a63c836bd9c5ba
-[1] https://git.lede-project.org/?p=source.git;a=commitdiff;h=afa37092663d00aa0abf8c61943d9a1b5558b144
+-- 
+Best regards,
+Michał Kępień
