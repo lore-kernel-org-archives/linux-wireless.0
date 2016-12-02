@@ -1,39 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54203 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756176AbcLNTrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:47:12 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
-Subject: [PATCH 03/10] mac80211: minstrel_ht: make att_hist and succ_hist u32 instead of u64
-Date: Wed, 14 Dec 2016 20:46:56 +0100
-Message-Id: <20161214194703.33429-3-nbd@nbd.name> (sfid-20161214_204743_128094_44958F75)
-In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
-References: <20161214194703.33429-1-nbd@nbd.name>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18767 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753026AbcLBV7a (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Dec 2016 16:59:30 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vamsi Krishna <vamsin@qti.qualcomm.com>,
+        Jouni Malinen <jouni@qca.qualcomm.com>
+Subject: [PATCH v2 1/2] nl80211: Use different attrs for BSSID and random MAC addr in scan req
+Date: Fri, 2 Dec 2016 23:59:08 +0200
+Message-ID: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161202_225950_812447_85E3A252)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are only used for debugging purposes and take a very long time to
-overflow. Visibly reduces the size of the per-sta rate control data.
+From: Vamsi Krishna <vamsin@qti.qualcomm.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+NL80211_ATTR_MAC was used to set both the specific BSSID to be scanned
+and the random MAC address to be used when privacy is enabled. When both
+the features are enabled, both the BSSID and the local MAC address were
+getting same value causing Probe Request frames to go with unintended
+DA. Hence, this has been fixed by using a different NL80211_ATTR_BSSID
+attribute to set the specific BSSID (which was the more recent addition
+in cfg80211) for a scan.
+
+Backwards compatibility with old userspace software is maintained to
+some extent by allowing NL80211_ATTR_MAC to be used to set the specific
+BSSID when scanning without enabling random MAC address use.
+
+Scanning with random source MAC address was introduced by commit
+ad2b26abc157 ("cfg80211: allow drivers to support random MAC addresses
+for scan") and the issue was introduced with the addition of the second
+user for the same attribute in commit 818965d39177 ("cfg80211: Allow a
+scan request for a specific BSSID").
+
+Fixes: 818965d39177 ("cfg80211: Allow a scan request for a specific BSSID")
+Signed-off-by: Vamsi Krishna <vamsin@qti.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- net/mac80211/rc80211_minstrel.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/uapi/linux/nl80211.h |  7 ++++++-
+ net/wireless/nl80211.c       | 16 +++++++++++++++-
+ 2 files changed, 21 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index c230bbe..209961c 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -59,7 +59,7 @@ struct minstrel_rate_stats {
- 	u16 success, last_success;
+v2: address comments from Luca and Johannes
+
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 259c9c7..6b76e3b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -323,7 +323,7 @@
+  * @NL80211_CMD_GET_SCAN: get scan results
+  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
+  *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
+- *	probe requests at CCK rate or not. %NL80211_ATTR_MAC can be used to
++ *	probe requests at CCK rate or not. %NL80211_ATTR_BSSID can be used to
+  *	specify a BSSID to scan for; if not included, the wildcard BSSID will
+  *	be used.
+  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
+@@ -1977,6 +1977,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED: Indicates whether or not multicast
+  *	packets should be send out as unicast to all stations (flag attribute).
+  *
++ * @NL80211_ATTR_BSSID: The BSSID of the AP. Note that %NL80211_ATTR_MAC is also
++ *	used in various commands/events for specifying the BSSID.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2381,6 +2384,8 @@ enum nl80211_attrs {
  
- 	/* total attempts/success counters */
--	u64 att_hist, succ_hist;
-+	u32 att_hist, succ_hist;
+ 	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
  
- 	/* statistis of packet delivery probability
- 	 *  cur_prob  - current prob within last update intervall
++	NL80211_ATTR_BSSID,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e4f718e..7762231 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -404,6 +404,7 @@ enum nl80211_multicast_groups {
+ 				    .len = FILS_MAX_KEK_LEN },
+ 	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
+ 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
++	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
+ };
+ 
+ /* policy for the key attributes */
+@@ -6703,7 +6704,20 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
+ 
+-	if (info->attrs[NL80211_ATTR_MAC])
++	/* Initial implementation used NL80211_ATTR_MAC to set the specific
++	 * BSSID to scan for. This was problematic because that same attribute
++	 * was already used for another purpose (local random MAC address). The
++	 * NL80211_ATTR_BSSID attribute was added to fix this. For backwards
++	 * compatibility with older userspace components, also use the
++	 * NL80211_ATTR_MAC value here if it can be determined to be used for
++	 * the specific BSSID use case instead of the random MAC address
++	 * (NL80211_ATTR_SCAN_FLAGS is used to enable random MAC address use).
++	 */
++	if (info->attrs[NL80211_ATTR_BSSID])
++		memcpy(request->bssid,
++		       nla_data(info->attrs[NL80211_ATTR_BSSID]), ETH_ALEN);
++	else if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) &&
++		 info->attrs[NL80211_ATTR_MAC])
+ 		memcpy(request->bssid, nla_data(info->attrs[NL80211_ATTR_MAC]),
+ 		       ETH_ALEN);
+ 	else
 -- 
-2.10.1
+1.9.1
