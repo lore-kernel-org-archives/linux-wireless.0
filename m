@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34498 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbcL3N5K (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:38956 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752243AbcLBS65 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:57:10 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: Fix alignment issues
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161228214004.6309-1-Larry.Finger@lwfinger.net>
-References: <20161228214004.6309-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
-Message-Id: <20161230135709.C8A4361481@smtp.codeaurora.org> (sfid-20161230_145718_422730_0630DFAB)
-Date: Fri, 30 Dec 2016 13:57:09 +0000 (UTC)
+        Fri, 2 Dec 2016 13:58:57 -0500
+Date: Fri, 02 Dec 2016 13:58:55 -0500 (EST)
+Message-Id: <20161202.135855.9272188465887066.davem@davemloft.net> (sfid-20161202_195922_646058_463BB03B)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-12-01
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <877f7jsdmm.fsf@kamboji.qca.qualcomm.com>
+References: <877f7jsdmm.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 01 Dec 2016 20:33:37 +0200
+
+> here's another pull request for net-next. Nothing special to mention
+> about, the details are in the signed tag below.
 > 
-> The addresses of Wlan NIC registers are natural alignment, but some
-> drivers have bugs. These are evident on platforms that need natural
-> alignment to access registers.  This change contains the following:
->  1. Function _rtl8821ae_dbi_read() is used to read one byte from DBI,
->     thus it should use rtl_read_byte().
->  2. Register 0x4C7 of 8192ee is single byte.
+> This time there's a trivial conflict in
+> drivers/net/wireless/ath/ath10k/mac.c:
 > 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
+> <<<<<<< HEAD
+> 	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
+> =======
+> 	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
+>>>>>>>> d5fb3a138048798ce4cc4b4ced47d07d1794c577
+> 
+> We want to have both flags enabled in ath10k.
+> 
+> I'm planning to submit at least one more pull request, if Linus gives us
+> one more week I might send even two. For example there are patches to
+> convert wcn36xx to use the real SMD bus subsystem but they depend on few
+> arm-soc patches. I'll send a separate email about that, they are not
+> part of this pull request.
+> 
+> Please let me know if there are any problems.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-40b368af4b75 rtlwifi: Fix alignment issues
-
--- 
-https://patchwork.kernel.org/patch/9490651/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Pulled, thanks so much for the heads up about the ath10k merge conflict.
