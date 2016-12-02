@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53888 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752442AbcL2QBX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 11:01:23 -0500
-From: Colin King <colin.king@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: fix spelling mistake: "contry" -> "country"
-Date: Thu, 29 Dec 2016 16:00:29 +0000
-Message-Id: <20161229160029.22117-1-colin.king@canonical.com> (sfid-20161229_170151_211505_5C02F991)
+Received: from ozlabs.org ([103.22.144.67]:57103 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755585AbcLBADQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 19:03:16 -0500
+Date: Fri, 2 Dec 2016 11:03:13 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        David Miller <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: linux-next: manual merge of the wireless-drivers-next tree with the
+ net-next tree
+Message-ID: <20161202110313.2104919e@canb.auug.org.au> (sfid-20161202_010353_036397_5636BE9F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi all,
 
-trivial fix to spelling mistake in RT_TRACE message
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtlwifi/regd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+  drivers/net/wireless/ath/ath10k/mac.c
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
-index 6ee6bf8..558c31b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/regd.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
-@@ -440,7 +440,7 @@ int rtl_regd_init(struct ieee80211_hw *hw,
- 
- 	if (rtlpriv->regd.country_code >= COUNTRY_CODE_MAX) {
- 		RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
--			 "rtl: EEPROM indicates invalid contry code, world wide 13 should be used\n");
-+			 "rtl: EEPROM indicates invalid country code, world wide 13 should be used\n");
- 
- 		rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
- 	}
+between commit:
+
+  f3fe4e93dd63 ("mac80211: add a HW flag for supporting HW TX fragmentation")
+
+from the net-next tree and commit:
+
+  ff32eeb86aa1 ("ath10k: advertize hardware packet loss mechanism")
+
+from the wireless-drivers-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
 -- 
-2.10.2
+Cheers,
+Stephen Rothwell
+
+diff --cc drivers/net/wireless/ath/ath10k/mac.c
+index 717b2fad9a8a,db6ddf974d1d..000000000000
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@@ -8005,7 -7993,7 +7993,8 @@@ int ath10k_mac_register(struct ath10k *
+  	ieee80211_hw_set(ar->hw, WANT_MONITOR_VIF);
+  	ieee80211_hw_set(ar->hw, CHANCTX_STA_CSA);
+  	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
+ +	ieee80211_hw_set(ar->hw, SUPPORTS_TX_FRAG);
++ 	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
+  
+  	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+  		ieee80211_hw_set(ar->hw, SW_CRYPTO_CONTROL);
