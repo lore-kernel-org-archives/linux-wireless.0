@@ -1,159 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45116 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752138AbcLLUz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 15:55:59 -0500
-From: Andy Lutomirski <luto@kernel.org>
-To: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Cc: Eric Biggers <ebiggers3@gmail.com>, linux-crypto@vger.kernel.org,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Stephan Mueller <smueller@chronox.de>,
-        Andy Lutomirski <luto@kernel.org>
-Subject: [PATCH] orinoco: Use shash instead of ahash for MIC calculations
-Date: Mon, 12 Dec 2016 12:55:55 -0800
-Message-Id: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org> (sfid-20161212_215618_498634_95488481)
-In-Reply-To: <8c273c9c41f51b34bb3115086f1d776895580637.1481575835.git.luto@kernel.org>
-References: <8c273c9c41f51b34bb3115086f1d776895580637.1481575835.git.luto@kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:32939 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753274AbcLBBst (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Dec 2016 20:48:49 -0500
+Received: by mail-oi0-f66.google.com with SMTP id f201so25534724oib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 17:48:49 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Ping-Ke Shih <pkshih@realtek.com>, shaofu <shaofu@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 02/14] rtlwifi: Fix programing CAM content sequence.
+Date: Thu,  1 Dec 2016 19:48:21 -0600
+Message-Id: <20161202014833.6856-3-Larry.Finger@lwfinger.net> (sfid-20161202_025211_958752_7FFB4B23)
+In-Reply-To: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Biggers pointed out that the orinoco driver pointed scatterlists
-at the stack.
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-Fix it by switching from ahash to shash.  The result should be
-simpler, faster, and more correct.
+There is a potential race condition when the control byte of a CAM
+entry is written first. Write in reverse order to correct the condition.
 
-Cc: stable@vger.kernel.org # 4.9 only
-Reported-by: Eric Biggers <ebiggers3@gmail.com>
-Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: shaofu <shaofu@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ drivers/net/wireless/realtek/rtlwifi/cam.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Compile-tested only.
-
-drivers/net/wireless/intersil/orinoco/mic.c     | 44 +++++++++++++++----------
- drivers/net/wireless/intersil/orinoco/mic.h     |  3 +-
- drivers/net/wireless/intersil/orinoco/orinoco.h |  4 +--
- 3 files changed, 30 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/net/wireless/intersil/orinoco/mic.c b/drivers/net/wireless/intersil/orinoco/mic.c
-index bc7397d709d3..08bc7822f820 100644
---- a/drivers/net/wireless/intersil/orinoco/mic.c
-+++ b/drivers/net/wireless/intersil/orinoco/mic.c
-@@ -16,7 +16,7 @@
- /********************************************************************/
- int orinoco_mic_init(struct orinoco_private *priv)
- {
--	priv->tx_tfm_mic = crypto_alloc_ahash("michael_mic", 0,
-+	priv->tx_tfm_mic = crypto_alloc_shash("michael_mic", 0,
- 					      CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->tx_tfm_mic)) {
- 		printk(KERN_DEBUG "orinoco_mic_init: could not allocate "
-@@ -25,7 +25,7 @@ int orinoco_mic_init(struct orinoco_private *priv)
- 		return -ENOMEM;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
+index 8fe8b4c..5d58ec0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/cam.c
++++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
+@@ -45,12 +45,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
  
--	priv->rx_tfm_mic = crypto_alloc_ahash("michael_mic", 0,
-+	priv->rx_tfm_mic = crypto_alloc_shash("michael_mic", 0,
- 					      CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(priv->rx_tfm_mic)) {
- 		printk(KERN_DEBUG "orinoco_mic_init: could not allocate "
-@@ -40,17 +40,16 @@ int orinoco_mic_init(struct orinoco_private *priv)
- void orinoco_mic_free(struct orinoco_private *priv)
- {
- 	if (priv->tx_tfm_mic)
--		crypto_free_ahash(priv->tx_tfm_mic);
-+		crypto_free_shash(priv->tx_tfm_mic);
- 	if (priv->rx_tfm_mic)
--		crypto_free_ahash(priv->rx_tfm_mic);
-+		crypto_free_shash(priv->rx_tfm_mic);
- }
+ 	u32 target_command;
+ 	u32 target_content = 0;
+-	u8 entry_i;
++	s8 entry_i;
  
--int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
-+int orinoco_mic(struct crypto_shash *tfm_michael, u8 *key,
- 		u8 *da, u8 *sa, u8 priority,
- 		u8 *data, size_t data_len, u8 *mic)
- {
--	AHASH_REQUEST_ON_STACK(req, tfm_michael);
--	struct scatterlist sg[2];
-+	SHASH_DESC_ON_STACK(desc, tfm_michael);
- 	u8 hdr[ETH_HLEN + 2]; /* size of header + padding */
- 	int err;
+ 	RT_PRINT_DATA(rtlpriv, COMP_SEC, DBG_DMESG, "Key content :",
+ 		      key_cont_128, 16);
  
-@@ -67,18 +66,27 @@ int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
- 	hdr[ETH_ALEN * 2 + 2] = 0;
- 	hdr[ETH_ALEN * 2 + 3] = 0;
+-	for (entry_i = 0; entry_i < CAM_CONTENT_COUNT; entry_i++) {
++	/* 0-1 config + mac, 2-5 fill 128key,6-7 are reserved */
++	for (entry_i = CAM_CONTENT_COUNT - 1; entry_i >= 0; entry_i--) {
+ 		target_command = entry_i + CAM_CONTENT_COUNT * entry_no;
+ 		target_command = target_command | BIT(31) | BIT(16);
  
--	/* Use scatter gather to MIC header and data in one go */
--	sg_init_table(sg, 2);
--	sg_set_buf(&sg[0], hdr, sizeof(hdr));
--	sg_set_buf(&sg[1], data, data_len);
-+	desc->tfm = tfm_michael;
-+	desc->flags = 0;
+@@ -102,7 +103,6 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+ 					target_content);
+ 			rtl_write_dword(rtlpriv, rtlpriv->cfg->maps[RWCAM],
+ 					target_command);
+-			udelay(100);
  
--	if (crypto_ahash_setkey(tfm_michael, key, MIC_KEYLEN))
--		return -1;
-+	err = crypto_shash_setkey(tfm_michael, key, MIC_KEYLEN);
-+	if (err)
-+		return err;
-+
-+	err = crypto_shash_init(desc);
-+	if (err)
-+		return err;
-+
-+	err = crypto_shash_update(desc, hdr, sizeof(hdr));
-+	if (err)
-+		return err;
-+
-+	err = crypto_shash_update(desc, data, data_len);
-+	if (err)
-+		return err;
-+
-+	err = crypto_shash_final(desc, mic);
-+	shash_desc_zero(desc);
- 
--	ahash_request_set_tfm(req, tfm_michael);
--	ahash_request_set_callback(req, 0, NULL, NULL);
--	ahash_request_set_crypt(req, sg, mic, data_len + sizeof(hdr));
--	err = crypto_ahash_digest(req);
--	ahash_request_zero(req);
- 	return err;
- }
-diff --git a/drivers/net/wireless/intersil/orinoco/mic.h b/drivers/net/wireless/intersil/orinoco/mic.h
-index ce731d05cc98..e8724e889219 100644
---- a/drivers/net/wireless/intersil/orinoco/mic.h
-+++ b/drivers/net/wireless/intersil/orinoco/mic.h
-@@ -6,6 +6,7 @@
- #define _ORINOCO_MIC_H_
- 
- #include <linux/types.h>
-+#include <crypto/hash.h>
- 
- #define MICHAEL_MIC_LEN 8
- 
-@@ -15,7 +16,7 @@ struct crypto_ahash;
- 
- int orinoco_mic_init(struct orinoco_private *priv);
- void orinoco_mic_free(struct orinoco_private *priv);
--int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
-+int orinoco_mic(struct crypto_shash *tfm_michael, u8 *key,
- 		u8 *da, u8 *sa, u8 priority,
- 		u8 *data, size_t data_len, u8 *mic);
- 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco.h b/drivers/net/wireless/intersil/orinoco/orinoco.h
-index 2f0c84b1c440..5fa1c3e3713f 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco.h
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco.h
-@@ -152,8 +152,8 @@ struct orinoco_private {
- 	u8 *wpa_ie;
- 	int wpa_ie_len;
- 
--	struct crypto_ahash *rx_tfm_mic;
--	struct crypto_ahash *tx_tfm_mic;
-+	struct crypto_shash *rx_tfm_mic;
-+	struct crypto_shash *tx_tfm_mic;
- 
- 	unsigned int wpa_enabled:1;
- 	unsigned int tkip_cm_active:1;
+ 			RT_TRACE(rtlpriv, COMP_SEC, DBG_LOUD,
+ 				 "WRITE A4: %x\n", target_content);
 -- 
-2.9.3
+2.10.2
