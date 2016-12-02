@@ -1,115 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:34899 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752102AbcLEScs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64566 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932407AbcLBVsX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 13:32:48 -0500
-Received: by mail-io0-f169.google.com with SMTP id a124so610724295ioe.2
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 10:32:38 -0800 (PST)
+        Fri, 2 Dec 2016 16:48:23 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Luca Coelho <luca@coelho.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Vamsi, Krishna" <vamsin@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] cfg80211: Add support to sched scan to report better
+ BSSs
+Date: Fri, 2 Dec 2016 21:48:15 +0000
+Message-ID: <20161202214812.GA31476@jouni.qca.qualcomm.com> (sfid-20161202_224827_010916_3B4BAE66)
+References: <1479938857-1788-1-git-send-email-jouni@qca.qualcomm.com>
+ <1479938857-1788-2-git-send-email-jouni@qca.qualcomm.com>
+ <1480065675.2517.109.camel@coelho.fi>
+In-Reply-To: <1480065675.2517.109.camel@coelho.fi>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1480948100.31788.15.camel@sipsolutions.net>
-References: <94eb2c110db85c2379054172dad0@google.com> <1480948100.31788.15.camel@sipsolutions.net>
-From: Dmitry Shmidt <dimitrysh@google.com>
-Date: Mon, 5 Dec 2016 10:32:36 -0800
-Message-ID: <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com> (sfid-20161205_193252_119697_31120007)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Fri, Nov 25, 2016 at 11:21:15AM +0200, Luca Coelho wrote:
+> On Thu, 2016-11-24 at 00:07 +0200, Jouni Malinen wrote:
+> > From: vamsi krishna <vamsin@qti.qualcomm.com>
+> > @@ -9670,6 +9689,15 @@ static int nl80211_send_wowlan_nd(struct sk_buff=
+ *msg,
+> >  	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_DELAY, req->delay))
+> >  		return -ENOBUFS;
+> > =20
+> > +	if (wiphy_ext_feature_isset(
+> > +		    wiphy, NL80211_EXT_FEATURE_SCHED_SCAN_BETTER_BSS) &&
+> > +	    (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI,
+> > +			 req->relative_rssi) ||
+> > +	     nla_put_u32(msg,
+> > +			 NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF,
+> > +			 req->relative_rssi_5g_pref)))
+> > +		return -ENOBUFS;
+> > +
+>=20
+> Why did you add this to nl80211_send_wowlan_nd() function?
 
-On Mon, Dec 5, 2016 at 6:28 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi Dmitry,
->
-> Sorry I didn't respond earlier.
->
->>    Currently we have sched scan with possibility of various
->> intervals. We would like to extend it to support also
->> different types of scan.
->
-> "Different types of scan" is a bit misleading though, isn't it? I mean,
-> mostly they differ in the reporting modes - the scanning itself still
-> happens at "various intervals"?
->
->>    In case of powerful wlan CPU, all this functionality
->> can be offloaded.
->>    In general case FW processes additional scan requests
->> and puts them into queue based on start time and interval.
->> Once current request is fulfilled, FW adds it (if interval != 0)
->> again to the queue with proper interval. If requests are
->> overlapping, new request can be combined with either one before,
->> or one after, assuming that requests are not mutually exclusive.
->>    Combining requests is done by combining scan channels, ssids,
->> bssids and types of scan result. Once combined request was fulfilled
->> it will be reinserted as two (or three) different requests based on
->> their type and interval.
->>    Each request has attribute:
->> Type: connectivity / location
->
-> I'm not super happy with this - after all, in theory nothing precludes
-> using the results for one thing or the other, it's just about when and
-> how they are gathered, no?
-
-Indeed, results are results. I just want to take care of two things:
-1) Memory consumption - we can clear stale scan results for connection,
-but not for location if we are using history scan.
-2) Use of insufficient results for connection - in case we had history
-or hotlist scan only for very limited amount of channels, then we may not
-have enough APs in our result for "sterling" connection decision.
-
-> You do have a point wrt. an incomplete scan triggering something wrt.
-> roaming or so in the connection manager, but I think that if it finds a
-> better result there than the current connection it would make sense to
-> pick it - even without full information.
->
-> So ultimately, I think this might boil down to reporting the scan
-> finished more accurately/precisely, rather than saying the type of
-> scan?
-
-This is intertwined with Luca's and yours point below - to use
-scan by name or by description of the actions. Indeed maybe
-this way is more generic and more useful.
-
->> Report: none / batch / immediate
->
-> Not sure I see much point in "none"??
->
-> Can you define these more clearly? Do you think "batch" reporting
-> should be like the gscan buckets? Or actually have full information?
-
-None - means that there is not need to report. It can be useful
-in case of roaming scan, scheduling or hotlist scan - you didn't find
-anything suitable - don't report that there is no scan results.
-Batch - means to report only when buffer is full (or close to full) -
-mostly for history scan or for example for case to report all scan
-results together.
-
-Immediate - is kind of self-explaining.
-
->>    Request may have priority and can be inserted into
->> the head of the queue.
->>    Types of scans:
->> - Normal scan
->> - Scheduled scan
->> - Hotlist (BSSID scan)
->> - Roaming
->> - AutoJoin
->
-> I think somebody else said this but I didn't find it now - I think this
-> would make more sense to define in terms of expected behaviour than use
-> cases for each type of scan.
-
-I think Luca made this statement. It is totally ok from SW point of
-view - especially due to the fact that scan is scan. However,
-I suspect it will be harder to handle from user experience. I mean
-at the end wireless framework / driver / FW will convert special
-scan type to usual scan with special params and response, but why
-to put this burden on user?
-Anyway, I am ok with this approach as well. If we see that it is
-confusing we can use scan wrappers.
-
-> johannes
->
+Rest of the feedback will be addressed in PATCH v2, but I'm not sure
+what to do with this part. I don't think we have any use case for this,
+i.e., the addition here for NL80211_CMD_GET_WOWLAN response attributes
+is based on how other sched_scan attributes were already included in the
+response. Any new attribute atted to nl80211_parse_sched_scan() (like
+these two new attributes) get parsed into
+rdev->wiphy.wowlan_config->nd_config in nl80211_wowlan_nd(), so they can
+end up being set here when using NL80211_CMD_SET_WOWLAN.
+=20
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
