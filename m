@@ -1,125 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34662 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754016AbcLZQFB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52866 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbcLBFEf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Dec 2016 11:05:01 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
-Date: Mon, 26 Dec 2016 17:04:56 +0100
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> <201612252146.44496@pali> <20161226154353.GA27087@amd>
-In-Reply-To: <20161226154353.GA27087@amd>
+        Fri, 2 Dec 2016 00:04:35 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-kernel@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk,
+        minyard@acm.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org
+Subject: Re: [PATCH 23/39] Annotate hardware config module parameters in drivers/net/wireless/
+References: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
+        <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
+Date: Fri, 02 Dec 2016 07:04:25 +0200
+In-Reply-To: <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
+        (David Howells's message of "Thu, 01 Dec 2016 12:32:43 +0000")
+Message-ID: <8737i6syzq.fsf@kamboji.qca.qualcomm.com> (sfid-20161202_060507_437406_423DED60)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart52962415.0az8tMa0k5";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201612261704.56567@pali> (sfid-20161226_170523_658335_D01D434A)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart52962415.0az8tMa0k5
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+David Howells <dhowells@redhat.com> writes:
 
-On Monday 26 December 2016 16:43:53 Pavel Machek wrote:
-> Hi!
->=20
-> > > > NVS calibration data for wl1251 are model specific. Every one
-> > > > device with wl1251 chip has different and calibrated in
-> > > > factory.
-> > > >=20
-> > > > Not all wl1251 chips have own EEPROM where are calibration data
-> > > > stored. And in that case there is no "standard" place. Every
-> > > > device has stored them on different place (some in rootfs file,
-> > > > some in dedicated nand partition, some in another proprietary
-> > > > structure).
-> > > >=20
-> > > > Kernel wl1251 driver cannot support every one different storage
-> > > > decided by device manufacture so it will use
-> > > > request_firmware_prefer_user() call for loading NVS calibration
-> > > > data and userspace helper will be responsible to prepare
-> > > > correct data.
-> > >=20
-> > > Responding to this patch as it provides a lot of context to
-> > > discuss. As you might have gathered from earlier discussions I
-> > > am not a fan of using user-space helper. I can agree that the
-> > > kernel driver, wl1251 in this case, should be agnostic to
-> > > platform specific details regarding storage solutions and the
-> > > firmware api should hide that. However, it seems your only
-> > > solution is adding user-space to the mix and changing the api
-> > > towards that. Can we solve it without user-space help?
-> >=20
-> > Without userspace helper it means that userspace helper code must
-> > be integrated into kernel.
-> >=20
-> > So what is userspace helper doing?
-> >=20
-> > 1) Read MAC address from CAL
-> > 2) Read NVS data from CAL
-> > 3) Modify MAC address in memory NVS data (new for this patch
-> > series) 4) Modify in memory NVS data if we in FCC country
-> >=20
-> > Checking for country is done via dbus call to either Maemo cellular
-> > daemon or alternatively via REGDOMAIN in /etc/default/crda. I have
-> > plan to use ofono (instead Maemo cellular daemon) too...
-> >=20
-> > Currently we are using closed Nokia proprietary CAL library.
-> >=20
-> > Steps 1) and 2) needs closed library, step 4) needs dbus call.
->=20
-> I guess pointer to the source code implementing this would be
-> welcome.
+> When the kernel is running in secure boot mode, we lock down the kernel to
+> prevent userspace from modifying the running kernel image.  Whilst this
+> includes prohibiting access to things like /dev/mem, it must also prevent
+> access by means of configuring driver modules in such a way as to cause a
+> device to access or modify the kernel image.
+>
+> To this end, annotate module_param* statements that refer to hardware
+> configuration and indicate for future reference what type of parameter they
+> specify.  The parameter parser in the core sees this information and can
+> skip such parameters with an error message if the kernel is locked down.
+> The module initialisation then runs as normal, but just sees whatever the
+> default values for those parameters is.
+>
+> Note that we do still need to do the module initialisation because some
+> drivers have viable defaults set in case parameters aren't specified and
+> some drivers support automatic configuration (e.g. PNP or PCI) in addition
+> to manually coded parameters.
+>
+> This patch annotates drivers in drivers/net/wireless/.
+>
+> Suggested-by: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: Kalle Valo <kvalo@codeaurora.org>
+> cc: linux-wireless@vger.kernel.org
+> cc: netdev@vger.kernel.org
+> ---
+>
+>  drivers/net/wireless/cisco/airo.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
-Here is current code: https://github.com/community-ssu/wl1251-cal
+Via which tree are you planning to submit this, should I take it to
+wireless-drivers or will someone else handle it? I didn't get the cover
+letter so I have no idea.
 
-(there is implemented also Maemo netlink interface)
-
-> > > But on other devices that use wl1251, but for instance have no
-> > > userspace helper the request to userspace will fail (after 60
-> > > sec?) and try VFS after that. Maybe not so nice.
-> >=20
-> > Currently support for those devices is broken (like for N900) as
-> > without proper NVS data they do not work correctly...
->=20
-> Is it expected to work at all, perhaps with degraded performance /
-> range? Because it seems to work for me.
-
-Yes, some degraded performance or problems with connecting is expected.=20
-And random MAC address at every boot. Plus some regulatory problems in=20
-=46CC countries.
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart52962415.0az8tMa0k5
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlhhP6gACgkQi/DJPQPkQ1IURwCeKUzk1tpo8L9a13wVQ6nqCx7s
-9uoAoL257XYa8PrTwc3qnCasAmqtMd4c
-=9psR
------END PGP SIGNATURE-----
-
---nextPart52962415.0az8tMa0k5--
+-- 
+Kalle Valo
