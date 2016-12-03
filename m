@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59536 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932979AbcLMLft (ORCPT
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:35026 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750900AbcLCG7G (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 06:35:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andy Lutomirski <luto@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Eric Biggers <ebiggers3@gmail.com>,
-        linux-crypto@vger.kernel.org,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Stephan Mueller <smueller@chronox.de>
-Subject: Re: [PATCH] orinoco: Use shash instead of ahash for MIC calculations
-References: <8c273c9c41f51b34bb3115086f1d776895580637.1481575835.git.luto@kernel.org>
-        <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
-Date: Tue, 13 Dec 2016 13:35:39 +0200
-In-Reply-To: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
-        (Andy Lutomirski's message of "Mon, 12 Dec 2016 12:55:55 -0800")
-Message-ID: <87mvg0kqno.fsf@purkki.adurom.net> (sfid-20161213_123611_495857_FBCDF017)
+        Sat, 3 Dec 2016 01:59:06 -0500
+Received: by mail-pg0-f50.google.com with SMTP id p66so115783946pga.2
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2016 22:59:06 -0800 (PST)
+Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF
+ synchronization
+To: Bob Copeland <me@bobcopeland.com>,
+        Thomas Pedersen <thomas@eero.com>
+References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+ <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
+ <20161202211351.GA5571@localhost>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com> (sfid-20161203_075914_226371_0B241E16)
+Date: Sat, 3 Dec 2016 15:59:03 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161202211351.GA5571@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Lutomirski <luto@kernel.org> writes:
+On 2016/12/03 06:13, Bob Copeland wrote:
+> On Fri, Dec 02, 2016 at 12:07:18PM -0800, Thomas Pedersen wrote:
 
-> Eric Biggers pointed out that the orinoco driver pointed scatterlists
-> at the stack.
->
-> Fix it by switching from ahash to shash.  The result should be
-> simpler, faster, and more correct.
->
-> Cc: stable@vger.kernel.org # 4.9 only
-> Reported-by: Eric Biggers <ebiggers3@gmail.com>
-> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+# Rejected by linux wireless ML. This is resubmission.
 
-"more correct"? Does this fix a real user visible bug or what? And why
-just stable 4.9, does this maybe have something to do with
-CONFIG_VMAP_STACK?
+thomas and Bob, Thanks for comments.
 
-I'm just wondering should I push this to 4.10 or -next. This is a driver
-for ancient hardware so I'm starting to lean for -next.
+ > 802.11-2012 13.13.2.2.3:
+ > The mesh STA checks if the transmitter of the Beacon frame or Probe
+ > Response frame is in the
+ > process of the TBTT adjustment (see 13.13.4.4.3).
 
--- 
-Kalle Valo
+There are two functionalities.
+
+1) 13.13.2.2 Neighbor offset synchronization method
+2) 13.13.4.4 TBTT adjustment
+
+The ifmsh->adjusting_tbtt flag implements "TBTT Adjusting field" in the
+Mesh Configuration field.
+
+The flag is updated by 2).
+13.13.4.4.3 TBTT scanning and adjustment procedures:
+The mesh STA shall set the TBTT Adjusting field in the Mesh
+Configuration element to 1 in order to announce that the TBTT
+adjustment procedure is ongoing.
+
+And the flag is refered by 1) as you said.
+
+The purpose of the flag is to prevent 1) while 2) is ongoing.
+
+In other words, 1) has only read access authority to the flag. However,
+previous code updated the flag in 1). In addition, there is no code for
+2). So I just remove the invalid accessing codes.
+
+Masashi Honma.
