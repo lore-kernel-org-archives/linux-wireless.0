@@ -1,92 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50474 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933726AbcLMQJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 11:09:16 -0500
-Message-ID: <1481645351.20412.34.camel@sipsolutions.net> (sfid-20161213_171012_140266_DC3F2D22)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Tue, 13 Dec 2016 17:09:11 +0100
-In-Reply-To: <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-         <1480949353.31788.27.camel@sipsolutions.net>
-         <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:40368 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751080AbcLEPBR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 10:01:17 -0500
+Message-ID: <5845813C.8070904@candelatech.com> (sfid-20161205_160126_752392_50FF4B38)
+Date: Mon, 05 Dec 2016 07:01:16 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Return avg sig, rx, tx values in ethtool stats.
+References: <1480442872-7358-1-git-send-email-greearb@candelatech.com>           (sfid-20161129_190824_045626_457405E8) <1480946891.31788.10.camel@sipsolutions.net>     <58457D63.2010605@candelatech.com> <1480949600.31788.29.camel@sipsolutions.net>
+In-Reply-To: <1480949600.31788.29.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> > >  /**
-> > > + * wiphy_btcoex_support_flags
-> > > + *	This enum has the driver supported frame types for
-> > > BTCOEX.
-> > > + * @WIPHY_WLAN_BE_PREFERRED - Supports Best Effort frame for
-> > > BTCOEX
-> > > + * @WIPHY_WLAN_BK_PREFERRED - supports Background frame for
-> > > BTCOEX
-> > > + * @WIPHY_WLAN_VI_PREFERRED - supports Video frame for BTCOEX
-> > > + * @WIPHY_WLAN_VO_PREFERRED - supports Voice frame for BTCOEX
-> > > + * @WIPHY_WLAN_BEACON_PREFERRED - supports Beacon frame for
-> > > BTCOEX
-> > > + * @WIPHY_WLAN_MGMT_PREFERRED - supports Management frames for
-> > > BTCOEX.
-> > > + */
-> > 
-> > That's not making much sense to me?
-> > 
-> 
-> is it fine to have as WIPHY_BTCOEX_BE_PREFERRED ?
 
-It's not really clear to me what you intend to do this - if it's really
-support flags then you really should name those better.
+On 12/05/2016 06:53 AM, Johannes Berg wrote:
+>
+>> Unless I screwed up, this patch also returns an average.
+>
+> Oops, sorry. I missed the whole mac_div() indirection thing.
+>
+> I'm not super convinced anyway though - all of this data already is
+> available in a much more reliable fashion, even trackable when stations
+> are removed (all data gets sent in the DEL_STATION notification), so
+> adding a crippled way to get the same data seems a bit strange?
 
-> > > +/**
-> > > + * enum wiphy_btcoex_priority - BTCOEX priority level
-> > > + *	This enum defines priority level for BTCOEX
-> > > + * WIPHY_WLAN_PREFERRED_LOW - low priority frames over BT
-> > > traffic
-> > > + * WIPHY_WLAN_PREFERRED_HIGH - high priority frames over BT
-> > > traffic
-> > > + */
-> > > +
-> > > +enum wiphy_btcoex_priority {
-> > > +	WIPHY_WLAN_PREFERRED_LOW = false,
-> > > +	WIPHY_WLAN_PREFERRED_HIGH = true,
-> > > +};
-> > 
-> > That false/true seems just strange.
-> > 
-> 
-> I will just use as a enum without assigning false/true.
+Ethtool stats are easy to program against, and I am already making the
+get-stats call to get other things, so it was a quick tweak to return
+these additional values.  I agree the stats are of somewhat limited worth,
+but the cost to get them is also pretty small code wise :)
 
-What do you even need this enum for though?
+> In any case I'd want you to resend with the /* pr_..*/ stuff removed.
 
-> > > +enum nl80211_btcoex_priority {
-> > > +	__NL80211_WLAN_PREFERRED_INVALID,
-> > > +	NL80211_WLAN_BE_PREFERRED,
-> > > +	NL80211_WLAN_BK_PREFERRED,
-> > > +	NL80211_WLAN_VI_PREFERRED,
-> > > +	NL80211_WLAN_VO_PREFERRED,
-> > > +	NL80211_WLAN_BEACON_PREFERRED,
-> > > +	NL80211_WLAN_MGMT_PREFERRED,
-> > > +	__NL80211_WLAN_PREFERRED_LAST,
-> > > +	NL80211_WLAN_PREFERRED_MAX =
-> > > +			__NL80211_WLAN_PREFERRED_LAST - 1,
-> > > +};
-> > 
-> > Wouldn't a bitmap be easier?
-> > 
-> since this is to distinguish between different btcoex priorities and
-> we 
-> are not going to do any manipulations on these parameters.
-> It is just used as flag attribute.
+I can respin with the comment removed.
 
-But why the (parsing) complexity, when a single bitmap would do?
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
