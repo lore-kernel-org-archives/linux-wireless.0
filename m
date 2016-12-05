@@ -1,128 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:33467 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757927AbcLRLyE (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:33270 "EHLO
+        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751373AbcLER7r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2016 06:54:04 -0500
-Received: by mail-wm0-f52.google.com with SMTP id c184so22941354wmd.0
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2016 03:54:03 -0800 (PST)
-Subject: Re: wl1251 & mac address & calibration data
-To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
-References: <201611111820.52072@pali> <201612161140.27241@pali>
- <68166247-bcd3-f598-7f9e-2139e732233e@broadcom.com> <201612181204.52928@pali>
-Cc: Daniel Wagner <wagi@monom.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Ming Lei <ming.lei@canonical.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Takashi Iwai <tiwai@suse.de>,
-        Josh Boyer <jwboyer@fedoraproject.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <83b2e9a4-f990-68a8-241e-375e46448d47@broadcom.com> (sfid-20161218_125514_347913_9C411ADD)
-Date: Sun, 18 Dec 2016 12:54:00 +0100
+        Mon, 5 Dec 2016 12:59:47 -0500
+Received: by mail-oi0-f50.google.com with SMTP id w63so349910064oiw.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 09:59:47 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <201612181204.52928@pali>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
+References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+ <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
+ <20161202211351.GA5571@localhost> <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
+From: Thomas Pedersen <thomas@eero.com>
+Date: Mon, 5 Dec 2016 09:59:45 -0800
+Message-ID: <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com> (sfid-20161205_185950_753650_D2725CC5)
+Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF synchronization
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18-12-2016 12:04, Pali Rohár wrote:
-> On Sunday 18 December 2016 11:49:53 Arend Van Spriel wrote:
->> On 16-12-2016 11:40, Pali Rohár wrote:
->>> On Friday 16 December 2016 08:25:44 Daniel Wagner wrote:
->>>> On 12/16/2016 03:03 AM, Luis R. Rodriguez wrote:
->>>>> For the new API a solution for "fallback mechanisms" should be
->>>>> clean though and I am looking to stay as far as possible from the
->>>>> existing mess. A solution to help both the old API and new API is
->>>>> possible for the "fallback mechanism" though -- but for that I
->>>>> can only refer you at this point to some of Daniel Wagner and
->>>>> Tom Gunderson's firmwared deamon prospect. It should help pave
->>>>> the way for a clean solution and help address other stupid
->>>>> issues.
->>>>
->>>> The firmwared project is hosted here
->>>>
->>>> https://github.com/teg/firmwared
->>>>
->>>> As Luis pointed out, firmwared relies on
->>>> FW_LOADER_USER_HELPER_FALLBACK, which is not enabled by default.
->>>
->>> I know. But it does not mean that I cannot enable this option at
->>> kernel compile time.
->>>
->>> Bigger problem is that currently request_firmware() first try to
->>> load firmware directly from VFS and after that (if fails) fallback
->>> to user helper.
->>>
->>> So I would need to extend kernel firmware code with new function
->>> (or flag) to not use VFS and try only user mode helper.
+On Fri, Dec 2, 2016 at 10:59 PM, Masashi Honma <masashi.honma@gmail.com> wrote:
+> On 2016/12/03 06:13, Bob Copeland wrote:
 >>
->> Why do you need the user-mode helper anyway. This is all static data,
->> right?
-> 
-> Those are static data, but device specific!
+>> On Fri, Dec 02, 2016 at 12:07:18PM -0800, Thomas Pedersen wrote:
+>
+>
+> # Rejected by linux wireless ML. This is resubmission.
+>
+> thomas and Bob, Thanks for comments.
+>
+>> 802.11-2012 13.13.2.2.3:
+>> The mesh STA checks if the transmitter of the Beacon frame or Probe
+>> Response frame is in the
+>> process of the TBTT adjustment (see 13.13.4.4.3).
+>
+> There are two functionalities.
+>
+> 1) 13.13.2.2 Neighbor offset synchronization method
+> 2) 13.13.4.4 TBTT adjustment
+>
+> The ifmsh->adjusting_tbtt flag implements "TBTT Adjusting field" in the
+> Mesh Configuration field.
+>
+> The flag is updated by 2).
+> 13.13.4.4.3 TBTT scanning and adjustment procedures:
+> The mesh STA shall set the TBTT Adjusting field in the Mesh
+> Configuration element to 1 in order to announce that the TBTT
+> adjustment procedure is ongoing.
+>
+> And the flag is refered by 1) as you said.
+>
+>
+> The purpose of the flag is to prevent 1) while 2) is ongoing.
+>
+> In other words, 1) has only read access authority to the flag. However,
+> previous code updated the flag in 1). In addition, there is no code for
+> 2). So I just remove the invalid accessing codes.
 
-So what?
+I don't think 1) has read only access to that flag. A TSF adjust will
+by definition move the TBTT as well.
 
->> So why not cook up a firmware file in user-space once and put
->> it in /lib/firmware for the driver to request directly.
-> 
-> 1. Violates FHS
-
-How?
-
-> 2. Does not work for readonly /, readonly /lib, readonly /lib/firmware
-
-Que?
-
-> 3. Backup & restore of rootfs between same devices does not work (as 
-> rootfs now contains device specific data).
-
-True.
-
-> 4. Sharing one rootfs (either via nfs or other technology) does not work 
-> for more devices (even in state when rootfs is used only by one device 
-> at one time).
-
-Indeed.
-
-> And it is common that N900 developers have rootfs in laptop and via usb 
-> (cdc_ether) exports it over nfs to N900 device and boot system. It 
-> basically break booting from one nfs-exported rootfs, as that export 
-> become model specific...
-
-These are all you choices and more a logistic issue. If your take is
-that udev is the way to solve those, fine by me.
-
->> Seems a bit
->> overkill to have a {e,}udev or whatever daemon running if the result
->> is always the same. Just my 2 cents.
-> 
-> No it is not. It will break couple of other things in Linux and device 
-
-Now I am curious. What "couple of other things" will be broken.
-
-> and model specific calibration data should not be in /lib/firmware! That 
-> directory is used for firmware files, not calibration.
-
-What is "firmware"? Really. These are binary blobs required to make the
-device work. And guess what, your device needs calibration data. Why
-make the distinction.
-
-Regards,
-Arend
+-- 
+thomas
