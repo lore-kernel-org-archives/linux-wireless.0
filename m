@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56708 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbcL2Vg0 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:24897 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751779AbcLEVKo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 16:36:26 -0500
-Subject: Re: [PATCH] [media] gp8psk: fix spelling mistake: "firmare" ->
- "firmware"
-To: VDR User <user.vdr@gmail.com>
-References: <20161229202952.27448-1-colin.king@canonical.com>
- <CAA7C2qjAk6LqTru2zimRr4_JUYXK+4d8VENpyYXjyE0-eJ+RKQ@mail.gmail.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "mailing list: linux-media" <linux-media@vger.kernel.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Colin Ian King <colin.king@canonical.com>
-Message-ID: <4ebb4c2e-2adc-d54c-69ce-fee427f0cb48@canonical.com> (sfid-20161229_223652_554577_04AFACB1)
-Date: Thu, 29 Dec 2016 21:35:37 +0000
+        Mon, 5 Dec 2016 16:10:44 -0500
+Date: Tue, 6 Dec 2016 00:10:19 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 05/14] rtlwifi: Add TX report and disable key will wait
+ until report acked.
+Message-ID: <20161205211019.GI8176@mwanda> (sfid-20161205_221047_174230_FA09DD25)
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+ <20161202014833.6856-6-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAA7C2qjAk6LqTru2zimRr4_JUYXK+4d8VENpyYXjyE0-eJ+RKQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161202014833.6856-6-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29/12/16 21:23, VDR User wrote:
->> -                       err("firmare chunk size bigger than 64 bytes.");
->> +                       err("firmware chunk size bigger than 64 bytes.");
-> 
-> Yup.
-> 
->> -                        "HW don't support CMAC encrypiton, use software CMAC encrypiton\n");
->> +                        "HW don't support CMAC encryption, use software CMAC encryption\n");
-> 
-> Should be: "HW doesn't support CMAC encryption, use software CMAC
-> encryption\n");
-> 
-Very true, I was so focused on the spelling I overlooked the grammar.
-I'll re-send with that fixed.
+On Thu, Dec 01, 2016 at 07:48:24PM -0600, Larry Finger wrote:
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> index 2d48ccd..0f9d9f0 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> @@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
+>  			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
+>  		}
+>  
+> +		/* tx report */
+> +		if (ptcb_desc->use_spe_rpt) {
+> +			u16 sn = rtl_get_tx_report_sn(hw);
+> +
+> +			SET_TX_DESC_SPE_RPT(pdesc, 1);
+> +			SET_TX_DESC_SW_DEFINE(pdesc, sn);
+> +		}
+> +
 
-Colin
+All the callers of rtl_get_tx_report_sn() use this same 5 line block.
+Let's move it to a separate function.
+
+regards,
+dan carpenter
