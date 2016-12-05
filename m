@@ -1,27 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42954 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750841AbcLEOCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:02:19 -0500
-Message-ID: <1480946529.31788.8.camel@sipsolutions.net> (sfid-20161205_150221_359966_DB36A478)
-Subject: Re: [PATCH] mac80211: Suppress NEW_PEER_CANDIDATE event if no room
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, me@bobcopeland.com
-Date: Mon, 05 Dec 2016 15:02:09 +0100
-In-Reply-To: <1480464364-5054-1-git-send-email-masashi.honma@gmail.com> (sfid-20161130_010619_619017_21132536)
-References: <1480464364-5054-1-git-send-email-masashi.honma@gmail.com>
-         (sfid-20161130_010619_619017_21132536)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:50690 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbcLES7J (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 13:59:09 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 1/2] mac80211:  Return avg sig, rx, tx values in ethtool stats.
+Date: Mon,  5 Dec 2016 10:58:29 -0800
+Message-Id: <1480964310-16698-1-git-send-email-greearb@candelatech.com> (sfid-20161205_195914_504879_CF1E4B76)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-11-30 at 09:06 +0900, Masashi Honma wrote:
-> Previously, kernel sends NEW_PEER_CANDIDATE event to user land even
-> if the found peer does not have any room to accept other peer. This
-> causes continuous connection trials.
+From: Ben Greear <greearb@candelatech.com>
 
-Thanks, applied.
+For non-station devices.  This gives at least some useful
+summary in some cases (especially when we know AP has only one
+station attached, for instance).
 
-johannes
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+
+v2:  Remove commented out pr_err code, remove trailing i++ that had no effect.
+
+ net/mac80211/ethtool.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
+index 4e937c1..e7df3d3 100644
+--- a/net/mac80211/ethtool.c
++++ b/net/mac80211/ethtool.c
+@@ -12,6 +12,25 @@
+ #include "ieee80211_i.h"
+ #include "sta_info.h"
+ #include "driver-ops.h"
++#include <asm/div64.h>
++
++static inline __s64 mac_div(__s64 n, __u32 base)
++{
++	if (n < 0) {
++		__u64 tmp = -n;
++		do_div(tmp, base);
++		/* printk("pktgen: pg_div, n: %llu  base: %d  rv: %llu\n",
++		   n, base, tmp); */
++		return -tmp;
++	}
++	else {
++		__u64 tmp = n;
++		do_div(tmp, base);
++		/* printk("pktgen: pg_div, n: %llu  base: %d  rv: %llu\n",
++		   n, base, tmp); */
++		return tmp;
++	}
++}
+ 
+ static int ieee80211_set_ringparam(struct net_device *dev,
+ 				   struct ethtool_ringparam *rp)
+@@ -128,6 +147,12 @@ static void ieee80211_get_stats(struct net_device *dev,
+ 			data[i] = (u8)sinfo.signal_avg;
+ 		i++;
+ 	} else {
++		int amt_tx = 0;
++		int amt_rx = 0;
++		int amt_sig = 0;
++		s64 tx_accum = 0;
++		s64 rx_accum = 0;
++		s64 sig_accum = 0;
+ 		list_for_each_entry(sta, &local->sta_list, list) {
+ 			/* Make sure this station belongs to the proper dev */
+ 			if (sta->sdata->dev != dev)
+@@ -137,6 +162,30 @@ static void ieee80211_get_stats(struct net_device *dev,
+ 			sta_set_sinfo(sta, &sinfo);
+ 			i = 0;
+ 			ADD_STA_STATS(sta);
++
++			i++; /* skip sta state */
++
++			if (sinfo.filled & BIT(NL80211_STA_INFO_TX_BITRATE)) {
++				tx_accum += 100000 *
++					cfg80211_calculate_bitrate(&sinfo.txrate);
++				amt_tx++;
++				data[i] = mac_div(tx_accum, amt_tx);
++			}
++			i++;
++
++			if (sinfo.filled & BIT(NL80211_STA_INFO_RX_BITRATE)) {
++				rx_accum += 100000 *
++					cfg80211_calculate_bitrate(&sinfo.rxrate);
++				amt_rx++;
++				data[i] = mac_div(rx_accum, amt_rx);
++			}
++			i++;
++
++			if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL_AVG)) {
++				sig_accum += sinfo.signal_avg;
++				amt_sig++;
++				data[i] = (mac_div(sig_accum, amt_sig) & 0xFF);
++			}
+ 		}
+ 	}
+ 
+-- 
+2.4.11
