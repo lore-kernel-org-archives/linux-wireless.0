@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750888AbcLBFEf (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60154 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751327AbcLEWMS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2016 00:04:35 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk,
-        minyard@acm.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org
-Subject: Re: [PATCH 23/39] Annotate hardware config module parameters in drivers/net/wireless/
-References: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk>
-        <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
-Date: Fri, 02 Dec 2016 07:04:25 +0200
-In-Reply-To: <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
-        (David Howells's message of "Thu, 01 Dec 2016 12:32:43 +0000")
-Message-ID: <8737i6syzq.fsf@kamboji.qca.qualcomm.com> (sfid-20161202_060507_437406_423DED60)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Mon, 5 Dec 2016 17:12:18 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  fix rx-rate report when rate is invalid.
+Date: Mon,  5 Dec 2016 14:12:15 -0800
+Message-Id: <1480975935-12760-1-git-send-email-greearb@candelatech.com> (sfid-20161205_231221_066094_0B3137AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Howells <dhowells@redhat.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> When the kernel is running in secure boot mode, we lock down the kernel to
-> prevent userspace from modifying the running kernel image.  Whilst this
-> includes prohibiting access to things like /dev/mem, it must also prevent
-> access by means of configuring driver modules in such a way as to cause a
-> device to access or modify the kernel image.
->
-> To this end, annotate module_param* statements that refer to hardware
-> configuration and indicate for future reference what type of parameter they
-> specify.  The parameter parser in the core sees this information and can
-> skip such parameters with an error message if the kernel is locked down.
-> The module initialisation then runs as normal, but just sees whatever the
-> default values for those parameters is.
->
-> Note that we do still need to do the module initialisation because some
-> drivers have viable defaults set in case parameters aren't specified and
-> some drivers support automatic configuration (e.g. PNP or PCI) in addition
-> to manually coded parameters.
->
-> This patch annotates drivers in drivers/net/wireless/.
->
-> Suggested-by: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: Kalle Valo <kvalo@codeaurora.org>
-> cc: linux-wireless@vger.kernel.org
-> cc: netdev@vger.kernel.org
-> ---
->
->  drivers/net/wireless/cisco/airo.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+This fixes obtaining the rate info via sta_set_sinfo
+when the rx rate is invalid (for instance, on IBSS
+interface that has received no frames from one of its
+peers).
 
-Via which tree are you planning to submit this, should I take it to
-wireless-drivers or will someone else handle it? I didn't get the cover
-letter so I have no idea.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/sta_info.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 01868f9..868dc88 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2076,10 +2076,12 @@ static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
+ {
+ 	u16 rate = ACCESS_ONCE(sta_get_last_rx_stats(sta)->last_rate);
+ 
+-	if (rate == STA_STATS_RATE_INVALID)
+-		rinfo->flags = 0;
+-	else
++	if (rate == STA_STATS_RATE_INVALID) {
++		rinfo->flags = 0; /* means use legacy rates */
++		rinfo->legacy = 0; /* Initialize legacy rates to known value */
++	} else {
+ 		sta_stats_decode_rate(sta->local, rate, rinfo);
++	}
+ }
+ 
+ static void sta_set_tidstats(struct sta_info *sta,
 -- 
-Kalle Valo
+2.4.11
