@@ -1,38 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33522 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754350AbcLVSsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 13:48:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAO7Z3WKmEbJCN_=srxTVKXvtz84vHGi41RS+9T7fmkmhRB6nEw@mail.gmail.com>
-References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
- <20161219223111.itu77g7wsqtj6cvs@rob-hp-laptop> <CAO7Z3WKmEbJCN_=srxTVKXvtz84vHGi41RS+9T7fmkmhRB6nEw@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 22 Dec 2016 12:48:27 -0600
-Message-ID: <CAL_JsqL4TMDaMQZM3h5gRBEiAa7-ApUWj4GgS_BPG6qpoLxv6g@mail.gmail.com> (sfid-20161222_194917_372078_81B91103)
-Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        netdev <netdev@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Mark Greer <mgreer@animalcreek.com>,
-        Justin Bronder <justin@kuvee.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:34163 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752332AbcLEVwy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 16:52:54 -0500
+Received: by mail-wj0-f196.google.com with SMTP id xy5so41223240wjc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 13:52:49 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: add accounting for the extended peer statistics
+Date: Mon,  5 Dec 2016 22:52:45 +0100
+Message-Id: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com> (sfid-20161205_225259_675260_D6967200)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2016 at 5:23 PM, Geoff Lansberry <geoff@kuvee.com> wrote:
-> I can make that change, however, I worry that it may be a bit
-> misleading, since there are only two supported clock frequencies, but
-> a number like that to me implies that it could be set to any number
-> you want.   I'm new at this, and so I'll go ahead and change it as you
-> request, but I'd like to hear your thoughts on my concern.
+The 10.4 firmware adds extended peer information to the
+firmware's statistics payload. This additional info is
+stored as a separate data field and the elements are
+stored in their own "peers_extd" list.
 
-Then the binding doc just needs to state what are the 2 valid frequencies.
+These elements can pile up in the same way as the peer
+information elements. This is because the
+ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+pull the same amount (num_peer_stats) for every statistic
+data unit.
 
-Rob
+Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 82a4c67f3672..4acd9eb65910 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -399,6 +399,7 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 			 * prevent firmware from DoS-ing the host.
+ 			 */
+ 			ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
++			ath10k_fw_extd_stats_peers_free(&ar->debug.fw_stats.peers_extd);
+ 			ath10k_warn(ar, "dropping fw peer stats\n");
+ 			goto free;
+ 		}
+@@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 			goto free;
+ 		}
+ 
++		if (!list_empty(&stats.peers))
++			list_splice_tail_init(&stats.peers_extd,
++					      &ar->debug.fw_stats.peers_extd);
++
+ 		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
+ 		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
+-		list_splice_tail_init(&stats.peers_extd,
+-				      &ar->debug.fw_stats.peers_extd);
+ 	}
+ 
+ 	complete(&ar->debug.fw_stats_complete);
+-- 
+2.11.0
