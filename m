@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36662 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757659AbcLTPZn (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:49055 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbcLEUuV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 10:25:43 -0500
-Subject: Re: [PATCH] rtlwifi: Fix kernel oops introduced with commit
- e49656147359
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20161220023812.5999-1-Larry.Finger@lwfinger.net>
- <87wpeuu9qm.fsf@kamboji.qca.qualcomm.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
-        Stable <stable@vger.kernel.org>,
-        Wei Yongjun <weiyongjun1@huawei.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <c3779ada-0018-3ec5-cdb2-c470f9ca467e@lwfinger.net> (sfid-20161220_162547_663479_F0277727)
-Date: Tue, 20 Dec 2016 09:25:40 -0600
+        Mon, 5 Dec 2016 15:50:21 -0500
+Date: Mon, 5 Dec 2016 23:49:54 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+        shaofu <shaofu@realtek.com>, Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 02/14] rtlwifi: Fix programing CAM content sequence.
+Message-ID: <20161205204954.GH8176@mwanda> (sfid-20161205_215030_695526_2D8F48B6)
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+ <20161202014833.6856-3-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <87wpeuu9qm.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161202014833.6856-3-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2016 05:21 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
->> kfree_skb"), the method used to free an skb was changed because the
->> kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
->> guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
->> does not, and a test is needed to prevent kernel panics.
->>
->> Fixes: commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
->
-> This should be:
->
-> Fixes: e49656147359 ("rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
->
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org> (4.9+)
->
-> And this:
->
-> Cc: Stable <stable@vger.kernel.org> # 4.9+
->
-> I can fix both of them.
->
->> Cc: Wei Yongjun <weiyongjun1@huawei.com>
->> ---
->> Kalle,
->>
->> This change should be sent to mainline during the 4.10 merge period,
->> or as soon as possible.
->
-> Ok, I'll queue this to 4.10. Most likely I'll send a pull request to
-> Dave later this week or so.
+On Thu, Dec 01, 2016 at 07:48:21PM -0600, Larry Finger wrote:
+> From: Ping-Ke Shih <pkshih@realtek.com>
+> 
+> There is a potential race condition when the control byte of a CAM
+> entry is written first. Write in reverse order to correct the condition.
+> 
+> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: shaofu <shaofu@realtek.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/cam.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
+> index 8fe8b4c..5d58ec0 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/cam.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
+> @@ -45,12 +45,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
+>  
+>  	u32 target_command;
+>  	u32 target_content = 0;
+> -	u8 entry_i;
+> +	s8 entry_i;
 
-Thanks for the suggested changes, and for the quick action.
+Just make this an int.  s8 is for very specific things like hardware
+registers.
 
-Larry
+regards,
+dan carpenter
