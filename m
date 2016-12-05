@@ -1,72 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:35289 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752752AbcLNKH2 (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:34385 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751168AbcLEPcw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 05:07:28 -0500
-Received: by mail-pg0-f44.google.com with SMTP id p66so6746026pga.2
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2016 02:07:28 -0800 (PST)
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
- <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
- <1481646049.20412.43.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com> (sfid-20161214_110732_496364_994CEB1B)
-Date: Wed, 14 Dec 2016 11:07:24 +0100
+        Mon, 5 Dec 2016 10:32:52 -0500
+Received: by mail-oi0-f52.google.com with SMTP id y198so343540796oia.1
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 07:32:52 -0800 (PST)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+ <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
+ <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
+ <1480950886.31788.44.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <584588A2.9090006@gmail.com> (sfid-20161205_163256_333315_ACC2B3FF)
+Date: Mon, 5 Dec 2016 09:32:50 -0600
 MIME-Version: 1.0
-In-Reply-To: <1481646049.20412.43.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1480950886.31788.44.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-12-2016 17:20, Johannes Berg wrote:
-> On Mon, 2016-12-12 at 11:59 +0000, Arend van Spriel wrote:
->> The driver can indicate gscan results are available or gscan
->> operation has stopped.
-> 
-> This patch is renumbering the previous patches' nl80211 API, which is
-> best avoided, even if I do realize it doesn't matter now. :)
+Hi Johannes,
 
-Indeed. Will be more careful in upcoming revision(s).
+On 12/05/2016 09:14 AM, Johannes Berg wrote:
+>>> Well, no, that'd only work with an open connection :)
+>
+> Actually, it also works fairly easily for when firmware has 4-way-
+> handshake offload, which will be coming to a kernel near you soon.
+>
 
-> Even here it's not clear how things are reported though. Somehow I
-> thought that gscan was reporting only partial information through the
-> buckets, or is that not true?
+Great, but still not applicable for all devices, and still questionable 
+how useful an unmanaged connection actually is.  But okay.
 
-Not sure what is meant by "through the buckets". Referring to your
-remark/question in the "Unversal scan proposal" thread:
+>> And even that is questionable in my mind for some of the more
+>> advanced cases.
+>
+> Well, at least in that case you can have things running (for a while)
+> if the manager crashes?
+>
 
-"""
-I'm much more worried about the "bucket reporting" since that doesn't
-fit into the current full BSS reporting model at all. What's your
-suggestion for this?
-"""
+To what purpose?  That's like saying that maybe a socket should be kept 
+open in case an application crashes.
 
-So this is exactly the dilemma I considered so I decided to stick with
-the full BSS reporting model for gscan as well merely to get it
-discussed so glad you brought it up ;-). The problem here is that
-gscan is a vehicle that serves a number of use-cases. So ignoring
-hotlists, ePNO, etc. the gscan configuration still hold several
-notification types:
+>> But I'm not sure what your point is, do you still have objections to
+>> this approach?
+>
+> Well, first of all, you can keep things running, at least until you've
+> figured out how to restart wpa_supplicant/whatever.
+>
+> There also aren't really any important resources to clear when
+> userspace dies, at least nothing that userspace can't trivially clear
+> later by disconnecting (even unconditionally and ignoring the
+> result)...
 
-- report after completing M scans capturing N best APs or a
-  percentage of (M * N).
-- report after completing a scan include a specific bucket.
-- report full scan results.
+Sure, but in the meantime you have a completely unmanaged connection, 
+with no connection manager to tell you what the state of it is.  Maybe 
+okay for a command line system with a brain in front of it, but not much 
+use anywhere else.
 
-The first two notification trigger retrieval of gscan results which are
-historic, ie. partial scan results for max M scans.
+But for that use case the SOCKET_OWNER attribute can be omitted...
 
-As said earlier the universal scan proposal has some similarities to
-gscan. Guess you share that as you are using the term "bucket reporting"
-in that discussion ;-). The historic results are needed for location (if
-I am not mistaken) so the full BSS reporting model does not fit that.
-Question is what particular attribute in the historic results is needed
-for location (suspecting only rssi and possibly the timestamp, but would
-like to see that confirmed). I was thinking about have historic storage
-in cfg80211 so we do not need a per-driver solution.
+>
+> So basically I just don't see the advantage. It feels like trading a
+> single line of userspace code to disconnect with some (not super
+> complex, but still somewhat involved) kernel-side tracking. That
+> doesn't really seem like a worthwhile tradeoff to me.
+>
+
+Well, we'd be trading quite a bit of race-prone user space code that 
+performs the clean up on start up for one line of attributes.  I call 
+that a good trade.
+
+Also, I thought it was good form / the UNIX way to clean up after 
+processes exit ungracefully.  You seem to be arguing against that?  I 
+would argue the kernel should be doing the opposite.  It should always 
+clean up the connection unless user space has indicated it can be 'reused'.
 
 Regards,
-Arend
+-Denis
