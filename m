@@ -1,57 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55330 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760122AbcLPJhJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 04:37:09 -0500
-Message-ID: <1481881024.27953.14.camel@sipsolutions.net> (sfid-20161216_103717_375905_C8CD7CFB)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Fri, 16 Dec 2016 10:37:04 +0100
-In-Reply-To: <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-         <1480949353.31788.27.camel@sipsolutions.net>
-         <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-         <1481645351.20412.34.camel@sipsolutions.net>
-         <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:49364 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752306AbcLES2s (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 13:28:48 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  free host-mem with DMA_BIRECTIONAL flag.
+Date: Mon,  5 Dec 2016 10:28:39 -0800
+Message-Id: <1480962519-13027-1-git-send-email-greearb@candelatech.com> (sfid-20161205_192904_130724_5B3616BA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > is it fine to have as WIPHY_BTCOEX_BE_PREFERRED ?
-> > 
-> > It's not really clear to me what you intend to do this - if it's
-> > really support flags then you really should name those better.
-> > 
-> 
-> This is support flags and it used by the driver to intimate driver 
-> supported frame type for the BTCOEX to cfg like
-> "wiphy_wowlan_support_flags" implementation. Please suggest if this
-> is ok ? I will be thankful if you can suggest a  better one if this
-> is not ok "WIPHY_BTCOEX_SUPPORTS_BE"
+From: Ben Greear <greearb@candelatech.com>
 
-Well, I see a few things here:
+Hopefully this fixes the problem reported by Kalle:
 
-1) does it even make sense to split it out per AC? wouldn't it be weird
-if you supported this only for VO and BK, and not the others, or
-something like that?
+Noticed this in my log, but I don't have time to investigate this in
+detail right now:
 
-2) Wouldn't it make more sense to define this in nl80211 and just pass
-the bitmap through to userspace? That would save quite a bit of netlink
-mangling complexity.
+[  413.795346] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[  414.158755] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[  477.439659] ath10k_pci 0000:02:00.0: could not get mac80211 beacon
+[  481.666630] ------------[ cut here ]------------
+[  481.666669] WARNING: CPU: 0 PID: 1978 at lib/dma-debug.c:1155 check_unmap+0x320/0x8e0
+[  481.666688] ath10k_pci 0000:02:00.0: DMA-API: device driver frees DMA memory with different direction [device address=0x000000002d130000] [size=63800 bytes] [mapped with DMA_BIDIRECTIONAL] [unmapped with DMA_TO_DEVICE]
+[  481.666703] Modules linked in: ctr ccm ath10k_pci(E-) ath10k_core(E) ath(E) mac80211(E) cfg80211(E) snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_codec_generic snd_hda_intel snd_hda_codec snd_hda_core snd_hwdep snd_pcm snd_seq_midi arc4 snd_rawmidi snd_seq_midi_event snd_seq btusb btintel snd_seq_device joydev coret
+[  481.671468] CPU: 0 PID: 1978 Comm: rmmod Tainted: G            E   4.9.0-rc7-wt+ #54
+[  481.671478] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 68CDD Ver. F.04 01/27/2010
+[  481.671489]  ef49dcec c842ee92 c8b5830e ef49dd34 ef49dd20 c80850f5 c8b5a13c ef49dd50
+[  481.671560]  000007ba c8b5830e 00000483 c8461830 c8461830 00000483 ef49ddcc f34e64b8
+[  481.671641]  c8b58360 ef49dd3c c80851bb 00000009 00000000 ef49dd34 c8b5a13c ef49dd50
+[  481.671716] Call Trace:
+[  481.671731]  [<c842ee92>] dump_stack+0x76/0xb4
+[  481.671745]  [<c80850f5>] __warn+0xe5/0x100
+[  481.671757]  [<c8461830>] ? check_unmap+0x320/0x8e0
+[  481.671769]  [<c8461830>] ? check_unmap+0x320/0x8e0
+[  481.671780]  [<c80851bb>] warn_slowpath_fmt+0x3b/0x40
+[  481.671791]  [<c8461830>] check_unmap+0x320/0x8e0
+[  481.671804]  [<c8462054>] debug_dma_unmap_page+0x84/0xa0
+[  481.671835]  [<f937cd7a>] ath10k_wmi_free_host_mem+0x9a/0xe0 [ath10k_core]
+[  481.671861]  [<f9363400>] ath10k_core_destroy+0x50/0x60 [ath10k_core]
+[  481.671875]  [<f8e13969>] ath10k_pci_remove+0x79/0xa0 [ath10k_pci]
+[  481.671889]  [<c848d8d8>] pci_device_remove+0x38/0xb0
+[  481.671901]  [<c859fe4b>] __device_release_driver+0x7b/0x110
+[  481.671913]  [<c85a00e7>] driver_detach+0x97/0xa0
+[  481.671923]  [<c859ef8b>] bus_remove_driver+0x4b/0xb0
+[  481.671934]  [<c85a0cda>] driver_unregister+0x2a/0x60
+[  481.671949]  [<c848c888>] pci_unregister_driver+0x18/0x70
+[  481.671965]  [<f8e14dae>] ath10k_pci_exit+0xd/0x25f [ath10k_pci]
+[  481.671979]  [<c812bb84>] SyS_delete_module+0xf4/0x180
+[  481.671995]  [<c81f801b>] ? __might_fault+0x8b/0xa0
+[  481.672009]  [<c80037d0>] do_fast_syscall_32+0xa0/0x1e0
+[  481.672025]  [<c88d4c88>] sysenter_past_esp+0x45/0x74
+[  481.672037] ---[ end trace 3fd23759e17e1622 ]---
+[  481.672049] Mapped at:
+[  481.672060]  [  481.672072] [<c846062c>] debug_dma_map_page.part.25+0x1c/0xf0
+[  481.672083]  [  481.672095] [<c8460799>] debug_dma_map_page+0x99/0xc0
+[  481.672106]  [  481.672132] [<f93745ec>] ath10k_wmi_alloc_chunk+0x12c/0x1f0 [ath10k_core]
+[  481.672142]  [  481.672168] [<f937d0c4>] ath10k_wmi_event_service_ready_work+0x304/0x540 [ath10k_core]
+[  481.672178]  [  481.672190] [<c80a3643>] process_one_work+0x1c3/0x670
+[  482.137134] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
+[  482.313144] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/pre-cal-pci-0000:02:00.0.bin failed with error -2
+[  482.313274] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/cal-pci-0000:02:00.0.bin failed with error -2
+[  482.313768] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
+[  482.313777] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 1
+[  482.313974] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
+[  482.369858] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/QCA988X/hw2.0/board-2.bin failed with error -2
+[  482.370011] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
+[  483.596770] ath10k_pci 0000:02:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
+[  483.701686] ath: EEPROM regdomain: 0x0
+[  483.701706] ath: EEPROM indicates default country code should be used
+[  483.701713] ath: doing EEPROM country->regdmn map search
+[  483.701721] ath: country maps to regdmn code: 0x3a
+[  483.701730] ath: Country alpha2 being used: US
+[  483.701737] ath: Regpair used: 0x3a
 
-3) I think the naming is confusing - "WIPHY_BTCOEX_SUPPORTS_BE_PREF" or
-so might be more appropriate?
+Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Do you mean to say, sending a value from user space and parse that
-> in  the driver?
-
-I was more thinking of the capability advertisement, but yeah, both
-ways seems reasonable.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index c748923..0be76e4 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -8473,7 +8473,7 @@ void ath10k_wmi_free_host_mem(struct ath10k *ar)
+ 		dma_unmap_single(ar->dev,
+ 				 ar->wmi.mem_chunks[i].paddr,
+ 				 ar->wmi.mem_chunks[i].len,
+-				 DMA_TO_DEVICE);
++				 DMA_BIDIRECTIONAL);
+ 		kfree(ar->wmi.mem_chunks[i].vaddr);
+ 	}
+ 
+-- 
+2.4.11
