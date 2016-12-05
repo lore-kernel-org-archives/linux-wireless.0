@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56992 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbcLAMZU (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:37867 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751605AbcLEVfL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 07:25:20 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 5 Dec 2016 16:35:11 -0500
+Date: Tue, 6 Dec 2016 00:34:47 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
+Message-ID: <20161205213447.GJ8176@mwanda> (sfid-20161205_223517_078106_AE53D3A6)
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+ <20161202014833.6856-11-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Subject: Re: [1/1] rtl8xxxu: Work around issue with 8192eu and 8723bu devices
- not reconnecting
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161129235902.11882-2-Jes.Sorensen@redhat.com>
-References: <20161129235902.11882-2-Jes.Sorensen@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, briselec@gmail.com
-Message-Id: <20161201122445.DBFAD6155C@smtp.codeaurora.org> (sfid-20161201_132524_085121_09D530BE)
-Date: Thu,  1 Dec 2016 12:24:45 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161202014833.6856-11-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> The H2C MEDIA_STATUS_RPT command for some reason causes 8192eu and
-> 8723bu devices not being able to reconnect.
-> 
-> Reported-by: Barry Day <briselec@gmail.com>
-> Cc: <stable@vger.kernel.org> #4.8+
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Thu, Dec 01, 2016 at 07:48:29PM -0600, Larry Finger wrote:
+> --- wireless-drivers-next.orig/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> +++ wireless-drivers-next/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+> @@ -27,6 +27,29 @@
+>  
+>  #include	"../wifi.h"
+>  
+> +#ifdef CONFIG_RTLWIFI_DEBUG
+> +
+> +#define BTC_SPRINTF(ptr, ...)	snprintf(ptr, ##__VA_ARGS__)
+> +#define BTC_TRACE(fmt)						\
+> +do {								\
+> +	struct rtl_priv *rtlpriv = gl_bt_coexist.adapter;	\
+> +	if (!rtlpriv)					\
+> +		break;						\
+> +	RT_TRACE_STRING(rtlpriv, COMP_COEX, DBG_LOUD, fmt);	\
+> +} while (0)
+> +
 
-Patch applied to wireless-drivers-next.git, thanks.
+This sort of macro is exactly when the rtl drivers spent so long in
+staging...  Subsystems should not invent their own tracing but in
+particular these macros are so very very ugly.
 
-c59f13bbead4 rtl8xxxu: Work around issue with 8192eu and 8723bu devices not reconnecting
+It's just super frustrating to even look at this...
 
--- 
-https://patchwork.kernel.org/patch/9453251/
+There are a lot of staging drivers I feel good about when they leave.
+The HyperV drivers.  The IIO stuff.  A lot of the media stuff and
+generally the media tree is getting better and better.  I like comedi
+and unisys, those are in staging, but they are great and could move out
+any time as far as I'm concerned.
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+But this patch just makes me super discouraged.  What are we doing???
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+regards,
+dan carpenter
