@@ -1,38 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:33744 "EHLO
-        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932123AbcLLKBs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 05:01:48 -0500
-Received: by mail-io0-f178.google.com with SMTP id d9so161040600ioe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 02:01:47 -0800 (PST)
-Received: from mail-io0-f178.google.com (mail-io0-f178.google.com. [209.85.223.178])
-        by smtp.gmail.com with ESMTPSA id l73sm15577115ioe.1.2016.12.12.02.01.47
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 12 Dec 2016 02:01:47 -0800 (PST)
-Received: by mail-io0-f178.google.com with SMTP id a81so154411986ioe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 02:01:47 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <8E332BC1-F05E-4771-ABA4-BD6C59449125@holtmann.org>
-References: <20161212002911.5541-1-andrew.zaborowski@intel.com> <8E332BC1-F05E-4771-ABA4-BD6C59449125@holtmann.org>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Mon, 12 Dec 2016 11:01:45 +0100
-Message-ID: <CAOq732Lvqez5mNne9YAk8aTrZyAQsxxL6pSwD9EkB4V0t2mLrg@mail.gmail.com> (sfid-20161212_110152_498754_AEAADC19)
-Subject: Re: [PATCH] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:43454 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751726AbcLEPA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 10:00:58 -0500
+Message-ID: <1480950054.31788.36.camel@sipsolutions.net> (sfid-20161205_160104_005466_DB882532)
+Subject: Re: [PATCH 1/2] mac80211: do not iterate active interfaces when in
+ re-configure
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Date: Mon, 05 Dec 2016 16:00:54 +0100
+In-Reply-To: <58458058.5020008@candelatech.com>
+References: <1480645800-2148-1-git-send-email-greearb@candelatech.com>
+         <CA+BoTQkEaC-ZSbeK=JB=q+ucF1PWcEQXkJEp6JYv4pfOf35cHg@mail.gmail.com>
+         (sfid-20161205_092619_855272_0854B225) <1480945950.31788.4.camel@sipsolutions.net>
+         <58458058.5020008@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 December 2016 at 08:21, Marcel Holtmann <marcel@holtmann.org> wrote:
->> Disconnect or deauthenticate when the owning socket is closed if this
->> flag is supplied to CMD_CONNECT or CMD_AUTHENTICATE.  This may be used
->> to ensure userspace daemon doesn't leave an unmanaged connection behind.
->
-> I think you have a typo here. The CMD_AUTHENTICATE should be CMD_ASSOCIATE?
+On Mon, 2016-12-05 at 06:57 -0800, Ben Greear wrote:
 
-Good point, let me change this and resend.
+> I think clearing sdata-in-driver would fix the ath10k problem, at
+> least, but I was afraid it would break something else in mac80211 or
+> maybe in other thick firmware drivers.
 
-Best regards
+It's pretty much an internal thing - not sure what it'd break. OTOH,
+some drivers might actually assume that iterating finds them all, if
+they never clear the data even across a restart?
+
+> One way or another, we cannot be iterating over interfaces while
+> the interfaces are at the same time being (re)added.
+
+Well, we obviously *can* be, and we do in fact do that - it's just that
+ath10k specifically has issues with the data it's putting there, no?
+
+> Maybe mac80211 should explicitly remove all interfaces from the
+> driver during crash recovery?  
+
+I don't think that'll work. Removing them would interact with the
+firmware, which is dead, etc. That'd just cause trouble.
+
+> And the behaviour needs to be clearly documented somewhere
+> easy to find so that we can think about and program to the correct
+> API behaviour.
+
+We assume that the driver resets all its internal state - this whole
+interface iteration is a corner case we hadn't considered, I suppose.
+
+johannes
