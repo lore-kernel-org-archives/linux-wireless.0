@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53816 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753456AbcLSLpF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 06:45:05 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Thiagarajan\, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "nbd\@nbd.name" <nbd@nbd.name>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
-References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
-        <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
-        <1481794142.31776.5.camel@sipsolutions.net>
-        <58528607.7090101@qti.qualcomm.com>
-        <85c98160-3ee9-07db-cb4c-9e300f0ba798@nbd.name>
-        <1481809984.2582.5.camel@sipsolutions.net>
-        <58537DA3.1090901@qti.qualcomm.com>
-Date: Mon, 19 Dec 2016 13:45:00 +0200
-In-Reply-To: <58537DA3.1090901@qti.qualcomm.com> (Vasanthakumar Thiagarajan's
-        message of "Fri, 16 Dec 2016 05:37:39 +0000")
-Message-ID: <878trckurn.fsf@purkki.adurom.net> (sfid-20161219_124606_543289_BCC685FC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:43430 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751476AbcLEO5a (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Dec 2016 09:57:30 -0500
+Message-ID: <1480949847.31788.33.camel@sipsolutions.net> (sfid-20161205_155735_186831_B07E3331)
+Subject: Re: [PATCH] mac80211: fix Tx BA session stuck issue during sw
+ scanning
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Chris Chiu <chiu@endlessm.com>
+Cc: linux-wireless@vger.kernel.org, linux@endlessm.com
+Date: Mon, 05 Dec 2016 15:57:27 +0100
+In-Reply-To: <CAB4CAwfJeE15nhXuLi_V-FYeCj4wj=1ojij+pwZ8V7=gdER76Q@mail.gmail.com> (sfid-20161201_122456_423194_378125CA)
+References: <1479887968-17473-1-git-send-email-chiu@endlessm.com>
+         <1480424369.10012.6.camel@sipsolutions.net>
+         <CAB4CAwfJeE15nhXuLi_V-FYeCj4wj=1ojij+pwZ8V7=gdER76Q@mail.gmail.com>
+         (sfid-20161201_122456_423194_378125CA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com> writes:
+> > The premise seems fairly reasonable, although I'm a little worried
+> > that if so much new traffic is coming in we never finish the scan
+> > suspend? Actually, the queues are still stopped, so it's only
+> > management frames that can come in, so that should be ok?
+> > 
+> 
+> Actually it will finish scan eventually and back to SCAN_DECISION
+> state but almost 20~30 seconds elapsed. The local->scanning should be
+> cleared after all channels been scanned. However, from the debug
+> messages I added in ieee80211_iface_work(), it still returns when
+> check local->scanning and the DELBA still has no chance to be
+> transferred then stuck again at the next scan state machine. Supposed
+> to be another scan request issued but I don't know who's the killer.
+> Except to find who issue the next scan request, BA session have no
+> chance to reset in this long scan period (>20s) still need to be
+> taken
+> care.
 
-> On Thursday 15 December 2016 07:23 PM, Johannes Berg wrote:
->>
->>>> I agree. Dynamic switch part is buggy, we can start with not
->>>> allowing interfaces resulting in dynamic switch.
->>>
->>> Does this mean that when bringing up multiple interfaces, users would
->>> need to figure out the 'magic' order that works?
->>
->> I think we need to talk about hardware capabilities at this point.
->
-> QCA988X does not have capability to configure vif specific decap mode. Encap mode
-> is configurable per packet for all the ath10k based chips so this part should be
-> fine to support per vif configuration. Newer QCA chips like QCA9984, QCA4019, QCA9888
-> and QCA99X0 supports decap mode configuration per vif.
+No no, you misunderstood. My question is more like:
 
-When you say "all" are you also taking into account QCA6174 and QCA9377?
+Where is this traffic coming from, since netdev queues should be
+stopped?
 
-Just checking...
+And then, if there's so much traffic coming in that we can take 20-30
+seconds to send it out, could we - with the change - get stuck forever?
 
--- 
-Kalle Valo
+> You're right. I just want to clear_bit and set_bit in this case,
+> sorry for that confusing. Or any better suggestion?
+
+We seem to be using set_bit/clear_bit so that seems reasonable, unless
+you can prove that all of those are under the lock and we can remove
+the atomics entirely ... Not that it matters hugely, we don't scan all
+the time after all!
+
+johannes
