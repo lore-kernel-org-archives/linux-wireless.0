@@ -1,532 +1,379 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34651 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752089AbcLKFpi (ORCPT
+Received: from mail-io0-f179.google.com ([209.85.223.179]:36605 "EHLO
+        mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751645AbcLESeh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 00:45:38 -0500
-Received: by mail-oi0-f66.google.com with SMTP id m75so7285589oig.1
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:37 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 02/14] rtlwifi: Remove RT_TRACE messages that use DBG_EMERG
-Date: Sat, 10 Dec 2016 23:45:00 -0600
-Message-Id: <20161211054523.7119-4-Larry.Finger@lwfinger.net> (sfid-20161211_070932_477874_684496CF)
-In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
-References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+        Mon, 5 Dec 2016 13:34:37 -0500
+Received: by mail-io0-f179.google.com with SMTP id m5so473162175ioe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 10:34:16 -0800 (PST)
+Subject: Re: ath10k firmware crashes in mesh mode on QCA9880
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+References: <583DD564.8040704@cococorp.com>
+ <20161201070908.GB11953@atheros-ThinkPad-T61> <58421FA2.2020004@cococorp.com>
+ <20161203124358.GB31861@atheros-ThinkPad-T61>
+ <20161203124600.GC31861@atheros-ThinkPad-T61>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        lede-dev@lists.infradead.org, agreen@cococorp.com
+From: Benjamin Morgan <bmorgan@cococorp.com>
+Message-ID: <5845B325.6060002@cococorp.com> (sfid-20161205_193522_591448_BA9E9C83)
+Date: Mon, 5 Dec 2016 10:34:13 -0800
+MIME-Version: 1.0
+In-Reply-To: <20161203124600.GC31861@atheros-ThinkPad-T61>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages are always logged and represent error conditions, thus
-we can use pr_err().
+Applied the patch and tried with 10.2.4.70.54 firmware and it still crashes:
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c  | 14 +++------
- drivers/net/wireless/realtek/rtlwifi/cam.c   | 14 +++------
- drivers/net/wireless/realtek/rtlwifi/core.c  | 20 +++++-------
- drivers/net/wireless/realtek/rtlwifi/efuse.c |  3 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c   | 36 ++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/ps.c    |  3 +-
- drivers/net/wireless/realtek/rtlwifi/rc.c    |  3 +-
- drivers/net/wireless/realtek/rtlwifi/usb.c   | 46 +++++++++-------------------
- 8 files changed, 47 insertions(+), 92 deletions(-)
+[  142.438377] ath10k_pci 0000:01:00.0: firmware crashed! (uuid 
+a5499582-e220-46d2-9359-0b44219f69ea)
+[  142.447512] ath10k_pci 0000:01:00.0: qca988x hw2.0 target 0x4100016c 
+chip_id 0x043202ff sub 0000:0000
+[  142.456879] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1 
+tracing 0 dfs 1 testmode 1
+[  142.469916] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54 api 5 
+features no-p2p,raw-mode,mfp crc32 9d340dd9
+[  142.480295] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A 
+crc32 bebc7c08
+[  142.487717] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 
+cal file max-sta 128 raw 0 hwcrypto 1
+[  142.499361] ath10k_pci 0000:01:00.0: firmware register dump:
+[  142.505124] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3 
+0x009A4577 0x00955B31
+[  142.513157] ath10k_pci 0000:01:00.0: [04]: 0x009A4577 0x00060130 
+0x00000002 0x00439E98
+[  142.521203] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074 
+0x00407120 0x004436CC
+[  142.529246] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000 
+0x009A3518 0x009A3526
+[  142.537285] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x009A3EA6 
+0x00000000 0x00000000
+[  142.545324] ath10k_pci 0000:01:00.0: [20]: 0x409A4577 0x0040AAC4 
+0x0040AC60 0x0040AC09
+[  142.553356] ath10k_pci 0000:01:00.0: [24]: 0x809A44BA 0x0040AB24 
+0x00400000 0xC09A4577
+[  142.561400] ath10k_pci 0000:01:00.0: [28]: 0x809A39DE 0x0040AB84 
+0x0044110C 0x00442074
+[  142.569444] ath10k_pci 0000:01:00.0: [32]: 0x809A5FE2 0x0040ABB4 
+0x0044110C 0x00407120
+[  142.577483] ath10k_pci 0000:01:00.0: [36]: 0x809A2E6C 0x0040ABF4 
+0x0040AC14 0x00001580
+[  142.585522] ath10k_pci 0000:01:00.0: [40]: 0x80990F6F 0x0040AD04 
+0x009C643C 0x004436CC
+[  142.593554] ath10k_pci 0000:01:00.0: [44]: 0x80998510 0x0040AD64 
+0x004208FC 0x00439E4C
+[  142.601600] ath10k_pci 0000:01:00.0: [48]: 0x8099AE95 0x0040AD84 
+0x004208FC 0x0042638C
+[  142.609642] ath10k_pci 0000:01:00.0: [52]: 0x809BFC55 0x0040AEE4 
+0x00424FE8 0x00000002
+[  142.617681] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14 
+0x00000004 0x004039D0
+[  142.727220] ieee80211 phy0: Hardware restart was requested
+[  142.732850] ath10k_pci 0000:01:00.0: failed to synchronize monitor 
+vdev 1 stop: -143
+[  142.740739] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 4ac928b..0a8553e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -207,8 +207,7 @@ static void _rtl_init_hw_ht_capab(struct ieee80211_hw *hw,
- 	 *highest supported RX rate
- 	 */
- 	if (rtlpriv->dm.supp_phymode_switch) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "Support phy mode switch\n");
-+		pr_info("Support phy mode switch\n");
- 
- 		ht_cap->mcs.rx_mask[0] = 0xFF;
- 		ht_cap->mcs.rx_mask[1] = 0xFF;
-@@ -389,8 +388,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 			/* <4> set mac->sband to wiphy->sband */
- 			hw->wiphy->bands[NL80211_BAND_5GHZ] = sband;
- 		} else {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Err BAND %d\n",
--				 rtlhal->current_bandtype);
-+			pr_err("rtlwifi: Err BAND %d\n",
-+			       rtlhal->current_bandtype);
- 		}
- 	}
- 	/* <5> set hw caps */
-@@ -544,7 +542,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	 * mac80211 hw  in _rtl_init_mac80211.
- 	 */
- 	if (rtl_regd_init(hw, rtl_reg_notifier)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "REGD init failed\n");
-+		pr_err("rtlwifi: REGD init failed\n");
- 		return 1;
- 	}
- 
-@@ -1694,8 +1692,7 @@ void rtl_watchdog_wq_callback(void *data)
- 			 * we should reconnect this AP
- 			 */
- 			if (rtlpriv->link_info.roam_times >= 5) {
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "AP off, try to reconnect now\n");
-+				pr_err("rtlwifi: AP off, try to reconnect now\n");
- 				rtlpriv->link_info.roam_times = 0;
- 				ieee80211_connection_loss(
- 					rtlpriv->mac80211.vif);
-@@ -1886,8 +1883,7 @@ void rtl_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
- 						      (u8 *)&iotype);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unknown Scan Backup operation.\n");
-+			pr_err("rtlwifi: Unknown Scan Backup operation.\n");
- 			break;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
-index 8fe8b4c..a0605d8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/cam.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
-@@ -285,8 +285,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	u8 i, *addr;
- 
- 	if (NULL == sta_addr) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is NULL.\n");
-+		pr_err("rtlwifi: sta_addr is NULL.\n");
- 		return TOTAL_CAM_ENTRY;
- 	}
- 	/* Does STA already exist? */
-@@ -298,9 +297,8 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	/* Get a free CAM entry. */
- 	for (entry_idx = 4; entry_idx < TOTAL_CAM_ENTRY; entry_idx++) {
- 		if ((bitmap & BIT(0)) == 0) {
--			RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--				 "-----hwsec_cam_bitmap: 0x%x entry_idx=%d\n",
--				 rtlpriv->sec.hwsec_cam_bitmap, entry_idx);
-+			pr_err("rtlwifi: -----hwsec_cam_bitmap: 0x%x entry_idx=%d\n",
-+			       rtlpriv->sec.hwsec_cam_bitmap, entry_idx);
- 			rtlpriv->sec.hwsec_cam_bitmap |= BIT(0) << entry_idx;
- 			memcpy(rtlpriv->sec.hwsec_cam_sta_addr[entry_idx],
- 			       sta_addr, ETH_ALEN);
-@@ -319,14 +317,12 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	u8 i, *addr;
- 
- 	if (NULL == sta_addr) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is NULL.\n");
-+		pr_err("rtlwifi: sta_addr is NULL.\n");
- 		return;
- 	}
- 
- 	if (is_zero_ether_addr(sta_addr)) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is %pM\n", sta_addr);
-+		pr_err("rtlwifi: sta_addr is %pM\n", sta_addr);
- 		return;
- 	}
- 	/* Does STA already exist? */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 6aad64c..77d7baa 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -117,8 +117,7 @@ static void rtl_fw_do_work(const struct firmware *firmware, void *context,
- 	}
- found_alt:
- 	if (firmware->size > rtlpriv->max_fw_size) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Firmware is too big!\n");
-+		pr_err("rtlwifi: Firmware is too big!\n");
- 		release_firmware(firmware);
- 		return;
- 	}
-@@ -303,8 +302,8 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 				(u8 *)(&mac->basic_rates));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "operation mode %d is not support!\n", vif->type);
-+		pr_err("rtlwifi: operation mode %d is not supported!\n",
-+		       vif->type);
- 		err = -EOPNOTSUPP;
- 		goto out;
- 	}
-@@ -764,9 +762,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 			default:
- 					mac->bw_40 = false;
- 					mac->bw_80 = false;
--					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case %#x not processed\n",
--						 channel_type);
-+					pr_err("rtlwifi: switch case %#x not processed\n",
-+					       channel_type);
- 					break;
- 			}
- 		}
-@@ -1399,8 +1396,7 @@ static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
- 			 "IEEE80211_AMPDU_RX_STOP:TID:%d\n", tid);
- 		return rtl_rx_agg_stop(hw, sta, tid);
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "IEEE80211_AMPDU_ERR!!!!:\n");
-+		pr_err("rtlwifi: IEEE80211_AMPDU_ERR!!!!:\n");
- 		return -EOPNOTSUPP;
- 	}
- 	return 0;
-@@ -1536,8 +1532,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		err = -EOPNOTSUPP;
- 		goto out_unlock;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "alg_err:%x!!!!:\n", key->cipher);
-+		pr_err("rtlwifi: alg_err:%x!!!!:\n", key->cipher);
- 		goto out_unlock;
- 	}
- 	if (key_type == WEP40_ENCRYPTION ||
-@@ -1662,8 +1657,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "cmd_err:%x!!!!:\n", cmd);
-+		pr_err("rtlwifi: cmd_err:%x!!!!:\n", cmd);
- 	}
- out_unlock:
- 	mutex_unlock(&rtlpriv->locks.conf_mutex);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.c b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-index 7becfef..afc7550 100644
---- a/drivers/net/wireless/realtek/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-@@ -1259,8 +1259,7 @@ int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
- 		break;
- 
- 	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL8XXX did not boot from eeprom, check it !!\n");
-+		pr_err("rtlwifi: RTL8XXX did not boot from eeprom, check it !!\n");
- 		return 1;
- 
- 	default:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 661c66f..f8bfa73 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -174,9 +174,8 @@ static void _rtl_pci_update_default_setting(struct ieee80211_hw *hw)
- 		}
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n",
--			 rtlpci->const_support_pciaspm);
-+		pr_err("rtlwifi: switch case %#x not processed\n",
-+		       rtlpci->const_support_pciaspm);
- 		break;
- 	}
- 
-@@ -1247,9 +1246,8 @@ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
- 					 &buffer_desc_dma);
- 
- 		if (!buffer_desc || (unsigned long)buffer_desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate TX ring (prio = %d)\n",
--				 prio);
-+			pr_err("rtlwifi: Cannot allocate TX ring (prio = %d)\n",
-+			       prio);
- 			return -ENOMEM;
- 		}
- 
-@@ -1266,8 +1264,7 @@ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
- 				     sizeof(*desc) * entries, &desc_dma);
- 
- 	if (!desc || (unsigned long)desc & 0xFF) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Cannot allocate TX ring (prio = %d)\n", prio);
-+		pr_err("rtlwifi: Cannot allocate TX ring (prio = %d)\n", prio);
- 		return -ENOMEM;
- 	}
- 
-@@ -1314,8 +1311,7 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw, int rxring_idx)
- 					  &rtlpci->rx_ring[rxring_idx].dma);
- 		if (!rtlpci->rx_ring[rxring_idx].buffer_desc ||
- 		    (ulong)rtlpci->rx_ring[rxring_idx].buffer_desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate RX ring\n");
-+			pr_err("rtlwifi: Cannot allocate RX ring\n");
- 			return -ENOMEM;
- 		}
- 
-@@ -1338,8 +1334,7 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw, int rxring_idx)
- 					  &rtlpci->rx_ring[rxring_idx].dma);
- 		if (!rtlpci->rx_ring[rxring_idx].desc ||
- 		    (unsigned long)rtlpci->rx_ring[rxring_idx].desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate RX ring\n");
-+			pr_err("rtlwifi: Cannot allocate RX ring\n");
- 			return -ENOMEM;
- 		}
- 
-@@ -1799,15 +1794,13 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
- 
- static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err;
- 
- 	_rtl_pci_init_struct(hw, pdev);
- 
- 	err = _rtl_pci_init_trx_ring(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "tx ring initialization failed\n");
-+		pr_err("rtlwifi: tx ring initialization failed\n");
- 		return err;
- 	}
- 
-@@ -2275,7 +2268,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
- 
- 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		pr_err("rtlwifi: Can't init_sw_vars\n");
- 		err = -ENODEV;
- 		goto fail3;
- 	}
-@@ -2287,22 +2280,20 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate sw for mac80211\n");
-+		pr_err("rtlwifi: Can't allocate sw for mac80211\n");
- 		goto fail3;
- 	}
- 
- 	/* Init PCI sw */
- 	err = rtl_pci_init(hw, pdev);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init PCI\n");
-+		pr_err("rtlwifi: Failed to init PCI\n");
- 		goto fail3;
- 	}
- 
- 	err = ieee80211_register_hw(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw.\n");
-+		pr_err("rtlwifi: Can't register mac80211 hw.\n");
- 		err = -ENODEV;
- 		goto fail3;
- 	}
-@@ -2310,8 +2301,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 
- 	err = sysfs_create_group(&pdev->dev.kobj, &rtl_attribute_group);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "failed to create sysfs device attributes\n");
-+		pr_err("rtlwifi: failed to create sysfs device attributes\n");
- 		goto fail3;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index d0ffc4d..4f83270 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -150,8 +150,7 @@ static bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 		break;
- 
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", state_toset);
-+		pr_err("rtlwifi: switch case %#x not processed\n", state_toset);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index ce8621a..951d257 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -267,8 +267,7 @@ static void *rtl_rate_alloc_sta(void *ppriv,
- 
- 	rate_priv = kzalloc(sizeof(struct rtl_rate_priv), gfp);
- 	if (!rate_priv) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Unable to allocate private rc structure\n");
-+		pr_err("rtlwifi: Unable to allocate private rc structure\n");
- 		return NULL;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index dc58aa6..14d68e9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -421,14 +421,12 @@ static void _rtl_rx_completed(struct urb *urb);
- static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
- 			      struct urb *urb, gfp_t gfp_mask)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	void *buf;
- 
- 	buf = usb_alloc_coherent(rtlusb->udev, rtlusb->rx_max_size, gfp_mask,
- 				 &urb->transfer_dma);
- 	if (!buf) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Failed to usb_alloc_coherent!!\n");
-+		pr_err("rtlwifi: Failed to usb_alloc_coherent!!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -613,8 +611,6 @@ static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
- static void _rtl_rx_completed(struct urb *_urb)
- {
- 	struct rtl_usb *rtlusb = (struct rtl_usb *)_urb->context;
--	struct ieee80211_hw *hw = usb_get_intfdata(rtlusb->intf);
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err = 0;
- 
- 	if (unlikely(IS_USB_STOP(rtlusb)))
-@@ -628,17 +624,15 @@ static void _rtl_rx_completed(struct urb *_urb)
- 		struct ieee80211_hdr *hdr;
- 
- 		if (size < RTL_RX_DESC_SIZE + sizeof(struct ieee80211_hdr)) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Too short packet from bulk IN! (len: %d)\n",
--				 size);
-+			pr_err("rtlwifi: Too short packet from bulk IN! (len: %d)\n",
-+			       size);
- 			goto resubmit;
- 		}
- 
- 		qlen = skb_queue_len(&rtlusb->rx_queue);
- 		if (qlen >= __RX_SKB_MAX_QUEUED) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Pending RX skbuff queue full! (qlen: %d)\n",
--				 qlen);
-+			pr_err("rtlwifi: Pending RX skbuff queue full! (qlen: %d)\n",
-+			       qlen);
- 			goto resubmit;
- 		}
- 
-@@ -647,8 +641,7 @@ static void _rtl_rx_completed(struct urb *_urb)
- 
- 		skb = dev_alloc_skb(size + __RADIO_TAP_SIZE_RSV + padding);
- 		if (!skb) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Can't allocate skb for bulk IN!\n");
-+			pr_err("rtlwifi: Can't allocate skb for bulk IN!\n");
- 			goto resubmit;
- 		}
- 
-@@ -725,7 +718,6 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 	struct urb *urb;
- 	int err;
- 	int i;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
- 	WARN_ON(0 == rtlusb->rx_urb_num);
-@@ -740,8 +732,7 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 
- 		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
- 		if (err < 0) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Failed to prep_rx_urb!!\n");
-+			pr_err("rtlwifi: Failed to prep_rx_urb!!\n");
- 			usb_free_urb(urb);
- 			goto err_out;
- 		}
-@@ -839,7 +830,6 @@ static void rtl_usb_stop(struct ieee80211_hw *hw)
- static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- {
- 	int err;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
- 	usb_anchor_urb(_urb, &rtlusb->tx_submitted);
-@@ -847,8 +837,7 @@ static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- 	if (err < 0) {
- 		struct sk_buff *skb;
- 
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Failed to submit urb\n");
-+		pr_err("rtlwifi: Failed to submit urb\n");
- 		usb_unanchor_urb(_urb);
- 		skb = (struct sk_buff *)_urb->context;
- 		kfree_skb(skb);
-@@ -859,7 +848,6 @@ static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- static int _usb_tx_post(struct ieee80211_hw *hw, struct urb *urb,
- 			struct sk_buff *skb)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 	struct ieee80211_tx_info *txinfo;
- 
-@@ -870,8 +858,7 @@ static int _usb_tx_post(struct ieee80211_hw *hw, struct urb *urb,
- 	txinfo->flags |= IEEE80211_TX_STAT_ACK;
- 
- 	if (urb->status) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Urb has error status 0x%X\n", urb->status);
-+		pr_err("rtlwifi: Urb has error status 0x%X\n", urb->status);
- 		goto out;
- 	}
- 	/*  TODO:	statistics */
-@@ -919,7 +906,6 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
- static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		       enum rtl_txq qnum)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 	u32 ep_num;
- 	struct urb *_urb = NULL;
-@@ -927,8 +913,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 
- 	WARN_ON(NULL == rtlusb->usb_tx_aggregate_hdl);
- 	if (unlikely(IS_USB_STOP(rtlusb))) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "USB device is stopping...\n");
-+		pr_err("rtlwifi: USB device is stopping...\n");
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -936,8 +921,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	_skb = skb;
- 	_urb = _rtl_usb_tx_urb_setup(hw, _skb, ep_num);
- 	if (unlikely(!_urb)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate urb. Drop skb!\n");
-+		pr_err("rtlwifi: Can't allocate urb. Drop skb!\n");
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -1102,20 +1086,18 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate sw for mac80211\n");
-+		pr_err("rtlwifi: Can't allocate sw for mac80211\n");
- 		goto error_out;
- 	}
- 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		pr_err("rtlwifi: Can't init_sw_vars\n");
- 		goto error_out;
- 	}
- 	rtlpriv->cfg->ops->init_sw_leds(hw);
- 
- 	err = ieee80211_register_hw(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw.\n");
-+		pr_err("rtlwifi: Can't register mac80211 hw.\n");
- 		err = -ENODEV;
- 		goto error_out;
- 	}
--- 
-2.10.2
+
+~Benjamin
+
+On 12/03/2016 04:46 AM, Mohammed Shafi Shajakhan wrote:
+> https://patchwork.kernel.org/patch/9437519/
+> (sorry missed this in the previous thread)
+>
+> On Sat, Dec 03, 2016 at 06:13:58PM +0530, Mohammed Shafi Shajakhan wrote:
+>> Hi Benjamin,
+>>
+>> On Fri, Dec 02, 2016 at 05:28:02PM -0800, Benjamin Morgan wrote:
+>>> Just tried 10.2.4.70.58 firmware that you linked to and it still crashes:
+>>>
+>>> [  131.568989] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
+>>> 1838347e-9380-4a26-ac9d-2963ee95968b)
+>>> [  131.578124] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
+>>> 0x4100016c chip_id 0x043202ff sub 0000:0000
+>>> [  131.587491] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+>>> tracing 0 dfs 1 testmode 1
+>>> [  131.600521] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.58
+>>> api 5 features no-p2p,raw-mode,mfp crc32 e1af076f
+>>> [  131.610899] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
+>>> crc32 bebc7c08
+>>> [  131.618325] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
+>>> 2 cal file max-sta 128 raw 0 hwcrypto 1
+>>> [  131.629965] ath10k_pci 0000:01:00.0: firmware register dump:
+>>> [  131.635728] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
+>>> 0x009A45AF 0x00955B31
+>>> [  131.643761] ath10k_pci 0000:01:00.0: [04]: 0x009A45AF 0x00060130
+>>> 0x00000002 0x00439E98
+>>> [  131.651806] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
+>>> 0x00407120 0x004436CC
+>>> [  131.659852] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
+>>> 0x009A3550 0x009A355E
+>>> [  131.667892] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x009A31D6
+>>> 0x00000000 0x00000000
+>>> [  131.675936] ath10k_pci 0000:01:00.0: [20]: 0x409A45AF 0x0040AAC4
+>>> 0x0040AC60 0x0040AC09
+>>> [  131.683968] ath10k_pci 0000:01:00.0: [24]: 0x809A44F2 0x0040AB24
+>>> 0x00400000 0xC09A45AF
+>>> [  131.692013] ath10k_pci 0000:01:00.0: [28]: 0x809A3A16 0x0040AB84
+>>> 0x0044110C 0x00442074
+>>> [  131.700056] ath10k_pci 0000:01:00.0: [32]: 0x809A601A 0x0040ABB4
+>>> 0x0044110C 0x00407120
+>>> [  131.708100] ath10k_pci 0000:01:00.0: [36]: 0x809A2EA4 0x0040ABF4
+>>> 0x0040AC14 0x00001580
+>>> [  131.716143] ath10k_pci 0000:01:00.0: [40]: 0x80990F63 0x0040AD04
+>>> 0x009C6458 0x004436CC
+>>> [  131.724175] ath10k_pci 0000:01:00.0: [44]: 0x80998520 0x0040AD64
+>>> 0x004208FC 0x00439E4C
+>>> [  131.732220] ath10k_pci 0000:01:00.0: [48]: 0x8099AEA5 0x0040AD84
+>>> 0x004208FC 0x00425874
+>>> [  131.740263] ath10k_pci 0000:01:00.0: [52]: 0x809BFC39 0x0040AEE4
+>>> 0x00424FE8 0x00000002
+>>> [  131.748306] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
+>>> 0x00000004 0x004039D0
+>>> [  131.857076] ieee80211 phy0: Hardware restart was requested
+>>> [  131.862705] ath10k_pci 0000:01:00.0: failed to synchronize
+>>> monitor vdev 1 stop: -143
+>>> [  131.870594] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
+>> [shafi] request to try with the latest backports and ath.git
+>> Also worth trying this fix in ath10k (once the next firmware version)
+>> is available. I will keep you posted. thank you !
+>>
+>>> ~Benjamin
+>>>
+>>> On 11/30/2016 11:09 PM, Mohammed Shafi Shajakhan wrote:
+>>>> Hi,
+>>>>
+>>>> On Tue, Nov 29, 2016 at 11:22:12AM -0800, Benjamin Morgan wrote:
+>>>>> When we try to transmit traffic (ping) between two meshed ath10k
+>>>>> devices running latest lede we keep experiencing ath10k firmware
+>>>>> crashes. This seems to only happen when running in 802.11n/ac mode
+>>>>> but not in 802.11a/g mode. Also, from the station dumps it appears
+>>>>> that management traffic is flowing between the devices, however when
+>>>>> we try to send unicast data traffic the firmware crashes
+>>>>> immediately.
+>>>> [shafi] Did you get a chance to try with the below firmware as well
+>>>> https://github.com/kvalo/ath10k-firmware/blob/master/QCA988X/hw2.0/10.2.4.70/firmware-5.bin_10.2.4.70.58
+>>>>
+>>>>> Platform: Archer C7 AC1750 v2
+>>>>> Software Image: LEDE (HEAD, r2299) Commit: https://github.com/lede-project/source/commit/d596c21ebd5a3e6ce933eff3e51989031e4b1d58
+>>>>>
+>>>>> Crypto: wpa_supplicant
+>>>>> wpa_supplicant-wlan0.conf
+>>>>> network={
+>>>>> ssid="bmorgan_lede_mesh"
+>>>>> key_mgmt=SAE
+>>>>> mode=5
+>>>>> frequency=5180
+>>>>> psk="meshpassword"
+>>>>> }
+>>>>>
+>>>>> Backports Verstion:
+>>>>> [    9.818007] Loading modules backported from Linux version
+>>>>> wt-2016-10-03-1-g6fcb1a6
+>>>>> [    9.825736] Backport generated by backports.git
+>>>>> backports-20160324-9-g0e38f5c
+>>>>>
+>>>>> ​​Ath10k Initialization on Station A (dmesg)
+>>>>> [    9.896715] PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
+>>>>> [    9.902622] ath10k_pci 0000:01:00.0: pci irq legacy oper_irq_mode
+>>>>> 1 irq_mode 0 reset_mode 0
+>>>>> [   10.123734] ath10k_pci 0000:01:00.0: Direct firmware load for
+>>>>> ath10k/pre-cal-pci-0000:01:00.0.bin failed with error -2
+>>>>> [   10.134620] ath10k_pci 0000:01:00.0: Falling back to user helper
+>>>>> [   10.287680] firmware ath10k!pre-cal-pci-0000:01:00.0.bin:
+>>>>> firmware_loading_store: map pages failed
+>>>>> [   10.622789] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
+>>>>> 0x4100016c chip_id 0x043202ff sub 0000:0000
+>>>>> [   10.632184] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+>>>>> tracing 0 dfs 1 testmode 1
+>>>>> [   10.645231] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54
+>>>>> api 5 features no-p2p,raw-mode,mfp crc32 9d340dd9
+>>>>> [   10.655660] ath10k_pci 0000:01:00.0: Direct firmware load for
+>>>>> ath10k/QCA988X/hw2.0/board-2.bin failed with error -2
+>>>>> [   10.666264] ath10k_pci 0000:01:00.0: Falling back to user helper
+>>>>> [   10.747925] firmware ath10k!QCA988X!hw2.0!board-2.bin:
+>>>>> firmware_loading_store: map pages failed
+>>>>> [   11.011123] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
+>>>>> crc32 bebc7c08
+>>>>> [   12.155224] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
+>>>>> 2 cal file max-sta 128 raw 0 hwcrypto 1
+>>>>>
+>>>>> Station A (wlan0):
+>>>>> 18:A6:F7:23:6E:66
+>>>>> 10.230.5.41
+>>>>>
+>>>>> Station B (wlan0):
+>>>>> 18:a6:f7:26:0f:21
+>>>>> 10.230.5.42
+>>>>>
+>>>>> Station Dump on Station A before ping:
+>>>>> Station 18:a6:f7:26:0f:21 (on wlan0)
+>>>>> inactive time:340 ms
+>>>>> rx bytes:2472
+>>>>> rx packets:28
+>>>>> tx bytes:1204
+>>>>> tx packets:9
+>>>>> tx retries:0
+>>>>> tx failed:0
+>>>>> rx drop misc:1
+>>>>> signal: -14 dBm
+>>>>> signal avg:-14 dBm
+>>>>> Toffset:18142530 us
+>>>>> tx bitrate:6.0 MBit/s
+>>>>> rx bitrate:6.0 MBit/s
+>>>>> rx duration:1524 us
+>>>>> mesh llid:0
+>>>>> mesh plid:0
+>>>>> mesh plink:ESTAB
+>>>>> mesh local PS mode:ACTIVE
+>>>>> mesh peer PS mode:UNKNOWN
+>>>>> mesh non-peer PS mode:ACTIVE
+>>>>> authorized:yes
+>>>>> authenticated:yes
+>>>>> associated:yes
+>>>>> preamble:long
+>>>>> WMM/WME:yes
+>>>>> MFP:yes
+>>>>> TDLS peer:no
+>>>>> DTIM period:2
+>>>>> beacon interval:1000
+>>>>> connected time:10 seconds
+>>>>>
+>>>>> ​Crash Log on Station B (10.230.5.42)
+>>>>> [245.483888] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
+>>>>> 2bab5ee9-08ff-4a17-95b1-636d212acebc)
+>>>>> [245.493020] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
+>>>>> 0x4100016c chip_id 0x043202ff sub 0000:0000
+>>>>> [245.502384] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+>>>>> tracing 0 dfs 1 testmode 1
+>>>>> [245.515436] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54 api
+>>>>> 5 features no-p2p,raw-mode,mfp crc32 9d340dd9
+>>>>> [245.525812] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
+>>>>> crc32 bebc7c08
+>>>>> [245.533232] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2
+>>>>> cal file max-sta 128 raw 0 hwcrypto 1
+>>>>> [245.544876] ath10k_pci 0000:01:00.0: firmware register dump:
+>>>>> [245.550633] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
+>>>>> 0x009A4577 0x00955B31
+>>>>> [245.558676] ath10k_pci 0000:01:00.0: [04]: 0x009A4577 0x00060130
+>>>>> 0x00000002 0x00439E98
+>>>>> [245.566715] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
+>>>>> 0x00407120 0x004436CC
+>>>>> [245.574749] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
+>>>>> 0x009A3518 0x009A3526
+>>>>> [245.582793] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
+>>>>> 0x00000000 0x00000000
+>>>>> [245.590836] ath10k_pci 0000:01:00.0: [20]: 0x409A4577 0x0040AAC4
+>>>>> 0x0040AC60 0x0040AC09
+>>>>> [245.598882] ath10k_pci 0000:01:00.0: [24]: 0x809A44BA 0x0040AB24
+>>>>> 0x00400000 0xC09A4577
+>>>>> [245.606923] ath10k_pci 0000:01:00.0: [28]: 0x809A39DE 0x0040AB84
+>>>>> 0x0044110C 0x00442074
+>>>>> [245.614955] ath10k_pci 0000:01:00.0: [32]: 0x809A5FE2 0x0040ABB4
+>>>>> 0x0044110C 0x00407120
+>>>>> [245.623000] ath10k_pci 0000:01:00.0: [36]: 0x809A2E6C 0x0040ABF4
+>>>>> 0x0040AC14 0x00001580
+>>>>> [245.631043] ath10k_pci 0000:01:00.0: [40]: 0x80990F6F 0x0040AD04
+>>>>> 0x009C643C 0x004436CC
+>>>>> [245.639086] ath10k_pci 0000:01:00.0: [44]: 0x80998510 0x0040AD64
+>>>>> 0x004208FC 0x00439E4C
+>>>>> [245.647129] ath10k_pci 0000:01:00.0: [48]: 0x8099AE95 0x0040AD84
+>>>>> 0x004208FC 0x00425404
+>>>>> [245.655170] ath10k_pci 0000:01:00.0: [52]: 0x809BFC55 0x0040AEE4
+>>>>> 0x00424FE8 0x00000002
+>>>>> [245.663198] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
+>>>>> 0x00000004 0x004039D0
+>>>>> [245.767023] ieee80211 phy0: Hardware restart was requested
+>>>>> [245.772655] ath10k_pci 0000:01:00.0: failed to synchronize monitor
+>>>>> vdev 1 stop: -143
+>>>>> [245.780542] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
+>>>>> ​
+>>>>> With wpa_supplicant turned off:
+>>>>>
+>>>>> Station Dump on Station A before ping:
+>>>>> Station 18:a6:f7:26:0f:21 (on wlan0)
+>>>>> inactive time:60 ms
+>>>>> rx bytes:3874
+>>>>> rx packets:67
+>>>>> tx bytes:707
+>>>>> tx packets:7
+>>>>> tx retries:0
+>>>>> tx failed:1
+>>>>> rx drop misc:3
+>>>>> signal: -14 dBm
+>>>>> signal avg:-14 dBm
+>>>>> Toffset:18446744073684250999 us
+>>>>> tx bitrate:6.0 MBit/s
+>>>>> rx bitrate:6.0 MBit/s
+>>>>> rx duration:1312 us
+>>>>> mesh llid:24953
+>>>>> mesh plid:59412
+>>>>> mesh plink:ESTAB
+>>>>> mesh local PS mode:ACTIVE
+>>>>> mesh peer PS mode:UNKNOWN
+>>>>> mesh non-peer PS mode:ACTIVE
+>>>>> authorized:yes
+>>>>> authenticated:yes
+>>>>> associated:yes
+>>>>> preamble:long
+>>>>> WMM/WME:yes
+>>>>> MFP:no
+>>>>> TDLS peer:no
+>>>>> DTIM period:2
+>>>>> beacon interval:1000
+>>>>> short slot time:yes
+>>>>> connected time:33 seconds
+>>>>>
+>>>>> Firmware crash on Station A (10.230.5.41)
+>>>>> [ 1040.984599] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
+>>>>> 42d4f6dc-0e89-4505-aefb-58cbb70d0dce)
+>>>>> [ 1040.993732] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
+>>>>> 0x4100016c chip_id 0x043202ff sub 0000:0000
+>>>>> [ 1041.003100] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
+>>>>> tracing 0 dfs 1 testmode 1
+>>>>> [ 1041.016144] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54
+>>>>> api 5 features no-p2p,raw-mode,mfp crc32 9d340dd9
+>>>>> [ 1041.026523] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
+>>>>> crc32 bebc7c08
+>>>>> [ 1041.033940] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
+>>>>> 2 cal file max-sta 128 raw 0 hwcrypto 1
+>>>>> [ 1041.045593] ath10k_pci 0000:01:00.0: firmware register dump:
+>>>>> [ 1041.051336] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
+>>>>> 0x009A4577 0x00955B31
+>>>>> [ 1041.059383] ath10k_pci 0000:01:00.0: [04]: 0x009A4577 0x00060130
+>>>>> 0x00000001 0x00435354
+>>>>> [ 1041.067424] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
+>>>>> 0x00407120 0x004436CC
+>>>>> [ 1041.075463] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
+>>>>> 0x009A43A0 0x009A43DE
+>>>>> [ 1041.083490] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
+>>>>> 0x00000000 0x00000000
+>>>>> [ 1041.091535] ath10k_pci 0000:01:00.0: [20]: 0x409A4577 0x0040AAC4
+>>>>> 0x0040AC60 0x0040AC09
+>>>>> [ 1041.099579] ath10k_pci 0000:01:00.0: [24]: 0x809A44BA 0x0040AB24
+>>>>> 0x00955A00 0xC09A4577
+>>>>> [ 1041.107622] ath10k_pci 0000:01:00.0: [28]: 0x809A39DE 0x0040AB84
+>>>>> 0x0044110C 0x00442074
+>>>>> [ 1041.115661] ath10k_pci 0000:01:00.0: [32]: 0x809A5FE2 0x0040ABB4
+>>>>> 0x0044110C 0x00407120
+>>>>> [ 1041.123689] ath10k_pci 0000:01:00.0: [36]: 0x809A2E6C 0x0040ABF4
+>>>>> 0x0040AC10 0x00001580
+>>>>> [ 1041.131733] ath10k_pci 0000:01:00.0: [40]: 0x80990F6F 0x0040AD04
+>>>>> 0x009C643C 0x004436CC
+>>>>> [ 1041.139777] ath10k_pci 0000:01:00.0: [44]: 0x80998510 0x0040AD64
+>>>>> 0x004208FC 0x00439E4C
+>>>>> [ 1041.147820] ath10k_pci 0000:01:00.0: [48]: 0x8099AE95 0x0040AD84
+>>>>> 0x004208FC 0x00425758
+>>>>> [ 1041.155860] ath10k_pci 0000:01:00.0: [52]: 0x809BFC55 0x0040AEE4
+>>>>> 0x00424FE8 0x00000002
+>>>>> [ 1041.163888] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
+>>>>> 0x00000004 0x004039D0
+>>>>> [ 1041.267025] ieee80211 phy0: Hardware restart was requested
+>>>>> [ 1041.272656] ath10k_pci 0000:01:00.0: failed to synchronize
+>>>>> monitor vdev 1 stop: -143
+>>>>> [ 1041.280545] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
+>>>>>
+>>>>> ​
+>>>>> Thanks in advance for your time and help,
+>>>>>
+>>>>> ~Benjamin
+>>>>>
