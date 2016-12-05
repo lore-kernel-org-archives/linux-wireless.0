@@ -1,68 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:34079 "EHLO
-        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752871AbcLRALZ (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32888 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751096AbcLEO4v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Dec 2016 19:11:25 -0500
-Received: by mail-it0-f67.google.com with SMTP id 75so6721495ite.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2016 16:11:25 -0800 (PST)
-Received: from mail-io0-f174.google.com (mail-io0-f174.google.com. [209.85.223.174])
-        by smtp.gmail.com with ESMTPSA id c71sm5467772ioe.19.2016.12.17.16.11.24
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 17 Dec 2016 16:11:24 -0800 (PST)
-Received: by mail-io0-f174.google.com with SMTP id d9so126897835ioe.0
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2016 16:11:24 -0800 (PST)
+        Mon, 5 Dec 2016 09:56:51 -0500
+Received: by mail-oi0-f65.google.com with SMTP id f201so36848985oib.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 06:55:39 -0800 (PST)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+ <1480945883.31788.3.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <58457FEA.4030305@gmail.com> (sfid-20161205_155714_254546_E53F8D12)
+Date: Mon, 5 Dec 2016 08:55:38 -0600
 MIME-Version: 1.0
-In-Reply-To: <1481643200.20412.9.camel@sipsolutions.net>
-References: <20161212164500.691-1-andrew.zaborowski@intel.com> <1481643200.20412.9.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Sat, 17 Dec 2016 19:11:23 -0500
-Message-ID: <CAOq732+a+nSFTtJuouxBiPPySN9RLdy-h2Fxh7VkpPuM0Wk9QA@mail.gmail.com> (sfid-20161218_011128_940471_725B358D)
-Subject: Re: [PATCH v3] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1480945883.31788.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Johannes,
 
-On 13 December 2016 at 10:33, Johannes Berg <johannes@sipsolutions.net> wrote:
-> [snip]
+On 12/05/2016 07:51 AM, Johannes Berg wrote:
+> On Fri, 2016-12-02 at 21:56 +0100, Andrew Zaborowski wrote:
+>> Disconnect or deauthenticate when the owning socket is closed if this
+>> flag has been supplied to CMD_CONNECT, CMD_AUTHENTICATE or
+>> CMD_ASSOCIATE.
 >
-> Please fix coding style, particularly indentation.
+> Huh. That I think needs a lot more commit log to justify this code -
+> why do you think this would be useful? Connection managers dying don't
+> really mean you need to disconnect immediately, after all, and if they
+> restart it's pretty simple to detect the existing connection and
+> perhaps even use it...
+>
 
-Ok, fixed the wrapped lines.
+Detecting it is easy, sure.  But I'm a bit lost on how you propose to 
+'use' it.  The connection is active up until the next rekey event.  If 
+rekey offloading is supported, then this might never involve user space. 
+  But if it isn't (and I can't get rekey offload to work on any recent 
+kernel I tried) then how do you propose userspace obtains the rekey 
+counter, or the various keys used in the connection?
 
->
->> +static void cfg80211_disconnect_wk(struct work_struct *work)
->> +{
->> +       struct cfg80211_registered_device *rdev;
->> +       struct wireless_dev *wdev;
->> +
->> +       wdev = container_of(work, struct wireless_dev, disconnect_wk);
->> +       rdev = wiphy_to_rdev(wdev->wiphy);
->
->
-> Those should also be possible as initializers on the same line, I
-> guess?
->
-> It might also be worthwhile moving this function into a better file,
-> even if then it needs a prototype in core.h (it can't be inlined anyway
-> since it's called through a function pointer in the work struct)
+What about all the other state information?  FT, Pre-Authentication, etc?
 
-Ok, I pick sme.c because cfg80211_disconnect is there and I renamed
-this function to autodisconnect_wk to avoid confusion.
+Can you point me to a connection manager that actually performs this 
+'reuse' and not just simply wipes the state clean when starting?
 
->
->> +       if (!wdev->netdev)
->> +               return;
->
-> This obviously cannot happen.
->
-> All the code you added to nl80211.c is racy.
-
-Will use wdev_lock in the command handlers.
-
-Best regards
+Regards,
+-Denis
