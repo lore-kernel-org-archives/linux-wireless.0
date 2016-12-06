@@ -1,27 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57286 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759552AbcLPMeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 07:34:18 -0500
-Message-ID: <1481891640.27953.25.camel@sipsolutions.net> (sfid-20161216_133425_208965_63432A5C)
-Subject: Re: [PATCH] nl80211: rework {sched_,}scan event related functions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 16 Dec 2016 13:34:00 +0100
-In-Reply-To: <1481887314-9471-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481887314-9471-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from aserp1040.oracle.com ([141.146.126.69]:20486 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751166AbcLFTiJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Dec 2016 14:38:09 -0500
+Date: Tue, 6 Dec 2016 22:37:46 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+        Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
+Message-ID: <20161206193746.GJ8244@mwanda> (sfid-20161206_203812_802095_B28ACDBF)
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+ <20161202014833.6856-11-Larry.Finger@lwfinger.net>
+ <20161205213447.GJ8176@mwanda>
+ <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-12-16 at 11:21 +0000, Arend van Spriel wrote:
-> A couple of functions used with scan events were named with
-> term "send" although they were only preparing the the event
-> message so renamed those.
+On Mon, Dec 05, 2016 at 04:34:08PM -0600, Larry Finger wrote:
+> Can you point me to a driver with a better way to conditionally dump
+> a debugging string to the logs?
 
-Applied - I added a mention of nl80211_send_sched_scan_results() to the
-commit log since I was confused about that at first :)
+People should look at using ftrace and kprobes.  They really are very
+powerful and useful.
 
-johannes
+regards,
+dan carpenter
