@@ -1,79 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32230 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755576AbcLOJSY (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:36182 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752038AbcLFTgf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 04:18:24 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 6 Dec 2016 14:36:35 -0500
+Subject: Re: ath10k firmware sends probes on DFS channels without radar
+ detection
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr>
+Cc: Cedric VONCKEN <cedric.voncken@acksys.fr>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <63c731f2-ee21-6450-2ae4-2808e7130eb5@candelatech.com> (sfid-20161206_203641_123618_DFE0AFBD)
+Date: Tue, 6 Dec 2016 11:36:01 -0800
 MIME-Version: 1.0
-Subject: Re: ath10k: Avoid potential page alloc BUG_ON in tx free path
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1481086832-17281-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1481086832-17281-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <d64a028b471e4d38b6d9ac3e664f7c4d@euamsexm01a.eu.qualcomm.com> (sfid-20161215_101830_463740_3BFA9FA9)
-Date: Thu, 15 Dec 2016 10:18:15 +0100
+In-Reply-To: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> 'ath10k_htt_tx_free_cont_txbuf' and 'ath10k_htt_tx_free_cont_frag_desc'
-> have NULL pointer checks to avoid crash if they are called twice
-> but this is as of now not sufficient as these pointers are not assigned
-> to NULL once the contiguous DMA memory allocation is freed, fix this.
-> Though this may not be hit with the explicity check of state variable
-> 'tx_mem_allocated' check, good to have this addressed as well.
-> 
-> Below BUG_ON is hit when the above scenario is simulated
-> with kernel debugging enabled
-> 
->  page:f6d09a00 count:0 mapcount:-127 mapping:  (null)
-> index:0x0
->  flags: 0x40000000()
->  page dumped because: VM_BUG_ON_PAGE(page_ref_count(page)
-> == 0)
->  ------------[ cut here ]------------
->  kernel BUG at ./include/linux/mm.h:445!
->  invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
->  EIP is at put_page_testzero.part.88+0xd/0xf
->  Call Trace:
->   [<c118a2cc>] __free_pages+0x3c/0x40
->   [<c118a30e>] free_pages+0x3e/0x50
->   [<c10222b4>] dma_generic_free_coherent+0x24/0x30
->   [<f8c1d9a8>] ath10k_htt_tx_free_cont_txbuf+0xf8/0x140
-> 
->   [<f8c1e2a9>] ath10k_htt_tx_destroy+0x29/0xa0
-> 
->   [<f8c143e0>] ath10k_core_destroy+0x60/0x80 [ath10k_core]
->   [<f8acd7e9>] ath10k_pci_remove+0x79/0xa0 [ath10k_pci]
->   [<c13ed7a8>] pci_device_remove+0x38/0xb0
->   [<c14d3492>] __device_release_driver+0x72/0x100
->   [<c14d36b7>] driver_detach+0x97/0xa0
->   [<c14d29c0>] bus_remove_driver+0x40/0x80
->   [<c14d427a>] driver_unregister+0x2a/0x60
->   [<c13ec768>] pci_unregister_driver+0x18/0x70
->   [<f8aced4f>] ath10k_pci_exit+0xd/0x2be [ath10k_pci]
->   [<c1101e78>] SyS_delete_module+0x158/0x210
->   [<c11b34f1>] ? __might_fault+0x41/0xa0
->   [<c11b353b>] ? __might_fault+0x8b/0xa0
->   [<c1001a4b>] do_fast_syscall_32+0x9b/0x1c0
->   [<c178da34>] sysenter_past_esp+0x45/0x74
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On 12/06/2016 09:02 AM, Jean-Pierre Tosoni wrote:
+> This follows on the previous discussion
+> 	"Client station sends probes on DFS channels"
+>
+> Problem:
+> The combination of QCA988X firmware v10.2.4.70-2 + ath10k +
+> wpa_supplicant do not comply with the norm ETSI/EN 301-893
+> section 4.7; because they can send probes for 600s when no
+> AP is around.
+>
+> Analysis:
+> The problem seems to lie in the firmware, which regards the presence
+> of *any* beacon as a proof that the channel is radar-clean for 600s.
+>
+> This is a wrong hypothesis, since a rogue AP sending fraudulent
+> beacons should not induce a scrupulous STA in sending illegal probes.
+>
+> Moreover, the norm (table D.1) sets a time limit of 10s to
+> shutdown when no AP positively allows the STA to transmit on
+> the DFS channel.
+>
+> Status:
+> - there is no known plan at QCA to fix the issue.
+> - ath10k firmware is not publicly available for fixes.
+> - there is no obvious fix working in ath10k.
+> - the issue does not show up with other mac80211 devices like ath9k.
+> - wpa_supplicant considers this is a kernel issue [2]
 
-Patch applied to ath-next branch of ath.git, thanks.
+Have you confirmed that there are no probe requests being sent by
+ath10k driver?
 
-02a9e08d7374 ath10k: Avoid potential page alloc BUG_ON in tx free path
+You could also try disabling the station keep-alive and roaming logic in the firmware by
+tweaking the wmi initial setup logic.  I disable that in my firmware,
+for instance, because mac80211 can do a better job and then I can
+save resources in the firmware.
+
+Finally, if that doesn't work, then I could probably fix that in CT firmware
+in case that is of interest.
+
+Thanks,
+Ben
+
+>
+> Jean-Pierre Tosoni
+>
+>
+>
+>> -----Message d'origine-----
+>> De : ath10k [mailto:ath10k-bounces@lists.infradead.org] De la part de
+>> Jean-Pierre Tosoni
+>> Envoyé : mercredi 30 novembre 2016 19:04
+>> À : ath10k@lists.infradead.org
+>> Objet : Client station sends probes on DFS channels
+>>
+>> Hello list,
+>>
+>> There is a case where I can see probes on a DFS channel, from a non-
+>> associated station using ath10k. (note that the problem does not arise
+>> when using ath9k).
+>>
+>> *The setup*
+>>
+>> I am using Openwrt, wpa_supplicant and compat-wireless 2016-10-08,
+>> Card firmware is	ath10k_pci: qca988x hw2.0 (0x4100016c, 0x043202ff)
+>> 		fw 10.2.4.70-2 api 5 htt-ver 2.1 wmi-op 5 htt-op 2
+>> 		cal otp max-sta 128 features no-p2p
+>> 	ath10k_pci: debug 0 debugfs 1 tracing 0 dfs 1 testmode 1
+>>
+>> I am using channel 116, regdom US or FR, where I see no traffic at all
+>> using wireshark+Airpcap.
+>> I set wpa_supplicant to scan this channel only for a specific SSID
+>> "ssid1".
+>>
+>> At initial startup of the client device, no probes are going out, which
+>> is OK.
+>>
+>> Then, on another device, I start a hostapd set to channel 116, with a
+>> different SSID "otherssid" so that the supplicant will not associate.
+>>
+>> Shortly (1-2s) after the beacons appear in the air, the client begins to
+>> Send probe request in the air, which is unexpected, but acceptable since
+>> the client can infer absence of radars from the presence of beacons.
+>>
+>> *The problem*
+>>
+>> If I power down the AP, the client continues to send probes for around
+>> 10 minutes, which is unacceptable since it cannot handle radar detection,
+>> as it is a slave device in the meaning of ETSI/EN 301-893[1].
+>>
+>>
+>> Some tests I made:
+>> - I tried to investigate the "beacon hint" mechanism but it appears
+>>   that it is not used on DFS channels.
+>>
+>> - I tried to force the IEEE80211_NO_IR flag when IEEE80211_CHAN_DFS
+>>   is set.
+>>
+>> - When I reload the reg. domain using "iw reg set", the probes cease,
+>>   but will reappear if I cycle my AP again On then Off.
+>>
+>> - When I let the client associate, then disassociate and stop the AP,
+>>   the same problem arises. It disappears if I add a call to
+>>   ath10k_regd_update() in mac.c after a disconnection (This is not a
+>>   fix, since in my case the client never associates).
+>>
+>> - Since at startup, the client does not send probes, I infer that the
+>>   problem is *not* caused by a hidden AP that the card could see but
+>>   not airpcap.
+>>
+>> - I tried with channels 52 and 100, with regdom FR or US: same problem.
+>>
+>> Any ideas?
+>>
+>>
+>> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/
+>> 01.08.01_60/en_301893v010801p.pdf
+> [2] http://lists.shmoo.com/pipermail/hostap/2015-January/031906.html
+>>
+>> J.P. Tosoni - ACKSYS
+>>
+>>
+>>
+>>
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
+>
+
 
 -- 
-https://patchwork.kernel.org/patch/9463923/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
