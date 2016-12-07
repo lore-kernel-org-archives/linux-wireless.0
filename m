@@ -1,90 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36574 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935046AbcLMR00 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 12:26:26 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: Erik Stromdahl <erik.stromdahl@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v2 05/11] ath10k: htc: refactorization
-Date: Tue, 13 Dec 2016 17:26:18 +0000
-Message-ID: <871sxbzqo6.fsf@kamboji.qca.qualcomm.com> (sfid-20161213_182647_092448_02C07AEF)
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
-        <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com>
-        <87inqoymd0.fsf@kamboji.qca.qualcomm.com>
-        <CA+BoTQkuUFxnra75B4LpF5+k9yE7hkNYDXbtUMBLq2LFuPSasg@mail.gmail.com>
-In-Reply-To: <CA+BoTQkuUFxnra75B4LpF5+k9yE7hkNYDXbtUMBLq2LFuPSasg@mail.gmail.com>       (Michal
- Kazior's message of "Tue, 13 Dec 2016 14:52:41 +0100")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:34898 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751704AbcLGJYQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Dec 2016 04:24:16 -0500
+Message-ID: <1481102652.4092.33.camel@sipsolutions.net> (sfid-20161207_102423_683464_D1A0F883)
+Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF
+ synchronization
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@eero.com>,
+        Masashi Honma <masashi.honma@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Date: Wed, 07 Dec 2016 10:24:12 +0100
+In-Reply-To: <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com> (sfid-20161205_185947_682233_EC8A03E3)
+References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+         <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
+         <20161202211351.GA5571@localhost>
+         <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
+         <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com>
+         (sfid-20161205_185947_682233_EC8A03E3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Hi,
 
-> On 13 December 2016 at 14:44, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->>
->>> Code refactorization:
->>>
->>> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
->>> to ath10k_htc_control_rx_complete.
->>>
->>> This eases the implementation of SDIO/mbox significantly since
->>> the ep_rx_complete cb is invoked directly from the SDIO/mbox
->>> hif layer.
->>>
->>> Since the ath10k_htc_control_rx_complete already is present
->>> (only containing a warning message) there is no reason for not
->>> using it (instead of having a special case for ep 0 in
->>> ath10k_htc_rx_completion_handler).
->>>
->>> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
->>
->> I tested this on QCA988X PCI board just to see if there are any
->> regressions. It crashes immediately during module load, every time, and
->> bisected that the crashing starts on this patch:
->>
->> [ 1239.715325] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_=
-mode 0 reset_mode 0
->> [ 1239.885125] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/=
-pre-cal-pci-0000:02:00.0.bin failed with error -2
->> [ 1239.885260] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/=
-cal-pci-0000:02:00.0.bin failed with error -2
->> [ 1239.885687] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c =
-chip_id 0x043202ff sub 0000:0000
->> [ 1239.885699] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracin=
-g 1 dfs 1 testmode 1
->> [ 1239.885899] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api =
-5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
->> [ 1239.941836] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/=
-QCA988X/hw2.0/board-2.bin failed with error -2
->> [ 1239.941993] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc3=
-2 bebc7c08
->> [ 1241.136693] BUG: unable to handle kernel NULL pointer dereference at =
-  (null)
->> [ 1241.136738] IP: [<  (null)>]   (null)
->> [ 1241.136759] *pdpt =3D 0000000000000000 *pde =3D f0002a55f0002a55 [ 12=
-41.136781]
->> [ 1241.136793] Oops: 0010 [#1] SMP
->>
->> What's odd is that when I added some printks on my own and enabled both
->> boot and htc debug levels it doesn't crash anymore. After everything
->> works normally after that, I can start AP mode and connect to it. Is it
->> a race somewhere?
->
-> Yes. htc_wait_target() is called after hif_start(). The ep_rx_complete
-> is set in htc_wait_target() [changed patch 4, but still too late].
->
-> ep_rx_complete must be set prior to calling hif_start(). You probably
-> crash on end of ath10k_htc_rx_completion_handler() when trying to call
-> ep->ep_ops.ep_rx_complete(ar, skb).
+I'm not sure what to do with this now :)
 
-Yeah, just checked and ep->ep_ops.ep_rx_complete is NULL at the end of
-ath10k_htc_rx_completion_handler().
+> > There are two functionalities.
+> > 
+> > 1) 13.13.2.2 Neighbor offset synchronization method
+> > 2) 13.13.4.4 TBTT adjustment
 
---=20
-Kalle Valo=
+Yes, this much is obvious.
+
+> > The flag is updated by 2).
+
+Yes, the definition of the flag says:
+
+"The TBTT Adjusting subfield is set to 1 while the TBTT adjustment
+procedure is ongoing, and is set to 0 otherwise. (See 13.13.4.4.3.)"
+
+(802.11-2012 8.4.2.100.8 Mesh Capability)
+
+> > 13.13.4.4.3 TBTT scanning and adjustment procedures:
+> > The mesh STA shall set the TBTT Adjusting field in the Mesh
+> > Configuration element to 1 in order to announce that the TBTT
+> > adjustment procedure is ongoing.
+
+That's saying the same thing again, I guess :)
+
+> > And the flag is refered by 1) as you said.
+> > 
+> > 
+> > The purpose of the flag is to prevent 1) while 2) is ongoing.
+> > 
+> > In other words, 1) has only read access authority to the flag.
+> > However,
+> > previous code updated the flag in 1). In addition, there is no code
+> > for
+> > 2). So I just remove the invalid accessing codes.
+> 
+> I don't think 1) has read only access to that flag. A TSF adjust will
+> by definition move the TBTT as well.
+
+It seems that the wording in the spec disagrees with that - it says
+(twice) to set the bit only while the TBTT adjustment procedure is
+ongoing, which isn't the case here?
+
+Then again, what exactly *is* this code doing?
+
+It's called mesh_sync_offset_adjust_tbtt() which matches more closely
+"TBTT adjustment" than "neighbor offset synchronization"? The code
+looks more like offset synchronization though. Perhaps there's some
+confusing and it's kinda doing both?
+
+johannes
