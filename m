@@ -1,51 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49055 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751176AbcLEUuV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 15:50:21 -0500
-Date: Mon, 5 Dec 2016 23:49:54 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
-        shaofu <shaofu@realtek.com>, Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 02/14] rtlwifi: Fix programing CAM content sequence.
-Message-ID: <20161205204954.GH8176@mwanda> (sfid-20161205_215030_695526_2D8F48B6)
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
- <20161202014833.6856-3-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161202014833.6856-3-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33320 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752009AbcLGGgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Dec 2016 01:36:49 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] iwlegacy: make il3945_mac_ops __ro_after_init
+Date: Wed,  7 Dec 2016 07:36:46 +0100
+Message-Id: <20161207063646.30969-1-johannes@sipsolutions.net> (sfid-20161207_073653_595076_2AB3237E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 07:48:21PM -0600, Larry Finger wrote:
-> From: Ping-Ke Shih <pkshih@realtek.com>
-> 
-> There is a potential race condition when the control byte of a CAM
-> entry is written first. Write in reverse order to correct the condition.
-> 
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: shaofu <shaofu@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/cam.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
-> index 8fe8b4c..5d58ec0 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/cam.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
-> @@ -45,12 +45,13 @@ static void rtl_cam_program_entry(struct ieee80211_hw *hw, u32 entry_no,
->  
->  	u32 target_command;
->  	u32 target_content = 0;
-> -	u8 entry_i;
-> +	s8 entry_i;
+From: Johannes Berg <johannes.berg@intel.com>
 
-Just make this an int.  s8 is for very specific things like hardware
-registers.
+There's no need for this to be only __read_mostly, since
+it's only written in a single way depending on the module
+parameter, so that can be moved into the module's __init
+function, and the ops can be __ro_after_init.
 
-regards,
-dan carpenter
+This is a little bit safer since it means the ops can't
+be overwritten (accidentally or otherwise), which would
+otherwise cause an arbitrary function or bad pointer to
+be called.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/intel/iwlegacy/3945-mac.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+index 466912eb2d87..e8e65115feba 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
+@@ -3469,7 +3469,7 @@ static struct attribute_group il3945_attribute_group = {
+ 	.attrs = il3945_sysfs_entries,
+ };
+ 
+-static struct ieee80211_ops il3945_mac_ops __read_mostly = {
++static struct ieee80211_ops il3945_mac_ops __ro_after_init = {
+ 	.tx = il3945_mac_tx,
+ 	.start = il3945_mac_start,
+ 	.stop = il3945_mac_stop,
+@@ -3627,15 +3627,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
+ 
+-	/*
+-	 * Disabling hardware scan means that mac80211 will perform scans
+-	 * "the hard way", rather than using device's scan.
+-	 */
+-	if (il3945_mod_params.disable_hw_scan) {
+-		D_INFO("Disabling hw_scan\n");
+-		il3945_mac_ops.hw_scan = NULL;
+-	}
+-
+ 	D_INFO("*** LOAD DRIVER ***\n");
+ 	il->cfg = cfg;
+ 	il->ops = &il3945_ops;
+@@ -3913,6 +3904,15 @@ il3945_init(void)
+ 	pr_info(DRV_DESCRIPTION ", " DRV_VERSION "\n");
+ 	pr_info(DRV_COPYRIGHT "\n");
+ 
++	/*
++	 * Disabling hardware scan means that mac80211 will perform scans
++	 * "the hard way", rather than using device's scan.
++	 */
++	if (il3945_mod_params.disable_hw_scan) {
++		pr_info("hw_scan is disabled\n");
++		il3945_mac_ops.hw_scan = NULL;
++	}
++
+ 	ret = il3945_rate_control_register();
+ 	if (ret) {
+ 		pr_err("Unable to register rate control algorithm: %d\n", ret);
+-- 
+2.9.3
