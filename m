@@ -1,139 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36282 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753059AbcLRP7g (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36696 "EHLO
+        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751610AbcLGHHI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2016 10:59:36 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBIFx9O0037387
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2016 10:59:35 -0500
-Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27dkuwqq1m-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2016 10:59:35 -0500
-Received: from localhost
-        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Sun, 18 Dec 2016 08:59:34 -0700
-Date: Sun, 18 Dec 2016 07:59:38 -0800
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: Gabriel C <nix.or.die@gmail.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        netdev@vger.kernel.org, nbd@nbd.name, kvalo@qca.qualcomm.com
-Subject: Re: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU
- read-side critical section
-Reply-To: paulmck@linux.vnet.ibm.com
-References: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
+        Wed, 7 Dec 2016 02:07:08 -0500
+Received: by mail-oi0-f41.google.com with SMTP id v84so405612829oie.3
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2016 23:07:08 -0800 (PST)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+ <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
+ <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
+ <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
+ <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
+ <1481091301.4092.5.camel@sipsolutions.net> <5847AEF9.90409@gmail.com>
+ <1481093287.4092.20.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <5847B51A.6090303@gmail.com> (sfid-20161207_080712_008802_7FE80C5B)
+Date: Wed, 7 Dec 2016 01:07:06 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
-Message-Id: <20161218155938.GP3924@linux.vnet.ibm.com> (sfid-20161218_170045_273068_3BF17D7C)
+In-Reply-To: <1481093287.4092.20.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 18, 2016 at 02:52:48PM +0100, Gabriel C wrote:
-> Hello,
-> 
-> while testing kernel 4.9 I run into a weird issue with the ath9k driver.
-> 
-> I can boot the box in console mode and it stay up sometime but is not usable.
+Hi Johannes,
 
-Looks to me like someone forgot an rcu_read_unlock() somewhere.  Given that
-the unmatched rcu_read_lock() appears in ath_tx_edma_tasklet(), perhaps
-that is also where the missing rcu_read_unlock() is.  And sure enough,
-in the middle of this function we have the following:
+On 12/07/2016 12:48 AM, Johannes Berg wrote:
+> On Wed, 2016-12-07 at 00:40 -0600, Denis Kenzior wrote:
+>>
+>>> No, this is the part you didn't understand. Simply authenticating
+>>> doesn't actually create anything like a "link" to the AP. The only
+>>
+>> Okay, but it is then a bit misleading that iw link reports us being
+>> 'connected' during this time for example.
+>
+> It doesn't!
+>
+> # iw wlan0 auth <ssid> <bssid> open 2462
+>
+> -> iw event reporting
+> wlan0 (phy #0): auth <localMAC> -> <bssid> status: 0: Successful
+>
+> # iw wlan0 link
+> Not connected.
+>
 
-		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
-		if (list_empty(fifo_list)) {
-			ath_txq_unlock(sc, txq);
-			return;
-		}
+Yes, you're right.  It is iw info that shows us 'connected'
 
-This will of course return while still in an RCU read-side critical
-section.  The caller cannot tell the difference between a return here
-and falling off the end of the function, so this is likely the bug.
-Or one of the bugs, anyway.  Copying the author and committer for
-their thoughts.
+< Request: Get Interface (0x05) len 8 [ack]                 35235.316448
+     Interface Index: 3 (0x00000003)
+ > Result: New Interface (0x07) len 108                      35235.316455
+     Interface Index: 3 (0x00000003)
+     Interface Name: wlp2s0
+     Wiphy: 0 (0x00000000)
+     Interface Type: 2 (0x00000002)
+     Wireless Device: 1 (0x0000000000000001)
+     Generation: 5 (0x00000005)
+     Wiphy Frequency: 2417 (0x00000971)
+     Wiphy Channel Type: 1 (0x00000001)
+     Channel Width: 1 (0x00000001)
+     Center Frequency 1: 2417 (0x00000971)
+     Wiphy TX Power Level: 2200 (0x00000898)
+ > Response: Get Interface (0x05) len 4                      35235.316457
+     Status: Success (0)
 
-Please try the patch at the end of this email.
+>
+>> Fair enough.  I think we can live with that since we're not using
+>> CMD_AUTHENTICATE unless we need to roam using FT.
+>
+> That seems like a very strange decision, but it's obviously up to you
+> :)
+>
 
-							Thanx, Paul
+Care to elaborate ?
 
-> from dmesg :
-> 
-> ===============================
-> [ INFO: suspicious RCU usage. ]
-> 4.9-fw1 #1 Tainted: G          I
-> -------------------------------
-> kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
-> 
-> other info that might help us debug this:
-> 
-> 
-> RCU used illegally from idle CPU!
-> rcu_scheduler_active = 1, debug_locks = 1
-> RCU used illegally from extended quiescent state!
-> 1 lock held by swapper/0/0:
->  #0:  (rcu_read_lock){......}, at: [<ffffffffa0ee0240>] ath_tx_edma_tasklet+0x0/0x460 [ath9k]
-> 
-> stack backtrace:
-> CPU: 0 PID: 0 Comm: swapper/0 Tainted: G          I     4.9-fw1 #1
-> Hardware name: FUJITSU                          PRIMERGY TX200 S5             /D2709, BIOS 6.00 Rev. 1.14.2709              02/04/2013
->  ffff88043ee03f38 ffffffff812cf0f3 ffffffff81a11540 0000000000000001
->  ffff88043ee03f68 ffffffff810b7865 ffffffff81a55d58 ffff88043efcedc0
->  ffff88083cb1ca00 00000000000000d1 ffff88043ee03f88 ffffffff810dbfe8
-> Call Trace:
->  <IRQ>
->  [<ffffffff812cf0f3>] dump_stack+0x86/0xc3
->  [<ffffffff810b7865>] lockdep_rcu_suspicious+0xc5/0x100
->  [<ffffffff810dbfe8>] rcu_eqs_enter_common.constprop.62+0x128/0x130
->  [<ffffffff810ddc78>] rcu_irq_exit+0x38/0x70
->  [<ffffffff81067ec4>] irq_exit+0x74/0xd0
->  [<ffffffff8101e561>] do_IRQ+0x71/0x130
->  [<ffffffff8158700c>] common_interrupt+0x8c/0x8c
->  <EOI>
->  [<ffffffff81472836>] ? cpuidle_enter_state+0x156/0x220
->  [<ffffffff81472922>] cpuidle_enter+0x12/0x20
->  [<ffffffff810ad23e>] call_cpuidle+0x1e/0x40
->  [<ffffffff810ad46d>] cpu_startup_entry+0x11d/0x210
->  [<ffffffff8157892c>] rest_init+0x12c/0x140
->  [<ffffffff81d02ec3>] start_kernel+0x40f/0x41c
->  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
->  [<ffffffff81d02299>] x86_64_start_reservations+0x2a/0x2c
->  [<ffffffff81d02386>] x86_64_start_kernel+0xeb/0xf8
-
-------------------------------------------------------------------------
-
-commit 5a16fed76936184a7ac22e466cf39bd8bb5ee65e
-Author: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Date:   Sun Dec 18 07:49:00 2016 -0800
-
-    drivers/ath: Add missing rcu_read_unlock() to ath_tx_edma_tasklet()
-    
-    Commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
-    added rcu_read_lock() and rcu_read_unlock() around the body of
-    ath_tx_edma_tasklet(), but failed to add the needed rcu_read_unlock()
-    before a "return" in the middle of this function.  This commit therefore
-    adds the missing rcu_read_unlock().
-    
-    Reported-by: Gabriel C <nix.or.die@gmail.com>
-    Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-    Cc: Felix Fietkau <nbd@nbd.name>
-    Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-    Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-    Cc: <linux-wireless@vger.kernel.org?
-    Cc: <ath9k-devel@lists.ath9k.org>
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 52bfbb988611..857d5ae09a1d 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2787,6 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
- 		if (list_empty(fifo_list)) {
- 			ath_txq_unlock(sc, txq);
-+			rcu_read_unlock();
- 			return;
- 		}
- 
+Regards,
+-Denis
