@@ -1,94 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35213 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753628AbcLNVJX (ORCPT
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:35108 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932243AbcLGUMD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 16:09:23 -0500
-Received: by mail-wm0-f67.google.com with SMTP id a20so1819185wme.2
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2016 13:07:52 -0800 (PST)
-Subject: Re: [RFC v2 05/11] ath10k: htc: refactorization
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
- <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com>
- <87inqoymd0.fsf@kamboji.qca.qualcomm.com>
- <CA+BoTQkuUFxnra75B4LpF5+k9yE7hkNYDXbtUMBLq2LFuPSasg@mail.gmail.com>
- <871sxbzqo6.fsf@kamboji.qca.qualcomm.com>
- <70b8a055-e6ba-857d-8b03-06f50e3f10fe@gmail.com>
- <871sxay66a.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <b3068401-aee9-47bc-141e-692ea72ffb74@gmail.com> (sfid-20161214_220928_660425_C6652FA6)
-Date: Wed, 14 Dec 2016 22:07:50 +0100
+        Wed, 7 Dec 2016 15:12:03 -0500
+Received: by mail-qt0-f171.google.com with SMTP id c47so390891699qtc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 12:12:03 -0800 (PST)
+Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
+To: Jouni Malinen <jouni@qca.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
+ <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5fd9ac43-bcd9-096a-53d9-81528ba5d071@broadcom.com> (sfid-20161207_211207_459402_20705928)
+Date: Wed, 7 Dec 2016 21:11:59 +0100
 MIME-Version: 1.0
-In-Reply-To: <871sxay66a.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
 Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 12/14/2016 02:46 PM, Valo, Kalle wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+On 2-12-2016 22:59, Jouni Malinen wrote:
+> From: vamsi krishna <vamsin@qti.qualcomm.com>
 > 
->> I have made a few updates since I submitted the original RFC and created
->> a repo on github:
->>
->> https://github.com/erstrom/linux-ath
->>
->> I have a bunch of branches that are all based on the tags on the ath master.
->>
->> As of this moment the latest version is:
->>
->> ath-201612131156-ath10k-sdio
->>
->> This branch contains the original RFC patches plus some addons/fixes.
+> Enhance sched scan to support option of finding a better BSS while in
+> connected state. Firmware scans the medium and reports when it finds a
+> known BSS which has better RSSI than the current connected BSS. New
+> attributes to specify the relative RSSI (compared to the current BSS)
+> are added to the sched scan to implement this.
 > 
-> Good, this makes it easier to follow the development. So what's the
-> current status with this branch? What works and what doesn't?
+> Signed-off-by: vamsi krishna <vamsin@qti.qualcomm.com>
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> ---
+>  include/net/cfg80211.h       | 19 +++++++++++++++++++
+>  include/uapi/linux/nl80211.h | 18 ++++++++++++++++++
+>  net/wireless/nl80211.c       | 29 +++++++++++++++++++++++++++--
+>  3 files changed, 64 insertions(+), 2 deletions(-)
 > 
-Well, everything in there has been tested (limited though, as you
-yourself experienced), but it is not complete. I still have some other
-patches that need some more refurbishing before I can push them.
-
-I will push those patches that I consider "good enough" for publish to
-this repo. Most likely I will rewrite/squash etc. some of it before
-submitting a new RFC series.
-
-So, there are still some additional stuff that needs to be added. In my
-case I have a series of patches related to OCB (Outside the Context of a
-BSS) mode of operation (since the chipset I am using is intended for
-this purpose). These patches are still not complete.
-
-Other SDIO 11ac chipsets might just need an item in the struct
-ath10k_hw_params array together with some firmware files.
-
-> Especially I'm interested about the state of the HTT high latency
-> support. How much work is to add that? It would also make it easier to
-> add USB support to ath10k.
+> v2: address comments from Luca, Arend, and Johannes
 > 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index ef42749..dcdd0c4 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1626,6 +1626,22 @@ struct cfg80211_sched_scan_plan {
+>   *	cycle.  The driver may ignore this parameter and start
+>   *	immediately (or at any other time), if this feature is not
+>   *	supported.
+> + * @relative_rssi: Relative RSSI threshold in dB to restrict scan result
+> + *	reporting in connected state to cases where a matching BSS is determined
+> + *	to have better RSSI than the current connected BSS. The relative RSSI
+> + *	threshold values are ignored in disconnected state.
+> + * @relative_rssi_5g_pref: The amount of RSSI preference in dB that is given to
+> + *	a 5 GHz BSS over 2.4 GHz BSS while looking for better BSSs in connected
+> + *	state. A negative value can be passed if 2.4 GHz band should be given
+> + *	priority to 5 GHz band.
+> + *	If the current connected BSS is in the 2.4 GHz band, other BSSs in the
+> + *	2.4 GHz band to be reported should have better RSSI by @relative_rssi
+> + *	and other BSSs in the 5 GHz band to be reported should have better RSSI
+> + *	by (@relative_rssi - @relative_rssi_5g_pref).
+> + *	If the current connected BSS is in the 5 GHz band, other BSSs in the
+> + *	2.4 GHz band to be reported should have better RSSI by
+> + *	(@relative_rssi + @relative_rssi_5g_pref) and other BSSs in the 5 GHz
+> + *	band to be reported should have better RSSI by by @relative_rssi.
 
-I actually have some patches regarding this, but they have not been
-tested at all since I have not yet managed to fully configure my SDIO
-chip properly so far. I must finish the OCB code I mentioned earlier and
-fix another really annoying issue with a missing HTT version response
-(sometimes target won't respond to the HTT version request).
+The choice of these attributes makes the implicit assumption that the
+BSS-es in 5G are preferred. The relative_rssi_5g_pref is actually more a
+bonus or penalty is negative value is used. I guess for speed junkies
+that want their 11ac card maxed out that is true, but if you need to
+cross a couple of concrete floors you might want to stick with 2.4G.
 
-Then, hopefully, I can make some TX and RX tests.
+I introduced a similar attribute to be provided in the
+NL80211_CMD_CONNECT (see [1]).
 
-I think the HTT TX part is fairly straight forward. But the RX part is a
-little bit more tricky since I am not really sure about how to interface
-mac80211 in the RX path.
+Regards,
+Arend
 
-My work flow goes like this:
+[1] http://lxr.free-electrons.com/source/include/uapi/linux/nl80211.h#L1815
 
-As soon as there is a new tag on the ath.git master, I rebase my stuff
-on top of it and push a new branch to my repo.
-
-I will continuously push updates to the latest branch (the branch based
-on the latest ath tag).
-
-Older branches will not be maintained.
-
-/Erik
+>   */
+>  struct cfg80211_sched_scan_request {
+>  	struct cfg80211_ssid *ssids;
+> @@ -1645,6 +1661,9 @@ struct cfg80211_sched_scan_request {
+>  	u8 mac_addr[ETH_ALEN] __aligned(2);
+>  	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
+>  
+> +	s8 relative_rssi;
+> +	s8 relative_rssi_5g_pref;
+> +
+>  	/* internal */
+>  	struct wiphy *wiphy;
+>  	struct net_device *dev;
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 6b76e3b..fc29bdb 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1980,6 +1980,17 @@ enum nl80211_commands {
+>   * @NL80211_ATTR_BSSID: The BSSID of the AP. Note that %NL80211_ATTR_MAC is also
+>   *	used in various commands/events for specifying the BSSID.
+>   *
+> + * @NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI: Relative RSSI threshold by which
+> + *	other BSSs has to be better than the current connected BSS so that they
+> + *	get reported to user space. This will give an opportunity to userspace
+> + *	to consider connecting to other matching BSSs which have better RSSI
+> + *	than the current connected BSS by using an offloaded operation to avoid
+> + *	unnecessary wakeups.
+> + *
+> + * @NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF: The amount of RSSI preference
+> + *	to be given to 5 GHz APs over 2.4 GHz APs while searching for better
+> + *	BSSs than the current connected BSS.
+> + *
+>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+> @@ -2386,6 +2397,9 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_BSSID,
+>  
+> +	NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI,
+> +	NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF,
+> +
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+>  	__NL80211_ATTR_AFTER_LAST,
+> @@ -4697,6 +4711,9 @@ enum nl80211_feature_flags {
+>   *	configuration (AP/mesh) with VHT rates.
+>   * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial Link Setup
+>   *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
+> + * @NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI: The driver supports sched_scan
+> + *	for reporting BSSs with better RSSI than the current connected BSS
+> + *	(%NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI).
+>   *
+>   * @NUM_NL80211_EXT_FEATURES: number of extended features.
+>   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+> @@ -4712,6 +4729,7 @@ enum nl80211_ext_feature_index {
+>  	NL80211_EXT_FEATURE_BEACON_RATE_HT,
+>  	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
+>  	NL80211_EXT_FEATURE_FILS_STA,
+> +	NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI,
+>  
+>  	/* add new features before the definition below */
+>  	NUM_NL80211_EXT_FEATURES,
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 7762231..549f239 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -405,6 +405,8 @@ enum nl80211_multicast_groups {
+>  	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
+>  	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
+>  	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
+> +	[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI] = { .type = NLA_S8 },
+> +	[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF] = { .type = NLA_S8 },
+>  };
+>  
+>  /* policy for the key attributes */
+> @@ -6950,6 +6952,12 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+>  	if (!n_plans || n_plans > wiphy->max_sched_scan_plans)
+>  		return ERR_PTR(-EINVAL);
+>  
+> +	if (!wiphy_ext_feature_isset(
+> +		    wiphy, NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI) &&
+> +	    (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI] ||
+> +	     attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF]))
+> +		return ERR_PTR(-EINVAL);
+> +
+>  	request = kzalloc(sizeof(*request)
+>  			+ sizeof(*request->ssids) * n_ssids
+>  			+ sizeof(*request->match_sets) * n_match_sets
+> @@ -7156,6 +7164,14 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+>  		request->delay =
+>  			nla_get_u32(attrs[NL80211_ATTR_SCHED_SCAN_DELAY]);
+>  
+> +	if (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI])
+> +		request->relative_rssi = nla_get_s8(
+> +			attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI]);
+> +
+> +	if (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF])
+> +		request->relative_rssi_5g_pref = nla_get_s8(
+> +			attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF]);
+> +
+>  	err = nl80211_parse_sched_scan_plans(wiphy, n_plans, request, attrs);
+>  	if (err)
+>  		goto out_free;
+> @@ -9649,7 +9665,8 @@ static int nl80211_send_wowlan_tcp(struct sk_buff *msg,
+>  	return 0;
+>  }
+>  
+> -static int nl80211_send_wowlan_nd(struct sk_buff *msg,
+> +static int nl80211_send_wowlan_nd(struct wiphy *wiphy,
+> +				  struct sk_buff *msg,
+>  				  struct cfg80211_sched_scan_request *req)
+>  {
+>  	struct nlattr *nd, *freqs, *matches, *match, *scan_plans, *scan_plan;
+> @@ -9670,6 +9687,14 @@ static int nl80211_send_wowlan_nd(struct sk_buff *msg,
+>  	if (nla_put_u32(msg, NL80211_ATTR_SCHED_SCAN_DELAY, req->delay))
+>  		return -ENOBUFS;
+>  
+> +	if (wiphy_ext_feature_isset(
+> +		    wiphy, NL80211_EXT_FEATURE_SCHED_SCAN_RELATIVE_RSSI) &&
+> +	    (nla_put_s8(msg, NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI,
+> +			req->relative_rssi) ||
+> +	     nla_put_s8(msg, NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF,
+> +			req->relative_rssi_5g_pref)))
+> +		return -ENOBUFS;
+> +
+>  	freqs = nla_nest_start(msg, NL80211_ATTR_SCAN_FREQUENCIES);
+>  	if (!freqs)
+>  		return -ENOBUFS;
+> @@ -9783,7 +9808,7 @@ static int nl80211_get_wowlan(struct sk_buff *skb, struct genl_info *info)
+>  			goto nla_put_failure;
+>  
+>  		if (nl80211_send_wowlan_nd(
+> -			    msg,
+> +			    &rdev->wiphy, msg,
+>  			    rdev->wiphy.wowlan_config->nd_config))
+>  			goto nla_put_failure;
+>  
+> 
