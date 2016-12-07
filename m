@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:35234 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753287AbcL3AFa (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:36745 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751631AbcLGJuT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 19:05:30 -0500
-Received: by mail-qk0-f171.google.com with SMTP id u25so274565969qki.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2016 16:05:30 -0800 (PST)
+        Wed, 7 Dec 2016 04:50:19 -0500
+Received: by mail-io0-f178.google.com with SMTP id l140so87089451iol.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 01:49:19 -0800 (PST)
+Received: from mail-io0-f182.google.com (mail-io0-f182.google.com. [209.85.223.182])
+        by smtp.gmail.com with ESMTPSA id c101sm10670005ioj.25.2016.12.07.01.49.18
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 07 Dec 2016 01:49:18 -0800 (PST)
+Received: by mail-io0-f182.google.com with SMTP id l140so87088954iol.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 01:49:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAHMXK7gqy9_PsZLKxTW7821XmGO1VOaD0Ex+gEsdzsXgwGenWg@mail.gmail.com>
-References: <CAHMXK7gqy9_PsZLKxTW7821XmGO1VOaD0Ex+gEsdzsXgwGenWg@mail.gmail.com>
-From: Agustin Martin <agustin6martin@gmail.com>
-Date: Fri, 30 Dec 2016 01:05:28 +0100
-Message-ID: <CAHMXK7ibzxuhB0MFcGHLAqWexLwXVYG8MgJxofNeeCsUDKTGtQ@mail.gmail.com> (sfid-20161230_010538_850797_5569A647)
-Subject: Re: rtl8xxxu: Testing with 0BDA:8178 (TP-link TL-WN821N with 8192cu)
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <1481091554.4092.7.camel@sipsolutions.net>
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+ <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
+ <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
+ <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
+ <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
+ <CAOq732LOk-GQiSfs9Js-qEgvmbNMD_xf6j_1NR88Z1SDL=J8WA@mail.gmail.com> <1481091554.4092.7.camel@sipsolutions.net>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Wed, 7 Dec 2016 10:49:18 +0100
+Message-ID: <CAOq732KP0SiJo-m5FGi9-SrmUmWy+Bs2eX06K33UknEH2TXpaA@mail.gmail.com> (sfid-20161207_105022_451907_8B1E337B)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2016-12-29 17:22 GMT+01:00 Agustin Martin <agustin6martin@gmail.com>:
-> Hi, Jes
+On 7 December 2016 at 07:19, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> Possibly Johanness refers to the fact that if you use
+>> CMD_AUTHENTICATE, or if you use CMD_CONNECT but the driver implements
+>> the SME -- doesn't use the cfg80211 software SME -- then
+>> cfg80211_disconnect won't do anything if we're not associated, only
+>> authenticated.  Currently cfg80211 doesn't have knowledge of whether
+>> it is authenticated and where to.
 >
-> Sorry if you already received this feedback, I could not find references.
+> We used to track it, but it was a nightmare and just always buggy :)
 >
-> I am trying a TP-LINK TL-WN821N wifi usb dongle with Realtek 8192cu
-> (lsusb returns: 0bda:8178 Realtek Semiconductor Corp. RTL8192CU
-> 802.11n WLAN Adapter) and found the same problems described in
+>> With the software SME current_bss would be set from the moment the
+>> authentication attempt starts,
 >
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1365844
->
-> When using kernel rtl8192cu driver, I can connect to wifi, but soon
-> the connection is dropped.
->
-> Since some time ago (2014) you asked for feedback in that bug and I
-> did not find further references I decided to try your rtl8xxxu driver.
->
-> All tests were carried out in a Debian GNU/Linux jessie box (current
-> stable release) with kernel 4.7.8 from Debian jessie backports (source
-> package linux_4.7.8-1~bpo8+1.dsc).
->
-> Changed kernel config to
->
-> ## file: drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-> ##
-> CONFIG_RTL8XXXU=m
-> CONFIG_RTL8XXXU_UNTESTED=y
->
-> built a kernel (slooow here), installed it and added this line to a
-> file under /etc/modprobe.d
->
-> alias usb:v0BDAp8178d*dc*dsc*dp*icFFiscFFipFFin* rtl8xxxu
->
-> If the dongle is initially connected, system loads the rtl8xxxu module
-> instead of rtl8192cu when booting but seems not to initialize the
-> dongle, so I have no connection. However, if I disconnect the dongle
-> and reconnect it again with the system on, everything seems to work
-> well with no connection dropping. Only minimally tested, but apart
-> from the boot problem apparently much better than with the built-in
-> rtl8192cu kernel module.
+> I'm almost certain this isn't true, what makes you think so?
 
-Hi again Jes, good news,
+Ok, I think I misread the code, indeed it looks consistent between the
+driver SME and cfg80211 SME.
 
-I do not know what I did wrong before, but I am retesting above kernel
-and dongle and things seem to be working from the very beginning, no
-problems found after plain boot (just need to enable the network
-twice, but that also happemed with the old b/g dongle, may be
-something with network manager).
+I'm fine only adding the socket owner flag to CMD_ASSOCIATE and
+CMD_CONNECT.  I'll need to store the bssid of the association in
+progress so we can send the Deauthenticate if the socket is closed
+before association finishes.
 
-This is not my usual box, it is slow  and I do not have it accesible
-in a daily basis, but feel free to ask for further testing. Will try
-to make my best.
+>
+>> so there seems to be an inconsistency
+>> which would affect for example the NL80211_BSS_STATUS_ASSOCIATED
+>> flags in the result of CMD_GET_SCAN.
+>
+> Thus this can't be the case.
+>
+>> Perhaps this can be fixed by always
+>> setting current_bss on auth attempt start, with flags to indicate
+>> whether authentication has happened and whether association happened.
+>
+> No! That would be wrong!
+>
+>> At the very least with this patch if you set the socket owner during
+>> CMD_AUTHENTICATE and then separately associate, you'd get the
+>> expected deauthentication.
+>
+> That would *NOT* be expected. There's no need to even authenticate
+> through CMD_AUTHENTICATE at all to connect to (another) AP!
+>
+> You need to think beyond the 1996 version of 802.11 ;-)
 
-Best regards,
-
--- 
-Agustin
+Best regards
