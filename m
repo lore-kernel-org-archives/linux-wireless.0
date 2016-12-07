@@ -1,48 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45854 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751691AbcL3L3E (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 06:29:04 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: iwlegacy: make il3945_mac_ops __ro_after_init
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161207063646.30969-1-johannes@sipsolutions.net>
-References: <20161207063646.30969-1-johannes@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Message-Id: <20161230112903.97C1161469@smtp.codeaurora.org> (sfid-20161230_122906_948897_89BE08D4)
-Date: Fri, 30 Dec 2016 11:29:03 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33122 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751225AbcLGGPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Dec 2016 01:15:08 -0500
+Message-ID: <1481091301.4092.5.camel@sipsolutions.net> (sfid-20161207_071511_159183_3DA83861)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 07 Dec 2016 07:15:01 +0100
+In-Reply-To: <584730D7.2020708@gmail.com> (sfid-20161206_224249_092743_E8D41EDB)
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+         <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
+         <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
+         <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
+         <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
+         (sfid-20161206_224249_092743_E8D41EDB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There's no need for this to be only __read_mostly, since
-> it's only written in a single way depending on the module
-> parameter, so that can be moved into the module's __init
-> function, and the ops can be __ro_after_init.
-> 
-> This is a little bit safer since it means the ops can't
-> be overwritten (accidentally or otherwise), which would
-> otherwise cause an arbitrary function or bad pointer to
-> be called.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+> I'm afraid to consider what you're like when you _are_ 'super'
+> against something :)
 
-ae3cf4764506 iwlegacy: make il3945_mac_ops __ro_after_init
+Why, that's easy, there wouldn't be a long discussion like that ;-)
 
--- 
-https://patchwork.kernel.org/patch/9463999/
+> So here's a quick test, with the client triggering authenticate, then
+> crashing:
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+> < Request: Authenticate (0x25) len 52
+> [ack]                  362.339712
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+> [...]
+
+>  > Event: Del Station (0x14) len
+> 1144                         367.442024
+
+> Pay attention to the time stamps.  The del station event comes in 5 
+> seconds or so after our client has aborted.  So for 5 seconds we have
+> an unmanaged link to some AP.
+
+No, this is the part you didn't understand. Simply authenticating
+doesn't actually create anything like a "link" to the AP. The only
+reason we keep the station entry around for a few seconds is that it
+*probably* will be used next to associate. But if you don't do that, or
+authenticate to some other AP, or do whatever else - nothing stops you
+from doing that. There's no connection, nothing really stays active
+except for this 5 second grace period to associate.
+
+So even if you crash here like in the example, there's nothing to clean
+up, a subsequent authentication attempt to the same or another AP will
+go through anyway.
+
+Therefore, there's nothing to "own" with an authentication attempt,
+since it doesn't actually keep any (permanent) state in the kernel, and
+keeping the station entry around is just an optimisation.
+
+I don't think it's worth trying to clean that up.
+
+Also, consider that authentication doesn't block anything, so another
+socket might immediately do another authentication/association, and you
+don't want to kill that even when the first one dies. Corner case,
+sure, but at least with association the second one would get "-EBUSY"
+or so, whereas authentication keeps no state in the kernel.
+
+johannes
