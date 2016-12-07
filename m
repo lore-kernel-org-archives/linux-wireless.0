@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:50458 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933853AbcLTS7H (ORCPT
+Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:42094 "EHLO
+        sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752425AbcLGKO3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 13:59:07 -0500
-Date: Tue, 20 Dec 2016 11:59:05 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>
-Subject: Re: [PATCH 3/3] nfc: trf7970a: Prevent repeated polling from
- crashing the kernel
-Message-ID: <20161220185905.GA5867@animalcreek.com> (sfid-20161220_200232_150396_5935B1D3)
-References: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
- <1482250592-4268-3-git-send-email-glansberry@gmail.com>
+        Wed, 7 Dec 2016 05:14:29 -0500
+From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: Ensure enough headroom when forwarding mesh pkt
+Date: Wed, 7 Dec 2016 09:59:00 +0000
+Message-ID: <1ffe01100a724290ab910d68980604ba@ceva-dsp.com> (sfid-20161207_111435_589586_8DB320B6)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482250592-4268-3-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2016 at 11:16:32AM -0500, Geoff Lansberry wrote:
-> From: Jaret Cantu <jaret.cantu@timesys.com>
-> 
-> Repeated polling attempts cause a NULL dereference error to occur.
-> This is because the state of the trf7970a is currently reading but
-> another request has been made to send a command before it has finished.
+When a buffer is duplicated during MESH packet forwarding,
+this patch ensures that the new buffer has enough headroom.
 
-How is this happening?  Was trf7970a_abort_cmd() called and it didn't
-work right?  Was it not called at all and there is a bug in the digital
-layer?  More details please.
+Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+---
+ net/mac80211/rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> The solution is to properly kill the waiting reading (workqueue)
-> before failing on the send.
-
-If the bug is in the calling code, then that is what should get fixed.
-This seems to be a hack to work-around a digital layer bug.
-
-Mark
---
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index d2a00f2..bfa5f4d 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2468,7 +2468,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	if (!ifmsh->mshcfg.dot11MeshForwarding)
+ 		goto out;
+ 
+-	fwd_skb = skb_copy(skb, GFP_ATOMIC);
++	fwd_skb = skb_copy_expand(skb, local->tx_headroom, 0, GFP_ATOMIC);
+ 	if (!fwd_skb) {
+ 		net_info_ratelimited("%s: failed to clone mesh frame\n",
+ 				    sdata->name);
+-- 
+2.7.4
