@@ -1,43 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57146 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753882AbcL3NjE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:39:04 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:44224 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751064AbcLGNpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Dec 2016 08:45:55 -0500
+From: David Howells <dhowells@redhat.com>
+In-Reply-To: <8737i6syzq.fsf@kamboji.qca.qualcomm.com>
+References: <8737i6syzq.fsf@kamboji.qca.qualcomm.com> <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk> <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: dhowells@redhat.com, linux-kernel@vger.kernel.org,
+        gnomes@lxorguk.ukuu.org.uk, minyard@acm.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org
+Subject: Re: [PATCH 23/39] Annotate hardware config module parameters in drivers/net/wireless/
 MIME-Version: 1.0
-Subject: Re: rtlwifi: rtl_usb: Fix missing entry in USB driver's private data
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161221171855.5056-1-Larry.Finger@lwfinger.net>
-References: <20161221171855.5056-1-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org
-Message-Id: <20161230133903.D082361481@smtp.codeaurora.org> (sfid-20161230_143940_922700_4FBD3915)
-Date: Fri, 30 Dec 2016 13:39:03 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
+Date: Wed, 07 Dec 2016 13:45:52 +0000
+Message-ID: <25121.1481118352@warthog.procyon.org.uk> (sfid-20161207_144618_643095_0C1D5EBD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> These drivers need to be able to reference "struct ieee80211_hw" from
-> the driver's private data, and vice versa. The USB driver failed to
-> store the address of ieee80211_hw in the private data. Although this
-> bug has been present for a long time, it was not exposed until
-> commit ba9f93f82aba ("rtlwifi: Fix enter/exit power_save").
-> 
-> Fixes: ba9f93f82aba ("rtlwifi: Fix enter/exit power_save")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-Patch applied to wireless-drivers.git, thanks.
+> Via which tree are you planning to submit this, should I take it to
+> wireless-drivers or will someone else handle it? I didn't get the cover
+> letter so I have no idea.
 
-60f59ce02785 rtlwifi: rtl_usb: Fix missing entry in USB driver's private data
+I'll see if I can get patch 1 (which defines the macros) in a window prior to
+the others - or maybe I can get Linus to apply all of these together.
 
--- 
-https://patchwork.kernel.org/patch/9483579/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+David
