@@ -1,97 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33009 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753129AbcLJM75 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34670 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752371AbcLGKwX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Dec 2016 07:59:57 -0500
-Received: by mail-lf0-f67.google.com with SMTP id y21so2226492lfa.0
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 04:59:56 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH 2/2] ath10k: htc: Simplified credit distribution.
-Date: Sat, 10 Dec 2016 13:58:41 +0100
-Message-Id: <1481374721-16354-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20161210_140000_913448_20E941A5)
-In-Reply-To: <1481374721-16354-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1481374721-16354-1-git-send-email-erik.stromdahl@gmail.com>
+        Wed, 7 Dec 2016 05:52:23 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "briannorris@google.com" <briannorris@google.com>,
+        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: RE: [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+Date: Wed, 7 Dec 2016 10:52:15 +0000
+Message-ID: <25e936b31e1e4f3d9db2c2309da9f798@SC-EXCH04.marvell.com> (sfid-20161207_115226_813321_FA66620E)
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+ <20161205110906.28C706034F@smtp.codeaurora.org>
+In-Reply-To: <20161205110906.28C706034F@smtp.codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplified transmit credit distribution code somewhat.
-Since the WMI control service will get assigned all credits
-there is no need for having a credit_allocation array in
-struct ath10k_htc.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c |   29 +++++------------------------
- drivers/net/wireless/ath/ath10k/htc.h |    1 -
- 2 files changed, 5 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index f2e0659..9f6a915 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -474,33 +474,16 @@ static void ath10k_htc_reset_endpoint_states(struct ath10k_htc *htc)
- 	}
- }
- 
--static void ath10k_htc_setup_target_buffer_assignments(struct ath10k_htc *htc)
--{
--	struct ath10k_htc_svc_tx_credits *entry;
--
--	entry = &htc->service_tx_alloc[0];
--
--	/*
--	 * for PCIE allocate all credists/HTC buffers to WMI.
--	 * no buffers are used/required for data. data always
--	 * remains on host.
--	 */
--	entry++;
--	entry->service_id = ATH10K_HTC_SVC_ID_WMI_CONTROL;
--	entry->credit_allocation = htc->total_transmit_credits;
--}
--
- static u8 ath10k_htc_get_credit_allocation(struct ath10k_htc *htc,
- 					   u16 service_id)
- {
- 	u8 allocation = 0;
--	int i;
- 
--	for (i = 0; i < ATH10K_HTC_EP_COUNT; i++) {
--		if (htc->service_tx_alloc[i].service_id == service_id)
--			allocation =
--			    htc->service_tx_alloc[i].credit_allocation;
--	}
-+	/* The WMI control service is the only service with flow control.
-+	 * Let it have all transmit credits.
-+	 */
-+	if (service_id == ATH10K_HTC_SVC_ID_WMI_CONTROL)
-+		allocation = htc->total_transmit_credits;
- 
- 	return allocation;
- }
-@@ -574,8 +557,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
- 		return -ECOMM;
- 	}
- 
--	ath10k_htc_setup_target_buffer_assignments(htc);
--
- 	/* setup our pseudo HTC control endpoint connection */
- 	memset(&conn_req, 0, sizeof(conn_req));
- 	memset(&conn_resp, 0, sizeof(conn_resp));
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index ca150c9..6ababa3 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -337,7 +337,6 @@ struct ath10k_htc {
- 	struct completion ctl_resp;
- 
- 	int total_transmit_credits;
--	struct ath10k_htc_svc_tx_credits service_tx_alloc[ATH10K_HTC_EP_COUNT];
- 	int target_credit_size;
- };
- 
--- 
-1.7.9.5
+SGkgS2FsbGUsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIEthbGxlIFZhbG8NCj4gU2VudDogTW9uZGF5LCBEZWNlbWJlciAwNSwgMjAxNiA0OjM5
+IFBNDQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
+cm5lbC5vcmc7IENhdGh5IEx1bzsgTmlzaGFudCBTYXJtdWthZGFtOw0KPiByYWphdGphQGdvb2ds
+ZS5jb207IGJyaWFubm9ycmlzQGdvb2dsZS5jb207IGRtaXRyeS50b3Jva2hvdkBnbWFpbC5jb207
+DQo+IFhpbm1pbmcgSHU7IEFtaXRrdW1hciBLYXJ3YXINCj4gU3ViamVjdDogUmU6IFsxLzJdIG13
+aWZpZXg6IGNvZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8uYw0KPiANCj4gQW1p
+dGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogWGlu
+bWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IE5leHQgcGF0Y2ggaW4gdGhpcyBz
+ZXJpZXMgaXMgZ29pbmcgdG8gdXNlIG13aWZpZXhfcmVhZF9yZWcoKSBpbg0KPiByZW1vdmUNCj4g
+PiBoYW5kbGVycy4gVGhlIGNoYW5nZXMgaGVyZSBhcmUgcHJlcmVxdWlzaXRlcyB0byBhdm9pZCBm
+b3J3YXJkDQo+ID4gZGVjbGFyYXRpb25zLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWGlubWlu
+ZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fy
+d2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiANCj4gRmFpbGVkIHRvIGFwcGx5Og0KPiANCj4g
+ZmF0YWw6IHNoYTEgaW5mb3JtYXRpb24gaXMgbGFja2luZyBvciB1c2VsZXNzDQo+IChkcml2ZXJz
+L25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5jKS4NCj4gQXBwbHlpbmc6IG13aWZp
+ZXg6IGdldCByaWQgb2YgZ2xvYmFsIHVzZXJfcm1tb2QgZmxhZyBSZXBvc2l0b3J5IGxhY2tzDQo+
+IG5lY2Vzc2FyeSBibG9icyB0byBmYWxsIGJhY2sgb24gMy13YXkgbWVyZ2UuDQo+IENhbm5vdCBm
+YWxsIGJhY2sgdG8gdGhyZWUtd2F5IG1lcmdlLg0KPiBQYXRjaCBmYWlsZWQgYXQgMDAwMSBtd2lm
+aWV4OiBnZXQgcmlkIG9mIGdsb2JhbCB1c2VyX3JtbW9kIGZsYWcNCj4gDQo+IDIgcGF0Y2hlcyBz
+ZXQgdG8gQ2hhbmdlcyBSZXF1ZXN0ZWQuDQo+IA0KPiA5NDU0NDkxIFsxLzJdIG13aWZpZXg6IGNv
+ZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8uYw0KPiA5NDU0NDkzIFsyLzJdIG13
+aWZpZXg6IGdldCByaWQgb2YgZ2xvYmFsIHVzZXJfcm1tb2QgZmxhZw0KPiANCj4gLS0NCj4gaHR0
+cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85NDU0NDkxLw0KPiANCj4gRG9jdW1lbnRh
+dGlvbiBhYm91dCBzdWJtaXR0aW5nIHdpcmVsZXNzIHBhdGNoZXMgYW5kIGNoZWNraW5nIHN0YXR1
+cw0KPiBmcm9tIHBhdGNod29yazoNCj4gDQo+IGh0dHBzOi8vd2lyZWxlc3Mud2lraS5rZXJuZWwu
+b3JnL2VuL2RldmVsb3BlcnMvZG9jdW1lbnRhdGlvbi9zdWJtaXR0aW5nDQo+IHBhdGNoZXMNCg0K
+DQpUaGVzZSB0d28gcGF0Y2hlcyBoYXZlIGRlcGVuZGVuY3kgd2l0aCBvdGhlciBwYXRjaCBzZXJp
+ZXMuIEkgd2FudCB5b3UgdG8gY29uc2lkZXIgcGF0Y2hlcyBpbiBmb2xsb3dpbmcgb3JkZXIoZmly
+c3QgYmVpbmcgcmVjZW50KS4NCg0KbXdpZmlleDogc2RpbzogZml4IHVzZSBhZnRlciBmcmVlIGlz
+c3VlIGZvciBzYXZlX2FkYXB0ZXINCm13aWZpZXg6IHVzZSBtb2R1bGVfKl9kcml2ZXIgaGVscGVy
+IG1hY3Jvcw0KDQpbMi8yXSBtd2lmaWV4OiBnZXQgcmlkIG9mIGdsb2JhbCB1c2VyX3JtbW9kIGZs
+YWcNClsxLzJdIG13aWZpZXg6IGNvZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8u
+Yw0KDQpbdjMsNS81XSBtd2lmaWV4OiBtb3ZlIHBjaWVfd29yayBhbmQgcmVsYXRlZCB2YXJpYWJs
+ZXMgaW5zaWRlIGNhcmQgLS0tLS0tLS0gVGhpcyBzZXJpZXMgY2FuIGJlIGFjY2VwdGVkIGlmIHRo
+ZXJlIGFyZSBubyBmdXJ0aGVyIGNvbmNlcm5zL2NvbW1lbnRzIGZyb20gQnJpYW4vRG1pdHJ5LiAN
+Clt2Myw0LzVdIG13aWZpZXg6IHdhaXQgZmlybXdhcmUgZHVtcCBjb21wbGV0ZSBkdXJpbmcgY2Fy
+ZCByZW1vdmUgcHJvY2Vzcw0KW3YzLDMvNV0gbXdpZmlleDogZ2V0IHJpZCBvZiBkcnZfaW5mbyog
+YWRhcHRlciB2YXJpYWJsZXMNClt2MywyLzVdIG13aWZpZXg6IGRvIG5vdCBmcmVlIGZpcm13YXJl
+IGR1bXAgbWVtb3J5IGluIHNodXRkb3duX2Rydg0KW3YzLDEvNV0gbXdpZmlleDogZG9uJ3Qgd2Fp
+dCBmb3IgbWFpbl9wcm9jZXNzIGluIHNodXRkb3duX2Rydg0KDQpSZWdhcmRzLA0KQW1pdGt1bWFy
+DQo=
