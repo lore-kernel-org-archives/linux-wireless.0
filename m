@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53708 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbcLBFIy (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:32915 "EHLO
+        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751266AbcLGGlD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2016 00:08:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Wireless <linux-wireless@vger.kernel.org>,
-        David Miller <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>, linux-next@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with the net-next tree
-References: <20161202110313.2104919e@canb.auug.org.au>
-Date: Fri, 02 Dec 2016 07:08:48 +0200
-In-Reply-To: <20161202110313.2104919e@canb.auug.org.au> (Stephen Rothwell's
-        message of "Fri, 2 Dec 2016 11:03:13 +1100")
-Message-ID: <87polark7z.fsf@kamboji.qca.qualcomm.com> (sfid-20161202_060916_916482_9AA749D1)
+        Wed, 7 Dec 2016 01:41:03 -0500
+Received: by mail-oi0-f54.google.com with SMTP id w63so406522777oiw.0
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2016 22:40:58 -0800 (PST)
+Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
+ <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
+ <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
+ <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
+ <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
+ <1481091301.4092.5.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <5847AEF9.90409@gmail.com> (sfid-20161207_074106_627610_394FFC52)
+Date: Wed, 7 Dec 2016 00:40:57 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481091301.4092.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen Rothwell <sfr@canb.auug.org.au> writes:
+Hi Johannes,
 
-> Hi all,
+On 12/07/2016 12:15 AM, Johannes Berg wrote:
 >
-> Today's linux-next merge of the wireless-drivers-next tree got a
-> conflict in:
+>> I'm afraid to consider what you're like when you _are_ 'super'
+>> against something :)
 >
->   drivers/net/wireless/ath/ath10k/mac.c
->
-> between commit:
->
->   f3fe4e93dd63 ("mac80211: add a HW flag for supporting HW TX fragmentation")
->
-> from the net-next tree and commit:
->
->   ff32eeb86aa1 ("ath10k: advertize hardware packet loss mechanism")
->
-> from the wireless-drivers-next tree.
->
-> I fixed it up (see below) and can carry the fix as necessary. This
-> is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
+> Why, that's easy, there wouldn't be a long discussion like that ;-)
 
-The fix looks good, thanks. I sent a pull request to Dave yesteday which
-should fix this.
+lol
 
--- 
-Kalle Valo
+>
+> No, this is the part you didn't understand. Simply authenticating
+> doesn't actually create anything like a "link" to the AP. The only
+
+Okay, but it is then a bit misleading that iw link reports us being 
+'connected' during this time for example.
+
+> reason we keep the station entry around for a few seconds is that it
+> *probably* will be used next to associate. But if you don't do that, or
+> authenticate to some other AP, or do whatever else - nothing stops you
+> from doing that. There's no connection, nothing really stays active
+> except for this 5 second grace period to associate.
+>
+> So even if you crash here like in the example, there's nothing to clean
+> up, a subsequent authentication attempt to the same or another AP will
+> go through anyway.
+>
+> Therefore, there's nothing to "own" with an authentication attempt,
+> since it doesn't actually keep any (permanent) state in the kernel, and
+> keeping the station entry around is just an optimisation.
+>
+> I don't think it's worth trying to clean that up.
+
+Fair enough.  I think we can live with that since we're not using 
+CMD_AUTHENTICATE unless we need to roam using FT.
+
+Regards,
+-Denis
