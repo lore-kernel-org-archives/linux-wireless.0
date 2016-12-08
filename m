@@ -1,92 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:45297 "EHLO purkki.adurom.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753687AbcL3Mo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 07:44:29 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Andrew Lutomirski <luto@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Eric Biggers <ebiggers3@gmail.com>,
-        linux-crypto@vger.kernel.org,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Stephan Mueller <smueller@chronox.de>
-Subject: Re: orinoco: Use shash instead of ahash for MIC calculations
-References: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
-        <20161230113451.C10ED614E4@smtp.codeaurora.org>
-        <87vau1k4ka.fsf@purkki.adurom.net>
-Date: Fri, 30 Dec 2016 14:15:53 +0200
-In-Reply-To: <87vau1k4ka.fsf@purkki.adurom.net> (Kalle Valo's message of "Fri,
-        30 Dec 2016 14:02:45 +0200")
-Message-ID: <87mvfdk3ye.fsf@purkki.adurom.net> (sfid-20161230_134508_284102_BE38587E)
+Received: from userp1040.oracle.com ([156.151.31.81]:17346 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751487AbcLHLvI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Dec 2016 06:51:08 -0500
+Date: Thu, 8 Dec 2016 14:50:49 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: devel@driverdev.osuosl.org, Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
+Message-ID: <20161208115049.GR8176@mwanda> (sfid-20161208_125112_849496_31E4A7DF)
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+ <20161202014833.6856-11-Larry.Finger@lwfinger.net>
+ <20161205213447.GJ8176@mwanda>
+ <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
+ <20161206071340.GB10292@kroah.com>
+ <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
+ <20161207133219.GM8176@mwanda>
+ <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+I don't have a problem with the ath debug printks.  Larry asked me for
+examples of better debug functions and the ath code is an example.
+Literally, any existing debug functions are better than the
+BTC_TRACE_STRING() stuff.
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Andrew Lutomirski <luto@kernel.org> wrote:
->>> Eric Biggers pointed out that the orinoco driver pointed scatterlists
->>> at the stack.
->>> 
->>> Fix it by switching from ahash to shash.  The result should be
->>> simpler, faster, and more correct.
->>> 
->>> Cc: stable@vger.kernel.org # 4.9 only
->>> Reported-by: Eric Biggers <ebiggers3@gmail.com>
->>> Signed-off-by: Andy Lutomirski <luto@kernel.org>
->>
->> 11 patches applied to wireless-drivers-next.git, thanks.
->>
->> 1fef293b8a98 orinoco: Use shash instead of ahash for MIC calculations
->> a08b98196a36 rt2800: make rx ampdu_factor depend on number of rx chains
->> e49abb19d1bf rt2800: don't set ht parameters for non-aggregated frames
->> a51b89698ccc rt2800: set minimum MPDU and PSDU lengths to sane values
->> 8f03a7c6e7f9 rt2800: set MAX_PSDU len according to remote STAs capabilities
->> 8845254112ac rt2800: rename adjust_freq_offset function
->> bc0077053948 rt2800: warn if doing VCO recalibration for unknow RF chip
->> 24d42ef3b152 rt2800: perform VCO recalibration for RF5592 chip
->> d96324703ffa rt2x00: merge agc and vco works with link tuner
->> eb79a8fe94c8 rt2800: replace mdelay by usleep on vco calibration.
->> 31369c323ba0 rt2800: replace msleep() with usleep_range() on channel switch
->
-> Oh man, when I was applying rt2800 patches I did an off by one error
-> with my patchwork script ('commit 2-12' vs 'commit 1-11') and
-> accidentally applied this orinoco patch to wireless-drivers-next along
-> with the 10 rt2800 patches above. And failed to spot that before pushing
-> the tree :(
->
-> As this orinoco patch is pretty important I'll cherry pick it manually
-> to wireless-drivers also so that it goes to 4.10. This means that the
-> patch is in both trees, but just with a different commit id.
+On Thu, Dec 08, 2016 at 01:43:42PM +0200, Kalle Valo wrote:
+> But it would make me very happy if someone would add a similar grouping
+> functionality to dyndbg to make it easy to enable a set of debug
+> messages in a driver.
 
-This is the commit in wireless-drivers:
+Thats seems like a reasonable thing as well.
 
-commit 570b90fa230b8021f51a67fab2245fe8df6fe37d
-Author: Andrew Lutomirski <luto@kernel.org>
-Date:   Mon Dec 12 12:55:55 2016 -0800
-
-    orinoco: Use shash instead of ahash for MIC calculations
-    
-    Eric Biggers pointed out that the orinoco driver pointed
-    scatterlists
-    at the stack.
-    
-    Fix it by switching from ahash to shash.  The result should be
-    simpler, faster, and more correct.
-    
-    kvalo: cherry picked from commit
-    1fef293b8a9850cfa124a53c1d8878d355010403 as I
-    accidentally applied this patch to wireless-drivers-next when I was
-    supposed to
-    apply this wireless-drivers
-    
-    Cc: stable@vger.kernel.org # 4.9 only
-    Reported-by: Eric Biggers <ebiggers3@gmail.com>
-    Signed-off-by: Andy Lutomirski <luto@kernel.org>
-    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
-
--- 
-Kalle Valo
+regards,
+dan carpenter
