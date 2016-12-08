@@ -1,69 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34670 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752371AbcLGKwX (ORCPT
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36846 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751515AbcLHHbM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 05:52:23 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Cathy Luo" <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        "rajatja@google.com" <rajatja@google.com>,
-        "briannorris@google.com" <briannorris@google.com>,
-        "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
-        Xinming Hu <huxm@marvell.com>
-Subject: RE: [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
-Date: Wed, 7 Dec 2016 10:52:15 +0000
-Message-ID: <25e936b31e1e4f3d9db2c2309da9f798@SC-EXCH04.marvell.com> (sfid-20161207_115226_813321_FA66620E)
-References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
- <20161205110906.28C706034F@smtp.codeaurora.org>
-In-Reply-To: <20161205110906.28C706034F@smtp.codeaurora.org>
-Content-Type: text/plain; charset="utf-8"
+        Thu, 8 Dec 2016 02:31:12 -0500
+Received: by mail-wj0-f196.google.com with SMTP id j10so25783338wjb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 23:31:06 -0800 (PST)
+From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] net: rfkill: Add rfkill-any LED trigger
+Date: Thu,  8 Dec 2016 08:30:52 +0100
+Message-Id: <20161208073052.12988-2-kernel@kempniu.pl> (sfid-20161208_083122_447160_B451CABE)
+In-Reply-To: <20161208073052.12988-1-kernel@kempniu.pl>
+References: <20161208073052.12988-1-kernel@kempniu.pl>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIEthbGxlIFZhbG8NCj4gU2VudDogTW9uZGF5LCBEZWNlbWJlciAwNSwgMjAxNiA0OjM5
-IFBNDQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtl
-cm5lbC5vcmc7IENhdGh5IEx1bzsgTmlzaGFudCBTYXJtdWthZGFtOw0KPiByYWphdGphQGdvb2ds
-ZS5jb207IGJyaWFubm9ycmlzQGdvb2dsZS5jb207IGRtaXRyeS50b3Jva2hvdkBnbWFpbC5jb207
-DQo+IFhpbm1pbmcgSHU7IEFtaXRrdW1hciBLYXJ3YXINCj4gU3ViamVjdDogUmU6IFsxLzJdIG13
-aWZpZXg6IGNvZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8uYw0KPiANCj4gQW1p
-dGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogWGlu
-bWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IE5leHQgcGF0Y2ggaW4gdGhpcyBz
-ZXJpZXMgaXMgZ29pbmcgdG8gdXNlIG13aWZpZXhfcmVhZF9yZWcoKSBpbg0KPiByZW1vdmUNCj4g
-PiBoYW5kbGVycy4gVGhlIGNoYW5nZXMgaGVyZSBhcmUgcHJlcmVxdWlzaXRlcyB0byBhdm9pZCBm
-b3J3YXJkDQo+ID4gZGVjbGFyYXRpb25zLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWGlubWlu
-ZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBBbWl0a3VtYXIgS2Fy
-d2FyIDxha2Fyd2FyQG1hcnZlbGwuY29tPg0KPiANCj4gRmFpbGVkIHRvIGFwcGx5Og0KPiANCj4g
-ZmF0YWw6IHNoYTEgaW5mb3JtYXRpb24gaXMgbGFja2luZyBvciB1c2VsZXNzDQo+IChkcml2ZXJz
-L25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvcGNpZS5jKS4NCj4gQXBwbHlpbmc6IG13aWZp
-ZXg6IGdldCByaWQgb2YgZ2xvYmFsIHVzZXJfcm1tb2QgZmxhZyBSZXBvc2l0b3J5IGxhY2tzDQo+
-IG5lY2Vzc2FyeSBibG9icyB0byBmYWxsIGJhY2sgb24gMy13YXkgbWVyZ2UuDQo+IENhbm5vdCBm
-YWxsIGJhY2sgdG8gdGhyZWUtd2F5IG1lcmdlLg0KPiBQYXRjaCBmYWlsZWQgYXQgMDAwMSBtd2lm
-aWV4OiBnZXQgcmlkIG9mIGdsb2JhbCB1c2VyX3JtbW9kIGZsYWcNCj4gDQo+IDIgcGF0Y2hlcyBz
-ZXQgdG8gQ2hhbmdlcyBSZXF1ZXN0ZWQuDQo+IA0KPiA5NDU0NDkxIFsxLzJdIG13aWZpZXg6IGNv
-ZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8uYw0KPiA5NDU0NDkzIFsyLzJdIG13
-aWZpZXg6IGdldCByaWQgb2YgZ2xvYmFsIHVzZXJfcm1tb2QgZmxhZw0KPiANCj4gLS0NCj4gaHR0
-cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wYXRjaC85NDU0NDkxLw0KPiANCj4gRG9jdW1lbnRh
-dGlvbiBhYm91dCBzdWJtaXR0aW5nIHdpcmVsZXNzIHBhdGNoZXMgYW5kIGNoZWNraW5nIHN0YXR1
-cw0KPiBmcm9tIHBhdGNod29yazoNCj4gDQo+IGh0dHBzOi8vd2lyZWxlc3Mud2lraS5rZXJuZWwu
-b3JnL2VuL2RldmVsb3BlcnMvZG9jdW1lbnRhdGlvbi9zdWJtaXR0aW5nDQo+IHBhdGNoZXMNCg0K
-DQpUaGVzZSB0d28gcGF0Y2hlcyBoYXZlIGRlcGVuZGVuY3kgd2l0aCBvdGhlciBwYXRjaCBzZXJp
-ZXMuIEkgd2FudCB5b3UgdG8gY29uc2lkZXIgcGF0Y2hlcyBpbiBmb2xsb3dpbmcgb3JkZXIoZmly
-c3QgYmVpbmcgcmVjZW50KS4NCg0KbXdpZmlleDogc2RpbzogZml4IHVzZSBhZnRlciBmcmVlIGlz
-c3VlIGZvciBzYXZlX2FkYXB0ZXINCm13aWZpZXg6IHVzZSBtb2R1bGVfKl9kcml2ZXIgaGVscGVy
-IG1hY3Jvcw0KDQpbMi8yXSBtd2lmaWV4OiBnZXQgcmlkIG9mIGdsb2JhbCB1c2VyX3JtbW9kIGZs
-YWcNClsxLzJdIG13aWZpZXg6IGNvZGUgcmVhcnJhbmdlbWVudCBpbiBwY2llLmMgYW5kIHNkaW8u
-Yw0KDQpbdjMsNS81XSBtd2lmaWV4OiBtb3ZlIHBjaWVfd29yayBhbmQgcmVsYXRlZCB2YXJpYWJs
-ZXMgaW5zaWRlIGNhcmQgLS0tLS0tLS0gVGhpcyBzZXJpZXMgY2FuIGJlIGFjY2VwdGVkIGlmIHRo
-ZXJlIGFyZSBubyBmdXJ0aGVyIGNvbmNlcm5zL2NvbW1lbnRzIGZyb20gQnJpYW4vRG1pdHJ5LiAN
-Clt2Myw0LzVdIG13aWZpZXg6IHdhaXQgZmlybXdhcmUgZHVtcCBjb21wbGV0ZSBkdXJpbmcgY2Fy
-ZCByZW1vdmUgcHJvY2Vzcw0KW3YzLDMvNV0gbXdpZmlleDogZ2V0IHJpZCBvZiBkcnZfaW5mbyog
-YWRhcHRlciB2YXJpYWJsZXMNClt2MywyLzVdIG13aWZpZXg6IGRvIG5vdCBmcmVlIGZpcm13YXJl
-IGR1bXAgbWVtb3J5IGluIHNodXRkb3duX2Rydg0KW3YzLDEvNV0gbXdpZmlleDogZG9uJ3Qgd2Fp
-dCBmb3IgbWFpbl9wcm9jZXNzIGluIHNodXRkb3duX2Rydg0KDQpSZWdhcmRzLA0KQW1pdGt1bWFy
-DQo=
+Add a new "global" (i.e. not per-rfkill device) LED trigger, rfkill-any,
+which may be useful on laptops with a single "radio LED" and multiple
+radio transmitters.  The trigger is meant to turn a LED on whenever
+there is at least one radio transmitter active and turn it off
+otherwise.
+
+Signed-off-by: Michał Kępień <kernel@kempniu.pl>
+---
+Changes from v1:
+
+  - take rfkill_global_mutex before calling rfkill_set_block() in
+    rfkill_resume(); the need for doing this was previously obviated by
+    908209c ("rfkill: don't impose global states on resume"), but given
+    that __rfkill_any_led_trigger_event() is called from
+    rfkill_set_block() unconditionally, each caller of the latter needs
+    to take care of locking rfkill_global_mutex,
+
+  - declare __rfkill_any_led_trigger_event() even when
+    CONFIG_RFKILL_LEDS=n to prevent implicit declaration errors,
+
+  - remove the #ifdef surrounding rfkill_any_led_trigger_{,un}register()
+    calls to prevent compilation warnings about functions and a label
+    being defined but not used,
+
+  - move the rfkill_any_led_trigger_register() call in rfkill_init()
+    before the rfkill_handler_init() call to avoid the need to call
+    rfkill_handler_exit() from rfkill_init() and thus prevent a section
+    mismatch.
+
+ net/rfkill/core.c | 73 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index f28e441..cd50b11 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -176,6 +176,47 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ {
+ 	led_trigger_unregister(&rfkill->led_trigger);
+ }
++
++static struct led_trigger rfkill_any_led_trigger;
++
++static void __rfkill_any_led_trigger_event(void)
++{
++	enum led_brightness brightness = LED_OFF;
++	struct rfkill *rfkill;
++
++	list_for_each_entry(rfkill, &rfkill_list, node) {
++		if (!(rfkill->state & RFKILL_BLOCK_ANY)) {
++			brightness = LED_FULL;
++			break;
++		}
++	}
++
++	led_trigger_event(&rfkill_any_led_trigger, brightness);
++}
++
++static void rfkill_any_led_trigger_event(void)
++{
++	mutex_lock(&rfkill_global_mutex);
++	__rfkill_any_led_trigger_event();
++	mutex_unlock(&rfkill_global_mutex);
++}
++
++static void rfkill_any_led_trigger_activate(struct led_classdev *led_cdev)
++{
++	rfkill_any_led_trigger_event();
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	rfkill_any_led_trigger.name = "rfkill-any";
++	rfkill_any_led_trigger.activate = rfkill_any_led_trigger_activate;
++	return led_trigger_register(&rfkill_any_led_trigger);
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++	led_trigger_unregister(&rfkill_any_led_trigger);
++}
+ #else
+ static void rfkill_led_trigger_event(struct rfkill *rfkill)
+ {
+@@ -189,6 +230,23 @@ static inline int rfkill_led_trigger_register(struct rfkill *rfkill)
+ static inline void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ {
+ }
++
++static void __rfkill_any_led_trigger_event(void)
++{
++}
++
++static void rfkill_any_led_trigger_event(void)
++{
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	return 0;
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++}
+ #endif /* CONFIG_RFKILL_LEDS */
+ 
+ static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
+@@ -297,6 +355,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	__rfkill_any_led_trigger_event();
+ 
+ 	if (prev != curr)
+ 		rfkill_event(rfkill);
+@@ -477,6 +536,7 @@ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
+ 
+ 	if (!rfkill->registered)
+ 		return ret;
+@@ -523,6 +583,7 @@ bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
+ 		schedule_work(&rfkill->uevent_work);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
+ 
+ 	return blocked;
+ }
+@@ -572,6 +633,7 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
+ 			schedule_work(&rfkill->uevent_work);
+ 
+ 		rfkill_led_trigger_event(rfkill);
++		rfkill_any_led_trigger_event();
+ 	}
+ }
+ EXPORT_SYMBOL(rfkill_set_states);
+@@ -815,8 +877,10 @@ static int rfkill_resume(struct device *dev)
+ 	rfkill->suspended = false;
+ 
+ 	if (!rfkill->persistent) {
++		mutex_lock(&rfkill_global_mutex);
+ 		cur = !!(rfkill->state & RFKILL_BLOCK_SW);
+ 		rfkill_set_block(rfkill, cur);
++		mutex_unlock(&rfkill_global_mutex);
+ 	}
+ 
+ 	if (rfkill->ops->poll && !rfkill->polling_paused)
+@@ -988,6 +1052,7 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+ #endif
+ 	}
+ 
++	__rfkill_any_led_trigger_event();
+ 	rfkill_send_events(rfkill, RFKILL_OP_ADD);
+ 
+ 	mutex_unlock(&rfkill_global_mutex);
+@@ -1020,6 +1085,7 @@ void rfkill_unregister(struct rfkill *rfkill)
+ 	mutex_lock(&rfkill_global_mutex);
+ 	rfkill_send_events(rfkill, RFKILL_OP_DEL);
+ 	list_del_init(&rfkill->node);
++	__rfkill_any_led_trigger_event();
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	rfkill_led_trigger_unregister(rfkill);
+@@ -1272,6 +1338,10 @@ static int __init rfkill_init(void)
+ 	if (error)
+ 		goto error_misc;
+ 
++	error = rfkill_any_led_trigger_register();
++	if (error)
++		goto error_led_trigger;
++
+ #ifdef CONFIG_RFKILL_INPUT
+ 	error = rfkill_handler_init();
+ 	if (error)
+@@ -1281,6 +1351,8 @@ static int __init rfkill_init(void)
+ 	return 0;
+ 
+ error_input:
++	rfkill_any_led_trigger_unregister();
++error_led_trigger:
+ 	misc_deregister(&rfkill_miscdev);
+ error_misc:
+ 	class_unregister(&rfkill_class);
+@@ -1294,6 +1366,7 @@ static void __exit rfkill_exit(void)
+ #ifdef CONFIG_RFKILL_INPUT
+ 	rfkill_handler_exit();
+ #endif
++	rfkill_any_led_trigger_unregister();
+ 	misc_deregister(&rfkill_miscdev);
+ 	class_unregister(&rfkill_class);
+ }
+-- 
+2.10.2
