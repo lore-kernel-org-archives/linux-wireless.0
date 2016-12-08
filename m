@@ -1,355 +1,491 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35231 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755974AbcLOSYD (ORCPT
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34210 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752738AbcLHFLP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 13:24:03 -0500
-Received: by mail-oi0-f67.google.com with SMTP id v84so7055350oie.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:41 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 13/14 V2] rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG
-Date: Thu, 15 Dec 2016 12:23:09 -0600
-Message-Id: <20161215182310.13713-14-Larry.Finger@lwfinger.net> (sfid-20161215_192415_477973_D0C41028)
-In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+        Thu, 8 Dec 2016 00:11:15 -0500
+Received: by mail-pg0-f66.google.com with SMTP id e9so25619146pgc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 21:11:11 -0800 (PST)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Subject: [PATCH 1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
+Date: Thu,  8 Dec 2016 10:37:56 +0530
+Message-Id: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161208_061120_394918_97CA335A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a step toward eliminating the RT_TRACE macros. Those calls that
-have DBG_EMERG as the level are always logged, and they represent error
-conditions, thus they are replaced with pr_err().
+The file 'rsi_91x_hal.c' is going to contain device specific
+code like firmware loading etc. As the file 'rsi_91x_pkt.c'
+contains code for preparing device (frimware understandable)
+specific descriptors for the transmit frames, it is moved to
+'rsi_91x_hal.c'
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
-V2 - eliminate some files that should not have been sent, and remove the
-     module name from the format. It is already specified by a pr_fmt().
----
- .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 33 ++++++----------------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 30 ++++++++------------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   | 22 ++++++---------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  8 ++----
- 5 files changed, 33 insertions(+), 63 deletions(-)
+ drivers/net/wireless/rsi/Makefile      |   2 +-
+ drivers/net/wireless/rsi/rsi_91x_hal.c | 215 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/rsi/rsi_91x_pkt.c | 215 ---------------------------------
+ 3 files changed, 216 insertions(+), 216 deletions(-)
+ create mode 100644 drivers/net/wireless/rsi/rsi_91x_hal.c
+ delete mode 100644 drivers/net/wireless/rsi/rsi_91x_pkt.c
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-index c34cde2..009fd3b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-@@ -125,10 +125,8 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
- 	pagenums = size / FW_8192C_PAGE_SIZE;
- 	remainsize = size % FW_8192C_PAGE_SIZE;
+diff --git a/drivers/net/wireless/rsi/Makefile b/drivers/net/wireless/rsi/Makefile
+index 25828b6..a475c81 100644
+--- a/drivers/net/wireless/rsi/Makefile
++++ b/drivers/net/wireless/rsi/Makefile
+@@ -2,7 +2,7 @@ rsi_91x-y			+= rsi_91x_main.o
+ rsi_91x-y			+= rsi_91x_core.o
+ rsi_91x-y			+= rsi_91x_mac80211.o
+ rsi_91x-y			+= rsi_91x_mgmt.o
+-rsi_91x-y			+= rsi_91x_pkt.o
++rsi_91x-y			+= rsi_91x_hal.o
+ rsi_91x-$(CONFIG_RSI_DEBUGFS)	+= rsi_91x_debugfs.o
  
--	if (pagenums > 8) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Page numbers should not greater then 8\n");
+ rsi_usb-y			+= rsi_91x_usb.o rsi_91x_usb_ops.o
+diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
+new file mode 100644
+index 0000000..02920c9
+--- /dev/null
++++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
+@@ -0,0 +1,215 @@
++/**
++ * Copyright (c) 2014 Redpine Signals Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include "rsi_mgmt.h"
++
++/**
++ * rsi_send_data_pkt() - This function sends the recieved data packet from
++ *			 driver to device.
++ * @common: Pointer to the driver private structure.
++ * @skb: Pointer to the socket buffer structure.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_hdr *tmp_hdr;
++	struct ieee80211_tx_info *info;
++	struct skb_info *tx_params;
++	struct ieee80211_bss_conf *bss;
++	int status;
++	u8 ieee80211_size = MIN_802_11_HDR_LEN;
++	u8 extnd_size;
++	__le16 *frame_desc;
++	u16 seq_num;
++
++	info = IEEE80211_SKB_CB(skb);
++	bss = &info->control.vif->bss_conf;
++	tx_params = (struct skb_info *)info->driver_data;
++
++	if (!bss->assoc) {
++		status = -EINVAL;
++		goto err;
++	}
++
++	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
++	seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
++
++	extnd_size = ((uintptr_t)skb->data & 0x3);
++
++	if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
++		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
++		status = -ENOSPC;
++		goto err;
++	}
++
++	skb_push(skb, (FRAME_DESC_SZ + extnd_size));
++	frame_desc = (__le16 *)&skb->data[0];
++	memset((u8 *)frame_desc, 0, FRAME_DESC_SZ);
++
++	if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
++		ieee80211_size += 2;
++		frame_desc[6] |= cpu_to_le16(BIT(12));
++	}
++
++	if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
++	    (common->secinfo.security_enable)) {
++		if (rsi_is_cipher_wep(common))
++			ieee80211_size += 4;
++		else
++			ieee80211_size += 8;
++		frame_desc[6] |= cpu_to_le16(BIT(15));
++	}
++
++	frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
++				    (RSI_WIFI_DATA_Q << 12));
++	frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
++
++	if (common->min_rate != 0xffff) {
++		/* Send fixed rate */
++		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
++		frame_desc[4] = cpu_to_le16(common->min_rate);
++
++		if (conf_is_ht40(&common->priv->hw->conf))
++			frame_desc[5] = cpu_to_le16(FULL40M_ENABLE);
++
++		if (common->vif_info[0].sgi) {
++			if (common->min_rate & 0x100) /* Only MCS rates */
++				frame_desc[4] |=
++					cpu_to_le16(ENABLE_SHORTGI_RATE);
++		}
++
++	}
++
++	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
++	frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
++				    (skb->priority & 0xf) |
++				    (tx_params->sta_id << 8));
++
++	status = adapter->host_intf_write_pkt(common->priv,
++					      skb->data,
++					      skb->len);
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
++			__func__);
++
++err:
++	++common->tx_stats.total_tx_pkt_freed[skb->priority];
++	rsi_indicate_tx_status(common->priv, skb, status);
++	return status;
++}
++
++/**
++ * rsi_send_mgmt_pkt() - This functions sends the received management packet
++ *			 from driver to device.
++ * @common: Pointer to the driver private structure.
++ * @skb: Pointer to the socket buffer structure.
++ *
++ * Return: status: 0 on success, -1 on failure.
++ */
++int rsi_send_mgmt_pkt(struct rsi_common *common,
++		      struct sk_buff *skb)
++{
++	struct rsi_hw *adapter = common->priv;
++	struct ieee80211_hdr *wh;
++	struct ieee80211_tx_info *info;
++	struct ieee80211_bss_conf *bss;
++	struct ieee80211_hw *hw = adapter->hw;
++	struct ieee80211_conf *conf = &hw->conf;
++	struct skb_info *tx_params;
++	int status = -E2BIG;
++	__le16 *msg;
++	u8 extnd_size;
++	u8 vap_id = 0;
++
++	info = IEEE80211_SKB_CB(skb);
++	tx_params = (struct skb_info *)info->driver_data;
++	extnd_size = ((uintptr_t)skb->data & 0x3);
++
++	if (tx_params->flags & INTERNAL_MGMT_PKT) {
++		if ((extnd_size) > skb_headroom(skb)) {
++			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
++			dev_kfree_skb(skb);
++			return -ENOSPC;
++		}
++		skb_push(skb, extnd_size);
++		skb->data[extnd_size + 4] = extnd_size;
++		status = adapter->host_intf_write_pkt(common->priv,
++						      (u8 *)skb->data,
++						      skb->len);
++		if (status) {
++			rsi_dbg(ERR_ZONE,
++				"%s: Failed to write the packet\n", __func__);
++		}
++		dev_kfree_skb(skb);
++		return status;
++	}
++
++	bss = &info->control.vif->bss_conf;
++	wh = (struct ieee80211_hdr *)&skb->data[0];
++
++	if (FRAME_DESC_SZ > skb_headroom(skb))
++		goto err;
++
++	skb_push(skb, FRAME_DESC_SZ);
++	memset(skb->data, 0, FRAME_DESC_SZ);
++	msg = (__le16 *)skb->data;
++
++	if (skb->len > MAX_MGMT_PKT_SIZE) {
++		rsi_dbg(INFO_ZONE, "%s: Dropping mgmt pkt > 512\n", __func__);
++		goto err;
++	}
++
++	msg[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
++			    (RSI_WIFI_MGMT_Q << 12));
++	msg[1] = cpu_to_le16(TX_DOT11_MGMT);
++	msg[2] = cpu_to_le16(MIN_802_11_HDR_LEN << 8);
++	msg[3] = cpu_to_le16(RATE_INFO_ENABLE);
++	msg[6] = cpu_to_le16(le16_to_cpu(wh->seq_ctrl) >> 4);
++
++	if (wh->addr1[0] & BIT(0))
++		msg[3] |= cpu_to_le16(RSI_BROADCAST_PKT);
++
++	if (common->band == NL80211_BAND_2GHZ)
++		msg[4] = cpu_to_le16(RSI_11B_MODE);
++	else
++		msg[4] = cpu_to_le16((RSI_RATE_6 & 0x0f) | RSI_11G_MODE);
++
++	if (conf_is_ht40(conf)) {
++		msg[4] = cpu_to_le16(0xB | RSI_11G_MODE);
++		msg[5] = cpu_to_le16(0x6);
++	}
++
++	/* Indicate to firmware to give cfm */
++	if ((skb->data[16] == IEEE80211_STYPE_PROBE_REQ) && (!bss->assoc)) {
++		msg[1] |= cpu_to_le16(BIT(10));
++		msg[7] = cpu_to_le16(PROBEREQ_CONFIRM);
++		common->mgmt_q_block = true;
++	}
++
++	msg[7] |= cpu_to_le16(vap_id << 8);
++
++	status = adapter->host_intf_write_pkt(common->priv,
++					      (u8 *)msg,
++					      skb->len);
++	if (status)
++		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
++
++err:
++	rsi_indicate_tx_status(common->priv, skb, status);
++	return status;
++}
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+deleted file mode 100644
+index 02920c9..0000000
+--- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
++++ /dev/null
+@@ -1,215 +0,0 @@
+-/**
+- * Copyright (c) 2014 Redpine Signals Inc.
+- *
+- * Permission to use, copy, modify, and/or distribute this software for any
+- * purpose with or without fee is hereby granted, provided that the above
+- * copyright notice and this permission notice appear in all copies.
+- *
+- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+- */
+-
+-#include "rsi_mgmt.h"
+-
+-/**
+- * rsi_send_data_pkt() - This function sends the recieved data packet from
+- *			 driver to device.
+- * @common: Pointer to the driver private structure.
+- * @skb: Pointer to the socket buffer structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_hdr *tmp_hdr;
+-	struct ieee80211_tx_info *info;
+-	struct skb_info *tx_params;
+-	struct ieee80211_bss_conf *bss;
+-	int status;
+-	u8 ieee80211_size = MIN_802_11_HDR_LEN;
+-	u8 extnd_size;
+-	__le16 *frame_desc;
+-	u16 seq_num;
+-
+-	info = IEEE80211_SKB_CB(skb);
+-	bss = &info->control.vif->bss_conf;
+-	tx_params = (struct skb_info *)info->driver_data;
+-
+-	if (!bss->assoc) {
+-		status = -EINVAL;
+-		goto err;
 -	}
-+	if (pagenums > 8)
-+		pr_err("Page numbers should not greater then 8\n");
- 
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8192C_PAGE_SIZE;
-@@ -157,15 +155,10 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
- 		 (!(value32 & FWDL_CHKSUM_RPT)));
- 
- 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
--			  value32);
-+		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
-+		       value32);
- 		goto exit;
- 	}
 -
--	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
--		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
+-	seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
 -
- 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
- 	value32 |= MCUFWDL_RDY;
- 	value32 &= ~WINTINI_RDY;
-@@ -176,20 +169,15 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
- 
- 	do {
- 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
--		if (value32 & WINTINI_RDY) {
--			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
--				 "Polling FW ready success!! REG_MCUFWDL:0x%08x.\n",
--				  value32);
--			err = 0;
--			goto exit;
+-	extnd_size = ((uintptr_t)skb->data & 0x3);
+-
+-	if ((FRAME_DESC_SZ + extnd_size) > skb_headroom(skb)) {
+-		rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+-		status = -ENOSPC;
+-		goto err;
+-	}
+-
+-	skb_push(skb, (FRAME_DESC_SZ + extnd_size));
+-	frame_desc = (__le16 *)&skb->data[0];
+-	memset((u8 *)frame_desc, 0, FRAME_DESC_SZ);
+-
+-	if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
+-		ieee80211_size += 2;
+-		frame_desc[6] |= cpu_to_le16(BIT(12));
+-	}
+-
+-	if ((!(info->flags & IEEE80211_TX_INTFL_DONT_ENCRYPT)) &&
+-	    (common->secinfo.security_enable)) {
+-		if (rsi_is_cipher_wep(common))
+-			ieee80211_size += 4;
+-		else
+-			ieee80211_size += 8;
+-		frame_desc[6] |= cpu_to_le16(BIT(15));
+-	}
+-
+-	frame_desc[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
+-				    (RSI_WIFI_DATA_Q << 12));
+-	frame_desc[2] = cpu_to_le16((extnd_size) | (ieee80211_size) << 8);
+-
+-	if (common->min_rate != 0xffff) {
+-		/* Send fixed rate */
+-		frame_desc[3] = cpu_to_le16(RATE_INFO_ENABLE);
+-		frame_desc[4] = cpu_to_le16(common->min_rate);
+-
+-		if (conf_is_ht40(&common->priv->hw->conf))
+-			frame_desc[5] = cpu_to_le16(FULL40M_ENABLE);
+-
+-		if (common->vif_info[0].sgi) {
+-			if (common->min_rate & 0x100) /* Only MCS rates */
+-				frame_desc[4] |=
+-					cpu_to_le16(ENABLE_SHORTGI_RATE);
 -		}
-+		if (value32 & WINTINI_RDY)
-+			return 0;
- 
- 		udelay(FW_8192C_POLLING_DELAY);
- 
- 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
- 
--	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
-+	pr_err("Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n",
-+	       value32);
- 
- exit:
- 	return err;
-@@ -235,8 +222,7 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
- 
- 	err = _rtl88e_fw_free_to_go(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Firmware is not ready to run!\n");
-+		pr_err("Firmware is not ready to run!\n");
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
- 			 "Firmware is ready to run!\n");
-@@ -309,8 +295,7 @@ static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
- 	while (!write_sucess) {
- 		wait_writeh2c_limit--;
- 		if (wait_writeh2c_limit == 0) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Write H2C fail because no trigger for FW INT!\n");
-+			pr_err("Write H2C fail because no trigger for FW INT!\n");
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index d85fa67..6aa593d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -358,8 +358,7 @@ void rtl88ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 	case HAL_DEF_WOWLAN:
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
-+		pr_err("switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -572,9 +571,8 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				acm_ctrl &= (~ACMHW_VOQEN);
- 				break;
- 			default:
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "switch case %#x not processed\n",
--					 e_aci);
-+				pr_err("switch case %#x not processed\n",
-+				       e_aci);
- 				break;
- 			}
- 		}
-@@ -737,8 +735,7 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				    2, array);
- 		break; }
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
-+		pr_err("switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -759,9 +756,8 @@ static bool _rtl88ee_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
- 			break;
- 
- 		if (count > POLLING_LLT_THRESHOLD) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Failed to polling write LLT done at address %d!\n",
--				 address);
-+			pr_err("Failed to polling write LLT done at address %d!\n",
-+			       address);
- 			status = false;
- 			break;
- 		}
-@@ -1096,7 +1092,7 @@ int rtl88ee_hw_init(struct ieee80211_hw *hw)
- 
- 	rtstatus = _rtl88ee_init_mac(hw);
- 	if (rtstatus != true) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
-+		pr_info("Init MAC failed\n");
- 		err = 1;
- 		goto exit;
- 	}
-@@ -1252,8 +1248,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
- 			 "Set Network type to AP!\n");
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Network type %d not support!\n", type);
-+		pr_err("Network type %d not support!\n", type);
- 		return 1;
- 		break;
- 	}
-@@ -1987,7 +1982,7 @@ void rtl88ee_read_eeprom_info(struct ieee80211_hw *hw)
- 		rtlefuse->autoload_failflag = false;
- 		_rtl88ee_read_adapter_info(hw);
- 	} else {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
-+		pr_err("Autoload ERR!!\n");
- 	}
- 	_rtl88ee_hal_customized_behavior(hw);
- }
-@@ -2354,8 +2349,8 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			enc_algo = CAM_AES;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n", enc_algo);
-+			pr_err("switch case %#x not processed\n",
-+			       enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-@@ -2373,9 +2367,7 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
- 					entry_id =
- 					  rtl_cam_get_free_entry(hw, p_macaddr);
- 					if (entry_id >=  TOTAL_CAM_ENTRY) {
--						RT_TRACE(rtlpriv, COMP_SEC,
--							 DBG_EMERG,
--							 "Can not find free hw security cam entry\n");
-+						pr_err("Can not find free hw security cam entry\n");
- 						return;
- 					}
- 				} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index 870d8202..925a43f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -176,7 +176,7 @@ static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
- 	offset &= 0xff;
- 	newoffset = offset;
- 	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
-+		pr_err("return all one\n");
- 		return 0xFFFFFFFF;
- 	}
- 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
-@@ -220,7 +220,7 @@ static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
- 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
- 
- 	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
-+		pr_err("stop\n");
- 		return;
- 	}
- 	offset &= 0xff;
-@@ -373,7 +373,7 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
- 
- 	rtstatus = phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_PHY_REG);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
-+		pr_err("Write BB Reg Fail!!\n");
- 		return false;
- 	}
- 
-@@ -383,13 +383,13 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
- 		  phy_config_bb_with_pghdr(hw, BASEBAND_CONFIG_PHY_REG);
- 	}
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
-+		pr_err("BB_PG Reg Fail!!\n");
- 		return false;
- 	}
- 	rtstatus =
- 	  phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
-+		pr_err("AGC Table Fail\n");
- 		return false;
- 	}
- 	rtlphy->cck_high_power =
-@@ -1095,8 +1095,7 @@ void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
- 						      (u8 *)&iotype);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unknown Scan Backup operation.\n");
-+			pr_err("Unknown Scan Backup operation.\n");
- 			break;
- 		}
- 	}
-@@ -1137,8 +1136,8 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
- 		break;
- 	}
- 
-@@ -1162,8 +1160,8 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
- 		break;
- 	}
- 	rtl88e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
-@@ -1303,8 +1300,8 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			currentcmd = &postcommoncmd[*step];
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Invalid 'stage' = %d, Check it!\n", *stage);
-+			pr_err("Invalid 'stage' = %d, Check it!\n",
-+			       *stage);
- 			return true;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
-index 26ac4c2..30798b1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
-@@ -51,8 +51,7 @@ void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
- 			      rtlphy->rfreg_chnlval[0]);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", bandwidth);
-+		pr_err("unknown bandwidth: %#X\n", bandwidth);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-index f361808..276c745 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
-@@ -165,8 +165,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 	/* for firmware buf */
- 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
- 	if (!rtlpriv->rtlhal.pfirmware) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't alloc buffer for fw.\n");
-+		pr_info("Can't alloc buffer for fw.\n");
- 		return 1;
- 	}
- 
-@@ -177,8 +176,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Failed to request firmware!\n");
-+		pr_info("Failed to request firmware!\n");
- 		return 1;
- 	}
- 
-@@ -278,7 +276,7 @@ static struct rtl_mod_params rtl88ee_mod_params = {
- 	.swctrl_lps = false,
- 	.fwctrl_lps = false,
- 	.msi_support = true,
--	.debug = DBG_EMERG,
-+	.debug = 0,
- };
- 
- static const struct rtl_hal_cfg rtl88ee_hal_cfg = {
+-
+-	}
+-
+-	frame_desc[6] |= cpu_to_le16(seq_num & 0xfff);
+-	frame_desc[7] = cpu_to_le16(((tx_params->tid & 0xf) << 4) |
+-				    (skb->priority & 0xf) |
+-				    (tx_params->sta_id << 8));
+-
+-	status = adapter->host_intf_write_pkt(common->priv,
+-					      skb->data,
+-					      skb->len);
+-	if (status)
+-		rsi_dbg(ERR_ZONE, "%s: Failed to write pkt\n",
+-			__func__);
+-
+-err:
+-	++common->tx_stats.total_tx_pkt_freed[skb->priority];
+-	rsi_indicate_tx_status(common->priv, skb, status);
+-	return status;
+-}
+-
+-/**
+- * rsi_send_mgmt_pkt() - This functions sends the received management packet
+- *			 from driver to device.
+- * @common: Pointer to the driver private structure.
+- * @skb: Pointer to the socket buffer structure.
+- *
+- * Return: status: 0 on success, -1 on failure.
+- */
+-int rsi_send_mgmt_pkt(struct rsi_common *common,
+-		      struct sk_buff *skb)
+-{
+-	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_hdr *wh;
+-	struct ieee80211_tx_info *info;
+-	struct ieee80211_bss_conf *bss;
+-	struct ieee80211_hw *hw = adapter->hw;
+-	struct ieee80211_conf *conf = &hw->conf;
+-	struct skb_info *tx_params;
+-	int status = -E2BIG;
+-	__le16 *msg;
+-	u8 extnd_size;
+-	u8 vap_id = 0;
+-
+-	info = IEEE80211_SKB_CB(skb);
+-	tx_params = (struct skb_info *)info->driver_data;
+-	extnd_size = ((uintptr_t)skb->data & 0x3);
+-
+-	if (tx_params->flags & INTERNAL_MGMT_PKT) {
+-		if ((extnd_size) > skb_headroom(skb)) {
+-			rsi_dbg(ERR_ZONE, "%s: Unable to send pkt\n", __func__);
+-			dev_kfree_skb(skb);
+-			return -ENOSPC;
+-		}
+-		skb_push(skb, extnd_size);
+-		skb->data[extnd_size + 4] = extnd_size;
+-		status = adapter->host_intf_write_pkt(common->priv,
+-						      (u8 *)skb->data,
+-						      skb->len);
+-		if (status) {
+-			rsi_dbg(ERR_ZONE,
+-				"%s: Failed to write the packet\n", __func__);
+-		}
+-		dev_kfree_skb(skb);
+-		return status;
+-	}
+-
+-	bss = &info->control.vif->bss_conf;
+-	wh = (struct ieee80211_hdr *)&skb->data[0];
+-
+-	if (FRAME_DESC_SZ > skb_headroom(skb))
+-		goto err;
+-
+-	skb_push(skb, FRAME_DESC_SZ);
+-	memset(skb->data, 0, FRAME_DESC_SZ);
+-	msg = (__le16 *)skb->data;
+-
+-	if (skb->len > MAX_MGMT_PKT_SIZE) {
+-		rsi_dbg(INFO_ZONE, "%s: Dropping mgmt pkt > 512\n", __func__);
+-		goto err;
+-	}
+-
+-	msg[0] = cpu_to_le16((skb->len - FRAME_DESC_SZ) |
+-			    (RSI_WIFI_MGMT_Q << 12));
+-	msg[1] = cpu_to_le16(TX_DOT11_MGMT);
+-	msg[2] = cpu_to_le16(MIN_802_11_HDR_LEN << 8);
+-	msg[3] = cpu_to_le16(RATE_INFO_ENABLE);
+-	msg[6] = cpu_to_le16(le16_to_cpu(wh->seq_ctrl) >> 4);
+-
+-	if (wh->addr1[0] & BIT(0))
+-		msg[3] |= cpu_to_le16(RSI_BROADCAST_PKT);
+-
+-	if (common->band == NL80211_BAND_2GHZ)
+-		msg[4] = cpu_to_le16(RSI_11B_MODE);
+-	else
+-		msg[4] = cpu_to_le16((RSI_RATE_6 & 0x0f) | RSI_11G_MODE);
+-
+-	if (conf_is_ht40(conf)) {
+-		msg[4] = cpu_to_le16(0xB | RSI_11G_MODE);
+-		msg[5] = cpu_to_le16(0x6);
+-	}
+-
+-	/* Indicate to firmware to give cfm */
+-	if ((skb->data[16] == IEEE80211_STYPE_PROBE_REQ) && (!bss->assoc)) {
+-		msg[1] |= cpu_to_le16(BIT(10));
+-		msg[7] = cpu_to_le16(PROBEREQ_CONFIRM);
+-		common->mgmt_q_block = true;
+-	}
+-
+-	msg[7] |= cpu_to_le16(vap_id << 8);
+-
+-	status = adapter->host_intf_write_pkt(common->priv,
+-					      (u8 *)msg,
+-					      skb->len);
+-	if (status)
+-		rsi_dbg(ERR_ZONE, "%s: Failed to write the packet\n", __func__);
+-
+-err:
+-	rsi_indicate_tx_status(common->priv, skb, status);
+-	return status;
+-}
 -- 
-2.10.2
+2.4.11
