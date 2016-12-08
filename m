@@ -1,155 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8282 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755158AbcLOLGs (ORCPT
+Received: from mail-wj0-f181.google.com ([209.85.210.181]:35930 "EHLO
+        mail-wj0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752495AbcLHUfV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 06:06:48 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+        Thu, 8 Dec 2016 15:35:21 -0500
+Received: by mail-wj0-f181.google.com with SMTP id tk12so102826727wjb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2016 12:35:21 -0800 (PST)
 Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
  better BSSs
-Date: Thu, 15 Dec 2016 11:06:37 +0000
-Message-ID: <20161215110635.GA11840@jouni.qca.qualcomm.com> (sfid-20161215_120652_706293_0BEF2F2E)
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
 References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
  <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
  <1481102727.4092.34.camel@sipsolutions.net>
  <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
  <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
  <20161208175236.GA6121@jouni.qca.qualcomm.com>
- <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com>
- <1481644615.20412.25.camel@sipsolutions.net>
-In-Reply-To: <1481644615.20412.25.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Cc: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com> (sfid-20161208_213526_967952_6E9296C4)
+Date: Thu, 8 Dec 2016 21:35:18 +0100
 MIME-Version: 1.0
+In-Reply-To: <20161208175236.GA6121@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCBEZWMgMTMsIDIwMTYgYXQgMDQ6NTY6NTVQTSArMDEwMCwgSm9oYW5uZXMgQmVyZyB3
-cm90ZToNCj4gUmVnYXJkaW5nIHJldXNpbmcgYXR0cmlidXRlcywgd2UgaGF2ZSAoZm9yIHRoZSBC
-U1Mgc2VsZWN0aW9uIHRoaW5nKSB0aGUNCj4gYXR0cmlidXRlIE5MODAyMTFfQlNTX1NFTEVDVF9B
-VFRSX1JTU0lfQURKVVNULCB3aGljaCBpcyByZWFsbHkgcXVpdGUNCj4gc2ltaWxhciB0byB5b3Vy
-IG5ld8KgTkw4MDIxMV9BVFRSX1NDSEVEX1NDQU5fUkVMQVRJVkVfUlNTSV81R19QUkVGIHNpbmNl
-DQo+IHdoaWxlIGNvbm5lY3RlZCAod2hpY2ggQlNTX1NFTEVDVF9BVFRSXyogYXNzdW1lcykgdGhl
-IGN1cnJlbnQgQlNTIGlzDQo+IGFsd2F5cyBwYXJ0IG9mIHRoZSBjb25zaWRlcmVkIEJTU2VzLCBJ
-J2QgdGhpbmsuDQoNCkl0IHNlZW1zIHRvIGhhdmUgc29tZXdoYXQgc2ltaWxhciBtZWFuaW5nLCBi
-dXQgaXQgbG9va3MgbW9yZSBnZW5lcmljIGJ5DQpub3QgYmVpbmcgdGllZCB0byBqdXN0IHR3byBi
-YW5kcyAoMi40IGFuZCA1KS4gQW5kIG5vdyB0aGF0IEkgYWN0dWFsbHkNCmxvb2tlZCBhZ2FpbiBh
-dCB0aGlzLCBpdCBkb2VzIG5vdCBsb29rIGxpa2UNCk5MODAyMTFfQlNTX1NFTEVDVF9BVFRSX1JT
-U0lfQURKVVNUIGFjdHVhbGx5IGFsbG93cyBtb3JlIHRoYW4gYSBzaW5nbGUNCmJhbmQsZGVsdGEg
-cGFpciB0byBiZSBwcm92aWRlZCBhbmQgYXMgc3VjaCwgaXQgYWN0dWFsbHkgd291bGQgbm90IHdv
-cmsNCnZlcnkgd2VsbCB3aXRoIG1vcmUgdGhhbiB0d28gYmFuZHMgZXZlbiBpZiBpdCBtaWdodCBi
-ZSBhIGJpdCBtb3JlDQpnZW5lcmljIGJ5IGFsbG93aW5nIGJhbmQgdG8gYmUgc2V0IHRvIHNvbWV0
-aGluZyBlbHNlIHRoYW4gMi40IG9yIDUuIEJ5DQp0aGUgd2F5LCBubDgwMjExLmggZG9lcyBub3Qg
-c2VlbSB0byBkb2N1bWVudCB3aGF0IHZhbHVlcyBzdHJ1Y3QNCm5sODIwMTFfYnNzX3NlbGVjdF9y
-c3NpX2FkanVzdCBiYW5kIHVzZXMuLiAgSXMgdGhpcyBlbnVtIG5sODAyMTFfYmFuZD8NCk5laXRo
-ZXIgZG9lcyBpdCBzYXkgdGhhdCBkZWx0YSBpcyBpbiBkQiAoaXMgaXQ/KS4NCg0KPiBPVE9ILCB0
-aGUgbmV3wqBOTDgwMjExX0FUVFJfU0NIRURfU0NBTl9SRUxBVElWRV9SU1NJXzVHX1BSRUYgZG9l
-c24ndA0KPiBtYWtlIHRoaXMgcXVpdGUgY2xlYXIgLSBpcyB0aGUgY3VycmVudCBCU1MgdG8gYmUg
-YWRqdXN0ZWQgYmVmb3JlDQo+IGNvbXBhcmluZywgaWYgaXQncyA1IEdIej8gSWYgc28sIHRoZSBz
-ZW1hbnRpY3MgYXJlIGVxdWl2YWxlbnQuIElmIG5vdCwNCj4gaXQgZG9lc24ndCBhY3R1YWxseSBt
-YWtlIG11Y2ggc2Vuc2UgOy0pDQoNCk1heWJlIHRoZSBubDgwMjExLmggZGVzY3JpcHRpb24gd2Fz
-IG5vdCBjbGVhciBlbm91Z2gsIGJ1dCB0aGUgY29tbWVudHMNCmluIGNmZzgwMjExLmggc2hvdWxk
-IGJlIHF1aXRlIGNsZWFyIG9uIGhvdyB0aGlzIHdhcyBkZXNpZ25lZCB0byB3b3JrIGF0DQp0aGUg
-aW1wbGVtZW50YXRpb24gbGV2ZWw6DQoNCiJJZiB0aGUgY3VycmVudCBjb25uZWN0ZWQgQlNTIGlz
-IGluIHRoZSAyLjQgR0h6IGJhbmQsIG90aGVyIEJTU3MgaW4gdGhlDQoyLjQgR0h6IGJhbmQgdG8g
-YmUgcmVwb3J0ZWQgc2hvdWxkIGhhdmUgYmV0dGVyIFJTU0kgYnkgQHJlbGF0aXZlX3Jzc2kNCmFu
-ZCBvdGhlciBCU1NzIGluIHRoZSA1IEdIeiBiYW5kIHRvIGJlIHJlcG9ydGVkIHNob3VsZCBoYXZl
-IGJldHRlciBSU1NJDQpieSAoQHJlbGF0aXZlX3Jzc2kgLSBAcmVsYXRpdmVfcnNzaV81Z19wcmVm
-KS4NCklmIHRoZSBjdXJyZW50IGNvbm5lY3RlZCBCU1MgaXMgaW4gdGhlIDUgR0h6IGJhbmQsIG90
-aGVyIEJTU3MgaW4gdGhlDQoyLjQgR0h6IGJhbmQgdG8gYmUgcmVwb3J0ZWQgc2hvdWxkIGhhdmUg
-YmV0dGVyIFJTU0kgYnkNCihAcmVsYXRpdmVfcnNzaSArIEByZWxhdGl2ZV9yc3NpXzVnX3ByZWYp
-IGFuZCBvdGhlciBCU1NzIGluIHRoZSA1IEdIeg0KYmFuZCB0byBiZSByZXBvcnRlZCBzaG91bGQg
-aGF2ZSBiZXR0ZXIgUlNTSSBieSBieSBAcmVsYXRpdmVfcnNzaS4iDQoNCkknbSBub3Qgc3VyZSBJ
-J2QgZGVzY3JpYmUgdGhpcyBhcyBhZGp1c3RpbmcgdGhlIGN1cnJlbnQgQlNTIFJTU0ksIGJ1dA0K
-bW9yZSBsaWtlIGFkanVzdGluZyB0aGUgUlNTSSB0aHJlc2hvbGQgdmFsdWUgaWYgcm9hbWluZyB3
-b3VsZCBiZSBmcm9tDQpvbmUgYmFuZCB0byBhbm90aGVyIGFuZCBkb2luZyB0aGF0IGFkanVzdG1l
-bnQgYnkgYWRkaW5nIG9yIGRlY3JlbWVudGluZw0KYmFzZWQgb24gd2hldGhlciB0aGUgcm9hbSB3
-b3VsZCBiZSBmcm9tIDIuNCB0byA1IG9yIGZyb20gNSB0byAyLjQuDQoNCj4gU28gYXNzdW1pbmcg
-dGhhdCBpdCBpcyBpbiBmYWN0IHRha2VuIGludG8gYWNjb3VudCBhZnRlciB0aGUgc2FtZQ0KPiBh
-ZGp1c3RtZW50LCB0aGUgdHdvIGF0dHJpYnV0ZXMgYXJlIGVxdWl2YWxlbnQsIGFuZCB0aGVuIHBl
-cmhhcHMgaXQNCj4gd291bGQgbWFrZSBzZW5zZSB0byB1c2Ugc3RydWN0IG5sODAyMTFfYnNzX3Nl
-bGVjdF9yc3NpX2FkanVzdCBmb3IgdGhlDQo+IG5ldyBhdHRyaWJ1dGUuIElmIGEgZHJpdmVyIGRv
-ZXNuJ3Qgc3VwcG9ydCBhcmJpdHJhcnkgYmFuZHMsIGJ1dCBqdXN0IDUNCj4gR0h6IGFzIGluIHlv
-dXIgZXhhbXBsZSwgaXQgY2FuIGp1c3QgZmxpcCBpdCBhcm91bmQgdG8gMi40IEdIeiBieQ0KPiBz
-d2l0Y2hpbmcgdGhlIHNpZ24uDQo+IA0KPiBQZXJoYXBzIHdlIHNob3VsZCBldmVuIGNvbnNpZGVy
-IGRvaW5nIHRoYXQgaW4gY2ZnODAyMTEgYW5kIGFkanVzdGluZw0KPiB0aGUgaW50ZXJuYWwgQVBJ
-IGZvciBib3RoIHRoYXQgd2F5Pw0KDQpJJ20gbm90IGNvbXBsZXRlbHkgc3VyZSBJIHVuZGVyc3Rv
-b2QuIE9uZSB0aGluZyB0byBub3RlIGFib3V0DQpkaWZmZXJlbmNlcyBoZXJlIGlzIHRoYXQgTkw4
-MDIxMV9CU1NfU0VMRUNUX0FUVFJfKiBzZWVtcyB0byBiZSBkZWZpbmluZw0Kc29tZSBwcmVmZXJl
-bmNlcyBmb3IgQlNTIHNlbGVjdGlvbiBiYXNlZCBvbiBSU1NJIHdpdGggYW4gYWRkaXRpb25hbCBi
-YW5kDQpwcmVmZXJlbmNlLCBidXQgaXQgZG9lcyBub3Qgc2VlbSB0byBkZWZpbmUgdGhlIHRocmVz
-aG9sZCBieSBob3cgbWFueSBkQg0KdGhlIG5ldyBjYW5kaWRhdGUgQlNTIHNob3VsZCBiZSBiZXR0
-ZXIuDQoNCkF0IG1pbmltdW0sIHdlIHdvdWxkIG5lZWQgdG8gY2xlYXJseSBkb2N1bWVudCBzdHJ1
-Y3QNCm5sODAyMTFfYnNzX3NlbGVjdF9yc3NpX2FkanVzdCwgYnV0IGV2ZW4gaWYgd2UgZG8sIEkn
-bSBub3Qgc3VyZSBpdA0KcmVhbGx5IGlzIGlkZWFsIG1lY2hhbmlzbSB0byBtb3ZlIHRvIG5vdyB0
-aGF0IEkgcmVhbGl6ZWQgaXQgaXMgbm90IGFuDQphcnJheSwgYnV0IGEgc2luZ2xlIGJhbmQsZGVs
-dGEgcGFpci4NCg0KQXJlbmQ6DQo+ID4gSSBhbSBub3Qgc2F5aW5nIGl0IHNob3VsZCBiZSBhdm9p
-ZGVkLiBKdXN0IGxvb2tpbmcgYXQgaXQgY29uY2VwdHVhbGx5DQo+ID4gdGhlIHNjaGVkdWxlZCBz
-Y2FuIHJlcXVlc3QgaG9sZHMgc28tY2FsbGVkIG1hdGNoc2V0cyB0aGF0IHNwZWNpZnkgdGhlDQo+
-ID4gY29uc3RyYWludHMgdG8gZGV0ZXJtaW5lIHdoZXRoZXIgYSBCU1Mgd2FzIGZvdW5kIHRoYXQg
-aXMgd29ydGgNCj4gPiBub3RpZnlpbmcgdGhlIGhvc3QvdXNlci1zcGFjZSBhYm91dC4gQXMgc3Vj
-aCBJIHdvdWxkIGV4cGVjdCB0aGUNCj4gPiByZWxhdGl2ZSBSU1NJIGF0dHJpYnV0ZShzKSB0byBi
-ZSBwYXJ0IG9mIHRoZSBtYXRjaHNldC4gVGhhdCB3YXkgeW91DQo+ID4gY2FuIHNwZWNpZnkgaXQg
-dG9nZXRoZXIgd2l0aCB0aGUgY3VycmVudGx5IGNvbm5lY3RlZCBTU0lEIGluIGEgc2luZ2xlDQo+
-ID4gbWF0Y2hzZXQuDQo+IA0KPiBJIHRoaW5rIHRoaXMgbWFrZXMgYSBsb3Qgb2Ygc2Vuc2UuDQoN
-CklmIHdlIGFyZSB0YWxraW5nIG9ubHkgYWJvdXQgcm9hbWluZyB3aXRoaW4gYW4gRVNTIChhIHNp
-bmdsZSBTU0lEKSwgdGhhdA0Kd291bGQgc291bmQgY2xlYXIsIGJ1dCB3aGljaCByZWxhdGl2ZSBS
-U1NJIHJ1bGVzIHdvdWxkIGFwcGx5IGlmIHRoZXJlDQphcmUgbWF0Y2ggc2V0cyBmb3IgYm90aCB0
-aGUgY3VycmVudGx5IGNvbm5lY3RlZCBTU0lEIGFuZCBhbm90aGVyIFNTSUQNCnRoYXQgdGhlIGNh
-bmRpZGF0ZSBCU1MgaXMgZm9yPw0KDQo+IFdlIGFscmVhZHkgaGF2ZcKgTkw4MDIxMV9TQ0hFRF9T
-Q0FOX01BVENIX0FUVFJfUlNTSSwgd2hpY2ggYXNrcyB0byBiZQ0KPiByZXBvcnRpbmcgb25seSBu
-ZXR3b3JrcyB0aGF0IGhhdmUgYW4gKmFic29sdXRlKiBSU1NJIHZhbHVlIGFib3ZlIHRoZQ0KPiB2
-YWx1ZSBvZiB0aGUgYXR0cmlidXRlIC0gYSBuZXcgYXR0cmlidXRlIHRvIG1ha2UgaXQgcmVsYXRp
-dmUgdG8gdGhlDQo+IGN1cnJlbnQgbmV0d29yayBpbnN0ZWFkIHdvdWxkIG1ha2Ugc2Vuc2UuDQoN
-CldoZW4geW91IHNheSAiY3VycmVudCBuZXR3b3JrIiwgZG8geW91IG1lYW4gdGhlIGN1cnJlbnQg
-QlNTPyBUaGlzIGdldHMNCmNvbXBsZXggd2hlbiB0aGlua2luZyBhYm91dCBtdWx0aXBsZSBTU0lE
-cyAod2hpY2ggc29tZSBjYWxsICJuZXR3b3JrcyIpDQphbmQgdGhlcmUgYmVpbmcgTkw4MDIxMV9T
-Q0hFRF9TQ0FOX01BVENIX0FUVFJfU1NJRCBhbmQgbXVsdGlwbGUNCm1hdGNoIHNldHMuLg0KDQo+
-IFRoYXQgd291bGQgaW5kZWVkIGJlIGVxdWl2YWxlbnQgdG8gTkw4MDIxMV9CU1NfU0VMRUNUX0FU
-VFJfUlNTSSB0aGVuLg0KDQpOTDgwMjExX0JTU19TRUxFQ1RfQVRUUl9SU1NJIGlzIGEgZmxhZyBh
-dHRyaWJ1dGUuLiBCU1Mgc2VsZWN0IG1lY2hhbmlzbQ0KZG9lcyBub3QgcHJvdmlkZSBhbiBhYnNv
-bHV0ZSBSU1NJIHZhbHVlIG9yIHRocmVzaG9sZDsgaXQganVzdCBzZWVtcyB0bw0KaW5kaWNhdGUg
-dXNlIG9mIFJTU0ktYmFzZWQgc2VsZWN0aW9uIG1lY2hhbmlzbSB3aXRob3V0IGRlZmluaW5nIHdo
-YXQNCmV4YWN0bHkgaXMgYmV0dGVyLiBUaGVyZSBpcyBOTDgwMjExX0JTU19TRUxFQ1RfQVRUUl9C
-QU5EX1BSRUYgdGhhdCBnaXZlcw0KYSBwcmVmZXJlbmNlIHRvIGEgc3BlY2lmaWMgYmFuZCAod2l0
-aG91dCBkZWZpbmluZyB3aGF0IHRoYXQgcHJlZmVyZW5jZQ0KaXMpIGFuZCB0aGVuIHRoZSBOTDgw
-MjExX0JTU19TRUxFQ1RfQVRUUl9SU1NJX0FESlVTVCB0aGF0IGNhbiBhY3R1YWxseQ0KZ2l2ZSBh
-IHNwZWNpZmljIFJTU0kgYWRqdXN0bWVudCB2YWx1ZSAoaW4gZEI/KS4NCg0KPiBOb3csIGlmIHdl
-IGNvbnNpZGVyIHRoaXMswqBOTDgwMjExX0FUVFJfU0NIRURfU0NBTl9SRUxBVElWRV9SU1NJDQo+
-IGFjdHVhbGx5IGlzIGVxdWl2YWxlbnQgdG/CoE5MODAyMTFfQlNTX1NFTEVDVF9BVFRSX1JTU0kg
-KGEgZmxhZw0KPiBhdHRyaWJ1dGUgaW5kaWNhdGluZyB3aGV0aGVyIG9yIG5vdCBSU1NJLWJhc2Vk
-IHNlbGVjdGlvbi9tYXRjaGluZyBpcw0KPiBkb25lKSBhbmTCoE5MODAyMTFfQVRUUl9TQ0hFRF9T
-Q0FOX1JFTEFUSVZFX1JTU0lfNUdfUFJFRiBpcyBlcXVpdmFsZW50DQo+IHRvwqBOTDgwMjExX0JT
-U19TRUxFQ1RfQVRUUl9SU1NJX0FESlVTVCwgYm90aCBuZWVkIHRvIGJlIGdpdmVuIHdpdGggdGhl
-DQo+IGZsYWcgYW5kIGFmZmVjdCBvcGVyYXRpb24uDQoNCkhtbS4uIFNvIHlvdSBkaWQgbm90aWNl
-IGl0IGlzIGEgZmxhZyBhdHRyaWJ1dGUuLiBTbyBob3cgd291bGQgdGhpcyBtYXRjaA0KTkw4MDIx
-MV9BVFRSX1NDSEVEX1NDQU5fUkVMQVRJVkVfUlNTSSB3aGljaCBwcm92aWRlcyB0aGUgdGhyZXNo
-b2xkIHZhbHVlDQpmb3IgaG93IG1hbnkgZEIgYmV0dGVyIHRoZSBuZXcgQlNTIG5lZWRzIHRvIGJl
-IGZvciBpdCB0byBiZSByZXBvcnRlZD8NCg0KPiBTbywgaG93IGFib3V0IHdlIG1vdmUgdGhlc2Ug
-aW50b8KgTkw4MDIxMV9TQ0hFRF9TQ0FOX01BVENIX0FUVFJfKiBhcw0KPiBzdWdnZXN0ZWQgYnkg
-QXJlbmQsIGFuZCBkZWZpbmUgdGhlbSB3aXRoIHRoZSBzYW1lIGNvbnRlbnQgYXMgwqB0aGUNCj4g
-Y29ycmVzcG9uZGluZyBOTDgwMjExX0JTU19TRUxFQ1RfQVRUUl8qPw0KDQpJIHRoaW5rIEknbSBt
-aXNzaW5nIHNvbWV0aGluZyBoZXJlLi4gV2hlcmUgd291bGQgdGhlIHRocmVzaG9sZCB2YWx1ZQ0K
-KGhvdyBtdWNoIGJldHRlciBuZXcgQlNTIG5lZWRzIHRvIGJlKSBiZSBzdG9yZWQ/IEFuZCBkbyB3
-ZSByZWFsbHkgd2FudA0Kc29tZXRoaW5nIGxpa2UgdGhlIGNvbWJpbmF0aW9uIG9mIE5MODAyMTFf
-QlNTX1NFTEVDVF9BVFRSX0JBTkRfUFJFRiBhbmQNCk5MODAyMTFfQlNTX1NFTEVDVF9BVFRSX1JT
-U0lfQURKVVNUIHdoaWNoIHNlZW1zIHRvIGJlIHR3byBkaWZmZXJlbnQgd2F5cw0Kb2YgZG9pbmcg
-YmFuZCBwcmVmZXJlbmNlICh0aGUgZm9ybWVyIHdpdGhvdXQgc3BlY2lmeWluZyBkZWx0YSBhbmQg
-dGhlDQpsYXR0ZXIgd2l0aCBzcGVjaWZpYyBkZWx0YSk/IE9yIGFtIEkgc3RpbGwgbm90IHVuZGVy
-c3RhbmRpbmcgaG93DQpOTDgwMjExX0JTU19TRUxFQ1RfQVRUUl8qIHJlYWxseSB3b3Jrcz8NCg0K
-PiBJZiB0aGV5J3JlIHBhcnQgb2YgbWF0Y2ggYXR0cmlidXRlcywgd2UgbWlnaHQgZXZlbiByZW1v
-dmUgdGhlIGZlYXR1cmUNCj4gZmxhZyBlbnRpcmVseSAtIHRob3NlIHdlcmUgYWx3YXlzIGRlZmlu
-ZWQgdG8gYmUgb3B0aW9uYWwsIGJ1dCBpdCB2ZXJ5DQo+IHdlbGwgYmUgd29ydGh3aGlsZSBmb3Ig
-dXNlcnNwYWNlIHRvIGtub3cgaWYgdGhleSdyZSBzdXBwb3J0ZWQgaWYgaXQNCj4gd2FudHMgdG8g
-YmVoYXZlIGRpZmZlcmVudGx5IGRlcGVuZGluZyBvbiB3aGV0aGVyIHRoZXkncmUgc3VwcG9ydGVk
-IG9yDQo+IG5vdCwgSSdsbCBsZWF2ZSB0aGF0IHVwIHRvIHlvdSBzaW5jZSBwcmVzdW1hYmx5IHlv
-dSBrbm93IHRoZSB1c2Vyc3BhY2UNCj4gaW1wbGVtZW50YXRpb24gdGhhdCB5b3UncmUgcGxhbm5p
-bmcgdG8gY3JlYXRlLg0KDQpUaGUgbWFpbiBjb25jZXJuIEkgaGF2ZSBmb3Igb3B0aW9uYWwgZmVh
-dHVyZXMgd2l0aCBzY2hlZF9zY2FuIGlzIGluDQp3aGV0aGVyIHRoZSBkZXZpY2UgZW5kcyB1cCBi
-ZWluZyB3b2tlbiB1cCBjb25zdGFudGx5IGlmIHRoZSBkcml2ZXIgZG9lcw0Kbm90IHVuZGVyc3Rh
-bmQgYSBjb25zdHJhaW50IHRoYXQgdXNlciBzcGFjZSBpcyB0cnlpbmcgdG8gdXNlIHRvIGF2b2lk
-DQpiZWluZyBub3RpZmllZCBhbGwgdGhlIHRpbWUuDQoNCi0tIA0KSm91bmkgTWFsaW5lbiAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUEdQIGlkIEVGQzg5NUZB
+On 8-12-2016 18:52, Malinen, Jouni wrote:
+> On Wed, Dec 07, 2016 at 09:03:23PM +0100, Arend Van Spriel wrote:
+>> On 7-12-2016 10:33, Vamsi, Krishna wrote:
+>>>> -----Original Message-----
+>>>> From: Johannes Berg [mailto:johannes@sipsolutions.net]
+>>>
+>>>> What about Arend's comment regarding this functionality overlapping with the
+>>>> BSS selection offload configuration?
+>>>>
+>>>> Do you think there's any ability to share attributes/functionality?
+>>>
+>>> Hi Johannes,
+>>>
+>>> I think the later comment from Luca on this which I pasted below is more agreeable.
+>>>
+>>> Yes, similar but not quite the same.  The existing case is for finding BSSs that are worth waking the host up for (while disconnected), so it needs to be better than the RSSI passed (absolute number).  Now this is about relative RSSI as compared to the current connection, so RELATIVE_RSSI is different than RSSI and I think the same attribute should not be used, to avoid confusion.
+>>
+>> I noticed the response from Luca, but did not get back on this. I know
+>> it is not the same, but what I meant is whether we could extend it so it
+>> also covers your scenario.
+> 
+> I'm not sure I see the point of trying to avoid the new RELATIVE_RSSI
+> attribute. We need to clearly specify that this new constraint is indeed
+> for relative comparison against the currently connected BSS.
+
+Hi Jouni,
+
+I am not saying it should be avoided. Just looking at it conceptually
+the scheduled scan request holds so-called matchsets that specify the
+constraints to determine whether a BSS was found that is worth notifying
+the host/user-space about. As such I would expect the relative RSSI
+attribute(s) to be part of the matchset. That way you can specify it
+together with the currently connected SSID in a single matchset.
+
+> As far as your second email is concerned, it might make more sense to
+> use the existing NL80211_ATTR_BSS_SELECT instead of the new
+> NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF since they cover very
+> similar purpose in defining RSSI preference between bands. We can take a
+> look at doing so. One thing to be a careful about this is in what claims
+> there are about using NL80211_ATTR_BSS_SELECT for capability indication
+> in GET_WIPHY. I guess we can leave that as-is to apply for _CONNECT and
+> the new EXT_FEATURE flag we are adding for sched_scan applies for this
+> attribute in SCHED_SCAN.
+
+The NL80211_ATTR_BSS_SELECT supports different methods for BSS
+selection. One of them being RSSI_ADJUST which is similar to this. It
+lets user-space specify the band and adjustment instead of having a band
+implied in the attribute name. Agree that if reusing it for scheduled
+scan you would still need the EXT_FEATURE flag.
+
+Regards,
+Arend
