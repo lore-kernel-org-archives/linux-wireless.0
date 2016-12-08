@@ -1,117 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18767 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753026AbcLBV7a (ORCPT
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:33509 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932976AbcLHBYe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2016 16:59:30 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Vamsi Krishna <vamsin@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] nl80211: Use different attrs for BSSID and random MAC addr in scan req
-Date: Fri, 2 Dec 2016 23:59:08 +0200
-Message-ID: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161202_225950_812447_85E3A252)
+        Wed, 7 Dec 2016 20:24:34 -0500
+Received: by mail-pg0-f48.google.com with SMTP id 3so167946663pgd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 17:23:57 -0800 (PST)
+Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF
+ synchronization
+To: Bob Copeland <me@bobcopeland.com>
+References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+ <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
+ <20161202211351.GA5571@localhost>
+ <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
+ <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com>
+ <1481102652.4092.33.camel@sipsolutions.net>
+ <9197b711-3d48-071a-57d8-53e2a11c26de@gmail.com>
+ <20161207133315.GD7524@localhost>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Thomas Pedersen <thomas@eero.com>,
+        linux-wireless@vger.kernel.org
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <92b3fe4f-66b6-8b35-8f35-fe19c61f6597@gmail.com> (sfid-20161208_022438_122020_9A076EE0)
+Date: Thu, 8 Dec 2016 10:16:39 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20161207133315.GD7524@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vamsi Krishna <vamsin@qti.qualcomm.com>
+On 2016年12月07日 22:33, Bob Copeland wrote:
+> This mesh_sync_offset_adjust_tbtt is definitely doing offset
+> synchronization, so probably "tbtt" should be renamed "tsf" here.
 
-NL80211_ATTR_MAC was used to set both the specific BSSID to be scanned
-and the random MAC address to be used when privacy is enabled. When both
-the features are enabled, both the BSSID and the local MAC address were
-getting same value causing Probe Request frames to go with unintended
-DA. Hence, this has been fixed by using a different NL80211_ATTR_BSSID
-attribute to set the specific BSSID (which was the more recent addition
-in cfg80211) for a scan.
+Right. I will send a patch for this.
 
-Backwards compatibility with old userspace software is maintained to
-some extent by allowing NL80211_ATTR_MAC to be used to set the specific
-BSSID when scanning without enabling random MAC address use.
+> Actually, looking at the code now it doesn't make a lot of sense to set
+> this flag for offset sync because TOFFSET_KNOWN flag is completely cleared
+> whenever that is set, so we have to be forgetting the current t_offset all
+> the time?
 
-Scanning with random source MAC address was introduced by commit
-ad2b26abc157 ("cfg80211: allow drivers to support random MAC addresses
-for scan") and the issue was introduced with the addition of the second
-user for the same attribute in commit 818965d39177 ("cfg80211: Allow a
-scan request for a specific BSSID").
+Right, TOFFSET_KNOWN flag looks not need to be cleared when 
+TBTT_ADJUSTING flag is on. Because the t_offset is received when 
+TBTT_ADJUSTING flag is off. The t_offset is expected to have valid 
+value. I will remove the code by next patch.
 
-Fixes: 818965d39177 ("cfg80211: Allow a scan request for a specific BSSID")
-Signed-off-by: Vamsi Krishna <vamsin@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/uapi/linux/nl80211.h |  7 ++++++-
- net/wireless/nl80211.c       | 16 +++++++++++++++-
- 2 files changed, 21 insertions(+), 2 deletions(-)
-
-v2: address comments from Luca and Johannes
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 259c9c7..6b76e3b 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -323,7 +323,7 @@
-  * @NL80211_CMD_GET_SCAN: get scan results
-  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
-  *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
-- *	probe requests at CCK rate or not. %NL80211_ATTR_MAC can be used to
-+ *	probe requests at CCK rate or not. %NL80211_ATTR_BSSID can be used to
-  *	specify a BSSID to scan for; if not included, the wildcard BSSID will
-  *	be used.
-  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
-@@ -1977,6 +1977,9 @@ enum nl80211_commands {
-  * @NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED: Indicates whether or not multicast
-  *	packets should be send out as unicast to all stations (flag attribute).
-  *
-+ * @NL80211_ATTR_BSSID: The BSSID of the AP. Note that %NL80211_ATTR_MAC is also
-+ *	used in various commands/events for specifying the BSSID.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2381,6 +2384,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED,
- 
-+	NL80211_ATTR_BSSID,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index e4f718e..7762231 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -404,6 +404,7 @@ enum nl80211_multicast_groups {
- 				    .len = FILS_MAX_KEK_LEN },
- 	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
- 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
-+	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
- };
- 
- /* policy for the key attributes */
-@@ -6703,7 +6704,20 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
- 	request->no_cck =
- 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
- 
--	if (info->attrs[NL80211_ATTR_MAC])
-+	/* Initial implementation used NL80211_ATTR_MAC to set the specific
-+	 * BSSID to scan for. This was problematic because that same attribute
-+	 * was already used for another purpose (local random MAC address). The
-+	 * NL80211_ATTR_BSSID attribute was added to fix this. For backwards
-+	 * compatibility with older userspace components, also use the
-+	 * NL80211_ATTR_MAC value here if it can be determined to be used for
-+	 * the specific BSSID use case instead of the random MAC address
-+	 * (NL80211_ATTR_SCAN_FLAGS is used to enable random MAC address use).
-+	 */
-+	if (info->attrs[NL80211_ATTR_BSSID])
-+		memcpy(request->bssid,
-+		       nla_data(info->attrs[NL80211_ATTR_BSSID]), ETH_ALEN);
-+	else if (!(request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) &&
-+		 info->attrs[NL80211_ATTR_MAC])
- 		memcpy(request->bssid, nla_data(info->attrs[NL80211_ATTR_MAC]),
- 		       ETH_ALEN);
- 	else
--- 
-1.9.1
+Masashi Honma.
