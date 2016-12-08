@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:35672 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932511AbcLGRIQ (ORCPT
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:34779 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751884AbcLHHbB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 12:08:16 -0500
-Received: by mail-wm0-f48.google.com with SMTP id a197so177545171wmd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 09:08:15 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 5/5] ath10k: add debug trace to rts/cts set function
-Date: Wed,  7 Dec 2016 18:07:34 +0100
-Message-Id: <1481130454-27244-5-git-send-email-bartosz.markowski@tieto.com> (sfid-20161207_180822_249369_E9B67CC5)
-In-Reply-To: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
+        Thu, 8 Dec 2016 02:31:01 -0500
+Received: by mail-wj0-f196.google.com with SMTP id xy5so53108457wjc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 23:31:00 -0800 (PST)
+From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/2] net: rfkill: Cleanup error handling in rfkill_init()
+Date: Thu,  8 Dec 2016 08:30:51 +0100
+Message-Id: <20161208073052.12988-1-kernel@kempniu.pl> (sfid-20161208_083122_056850_3B9D2749)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align it with the cts protection call.
+Use a separate label per error condition in rfkill_init() to make it a
+bit cleaner and easier to extend.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
+Signed-off-by: Michał Kępień <kernel@kempniu.pl>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 3 +++
- 1 file changed, 3 insertions(+)
+No changes from v1.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6f1825964177..508366f139f1 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1275,6 +1275,9 @@ static int ath10k_recalc_rtscts_prot(struct ath10k_vif *arvif)
- 		rts_cts |= SM(WMI_RTSCTS_FOR_SECOND_RATESERIES,
- 			      WMI_RTSCTS_PROFILE);
+ net/rfkill/core.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 884027f..f28e441 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1266,24 +1266,25 @@ static int __init rfkill_init(void)
  
-+	ath10k_dbg(ar, ATH10K_DBG_MAC, "mac vdev %d recalc rts/cts prot %d\n",
-+		   arvif->vdev_id, rts_cts);
+ 	error = class_register(&rfkill_class);
+ 	if (error)
+-		goto out;
++		goto error_class;
+ 
+ 	error = misc_register(&rfkill_miscdev);
+-	if (error) {
+-		class_unregister(&rfkill_class);
+-		goto out;
+-	}
++	if (error)
++		goto error_misc;
+ 
+ #ifdef CONFIG_RFKILL_INPUT
+ 	error = rfkill_handler_init();
+-	if (error) {
+-		misc_deregister(&rfkill_miscdev);
+-		class_unregister(&rfkill_class);
+-		goto out;
+-	}
++	if (error)
++		goto error_input;
+ #endif
+ 
+- out:
++	return 0;
 +
- 	return ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, vdev_param,
- 					 rts_cts);
++error_input:
++	misc_deregister(&rfkill_miscdev);
++error_misc:
++	class_unregister(&rfkill_class);
++error_class:
+ 	return error;
  }
+ subsys_initcall(rfkill_init);
 -- 
-2.1.2
+2.10.2
