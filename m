@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48716 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751367AbcLOKNI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 05:13:08 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 0/3] Add new data path for ethernet frame format
-Date: Thu, 15 Dec 2016 10:03:06 +0000
-Message-ID: <58526A59.7050506@qti.qualcomm.com> (sfid-20161215_111312_750698_44F84D9E)
-References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
- <1481792926.31776.1.camel@sipsolutions.net>
-In-Reply-To: <1481792926.31776.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from m12-13.163.com ([220.181.12.13]:60175 "EHLO m12-13.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932441AbcLHAkc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Dec 2016 19:40:32 -0500
+From: Pan Bian <bianpan2016@163.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+Subject: [PATCH 1/1] orinoco: fix improper return value
+Date: Thu,  8 Dec 2016 08:40:02 +0800
+Message-Id: <1481157602-4011-1-git-send-email-bianpan2016@163.com> (sfid-20161208_014052_692890_947577B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMTUgRGVjZW1iZXIgMjAxNiAwMjozOCBQTSwgSm9oYW5uZXMgQmVyZyB3cm90
-ZToNCj4gT24gVGh1LCAyMDE2LTEyLTE1IGF0IDExOjMwICswNTMwLCBWYXNhbnRoYWt1bWFyIFRo
-aWFnYXJhamFuIHdyb3RlOg0KPj4gVGhpcyBwYXRjaCBzZXQgYWRkcyBhIG5ldyBkYXRhIHBhdGgg
-dG8gb2ZmbG9hZCA4MDIuMTEgaGVhZGVyDQo+PiBlbmNhcC9kZWNhcCB0byBkcml2ZXIgb3IgaGFy
-ZHdhcmUuIERyaXZlcnMgaGF2aW5nIHN1cHBvcnQNCj4+IGZvciBpZWVlODAyMTEgaGVhZGVyIGVu
-Y2FwL2RlY2FwIGFuZCBvdGhlciBvZmZsb2FkIGZ1bmN0aW9uYWxpdGllcw0KPj4gd2hpY2ggY2Fu
-J3QgYmUgZG9uZSBiZWZvcmUgZW5jYXAgb3IgYWZ0ZXIgZGVjYXAgY2FuIG1ha2UgdXNlIG9mDQo+
-PiB0aGlzIG5ldyBkYXRhIHBhdGguIEN1cnJlbnRseSBpdCBpcyBpbXBsZW1lbnRlZCBmb3IgU1RB
-IGFuZCBBUA0KPj4gaW50ZXJmYWNlIHR5cGUsIHRoaXMgY2FuIGJlIGV4dGVuZCBvdGhlciBpbnRl
-cmZhY2UgdHlwZXMgbGlrZQ0KPj4gYWRob2MuDQo+DQo+IFRoYW5rcyBmb3IgcG9zdGluZyB0aGlz
-IQ0KPg0KPj4gV2l0aCBhdGgxMGsgZHJpdmVyIGNoYW5nZXMgdXNpbmcgdGhpcyBuZXcgVHgvUngg
-cGF0aCwgMTAgLSAxNSUNCj4+IENQVSB1c2FnZSBhbmQgdXB0byB+MjBNYnBzIFRDUCBwZXJmb3Jt
-YW5jZSBpbXByb3ZlbWVudHMgYXJlDQo+PiBvYnNlcnZlZCB3aXRoIHRoaXMgZXRoZXJuZXQgZGF0
-YSBwYXRoLg0KPg0KPiBJJ20gc3VyZSB0aGF0J3MgYmVjYXVzZSB5b3VyIENQVSBpcyBzZXZlcmVs
-eSBsaW1pdGVkIDotKQ0KDQpSaWdodCwgbW9zdCBvZiB0aGUgdGltZSBJIHdhcyBvYnNlcnZpbmcg
-bWF4IENQVSB1c2FnZS4NCg0KPg0KPj4gVGhpcyBwYXRjaCBzZXQgaXMNCj4+IHByZXBhcmVkIG9u
-IGEgb2xkZXIgbWFjODAyMTEgY29kZSBiYXNlIG9uIHRvcCBvZg0KPj4gY29tbWl0IDdkMjdhMGJh
-N2FkYyAoImNmZzgwMjExOiBBZGQgbWVzaCBwZWVyIEFJRCBzZXR0aW5nIEFQSSIpLg0KPj4gU29y
-cnksIEkgY291bGQgbm90IGdldCBhIGNoYW5jZSB0byByZXdvcmsgaXQgb24gdG9wIG9mIGxhdGVz
-dA0KPj4gbWFjODAyMTEgY29kZSBiYXNlLg0KPg0KPiBPay4gSSBndWVzcyB0aGF0IGRvZXNuJ3Qg
-bWF0dGVyIG11Y2ggZm9yIHJldmlldyBub3cuDQo+DQo+PiAJLSBDb25zaWRlciBpZWVlODAxMSBo
-ZWFkZXIgYW5kIGNpcGhlciBoZWFkZXIgc2l6ZSBhbHNvIHdoaWxlDQo+PiB1cGRhdGluZyB0eC9y
-eCBzdGF0cyBmb3INCj4+IAkgIGV0aGVybmV0IGZyYW1lIGZvcm1hdC4NCj4NCj4gSSB3b25kZXIg
-aWYgd2UgcmVhbGx5IHNob3VsZG4ndCBiZSBnb2luZyB0aGUgb3RoZXIgd2F5IGFyb3VuZCBpbnN0
-ZWFkLA0KPiB0byBiZSBjbG9zZXIgdG8gd2hhdCBFdGhlcm5ldCBhbmQgbGlrZWx5IG90aGVyIGRy
-aXZlcnMgZG8uDQoNCk9rLiBJIGNhcHR1cmVkIHRoYXQgYmVjYXVzZSByeC90eCBieXRlcyBzdGF0
-cyB3aWxsIGJlIGluY29uc2lzdGVudCBiZXR3ZWVuIGV0aGVybmV0DQphbmQgODAyLjExIGZyYW1l
-IGZvcm1hdC4NCg0KVmFzYW50aA==
+Function orinoco_ioctl_commit() returns 0 (indicates success) when the
+call to orinoco_lock() fails. Thus, the return value is inconsistent with
+the execution status. It may be better to return "-EBUSY" when the call 
+to orinoco_lock() fails.
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188671
+
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/net/wireless/intersil/orinoco/wext.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intersil/orinoco/wext.c b/drivers/net/wireless/intersil/orinoco/wext.c
+index 1d4dae4..fee57ea 100644
+--- a/drivers/net/wireless/intersil/orinoco/wext.c
++++ b/drivers/net/wireless/intersil/orinoco/wext.c
+@@ -1314,7 +1314,7 @@ static int orinoco_ioctl_commit(struct net_device *dev,
+ 		return 0;
+ 
+ 	if (orinoco_lock(priv, &flags) != 0)
+-		return err;
++		return -EBUSY;
+ 
+ 	err = orinoco_commit(priv);
+ 
+-- 
+1.9.1
