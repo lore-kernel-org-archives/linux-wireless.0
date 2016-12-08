@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51146 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751375AbcL1MN7 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43394 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751540AbcLHRwt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 07:13:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Peter Xu <peterx@redhat.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Intel Wireless 7260 failed to work
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
-        <871swtkvdc.fsf@purkki.adurom.net>
-        <20161228035959.GB3924@pxdev.xzpeter.org>
-        <1482910035.8602.3.camel@coelho.fi>
-Date: Wed, 28 Dec 2016 14:13:53 +0200
-In-Reply-To: <1482910035.8602.3.camel@coelho.fi> (Luca Coelho's message of
-        "Wed, 28 Dec 2016 09:27:15 +0200")
-Message-ID: <87eg0smeta.fsf@kamboji.qca.qualcomm.com> (sfid-20161228_131420_841650_3577FF70)
+        Thu, 8 Dec 2016 12:52:49 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
+Date: Thu, 8 Dec 2016 17:52:39 +0000
+Message-ID: <20161208175236.GA6121@jouni.qca.qualcomm.com> (sfid-20161208_185315_861995_D1EE5B2A)
+References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
+ <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
+ <1481102727.4092.34.camel@sipsolutions.net>
+ <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
+ <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
+In-Reply-To: <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On Wed, Dec 07, 2016 at 09:03:23PM +0100, Arend Van Spriel wrote:
+> On 7-12-2016 10:33, Vamsi, Krishna wrote:
+> >> -----Original Message-----
+> >> From: Johannes Berg [mailto:johannes@sipsolutions.net]
+> >=20
+> >> What about Arend's comment regarding this functionality overlapping wi=
+th the
+> >> BSS selection offload configuration?
+> >>
+> >> Do you think there's any ability to share attributes/functionality?
+> >=20
+> > Hi Johannes,
+> >=20
+> > I think the later comment from Luca on this which I pasted below is mor=
+e agreeable.
+> >=20
+> > Yes, similar but not quite the same.  The existing case is for finding =
+BSSs that are worth waking the host up for (while disconnected), so it need=
+s to be better than the RSSI passed (absolute number).  Now this is about r=
+elative RSSI as compared to the current connection, so RELATIVE_RSSI is dif=
+ferent than RSSI and I think the same attribute should not be used, to avoi=
+d confusion.
+>=20
+> I noticed the response from Luca, but did not get back on this. I know
+> it is not the same, but what I meant is whether we could extend it so it
+> also covers your scenario.
 
-> On Wed, 2016-12-28 at 11:59 +0800, Peter Xu wrote:
->> On Tue, Dec 27, 2016 at 09:46:55PM +0200, Kalle Valo wrote:
->> > Peter Xu <peterx@redhat.com> writes:
->> > 
->> > > Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
->> > > with my wireless card, which is:
->> > > 
->> > >   Intel Corporation Wireless 7260 (rev bb)
->> > > 
->> > > Boot message shows that no suitable firmware found:
->> > > 
->> > >     # journalctl -kp3
->> > >     Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
->> > >     Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
->> > >     Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
->> > >     Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
->> > >     Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
->> > >     Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
->> > > 
->> > > Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
->> > > further tests have been done yet.
->> > > 
->> > > Is this a known issue? Please let me know if anyone wants more info or
->> > > logs, since this error triggers easily (everytime I boot).
->> > 
->> > The error message isn't really telling much to the user (hint hint) but
->> > I suspect this is by design:
->> > 
->> > "iwlwifi: remove support for fw older than -17 and -22
->
-> Right, we only maintain support for a certain number of firmware
-> versions.  The FW APIs change with time and we don't want to keep all
-> legacy code supporting old firmwares in the driver forever.
->
-> I agree that "no suitable firmware found!" is a bit scarce.  I'll see
-> if we can improve that with something: "no suitable firmware found! You
-> need iwlwifi-7260-17.ucode (<link to git>)".
+I'm not sure I see the point of trying to avoid the new RELATIVE_RSSI
+attribute. We need to clearly specify that this new constraint is indeed
+for relative comparison against the currently connected BSS.
 
-Yeah, something like that would be much more helpful for the user.
+As far as your second email is concerned, it might make more sense to
+use the existing NL80211_ATTR_BSS_SELECT instead of the new
+NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF since they cover very
+similar purpose in defining RSSI preference between bands. We can take a
+look at doing so. One thing to be a careful about this is in what claims
+there are about using NL80211_ATTR_BSS_SELECT for capability indication
+in GET_WIPHY. I guess we can leave that as-is to apply for _CONNECT and
+the new EXT_FEATURE flag we are adding for sched_scan applies for this
+attribute in SCHED_SCAN.
 
--- 
-Kalle Valo
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
