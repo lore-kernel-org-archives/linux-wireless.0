@@ -1,99 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34103 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755478AbcLXRCN (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:56364 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932978AbcLILeb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 12:02:13 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH 4/6] wl1251: Generate random MAC address only if driver does not have valid
-Date: Sat, 24 Dec 2016 17:52:59 +0100
-Message-Id: <1482598381-16513-5-git-send-email-pali.rohar@gmail.com> (sfid-20161224_180250_886747_18951CF8)
-In-Reply-To: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Fri, 9 Dec 2016 06:34:31 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH for-4.10 0/2] brcmfmac: small fixes for after merge window
+Date: Fri,  9 Dec 2016 11:34:12 +0000
+Message-Id: <1481283254-17883-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161209_123448_298517_213EAC42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before this patch driver generated random MAC address every time when was
-doing initialization. And after that random MAC address could be
-overwritten with fixed one if provided.
+Two issues found during more testing. The first patch fixes a memory leak
+in error path. The second one fixes a regression introduced by a change
+that currently sits in wireless-drivers-next.
 
-This patch changes order. First it tries to read fixed MAC address and if
-it fails then driver generates random MAC address.
+These patches have been applied on top of wireless-drivers-next/master branch
+so it can apply on wireless-drivers/master after the merge window (fingers
+crossed).
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
----
- drivers/net/wireless/ti/wl1251/main.c |   27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+Arend van Spriel (2):
+  brcmfmac: fix memory leak in brcmf_cfg80211_attach()
+  brcmfmac: fix uninitialized field in scheduled scan ssid configuration
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 8971b64..c3fa0b6 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -1582,7 +1582,24 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
- 	wl->hw->queues = 4;
- 
- 	if (wl->use_eeprom)
--		wl1251_read_eeprom_mac(wl);
-+		ret = wl1251_read_eeprom_mac(wl);
-+	else
-+		ret = -EINVAL;
-+
-+	if (ret == 0 && !is_valid_ether_addr(wl->mac_addr))
-+		ret = -EINVAL;
-+
-+	if (ret < 0) {
-+		/*
-+		 * In case our MAC address is not correctly set,
-+		 * we use a random but Nokia MAC.
-+		 */
-+		static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
-+		memcpy(wl->mac_addr, nokia_oui, 3);
-+		get_random_bytes(wl->mac_addr + 3, 3);
-+		wl1251_warning("MAC address in eeprom or nvs data is not valid");
-+		wl1251_warning("Setting random MAC address: %pM", wl->mac_addr);
-+	}
- 
- 	ret = wl1251_register_hw(wl);
- 	if (ret)
-@@ -1623,7 +1640,6 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	struct ieee80211_hw *hw;
- 	struct wl1251 *wl;
- 	int i;
--	static const u8 nokia_oui[3] = {0x00, 0x1f, 0xdf};
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &wl1251_ops);
- 	if (!hw) {
-@@ -1674,13 +1690,6 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
- 	INIT_WORK(&wl->irq_work, wl1251_irq_work);
- 	INIT_WORK(&wl->tx_work, wl1251_tx_work);
- 
--	/*
--	 * In case our MAC address is not correctly set,
--	 * we use a random but Nokia MAC.
--	 */
--	memcpy(wl->mac_addr, nokia_oui, 3);
--	get_random_bytes(wl->mac_addr + 3, 3);
--
- 	wl->state = WL1251_STATE_OFF;
- 	mutex_init(&wl->mutex);
- 
--- 
-1.7.9.5
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c      | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+--
+1.9.1
