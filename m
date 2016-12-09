@@ -1,960 +1,486 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36280 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750728AbcLHFMq (ORCPT
+Received: from mout1.fh-giessen.de ([212.201.18.42]:37258 "EHLO
+        mout1.fh-giessen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933674AbcLIO3v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2016 00:12:46 -0500
-Received: by mail-pg0-f67.google.com with SMTP id x23so25666873pgx.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 21:12:46 -0800 (PST)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de, prameela.garnepudi@redpinesignals.com,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 2/3] rsi: Add new firmware loading method for RS9113 chip set
-Date: Thu,  8 Dec 2016 10:40:18 +0530
-Message-Id: <1481173818-18871-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20161208_061251_506089_9857EECF)
+        Fri, 9 Dec 2016 09:29:51 -0500
+Subject: Re: ATH9 driver issues on ARM64
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
+        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
+        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <874m2emif9.fsf@purkki.adurom.net>
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Message-ID: <8b348550-d909-cd98-4c04-dcf37b41f1ee@mni.thm.de> (sfid-20161209_153008_977743_4409083C)
+Date: Fri, 9 Dec 2016 15:22:40 +0100
+MIME-Version: 1.0
+In-Reply-To: <874m2emif9.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The older firmware loading method has been deprecated and not
-in use with the current RS9113 modules. The newer method uses
-soft boot loader (resides in device) to load the functional
-firmware.
-In this method complete RAM image and FLASH image are present
-in the flash. Before loading the functional firmware, host
-issues boot loader commands to verify whether the firmware
-to load is different from the firmware in the device. If it is
-different, firmware upgrade will progress and then boot loader
-switches to the functional firmware.
+Hello there,
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_hal.c | 667 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/rsi/rsi_hal.h     | 152 ++++++++
- drivers/net/wireless/rsi/rsi_main.h    |  40 ++
- 3 files changed, 859 insertions(+)
- create mode 100644 drivers/net/wireless/rsi/rsi_hal.h
+as this is a thread about ath9k and ARM64, i'm not sure if i should 
+answer here or not, but i have similar "stalls" with ath9k on x86_64 
+(starting with 4.9rc), stack trace is posted down below where the 
+original ARM64 stall traces are.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_hal.c b/drivers/net/wireless/rsi/rsi_91x_hal.c
-index 02920c9..55bc8f4 100644
---- a/drivers/net/wireless/rsi/rsi_91x_hal.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_hal.c
-@@ -1,6 +1,9 @@
- /**
-  * Copyright (c) 2014 Redpine Signals Inc.
-  *
-+ * Developers
-+ *	Prameela Rani Garnepudi 2016 <prameela.garnepudi@redpinesignals.com>
-+ *
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-  * copyright notice and this permission notice appear in all copies.
-@@ -14,7 +17,21 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- 
-+#include <linux/firmware.h>
- #include "rsi_mgmt.h"
-+#include "rsi_hal.h"
-+#include "rsi_sdio.h"
-+
-+/* FLASH Firmware */
-+struct ta_metadata metadata_flash_content[] = {
-+	{"flash_content", 0x00010000},
-+	{"rs9113_wlan_qspi.rps", 0x00010000},
-+	{"rs9113_wlan_bt_dual_mode.rps", 0x00010000},
-+	{"rs9113_wlan_zigbee.rps", 0x00010000},
-+	{"rs9113_ap_bt_dual_mode.rps", 0x00010000},
-+	{"rs9113_wlan_qspi.rps", 0x00010000}
-+};
-+
- 
- /**
-  * rsi_send_data_pkt() - This function sends the recieved data packet from
-@@ -213,3 +230,653 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 	rsi_indicate_tx_status(common->priv, skb, status);
- 	return status;
- }
-+
-+/**
-+ * bl_cmd_timeout() - This function is called when BL(Boot Loader) command is
-+ *		      timed out
-+ *
-+ * @priv: Pointer to the hardware structure.
-+ *
-+ * Return: NONE.
-+ */
-+static void bl_cmd_timeout(unsigned long priv)
-+{
-+	struct rsi_hw *adapter = (struct rsi_hw *)priv;
-+
-+	adapter->blcmd_timer_expired = 1;
-+	del_timer(&adapter->bl_cmd_timer);
-+}
-+
-+/**
-+ * bl_start_cmd_timer() - This function starts the BL command timer
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @timeout: Timeout of the command in milliseconds
-+ *
-+ * Return: 0 on success.
-+ */
-+static int bl_start_cmd_timer(struct rsi_hw *adapter, u32 timeout)
-+{
-+	init_timer(&adapter->bl_cmd_timer);
-+	adapter->bl_cmd_timer.data = (unsigned long)adapter;
-+	adapter->bl_cmd_timer.function = (void *)&bl_cmd_timeout;
-+	adapter->bl_cmd_timer.expires = (msecs_to_jiffies(timeout) + jiffies);
-+
-+	adapter->blcmd_timer_expired = 0;
-+	add_timer(&adapter->bl_cmd_timer);
-+
-+	return 0;
-+}
-+
-+/**
-+ * bl_stop_cmd_timer() - This function stops the BL command timer
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ *
-+ * Return: 0 on success.
-+ */
-+static int bl_stop_cmd_timer(struct rsi_hw *adapter)
-+{
-+	adapter->blcmd_timer_expired = 0;
-+	if (timer_pending(&adapter->bl_cmd_timer))
-+		del_timer(&adapter->bl_cmd_timer);
-+
-+	return 0;
-+}
-+
-+/**
-+ * bl_write_cmd() - This function writes the BL command to device
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @cmd: Command to write
-+ * @exp_resp: Expected Response
-+ * @cmd_resp: Received Response
-+ *
-+ * Return: 0 on success.
-+ */
-+static int bl_write_cmd(struct rsi_hw *adapter, u8 cmd,
-+			u8 exp_resp, u16 *cmd_resp)
-+{
-+	struct rsi_host_intf_ops *hif_ops = adapter->host_intf_ops;
-+	u32 regin_val = 0, regout_val = 0;
-+	u8 output = 0;
-+	u32 regin_input = 0;
-+
-+	regin_input = (REGIN_INPUT | adapter->priv->coex_mode);
-+
-+	while (!adapter->blcmd_timer_expired) {
-+		regin_val = 0;
-+		if (hif_ops->master_reg_read(adapter,
-+					     SWBL_REGIN,
-+					     &regin_val,
-+					     2) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Command %0x REGIN reading failed\n",
-+				__func__, cmd);
-+			goto fail;
-+		}
-+		mdelay(1);
-+		if ((regin_val >> 12) != REGIN_VALID)
-+			break;
-+	}
-+	if (adapter->blcmd_timer_expired) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Command %0x REGIN reading timed out\n",
-+			__func__, cmd);
-+		goto fail;
-+	}
-+
-+	rsi_dbg(INFO_ZONE,
-+		"Issuing write to Regin regin_val:%0x sending cmd:%0x\n",
-+		regin_val, (cmd | regin_input << 8));
-+	if ((hif_ops->master_reg_write(adapter,
-+				       SWBL_REGIN,
-+				       (cmd | regin_input << 8),
-+				       2)) < 0) {
-+		goto fail;
-+	}
-+	mdelay(1);
-+
-+	if (cmd == LOAD_HOSTED_FW || cmd == JUMP_TO_ZERO_PC) {
-+		/* JUMP_TO_ZERO_PC doesn't expect
-+		 * any response. So return from here
-+		 */
-+		return 0;
-+	}
-+
-+	while (!adapter->blcmd_timer_expired) {
-+		regout_val = 0;
-+		if (hif_ops->master_reg_read(adapter,
-+					     SWBL_REGOUT,
-+					     &regout_val,
-+					     2) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Command %0x REGOUT reading failed\n",
-+				__func__, cmd);
-+			goto fail;
-+		}
-+		mdelay(1);
-+		if ((regout_val >> 8) == REGOUT_VALID)
-+			break;
-+	}
-+	if (adapter->blcmd_timer_expired) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Command %0x REGOUT reading timed out\n",
-+			__func__, cmd);
-+		goto fail;
-+	}
-+
-+	*cmd_resp = ((u16 *)&regout_val)[0] & 0xffff;
-+
-+	output = ((u8 *)&regout_val)[0] & 0xff;
-+
-+	rsi_dbg(INFO_ZONE, "Invalidating regout\n");
-+	if ((hif_ops->master_reg_write(adapter,
-+				       SWBL_REGOUT,
-+				       (cmd | REGOUT_INVALID << 8),
-+				       2)) < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Command %0x REGOUT writing failed..\n",
-+			__func__, cmd);
-+		goto fail;
-+	}
-+	mdelay(1);
-+
-+	if (output == exp_resp) {
-+		rsi_dbg(INFO_ZONE,
-+			"%s: Recvd Expected resp %x for cmd %0x\n",
-+			__func__, output, cmd);
-+	} else {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Recvd resp %x for cmd %0x\n",
-+			__func__, output, cmd);
-+		goto fail;
-+	}
-+	return 0;
-+
-+fail:
-+	return -EINVAL;
-+}
-+
-+/**
-+ * bl_cmd() - This function initiates the BL command
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @cmd: Command to write
-+ * @exp_resp: Expected Response
-+ * @str: Command string
-+ *
-+ * Return: 0 on success, -1 on failure.
-+ */
-+static int bl_cmd(struct rsi_hw *adapter, u8 cmd, u8 exp_resp, char *str)
-+{
-+	u16 regout_val = 0;
-+	u32 timeout = 0;
-+
-+	rsi_dbg(INFO_ZONE, "Issuing cmd: \"%s\"\n", str);
-+
-+	if ((cmd == EOF_REACHED) || (cmd == PING_VALID) || (cmd == PONG_VALID))
-+		timeout = BL_BURN_TIMEOUT;
-+	else
-+		timeout = BL_CMD_TIMEOUT;
-+
-+	bl_start_cmd_timer(adapter, timeout);
-+	if (bl_write_cmd(adapter, cmd, exp_resp, &regout_val) < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Command %s (%0x) writing failed..\n",
-+			__func__, str, cmd);
-+		goto fail;
-+	}
-+	bl_stop_cmd_timer(adapter);
-+	return 0;
-+
-+fail:
-+	return -EINVAL;
-+}
-+
-+/**
-+ * bl_write_header() - This function writes the Bootloader header
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @flash_content: Flash content
-+ * @content_size: Flash content size
-+ *
-+ * Return: 0 on success, negative error code on failure.
-+ */
-+static int bl_write_header(struct rsi_hw *adapter,
-+			   u8 *flash_content, u32 content_size)
-+{
-+	struct rsi_host_intf_ops *hif_ops = adapter->host_intf_ops;
-+	struct bl_header bl_hdr;
-+	u32 write_addr, write_len;
-+
-+#define CHECK_SUM_OFFSET 20
-+#define LEN_OFFSET 8
-+#define ADDR_OFFSET 16
-+
-+	bl_hdr.flags = 0;
-+	bl_hdr.image_no = cpu_to_le32(adapter->priv->coex_mode);
-+	bl_hdr.check_sum = cpu_to_le32(
-+				*(u32 *)&flash_content[CHECK_SUM_OFFSET]);
-+	bl_hdr.flash_start_address = cpu_to_le32(
-+					*(u32 *)&flash_content[ADDR_OFFSET]);
-+	bl_hdr.flash_len = cpu_to_le32(*(u32 *)&flash_content[LEN_OFFSET]);
-+	write_len = sizeof(struct bl_header);
-+
-+	if (adapter->rsi_host_intf == RSI_HOST_INTF_USB) {
-+		write_addr = PING_BUFFER_ADDRESS;
-+		if ((hif_ops->write_reg_multiple(adapter,
-+						 write_addr,
-+						 (u8 *)&bl_hdr,
-+						 write_len)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to load Version/CRC structure\n",
-+				__func__);
-+			goto fail;
-+		}
-+	} else {
-+		write_addr = PING_BUFFER_ADDRESS >> 16;
-+		if ((hif_ops->master_access_msword(adapter, write_addr)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to set ms word to common reg\n",
-+				__func__);
-+			goto fail;
-+		}
-+		write_addr = RSI_SD_REQUEST_MASTER |
-+			     (PING_BUFFER_ADDRESS & 0xFFFF);
-+		if ((hif_ops->write_reg_multiple(adapter,
-+						 write_addr,
-+						 (u8 *)&bl_hdr,
-+						 write_len)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to load Version/CRC structure\n",
-+				__func__);
-+			goto fail;
-+		}
-+	}
-+	return 0;
-+
-+fail:
-+	return -EINVAL;
-+}
-+
-+/**
-+ * read_flash_capacity() - This function reads the flash size from device
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ *
-+ * Return: flash capacity on success, 0 on failure.
-+ */
-+static u32 read_flash_capacity(struct rsi_hw *adapter)
-+{
-+	u32 flash_sz = 0;
-+
-+	if ((adapter->host_intf_ops->master_reg_read(adapter,
-+						     FLASH_SIZE_ADDR,
-+						     &flash_sz, 2)) < 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Flash size reading failed..\n",
-+			__func__);
-+		return 0;
-+	}
-+	rsi_dbg(INIT_ZONE, "Flash capacity: %d KiloBytes\n", flash_sz);
-+
-+	return (flash_sz * 1024); /* Return size in kbytes */
-+}
-+
-+/**
-+ * ping_pong_write() - This function writes the flash contents throgh ping
-+ *			pong buffers
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @cmd: command ping/pong write
-+ * @addr: address to write
-+ * @size: size
-+ *
-+ * Return: 0 on success, -1 on failure.
-+ */
-+static int ping_pong_write(struct rsi_hw *adapter, u8 cmd, u8 *addr, u32 size)
-+{
-+	struct rsi_host_intf_ops *hif_ops = adapter->host_intf_ops;
-+	u32 block_size = 0;
-+	u32 cmd_addr;
-+	u16 cmd_resp = 0, cmd_req = 0;
-+	u8 *str;
-+
-+	if (adapter->rsi_host_intf == RSI_HOST_INTF_SDIO)
-+		block_size = RSI_USB_BLOCK_SIZE;
-+	else
-+		block_size = RSI_SDIO_BLOCK_SIZE;
-+
-+	if (cmd == PING_WRITE) {
-+		cmd_addr = PING_BUFFER_ADDRESS;
-+		cmd_resp = PONG_AVAIL;
-+		cmd_req = PING_VALID;
-+		str = "PING_VALID";
-+	} else {
-+		cmd_addr = PONG_BUFFER_ADDRESS;
-+		cmd_resp = PING_AVAIL;
-+		cmd_req = PONG_VALID;
-+		str = "PONG_VALID";
-+	}
-+
-+	if (hif_ops->load_data_master_write(adapter,
-+					    cmd_addr,
-+					    size,
-+					    block_size,
-+					    addr)) {
-+		rsi_dbg(ERR_ZONE, "%s: Unable to write blk at addr %0x\n",
-+			__func__, *addr);
-+		goto fail;
-+	}
-+	if (bl_cmd(adapter, cmd_req, cmd_resp, str) < 0) {
-+		bl_stop_cmd_timer(adapter);
-+		goto fail;
-+	}
-+	return 0;
-+
-+fail:
-+	return -EINVAL;
-+}
-+
-+/**
-+ * auto_fw_upgrade() - This function loads the firmware to device
-+ *
-+ * @adapter: Pointer to the hardware structure.
-+ * @flash_content: Firmware to load
-+ * @content_size: Size of the firmware
-+ *
-+ * Return: 0 on success, -1 on failure.
-+ */
-+static int auto_fw_upgrade(struct rsi_hw *adapter,
-+			   u8 *flash_content,
-+			   u32 content_size)
-+{
-+	u8 cmd;
-+	u8 *temp_flash_content;
-+	u32 temp_content_size;
-+	u32 num_flash;
-+	u32 index;
-+	u32 flash_start_address;
-+
-+	temp_flash_content = flash_content;
-+
-+	if (content_size > MAX_FLASH_FILE_SIZE) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Flash Content size is more than 400K %u\n",
-+			__func__, MAX_FLASH_FILE_SIZE);
-+		goto fail;
-+	}
-+
-+	flash_start_address = cpu_to_le32(
-+				*(u32 *)&flash_content[FLASHING_START_ADDRESS]);
-+	rsi_dbg(INFO_ZONE, "flash start address: %08x\n", flash_start_address);
-+
-+	if (flash_start_address < FW_IMAGE_MIN_ADDRESS) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Fw image Flash Start Address is less than 64K\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	if (flash_start_address % FLASH_SECTOR_SIZE) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Flash Start Address is not multiple of 4K\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	if ((flash_start_address + content_size) > adapter->flash_capacity) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Flash Content will cross max flash size\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	temp_content_size  = content_size;
-+	num_flash = content_size / FLASH_WRITE_CHUNK_SIZE;
-+
-+	rsi_dbg(INFO_ZONE, "content_size: %d\n", content_size);
-+	rsi_dbg(INFO_ZONE, "num_flash: %d\n", num_flash);
-+
-+	for (index = 0; index <= num_flash; index++) {
-+		rsi_dbg(INFO_ZONE, "flash index: %d\n", index);
-+		if (index != num_flash) {
-+			content_size = FLASH_WRITE_CHUNK_SIZE;
-+			rsi_dbg(INFO_ZONE,
-+				"QSPI content_size:%d\n",
-+				content_size);
-+		} else {
-+			content_size =
-+				temp_content_size % FLASH_WRITE_CHUNK_SIZE;
-+			rsi_dbg(INFO_ZONE,
-+				"Writing last sector content_size:%d\n",
-+				content_size);
-+			if (!content_size) {
-+				rsi_dbg(INFO_ZONE, "INSTRUCTION SIZE ZERO\n");
-+				break;
-+			}
-+		}
-+
-+		if (index % 2)
-+			cmd = PING_WRITE;
-+		else
-+			cmd = PONG_WRITE;
-+
-+		if (ping_pong_write(adapter,
-+				    cmd,
-+				    flash_content,
-+				    content_size)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Unable to load %d block\n",
-+				__func__, index);
-+			goto fail;
-+		}
-+
-+		rsi_dbg(INFO_ZONE,
-+			"%s: Successfully loaded block %d instructions\n",
-+			__func__, index);
-+		flash_content += content_size;
-+	}
-+
-+	if (bl_cmd(adapter, EOF_REACHED, FW_LOADING_SUCCESSFUL,
-+		   "EOF_REACHED") < 0) {
-+		bl_stop_cmd_timer(adapter);
-+		goto fail;
-+	}
-+	rsi_dbg(INFO_ZONE, "FW loading is done and FW is running..\n");
-+	return 0;
-+
-+fail:
-+	return -EINVAL;
-+}
-+
-+/**
-+ * rsi_load_9113_firmware () - This function loads the TA firmware for 9113
-+ *				module.
-+ *
-+ * @adapter: Pointer to the rsi hw.
-+ *
-+ * Return: status: 0 on success, negative error code on failure.
-+ */
-+int rsi_load_9113_firmware(struct rsi_hw *adapter)
-+{
-+	struct rsi_host_intf_ops *hif_ops = adapter->host_intf_ops;
-+	const struct firmware *fw_entry = NULL;
-+	u32 regout_val = 0;
-+	u16 tmp_regout_val = 0;
-+	u8 *flash_content = NULL;
-+	u32 content_size = 0;
-+	struct ta_metadata *metadata_p;
-+
-+	bl_start_cmd_timer(adapter, BL_CMD_TIMEOUT);
-+
-+	while (!adapter->blcmd_timer_expired) {
-+		if ((hif_ops->master_reg_read(adapter,
-+					      SWBL_REGOUT,
-+					      &regout_val,
-+					      2)) < 0) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: REGOUT read failed\n", __func__);
-+			goto fail;
-+		}
-+		mdelay(1);
-+		if ((regout_val >> 8) == REGOUT_VALID)
-+			break;
-+	}
-+	if (adapter->blcmd_timer_expired) {
-+		rsi_dbg(ERR_ZONE, "%s: REGOUT read timedout\n", __func__);
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Soft boot loader not present\n", __func__);
-+		goto fail;
-+	}
-+	bl_stop_cmd_timer(adapter);
-+
-+	rsi_dbg(INFO_ZONE, "Received Board Version Number: %x\n",
-+		(regout_val & 0xff));
-+
-+	if ((hif_ops->master_reg_write(adapter,
-+				       SWBL_REGOUT,
-+				       (REGOUT_INVALID | REGOUT_INVALID << 8),
-+				       2)) < 0) {
-+		rsi_dbg(ERR_ZONE, "%s: REGOUT writing failed..\n", __func__);
-+		goto fail;
-+	}
-+	mdelay(1);
-+
-+	if ((bl_cmd(adapter, CONFIG_AUTO_READ_MODE, CMD_PASS,
-+		    "AUTO_READ_CMD")) < 0)
-+		goto fail;
-+
-+	adapter->flash_capacity = read_flash_capacity(adapter);
-+	if (adapter->flash_capacity <= 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: Unable to read flash size from EEPROM\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	metadata_p = &metadata_flash_content[adapter->priv->coex_mode];
-+
-+	rsi_dbg(INIT_ZONE, "%s: loading file %s\n", __func__, metadata_p->name);
-+
-+	if ((request_firmware(&fw_entry, metadata_p->name,
-+			      adapter->device)) < 0) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to open file %s\n",
-+			__func__, metadata_p->name);
-+		goto fail;
-+	}
-+	flash_content = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
-+	if (!flash_content) {
-+		rsi_dbg(ERR_ZONE, "%s: Failed to copy firmware\n", __func__);
-+		goto fail;
-+	}
-+	content_size = fw_entry->size;
-+	rsi_dbg(INFO_ZONE, "FW Length = %d bytes\n", content_size);
-+
-+	if (bl_write_header(adapter, flash_content, content_size)) {
-+		rsi_dbg(ERR_ZONE,
-+			"%s: RPS Image header loading failed\n",
-+			__func__);
-+		goto fail;
-+	}
-+
-+	/* Check whether firmware in the device and firmware to load
-+	 * is same or not using crc check
-+	 */
-+	bl_start_cmd_timer(adapter, BL_CMD_TIMEOUT);
-+	if (bl_write_cmd(adapter, CHECK_CRC, CMD_PASS, &tmp_regout_val) < 0) {
-+		bl_stop_cmd_timer(adapter);
-+		rsi_dbg(ERR_ZONE,
-+			"%s: CHECK_CRC Command writing failed..\n",
-+			__func__);
-+		if ((tmp_regout_val & 0xff) == CMD_FAIL) {
-+			rsi_dbg(ERR_ZONE,
-+				"CRC Fail.. Proceeding to Upgrade mode\n");
-+			goto fw_upgrade;
-+		}
-+	}
-+	bl_stop_cmd_timer(adapter);
-+
-+	if (bl_cmd(adapter, POLLING_MODE, CMD_PASS, "POLLING_MODE") < 0)
-+		goto fail;
-+
-+load_image_cmd:
-+	if ((bl_cmd(adapter,
-+		    LOAD_HOSTED_FW,
-+		    LOADING_INITIATED,
-+		    "LOAD_HOSTED_FW")) < 0)
-+		goto fail;
-+	rsi_dbg(INFO_ZONE, "Load Image command passed..\n");
-+	goto success;
-+
-+fw_upgrade:
-+	/* After burning the RPS header, firmware has to be
-+	 * burned using the below steps
-+	 */
-+	if (bl_cmd(adapter, BURN_HOSTED_FW, SEND_RPS_FILE, "FW_UPGRADE") < 0)
-+		goto fail;
-+
-+	rsi_dbg(INFO_ZONE, "Burn Command Pass.. Upgrading the firmware\n");
-+
-+	if (auto_fw_upgrade(adapter, flash_content, content_size) == 0) {
-+		rsi_dbg(ERR_ZONE,
-+			"***** Auto firmware upgrade successful *****\n");
-+		goto load_image_cmd;
-+	}
-+
-+	bl_cmd(adapter, CONFIG_AUTO_READ_MODE, CMD_PASS, "AUTO_READ_MODE");
-+	goto fail;
-+
-+	rsi_dbg(INFO_ZONE, "SWBL FLASHING THROUGH SWBL PASSED...\n");
-+
-+success:
-+	kfree(flash_content);
-+	release_firmware(fw_entry);
-+	return 0;
-+
-+fail:
-+	kfree(flash_content);
-+	release_firmware(fw_entry);
-+	return -EINVAL;
-+}
-+
-+/**
-+ * rsi_hal_device_init() - This function initializes the Device
-+ * @adapter: Pointer to the hardware structure
-+ *
-+ * Return: status: 0 on success, -1 on failure.
-+ */
-+int rsi_hal_device_init(struct rsi_hw *adapter, enum rsi_dev_model dev_model)
-+{
-+#ifdef CONFIG_RSI_HCI
-+	adapter->priv->coex_mode = 4;
-+#else
-+	adapter->priv->coex_mode = 1;
-+#endif
-+
-+	adapter->device_model = dev_model;
-+	switch (adapter->device_model) {
-+	case RSI_DEV_9110:
-+		/* Add code for 9110 */
-+		break;
-+	case RSI_DEV_9113:
-+		if (rsi_load_9113_firmware(adapter)) {
-+			rsi_dbg(ERR_ZONE,
-+				"%s: Failed to load TA instructions\n",
-+				__func__);
-+			return -EINVAL;
-+		}
-+		break;
-+	case RSI_DEV_9116:
-+		/* Add code for 9116 */
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	adapter->common_hal_fsm = COMMAN_HAL_WAIT_FOR_CARD_READY;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(rsi_hal_device_init);
-+
-diff --git a/drivers/net/wireless/rsi/rsi_hal.h b/drivers/net/wireless/rsi/rsi_hal.h
-new file mode 100644
-index 0000000..77ededc
---- /dev/null
-+++ b/drivers/net/wireless/rsi/rsi_hal.h
-@@ -0,0 +1,152 @@
-+/**
-+ * Copyright (c) 2014 Redpine Signals Inc.
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef __RSI_HAL_H__
-+#define __RSI_HAL_H__
-+
-+#define TA_LOAD_ADDRESS			0x00
-+#define FLASH_WRITE_CHUNK_SIZE		(4 * 1024)
-+#define USB_FLASH_READ_CHUNK_SIZE	((2 * 1024) - 4)
-+#define SDIO_FLASH_READ_CHUNK_SIZE	(2 * 1024)
-+#define FLASH_SECTOR_SIZE		(4 * 1024)
-+#define STARTING_BLOCK_INDEX		0
-+#define FLASH_BLOCK_SIZE		(32 * 1024)
-+
-+#define FLASH_SIZE_ADDR			0x04000016
-+#define PING_BUFFER_ADDRESS		0x19000
-+#define PONG_BUFFER_ADDRESS		0x1a000
-+#define SWBL_REGIN			0x41050034
-+#define SWBL_REGOUT			0x4105003c
-+#define PING_WRITE			0x1
-+#define PONG_WRITE			0x2
-+
-+#define BL_CMD_TIMEOUT			2000
-+#define BL_BURN_TIMEOUT			(50 * 1000)
-+
-+#define MASTER_READ_MODE		1
-+#define EEPROM_READ_MODE		2
-+
-+#define REGIN_VALID			0xA
-+#define REGIN_INPUT			0xA0
-+#define REGOUT_VALID			0xAB
-+#define REGOUT_INVALID			(~0xAB)
-+#define CMD_PASS			0xAA
-+#define CMD_FAIL			0xCC
-+#define INVALID_ADDR			0x4C
-+
-+#define BURN_BL				0x23
-+#define LOAD_HOSTED_FW			'A'
-+#define BURN_HOSTED_FW			'B'
-+#define PING_VALID			'I'
-+#define PONG_VALID			'O'
-+#define PING_AVAIL			'I'
-+#define PONG_AVAIL			'O'
-+#define EOF_REACHED			'E'
-+#define CHECK_CRC			'K'
-+#define POLLING_MODE			'P'
-+#define CONFIG_AUTO_READ_MODE		'R'
-+#define JUMP_TO_ZERO_PC			'J'
-+#define FW_LOADING_SUCCESSFUL		'S'
-+#define LOADING_INITIATED		'1'
-+
-+/* Boot loader commands */
-+#define HOST_INTF_REG_OUT		0x4105003C
-+#define HOST_INTF_REG_IN		0x41050034
-+#define BOARD_READY			0xABCD
-+#define REG_READ			0xD1
-+#define REG_WRITE			0xD2
-+#define SEND_RPS_FILE			'2'
-+#define BOOTUP_OPTIONS_LAST_CONFIG_NOT_SAVED 0xF1
-+#define BOOTUP_OPTIONS_CHECKSUM_FAIL 0xF2
-+#define INVALID_OPTION			0xF3
-+#define CHECKSUM_SUCCESS		0xAA
-+#define CHECKSUM_FAILURE		0xCC
-+#define CHECKSUM_INVALID_ADDRESS	0x4C
-+
-+#define EEPROM_VERSION_OFFSET		77
-+#define CALIB_CRC_OFFSET		4092
-+#define MAGIC_WORD			0x5A
-+#define MAGIC_WORD_OFFSET_1		40
-+#define MAGIC_WORD_OFFSET_2		424
-+#define FW_IMAGE_MIN_ADDRESS		(68 * 1024)
-+#define FLASH_MAX_ADDRESS		(4 * 1024 * 1024) //4MB
-+#define MAX_FLASH_FILE_SIZE		(400 * 1024) //400K
-+#define FLASHING_START_ADDRESS		16
-+#define CALIB_VALUES_START_ADDR		16
-+#define SOC_FLASH_ADDR			0x04000000
-+#define EEPROM_DATA_SIZE		4096
-+#define CALIB_DATA_SIZE		(EEPROM_DATA_SIZE - CALIB_VALUES_START_ADDR)
-+#define BL_HEADER			32
-+
-+#define BT_CARD_READY_IND		0x89
-+#define WLAN_CARD_READY_IND		0x0
-+#define COMMON_HAL_CARD_READY_IND	0x0
-+#define ZIGB_CARD_READY_IND		0xff
-+
-+#define COMMAN_HAL_WAIT_FOR_CARD_READY	1
-+#define COMMON_HAL_SEND_CONFIG_PARAMS	2
-+#define COMMON_HAL_TX_ACCESS		3
-+#define COMMON_HAL_WAIT_FOR_PROTO_CARD_READY 4
-+#define HEX_FILE			1
-+#define BIN_FILE			0
-+#define UNIX_FILE_TYPE			8
-+#define DOS_FILE_TYPE			9
-+#define LMAC_INSTRUCTIONS_SIZE		(16  * 1024) /* 16Kbytes */
-+
-+#define ULP_RESET_REG			0x161
-+#define WATCH_DOG_TIMER_1		0x16c
-+#define WATCH_DOG_TIMER_2		0x16d
-+#define WATCH_DOG_DELAY_TIMER_1		0x16e
-+#define WATCH_DOG_DELAY_TIMER_2		0x16f
-+#define WATCH_DOG_TIMER_ENABLE		0x170
-+
-+#define RESTART_WDT			BIT(11)
-+#define BYPASS_ULP_ON_WDT		BIT(1)
-+
-+#define RF_SPI_PROG_REG_BASE_ADDR	0x40080000
-+
-+#define GSPI_CTRL_REG0			(RF_SPI_PROG_REG_BASE_ADDR)
-+#define GSPI_CTRL_REG1			(RF_SPI_PROG_REG_BASE_ADDR + 0x2)
-+#define GSPI_DATA_REG0			(RF_SPI_PROG_REG_BASE_ADDR + 0x4)
-+#define GSPI_DATA_REG1			(RF_SPI_PROG_REG_BASE_ADDR + 0x6)
-+#define GSPI_DATA_REG2			(RF_SPI_PROG_REG_BASE_ADDR + 0x8)
-+
-+#define GSPI_DMA_MODE			BIT(13)
-+
-+#define GSPI_2_ULP			BIT(12)
-+#define GSPI_TRIG			BIT(7)
-+#define GSPI_READ			BIT(6)
-+#define GSPI_RF_SPI_ACTIVE		BIT(8)
-+
-+#define RSI_USB_BLOCK_SIZE		256
-+#define RSI_SDIO_BLOCK_SIZE		252
-+
-+struct bl_header {
-+	u32 flags;
-+	u32 image_no;
-+	u32 check_sum;
-+	u32 flash_start_address;
-+	u32 flash_len;
-+} __packed;
-+
-+struct ta_metadata {
-+	char *name;
-+	unsigned int address;
-+};
-+
-+int rsi_hal_device_init(struct rsi_hw *adapter, enum rsi_dev_model dev_model);
-+
-+#endif
-diff --git a/drivers/net/wireless/rsi/rsi_main.h b/drivers/net/wireless/rsi/rsi_main.h
-index dcd0957..2c2c0bb 100644
---- a/drivers/net/wireless/rsi/rsi_main.h
-+++ b/drivers/net/wireless/rsi/rsi_main.h
-@@ -204,10 +204,23 @@ struct rsi_common {
- 	struct cqm_info cqm_info;
- 
- 	bool hw_data_qs_blocked;
-+	u8 coex_mode;
-+};
-+
-+enum host_intf {
-+	RSI_HOST_INTF_SDIO = 0,
-+	RSI_HOST_INTF_USB
-+};
-+
-+enum rsi_dev_model {
-+	RSI_DEV_9110 = 0,
-+	RSI_DEV_9113,
-+	RSI_DEV_9116
- };
- 
- struct rsi_hw {
- 	struct rsi_common *priv;
-+	enum rsi_dev_model device_model;
- 	struct ieee80211_hw *hw;
- 	struct ieee80211_vif *vifs[RSI_MAX_VIFS];
- 	struct ieee80211_tx_queue_params edca_params[NUM_EDCA_QUEUES];
-@@ -215,16 +228,43 @@ struct rsi_hw {
- 
- 	struct device *device;
- 	u8 sc_nvifs;
-+	enum host_intf rsi_host_intf;
- 
- #ifdef CONFIG_RSI_DEBUGFS
- 	struct rsi_debugfs *dfsentry;
- 	u8 num_debugfs_entries;
- #endif
-+
-+	struct timer_list bl_cmd_timer;
-+	u8 blcmd_timer_expired;
-+	u32 flash_capacity;
-+	u32 tx_blk_size;
-+	u32 common_hal_fsm;
- 	void *rsi_dev;
-+	struct rsi_host_intf_ops *host_intf_ops;
- 	int (*host_intf_read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
- 	int (*host_intf_write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
- 	int (*check_hw_queue_status)(struct rsi_hw *adapter, u8 q_num);
- 	int (*rx_urb_submit)(struct rsi_hw *adapter);
- 	int (*determine_event_timeout)(struct rsi_hw *adapter);
- };
-+
-+struct rsi_host_intf_ops {
-+	int (*read_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
-+	int (*write_pkt)(struct rsi_hw *adapter, u8 *pkt, u32 len);
-+	int (*master_access_msword)(struct rsi_hw *adapter, u16 ms_word);
-+	int (*read_reg_multiple)(struct rsi_hw *adapter, u32 addr,
-+				 u8 *data, u16 count);
-+	int (*write_reg_multiple)(struct rsi_hw *adapter, u32 addr,
-+				  u8 *data, u16 count);
-+	int (*master_reg_read)(struct rsi_hw *adapter, u32 addr,
-+			       u32 *read_buf, u16 size);
-+	int (*master_reg_write)(struct rsi_hw *adapter,
-+				unsigned long addr, unsigned long data,
-+				u16 size);
-+	int (*load_data_master_write)(struct rsi_hw *adapter, u32 addr,
-+				      u32 instructions_size, u16 block_size,
-+				      u8 *fw);
-+};
-+
- #endif
--- 
-2.4.11
+Greetings,
+
+Tobias
+
+
+On 08.12.2016 18:36, Kalle Valo wrote:
+> Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> writes:
+>
+>>   > [+cc Kalle, ath9k list]
+> Thanks, but please also CC linux-wireless. Full thread below for the
+> folks there.
+>
+>>> On Thu, Dec 08, 2016 at 01:49:42PM +0000, Bharat Kumar Gogada wrote:
+>>>> Hi,
+>>>>
+>>>> Did anyone test Atheros ATH9 driver(drivers/net/wireless/ath/ath9k/)
+>>>> on ARM64.  The end point is TP link wifi card with which supports
+>>>> only legacy interrupts.
+>>> If it works on other arches and the arm64 PCI enumeration works, my
+>>> first guess would be an INTx issue, e.g., maybe the driver is waiting
+>>> for an interrupt that never arrives.
+>> We are not sure for now.
+>>>> We are trying to test it on ARM64 with
+>>>> (drivers/pci/host/pcie-xilinx-nwl.c) as root port.
+>>>>
+>>>> EP is getting enumerated and able to link up.
+>>>>
+>>>> But when we start scan system gets hanged.
+>>> When you say the system hangs when you start a scan, I assume you mean
+>>> a wifi scan, not the PCI enumeration.  A problem with a wifi scan
+>>> might cause a *process* to hang, but it shouldn't hang the entire
+>>> system.
+>>>
+>> Yes wifi scan.
+>>>> When we took trace we see that after we start scan assert message is
+>>>> sent but there is no de assert from end point.
+>>> Are you talking about a trace from a PCIe analyzer?  Do you see an
+>>> Assert_INTx PCIe message on the link?
+>>>
+>> Yes lecroy trace, yes we do see Assert_INTx and Deassert_INTx happening when we do interface link up.
+>> When we have less debug prints in Atheros driver, and do wifi scan we see Assert_INTx but never Deassert_INTx,
+>>>> What might cause end point not sending de assert ?
+>>> If the endpoint doesn't send a Deassert_INTx message, I expect that
+>>> would mean the driver didn't service the interrupt and remove the
+>>> condition that caused the device to assert the interrupt in the first
+>>> place.
+>>>
+>>> If the driver didn't receive the interrupt, it couldn't service it, of
+>>> course.  You could add a printk in the ath9k interrupt service
+>>> routine to see if you ever get there.
+>>>
+>> The interrupt behavior is changing w.r.t amount of debug prints we add. (I kept many prints to aid debug)
+>> root@Xilinx-ZCU102-2016_3:~# iw dev wlan0 scan
+>> [   83.064675] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.069486] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.074257] ath9k_hw_kill_interrupts	 793
+>> [   83.078260] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.083107] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.087882] ath9k_hw_kill_interrupts	 793
+>> [   83.095450] ath9k_hw_enable_interrupts	 821
+>> [   83.099557] ath9k_hw_enable_interrupts	 825
+>> [   83.103721] ath9k_hw_enable_interrupts	 832
+>> [   83.107887] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.112748] AR_SREV_9100 0
+>> [   83.115438] ath9k_hw_enable_interrupts	 848
+>> [   83.119607] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.124389] ath9k_hw_intrpend	 762
+>> [   83.127761] (AR_SREV_9340(ah) val 0
+>> [   83.131234] ath9k_hw_intrpend	 767
+>> [   83.134628] ath_isr	 603
+>> [   83.137134] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.141995] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.146771] ath9k_hw_kill_interrupts	 793
+>> [   83.150864] ath9k_hw_enable_interrupts	 821
+>> [   83.154971] ath9k_hw_enable_interrupts	 825
+>> [   83.159135] ath9k_hw_enable_interrupts	 832
+>> [   83.163300] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.168161] AR_SREV_9100 0
+>> [   83.170852] ath9k_hw_enable_interrupts	 848
+>> [   83.170855] ath9k_hw_intrpend	 762
+>> [   83.178398] (AR_SREV_9340(ah) val 0
+>> [   83.181873] ath9k_hw_intrpend	 767
+>> [   83.185265] ath_isr	 603
+>> [   83.187773] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.192635] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.197411] ath9k_hw_kill_interrupts	 793
+>> [   83.201414] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.206258] ath9k_hw_enable_interrupts	 821
+>> [   83.210368] ath9k_hw_enable_interrupts	 825
+>> [   83.214531] ath9k_hw_enable_interrupts	 832
+>> [   83.218698] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.223558] AR_SREV_9100 0
+>> [   83.226243] ath9k_hw_enable_interrupts	 848
+>> [   83.226246] ath9k_hw_intrpend	 762
+>> [   83.233794] (AR_SREV_9340(ah) val 0
+>> [   83.237268] ath9k_hw_intrpend	 767
+>> [   83.240661] ath_isr	 603
+>> [   83.243169] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.248030] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.252806] ath9k_hw_kill_interrupts	 793
+>> [   83.256811] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.261651] ath9k_hw_enable_interrupts	 821
+>> [   83.265753] ath9k_hw_enable_interrupts	 825
+>> [   83.269919] ath9k_hw_enable_interrupts	 832
+>> [   83.274083] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.278945] AR_SREV_9100 0
+>> [   83.281630] ath9k_hw_enable_interrupts	 848
+>> [   83.281633] ath9k_hw_intrpend	 762
+>> [   83.281634] (AR_SREV_9340(ah) val 0
+>> [   83.281637] ath9k_hw_intrpend	 767
+>> [   83.281648] ath_isr	 603
+>> [   83.281649] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.281651] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.281654] ath9k_hw_kill_interrupts	 793
+>> [   83.312192] ath9k: ath9k_ioread32 ffffff800a400024
+>> [   83.317030] ath9k_hw_enable_interrupts	 821
+>> [   83.321132] ath9k_hw_enable_interrupts	 825
+>> [   83.325297] ath9k_hw_enable_interrupts	 832
+>> [   83.329463] ath9k: ath9k_iowrite32 ffffff800a400024
+>> [   83.334324] AR_SREV_9100 0
+>> [   83.337014] ath9k_hw_enable_interrupts	 848
+>> ..
+>> ..
+>> This log continues until I turn off board without obtaining scanning result.
+>>
+>> In between I get following cpu stall outputs :
+>>    230.457179] INFO: rcu_sched self-detected stall on CPU
+>> [  230.457185] 	2-...: (31314 ticks this GP) idle=2d1/140000000000001/0 softirq=1400/1400 fqs=36713
+>> [  230.457189] 	 (t=36756 jiffies g=161 c=160 q=16169)
+>> [  230.457191] Task dump for CPU 2:
+>> [  230.457196] kworker/u8:4    R  running task        0  1342      2 0x00000002
+>> [  230.457207] Workqueue: phy0 ieee80211_scan_work
+>> [  230.457208] Call trace:
+>> [  230.457214] [<ffffff8008089860>] dump_backtrace+0x0/0x198
+>> [  230.457219] [<ffffff8008089a0c>] show_stack+0x14/0x20
+>> [  230.457224] [<ffffff80080c0930>] sched_show_task+0x98/0xf8
+>> [  230.457228] [<ffffff80080c2628>] dump_cpu_task+0x40/0x50
+>> [  230.457233] [<ffffff80080e14a8>] rcu_dump_cpu_stacks+0xa0/0xf0
+>> [  230.457239] [<ffffff80080e4cd8>] rcu_check_callbacks+0x468/0x748
+>> [  230.457243] [<ffffff80080e7cfc>] update_process_times+0x3c/0x68
+>> [  230.457249] [<ffffff80080f6dfc>] tick_sched_handle.isra.5+0x3c/0x50
+>> [  230.457253] [<ffffff80080f6e54>] tick_sched_timer+0x44/0x90
+>> [  230.457257] [<ffffff80080e86b0>] __hrtimer_run_queues+0xf0/0x178
+>> ** 10 printk messages dropped ** [  230.457302] f8c0: 0000000000000000 0000000005f5e0ff 000000000001379a 3866666666666620
+>> [  230.457306] f8e0: ffffff800a1b4065 0000000000000006 ffffff800a129000 ffffffc87b8010a8
+>> [  230.457310] f900: ffffff808a1b4057 ffffff800a1c3000 ffffff800a1b3000 ffffff800a13b000
+>> [  230.457314] f920: 0000000000000140 0000000000000006 ffffff800a1b3b10 ffffff800a1c39e8
+>> [  230.457318] f940: 000000000000002f ffffff800a1b8a98 ffffff800a1b3ae8 ffffffc87b07f990
+>> [  230.457322] f960: ffffff80080d6230 ffffffc87b07f990 ffffff80080d6234 0000000060000145
+>> ** 1 printk messages dropped ** [  230.457329] [<ffffff8008085720>] el1_irq+0xa0/0x100
+>> ** 9 printk messages dropped ** [  230.457373] [<ffffff800885ad60>] ieee80211_hw_config+0x50/0x290
+>> [  230.457377] [<ffffff8008863690>] ieee80211_scan_work+0x1f8/0x480
+>> [  230.457383] [<ffffff80080b15d0>] process_one_work+0x120/0x378
+>> [  230.457386] [<ffffff80080b1870>] worker_thread+0x48/0x4b0
+>> [  230.457391] [<ffffff80080b7108>] kthread+0xd0/0xe8
+>> [  230.457395] [<ffffff8008085dd0>] ret_from_fork+0x10/0x40
+>> [  230.480389] ath9k_hw_intrpend	 762
+>>
+>>
+>> [  545.487987] ath9k: ath9k_ioread32 ffffff800a400024
+>> [  545.526189] INFO: rcu_sched self-detected stall on CPU
+>> [  545.526195] 	2-...: (97636 ticks this GP) idle=2d1/140000000000001/0 softirq=1400/1400 fqs=115374
+>> [  545.526199] 	 (t=115523 jiffies g=161 c=160 q=51066)
+>> [  545.526201] Task dump for CPU 2:
+>> [  545.526206] kworker/u8:4    R  running task        0  1342      2 0x00000002
+>> ** 3 printk messages dropped ** [  545.526231] [<ffffff8008089a0c>] show_stack+0x14/0x20
+>> ** 9 printk messages dropped ** [  545.526280] [<ffffff80086a71e8>] arch_timer_handler_phys+0x30/0x40
+>> [  545.526284] [<ffffff80080dbe18>] handle_percpu_devid_irq+0x78/0xa0
+>> [  545.526291] [<ffffff80080d760c>] generic_handle_irq+0x24/0x38
+>> [  545.526296] [<ffffff80080d7944>] __handle_domain_irq+0x5c/0xb8
+>> [  545.526299] [<ffffff80080824bc>] gic_handle_irq+0x64/0xc0
+>> [  545.526302] Exception stack(0xffffffc87b07f870 to 0xffffffc87b07f990)
+>> [  545.526306] f860:                                   0000000000009732 ffffff800a1eaaa8
+>> ** 8 printk messages dropped ** [  545.526341] f980: ffffff800a1c39e8 0000000000000036
+>> [  545.526345] [<ffffff8008085720>] el1_irq+0xa0/0x100
+>> [  545.526349] [<ffffff80080d6234>] console_unlock+0x384/0x5b0
+>> [  545.526353] [<ffffff80080d673c>] vprintk_emit+0x2dc/0x4b0
+>> [  545.526357] [<ffffff80080d6a50>] vprintk_default+0x38/0x40
+>> [  545.526362] [<ffffff8008129704>] printk+0x58/0x60
+>> [  545.526366] [<ffffff800859e3e4>] ath9k_iowrite32+0x9c/0xa8
+>> [  545.526372] [<ffffff80085c7ca8>] ath9k_hw_kill_interrupts+0x28/0xf0
+>> [  545.526376] [<ffffff80085a18ec>] ath_reset+0x24/0x68
+>> ** 2 printk messages dropped ** [  545.526391] [<ffffff800885ad60>] ieee80211_hw_config+0x50/0x290
+>> ** 11 printk messages dropped ** [  545.532834] ath9k_hw_kill_interrupts	 793
+>> [  545.532890] ath9k_hw_enable_interrupts	 821
+
+[   81.876902] INFO: rcu_preempt detected stalls on CPUs/tasks:
+[   81.876912]     Tasks blocked on level-0 rcu_node (CPUs 0-7): P0
+[   81.876932]     (detected by 4, t=60002 jiffies, g=1873, c=1872, q=4967)
+[   81.876936] swapper/4       R  running task        0     0      1 
+0x00000000
+[   81.876941]  0000000000000001 ffffffff810725f6 ffff88017edbc240 
+ffffffff81a3dc40
+[   81.876945]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40 
+ffffffff81a3dc40
+[   81.876948]  00000000ffffffff ffffffff810a7333 ffff88017ecee698 
+ffff88017edbc240
+[   81.876951] Call Trace:
+[   81.876970]  <IRQ>
+[   81.876979]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
+[   81.876983]  [<ffffffff81101e46>] ? 
+rcu_print_detail_task_stall_rnp+0x40/0x61
+[   81.876989]  [<ffffffff810a7333>] ? rcu_check_callbacks+0x6b3/0x8c0
+[   81.876993]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x40
+[   81.876996]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
+[   81.876999]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
+[   81.877002]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
+[   81.877004]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
+[   81.877008]  [<ffffffff81031b1e>] ? 
+smp_trace_apic_timer_interrupt+0x5e/0x90
+[   81.877012]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
+[   81.877013]  <EOI>
+[   81.877017]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
+[   81.877019]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
+[   81.877021]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
+[   81.877027]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
+[   81.877029] swapper/4       R  running task        0     0      1 
+0x00000000
+[   81.877032]  0000000000000001 ffffffff810725f6 ffff88017edbc240 
+ffffffff81a3dc40
+[   81.877035]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40 
+ffffffff81a3dc40
+[   81.877038]  00000000ffffffff ffffffff810a7368 ffff88017ecee698 
+ffff88017edbc240
+[   81.877041] Call Trace:
+[   81.877045]  <IRQ>
+[   81.877049]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
+[   81.877051]  [<ffffffff81101e46>] ? 
+rcu_print_detail_task_stall_rnp+0x40/0x61
+[   81.877055]  [<ffffffff810a7368>] ? rcu_check_callbacks+0x6e8/0x8c0
+[   81.877058]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x40
+[   81.877060]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
+[   81.877063]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
+[   81.877065]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
+[   81.877068]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
+[   81.877070]  [<ffffffff81031b1e>] ? 
+smp_trace_apic_timer_interrupt+0x5e/0x90
+[   81.877073]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
+[   81.877074]  <EOI>
+[   81.877076]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
+[   81.877078]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
+[   81.877080]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
+[   81.877084]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
+[   91.132787] INFO: rcu_preempt detected expedited stalls on 
+CPUs/tasks: { P0 } 63785 jiffies s: 505 root: 0x0/T
+[   91.132796] blocking rcu_node structures:
+
+>>
+>>
+>> But if we have less debug prints it does not reach EP handler sometimes, due to following
+>> Condition in "kernel/irq/chip.c" in function handle_simple_irq
+>>
+>> if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
+>>                  desc->istate |= IRQS_PENDING;
+>>                  goto out_unlock;
+>>          }
+>> Here irqd_irq_disabled is being set to 1.
+>>
+>> With lesser debug prints it stops after following prints:
+>> root@Xilinx-ZCU102-2016_3:~# iw dev wlan0 scan
+>> [   54.781045] ath9k_hw_kill_interrupts	 793
+>> [   54.785007] ath9k_hw_kill_interrupts	 793
+>> [   54.792535] ath9k_hw_enable_interrupts	 821
+>> [   54.796642] ath9k_hw_enable_interrupts	 825
+>> [   54.800807] ath9k_hw_enable_interrupts	 832
+>> [   54.804973] AR_SREV_9100 0
+>> [   54.807663] ath9k_hw_enable_interrupts	 848
+>> [   54.811843] ath9k_hw_intrpend	 762
+>> [   54.815211] (AR_SREV_9340(ah) val 0
+>> [   54.818684] ath9k_hw_intrpend	 767
+>> [   54.822078] ath_isr	 603
+>> [   54.824587] ath9k_hw_kill_interrupts	 793
+>> [   54.828601] ath9k_hw_enable_interrupts	 821
+>> [   54.832750] ath9k_hw_enable_interrupts	 825
+>> [   54.836916] ath9k_hw_enable_interrupts	 832
+>> [   54.841082] AR_SREV_9100 0
+>> [   54.843772] ath9k_hw_enable_interrupts	 848
+>> [   54.843775] ath9k_hw_intrpend	 762
+>> [   54.851319] (AR_SREV_9340(ah) val 0
+>> [   54.854793] ath9k_hw_intrpend	 767
+>> [   54.858185] ath_isr	 603
+>> [   54.860696] ath9k_hw_kill_interrupts	 793
+>> [   54.864776] ath9k_hw_enable_interrupts	 821
+>> [   54.867061] ath9k_hw_kill_interrupts	 793
+>> [   54.872870] ath9k_hw_enable_interrupts	 825
+>> [   54.877036] ath9k_hw_enable_interrupts	 832
+>> [   54.881202] AR_SREV_9100 0
+>> [   54.883892] ath9k_hw_enable_interrupts	 848
+>> [   75.963129] INFO: rcu_sched detected stalls on CPUs/tasks:
+>> [   75.968602] 	0-...: (2 GPs behind) idle=9d5/140000000000001/0 softirq=1103/1109 fqs=519
+>> [   75.976675] 	(detected by 2, t=5274 jiffies, g=64, c=63, q=11)
+>> [   75.982485] Task dump for CPU 0:
+>> [   75.985696] ksoftirqd/0     R  running task        0     3      2 0x00000002
+>> [   75.992726] Call trace:
+>> [   75.995165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0
+>> [   76.000281] [<ffffffc87b830500>] 0xffffffc87b830500
+>> [  139.059027] INFO: rcu_sched detected stalls on CPUs/tasks:
+>> [  139.064430] 	0-...: (2 GPs behind) idle=9d5/140000000000001/0 softirq=1103/1109 fqs=2097
+>> [  139.072593] 	(detected by 2, t=21049 jiffies, g=64, c=63, q=11)
+>> [  139.078489] Task dump for CPU 0:
+>> [  139.081700] ksoftirqd/0     R  running task        0     3      2 0x00000002
+>> [  139.088731] Call trace:
+>> [  139.091165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0
+>> [  139.096285] [<ffffffc87b830500>] 0xffffffc87b830500
+>>
+>>
+>>>> We are not seeing any issues on 32-bit ARM platform and X86
+>>>> platform.
+>>> Can you collect a dmesg log (or, if the system hang means you can't
+>>> collect that, a console log with "ignore_loglevel"), and "lspci -vv"
+>>> output as root?  That should have clues about whether the INTx got
+>>> routed correctly.  /proc/interrupts should also show whether we're
+>>> receiving interrupts from the device.
+>> Here is the lspci output:
+>> 00:00.0 PCI bridge: Xilinx Corporation Device d022 (prog-if 00 [Normal decode])
+>> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>> 	Latency: 0
+>> 	Interrupt: pin A routed to IRQ 224
+>> 	Bus: primary=00, secondary=01, subordinate=0c, sec-latency=0
+>> 	I/O behind bridge: 00000000-00000fff
+>> 	Memory behind bridge: e0000000-e00fffff
+>> 	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+>> 	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+>> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+>> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>> 	Capabilities: [40] Power Management version 3
+>> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold-)
+>> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>> 	Capabilities: [60] Express (v2) Root Port (Slot-), MSI 00
+>> 		DevCap:	MaxPayload 256 bytes, PhantFunc 0
+>> 			ExtTag- RBE+
+>> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+>> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
+>> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend+
+>> 		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM not supported, Exit Latency L0s unlimited, L1 unlimited
+>> 			ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
+>> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+>> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>> 		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible+
+>> 		RootCap: CRSVisible+
+>> 		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+>> 		DevCap2: Completion Timeout: Range B, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+>> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+>> 		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
+>> 			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+>> 			 Compliance De-emphasis: -6dB
+>> 		LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete-, EqualizationPhase1-
+>> 			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+>> 	Capabilities: [100 v1] Device Serial Number 00-00-00-00-00-00-00-00
+>> 	Capabilities: [10c v1] Virtual Channel
+>> 		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+>> 		Arb:	Fixed- WRR32- WRR64- WRR128-
+>> 		Ctrl:	ArbSelect=Fixed
+>> 		Status:	InProgress-
+>> 		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+>> 			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+>> 			Status:	NegoPending- InProgress-
+>> 	Capabilities: [128 v1] Vendor Specific Information: ID=1234 Rev=1 Len=018 <?>
+>>
+>> 01:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
+>> 	Subsystem: Qualcomm Atheros Device 3112
+>> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+>> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>> 	Latency: 0, Cache Line Size: 128 bytes
+>> 	Interrupt: pin A routed to IRQ 224
+>> 	Region 0: Memory at e0000000 (64-bit, non-prefetchable) [size=128K]
+>> 	[virtual] Expansion ROM at e0020000 [disabled] [size=64K]
+>> 	Capabilities: [40] Power Management version 3
+>> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+>> 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>> 	Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>> 		Address: 0000000000000000  Data: 0000
+>> 		Masking: 00000000  Pending: 00000000
+>> 	Capabilities: [70] Express (v2) Endpoint, MSI 00
+>> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
+>> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 0.000W
+>> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
+>> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+>> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <2us, L1 <64us
+>> 			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+>> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+>> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>> 		DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+>> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+>> 		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+>> 			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+>> 			 Compliance De-emphasis: -6dB
+>> 		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+>> 			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+>> 	Capabilities: [100 v1] Advanced Error Reporting
+>> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>> 		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>> 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>> 		AERCap:	First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+>> 	Capabilities: [140 v1] Virtual Channel
+>> 		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+>> 		Arb:	Fixed- WRR32- WRR64- WRR128-
+>> 		Ctrl:	ArbSelect=Fixed
+>> 		Status:	InProgress-
+>> 		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+>> 			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+>> 			Status:	NegoPending- InProgress-
+>> 	Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
+>> 	Kernel driver in use: ath9k
+>>
+>> Here is the cat /proc/interrupts (after we do interface up):
+>>
+>> root@:~# ifconfig wlan0 up
+>> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
+>>             CPU0       CPU1       CPU2       CPU3
+>>    1:          0          0          0          0     GICv2  29 Edge      arch_timer
+>>    2:      19873      20058      19089      17435     GICv2  30 Edge      arch_timer
+>>   12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
+>>   13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
+>>   14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
+>>   15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
+>>   16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
+>>   17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
+>>   18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
+>>   19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
+>>   20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+>>   30:          0          0          0          0     GICv2  95 Level     eth0, eth0
+>> 206:        314          0          0          0     GICv2  49 Level     cdns-i2c
+>> 207:         40          0          0          0     GICv2  50 Level     cdns-i2c
+>> 209:          0          0          0          0     GICv2 150 Level     nwl_pcie:misc
+>> 214:         12          0          0          0     GICv2  47 Level     ff0f0000.spi
+>> 215:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
+>> 216:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
+>> 217:          0          0          0          0     GICv2 165 Level     ahci-ceva[fd0c0000.ahci]
+>> 218:         61          0          0          0     GICv2  81 Level     mmc0
+>> 219:          0          0          0          0     GICv2 187 Level     arm-smmu global fault
+>> 220:        471          0          0          0     GICv2  53 Level     xuartps
+>> 223:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
+>> 224:          3          0          0          0     dummy   1 Edge      ath9k
+>> 225:          0          0          0          0     GICv2  97 Level     xhci-hcd:usb1
+>>
+>> Regards,
+>> Bharat
