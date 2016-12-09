@@ -1,102 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42460 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755222AbcLOJjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 04:39:03 -0500
-Message-ID: <1481794695.31776.7.camel@sipsolutions.net> (sfid-20161215_103927_416250_B34B445C)
-Subject: Re: [RFC 3/3] mac80211: Add receive path for ethernet frame format
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 15 Dec 2016 10:38:15 +0100
-In-Reply-To: <1481781608-5181-4-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1481781608-5181-4-git-send-email-vthiagar@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:51828 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753113AbcLIIs4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Dec 2016 03:48:56 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: devel@driverdev.osuosl.org, Ping-Ke Shih <pkshih@realtek.com>,
+        linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
+References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+        <20161202014833.6856-11-Larry.Finger@lwfinger.net>
+        <20161205213447.GJ8176@mwanda>
+        <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
+        <20161206071340.GB10292@kroah.com>
+        <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
+        <20161207133219.GM8176@mwanda>
+        <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com>
+        <20161208115049.GR8176@mwanda>
+Date: Fri, 09 Dec 2016 10:48:47 +0200
+In-Reply-To: <20161208115049.GR8176@mwanda> (Dan Carpenter's message of "Thu,
+        8 Dec 2016 14:50:49 +0300")
+Message-ID: <87zik532ts.fsf@kamboji.qca.qualcomm.com> (sfid-20161209_094940_021521_9D2ECD26)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-> This rx path only checks if the driver has advertised
-> it's support of 802.11 header encap/decap offload for
-> data frames. 
+> I don't have a problem with the ath debug printks.  Larry asked me for
+> examples of better debug functions and the ath code is an example.
+> Literally, any existing debug functions are better than the
+> BTC_TRACE_STRING() stuff.
 
-I'm not even sure I see the point in that? Other than that (and the
-various other offload requirements), it seems that encap/decap could be
-considered orthogonal.
+Sure, I agree with that. My point was just that sometimes it's ok to
+have own logging wrappers and there's no hard rule for this.
 
-> +	 * Adhoc interface depends on bssid to udpate last_rx.
-
-type - update
-
-> +	if (!(status->flag & RX_FLAG_MCAST)) {
-> +		sta->rx_stats.last_rx = jiffies;
-> +		sta->rx_stats.last_rate =
-> sta_stats_encode_rate(status);
-> +	}
-
-You should probably rename that flag to something like
-RX_FLAG_80211_MCAST since otherwise it's confusing with the next
-multicast ether addr check:
-
-> +	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-> +	    !is_multicast_ether_addr(ehdr->h_dest))
-> +		ieee80211_sta_reset_conn_monitor(sdata);
-
-But this could just also use the flag, since in station mode the two
-are equivalent, and it'd be easier to figure out if this was "else if
-(station mode)"?
-
-> +	memset(&rx, 0, sizeof(rx));
-
-That seems a bit pointless?
-
-> +	rx.skb = skb;
-> +	rx.sdata = sdata;
-> +	rx.local = local;
-> +	rx.sta = sta;
-> +
-> +	if (vif->type == NL80211_IFTYPE_AP_VLAN && sdata->bss &&
-> +	    unlikely(ehdr->h_proto == sdata->control_port_protocol)) 
-> {
-> +		sdata = container_of(sdata->bss, struct
-> ieee80211_sub_if_data,
-> +				     u.ap);
-> +		dev = sdata->dev;
-> +		rx.sdata = sdata;
-> +	}
-> +
-> +	rx.skb->dev = dev;
-> +
-> +	/* XXX: Since rx.seqno_idx is not available for decap
-> offloaded frames
-> +	 * rx msdu stats update at the seqno_idx in
-> ieee80211_deliver_skb()
-> +	 * will always be updated at index 0 and will not be very
-> useful.
-> +	 */
-> +	ieee80211_deliver_skb(&rx);
-
-Yeah, that's not nice - perhaps we can provide the TID out of band? If
-not, we'll have to disable those statistics *all the way*, i.e. not
-even report them to userspace when filling sinfo.
-
-> +	return;
-> +
-> +mic_fail:
-> +	cfg80211_michael_mic_failure(sdata->dev, sta->addr,
-> +				     (status->flag & RX_FLAG_MCAST)
-> ?
-> +				     NL80211_KEYTYPE_GROUP :
-> +				     NL80211_KEYTYPE_PAIRWISE,
-> +				     key ? key->conf.keyidx : -1,
-> +				     NULL, GFP_ATOMIC);
-
-Do we really want to handle that inline here? The driver probably has a
-different check to even set RX_FLAG_MMIC_ERROR, so we could just ask it
-to call cfg80211_michael_mic_failure() [or a wrapper to get sdata->dev] 
-instead? I guess this works too though, and might be easier to
-understand.
-
-johannes
+-- 
+Kalle Valo
