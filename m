@@ -1,31 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44224 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751064AbcLGNpz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:45:55 -0500
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <8737i6syzq.fsf@kamboji.qca.qualcomm.com>
-References: <8737i6syzq.fsf@kamboji.qca.qualcomm.com> <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk> <148059556349.31612.1087071308520573382.stgit@warthog.procyon.org.uk>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: dhowells@redhat.com, linux-kernel@vger.kernel.org,
-        gnomes@lxorguk.ukuu.org.uk, minyard@acm.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org
-Subject: Re: [PATCH 23/39] Annotate hardware config module parameters in drivers/net/wireless/
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Wed, 07 Dec 2016 13:45:52 +0000
-Message-ID: <25121.1481118352@warthog.procyon.org.uk> (sfid-20161207_144618_643095_0C1D5EBD)
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34363 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752418AbcLJM7z (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Dec 2016 07:59:55 -0500
+Received: by mail-lf0-f67.google.com with SMTP id x143so2227428lfd.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 04:59:54 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [PATCH 1/2] ath10k: htc: Removal of unused struct members
+Date: Sat, 10 Dec 2016 13:58:40 +0100
+Message-Id: <1481374721-16354-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20161210_140000_512009_AAC8D926)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> wrote:
+Removed tx_credits_per_max_message and tx_credit_size
+from struct ath10k_htc_ep since they are not used
+anywhere in the code.
 
-> Via which tree are you planning to submit this, should I take it to
-> wireless-drivers or will someone else handle it? I didn't get the cover
-> letter so I have no idea.
+They are just written, never read.
 
-I'll see if I can get patch 1 (which defines the macros) in a window prior to
-the others - or maybe I can get Linus to apply all of these together.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c |    6 ------
+ drivers/net/wireless/ath/ath10k/htc.h |    2 --
+ 2 files changed, 8 deletions(-)
 
-David
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 175aae3..f2e0659 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -726,12 +726,6 @@ int ath10k_htc_connect_service(struct ath10k_htc *htc,
+ 	ep->max_tx_queue_depth = conn_req->max_send_queue_depth;
+ 	ep->max_ep_message_len = __le16_to_cpu(resp_msg->max_msg_size);
+ 	ep->tx_credits = tx_alloc;
+-	ep->tx_credit_size = htc->target_credit_size;
+-	ep->tx_credits_per_max_message = ep->max_ep_message_len /
+-					 htc->target_credit_size;
+-
+-	if (ep->max_ep_message_len % htc->target_credit_size)
+-		ep->tx_credits_per_max_message++;
+ 
+ 	/* copy all the callbacks */
+ 	ep->ep_ops = conn_req->ep_ops;
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 0c55cd9..ca150c9 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -314,8 +314,6 @@ struct ath10k_htc_ep {
+ 
+ 	u8 seq_no; /* for debugging */
+ 	int tx_credits;
+-	int tx_credit_size;
+-	int tx_credits_per_max_message;
+ 	bool tx_credit_flow_enabled;
+ };
+ 
+-- 
+1.7.9.5
