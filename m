@@ -1,59 +1,284 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33206 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751693AbcLTCiU (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35008 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752554AbcLKFpl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 21:38:20 -0500
+        Sun, 11 Dec 2016 00:45:41 -0500
+Received: by mail-oi0-f66.google.com with SMTP id v84so7251774oie.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:41 -0800 (PST)
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org,
-        Linus Torvalds <torvalds@linux-foundation.org>
+To: kvalo@codeaurora.org
 Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
-        Stable <stable@vger.kernel.org>,
-        Wei Yongjun <weiyongjun1@huawei.com>
-Subject: [PATCH] rtlwifi: Fix kernel oops introduced with commit e49656147359
-Date: Mon, 19 Dec 2016 20:38:12 -0600
-Message-Id: <20161220023812.5999-1-Larry.Finger@lwfinger.net> (sfid-20161220_033927_493861_9A7CBAA7)
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 05/14] rtlwifi: rtl8723ae: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:06 -0600
+Message-Id: <20161211054523.7119-10-Larry.Finger@lwfinger.net> (sfid-20161211_070931_148286_93CBB849)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
-kfree_skb"), the method used to free an skb was changed because the
-kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
-guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
-does not, and a test is needed to prevent kernel panics.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-Fixes: commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> (4.9+)
-Cc: Wei Yongjun <weiyongjun1@huawei.com>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
-Kalle,
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c  |  9 +++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  | 19 +++++++------------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c |  6 ++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 18 +++++++-----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c  |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c  |  8 +++-----
+ 6 files changed, 23 insertions(+), 40 deletions(-)
 
-This change should be sent to mainline during the 4.10 merge period,
-or as soon as possible.
-
-Thanks,
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 955055b..df8b977 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1823,7 +1823,8 @@ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+index 2f398da..9136fb3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+@@ -99,8 +99,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("rtl8723ae: Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
  
- 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
- 	pskb = __skb_dequeue(&ring->queue);
--	dev_kfree_skb_irq(pskb);
-+	if (pskb)
-+		dev_kfree_skb_irq(pskb);
+@@ -123,8 +122,8 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			box_extreg = REG_HMEBOX_EXT_3;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", boxnum);
++			pr_err("rtl8723ae: switch case %#x not processed\n",
++			       boxnum);
+ 			break;
+ 		}
  
- 	/*this is wrong, fill_tx_cmddesc needs update*/
- 	pdesc = &ring->desc[0];
+@@ -229,8 +227,8 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			}
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", cmd_len);
++			pr_err("rtl8723ae: switch case %#x not processed\n",
++			       cmd_len);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 6c51483..dff9ebb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -570,9 +570,8 @@ static bool _rtl8723e_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
+ 
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("rtl8723ae: Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -961,7 +960,7 @@ int rtl8723e_hw_init(struct ieee80211_hw *hw)
+ 	rtlpriv->intf_ops->disable_aspm(hw);
+ 	rtstatus = _rtl8712e_init_mac(hw);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("rtl8723ae: Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1107,8 +1106,7 @@ static enum version_8723e _rtl8723e_read_chip_version(struct ieee80211_hw *hw)
+ 			 "Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT.\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Chip Version ID: Unknown. Bug?\n");
++		pr_err("rtl8723ae: Chip Version ID: Unknown. Bug?\n");
+ 		break;
+ 	}
+ 
+@@ -1157,8 +1155,7 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+ 			"Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			"Network type %d not support!\n", type);
++		pr_err("rtl8723ae: Network type %d not support!\n", type);
+ 		return 1;
+ 		break;
+ 	}
+@@ -1852,7 +1849,7 @@ void rtl8723e_read_eeprom_info(struct ieee80211_hw *hw)
+ 	} else {
+ 		rtlefuse->autoload_failflag = true;
+ 		_rtl8723e_read_adapter_info(hw, false);
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("rtl8723ae: Autoload ERR!!\n");
+ 	}
+ 	_rtl8723e_hal_customized_behavior(hw);
+ }
+@@ -2245,9 +2242,7 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id =
+ 					  rtl_cam_get_free_entry(hw, p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("rtl8723ae: Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+index 77c1004..c2a6b2c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+@@ -58,8 +58,8 @@ void rtl8723e_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("rtl8723ae: switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -100,8 +99,8 @@ void rtl8723e_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("rtl8723ae: switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+index 5dd4c74..25615e1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+@@ -213,7 +213,7 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = _rtl8723e_phy_config_bb_with_headerfile(hw,
+ 						BASEBAND_CONFIG_PHY_REG);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("rtl8723ae: Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -227,13 +227,13 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 					BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("rtl8723ae: BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus =
+ 	  _rtl8723e_phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("rtl8723ae: AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool) (rtl_get_bbreg(hw,
+@@ -749,8 +749,7 @@ void rtl8723e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("rtl8723ae: Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -791,8 +790,8 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8723ae: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -816,8 +814,8 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8723ae: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl8723e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -977,8 +974,8 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("rtl8723ae: Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+index 4227717..89958b6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+@@ -51,8 +51,7 @@ void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("rtl8723ae: unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index c51a9e8..401f542 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -172,8 +172,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x6000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw.\n");
++		pr_err("rtl8723ae: Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
+ 
+@@ -186,8 +185,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("rtl8723ae: Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 	return 0;
+@@ -270,7 +268,7 @@ static struct rtl_mod_params rtl8723e_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ 	.msi_support = false,
+ 	.disable_watchdog = false,
+ };
 -- 
 2.10.2
