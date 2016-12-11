@@ -1,275 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42362 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758345AbcLSKzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:55:11 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 08/11] rt2x00: merge agc and vco works with link tuner
-Date: Mon, 19 Dec 2016 11:52:54 +0100
-Message-Id: <1482144777-16760-9-git-send-email-sgruszka@redhat.com> (sfid-20161219_120124_488300_E6E4BF39)
-In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
-References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35967 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752924AbcLKFpu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:45:50 -0500
+Received: by mail-oi0-f66.google.com with SMTP id u15so7277507oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:49 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 11/14] rtlwifi_new: rtl8192ce: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:17 -0600
+Message-Id: <20161211054523.7119-21-Larry.Finger@lwfinger.net> (sfid-20161211_070932_044571_B796F099)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We need to perform different actions (AGC and VCO calibrations and VGC
-tuning) periodically at different intervals. We don't need separate
-works for those, we can use link tuner work and just check for proper
-interval on it.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-This fixes performing AGC and VCO calibration when scanning on STA
-mode. We need to be on-channel to perform those calibrations.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c  |    6 -
- drivers/net/wireless/ralink/rt2x00/rt2x00lib.h  |   31 +-----
- drivers/net/wireless/ralink/rt2x00/rt2x00link.c |  127 ++++++-----------------
- 3 files changed, 36 insertions(+), 128 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 36 ++++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/led.c   |  6 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.c   | 13 +++-----
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |  8 ++---
+ 5 files changed, 24 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 4e0c565..550eaf1 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -85,9 +85,6 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00queue_start_queues(rt2x00dev);
- 	rt2x00link_start_tuner(rt2x00dev);
--	rt2x00link_start_agc(rt2x00dev);
--	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
--		rt2x00link_start_vcocal(rt2x00dev);
- 
- 	/*
- 	 * Start watchdog monitoring.
-@@ -110,9 +107,6 @@ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Stop all queues
- 	 */
--	rt2x00link_stop_agc(rt2x00dev);
--	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
--		rt2x00link_stop_vcocal(rt2x00dev);
- 	rt2x00link_stop_tuner(rt2x00dev);
- 	rt2x00queue_stop_queues(rt2x00dev);
- 	rt2x00queue_flush_queues(rt2x00dev, true);
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h b/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
-index fb7c349..9ddc168 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
-@@ -29,9 +29,10 @@
-  * Interval defines
-  */
- #define WATCHDOG_INTERVAL	round_jiffies_relative(HZ)
--#define LINK_TUNE_INTERVAL	round_jiffies_relative(HZ)
--#define AGC_INTERVAL		round_jiffies_relative(4 * HZ)
--#define VCO_INTERVAL		round_jiffies_relative(10 * HZ) /* 10 sec */
-+#define LINK_TUNE_SECONDS	1
-+#define LINK_TUNE_INTERVAL	round_jiffies_relative(LINK_TUNE_SECONDS * HZ)
-+#define AGC_SECONDS		4
-+#define VCO_SECONDS		10
- 
- /*
-  * rt2x00_rate: Per rate device information
-@@ -271,30 +272,6 @@ void rt2x00link_update_stats(struct rt2x00_dev *rt2x00dev,
- void rt2x00link_stop_watchdog(struct rt2x00_dev *rt2x00dev);
- 
- /**
-- * rt2x00link_start_agc - Start periodic gain calibration
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- */
--void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev);
--
--/**
-- * rt2x00link_start_vcocal - Start periodic VCO calibration
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- */
--void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev);
--
--/**
-- * rt2x00link_stop_agc - Stop periodic gain calibration
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- */
--void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev);
--
--/**
-- * rt2x00link_stop_vcocal - Stop periodic VCO calibration
-- * @rt2x00dev: Pointer to &struct rt2x00_dev.
-- */
--void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev);
--
--/**
-  * rt2x00link_register - Initialize link tuning & watchdog functionality
-  * @rt2x00dev: Pointer to &struct rt2x00_dev.
-  *
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-index 017188e..73cbf23 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
-@@ -233,15 +233,13 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
- 	struct link *link = &rt2x00dev->link;
- 
- 	/*
--	 * Link tuning should only be performed when
--	 * an active sta interface exists. AP interfaces
--	 * don't need link tuning and monitor mode interfaces
--	 * should never have to work with link tuners.
-+	 * Single monitor mode interfaces should never have
-+	 * work with link tuners.
- 	 */
--	if (!rt2x00dev->intf_sta_count)
-+	if (!rt2x00dev->intf_ap_count && !rt2x00dev->intf_sta_count)
- 		return;
- 
--	/**
-+	/*
- 	 * While scanning, link tuning is disabled. By default
- 	 * the most sensitive settings will be used to make sure
- 	 * that all beacons and probe responses will be received
-@@ -308,22 +306,11 @@ static void rt2x00link_reset_qual(struct rt2x00_dev *rt2x00dev)
- 	qual->tx_failed = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+index b757a74..7ed33c2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+@@ -140,8 +140,7 @@ void rtl92ce_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
  }
- 
--static void rt2x00link_tuner(struct work_struct *work)
-+static void rt2x00link_tuner_sta(struct rt2x00_dev *rt2x00dev, struct link *link)
- {
--	struct rt2x00_dev *rt2x00dev =
--	    container_of(work, struct rt2x00_dev, link.work.work);
--	struct link *link = &rt2x00dev->link;
- 	struct link_qual *qual = &rt2x00dev->link.qual;
- 
- 	/*
--	 * When the radio is shutting down we should
--	 * immediately cease all link tuning.
--	 */
--	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
--	    test_bit(DEVICE_STATE_SCANNING, &rt2x00dev->flags))
--		return;
--
--	/*
- 	 * Update statistics.
- 	 */
- 	rt2x00dev->ops->lib->link_stats(rt2x00dev, qual);
-@@ -360,6 +347,33 @@ static void rt2x00link_tuner(struct work_struct *work)
- 	 */
- 	if (rt2x00lib_antenna_diversity(rt2x00dev))
- 		rt2x00link_reset_qual(rt2x00dev);
-+}
-+
-+static void rt2x00link_tuner(struct work_struct *work)
-+{
-+	struct rt2x00_dev *rt2x00dev =
-+	    container_of(work, struct rt2x00_dev, link.work.work);
-+	struct link *link = &rt2x00dev->link;
-+
-+	/*
-+	 * When the radio is shutting down we should
-+	 * immediately cease all link tuning.
-+	 */
-+	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
-+	    test_bit(DEVICE_STATE_SCANNING, &rt2x00dev->flags))
-+		return;
-+
-+	if (rt2x00dev->intf_sta_count)
-+		rt2x00link_tuner_sta(rt2x00dev, link);
-+
-+	if (rt2x00dev->ops->lib->gain_calibration &&
-+	    (link->count % (AGC_SECONDS / LINK_TUNE_SECONDS)) == 0)
-+		rt2x00dev->ops->lib->gain_calibration(rt2x00dev);
-+
-+	if (rt2x00dev->ops->lib->vco_calibration &&
-+	    rt2x00_has_cap_vco_recalibration(rt2x00dev) &&
-+	    (link->count % (VCO_SECONDS / LINK_TUNE_SECONDS)) == 0)
-+		rt2x00dev->ops->lib->vco_calibration(rt2x00dev);
- 
- 	/*
- 	 * Increase tuner counter, and reschedule the next link tuner run.
-@@ -408,85 +422,8 @@ static void rt2x00link_watchdog(struct work_struct *work)
- 					     WATCHDOG_INTERVAL);
+@@ -364,9 +363,8 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~AcmHw_VoqEn);
+ 					break;
+ 				default:
+-					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-						 "switch case %#x not processed\n",
+-						 e_aci);
++					pr_err("switch case %#x not processed\n",
++					       e_aci);
+ 					break;
+ 				}
+ 			}
+@@ -551,8 +549,7 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 		rtl92c_fill_h2c_cmd(hw, H2C_92C_KEEP_ALIVE_CTRL, 2, array);
+ 		break; }
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %d not processed\n", variable);
++		pr_err("switch case %d not processed\n", variable);
+ 		break;
+ 	}
  }
+@@ -573,9 +570,8 @@ static bool _rtl92ce_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
  
--void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev)
--{
--	struct link *link = &rt2x00dev->link;
--
--	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
--	    rt2x00dev->ops->lib->gain_calibration)
--		ieee80211_queue_delayed_work(rt2x00dev->hw,
--					     &link->agc_work,
--					     AGC_INTERVAL);
--}
--
--void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev)
--{
--	struct link *link = &rt2x00dev->link;
--
--	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
--	    rt2x00dev->ops->lib->vco_calibration)
--		ieee80211_queue_delayed_work(rt2x00dev->hw,
--					     &link->vco_work,
--					     VCO_INTERVAL);
--}
--
--void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev)
--{
--	cancel_delayed_work_sync(&rt2x00dev->link.agc_work);
--}
--
--void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev)
--{
--	cancel_delayed_work_sync(&rt2x00dev->link.vco_work);
--}
--
--static void rt2x00link_agc(struct work_struct *work)
--{
--	struct rt2x00_dev *rt2x00dev =
--	    container_of(work, struct rt2x00_dev, link.agc_work.work);
--	struct link *link = &rt2x00dev->link;
--
--	/*
--	 * When the radio is shutting down we should
--	 * immediately cease the watchdog monitoring.
--	 */
--	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
--		return;
--
--	rt2x00dev->ops->lib->gain_calibration(rt2x00dev);
--
--	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
--		ieee80211_queue_delayed_work(rt2x00dev->hw,
--					     &link->agc_work,
--					     AGC_INTERVAL);
--}
--
--static void rt2x00link_vcocal(struct work_struct *work)
--{
--	struct rt2x00_dev *rt2x00dev =
--	    container_of(work, struct rt2x00_dev, link.vco_work.work);
--	struct link *link = &rt2x00dev->link;
--
--	/*
--	 * When the radio is shutting down we should
--	 * immediately cease the VCO calibration.
--	 */
--	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
--		return;
--
--	rt2x00dev->ops->lib->vco_calibration(rt2x00dev);
--
--	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
--		ieee80211_queue_delayed_work(rt2x00dev->hw,
--					     &link->vco_work,
--					     VCO_INTERVAL);
--}
--
- void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
- {
--	INIT_DELAYED_WORK(&rt2x00dev->link.agc_work, rt2x00link_agc);
--	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
--		INIT_DELAYED_WORK(&rt2x00dev->link.vco_work, rt2x00link_vcocal);
- 	INIT_DELAYED_WORK(&rt2x00dev->link.watchdog_work, rt2x00link_watchdog);
- 	INIT_DELAYED_WORK(&rt2x00dev->link.work, rt2x00link_tuner);
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -963,7 +959,7 @@ int rtl92ce_hw_init(struct ieee80211_hw *hw)
+ 	rtlpriv->intf_ops->disable_aspm(hw);
+ 	rtstatus = _rtl92ce_init_mac(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1128,8 +1124,7 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
+ 		break;
+ 	}
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-		 "Chip Version ID: %s\n", versionid);
++	pr_info("Chip Version ID: %s\n", versionid);
+ 
+ 	switch (version & 0x3) {
+ 	case CHIP_88C:
+@@ -1143,8 +1138,7 @@ static enum version_8192c _rtl92ce_read_chip_version(struct ieee80211_hw *hw)
+ 		break;
+ 	default:
+ 		rtlphy->rf_type = RF_1T1R;
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "ERROR RF_Type is set!!\n");
++		pr_err("ERROR RF_Type is set!!\n");
+ 		break;
+ 	}
+ 
+@@ -1193,8 +1187,7 @@ static int _rtl92ce_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to Mesh Point!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not supported!\n", type);
++		pr_err("Network type %d not supported!\n", type);
+ 		return 1;
+ 
+ 	}
+@@ -1780,7 +1773,7 @@ void rtl92ce_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl92ce_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	_rtl92ce_hal_customized_behavior(hw);
  }
+@@ -2152,8 +2145,7 @@ void rtl92ce_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", enc_algo);
++			pr_err("switch case %#x not processed\n", enc_algo);
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -2171,9 +2163,7 @@ void rtl92ce_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								 p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
+index 833193b..b9d40be 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
+@@ -57,8 +57,7 @@ void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -92,8 +91,7 @@ void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_info("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
+index d1b6a8f..4b67358 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
+@@ -297,10 +297,10 @@ bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		break;
+ 	case RF90_PATH_C:
+ 	case RF90_PATH_D:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpath);
++		pr_info("Incorrect rfpath %#x\n", rfpath);
+ 		break;
+ 	default:
++		pr_info("switch case %#x not processed\n", rfpath);
+ 		break;
+ 	}
+ 	return true;
+@@ -340,8 +340,7 @@ void rtl92ce_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_info("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -365,8 +364,7 @@ void rtl92ce_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl92ce_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -546,8 +544,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 			break;
+ 		}
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpwr_state);
++		pr_err("switch case %#x not processed\n", rfpwr_state);
+ 		bresult = false;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
+index 7cae635..e68ed7f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/rf.c
+@@ -51,8 +51,7 @@ void rtl92ce_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+index 691ddef..9bd2bff6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
+@@ -158,8 +158,7 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x4000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw\n");
++		pr_err("Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
+ 
+@@ -173,8 +172,7 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -249,7 +247,7 @@ static struct rtl_mod_params rtl92ce_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ static const struct rtl_hal_cfg rtl92ce_hal_cfg = {
 -- 
-1.7.1
+2.10.2
