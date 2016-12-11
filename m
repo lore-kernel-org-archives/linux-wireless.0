@@ -1,132 +1,301 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:36382 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763492AbcLTQLL (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35963 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753075AbcLKFps (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 11:11:11 -0500
-Received: by mail-qt0-f171.google.com with SMTP id w33so180820231qtc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:10 -0800 (PST)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
-        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
-Date: Tue, 20 Dec 2016 11:10:46 -0500
-Message-Id: <1482250250-4192-3-git-send-email-glansberry@gmail.com> (sfid-20161220_171146_678766_7C1A059D)
-In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
-References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+        Sun, 11 Dec 2016 00:45:48 -0500
+Received: by mail-oi0-f66.google.com with SMTP id u15so7277486oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:48 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 10/14] rtlwifi_new: rtl8192cu: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:15 -0600
+Message-Id: <20161211054523.7119-19-Larry.Finger@lwfinger.net> (sfid-20161211_070931_468309_4E3AC6D5)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Geoff Lansberry <geoff@kuvee.com>
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-The TRF7970A has configuration options for supporting hardware designs
-with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
-using a fixed regulator binding, for setting the io voltage to match
-the hardware configuration. If no option is supplied it defaults to
-3.3 volt configuration.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
- drivers/nfc/trf7970a.c                             | 28 +++++++++++++++++++++-
- 2 files changed, 29 insertions(+), 3 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 33 ++++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/led.c   |  6 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   | 12 +++-----
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/phy.c   | 12 +++-----
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 ++--
+ 6 files changed, 24 insertions(+), 47 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index e262ac1..b5777d8 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -21,9 +21,9 @@ Optional SoC Specific Properties:
- - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
-   where an extra byte is returned by Read Multiple Block commands issued
-   to Type 5 tags.
-+- vdd-io-supply: Regulator specifying voltage for vdd-io
- - clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index ddfcf994..9db6ec6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -452,8 +452,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
+ 			break;
+ 		}
+ 		if (pollingCount++ > 100) {
+-			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-				 "Failed to polling REG_APS_FSMCO[PFM_ALDN] done!\n");
++			pr_err("Failed to polling REG_APS_FSMCO[PFM_ALDN] done!\n");
+ 			return -ENODEV;
+ 		}
+ 	} while (true);
+@@ -486,8 +485,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
+ 			break;
+ 		}
+ 		if (pollingCount++ > 1000) {
+-			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-				 "Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
++			pr_err("Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
+ 			return -ENODEV;
+ 		}
+ 	} while (true);
+@@ -687,7 +685,6 @@ static void _rtl92cu_init_chipN_three_out_ep_priority(struct ieee80211_hw *hw,
+ 						      u8 queue_sel)
+ {
+ 	u16 beQ, bkQ, viQ, voQ, mgtQ, hiQ;
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
  
--
- Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 
- &spi1 {
-@@ -41,11 +41,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 				  <&gpio2 5 GPIO_ACTIVE_LOW>;
- 		vin-supply = <&ldo3_reg>;
- 		vin-voltage-override = <5000000>;
-+		vdd-io-supply = <&ldo2_reg>;
- 		autosuspend-delay = <30000>;
- 		irq-status-read-quirk;
- 		en2-rf-quirk;
- 		t5t-rmb-extra-byte-quirk;
--		vdd_io_1v8;
- 		clock-frequency = <27120000>;
- 		status = "okay";
- 	};
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 4e051e9..8a88195 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -444,6 +444,7 @@ struct trf7970a {
- 	u8				iso_ctrl_tech;
- 	u8				modulator_sys_clk_ctrl;
- 	u8				special_fcn_reg1;
-+	u8				io_ctrl;
- 	unsigned int			guard_time;
- 	int				technology;
- 	int				framing;
-@@ -1051,6 +1052,11 @@ static int trf7970a_init(struct trf7970a *trf)
- 	if (ret)
- 		goto err_out;
- 
-+	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
-+			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
-+	if (ret)
-+		goto err_out;
-+
- 	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
- 	if (ret)
- 		goto err_out;
-@@ -1767,7 +1773,7 @@ static int _trf7970a_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
- 		goto out_err;
- 
- 	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
--			TRF7970A_REG_IO_CTRL_VRS(0x1));
-+			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
- 	if (ret)
- 		goto out_err;
- 
-@@ -2062,6 +2068,7 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return ret;
+ 	if (!wmm_enable) { /* typical setting */
+ 		beQ	= QUEUE_LOW;
+@@ -705,8 +702,7 @@ static void _rtl92cu_init_chipN_three_out_ep_priority(struct ieee80211_hw *hw,
+ 		hiQ	= QUEUE_HIGH;
  	}
+ 	_rtl92c_init_chipN_reg_priority(hw, beQ, bkQ, viQ, voQ, mgtQ, hiQ);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Tx queue select :0x%02x..\n",
+-		 queue_sel);
++	pr_info("Tx queue select :0x%02x..\n", queue_sel);
+ }
  
-+
- 	of_property_read_u32(np, "clock-frequency", &clk_freq);
- 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
- 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
-@@ -2105,6 +2112,25 @@ static int trf7970a_probe(struct spi_device *spi)
- 	if (uvolts > 4000000)
- 		trf->chip_status_ctrl = TRF7970A_CHIP_STATUS_VRS5_3;
+ static void _rtl92cu_init_chipN_queue_priority(struct ieee80211_hw *hw,
+@@ -765,8 +761,7 @@ static void _rtl92cu_init_chipT_queue_priority(struct ieee80211_hw *hw,
+ 		break;
+ 	}
+ 	rtl_write_byte(rtlpriv, (REG_TRXDMA_CTRL+1), hq_sele);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Tx queue select :0x%02x..\n",
+-		 hq_sele);
++	pr_info("Tx queue select :0x%02x..\n", hq_sele);
+ }
  
-+	trf->regulator = devm_regulator_get(&spi->dev, "vdd-io");
-+	if (IS_ERR(trf->regulator)) {
-+		ret = PTR_ERR(trf->regulator);
-+		dev_err(trf->dev, "Can't get VDD_IO regulator: %d\n", ret);
-+		goto err_destroy_lock;
-+	}
-+
-+	ret = regulator_enable(trf->regulator);
-+	if (ret) {
-+		dev_err(trf->dev, "Can't enable VDD_IO: %d\n", ret);
-+		goto err_destroy_lock;
-+	}
-+
-+
-+	if (regulator_get_voltage(trf->regulator) == 1800000) {
-+		trf->io_ctrl = TRF7970A_REG_IO_CTRL_IO_LOW;
-+		dev_dbg(trf->dev, "trf7970a config vdd_io to 1.8V\n");
-+	}
-+
- 	trf->ddev = nfc_digital_allocate_device(&trf7970a_nfc_ops,
- 			TRF7970A_SUPPORTED_PROTOCOLS,
- 			NFC_DIGITAL_DRV_CAPS_IN_CRC |
+ static void _rtl92cu_init_queue_priority(struct ieee80211_hw *hw,
+@@ -848,8 +843,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+ 	err = _rtl92cu_init_power_on(hw);
+ 
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to init power on!\n");
++		pr_err("Failed to init power on!\n");
+ 		return err;
+ 	}
+ 	if (!wmm_enable) {
+@@ -860,8 +854,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
+ 					: WMM_CHIP_A_TX_PAGE_BOUNDARY;
+ 	}
+ 	if (false == rtl92c_init_llt_table(hw, boundary)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to init LLT Table!\n");
++		pr_err("Failed to init LLT Table!\n");
+ 		return -EINVAL;
+ 	}
+ 	_rtl92cu_init_queue_reserved_page(hw, wmm_enable, out_ep_nums,
+@@ -986,7 +979,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
+ 	rtlhal->hw_type = HARDWARE_TYPE_RTL8192CU;
+ 	err = _rtl92cu_init_mac(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "init mac failed!\n");
++		pr_err("init mac failed!\n");
+ 		goto exit;
+ 	}
+ 	err = rtl92c_download_fw(hw);
+@@ -1099,8 +1092,7 @@ static void  _ResetDigitalProcedure1(struct ieee80211_hw *hw, bool bWithoutHWSM)
+ 				udelay(50);
+ 			}
+ 			if (retry_cnts >= 100) {
+-				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-					 "#####=> 8051 reset failed!.........................\n");
++				pr_err("8051 reset failed!.........................\n");
+ 				/* if 8051 reset fail, reset MAC. */
+ 				rtl_write_byte(rtlpriv,
+ 					       REG_SYS_FUNC_EN + 1,
+@@ -1340,8 +1332,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not supported!\n", type);
++		pr_err("Network type %d not supported!\n", type);
+ 		goto error_out;
+ 	}
+ 	rtl_write_byte(rtlpriv, MSR, bt_msr);
+@@ -1555,8 +1546,7 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -1926,8 +1916,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 			break;
+ 		}
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
+index c624081..9d83f08 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
+@@ -57,8 +57,7 @@ void rtl92cu_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -90,8 +89,7 @@ void rtl92cu_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+index cf212f6..1b124ea 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
+@@ -157,9 +157,8 @@ bool rtl92c_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
+ 			break;
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d! _LLT_OP_VALUE(%x)\n",
+-				 address, _LLT_OP_VALUE(value));
++			pr_err("Failed to polling write LLT done at address %d! _LLT_OP_VALUE(%x)\n",
++			       address, _LLT_OP_VALUE(value));
+ 			status = false;
+ 			break;
+ 		}
+@@ -262,8 +261,7 @@ void rtl92c_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "illegal switch case\n");
++			pr_err("illegal switch case\n");
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -280,9 +278,7 @@ void rtl92c_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								 p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
+index f35f435..452437f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
+@@ -274,8 +274,7 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		break;
+ 	case RF90_PATH_C:
+ 	case RF90_PATH_D:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpath);
++		pr_err("switch case %#x not processed\n", rfpath);
+ 		break;
+ 	default:
+ 		break;
+@@ -314,8 +313,7 @@ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	switch (rtlphy->current_chan_bw) {
+@@ -336,8 +334,7 @@ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl92cu_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -509,8 +506,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		_rtl92c_phy_set_rf_sleep(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpwr_state);
++		pr_err("switch case %#x not processed\n", rfpwr_state);
+ 		bresult = false;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+index 5e31830..9cff6bc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
+@@ -51,8 +51,7 @@ void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+index b84e13a..935e830 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
+@@ -68,8 +68,7 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x4000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw\n");
++		pr_err("Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
+ 	if (IS_VENDOR_UMC_A_CUT(rtlpriv->rtlhal.version) &&
+@@ -158,7 +157,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
+ 
+ static struct rtl_mod_params rtl92cu_mod_params = {
+ 	.sw_crypto = 0,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ module_param_named(swenc, rtl92cu_mod_params.sw_crypto, bool, 0444);
 -- 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+2.10.2
