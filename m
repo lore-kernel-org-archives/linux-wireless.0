@@ -1,83 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44409 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757415AbcLOKt3 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33624 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753199AbcLKFpx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 05:49:29 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 1/3] mac80211: Add provision for 802.11 encap/decap offload
-Date: Thu, 15 Dec 2016 10:43:33 +0000
-Message-ID: <585273D4.7030100@qti.qualcomm.com> (sfid-20161215_114949_057832_ED0EAD9D)
-References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1481781608-5181-2-git-send-email-vthiagar@qti.qualcomm.com>
- <1481793392.31776.3.camel@sipsolutions.net>
-In-Reply-To: <1481793392.31776.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Sun, 11 Dec 2016 00:45:53 -0500
+Received: by mail-oi0-f68.google.com with SMTP id f201so7294330oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:53 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 13/14] rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:22 -0600
+Message-Id: <20161211054523.7119-26-Larry.Finger@lwfinger.net> (sfid-20161211_064558_215567_DB54F9D8)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMTUgRGVjZW1iZXIgMjAxNiAwMjo0NiBQTSwgSm9oYW5uZXMgQmVyZyB3cm90
-ZToNCj4NCj4+IERyaXZlcnMgYWR2ZXJ0aXNpbmcgdGhpcyBjYXBhYmlsaXR5IHNob3VsZCBhbHNv
-IGltcGxlbWVudCBvdGhlcg0KPj4gZnVuY3Rpb25hbGl0aWVzIHdoaWNoIGRlYWwgd2l0aCA4MDIu
-MTEgZnJhbWUgZm9ybWF0IGxpa2UgYmVsb3cNCj4NCj4+IAktIEFEREJBL0RFTEJBIG9mZmxvYWQN
-Cj4NCj4gVGhpcyBzaG91bGRuJ3QgYmUgbmVjZXNzYXJ5Lg0KDQpPay4gU2luY2UgZHJpdmVyL2h3
-IG5lZWRzIHRvIGltcGxlbWVudCBUeC9SeCBhZ2dyZWdhdGlvbiByZWxhdGVkIGZ1bmN0aW9uYWxp
-dGllcw0KSSB0aG91Z2h0IEFEREJBL0RFTEJBIHByb2Nlc3Npbmcgd2lsbCBiZSBsaXR0bGUgaW1w
-b3J0YW50IHRvIG1hYzgwMjExLiBNYXkgYmUgSSdtDQptaXNzaW5nIHNvbWV0aGluZy4NCg0KPg0K
-Pj4gCS0gSGFyZHdhcmUgcmF0ZSBjb250cm9sDQo+DQo+IE5laXRoZXIgaXMgdGhpcywgaWYgd2Ug
-ZmluZCBzb21lIEFQSSB0byBkbyBzYW1wbGluZy4gVGhlIGV4aXN0aW5nIHJhdGUNCj4gdGFibGUg
-QVBJIGFscmVhZHkgYWxsb3dzIHNldHRpbmcgdGhlIHJhdGVzIG91dCBvZiBiYW5kLCBzbyB0aGUg
-b25seQ0KPiB0aGluZyB0aGF0IHlvdSdkIGhhdmUgdG8gc3VwcG9ydCBvdXQgb2YgYmFuZCBpcyBz
-YW1wbGluZy4NCg0KT2suDQoNCj4NCj4+IAktIFBvd2Vyc2F2ZSBvZmZsb2FkDQo+DQo+IFRoYXQn
-cyBhbWJpZ3VvdXMgLSB5b3UgZG8gbmVlZCB0byBoYW5kbGUgc2xlZXBpbmcgc3RhdGlvbnMgKGFu
-ZCBQUy0NCj4gUG9sbC9VLUFQU0QpIGluIEFQIG1vZGUgaW4gdGhlIGRldmljZSB3aXRoIHRoaXMs
-DQoNCkkgZGlkIG5vdCBkaWcgZGVlcCBpbnRvIFBTIHJlcXVpcmVtZW50IHdpdGggZXRoZXJuZXQg
-ZnJhbWUgZm9ybWF0IGJlY2F1c2UNCmZyYW1lIGNvbnRyb2wgaXMgbm90IGF2YWlsYWJsZSB0byBt
-YWM4MDIxMSwgc28gSSB0aG91Z2h0IHRvIG1lbnRpb24gUFMgb2ZmbG9hZA0KaXMgYSByZXF1aXJl
-bWVudC4gTWF5IGJlIHRoZXJlIGlzIGFscmVhZHkgYW4gaW5mcmFzdHJ1Y3R1cmUgaW4gbWFjODAy
-MTEgdG8NCmxlYXJuIFBTIHN0YXRlIG9mIGNsaWVudCB3aGljaCB3YXMgbm90aWZpZWQgaW4gdGhl
-IGN1cnJlbnQgZGF0YSBmcmFtZSAob3RoZXINCnRoYW4gODAyLjExIGZyYW1lIGNvbnRyb2wpLg0K
-DQogIGJ1dCBJIGRvbid0IHNlZSBhIGRlZXANCj4gdGVjaG5pY2FsIHJlYXNvbiB0byByZXF1aXJl
-IGl0IGZvciBjbGllbnQgbW9kZS4gT1RPSCwgY2xpZW50IG1vZGUgaXMNCj4gYWxtb3N0IGFsd2F5
-cyBvZmZsb2FkZWQgYW55d2F5Lg0KDQpPay4NCg0KPg0KPiBJIHRoaW5rIHlvdSBtYXkgaGF2ZSBm
-b3Jnb3R0ZW4gb25lIGltcG9ydGFudCBpdGVtLA0KPg0KPiAJLSBjb250cm9sIHBvcnQgaGFuZGxp
-bmcNCg0KSG1tbSwgSSdtIGdldHRpbmcgV1BBLVBTSyB3b3JraW5nIHdpdGggdGhpcy4gTWF5IGJl
-IHRoZXJlIGFyZSBvdGhlcg0KY29udHJvbCBwb3J0IGhhbmRsaW5nIHdoaWNoIHdpbGwgbm90IHdv
-cmsgd2l0aCBldGhlcm5ldCBmcmFtZSBmb3JtYXQ/DQoNCj4NCj4gPw0KPg0KPj4gKyAqIEBJRUVF
-ODAyMTFfSFdfU1VQUE9SVFNfODAyMTFfRU5DQVBfREVDQVA6IEhhcmR3YXJlL2RyaXZlcg0KPj4g
-c3VwcG9ydHMgODAyLjExDQo+PiArICoJZW5jYXAvZGVjYXAgZm9yIGRhdGEgZnJhbWVzLiBTdXBw
-b3J0aW5nIGRyaXZlciBoYXZlIHRvDQo+PiBpbXBsZW1lbnQNCj4+ICsgKglnZXRfdmlmXzgwMjEx
-X2VuY2FwX2RlY2FwX29mZmxvYWQoKSB0byBwYXNzIGlmIDgwMi4xMQ0KPj4gZW5jYXAvZGVjYXAN
-Cj4+ICsgKglvZmZsb2FkCWlzIHN1cHBvcnRlZCBmb3IgdGhlIHZpZi4NCj4NCj4gSSBkb24ndCBz
-ZWUgd2h5IHlvdSBuZWVkIHRoaXMsIHdoZW4geW91IGhhdmUgdGhlIG1ldGhvZCAtIHlvdSBjYW4g
-anVzdA0KPiBhc3N1bWUgdGhhdCB0aGUgbWV0aG9kIHJldHVybnMgZmFsc2Ugd2hlbiBpdCdzIG5v
-dCBpbXBsZW1lbnRlZC4NCg0KT2ssIEkgd2FzIHRyeWluZyBkZWZpbmUgYW4gaW50ZXJmYWNlIGZv
-ciBkcml2ZXIgdG8gcmV0dXJuIHZpZiB0eXBlIGJhc2VkDQplbmNhcC9kZWNhcCBjYXBhYmlsaXR5
-IHNvIHRoYXQgaW4gNC1hZGRyIGFuZCBNZXNoIHR5cGUgODAyLjExIGZyYW1lIGZvcm1hdA0KaXMg
-dXNlZC4NCg0KPg0KPj4gICBzdHJ1Y3QgaWVlZTgwMjExX29wcyB7DQo+PiAgIAl2b2lkICgqdHgp
-KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KPj4gQEAgLTM2MzksNiArMzY1MSwxMCBAQCBzdHJ1
-Y3QgaWVlZTgwMjExX29wcyB7DQo+PiAgIAl2b2lkICgqd2FrZV90eF9xdWV1ZSkoc3RydWN0IGll
-ZWU4MDIxMV9odyAqaHcsDQo+PiAgIAkJCSAgICAgIHN0cnVjdCBpZWVlODAyMTFfdHhxICp0eHEp
-Ow0KPj4gICAJdm9pZCAoKnN5bmNfcnhfcXVldWVzKShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodyk7
-DQo+PiArDQo+PiArCWludCAoKmdldF92aWZfODAyMTFfaGRyX29mZmxvYWQpKHN0cnVjdCBpZWVl
-ODAyMTFfaHcgKmh3LA0KPj4gKwkJCQkJIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQo+PiAr
-CQkJCQkgYm9vbCBpc180YWRkciwgYm9vbA0KPj4gKnN1cHBvcnRlZCk7DQo+DQo+IFdoeSBhcmUg
-eW91IG5vdCBzaW1wbHkgcmV0dXJuaW5nICJzdXBwb3J0ZWQiPw0KPg0KPiBJIGRvbid0IGxpa2Ug
-cGFzc2luZyB0aGUgdmlmIHBvaW50ZXIgaGVyZS4gQXQgdGhpcyBwb2ludCwgdGhlIHZpZg0KPiBw
-b2ludGVyIGlzbid0IGtub3duIHRvIHRoZSBkcml2ZXIgeWV0ICh0aHJvdWdoIGRydl9hZGRfaW50
-ZXJmYWNlKSBzbw0KPiBpdCdzIGEgZGVhZCBwb2ludGVyIGFzIGZhciBhcyB0aGUgc2VxdWVuY2lu
-ZyBpcyBjb25jZXJuZWQuDQo+DQo+IElzIHRoZXJlIGEgcG9zc2liaWxpdHkgdGhhdCBkcml2ZXJz
-IG5lZWQgdG8gc3dpdGNoIG9mZiBldGhlcm5ldCBmb3JtYXQNCj4gaGFuZGxpbmcgZW50aXJlbHkg
-d2hlbiBhbiBpbmNvbXBhdGlibGUgaW50ZXJmYWNlIGlzIGFkZGVkPyBGb3IgZXhhbXBsZSwNCj4g
-aWYgeW91IGFkZCBhIG1lc2ggaW50ZXJmYWNlLCBpcyB0aGVyZSBhIGNoYW5jZSB0aGF0IHRoZSBB
-UCBpbnRlcmZhY2UNCj4gbWlnaHQgbm8gbG9uZ2VyIGJlIGFibGUgdG8gaGFuZGxlIHRoaXM/DQog
-Pg0KID4gSSdkIGhvcGUgdGhpcyBkb2Vzbid0IGhhcHBlbiBiZWNhdXNlIEkgdGhpbmsgdGhhdCB3
-b3VsZCBiZSBleHRyZW1lbHkNCiA+IGNvbXBsaWNhdGVkIHRvIGhhbmRsZSBzYWZlbHkuDQoNClVu
-Zm9ydHVuYXRlbHkgIltSRkMgMi8zXSBtYWM4MDIxMTogSW1wbGVtZW50IGRhdGEgeG1pdCBmb3Ig
-ODAyLjExIGVuY2FwIG9mZmxvYWQiDQp0cmllcyB0byBpbXBsZW1lbnQgdGhpcyBidXQgbW9yZSBs
-aWtlbHkgYnVnZ3kgOiguIFlvdSBhcmUgcmlnaHQsIGl0IGlzIHZlcnkNCmNvbXBsZXggdG8gZ2V0
-IHRoYXQgcmlnaHQuIE1heSBiZSB3ZSBzaG91bGQgbm90IGFsbG93IGludGVyZmFjZSBuZWVkaW5n
-DQpkeW5hbWljIHN3aXRjaD8NCg0KVmFzYW50aA==
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 33 ++++++----------------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 30 ++++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   | 22 ++++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  8 ++----
+ 5 files changed, 33 insertions(+), 63 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index c34cde2..009fd3b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -125,10 +125,8 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8192C_PAGE_SIZE;
+ 	remainsize = size % FW_8192C_PAGE_SIZE;
+ 
+-	if (pagenums > 8) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Page numbers should not greater then 8\n");
+-	}
++	if (pagenums > 8)
++		pr_err("rtl8188ee: Page numbers should not greater then 8\n");
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+@@ -157,15 +155,10 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_CHKSUM_RPT)));
+ 
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("rtl8188ee: chksum report fail! REG_MCUFWDL:0x%08x .\n",
++		       value32);
+ 		goto exit;
+ 	}
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -176,20 +169,15 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x.\n",
+-				  value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		udelay(FW_8192C_POLLING_DELAY);
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
++	pr_err("rtl8188ee: Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n",
++	       value32);
+ 
+ exit:
+ 	return err;
+@@ -235,8 +222,7 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
+ 
+ 	err = _rtl88e_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("rtl8188ee: Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+ 			 "Firmware is ready to run!\n");
+@@ -309,8 +295,7 @@ static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!write_sucess) {
+ 		wait_writeh2c_limit--;
+ 		if (wait_writeh2c_limit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("rtl8188ee: Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index d85fa67..6aa593d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -358,8 +358,7 @@ void rtl88ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("rtl8188ee: switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -572,9 +571,8 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+-				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-					 "switch case %#x not processed\n",
+-					 e_aci);
++				pr_err("rtl8188ee: switch case %#x not processed\n",
++				       e_aci);
+ 				break;
+ 			}
+ 		}
+@@ -737,8 +735,7 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				    2, array);
+ 		break; }
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("rtl8188ee: switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -759,9 +756,8 @@ static bool _rtl88ee_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
+ 
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("rtl8188ee: Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -1096,7 +1092,7 @@ int rtl88ee_hw_init(struct ieee80211_hw *hw)
+ 
+ 	rtstatus = _rtl88ee_init_mac(hw);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_info("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1252,8 +1248,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not support!\n", type);
++		pr_err("rtl8188ee: Network type %d not support!\n", type);
+ 		return 1;
+ 		break;
+ 	}
+@@ -1987,7 +1982,7 @@ void rtl88ee_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl88ee_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("rtl8188ee: Autoload ERR!!\n");
+ 	}
+ 	_rtl88ee_hal_customized_behavior(hw);
+ }
+@@ -2354,8 +2349,8 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", enc_algo);
++			pr_err("rtl8188ee: switch case %#x not processed\n",
++			       enc_algo);
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -2373,9 +2367,7 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id =
+ 					  rtl_cam_get_free_entry(hw, p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("rtl8188ee: Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+index 870d8202..925a43f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+@@ -176,7 +176,7 @@ static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0xff;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("rtl8188ee: return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -220,7 +220,7 @@ static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("rtl8188ee: stop\n");
+ 		return;
+ 	}
+ 	offset &= 0xff;
+@@ -373,7 +373,7 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
+ 
+ 	rtstatus = phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("rtl8188ee: Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -383,13 +383,13 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
+ 		  phy_config_bb_with_pghdr(hw, BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("rtl8188ee: BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus =
+ 	  phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("rtl8188ee: AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power =
+@@ -1095,8 +1095,7 @@ void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("rtl8188ee: Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -1137,8 +1136,8 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8188ee: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -1162,8 +1160,8 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8188ee: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl88e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -1303,8 +1300,8 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("rtl8188ee: Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+index 26ac4c2..30798b1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+@@ -51,8 +51,7 @@ void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("rtl8188ee: unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index f361808..276c745 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -165,8 +165,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw.\n");
++		pr_info("Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
+ 
+@@ -177,8 +176,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_info("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -278,7 +276,7 @@ static struct rtl_mod_params rtl88ee_mod_params = {
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = false,
+ 	.msi_support = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ static const struct rtl_hal_cfg rtl88ee_hal_cfg = {
+-- 
+2.10.2
