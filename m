@@ -1,608 +1,386 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam03on0046.outbound.protection.outlook.com ([104.47.42.46]:59712
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752278AbcLJOk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Dec 2016 09:40:58 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
-        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: ATH9 driver issues on ARM64
-Date: Sat, 10 Dec 2016 14:40:48 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263A8EF9@XAP-PVEXMBX02.xlnx.xilinx.com> (sfid-20161210_154128_526275_BE00B824)
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <874m2emif9.fsf@purkki.adurom.net>
- <8b348550-d909-cd98-4c04-dcf37b41f1ee@mni.thm.de>
-In-Reply-To: <8b348550-d909-cd98-4c04-dcf37b41f1ee@mni.thm.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35021 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752924AbcLKFpr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:45:47 -0500
+Received: by mail-oi0-f65.google.com with SMTP id v84so7251852oie.2
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:46 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 09/14] rtlwifi_new: rtl8192de: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:13 -0600
+Message-Id: <20161211054523.7119-17-Larry.Finger@lwfinger.net> (sfid-20161211_064551_051391_95AFF1BD)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-After taking some more lecroy traces, we see that after 2nd ASSERT from EP =
-on ARM64 we see continuous data movement of 32 dwords or 12 dwords and neve=
-r sign of DEASSERT.
-Comparatively on working traces (x86) after 2nd assert there are only BAR r=
-egister reads and writes and then DEASSERT, for almost most of the interrup=
-ts and we haven't seen 12 or 32 dwords data movement on this trace.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 19 ++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 34 ++++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/led.c   |  6 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 31 ++++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |  8 ++---
+ 6 files changed, 36 insertions(+), 65 deletions(-)
 
-I did not work on EP wifi/network drivers, any help why EP needs those many=
- number of data at scan time ?
-
-Regards,
-Bharat
-
-=20
-> Hello there,
->=20
-> as this is a thread about ath9k and ARM64, i'm not sure if i should answe=
-r here
-> or not, but i have similar "stalls" with ath9k on x86_64 (starting with 4=
-.9rc), stack
-> trace is posted down below where the original ARM64 stall traces are.
->=20
-> Greetings,
->=20
-> Tobias
->=20
->=20
-> On 08.12.2016 18:36, Kalle Valo wrote:
-> > Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> writes:
-> >
-> >>   > [+cc Kalle, ath9k list]
-> > Thanks, but please also CC linux-wireless. Full thread below for the
-> > folks there.
-> >
-> >>> On Thu, Dec 08, 2016 at 01:49:42PM +0000, Bharat Kumar Gogada wrote:
-> >>>> Hi,
-> >>>>
-> >>>> Did anyone test Atheros ATH9
-> >>>> driver(drivers/net/wireless/ath/ath9k/)
-> >>>> on ARM64.  The end point is TP link wifi card with which supports
-> >>>> only legacy interrupts.
-> >>> If it works on other arches and the arm64 PCI enumeration works, my
-> >>> first guess would be an INTx issue, e.g., maybe the driver is
-> >>> waiting for an interrupt that never arrives.
-> >> We are not sure for now.
-> >>>> We are trying to test it on ARM64 with
-> >>>> (drivers/pci/host/pcie-xilinx-nwl.c) as root port.
-> >>>>
-> >>>> EP is getting enumerated and able to link up.
-> >>>>
-> >>>> But when we start scan system gets hanged.
-> >>> When you say the system hangs when you start a scan, I assume you
-> >>> mean a wifi scan, not the PCI enumeration.  A problem with a wifi
-> >>> scan might cause a *process* to hang, but it shouldn't hang the
-> >>> entire system.
-> >>>
-> >> Yes wifi scan.
-> >>>> When we took trace we see that after we start scan assert message
-> >>>> is sent but there is no de assert from end point.
-> >>> Are you talking about a trace from a PCIe analyzer?  Do you see an
-> >>> Assert_INTx PCIe message on the link?
-> >>>
-> >> Yes lecroy trace, yes we do see Assert_INTx and Deassert_INTx happenin=
-g
-> when we do interface link up.
-> >> When we have less debug prints in Atheros driver, and do wifi scan we
-> >> see Assert_INTx but never Deassert_INTx,
-> >>>> What might cause end point not sending de assert ?
-> >>> If the endpoint doesn't send a Deassert_INTx message, I expect that
-> >>> would mean the driver didn't service the interrupt and remove the
-> >>> condition that caused the device to assert the interrupt in the
-> >>> first place.
-> >>>
-> >>> If the driver didn't receive the interrupt, it couldn't service it,
-> >>> of course.  You could add a printk in the ath9k interrupt service
-> >>> routine to see if you ever get there.
-> >>>
-> >> The interrupt behavior is changing w.r.t amount of debug prints we
-> >> add. (I kept many prints to aid debug) root@Xilinx-ZCU102-2016_3:~# iw=
- dev
-> wlan0 scan
-> >> [   83.064675] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.069486] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.074257] ath9k_hw_kill_interrupts	 793
-> >> [   83.078260] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.083107] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.087882] ath9k_hw_kill_interrupts	 793
-> >> [   83.095450] ath9k_hw_enable_interrupts	 821
-> >> [   83.099557] ath9k_hw_enable_interrupts	 825
-> >> [   83.103721] ath9k_hw_enable_interrupts	 832
-> >> [   83.107887] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.112748] AR_SREV_9100 0
-> >> [   83.115438] ath9k_hw_enable_interrupts	 848
-> >> [   83.119607] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.124389] ath9k_hw_intrpend	 762
-> >> [   83.127761] (AR_SREV_9340(ah) val 0
-> >> [   83.131234] ath9k_hw_intrpend	 767
-> >> [   83.134628] ath_isr	 603
-> >> [   83.137134] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.141995] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.146771] ath9k_hw_kill_interrupts	 793
-> >> [   83.150864] ath9k_hw_enable_interrupts	 821
-> >> [   83.154971] ath9k_hw_enable_interrupts	 825
-> >> [   83.159135] ath9k_hw_enable_interrupts	 832
-> >> [   83.163300] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.168161] AR_SREV_9100 0
-> >> [   83.170852] ath9k_hw_enable_interrupts	 848
-> >> [   83.170855] ath9k_hw_intrpend	 762
-> >> [   83.178398] (AR_SREV_9340(ah) val 0
-> >> [   83.181873] ath9k_hw_intrpend	 767
-> >> [   83.185265] ath_isr	 603
-> >> [   83.187773] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.192635] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.197411] ath9k_hw_kill_interrupts	 793
-> >> [   83.201414] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.206258] ath9k_hw_enable_interrupts	 821
-> >> [   83.210368] ath9k_hw_enable_interrupts	 825
-> >> [   83.214531] ath9k_hw_enable_interrupts	 832
-> >> [   83.218698] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.223558] AR_SREV_9100 0
-> >> [   83.226243] ath9k_hw_enable_interrupts	 848
-> >> [   83.226246] ath9k_hw_intrpend	 762
-> >> [   83.233794] (AR_SREV_9340(ah) val 0
-> >> [   83.237268] ath9k_hw_intrpend	 767
-> >> [   83.240661] ath_isr	 603
-> >> [   83.243169] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.248030] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.252806] ath9k_hw_kill_interrupts	 793
-> >> [   83.256811] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.261651] ath9k_hw_enable_interrupts	 821
-> >> [   83.265753] ath9k_hw_enable_interrupts	 825
-> >> [   83.269919] ath9k_hw_enable_interrupts	 832
-> >> [   83.274083] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.278945] AR_SREV_9100 0
-> >> [   83.281630] ath9k_hw_enable_interrupts	 848
-> >> [   83.281633] ath9k_hw_intrpend	 762
-> >> [   83.281634] (AR_SREV_9340(ah) val 0
-> >> [   83.281637] ath9k_hw_intrpend	 767
-> >> [   83.281648] ath_isr	 603
-> >> [   83.281649] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.281651] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.281654] ath9k_hw_kill_interrupts	 793
-> >> [   83.312192] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.317030] ath9k_hw_enable_interrupts	 821
-> >> [   83.321132] ath9k_hw_enable_interrupts	 825
-> >> [   83.325297] ath9k_hw_enable_interrupts	 832
-> >> [   83.329463] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.334324] AR_SREV_9100 0
-> >> [   83.337014] ath9k_hw_enable_interrupts	 848
-> >> ..
-> >> ..
-> >> This log continues until I turn off board without obtaining scanning r=
-esult.
-> >>
-> >> In between I get following cpu stall outputs :
-> >>    230.457179] INFO: rcu_sched self-detected stall on CPU
-> >> [  230.457185] 	2-...: (31314 ticks this GP)
-> idle=3D2d1/140000000000001/0 softirq=3D1400/1400 fqs=3D36713
-> >> [  230.457189] 	 (t=3D36756 jiffies g=3D161 c=3D160 q=3D16169)
-> >> [  230.457191] Task dump for CPU 2:
-> >> [  230.457196] kworker/u8:4    R  running task        0  1342      2 0=
-x00000002
-> >> [  230.457207] Workqueue: phy0 ieee80211_scan_work [  230.457208]
-> >> Call trace:
-> >> [  230.457214] [<ffffff8008089860>] dump_backtrace+0x0/0x198 [
-> >> 230.457219] [<ffffff8008089a0c>] show_stack+0x14/0x20 [  230.457224]
-> >> [<ffffff80080c0930>] sched_show_task+0x98/0xf8 [  230.457228]
-> >> [<ffffff80080c2628>] dump_cpu_task+0x40/0x50 [  230.457233]
-> >> [<ffffff80080e14a8>] rcu_dump_cpu_stacks+0xa0/0xf0 [  230.457239]
-> >> [<ffffff80080e4cd8>] rcu_check_callbacks+0x468/0x748 [  230.457243]
-> >> [<ffffff80080e7cfc>] update_process_times+0x3c/0x68 [  230.457249]
-> >> [<ffffff80080f6dfc>] tick_sched_handle.isra.5+0x3c/0x50
-> >> [  230.457253] [<ffffff80080f6e54>] tick_sched_timer+0x44/0x90 [
-> >> 230.457257] [<ffffff80080e86b0>] __hrtimer_run_queues+0xf0/0x178
-> >> ** 10 printk messages dropped ** [  230.457302] f8c0:
-> >> 0000000000000000 0000000005f5e0ff 000000000001379a
-> 3866666666666620 [
-> >> 230.457306] f8e0: ffffff800a1b4065 0000000000000006 ffffff800a129000
-> >> ffffffc87b8010a8 [  230.457310] f900: ffffff808a1b4057
-> >> ffffff800a1c3000 ffffff800a1b3000 ffffff800a13b000 [  230.457314]
-> >> f920: 0000000000000140 0000000000000006 ffffff800a1b3b10
-> >> ffffff800a1c39e8 [  230.457318] f940: 000000000000002f
-> >> ffffff800a1b8a98 ffffff800a1b3ae8 ffffffc87b07f990 [  230.457322]
-> >> f960: ffffff80080d6230 ffffffc87b07f990 ffffff80080d6234
-> >> 0000000060000145
-> >> ** 1 printk messages dropped ** [  230.457329] [<ffffff8008085720>]
-> >> el1_irq+0xa0/0x100
-> >> ** 9 printk messages dropped ** [  230.457373] [<ffffff800885ad60>]
-> >> ieee80211_hw_config+0x50/0x290 [  230.457377] [<ffffff8008863690>]
-> >> ieee80211_scan_work+0x1f8/0x480 [  230.457383] [<ffffff80080b15d0>]
-> >> process_one_work+0x120/0x378 [  230.457386] [<ffffff80080b1870>]
-> >> worker_thread+0x48/0x4b0 [  230.457391] [<ffffff80080b7108>]
-> >> kthread+0xd0/0xe8 [  230.457395] [<ffffff8008085dd0>]
-> ret_from_fork+0x10/0x40
-> >> [  230.480389] ath9k_hw_intrpend	 762
-> >>
-> >>
-> >> [  545.487987] ath9k: ath9k_ioread32 ffffff800a400024 [  545.526189]
-> >> INFO: rcu_sched self-detected stall on CPU
-> >> [  545.526195] 	2-...: (97636 ticks this GP)
-> idle=3D2d1/140000000000001/0 softirq=3D1400/1400 fqs=3D115374
-> >> [  545.526199] 	 (t=3D115523 jiffies g=3D161 c=3D160 q=3D51066)
-> >> [  545.526201] Task dump for CPU 2:
-> >> [  545.526206] kworker/u8:4    R  running task        0  1342      2 0=
-x00000002
-> >> ** 3 printk messages dropped ** [  545.526231] [<ffffff8008089a0c>]
-> >> show_stack+0x14/0x20
-> >> ** 9 printk messages dropped ** [  545.526280] [<ffffff80086a71e8>]
-> >> arch_timer_handler_phys+0x30/0x40 [  545.526284] [<ffffff80080dbe18>]
-> >> handle_percpu_devid_irq+0x78/0xa0 [  545.526291] [<ffffff80080d760c>]
-> >> generic_handle_irq+0x24/0x38 [  545.526296] [<ffffff80080d7944>]
-> >> __handle_domain_irq+0x5c/0xb8 [  545.526299] [<ffffff80080824bc>]
-> >> gic_handle_irq+0x64/0xc0 [  545.526302] Exception stack(0xffffffc87b07=
-f870
-> to 0xffffffc87b07f990)
-> >> [  545.526306] f860:                                   000000000000973=
-2 ffffff800a1eaaa8
-> >> ** 8 printk messages dropped ** [  545.526341] f980: ffffff800a1c39e8
-> >> 0000000000000036 [  545.526345] [<ffffff8008085720>]
-> >> el1_irq+0xa0/0x100 [  545.526349] [<ffffff80080d6234>]
-> >> console_unlock+0x384/0x5b0 [  545.526353] [<ffffff80080d673c>]
-> >> vprintk_emit+0x2dc/0x4b0 [  545.526357] [<ffffff80080d6a50>]
-> >> vprintk_default+0x38/0x40 [  545.526362] [<ffffff8008129704>]
-> >> printk+0x58/0x60 [  545.526366] [<ffffff800859e3e4>]
-> >> ath9k_iowrite32+0x9c/0xa8 [  545.526372] [<ffffff80085c7ca8>]
-> >> ath9k_hw_kill_interrupts+0x28/0xf0
-> >> [  545.526376] [<ffffff80085a18ec>] ath_reset+0x24/0x68
-> >> ** 2 printk messages dropped ** [  545.526391] [<ffffff800885ad60>]
-> ieee80211_hw_config+0x50/0x290
-> >> ** 11 printk messages dropped ** [  545.532834] ath9k_hw_kill_interrup=
-ts
-> 	 793
-> >> [  545.532890] ath9k_hw_enable_interrupts	 821
->=20
-> [   81.876902] INFO: rcu_preempt detected stalls on CPUs/tasks:
-> [   81.876912]     Tasks blocked on level-0 rcu_node (CPUs 0-7): P0
-> [   81.876932]     (detected by 4, t=3D60002 jiffies, g=3D1873, c=3D1872,=
- q=3D4967)
-> [   81.876936] swapper/4       R  running task        0     0      1
-> 0x00000000
-> [   81.876941]  0000000000000001 ffffffff810725f6 ffff88017edbc240
-> ffffffff81a3dc40
-> [   81.876945]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40
-> ffffffff81a3dc40
-> [   81.876948]  00000000ffffffff ffffffff810a7333 ffff88017ecee698
-> ffff88017edbc240
-> [   81.876951] Call Trace:
-> [   81.876970]  <IRQ>
-> [   81.876979]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
-> [   81.876983]  [<ffffffff81101e46>] ?
-> rcu_print_detail_task_stall_rnp+0x40/0x61
-> [   81.876989]  [<ffffffff810a7333>] ? rcu_check_callbacks+0x6b3/0x8c0
-> [   81.876993]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x4=
-0
-> [   81.876996]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
-> [   81.876999]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
-> [   81.877002]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
-> [   81.877004]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
-> [   81.877008]  [<ffffffff81031b1e>] ?
-> smp_trace_apic_timer_interrupt+0x5e/0x90
-> [   81.877012]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
-> [   81.877013]  <EOI>
-> [   81.877017]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
-> [   81.877019]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
-> [   81.877021]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
-> [   81.877027]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
-> [   81.877029] swapper/4       R  running task        0     0      1
-> 0x00000000
-> [   81.877032]  0000000000000001 ffffffff810725f6 ffff88017edbc240
-> ffffffff81a3dc40
-> [   81.877035]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40
-> ffffffff81a3dc40
-> [   81.877038]  00000000ffffffff ffffffff810a7368 ffff88017ecee698
-> ffff88017edbc240
-> [   81.877041] Call Trace:
-> [   81.877045]  <IRQ>
-> [   81.877049]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
-> [   81.877051]  [<ffffffff81101e46>] ?
-> rcu_print_detail_task_stall_rnp+0x40/0x61
-> [   81.877055]  [<ffffffff810a7368>] ? rcu_check_callbacks+0x6e8/0x8c0
-> [   81.877058]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x4=
-0
-> [   81.877060]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
-> [   81.877063]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
-> [   81.877065]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
-> [   81.877068]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
-> [   81.877070]  [<ffffffff81031b1e>] ?
-> smp_trace_apic_timer_interrupt+0x5e/0x90
-> [   81.877073]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
-> [   81.877074]  <EOI>
-> [   81.877076]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
-> [   81.877078]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
-> [   81.877080]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
-> [   81.877084]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
-> [   91.132787] INFO: rcu_preempt detected expedited stalls on
-> CPUs/tasks: { P0 } 63785 jiffies s: 505 root: 0x0/T
-> [   91.132796] blocking rcu_node structures:
->=20
-> >>
-> >>
-> >> But if we have less debug prints it does not reach EP handler
-> >> sometimes, due to following Condition in "kernel/irq/chip.c" in
-> >> function handle_simple_irq
-> >>
-> >> if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
-> >>                  desc->istate |=3D IRQS_PENDING;
-> >>                  goto out_unlock;
-> >>          }
-> >> Here irqd_irq_disabled is being set to 1.
-> >>
-> >> With lesser debug prints it stops after following prints:
-> >> root@Xilinx-ZCU102-2016_3:~# iw dev wlan0 scan
-> >> [   54.781045] ath9k_hw_kill_interrupts	 793
-> >> [   54.785007] ath9k_hw_kill_interrupts	 793
-> >> [   54.792535] ath9k_hw_enable_interrupts	 821
-> >> [   54.796642] ath9k_hw_enable_interrupts	 825
-> >> [   54.800807] ath9k_hw_enable_interrupts	 832
-> >> [   54.804973] AR_SREV_9100 0
-> >> [   54.807663] ath9k_hw_enable_interrupts	 848
-> >> [   54.811843] ath9k_hw_intrpend	 762
-> >> [   54.815211] (AR_SREV_9340(ah) val 0
-> >> [   54.818684] ath9k_hw_intrpend	 767
-> >> [   54.822078] ath_isr	 603
-> >> [   54.824587] ath9k_hw_kill_interrupts	 793
-> >> [   54.828601] ath9k_hw_enable_interrupts	 821
-> >> [   54.832750] ath9k_hw_enable_interrupts	 825
-> >> [   54.836916] ath9k_hw_enable_interrupts	 832
-> >> [   54.841082] AR_SREV_9100 0
-> >> [   54.843772] ath9k_hw_enable_interrupts	 848
-> >> [   54.843775] ath9k_hw_intrpend	 762
-> >> [   54.851319] (AR_SREV_9340(ah) val 0
-> >> [   54.854793] ath9k_hw_intrpend	 767
-> >> [   54.858185] ath_isr	 603
-> >> [   54.860696] ath9k_hw_kill_interrupts	 793
-> >> [   54.864776] ath9k_hw_enable_interrupts	 821
-> >> [   54.867061] ath9k_hw_kill_interrupts	 793
-> >> [   54.872870] ath9k_hw_enable_interrupts	 825
-> >> [   54.877036] ath9k_hw_enable_interrupts	 832
-> >> [   54.881202] AR_SREV_9100 0
-> >> [   54.883892] ath9k_hw_enable_interrupts	 848
-> >> [   75.963129] INFO: rcu_sched detected stalls on CPUs/tasks:
-> >> [   75.968602] 	0-...: (2 GPs behind) idle=3D9d5/140000000000001/0
-> softirq=3D1103/1109 fqs=3D519
-> >> [   75.976675] 	(detected by 2, t=3D5274 jiffies, g=3D64, c=3D63, q=3D=
-11)
-> >> [   75.982485] Task dump for CPU 0:
-> >> [   75.985696] ksoftirqd/0     R  running task        0     3      2 0=
-x00000002
-> >> [   75.992726] Call trace:
-> >> [   75.995165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0
-> >> [   76.000281] [<ffffffc87b830500>] 0xffffffc87b830500
-> >> [  139.059027] INFO: rcu_sched detected stalls on CPUs/tasks:
-> >> [  139.064430] 	0-...: (2 GPs behind) idle=3D9d5/140000000000001/0
-> softirq=3D1103/1109 fqs=3D2097
-> >> [  139.072593] 	(detected by 2, t=3D21049 jiffies, g=3D64, c=3D63, q=
-=3D11)
-> >> [  139.078489] Task dump for CPU 0:
-> >> [  139.081700] ksoftirqd/0     R  running task        0     3      2 0=
-x00000002
-> >> [  139.088731] Call trace:
-> >> [  139.091165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0 [
-> >> 139.096285] [<ffffffc87b830500>] 0xffffffc87b830500
-> >>
-> >>
-> >>>> We are not seeing any issues on 32-bit ARM platform and X86
-> >>>> platform.
-> >>> Can you collect a dmesg log (or, if the system hang means you can't
-> >>> collect that, a console log with "ignore_loglevel"), and "lspci -vv"
-> >>> output as root?  That should have clues about whether the INTx got
-> >>> routed correctly.  /proc/interrupts should also show whether we're
-> >>> receiving interrupts from the device.
-> >> Here is the lspci output:
-> >> 00:00.0 PCI bridge: Xilinx Corporation Device d022 (prog-if 00 [Normal
-> decode])
-> >> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx-
-> >> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >> 	Latency: 0
-> >> 	Interrupt: pin A routed to IRQ 224
-> >> 	Bus: primary=3D00, secondary=3D01, subordinate=3D0c, sec-latency=3D0
-> >> 	I/O behind bridge: 00000000-00000fff
-> >> 	Memory behind bridge: e0000000-e00fffff
-> >> 	Prefetchable memory behind bridge: 00000000fff00000-
-> 00000000000fffff
-> >> 	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- <SERR- <PERR-
-> >> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-> >> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> >> 	Capabilities: [40] Power Management version 3
-> >> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
-> PME(D0+,D1+,D2+,D3hot+,D3cold-)
-> >> 		Status: D0 NoSoftRst+ PME-Enable- DSel=3D0 DScale=3D0 PME-
-> >> 	Capabilities: [60] Express (v2) Root Port (Slot-), MSI 00
-> >> 		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-> >> 			ExtTag- RBE+
-> >> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal-
-> Unsupported-
-> >> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-> >> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> >> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-> TransPend+
-> >> 		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM not supported,
-> Exit Latency L0s unlimited, L1 unlimited
-> >> 			ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
-> >> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-> >> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
-> DLActive- BWMgmt- ABWMgmt-
-> >> 		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna-
-> CRSVisible+
-> >> 		RootCap: CRSVisible+
-> >> 		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-> >> 		DevCap2: Completion Timeout: Range B, TimeoutDis+, LTR-,
-> OBFF Not Supported ARIFwd-
-> >> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
-> OBFF Disabled ARIFwd-
-> >> 		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-> >> 			 Transmit Margin: Normal Operating Range,
-> EnterModifiedCompliance- ComplianceSOS-
-> >> 			 Compliance De-emphasis: -6dB
-> >> 		LnkSta2: Current De-emphasis Level: -3.5dB,
-> EqualizationComplete-, EqualizationPhase1-
-> >> 			 EqualizationPhase2-, EqualizationPhase3-,
-> LinkEqualizationRequest-
-> >> 	Capabilities: [100 v1] Device Serial Number 00-00-00-00-00-00-00-00
-> >> 	Capabilities: [10c v1] Virtual Channel
-> >> 		Caps:	LPEVC=3D0 RefClk=3D100ns PATEntryBits=3D1
-> >> 		Arb:	Fixed- WRR32- WRR64- WRR128-
-> >> 		Ctrl:	ArbSelect=3DFixed
-> >> 		Status:	InProgress-
-> >> 		VC0:	Caps:	PATOffset=3D00 MaxTimeSlots=3D1 RejSnoopTrans-
-> >> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128-
-> WRR256-
-> >> 			Ctrl:	Enable+ ID=3D0 ArbSelect=3DFixed TC/VC=3Dff
-> >> 			Status:	NegoPending- InProgress-
-> >> 	Capabilities: [128 v1] Vendor Specific Information: ID=3D1234 Rev=3D1
-> >> Len=3D018 <?>
-> >>
-> >> 01:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network
-> Adapter (rev 01)
-> >> 	Subsystem: Qualcomm Atheros Device 3112
-> >> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx-
-> >> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >> 	Latency: 0, Cache Line Size: 128 bytes
-> >> 	Interrupt: pin A routed to IRQ 224
-> >> 	Region 0: Memory at e0000000 (64-bit, non-prefetchable) [size=3D128K]
-> >> 	[virtual] Expansion ROM at e0020000 [disabled] [size=3D64K]
-> >> 	Capabilities: [40] Power Management version 3
-> >> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=3D375mA
-> PME(D0+,D1+,D2-,D3hot+,D3cold-)
-> >> 		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-> >> 	Capabilities: [50] MSI: Enable- Count=3D1/4 Maskable+ 64bit+
-> >> 		Address: 0000000000000000  Data: 0000
-> >> 		Masking: 00000000  Pending: 00000000
-> >> 	Capabilities: [70] Express (v2) Endpoint, MSI 00
-> >> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency
-> L0s <1us, L1 <8us
-> >> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> SlotPowerLimit 0.000W
-> >> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal-
-> Unsupported-
-> >> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> >> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> >> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-> TransPend-
-> >> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
-> Latency L0s <2us, L1 <64us
-> >> 			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-> >> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-> >> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
-> DLActive- BWMgmt- ABWMgmt-
-> >> 		DevCap2: Completion Timeout: Not Supported, TimeoutDis+,
-> LTR-, OBFF Not Supported
-> >> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
-> OBFF Disabled
-> >> 		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance-
-> SpeedDis-
-> >> 			 Transmit Margin: Normal Operating Range,
-> EnterModifiedCompliance- ComplianceSOS-
-> >> 			 Compliance De-emphasis: -6dB
-> >> 		LnkSta2: Current De-emphasis Level: -6dB,
-> EqualizationComplete-, EqualizationPhase1-
-> >> 			 EqualizationPhase2-, EqualizationPhase3-,
-> LinkEqualizationRequest-
-> >> 	Capabilities: [100 v1] Advanced Error Reporting
-> >> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >> 		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-> >> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> NonFatalErr-
-> >> 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> NonFatalErr+
-> >> 		AERCap:	First Error Pointer: 00, GenCap- CGenEn-
-> ChkCap- ChkEn-
-> >> 	Capabilities: [140 v1] Virtual Channel
-> >> 		Caps:	LPEVC=3D0 RefClk=3D100ns PATEntryBits=3D1
-> >> 		Arb:	Fixed- WRR32- WRR64- WRR128-
-> >> 		Ctrl:	ArbSelect=3DFixed
-> >> 		Status:	InProgress-
-> >> 		VC0:	Caps:	PATOffset=3D00 MaxTimeSlots=3D1 RejSnoopTrans-
-> >> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128-
-> WRR256-
-> >> 			Ctrl:	Enable+ ID=3D0 ArbSelect=3DFixed TC/VC=3Dff
-> >> 			Status:	NegoPending- InProgress-
-> >> 	Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
-> >> 	Kernel driver in use: ath9k
-> >>
-> >> Here is the cat /proc/interrupts (after we do interface up):
-> >>
-> >> root@:~# ifconfig wlan0 up
-> >> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> >> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
-> >>             CPU0       CPU1       CPU2       CPU3
-> >>    1:          0          0          0          0     GICv2  29 Edge  =
-    arch_timer
-> >>    2:      19873      20058      19089      17435     GICv2  30 Edge  =
-    arch_timer
-> >>   12:          0          0          0          0     GICv2 156 Level =
-    zynqmp-dma
-> >>   13:          0          0          0          0     GICv2 157 Level =
-    zynqmp-dma
-> >>   14:          0          0          0          0     GICv2 158 Level =
-    zynqmp-dma
-> >>   15:          0          0          0          0     GICv2 159 Level =
-    zynqmp-dma
-> >>   16:          0          0          0          0     GICv2 160 Level =
-    zynqmp-dma
-> >>   17:          0          0          0          0     GICv2 161 Level =
-    zynqmp-dma
-> >>   18:          0          0          0          0     GICv2 162 Level =
-    zynqmp-dma
-> >>   19:          0          0          0          0     GICv2 163 Level =
-    zynqmp-dma
-> >>   20:          0          0          0          0     GICv2 164 Level =
-    Mali_GP_MMU,
-> Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
-> >>   30:          0          0          0          0     GICv2  95 Level =
-    eth0, eth0
-> >> 206:        314          0          0          0     GICv2  49 Level  =
-   cdns-i2c
-> >> 207:         40          0          0          0     GICv2  50 Level  =
-   cdns-i2c
-> >> 209:          0          0          0          0     GICv2 150 Level  =
-   nwl_pcie:misc
-> >> 214:         12          0          0          0     GICv2  47 Level  =
-   ff0f0000.spi
-> >> 215:          0          0          0          0     GICv2  58 Level  =
-   ffa60000.rtc
-> >> 216:          0          0          0          0     GICv2  59 Level  =
-   ffa60000.rtc
-> >> 217:          0          0          0          0     GICv2 165 Level  =
-   ahci-
-> ceva[fd0c0000.ahci]
-> >> 218:         61          0          0          0     GICv2  81 Level  =
-   mmc0
-> >> 219:          0          0          0          0     GICv2 187 Level  =
-   arm-smmu global fault
-> >> 220:        471          0          0          0     GICv2  53 Level  =
-   xuartps
-> >> 223:          0          0          0          0     GICv2 154 Level  =
-   fd4c0000.dma
-> >> 224:          3          0          0          0     dummy   1 Edge   =
-   ath9k
-> >> 225:          0          0          0          0     GICv2  97 Level  =
-   xhci-hcd:usb1
-> >>
-> >> Regards,
-> >> Bharat
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 452de25..5b33bed 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -126,8 +126,7 @@ static void _rtl92d_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8192D_PAGE_SIZE;
+ 	remainSize = size % FW_8192D_PAGE_SIZE;
+ 	if (pagenums > 8) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Page numbers should not greater then 8\n");
++		pr_err("Page numbers should not greater then 8\n");
+ 	}
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192D_PAGE_SIZE;
+@@ -153,9 +152,7 @@ static int _rtl92d_fw_free_to_go(struct ieee80211_hw *hw)
+ 	} while ((counter++ < FW_8192D_POLLING_TIMEOUT_COUNT) &&
+ 		 (!(value32 & FWDL_ChkSum_rpt)));
+ 	if (counter >= FW_8192D_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x\n",
+-			 value32);
++		pr_err("chksum report fail! REG_MCUFWDL:0x%08x\n", value32);
+ 		return -EIO;
+ 	}
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+@@ -327,8 +324,7 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
+ 	rtl_write_byte(rtlpriv, 0x1f, value);
+ 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "fw is not ready to run!\n");
++		pr_err("fw is not ready to run!\n");
+ 		goto exit;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "fw is ready to run!\n");
+@@ -407,8 +403,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!bwrite_success) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 		boxnum = rtlhal->last_hmeboxnum;
+@@ -430,8 +425,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 			box_extreg = REG_HMEBOX_EXT_3;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", boxnum);
++			pr_err("switch case %#x not processed\n", boxnum);
+ 			break;
+ 		}
+ 		isfw_read = _rtl92d_check_fw_read_last_h2c(hw, boxnum);
+@@ -507,8 +501,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 					       boxcontent[idx]);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", cmd_len);
++			pr_err("switch case %#x not processed\n", cmd_len);
+ 			break;
+ 		}
+ 		bwrite_success = true;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+index fcb14c5..2c92c33 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+@@ -163,8 +163,7 @@ void rtl92de_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -358,9 +357,8 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+-				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-					 "switch case %#x not processed\n",
+-					 e_aci);
++				pr_err("switch case %#x not processed\n",
++				       e_aci);
+ 				break;
+ 			}
+ 		}
+@@ -500,8 +498,7 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 		break;
+ 	}
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -520,9 +517,8 @@ static bool _rtl92de_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
+ 			break;
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -920,7 +916,7 @@ int rtl92de_hw_init(struct ieee80211_hw *hw)
+ 	/* rtlpriv->intf_ops->disable_aspm(hw); */
+ 	rtstatus = _rtl92de_init_mac(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("Init MAC failed\n");
+ 		err = 1;
+ 		spin_unlock_irqrestore(&globalmutex_for_power_and_efuse, flags);
+ 		return err;
+@@ -1119,11 +1115,8 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not supported!\n", type);
++		pr_err("Network type %d not supported!\n", type);
+ 		return 1;
+-		break;
+-
+ 	}
+ 	rtl_write_byte(rtlpriv, MSR, bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+@@ -1732,7 +1725,7 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
+ 		break;
+ 	default:
+ 		chipver |= CHIP_92D_D_CUT;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
++		pr_err("Unknown CUT!\n");
+ 		break;
+ 	}
+ 	rtlpriv->rtlhal.version = chipver;
+@@ -1816,7 +1809,7 @@ void rtl92de_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl92de_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	return;
+ }
+@@ -2169,8 +2162,7 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", enc_algo);
++			pr_err("switch case %#x not processed\n", enc_algo);
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -2186,9 +2178,7 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								 p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
+index c22b8a2..58ec4fc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
+@@ -66,8 +66,7 @@ void rtl92de_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -101,8 +100,7 @@ void rtl92de_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+index b0dc189..155b295 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+@@ -716,7 +716,7 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
+ 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
+ 		BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -731,13 +731,13 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
+ 			BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
+ 		BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool) (rtl_get_bbreg(hw,
+@@ -833,8 +833,7 @@ bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		break;
+ 	case RF90_PATH_C:
+ 	case RF90_PATH_D:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpath);
++		pr_err("switch case %#x not processed\n", rfpath);
+ 		break;
+ 	}
+ 	return true;
+@@ -987,8 +986,7 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	switch (rtlphy->current_chan_bw) {
+@@ -1019,8 +1017,7 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 			HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 
+ 	}
+@@ -2842,9 +2839,8 @@ static bool _rtl92d_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			rtl92d_phy_reload_iqk_setting(hw, channel);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n",
+-				 currentcmd->cmdid);
++			pr_err("switch case %#x not processed\n",
++			       currentcmd->cmdid);
+ 			break;
+ 		}
+ 		break;
+@@ -2956,9 +2952,8 @@ static void rtl92d_phy_set_io(struct ieee80211_hw *hw)
+ 		rtl92d_dm_write_dig(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n",
+-			 rtlphy->current_io_type);
++		pr_err("switch case %#x not processed\n",
++		       rtlphy->current_io_type);
+ 		break;
+ 	}
+ 	rtlphy->set_io_inprogress = false;
+@@ -2988,8 +2983,7 @@ bool rtl92d_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
+ 			postprocessing = true;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", iotype);
++			pr_err("switch case %#x not processed\n", iotype);
+ 			break;
+ 		}
+ 	} while (false);
+@@ -3176,8 +3170,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		_rtl92d_phy_set_rfsleep(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpwr_state);
++		pr_err("switch case %#x not processed\n", rfpwr_state);
+ 		bresult = false;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
+index 9dc9e91..021d3c5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
+@@ -63,8 +63,7 @@ void rtl92d_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 		}
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index 0d98b34..51463d7 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -171,8 +171,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw\n");
++		pr_err("Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
+ 
+@@ -185,8 +184,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -256,7 +254,7 @@ static struct rtl_mod_params rtl92de_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = true,
+ 	.fwctrl_lps = false,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ static const struct rtl_hal_cfg rtl92de_hal_cfg = {
+-- 
+2.10.2
