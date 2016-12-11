@@ -1,70 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f178.google.com ([209.85.210.178]:36169 "EHLO
-        mail-wj0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751527AbcL1Q7t (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33620 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753147AbcLKFpv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 11:59:49 -0500
-Received: by mail-wj0-f178.google.com with SMTP id c11so136173470wjx.3
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2016 08:59:49 -0800 (PST)
-MIME-Version: 1.0
-From: Greg Oliver <oliver.greg@gmail.com>
-Date: Wed, 28 Dec 2016 10:59:47 -0600
-Message-ID: <CAF4tN+9-1X=VhQ-=zMHJzpPL6f35TysboSpr4OqLFfM89-kE-g@mail.gmail.com> (sfid-20161228_180002_809930_2BE65E8A)
-Subject: BCM43602 -- Bluetooth while WiFi on 2.4GHz networks
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Sun, 11 Dec 2016 00:45:51 -0500
+Received: by mail-oi0-f65.google.com with SMTP id f201so7294299oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:51 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 12/14] rtlwifi_new: rtl8192c-common: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:19 -0600
+Message-Id: <20161211054523.7119-23-Larry.Finger@lwfinger.net> (sfid-20161211_070932_770789_CE347CF5)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have been fighting this laptop (MacBookPro11,5) for a year now with
-linux (mainly on Thunderbolt and power issues), but this is one of the
-last ones that remains.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-The system contains a BCM 43602 (rebranded by Apple of course):
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 33 ++++++----------------
+ .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 13 ++++-----
+ 2 files changed, 15 insertions(+), 31 deletions(-)
 
-04:00.0 Network controller [0280]: Broadcom Limited BCM43602 802.11ac
-Wireless LAN SoC [14e4:43ba] (rev 01)
-    Subsystem: Apple Inc. Device [106b:0152]
-    Flags: bus master, fast devsel, latency 0, IRQ 49
-    Memory at b0800000 (64-bit, non-prefetchable) [size=32K]
-    Memory at b0400000 (64-bit, non-prefetchable) [size=4M]
-    Capabilities: [48] Power Management version 3
-    Capabilities: [58] MSI: Enable+ Count=1/16 Maskable- 64bit+
-    Capabilities: [68] Vendor Specific Information: Len=44 <?>
-    Capabilities: [ac] Express Endpoint, MSI 00
-    Capabilities: [100] Advanced Error Reporting
-    Capabilities: [13c] Device Serial Number cd-97-9b-ff-ff-0b-a0-99
-    Capabilities: [150] Power Budgeting <?>
-    Capabilities: [160] Virtual Channel
-    Capabilities: [1b0] Latency Tolerance Reporting
-    Capabilities: [220] #15
-    Capabilities: [240] L1 PM Substates
-    Kernel driver in use: brcmfmac
-    Kernel modules: brcmfmac
-
-Modules options in use:
-alternative_fw_path ::
-debug ::  0
-roamoff ::  1
-
-Linux macbook 4.8.14-301.fc25.x86_64 #1 SMP Sun Dec 25 12:49:05 CST
-2016 x86_64 x86_64 x86_64 GNU/Linux
-
-Basically when wifi is on a 2.4G frequency, bluetooth (my keyboard and
-mouse) are erratic (all over the place) - mouse stutters and keyboard
-loses / repeats keys constantly.  In the past I have used atheros and
-intel nics with their bt coexistent modes, but I do not see that
-option for broadcom modules.
-
-Is there a trick to getting them to play nice?  At home, it is not an
-issue as I use 5GHz bands, but many times at customers they only have
-2.4 on their "vendor supported" APs for me to use, so my mouse is a
-no-go (and I truly hate trackpads).
-
-Thanks for any help, and I can provide any info needed.  This seems to
-be a common issue, but I do not see where anyone has fixed it or
-posted to linux-wireless as of yet.
-
-Thanks
-
--Greg
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 54fcf5a..5c93ee0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -145,10 +145,8 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 		pageNums = size / FW_8192C_PAGE_SIZE;
+ 		remainsize = size % FW_8192C_PAGE_SIZE;
+ 
+-		if (pageNums > 4) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Page numbers should not greater then 4\n");
+-		}
++		if (pageNums > 4)
++			pr_err("Page numbers should not greater then 4\n");
+ 
+ 		for (page = 0; page < pageNums; page++) {
+ 			offset = page * FW_8192C_PAGE_SIZE;
+@@ -180,15 +178,10 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_ChkSum_rpt)));
+ 
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
++		       value32);
+ 		goto exit;
+ 	}
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -198,20 +191,14 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x .\n",
+-					value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		mdelay(FW_8192C_POLLING_DELAY);
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
++	pr_err("Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
+ 
+ exit:
+ 	return err;
+@@ -251,8 +238,7 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+ 
+ 	err = _rtl92c_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "Firmware is ready to run!\n");
+@@ -327,8 +313,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 32fc4b6..fb0ce16 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -104,7 +104,7 @@ u32 _rtl92c_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0x3f;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -152,7 +152,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("stop\n");
+ 		return;
+ 	}
+ 	offset &= 0x3f;
+@@ -209,7 +209,7 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	if (rtlphy->rf_type == RF_1T2R) {
+@@ -222,13 +222,13 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 						   BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power =
+@@ -860,8 +860,7 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n", *stage);
+ 			return true;
+ 		}
+ 
+-- 
+2.10.2
