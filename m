@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58577 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756421AbcLAKe5 (ORCPT
+Received: from smtprelay0059.hostedemail.com ([216.40.44.59]:51874 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751986AbcLKKuz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 05:34:57 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: Ben Greear <greearb@candelatech.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>
-Subject: Re: ath10k: Fix soft lockup during firmware crash/hw-restart
-Date: Thu, 1 Dec 2016 10:34:50 +0000
-Message-ID: <87mvggrl87.fsf@kamboji.qca.qualcomm.com> (sfid-20161201_113513_521162_4E3D8077)
-References: <1480430762-15995-1-git-send-email-mohammed@qca.qualcomm.com>
-        <1a44a3e9-3d67-30a5-0325-a65003ebe1fc@candelatech.com>
-        <20161201060612.GA8611@atheros-ThinkPad-T61>
-In-Reply-To: <20161201060612.GA8611@atheros-ThinkPad-T61> (Mohammed Shafi
-        Shajakhan's message of "Thu, 1 Dec 2016 11:36:31 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Sun, 11 Dec 2016 05:50:55 -0500
+Message-ID: <1481453445.1764.11.camel@perches.com> (sfid-20161211_115059_165656_E137018C)
+Subject: Re: [PATCH 02/14] rtlwifi_new: Remove RT_TRACE messages that use
+ DBG_EMERG
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Ping-Ke Shih <pkshih@realtek.com>
+Date: Sun, 11 Dec 2016 02:50:45 -0800
+In-Reply-To: <20161211054523.7119-3-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+         <20161211054523.7119-3-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+On Sat, 2016-12-10 at 23:44 -0600, Larry Finger wrote:
+> These messages are always logged and reprresent error conditions, thus
+> we can use pr_err().
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/base.c  | 15 ++++-----
+>  drivers/net/wireless/realtek/rtlwifi/cam.c   | 14 +++------
+>  drivers/net/wireless/realtek/rtlwifi/core.c  | 21 +++++--------
+>  drivers/net/wireless/realtek/rtlwifi/debug.c |  9 ++----
+>  drivers/net/wireless/realtek/rtlwifi/debug.h |  2 +-
+>  drivers/net/wireless/realtek/rtlwifi/efuse.c |  3 +-
+>  drivers/net/wireless/realtek/rtlwifi/pci.c   | 36 ++++++++--------------
+>  drivers/net/wireless/realtek/rtlwifi/ps.c    |  3 +-
+>  drivers/net/wireless/realtek/rtlwifi/rc.c    |  3 +-
+>  drivers/net/wireless/realtek/rtlwifi/usb.c   | 46 +++++++++-------------------
+>  10 files changed, 53 insertions(+), 99 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+[]
+> @@ -207,8 +207,7 @@ static void _rtl_init_hw_ht_capab(struct ieee80211_hw *hw,
+>  	 *highest supported RX rate
+>  	 */
+>  	if (rtlpriv->dm.supp_phymode_switch) {
+> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+> -			 "Support phy mode switch\n");
+> +		pr_err("rtlwifi: Support phy mode switch\n");
 
-> On Tue, Nov 29, 2016 at 10:16:50AM -0800, Ben Greear wrote:
->> Is this something for stable?  And if so, how far back should it be appl=
-ied?
->
-> @Kalle,
->
-> [shafi] kindly suggest. If i am not wrong this is only needed for 4.9
-
-Correct, commit 3c97f5de1f28 went to 4.9-rc1, it was not in 4.8. I'll
-add CC stable to the commit log.
-
---=20
-Kalle Valo=
+I believe most all of these are already prefixed
+by the wifi.h that has a #define pr_fmt 
