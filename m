@@ -1,43 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33908 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751610AbcLGHiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 02:38:13 -0500
-Message-ID: <1481096290.4092.23.camel@sipsolutions.net> (sfid-20161207_083815_678997_F29087B3)
-Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 07 Dec 2016 08:38:10 +0100
-In-Reply-To: <5847B51A.6090303@gmail.com> (sfid-20161207_080708_346764_81655F78)
-References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
-         <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
-         <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
-         <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
-         <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
-         <1481091301.4092.5.camel@sipsolutions.net> <5847AEF9.90409@gmail.com>
-         <1481093287.4092.20.camel@sipsolutions.net> <5847B51A.6090303@gmail.com>
-         (sfid-20161207_080708_346764_81655F78)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34696 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752924AbcLKFpw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:45:52 -0500
+Received: by mail-oi0-f65.google.com with SMTP id m75so7285857oig.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:51 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 12/14] rtlwifi: rtl8192c-common: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:20 -0600
+Message-Id: <20161211054523.7119-24-Larry.Finger@lwfinger.net> (sfid-20161211_070931_897980_14C190DB)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-> > > Fair enough.  I think we can live with that since we're not using
-> > > CMD_AUTHENTICATE unless we need to roam using FT.
-> > 
-> > That seems like a very strange decision, but it's obviously up to
-> > you
-> > :)
-> > 
-> 
-> Care to elaborate ?
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 33 ++++++----------------
+ .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 13 ++++-----
+ 2 files changed, 15 insertions(+), 31 deletions(-)
 
-Well, for example, you won't be able to do SAE, the upcoming FILS or
-generally have any control over what's going on in the auth/assoc
-handshake, since the kernel's version thereof is really really simple.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 4a49e66..e739e56 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -145,10 +145,8 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 		pageNums = size / FW_8192C_PAGE_SIZE;
+ 		remainsize = size % FW_8192C_PAGE_SIZE;
+ 
+-		if (pageNums > 4) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Page numbers should not greater then 4\n");
+-		}
++		if (pageNums > 4)
++			pr_err("rtl8192c-common: Page numbers should not greater then 4\n");
+ 
+ 		for (page = 0; page < pageNums; page++) {
+ 			offset = page * FW_8192C_PAGE_SIZE;
+@@ -180,15 +178,10 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_ChkSum_rpt)));
+ 
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("rtl8192c-common: chksum report fail! REG_MCUFWDL:0x%08x .\n",
++		       value32);
+ 		goto exit;
+ 	}
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -198,20 +191,15 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x .\n",
+-					value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		mdelay(FW_8192C_POLLING_DELAY);
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
++	pr_err("rtl8192c-common: Polling FW ready fail! REG_MCUFWDL:0x%08x.\n",
++	       value32);
+ 
+ exit:
+ 	return err;
+@@ -251,8 +238,7 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+ 
+ 	err = _rtl92c_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("rtl8192c-common: Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "Firmware is ready to run!\n");
+@@ -327,8 +313,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("rtl8192c-common: Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 30c2d12..5f8fa4a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -104,7 +104,7 @@ u32 _rtl92c_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0x3f;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("rtl8192c-common: return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -152,7 +152,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("rtl8192c-common: stop\n");
+ 		return;
+ 	}
+ 	offset &= 0x3f;
+@@ -209,7 +209,7 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("rtl8192c-common: Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	if (rtlphy->rf_type == RF_1T2R) {
+@@ -222,13 +222,13 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 						   BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("rtl8192c-common: BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("rtl8192c-common: AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power =
+@@ -860,8 +860,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("rtl8192c-common: Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
+-- 
+2.10.2
