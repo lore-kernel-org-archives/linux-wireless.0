@@ -1,154 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36182 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752038AbcLFTgf (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35905 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbcLKFpc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Dec 2016 14:36:35 -0500
-Subject: Re: ath10k firmware sends probes on DFS channels without radar
- detection
-To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>,
-        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr>
-Cc: Cedric VONCKEN <cedric.voncken@acksys.fr>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <63c731f2-ee21-6450-2ae4-2808e7130eb5@candelatech.com> (sfid-20161206_203641_123618_DFE0AFBD)
-Date: Tue, 6 Dec 2016 11:36:01 -0800
-MIME-Version: 1.0
-In-Reply-To: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Sun, 11 Dec 2016 00:45:32 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u15so7277093oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:32 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 00/14] rtlwifi: Start reworking of debug system
+Date: Sat, 10 Dec 2016 23:44:57 -0600
+Message-Id: <20161211054523.7119-1-Larry.Finger@lwfinger.net> (sfid-20161211_064547_369502_4A707E50)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/06/2016 09:02 AM, Jean-Pierre Tosoni wrote:
-> This follows on the previous discussion
-> 	"Client station sends probes on DFS channels"
->
-> Problem:
-> The combination of QCA988X firmware v10.2.4.70-2 + ath10k +
-> wpa_supplicant do not comply with the norm ETSI/EN 301-893
-> section 4.7; because they can send probes for 600s when no
-> AP is around.
->
-> Analysis:
-> The problem seems to lie in the firmware, which regards the presence
-> of *any* beacon as a proof that the channel is radar-clean for 600s.
->
-> This is a wrong hypothesis, since a rogue AP sending fraudulent
-> beacons should not induce a scrupulous STA in sending illegal probes.
->
-> Moreover, the norm (table D.1) sets a time limit of 10s to
-> shutdown when no AP positively allows the STA to transmit on
-> the DFS channel.
->
-> Status:
-> - there is no known plan at QCA to fix the issue.
-> - ath10k firmware is not publicly available for fixes.
-> - there is no obvious fix working in ath10k.
-> - the issue does not show up with other mac80211 devices like ath9k.
-> - wpa_supplicant considers this is a kernel issue [2]
+Following the discussion regarding the patch entitled "rtlwifi: Add
+BTC_TRACE_STRING to new btcoex", we are reworking the entire debug
+system. This set of patches does the following:
 
-Have you confirmed that there are no probe requests being sent by
-ath10k driver?
+1. Replaces every invocation of RT_ASSERT with WARN_ON. With this
+   change, triggering these conditions with now give a stack dump.
+   Note that the logical condition between RT_ASSERT and WARN_ON
+   is inverted. In making these changes, 6 logic errors were found.
+2. Replaces every call of RT_TRACE with the level set to DBG_EMERG
+   with the equivalent pr_err() call.
+3. Removes some redundant logged conditions. For example, when the
+   failure of firmware to start is logged, it is not necessary to
+   log that the firmware did start.
 
-You could also try disabling the station keep-alive and roaming logic in the firmware by
-tweaking the wmi initial setup logic.  I disable that in my firmware,
-for instance, because mac80211 can do a better job and then I can
-save resources in the firmware.
+The previous two patch sequences "[PATCH 00/14] rtlwifi: Various updates"
+and "[PATCH 0/7] rtlwifi: btcoexist: Rewrite BT coexistence routines"
+should be discarded. That material will be resubmitted later.
 
-Finally, if that doesn't work, then I could probably fix that in CT firmware
-in case that is of interest.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-Thanks,
-Ben
+Larry Finger (14):
+  rtlwifi: Replace local debug macro RT_ASSERT
+  rtlwifi_new: Remove RT_TRACE messages that use DBG_EMERG
+  rtlwifi_new: rtl8821ae: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8723be: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8723ae: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192ee: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8723-common: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192se: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192de: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192cu: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192ce: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8192c-common: Remove all instances of DBG_EMERG
+  rtlwifi_new: rtl8188ee: Remove all instances of DBG_EMERG
+  rtlwifi: Remove some redundant code
 
->
-> Jean-Pierre Tosoni
->
->
->
->> -----Message d'origine-----
->> De : ath10k [mailto:ath10k-bounces@lists.infradead.org] De la part de
->> Jean-Pierre Tosoni
->> Envoyé : mercredi 30 novembre 2016 19:04
->> À : ath10k@lists.infradead.org
->> Objet : Client station sends probes on DFS channels
->>
->> Hello list,
->>
->> There is a case where I can see probes on a DFS channel, from a non-
->> associated station using ath10k. (note that the problem does not arise
->> when using ath9k).
->>
->> *The setup*
->>
->> I am using Openwrt, wpa_supplicant and compat-wireless 2016-10-08,
->> Card firmware is	ath10k_pci: qca988x hw2.0 (0x4100016c, 0x043202ff)
->> 		fw 10.2.4.70-2 api 5 htt-ver 2.1 wmi-op 5 htt-op 2
->> 		cal otp max-sta 128 features no-p2p
->> 	ath10k_pci: debug 0 debugfs 1 tracing 0 dfs 1 testmode 1
->>
->> I am using channel 116, regdom US or FR, where I see no traffic at all
->> using wireshark+Airpcap.
->> I set wpa_supplicant to scan this channel only for a specific SSID
->> "ssid1".
->>
->> At initial startup of the client device, no probes are going out, which
->> is OK.
->>
->> Then, on another device, I start a hostapd set to channel 116, with a
->> different SSID "otherssid" so that the supplicant will not associate.
->>
->> Shortly (1-2s) after the beacons appear in the air, the client begins to
->> Send probe request in the air, which is unexpected, but acceptable since
->> the client can infer absence of radars from the presence of beacons.
->>
->> *The problem*
->>
->> If I power down the AP, the client continues to send probes for around
->> 10 minutes, which is unacceptable since it cannot handle radar detection,
->> as it is a slave device in the meaning of ETSI/EN 301-893[1].
->>
->>
->> Some tests I made:
->> - I tried to investigate the "beacon hint" mechanism but it appears
->>   that it is not used on DFS channels.
->>
->> - I tried to force the IEEE80211_NO_IR flag when IEEE80211_CHAN_DFS
->>   is set.
->>
->> - When I reload the reg. domain using "iw reg set", the probes cease,
->>   but will reappear if I cycle my AP again On then Off.
->>
->> - When I let the client associate, then disassociate and stop the AP,
->>   the same problem arises. It disappears if I add a call to
->>   ath10k_regd_update() in mac.c after a disconnection (This is not a
->>   fix, since in my case the client never associates).
->>
->> - Since at startup, the client does not send probes, I infer that the
->>   problem is *not* caused by a hidden AP that the card could see but
->>   not airpcap.
->>
->> - I tried with channels 52 and 100, with regdom FR or US: same problem.
->>
->> Any ideas?
->>
->>
->> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/
->> 01.08.01_60/en_301893v010801p.pdf
-> [2] http://lists.shmoo.com/pipermail/hostap/2015-January/031906.html
->>
->> J.P. Tosoni - ACKSYS
->>
->>
->>
->>
->> _______________________________________________
->> ath10k mailing list
->> ath10k@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/ath10k
->
-
+ drivers/net/wireless/realtek/rtlwifi/base.c        | 15 +++----
+ drivers/net/wireless/realtek/rtlwifi/cam.c         | 14 +++---
+ drivers/net/wireless/realtek/rtlwifi/core.c        | 29 +++++-------
+ drivers/net/wireless/realtek/rtlwifi/debug.c       |  9 ++--
+ drivers/net/wireless/realtek/rtlwifi/debug.h       | 18 +-------
+ drivers/net/wireless/realtek/rtlwifi/efuse.c       |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/pci.c         | 48 ++++++++------------
+ drivers/net/wireless/realtek/rtlwifi/ps.c          |  3 +-
+ drivers/net/wireless/realtek/rtlwifi/rc.c          |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 43 +++++-------------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 32 +++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   | 32 ++++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |  8 ++--
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 45 ++++++-------------
+ .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 27 ++++++------
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 38 ++++++----------
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.c   | 13 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 35 +++++----------
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   | 12 ++---
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/phy.c   | 12 ++---
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/trx.c   |  2 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 31 ++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 34 +++++----------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 41 ++++++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    | 10 ++---
+ .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 40 +++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    | 13 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   | 36 +++++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 15 ++++---
+ .../net/wireless/realtek/rtlwifi/rtl8192se/fw.c    | 46 ++++++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    | 42 +++++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   | 42 +++++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192se/trx.c   |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/fw.c    | 13 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 21 ++++-----
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/phy.c   | 28 +++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.c   |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    | 13 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    | 18 +++-----
+ .../net/wireless/realtek/rtlwifi/rtl8723be/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 30 ++++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  8 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   | 14 +++---
+ .../realtek/rtlwifi/rtl8723com/fw_common.c         | 25 +++--------
+ .../realtek/rtlwifi/rtl8723com/phy_common.c        |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 28 ++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 31 ++++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   | 51 +++++++++-------------
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/rf.c    |  5 +--
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    | 14 +++---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   | 20 +++++----
+ drivers/net/wireless/realtek/rtlwifi/usb.c         | 48 +++++++-------------
+ 74 files changed, 488 insertions(+), 816 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.10.2
