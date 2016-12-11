@@ -1,21 +1,21 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35217 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755968AbcLOSYD (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34681 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752618AbcLKFpp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 13:24:03 -0500
-Received: by mail-oi0-f67.google.com with SMTP id v84so7055219oie.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:37 -0800 (PST)
+        Sun, 11 Dec 2016 00:45:45 -0500
+Received: by mail-oi0-f65.google.com with SMTP id m75so7285765oig.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:45 -0800 (PST)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
         Larry Finger <Larry.Finger@lwfinger.net>,
         Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 09/14 V2] rtlwifi: rtl8192de: Remove all instances of DBG_EMERG
-Date: Thu, 15 Dec 2016 12:23:05 -0600
-Message-Id: <20161215182310.13713-10-Larry.Finger@lwfinger.net> (sfid-20161215_192419_532589_9BF5ACBB)
-In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+Subject: [PATCH 08/14] rtlwifi_new: rtl8192se: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:11 -0600
+Message-Id: <20161211054523.7119-15-Larry.Finger@lwfinger.net> (sfid-20161211_070930_970484_2849336D)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -26,143 +26,225 @@ conditions, thus they are replaced with pr_err().
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
-V2 - eliminate some files that should not have been sent, and remove the
-     module name from the format. It is already specified by a pr_fmt().
----
- .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 19 ++++--------
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 34 ++++++++--------------
- .../net/wireless/realtek/rtlwifi/rtl8192de/led.c   |  6 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 31 ++++++++------------
- .../net/wireless/realtek/rtlwifi/rtl8192de/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |  8 ++---
- 6 files changed, 36 insertions(+), 65 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192se/fw.c    | 46 ++++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    | 40 +++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/led.c   |  6 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   | 36 ++++++-----------
+ .../net/wireless/realtek/rtlwifi/rtl8192se/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  8 ++--
+ 6 files changed, 51 insertions(+), 88 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index ddbb7e8..ed6aba0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -126,8 +126,7 @@ static void _rtl92d_write_fw(struct ieee80211_hw *hw,
- 	pagenums = size / FW_8192D_PAGE_SIZE;
- 	remainSize = size % FW_8192D_PAGE_SIZE;
- 	if (pagenums > 8) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Page numbers should not greater then 8\n");
-+		pr_err("Page numbers should not greater then 8\n");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
+index 32f9207..1922e78 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
+@@ -113,8 +113,7 @@ static u8 _rtl92s_firmware_header_map_rftype(struct ieee80211_hw *hw)
+ 	case RF_2T2R:
+ 		return 0x22;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown RF type(%x)\n",
+-			 rtlphy->rf_type);
++		pr_err("Unknown RF type(%x)\n", rtlphy->rf_type);
+ 		break;
  	}
- 	for (page = 0; page < pagenums; page++) {
- 		offset = page * FW_8192D_PAGE_SIZE;
-@@ -153,9 +152,8 @@ static int _rtl92d_fw_free_to_go(struct ieee80211_hw *hw)
- 	} while ((counter++ < FW_8192D_POLLING_TIMEOUT_COUNT) &&
- 		 (!(value32 & FWDL_ChkSum_rpt)));
- 	if (counter >= FW_8192D_POLLING_TIMEOUT_COUNT) {
+ 	return 0x22;
+@@ -168,9 +167,7 @@ static bool _rtl92s_firmware_downloadcode(struct ieee80211_hw *hw,
+ 	_rtl92s_fw_set_rqpn(hw);
+ 
+ 	if (buffer_len >= MAX_FIRMWARE_CODE_SIZE) {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "chksum report faill ! REG_MCUFWDL:0x%08x\n",
--			 value32);
-+		pr_err("chksum report fail! REG_MCUFWDL:0x%08x\n",
-+		       value32);
- 		return -EIO;
+-			 "Size over FIRMWARE_CODE_SIZE!\n");
+-
++		pr_err("Size over FIRMWARE_CODE_SIZE!\n");
+ 		return false;
  	}
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
-@@ -327,8 +324,7 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
- 	rtl_write_byte(rtlpriv, 0x1f, value);
- 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
- 	if (err) {
+ 
+@@ -239,9 +236,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
+ 		} while (pollingcnt--);
+ 
+ 		if (!(cpustatus & IMEM_CHK_RPT) || (pollingcnt <= 0)) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "FW_STATUS_LOAD_IMEM FAIL CPU, Status=%x\n",
+-				 cpustatus);
++			pr_err("FW_STATUS_LOAD_IMEM FAIL CPU, Status=%x\n",
++			       cpustatus);
+ 			goto status_check_fail;
+ 		}
+ 		break;
+@@ -257,17 +253,15 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
+ 		} while (pollingcnt--);
+ 
+ 		if (!(cpustatus & EMEM_CHK_RPT) || (pollingcnt <= 0)) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "FW_STATUS_LOAD_EMEM FAIL CPU, Status=%x\n",
+-				 cpustatus);
++			pr_err("FW_STATUS_LOAD_EMEM FAIL CPU, Status=%x\n",
++			       cpustatus);
+ 			goto status_check_fail;
+ 		}
+ 
+ 		/* Turn On CPU */
+ 		rtstatus = _rtl92s_firmware_enable_cpu(hw);
+ 		if (!rtstatus) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Enable CPU fail!\n");
++			pr_err("Enable CPU fail!\n");
+ 			goto status_check_fail;
+ 		}
+ 		break;
+@@ -282,9 +276,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
+ 		} while (pollingcnt--);
+ 
+ 		if (!(cpustatus & DMEM_CODE_DONE) || (pollingcnt <= 0)) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Polling DMEM code done fail ! cpustatus(%#x)\n",
+-				 cpustatus);
++			pr_err("Polling DMEM code done fail ! cpustatus(%#x)\n",
++			       cpustatus);
+ 			goto status_check_fail;
+ 		}
+ 
+@@ -308,9 +301,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
+ 
+ 		if (((cpustatus & LOAD_FW_READY) != LOAD_FW_READY) ||
+ 		    (pollingcnt <= 0)) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Polling Load Firmware ready fail ! cpustatus(%x)\n",
+-				 cpustatus);
++			pr_err("Polling Load Firmware ready fail ! cpustatus(%x)\n",
++			       cpustatus);
+ 			goto status_check_fail;
+ 		}
+ 
+@@ -331,8 +323,7 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
+ 		break;
+ 
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-			 "Unknown status check!\n");
++		pr_err("Unknown status check!\n");
+ 		rtstatus = false;
+ 		break;
+ 	}
+@@ -380,8 +371,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
+ 	/* 2. Retrieve IMEM image. */
+ 	if ((pfwheader->img_imem_size == 0) || (pfwheader->img_imem_size >
+ 	    sizeof(firmware->fw_imem))) {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "fw is not ready to run!\n");
-+		pr_err("fw is not ready to run!\n");
- 		goto exit;
+-			 "memory for data image is less than IMEM required\n");
++		pr_err("memory for data image is less than IMEM required\n");
+ 		goto fail;
  	} else {
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "fw is ready to run!\n");
-@@ -407,8 +403,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
- 	while (!bwrite_success) {
- 		wait_writeh2c_limmit--;
- 		if (wait_writeh2c_limmit == 0) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Write H2C fail because no trigger for FW INT!\n");
-+			pr_err("Write H2C fail because no trigger for FW INT!\n");
- 			break;
- 		}
- 		boxnum = rtlhal->last_hmeboxnum;
-@@ -430,8 +425,8 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
- 			box_extreg = REG_HMEBOX_EXT_3;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n", boxnum);
-+			pr_err("switch case %#x not processed\n",
-+			       boxnum);
- 			break;
- 		}
- 		isfw_read = _rtl92d_check_fw_read_last_h2c(hw, boxnum);
-@@ -507,8 +501,8 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
- 					       boxcontent[idx]);
+ 		puc_mappedfile += fwhdr_size;
+@@ -393,8 +383,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
+ 
+ 	/* 3. Retriecve EMEM image. */
+ 	if (pfwheader->img_sram_size > sizeof(firmware->fw_emem)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "memory for data image is less than EMEM required\n");
++		pr_err("memory for data image is less than EMEM required\n");
+ 		goto fail;
+ 	} else {
+ 		puc_mappedfile += firmware->fw_imem_len;
+@@ -428,8 +417,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
+ 					RT_8192S_FIRMWARE_HDR_EXCLUDE_PRI_SIZE;
  			break;
  		default:
 -			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n", cmd_len);
-+			pr_err("switch case %#x not processed\n",
-+			       cmd_len);
- 			break;
+-				 "Unexpected Download step!!\n");
++			pr_err("Unexpected Download step!!\n");
+ 			goto fail;
  		}
- 		bwrite_success = true;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-index fcb14c5..2c92c33 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-@@ -163,8 +163,7 @@ void rtl92de_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 
+@@ -438,14 +426,14 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
+ 				ul_filelength);
+ 
+ 		if (!rtstatus) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "fail!\n");
++			pr_err("fail!\n");
+ 			goto fail;
+ 		}
+ 
+ 		/* <3> Check whether load FW process is ready */
+ 		rtstatus = _rtl92s_firmware_checkready(hw, fwstatus);
+ 		if (!rtstatus) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "fail!\n");
++			pr_err("rtl8192se: firmware fail!\n");
+ 			goto fail;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+index f4ab721..a6f3783 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+@@ -75,11 +75,9 @@ void rtl92se_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 		}
  	case HAL_DEF_WOWLAN:
  		break;
- 	default:
+-	default: {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "switch case %#x not processed\n", variable);
+-			break;
+-		}
++	default:
 +		pr_err("switch case %#x not processed\n", variable);
- 		break;
++		break;
  	}
  }
-@@ -358,9 +357,8 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				acm_ctrl &= (~ACMHW_VOQEN);
- 				break;
- 			default:
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "switch case %#x not processed\n",
--					 e_aci);
-+				pr_err("switch case %#x not processed\n",
-+				       e_aci);
- 				break;
+ 
+@@ -294,9 +292,8 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 					acm_ctrl &= (~AcmHw_VoqEn);
+ 					break;
+ 				default:
+-					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-						 "switch case %#x not processed\n",
+-						 e_aci);
++					pr_err("switch case %#x not processed\n",
++					       e_aci);
+ 					break;
+ 				}
  			}
+@@ -431,8 +428,7 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
  		}
-@@ -500,8 +498,7 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	}
+ 		break; }
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "switch case %#x not processed\n", variable);
 +		pr_err("switch case %#x not processed\n", variable);
  		break;
  	}
- }
-@@ -520,9 +517,8 @@ static bool _rtl92de_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
- 		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
- 			break;
- 		if (count > POLLING_LLT_THRESHOLD) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Failed to polling write LLT done at address %d!\n",
--				 address);
-+			pr_err("Failed to polling write LLT done at address %d!\n",
-+			       address);
- 			status = false;
- 			break;
- 		}
-@@ -920,7 +916,7 @@ int rtl92de_hw_init(struct ieee80211_hw *hw)
- 	/* rtlpriv->intf_ops->disable_aspm(hw); */
- 	rtstatus = _rtl92de_init_mac(hw);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
-+		pr_err("Init MAC failed\n");
- 		err = 1;
- 		spin_unlock_irqrestore(&globalmutex_for_power_and_efuse, flags);
- 		return err;
-@@ -1119,11 +1115,8 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ 
+@@ -745,9 +741,8 @@ static void _rtl92se_macconfig_before_fwdownload(struct ieee80211_hw *hw)
+ 	} while (pollingcnt--);
+ 
+ 	if (pollingcnt <= 0) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Polling TXDMA_INIT_VALUE timeout!! Current TCR(%#x)\n",
+-			 tmpu1b);
++		pr_err("Polling TXDMA_INIT_VALUE timeout!! Current TCR(%#x)\n",
++		       tmpu1b);
+ 		tmpu1b = rtl_read_byte(rtlpriv, CMDR);
+ 		rtl_write_byte(rtlpriv, CMDR, tmpu1b & (~TXDMA_EN));
+ 		udelay(2);
+@@ -1004,7 +999,7 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
+ 
+ 	/* 3. Initialize MAC/PHY Config by MACPHY_reg.txt */
+ 	if (!rtl92s_phy_mac_config(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "MAC Config failed\n");
++		pr_err("MAC Config failed\n");
+ 		err = rtstatus;
+ 		goto exit;
+ 	}
+@@ -1024,7 +1019,7 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
+ 
+ 	/* 4. Initialize BB After MAC Config PHY_reg.txt, AGC_Tab.txt */
+ 	if (!rtl92s_phy_bb_config(hw)) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "BB Config failed\n");
++		pr_err("BB Config failed\n");
+ 		err = rtstatus;
+ 		goto exit;
+ 	}
+@@ -1194,8 +1189,7 @@ static int _rtl92se_set_media_status(struct ieee80211_hw *hw,
  			 "Set Network type to AP!\n");
  		break;
  	default:
@@ -170,140 +252,116 @@ index fcb14c5..2c92c33 100644
 -			 "Network type %d not supported!\n", type);
 +		pr_err("Network type %d not supported!\n", type);
  		return 1;
--		break;
--
+ 
  	}
- 	rtl_write_byte(rtlpriv, MSR, bt_msr);
- 	rtlpriv->cfg->ops->led_control(hw, ledaction);
-@@ -1732,7 +1725,7 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
+@@ -1685,8 +1679,7 @@ static void _rtl92se_read_adapter_info(struct ieee80211_hw *hw)
  		break;
+ 
+ 	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
++		pr_err("RTL819X Not boot from eeprom, check it !!\n");
+ 		return;
+ 
  	default:
- 		chipver |= CHIP_92D_D_CUT;
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
-+		pr_err("Unknown CUT!\n");
- 		break;
- 	}
- 	rtlpriv->rtlhal.version = chipver;
-@@ -1816,7 +1809,7 @@ void rtl92de_read_eeprom_info(struct ieee80211_hw *hw)
+@@ -2030,7 +2023,7 @@ void rtl92se_read_eeprom_info(struct ieee80211_hw *hw)
  		rtlefuse->autoload_failflag = false;
- 		_rtl92de_read_adapter_info(hw);
+ 		_rtl92se_read_adapter_info(hw);
  	} else {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
 +		pr_err("Autoload ERR!!\n");
+ 		rtlefuse->autoload_failflag = true;
  	}
- 	return;
  }
-@@ -2169,8 +2162,8 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+@@ -2463,8 +2456,7 @@ void rtl92se_set_key(struct ieee80211_hw *hw, u32 key_index, u8 *p_macaddr,
  			enc_algo = CAM_AES;
  			break;
  		default:
 -			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -				 "switch case %#x not processed\n", enc_algo);
-+			pr_err("switch case %#x not processed\n",
-+			       enc_algo);
++			pr_err("switch case %#x not processed\n", enc_algo);
  			enc_algo = CAM_TKIP;
  			break;
  		}
-@@ -2186,9 +2178,7 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+@@ -2481,9 +2473,7 @@ void rtl92se_set_key(struct ieee80211_hw *hw, u32 key_index, u8 *p_macaddr,
  					entry_id = rtl_cam_get_free_entry(hw,
  								 p_macaddr);
  					if (entry_id >=  TOTAL_CAM_ENTRY) {
--						RT_TRACE(rtlpriv, COMP_SEC,
--							 DBG_EMERG,
+-						RT_TRACE(rtlpriv,
+-							 COMP_SEC, DBG_EMERG,
 -							 "Can not find free hw security cam entry\n");
 +						pr_err("Can not find free hw security cam entry\n");
  						return;
  					}
  				} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-index c22b8a2..58ec4fc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-@@ -66,8 +66,8 @@ void rtl92de_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
+index 8700078..b6b890f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
+@@ -63,8 +63,7 @@ void rtl92se_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, LEDCFG, ledcfg & 0x0f);
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("switch case %#x not processed\n",
-+		       pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
  		break;
  	}
  	pled->ledon = true;
-@@ -101,8 +100,8 @@ void rtl92de_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
+@@ -99,8 +98,7 @@ void rtl92se_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, LEDCFG, (ledcfg | BIT(3)));
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("switch case %#x not processed\n",
-+		       pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
  		break;
  	}
  	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index fbd127b..90a3443 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -716,7 +716,7 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
- 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
- 		BASEBAND_CONFIG_PHY_REG);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
-+		pr_err("Write BB Reg Fail!!\n");
- 		return false;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+index 6299dc1..927bc2d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+@@ -235,7 +235,6 @@ void rtl92s_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
+ void rtl92s_phy_scan_operation_backup(struct ieee80211_hw *hw,
+ 				      u8 operation)
+ {
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
  
-@@ -731,13 +731,13 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
- 			BASEBAND_CONFIG_PHY_REG);
+ 	if (!is_hal_stop(rtlhal)) {
+@@ -247,8 +246,7 @@ void rtl92s_phy_scan_operation_backup(struct ieee80211_hw *hw,
+ 			rtl92s_phy_set_fw_cmd(hw, FW_CMD_RESUME_DM_BY_SCAN);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown operation\n");
++			pr_err("Unknown operation\n");
+ 			break;
+ 		}
  	}
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
-+		pr_err("BB_PG Reg Fail!!\n");
- 		return false;
- 	}
- 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
- 		BASEBAND_CONFIG_AGC_TAB);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
-+		pr_err("AGC Table Fail\n");
- 		return false;
- 	}
- 	rtlphy->cck_high_power = (bool) (rtl_get_bbreg(hw,
-@@ -833,8 +833,7 @@ bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		break;
- 	case RF90_PATH_C:
- 	case RF90_PATH_D:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", rfpath);
-+		pr_err("switch case %#x not processed\n", rfpath);
- 		break;
- 	}
- 	return true;
-@@ -987,8 +986,8 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
- 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+@@ -288,8 +286,7 @@ void rtl92s_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 		rtl_write_byte(rtlpriv, BW_OPMODE, reg_bw_opmode);
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
  		break;
  	}
- 	switch (rtlphy->current_chan_bw) {
-@@ -1019,8 +1017,8 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
- 			HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 
+@@ -313,8 +310,7 @@ void rtl92s_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 			rtl_write_byte(rtlpriv, RFPGA0_ANALOGPARAMETER2, 0x18);
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
  		break;
- 
  	}
-@@ -2842,9 +2839,8 @@ static bool _rtl92d_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			rtl92d_phy_reload_iqk_setting(hw, channel);
+ 
+@@ -437,9 +433,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			}
  			break;
  		default:
 -			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
@@ -313,47 +371,69 @@ index fbd127b..90a3443 100644
 +			       currentcmd->cmdid);
  			break;
  		}
- 		break;
-@@ -2956,9 +2952,8 @@ static void rtl92d_phy_set_io(struct ieee80211_hw *hw)
- 		rtl92d_dm_write_dig(hw);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n",
--			 rtlphy->current_io_type);
-+		pr_err("switch case %#x not processed\n",
-+		       rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -2988,8 +2983,8 @@ bool rtl92d_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			postprocessing = true;
+ 
+@@ -644,8 +639,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 			_rtl92se_phy_set_rf_sleep(hw);
  			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n", iotype);
-+			pr_err("switch case %#x not processed\n",
-+			       iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -3176,8 +3170,8 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		_rtl92d_phy_set_rfsleep(hw);
- 		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "switch case %#x not processed\n", rfpwr_state);
-+		pr_err("switch case %#x not processed\n",
-+		       rfpwr_state);
++		pr_err("switch case %#x not processed\n", rfpwr_state);
  		bresult = false;
  		break;
  	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
-index 9dc9e91..021d3c5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
-@@ -63,8 +63,7 @@ void rtl92d_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
- 		}
+@@ -937,8 +931,7 @@ static bool _rtl92s_phy_bb_config_parafile(struct ieee80211_hw *hw)
+ 	}
+ 
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-			 "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		goto phy_BB8190_Config_ParaFile_Fail;
+ 	}
+ 
+@@ -951,8 +944,7 @@ static bool _rtl92s_phy_bb_config_parafile(struct ieee80211_hw *hw)
+ 						 BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-			 "_rtl92s_phy_bb_config_parafile(): BB_PG Reg Fail!!\n");
++		pr_err("_rtl92s_phy_bb_config_parafile(): BB_PG Reg Fail!!\n");
+ 		goto phy_BB8190_Config_ParaFile_Fail;
+ 	}
+ 
+@@ -1077,12 +1069,10 @@ bool rtl92s_phy_bb_config(struct ieee80211_hw *hw)
+ 	    (rtlphy->rf_type == RF_1T2R && rf_num != 2) ||
+ 	    (rtlphy->rf_type == RF_2T2R && rf_num != 2) ||
+ 	    (rtlphy->rf_type == RF_2T2R_GREEN && rf_num != 2)) {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-			 "RF_Type(%x) does not match RF_Num(%x)!!\n",
+-			 rtlphy->rf_type, rf_num);
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
+-			 "path1 0x%x, path2 0x%x, pathmap 0x%x\n",
+-			 path1, path2, pathmap);
++		pr_err("RF_Type(%x) does not match RF_Num(%x)!!\n",
++		       rtlphy->rf_type, rf_num);
++		pr_err("path1 0x%x, path2 0x%x, pathmap 0x%x\n",
++		       path1, path2, pathmap);
+ 	}
+ 
+ 	return rtstatus;
+@@ -1221,7 +1211,7 @@ void rtl92s_phy_chk_fwcmd_iodone(struct ieee80211_hw *hw)
+ 	} while (--pollingcnt);
+ 
+ 	if (pollingcnt == 0)
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Set FW Cmd fail!!\n");
++		pr_err("Set FW Cmd fail!!\n");
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
+index bd2fa77..ea5b8ec 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
+@@ -523,8 +523,7 @@ void rtl92s_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 					rtlphy->rfreg_chnlval[0]);
  		break;
  	default:
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
@@ -362,23 +442,23 @@ index 9dc9e91..021d3c5 100644
  		break;
  	}
  }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index 63e942b..0fb014e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -171,8 +171,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
- 	/* for firmware buf */
- 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
- 	if (!rtlpriv->rtlhal.pfirmware) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't alloc buffer for fw\n");
-+		pr_err("Can't alloc buffer for fw\n");
- 		return 1;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+index 998cefb..3c66d00 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+@@ -96,8 +96,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 		return;
  	}
- 
-@@ -185,8 +184,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	if (firmware->size > rtlpriv->max_fw_size) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is too big!\n");
++		pr_err("Firmware is too big!\n");
+ 		rtlpriv->max_fw_size = 0;
+ 		release_firmware(firmware);
+ 		return;
+@@ -218,8 +217,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
  				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl_fw_cb);
+ 				      rtl92se_fw_cb);
  	if (err) {
 -		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
 -			 "Failed to request firmware!\n");
@@ -386,7 +466,7 @@ index 63e942b..0fb014e 100644
  		return 1;
  	}
  
-@@ -256,7 +254,7 @@ static struct rtl_mod_params rtl92de_mod_params = {
+@@ -299,7 +297,7 @@ static struct rtl_mod_params rtl92se_mod_params = {
  	.inactiveps = true,
  	.swctrl_lps = true,
  	.fwctrl_lps = false,
@@ -394,6 +474,6 @@ index 63e942b..0fb014e 100644
 +	.debug = 0,
  };
  
- static const struct rtl_hal_cfg rtl92de_hal_cfg = {
+ /* Because memory R/W bursting will cause system hang/crash
 -- 
 2.10.2
