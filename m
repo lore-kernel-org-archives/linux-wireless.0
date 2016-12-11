@@ -1,173 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:56657 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760292AbcLPLWD (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35975 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752618AbcLKFpy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 06:22:03 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] nl80211: rework {sched_,}scan event related functions
-Date: Fri, 16 Dec 2016 11:21:54 +0000
-Message-Id: <1481887314-9471-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161216_122206_791964_E9897EFE)
+        Sun, 11 Dec 2016 00:45:54 -0500
+Received: by mail-oi0-f66.google.com with SMTP id u15so7277552oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:54 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 14/14] rtlwifi: Remove some redundant code
+Date: Sat, 10 Dec 2016 23:45:23 -0600
+Message-Id: <20161211054523.7119-27-Larry.Finger@lwfinger.net> (sfid-20161211_064559_716194_807DDBAE)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A couple of functions used with scan events were named with
-term "send" although they were only preparing the the event
-message so renamed those.
+The symbol DBG_EMERG is no longer used and is removed.
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+In a number of places, the code has redundant messages. For example, if
+the failure for the firmware to run is logged, it is not necessary to
+log that the firmware has been started. In addition, extraneous braces are
+removed.
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/wireless/nl80211.c | 34 ++++++++--------------------------
- net/wireless/nl80211.h |  6 ++----
- net/wireless/scan.c    |  9 +++++----
- 3 files changed, 15 insertions(+), 34 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/debug.h          |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c   |  6 +-----
+ .../net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c |  6 +-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c   | 10 ++--------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c   | 19 ++-----------------
+ .../wireless/realtek/rtlwifi/rtl8723com/fw_common.c   |  9 +--------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c   | 15 +++------------
+ 7 files changed, 11 insertions(+), 56 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3df85a7..727ca50 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12810,7 +12810,7 @@ static int nl80211_add_scan_req(struct sk_buff *msg,
- 	return -ENOBUFS;
- }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
+index 51794bc..75596e2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.h
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
+@@ -36,7 +36,7 @@
+  *unexpected HW behavior, HW BUG
+  *and so on.
+  */
+-#define DBG_EMERG			0
++/*#define DBG_EMERG			0 */
  
--static int nl80211_send_scan_msg(struct sk_buff *msg,
-+static int nl80211_prep_scan_msg(struct sk_buff *msg,
- 				 struct cfg80211_registered_device *rdev,
- 				 struct wireless_dev *wdev,
- 				 u32 portid, u32 seq, int flags,
-@@ -12841,7 +12841,7 @@ static int nl80211_send_scan_msg(struct sk_buff *msg,
- }
+ /*
+  *Abnormal, rare, or unexpeted cases.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index 3ba2a3f..2e22759 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -221,12 +221,8 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
+ 	_rtl88e_enable_fw_download(hw, false);
  
- static int
--nl80211_send_sched_scan_msg(struct sk_buff *msg,
-+nl80211_prep_sched_scan_msg(struct sk_buff *msg,
- 			    struct cfg80211_registered_device *rdev,
- 			    struct net_device *netdev,
- 			    u32 portid, u32 seq, int flags, u32 cmd)
-@@ -12873,7 +12873,7 @@ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_scan_msg(msg, rdev, wdev, 0, 0, 0,
-+	if (nl80211_prep_scan_msg(msg, rdev, wdev, 0, 0, 0,
- 				  NL80211_CMD_TRIGGER_SCAN) < 0) {
- 		nlmsg_free(msg);
- 		return;
-@@ -12892,7 +12892,7 @@ struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return NULL;
- 
--	if (nl80211_send_scan_msg(msg, rdev, wdev, 0, 0, 0,
-+	if (nl80211_prep_scan_msg(msg, rdev, wdev, 0, 0, 0,
- 				  aborted ? NL80211_CMD_SCAN_ABORTED :
- 					    NL80211_CMD_NEW_SCAN_RESULTS) < 0) {
- 		nlmsg_free(msg);
-@@ -12902,31 +12902,13 @@ struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
- 	return msg;
- }
- 
--void nl80211_send_scan_result(struct cfg80211_registered_device *rdev,
--			      struct sk_buff *msg)
--{
--	if (!msg)
--		return;
--
--	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
--				NL80211_MCGRP_SCAN, GFP_KERNEL);
--}
--
--void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
--				     struct net_device *netdev)
-+/* send message created by nl80211_build_scan_msg() */
-+void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
-+			   struct sk_buff *msg)
- {
--	struct sk_buff *msg;
--
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_sched_scan_msg(msg, rdev, netdev, 0, 0, 0,
--					NL80211_CMD_SCHED_SCAN_RESULTS) < 0) {
--		nlmsg_free(msg);
--		return;
+ 	err = _rtl88e_fw_free_to_go(hw);
+-	if (err) {
++	if (err)
+ 		pr_err("Firmware is not ready to run!\n");
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+-			 "Firmware is ready to run!\n");
 -	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 5c93ee0..eb4459c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -237,12 +237,8 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+ 	_rtl92c_enable_fw_download(hw, false);
+ 
+ 	err = _rtl92c_fw_free_to_go(hw);
+-	if (err) {
++	if (err)
+ 		pr_err("Firmware is not ready to run!\n");
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-			 "Firmware is ready to run!\n");
+-	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 5b33bed..e647605 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -125,9 +125,8 @@ static void _rtl92d_write_fw(struct ieee80211_hw *hw,
+ 		_rtl92d_fill_dummy(bufferPtr, &size);
+ 	pagenums = size / FW_8192D_PAGE_SIZE;
+ 	remainSize = size % FW_8192D_PAGE_SIZE;
+-	if (pagenums > 8) {
++	if (pagenums > 8)
+ 		pr_err("Page numbers should not greater then 8\n");
+-	}
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192D_PAGE_SIZE;
+ 		_rtl92d_fw_page_write(hw, page, (bufferPtr + offset),
+@@ -155,8 +154,6 @@ static int _rtl92d_fw_free_to_go(struct ieee80211_hw *hw)
+ 		pr_err("chksum report fail! REG_MCUFWDL:0x%08x\n", value32);
+ 		return -EIO;
+ 	}
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x\n", value32);
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	rtl_write_dword(rtlpriv, REG_MCUFWDL, value32);
+@@ -323,12 +320,9 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
+ 	value &= (~BIT(5));
+ 	rtl_write_byte(rtlpriv, 0x1f, value);
+ 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
+-	if (err) {
++	if (err)
+ 		pr_err("fw is not ready to run!\n");
+ 		goto exit;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "fw is ready to run!\n");
+-	}
+ exit:
+ 	err = _rtl92d_fw_init(hw);
+ 	return err;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index 2959746..e05b181 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -157,10 +157,6 @@ static int _rtl92ee_fw_free_to_go(struct ieee80211_hw *hw)
+ 		       value32);
+ 		goto exit;
+ 	}
 -
- 	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK! REG_MCUFWDL:0x%08x\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -171,13 +167,8 @@ static int _rtl92ee_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD ,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x. count = %d\n",
+-				 value32, counter);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		udelay(FW_8192C_POLLING_DELAY*10);
+ 
+@@ -236,12 +227,6 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+ 	_rtl92ee_enable_fw_download(hw, false);
+ 
+ 	err = _rtl92ee_fw_free_to_go(hw);
+-	if (err) {
+-		pr_err("Firmware is not ready to run!\n");
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD ,
+-			 "Firmware is ready to run!\n");
+-	}
+ 
+ 	return 0;
  }
-@@ -12940,7 +12922,7 @@ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return;
- 
--	if (nl80211_send_sched_scan_msg(msg, rdev, netdev, 0, 0, 0, cmd) < 0) {
-+	if (nl80211_prep_sched_scan_msg(msg, rdev, netdev, 0, 0, 0, cmd) < 0) {
- 		nlmsg_free(msg);
- 		return;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index a9cc67e..a040e6b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -212,9 +212,6 @@ int rtl8723_fw_free_to_go(struct ieee80211_hw *hw, bool is_8723be,
+ 		       value32);
+ 		goto exit;
  	}
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 7e3821d..75f8252 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -14,12 +14,10 @@ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
- 			     struct wireless_dev *wdev);
- struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
- 				       struct wireless_dev *wdev, bool aborted);
--void nl80211_send_scan_result(struct cfg80211_registered_device *rdev,
--			      struct sk_buff *msg);
-+void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
-+			   struct sk_buff *msg);
- void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- 			     struct net_device *netdev, u32 cmd);
--void nl80211_send_sched_scan_results(struct cfg80211_registered_device *rdev,
--				     struct net_device *netdev);
- void nl80211_common_reg_change_event(enum nl80211_commands cmd_id,
- 				     struct regulatory_request *request);
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL) | MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+ 	rtl_write_dword(rtlpriv, REG_MCUFWDL, value32);
+@@ -290,12 +287,8 @@ int rtl8723_download_fw(struct ieee80211_hw *hw,
+ 	rtl8723_enable_fw_download(hw, false);
  
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index b5bd58d..76cdd1d 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -176,7 +176,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 	ASSERT_RTNL();
- 
- 	if (rdev->scan_msg) {
--		nl80211_send_scan_result(rdev, rdev->scan_msg);
-+		nl80211_send_scan_msg(rdev, rdev->scan_msg);
- 		rdev->scan_msg = NULL;
- 		return;
- 	}
-@@ -222,7 +222,7 @@ void ___cfg80211_scan_done(struct cfg80211_registered_device *rdev,
- 	if (!send_message)
- 		rdev->scan_msg = msg;
- 	else
--		nl80211_send_scan_result(rdev, msg);
-+		nl80211_send_scan_msg(rdev, msg);
+ 	err = rtl8723_fw_free_to_go(hw, is_8723be, max_count);
+-	if (err) {
++	if (err)
+ 		pr_err("Firmware is not ready to run!\n");
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-			 "Firmware is ready to run!\n");
+-	}
+ 	return 0;
  }
+ EXPORT_SYMBOL_GPL(rtl8723_download_fw);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 536c12a..4f17140 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -124,9 +124,8 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8821AE_PAGE_SIZE;
+ 	remainsize = size % FW_8821AE_PAGE_SIZE;
  
- void __cfg80211_scan_done(struct work_struct *wk)
-@@ -270,7 +270,8 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
- 			spin_unlock_bh(&rdev->bss_lock);
- 			request->scan_start = jiffies;
- 		}
--		nl80211_send_sched_scan_results(rdev, request->dev);
-+		nl80211_send_sched_scan(rdev, request->dev,
-+					NL80211_CMD_SCHED_SCAN_RESULTS);
+-	if (pagenums > 8) {
++	if (pagenums > 8)
+ 		pr_err("Page numbers should not greater then 8\n");
+-	}
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8821AE_PAGE_SIZE;
+@@ -160,9 +159,6 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
+ 			  value32);
+ 		goto exit;
  	}
+-
+-	pr_err("Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -173,13 +169,8 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
+ 	counter = 0;
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x .\n",
+-				  value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
  
- 	rtnl_unlock();
-@@ -1078,7 +1079,7 @@ struct cfg80211_bss *
- 	else
- 		rcu_assign_pointer(tmp.pub.beacon_ies, ies);
- 	rcu_assign_pointer(tmp.pub.ies, ies);
--	
-+
- 	memcpy(tmp.pub.bssid, mgmt->bssid, ETH_ALEN);
- 	tmp.pub.channel = channel;
- 	tmp.pub.scan_width = data->scan_width;
+ 		udelay(FW_8821AE_POLLING_DELAY);
+ 	} while (counter++ < FW_8821AE_POLLING_TIMEOUT_COUNT);
 -- 
-1.9.1
+2.10.2
