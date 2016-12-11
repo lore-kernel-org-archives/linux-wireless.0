@@ -1,217 +1,396 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54205 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756514AbcLNTrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:47:12 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
-Subject: [PATCH 01/10] mac80211: minstrel_ht: move supported bitrate mask out of group data
-Date: Wed, 14 Dec 2016 20:46:54 +0100
-Message-Id: <20161214194703.33429-1-nbd@nbd.name> (sfid-20161214_204753_937248_15130A76)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34686 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753010AbcLKFps (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:45:48 -0500
+Received: by mail-oi0-f66.google.com with SMTP id m75so7285794oig.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:47 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 09/14] rtlwifi: rtl8192de: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:14 -0600
+Message-Id: <20161211054523.7119-18-Larry.Finger@lwfinger.net> (sfid-20161211_070931_309735_060FD8A1)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Improves dcache footprint by ensuring that fewer cache lines need to be
-touched.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c         | 30 +++++++++++++++---------------
- net/mac80211/rc80211_minstrel_ht.h         |  6 +++---
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  8 ++++----
- 3 files changed, 22 insertions(+), 22 deletions(-)
+ .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 19 ++++--------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 34 ++++++++--------------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/led.c   |  6 ++--
+ .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 31 ++++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |  8 ++---
+ 6 files changed, 36 insertions(+), 65 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 30fbabf..ed8a34d 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -301,7 +301,7 @@ minstrel_ht_get_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 				break;
- 
- 		/* short preamble */
--		if (!(mi->groups[group].supported & BIT(idx)))
-+		if (!(mi->supported[group] & BIT(idx)))
- 			idx += 4;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index ddbb7e8..ed6aba0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -126,8 +126,7 @@ static void _rtl92d_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8192D_PAGE_SIZE;
+ 	remainSize = size % FW_8192D_PAGE_SIZE;
+ 	if (pagenums > 8) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Page numbers should not greater then 8\n");
++		pr_err("rtl8192de: Page numbers should not greater then 8\n");
  	}
- 	return &mi->groups[group].rates[idx];
-@@ -486,7 +486,7 @@ minstrel_ht_prob_rate_reduce_streams(struct minstrel_ht_sta *mi)
- 			  MCS_GROUP_RATES].streams;
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
- 		mg = &mi->groups[group];
--		if (!mg->supported || group == MINSTREL_CCK_GROUP)
-+		if (!mi->supported[group] || group == MINSTREL_CCK_GROUP)
- 			continue;
- 
- 		tmp_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-@@ -540,7 +540,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	for (group = 0; group < ARRAY_SIZE(minstrel_mcs_groups); group++) {
- 
- 		mg = &mi->groups[group];
--		if (!mg->supported)
-+		if (!mi->supported[group])
- 			continue;
- 
- 		mi->sample_count++;
-@@ -550,7 +550,7 @@ minstrel_ht_update_stats(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 			tmp_group_tp_rate[j] = group;
- 
- 		for (i = 0; i < MCS_GROUP_RATES; i++) {
--			if (!(mg->supported & BIT(i)))
-+			if (!(mi->supported[group] & BIT(i)))
- 				continue;
- 
- 			index = MCS_GROUP_RATES * group + i;
-@@ -636,7 +636,7 @@ minstrel_set_next_sample_idx(struct minstrel_ht_sta *mi)
- 		mi->sample_group %= ARRAY_SIZE(minstrel_mcs_groups);
- 		mg = &mi->groups[mi->sample_group];
- 
--		if (!mg->supported)
-+		if (!mi->supported[mi->sample_group])
- 			continue;
- 
- 		if (++mg->index >= MCS_GROUP_RATES) {
-@@ -657,7 +657,7 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- 	while (group > 0) {
- 		group--;
- 
--		if (!mi->groups[group].supported)
-+		if (!mi->supported[group])
- 			continue;
- 
- 		if (minstrel_mcs_groups[group].streams >
-@@ -994,7 +994,7 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 	sample_idx = sample_table[mg->column][mg->index];
- 	minstrel_set_next_sample_idx(mi);
- 
--	if (!(mg->supported & BIT(sample_idx)))
-+	if (!(mi->supported[sample_group] & BIT(sample_idx)))
- 		return -1;
- 
- 	mrs = &mg->rates[sample_idx];
-@@ -1052,7 +1052,7 @@ static void
- minstrel_ht_check_cck_shortpreamble(struct minstrel_priv *mp,
- 				    struct minstrel_ht_sta *mi, bool val)
- {
--	u8 supported = mi->groups[MINSTREL_CCK_GROUP].supported;
-+	u8 supported = mi->supported[MINSTREL_CCK_GROUP];
- 
- 	if (!supported || !mi->cck_supported_short)
- 		return;
-@@ -1061,7 +1061,7 @@ minstrel_ht_check_cck_shortpreamble(struct minstrel_priv *mp,
- 		return;
- 
- 	supported ^= mi->cck_supported_short | (mi->cck_supported_short << 4);
--	mi->groups[MINSTREL_CCK_GROUP].supported = supported;
-+	mi->supported[MINSTREL_CCK_GROUP] = supported;
- }
- 
- static void
-@@ -1154,7 +1154,7 @@ minstrel_ht_update_cck(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 			mi->cck_supported_short |= BIT(i);
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192D_PAGE_SIZE;
+@@ -153,9 +152,8 @@ static int _rtl92d_fw_free_to_go(struct ieee80211_hw *hw)
+ 	} while ((counter++ < FW_8192D_POLLING_TIMEOUT_COUNT) &&
+ 		 (!(value32 & FWDL_ChkSum_rpt)));
+ 	if (counter >= FW_8192D_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x\n",
+-			 value32);
++		pr_err("rtl8192de: chksum report fail! REG_MCUFWDL:0x%08x\n",
++		       value32);
+ 		return -EIO;
  	}
- 
--	mi->groups[MINSTREL_CCK_GROUP].supported = mi->cck_supported;
-+	mi->supported[MINSTREL_CCK_GROUP] = mi->cck_supported;
- }
- 
- static void
-@@ -1224,7 +1224,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		u32 gflags = minstrel_mcs_groups[i].flags;
- 		int bw, nss;
- 
--		mi->groups[i].supported = 0;
-+		mi->supported[i] = 0;
- 		if (i == MINSTREL_CCK_GROUP) {
- 			minstrel_ht_update_cck(mp, mi, sband, sta);
- 			continue;
-@@ -1256,8 +1256,8 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 			if (use_vht && minstrel_vht_only)
- 				continue;
- #endif
--			mi->groups[i].supported = mcs->rx_mask[nss - 1];
--			if (mi->groups[i].supported)
-+			mi->supported[i] = mcs->rx_mask[nss - 1];
-+			if (mi->supported[i])
- 				n_supported++;
- 			continue;
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+@@ -327,8 +324,7 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
+ 	rtl_write_byte(rtlpriv, 0x1f, value);
+ 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "fw is not ready to run!\n");
++		pr_err("rtl8192de: fw is not ready to run!\n");
+ 		goto exit;
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "fw is ready to run!\n");
+@@ -407,8 +403,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!bwrite_success) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("rtl8192de: Write H2C fail because no trigger for FW INT!\n");
+ 			break;
  		}
-@@ -1283,10 +1283,10 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		else
- 			bw = BW_20;
- 
--		mi->groups[i].supported = minstrel_get_valid_vht_rates(bw, nss,
-+		mi->supported[i] = minstrel_get_valid_vht_rates(bw, nss,
- 				vht_cap->vht_mcs.tx_mcs_map);
- 
--		if (mi->groups[i].supported)
-+		if (mi->supported[i])
- 			n_supported++;
+ 		boxnum = rtlhal->last_hmeboxnum;
+@@ -430,8 +425,8 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 			box_extreg = REG_HMEBOX_EXT_3;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", boxnum);
++			pr_err("rtl8192de: switch case %#x not processed\n",
++			       boxnum);
+ 			break;
+ 		}
+ 		isfw_read = _rtl92d_check_fw_read_last_h2c(hw, boxnum);
+@@ -507,8 +501,8 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
+ 					       boxcontent[idx]);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", cmd_len);
++			pr_err("rtl8192de: switch case %#x not processed\n",
++			       cmd_len);
+ 			break;
+ 		}
+ 		bwrite_success = true;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+index fcb14c5..2c92c33 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+@@ -163,8 +163,7 @@ void rtl92de_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("rtl8192de: switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -358,9 +357,8 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+-				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-					 "switch case %#x not processed\n",
+-					 e_aci);
++				pr_err("rtl8192de: switch case %#x not processed\n",
++				       e_aci);
+ 				break;
+ 			}
+ 		}
+@@ -500,8 +498,7 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 		break;
+ 	}
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("rtl8192de: switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -520,9 +517,8 @@ static bool _rtl92de_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
+ 			break;
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("rtl8192de: Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -920,7 +916,7 @@ int rtl92de_hw_init(struct ieee80211_hw *hw)
+ 	/* rtlpriv->intf_ops->disable_aspm(hw); */
+ 	rtstatus = _rtl92de_init_mac(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("rtl8192de: Init MAC failed\n");
+ 		err = 1;
+ 		spin_unlock_irqrestore(&globalmutex_for_power_and_efuse, flags);
+ 		return err;
+@@ -1119,11 +1115,8 @@ static int _rtl92de_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not supported!\n", type);
++		pr_err("rtl8192de: Network type %d not supported!\n", type);
+ 		return 1;
+-		break;
+-
+ 	}
+ 	rtl_write_byte(rtlpriv, MSR, bt_msr);
+ 	rtlpriv->cfg->ops->led_control(hw, ledaction);
+@@ -1732,7 +1725,7 @@ static void _rtl92de_efuse_update_chip_version(struct ieee80211_hw *hw)
+ 		break;
+ 	default:
+ 		chipver |= CHIP_92D_D_CUT;
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown CUT!\n");
++		pr_err("rtl8192de: Unknown CUT!\n");
+ 		break;
+ 	}
+ 	rtlpriv->rtlhal.version = chipver;
+@@ -1816,7 +1809,7 @@ void rtl92de_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl92de_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("rtl8192de: Autoload ERR!!\n");
+ 	}
+ 	return;
+ }
+@@ -2169,8 +2162,8 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", enc_algo);
++			pr_err("rtl8192de: switch case %#x not processed\n",
++			       enc_algo);
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -2186,9 +2178,7 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								 p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("rtl8192de: Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
+index c22b8a2..58ec4fc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
+@@ -66,8 +66,8 @@ void rtl92de_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("rtl8192de: switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -101,8 +100,8 @@ void rtl92de_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("rtl8192de: switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+index fbd127b..90a3443 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+@@ -716,7 +716,7 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
+ 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
+ 		BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("rtl8192de: Write BB Reg Fail!!\n");
+ 		return false;
  	}
  
-diff --git a/net/mac80211/rc80211_minstrel_ht.h b/net/mac80211/rc80211_minstrel_ht.h
-index e8b52a9..de1646c 100644
---- a/net/mac80211/rc80211_minstrel_ht.h
-+++ b/net/mac80211/rc80211_minstrel_ht.h
-@@ -52,9 +52,6 @@ struct minstrel_mcs_group_data {
- 	u8 index;
- 	u8 column;
+@@ -731,13 +731,13 @@ static bool _rtl92d_phy_bb_config(struct ieee80211_hw *hw)
+ 			BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("rtl8192de: BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = _rtl92d_phy_config_bb_with_headerfile(hw,
+ 		BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("rtl8192de: AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool) (rtl_get_bbreg(hw,
+@@ -833,8 +833,7 @@ bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
+ 		break;
+ 	case RF90_PATH_C:
+ 	case RF90_PATH_D:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpath);
++		pr_err("rtl8192de: switch case %#x not processed\n", rfpath);
+ 		break;
+ 	}
+ 	return true;
+@@ -987,8 +986,8 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8192de: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	switch (rtlphy->current_chan_bw) {
+@@ -1019,8 +1017,8 @@ void rtl92d_phy_set_bw_mode(struct ieee80211_hw *hw,
+ 			HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("rtl8192de: unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
  
--	/* bitfield of supported MCS rates of this group */
--	u16 supported;
--
- 	/* sorted rate set within a MCS group*/
- 	u16 max_group_tp_rate[MAX_THR_RATES];
- 	u16 max_group_prob_rate;
-@@ -101,6 +98,9 @@ struct minstrel_ht_sta {
- 	u8 cck_supported;
- 	u8 cck_supported_short;
+ 	}
+@@ -2842,9 +2839,8 @@ static bool _rtl92d_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			rtl92d_phy_reload_iqk_setting(hw, channel);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n",
+-				 currentcmd->cmdid);
++			pr_err("rtl8192de: switch case %#x not processed\n",
++			       currentcmd->cmdid);
+ 			break;
+ 		}
+ 		break;
+@@ -2956,9 +2952,8 @@ static void rtl92d_phy_set_io(struct ieee80211_hw *hw)
+ 		rtl92d_dm_write_dig(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n",
+-			 rtlphy->current_io_type);
++		pr_err("rtl8192de: switch case %#x not processed\n",
++		       rtlphy->current_io_type);
+ 		break;
+ 	}
+ 	rtlphy->set_io_inprogress = false;
+@@ -2988,8 +2983,8 @@ bool rtl92d_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
+ 			postprocessing = true;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", iotype);
++			pr_err("rtl8192de: switch case %#x not processed\n",
++			       iotype);
+ 			break;
+ 		}
+ 	} while (false);
+@@ -3176,8 +3170,8 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		_rtl92d_phy_set_rfsleep(hw);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", rfpwr_state);
++		pr_err("rtl8192de: switch case %#x not processed\n",
++		       rfpwr_state);
+ 		bresult = false;
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
+index 9dc9e91..021d3c5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/rf.c
+@@ -63,8 +63,7 @@ void rtl92d_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 		}
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("rtl8192de: unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index 63e942b..0fb014e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -171,8 +171,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw\n");
++		pr_err("rtl8192de: Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
  
-+	/* Bitfield of supported MCS rates of all groups */
-+	u16 supported[MINSTREL_GROUPS_NB];
-+
- 	/* MCS rate group info and statistics */
- 	struct minstrel_mcs_group_data groups[MINSTREL_GROUPS_NB];
+@@ -185,8 +184,7 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("rtl8192de: Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -256,7 +254,7 @@ static struct rtl_mod_params rtl92de_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = true,
+ 	.fwctrl_lps = false,
+-	.debug = DBG_EMERG,
++	.debug = 0,
  };
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 5320e35..1942d4b 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -24,7 +24,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 	char gimode = 'L';
- 	u32 gflags;
  
--	if (!mi->groups[i].supported)
-+	if (!mi->supported[i])
- 		return p;
- 
- 	mg = &minstrel_mcs_groups[i];
-@@ -42,7 +42,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		static const int bitrates[4] = { 10, 20, 55, 110 };
- 		int idx = i * MCS_GROUP_RATES + j;
- 
--		if (!(mi->groups[i].supported & BIT(j)))
-+		if (!(mi->supported[i] & BIT(j)))
- 			continue;
- 
- 		if (gflags & IEEE80211_TX_RC_MCS) {
-@@ -170,7 +170,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 	char gimode = 'L';
- 	u32 gflags;
- 
--	if (!mi->groups[i].supported)
-+	if (!mi->supported[i])
- 		return p;
- 
- 	mg = &minstrel_mcs_groups[i];
-@@ -188,7 +188,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		static const int bitrates[4] = { 10, 20, 55, 110 };
- 		int idx = i * MCS_GROUP_RATES + j;
- 
--		if (!(mi->groups[i].supported & BIT(j)))
-+		if (!(mi->supported[i] & BIT(j)))
- 			continue;
- 
- 		if (gflags & IEEE80211_TX_RC_MCS) {
+ static const struct rtl_hal_cfg rtl92de_hal_cfg = {
 -- 
-2.10.1
+2.10.2
