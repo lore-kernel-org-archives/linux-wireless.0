@@ -1,81 +1,347 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f181.google.com ([209.85.210.181]:35930 "EHLO
-        mail-wj0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752495AbcLHUfV (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35973 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752618AbcLKFpw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2016 15:35:21 -0500
-Received: by mail-wj0-f181.google.com with SMTP id tk12so102826727wjb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2016 12:35:21 -0800 (PST)
-Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
- better BSSs
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
- <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
- <1481102727.4092.34.camel@sipsolutions.net>
- <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
- <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
- <20161208175236.GA6121@jouni.qca.qualcomm.com>
-Cc: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com> (sfid-20161208_213526_967952_6E9296C4)
-Date: Thu, 8 Dec 2016 21:35:18 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161208175236.GA6121@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+        Sun, 11 Dec 2016 00:45:52 -0500
+Received: by mail-oi0-f67.google.com with SMTP id u15so7277539oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:52 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 13/14] rtlwifi_new: rtl8188ee: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:21 -0600
+Message-Id: <20161211054523.7119-25-Larry.Finger@lwfinger.net> (sfid-20161211_064555_142726_0A92E699)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8-12-2016 18:52, Malinen, Jouni wrote:
-> On Wed, Dec 07, 2016 at 09:03:23PM +0100, Arend Van Spriel wrote:
->> On 7-12-2016 10:33, Vamsi, Krishna wrote:
->>>> -----Original Message-----
->>>> From: Johannes Berg [mailto:johannes@sipsolutions.net]
->>>
->>>> What about Arend's comment regarding this functionality overlapping with the
->>>> BSS selection offload configuration?
->>>>
->>>> Do you think there's any ability to share attributes/functionality?
->>>
->>> Hi Johannes,
->>>
->>> I think the later comment from Luca on this which I pasted below is more agreeable.
->>>
->>> Yes, similar but not quite the same.  The existing case is for finding BSSs that are worth waking the host up for (while disconnected), so it needs to be better than the RSSI passed (absolute number).  Now this is about relative RSSI as compared to the current connection, so RELATIVE_RSSI is different than RSSI and I think the same attribute should not be used, to avoid confusion.
->>
->> I noticed the response from Luca, but did not get back on this. I know
->> it is not the same, but what I meant is whether we could extend it so it
->> also covers your scenario.
-> 
-> I'm not sure I see the point of trying to avoid the new RELATIVE_RSSI
-> attribute. We need to clearly specify that this new constraint is indeed
-> for relative comparison against the currently connected BSS.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-Hi Jouni,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 33 ++++++----------------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 30 ++++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   | 22 ++++++---------
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/rf.c    |  3 +-
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  8 ++----
+ 5 files changed, 33 insertions(+), 63 deletions(-)
 
-I am not saying it should be avoided. Just looking at it conceptually
-the scheduled scan request holds so-called matchsets that specify the
-constraints to determine whether a BSS was found that is worth notifying
-the host/user-space about. As such I would expect the relative RSSI
-attribute(s) to be part of the matchset. That way you can specify it
-together with the currently connected SSID in a single matchset.
-
-> As far as your second email is concerned, it might make more sense to
-> use the existing NL80211_ATTR_BSS_SELECT instead of the new
-> NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF since they cover very
-> similar purpose in defining RSSI preference between bands. We can take a
-> look at doing so. One thing to be a careful about this is in what claims
-> there are about using NL80211_ATTR_BSS_SELECT for capability indication
-> in GET_WIPHY. I guess we can leave that as-is to apply for _CONNECT and
-> the new EXT_FEATURE flag we are adding for sched_scan applies for this
-> attribute in SCHED_SCAN.
-
-The NL80211_ATTR_BSS_SELECT supports different methods for BSS
-selection. One of them being RSSI_ADJUST which is similar to this. It
-lets user-space specify the band and adjustment instead of having a band
-implied in the attribute name. Agree that if reusing it for scheduled
-scan you would still need the EXT_FEATURE flag.
-
-Regards,
-Arend
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index fbd3eea..3ba2a3f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -125,10 +125,8 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8192C_PAGE_SIZE;
+ 	remainsize = size % FW_8192C_PAGE_SIZE;
+ 
+-	if (pagenums > 8) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Page numbers should not greater then 8\n");
+-	}
++	if (pagenums > 8)
++		pr_err("Page numbers should not greater then 8\n");
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+@@ -157,15 +155,10 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_CHKSUM_RPT)));
+ 
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
++		       value32);
+ 		goto exit;
+ 	}
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -176,20 +169,14 @@ static int _rtl88e_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x.\n",
+-				  value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		udelay(FW_8192C_POLLING_DELAY);
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
++	pr_err("Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
+ 
+ exit:
+ 	return err;
+@@ -235,8 +222,7 @@ int rtl88e_download_fw(struct ieee80211_hw *hw,
+ 
+ 	err = _rtl88e_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+ 			 "Firmware is ready to run!\n");
+@@ -309,8 +295,7 @@ static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!write_sucess) {
+ 		wait_writeh2c_limit--;
+ 		if (wait_writeh2c_limit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 1a17dfe..0dc1293 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -358,8 +358,7 @@ void rtl88ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 	case HAL_DEF_WOWLAN:
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -572,9 +571,8 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				acm_ctrl &= (~ACMHW_VOQEN);
+ 				break;
+ 			default:
+-				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-					 "switch case %#x not processed\n",
+-					 e_aci);
++				pr_err("switch case %#x not processed\n",
++				       e_aci);
+ 				break;
+ 			}
+ 		}
+@@ -737,8 +735,7 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 				    2, array);
+ 		break; }
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", variable);
++		pr_err("switch case %#x not processed\n", variable);
+ 		break;
+ 	}
+ }
+@@ -759,9 +756,8 @@ static bool _rtl88ee_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
+ 
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -1096,7 +1092,7 @@ int rtl88ee_hw_init(struct ieee80211_hw *hw)
+ 
+ 	rtstatus = _rtl88ee_init_mac(hw);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_info("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1252,8 +1248,7 @@ static int _rtl88ee_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not support!\n", type);
++		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+ 		break;
+ 	}
+@@ -1987,7 +1982,7 @@ void rtl88ee_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl88ee_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	_rtl88ee_hal_customized_behavior(hw);
+ }
+@@ -2354,8 +2349,7 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 			enc_algo = CAM_AES;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", enc_algo);
++			pr_err("switch case %#x not processed\n", enc_algo);
+ 			enc_algo = CAM_TKIP;
+ 			break;
+ 		}
+@@ -2373,9 +2367,7 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id =
+ 					  rtl_cam_get_free_entry(hw, p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+index ece8691..c6d6a16 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+@@ -176,7 +176,7 @@ static u32 _rtl88e_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0xff;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -220,7 +220,7 @@ static void _rtl88e_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("stop\n");
+ 		return;
+ 	}
+ 	offset &= 0xff;
+@@ -373,7 +373,7 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
+ 
+ 	rtstatus = phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -383,13 +383,13 @@ static bool _rtl88e_phy_bb8188e_config_parafile(struct ieee80211_hw *hw)
+ 		  phy_config_bb_with_pghdr(hw, BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus =
+ 	  phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power =
+@@ -1095,8 +1095,7 @@ void rtl88e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -1137,8 +1136,7 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -1162,8 +1160,7 @@ void rtl88e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl88e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -1303,8 +1300,7 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n", *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+index 26ac4c2..30798b1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rf.c
+@@ -51,8 +51,7 @@ void rtl88e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+index f361808..276c745 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c
+@@ -165,8 +165,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw.\n");
++		pr_info("Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
+ 
+@@ -177,8 +176,7 @@ int rtl88e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_info("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -278,7 +276,7 @@ static struct rtl_mod_params rtl88ee_mod_params = {
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = false,
+ 	.msi_support = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ static const struct rtl_hal_cfg rtl88ee_hal_cfg = {
+-- 
+2.10.2
