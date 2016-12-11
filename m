@@ -1,142 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34089 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754053AbcLLBwa (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33595 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752423AbcLKFpl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 20:52:30 -0500
-Received: by mail-wm0-f66.google.com with SMTP id g23so8100741wme.1
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2016 17:52:29 -0800 (PST)
-Received: from localhost.localdomain ([92.185.195.211])
-        by smtp.gmail.com with ESMTPSA id ia7sm54561249wjb.23.2016.12.11.17.52.27
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 11 Dec 2016 17:52:27 -0800 (PST)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 4/4] mac80211: Add set_cqm_rssi_range_config
-Date: Mon, 12 Dec 2016 02:52:13 +0100
-Message-Id: <20161212015213.21323-4-andrew.zaborowski@intel.com> (sfid-20161212_025242_357440_4EA50ECD)
-In-Reply-To: <20161212015213.21323-2-andrew.zaborowski@intel.com>
-References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
+        Sun, 11 Dec 2016 00:45:41 -0500
+Received: by mail-oi0-f68.google.com with SMTP id f201so7294139oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:40 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 05/14] rtlwifi_new: rtl8723ae: Remove all instances of DBG_EMERG
+Date: Sat, 10 Dec 2016 23:45:05 -0600
+Message-Id: <20161211054523.7119-9-Larry.Finger@lwfinger.net> (sfid-20161211_070932_188031_5017677C)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Support .set_cqm_rssi_range_config if the beacons are available for
-processing in mac80211.  There's no reason that this couldn't be
-offloaded by mac80211-based drivers but there's no driver method for
-that added in this patch as I don't have the hardware.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- include/net/mac80211.h |  6 ++++++
- net/mac80211/cfg.c     | 28 ++++++++++++++++++++++++++++
- net/mac80211/mlme.c    | 24 ++++++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c  |  9 +++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  | 19 +++++++------------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c |  6 ++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 18 +++++++-----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c  |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c  |  8 +++-----
+ 6 files changed, 23 insertions(+), 40 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 33026e1..671e498 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -502,6 +502,10 @@ struct ieee80211_mu_group_data {
-  *	implies disabled. As with the cfg80211 callback, a change here should
-  *	cause an event to be sent indicating where the current value is in
-  *	relation to the newly configured threshold.
-+ * @cqm_rssi_low: Connection quality monitor RSSI lower threshold, a zero value
-+ *	implies disabled.  This is an alternative mechanism to the single
-+ *	threshold event and can't be enabled simultaneously.
-+ * @cqm_rssi_high: Connection quality monitor RSSI upper threshold.
-  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
-  * @arp_addr_list: List of IPv4 addresses for hardware ARP filtering. The
-  *	may filter ARP queries targeted for other addresses than listed here.
-@@ -554,6 +558,8 @@ struct ieee80211_bss_conf {
- 	u16 ht_operation_mode;
- 	s32 cqm_rssi_thold;
- 	u32 cqm_rssi_hyst;
-+	s32 cqm_rssi_low;
-+	s32 cqm_rssi_high;
- 	struct cfg80211_chan_def chandef;
- 	struct ieee80211_mu_group_data mu_group;
- 	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index fd6541f..6ac0523 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2647,6 +2647,33 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 
- 	bss_conf->cqm_rssi_thold = rssi_thold;
- 	bss_conf->cqm_rssi_hyst = rssi_hyst;
-+	bss_conf->cqm_rssi_low = 0;
-+	bss_conf->cqm_rssi_high = 0;
-+	sdata->u.mgd.last_cqm_event_signal = 0;
-+
-+	/* tell the driver upon association, unless already associated */
-+	if (sdata->u.mgd.associated &&
-+	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
-+		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
-+
-+	return 0;
-+}
-+
-+static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
-+					       struct net_device *dev,
-+					       s32 rssi_low, s32 rssi_high)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_vif *vif = &sdata->vif;
-+	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
-+
-+	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
-+		return -EOPNOTSUPP;
-+
-+	bss_conf->cqm_rssi_low = rssi_low;
-+	bss_conf->cqm_rssi_high = rssi_high;
-+	bss_conf->cqm_rssi_thold = 0;
-+	bss_conf->cqm_rssi_hyst = 0;
- 	sdata->u.mgd.last_cqm_event_signal = 0;
- 
- 	/* tell the driver upon association, unless already associated */
-@@ -3645,6 +3672,7 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.mgmt_tx = ieee80211_mgmt_tx,
- 	.mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
- 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
-+	.set_cqm_rssi_range_config = ieee80211_set_cqm_rssi_range_config,
- 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
- 	.set_antenna = ieee80211_set_antenna,
- 	.get_antenna = ieee80211_get_antenna,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 6898ecb..7f99918 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3416,6 +3416,30 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+index 164a27e..25a950e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+@@ -99,8 +99,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
  		}
+ 
+@@ -123,8 +122,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			box_extreg = REG_HMEBOX_EXT_3;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", boxnum);
++			pr_err("switch case %#x not processed\n", boxnum);
+ 			break;
+ 		}
+ 
+@@ -229,8 +227,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			}
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", cmd_len);
++			pr_err("switch case %#x not processed\n", cmd_len);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index e0da8dc..bb9de2f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -570,9 +570,8 @@ static bool _rtl8723e_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
+ 
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -961,7 +960,7 @@ int rtl8723e_hw_init(struct ieee80211_hw *hw)
+ 	rtlpriv->intf_ops->disable_aspm(hw);
+ 	rtstatus = _rtl8712e_init_mac(hw);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1107,8 +1106,7 @@ static enum version_8723e _rtl8723e_read_chip_version(struct ieee80211_hw *hw)
+ 			 "Chip Version ID: VERSION_NORMAL_UMC_CHIP_8723_1T1R_B_CUT.\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Chip Version ID: Unknown. Bug?\n");
++		pr_err("Chip Version ID: Unknown. Bug?\n");
+ 		break;
  	}
  
-+	if (bss_conf->cqm_rssi_low &&
-+	    ifmgd->count_beacon_signal >= IEEE80211_SIGNAL_AVE_MIN_COUNT) {
-+		int sig = -ewma_beacon_signal_read(&ifmgd->ave_beacon_signal);
-+		int last_event = ifmgd->last_cqm_event_signal;
-+		int low = bss_conf->cqm_rssi_low;
-+		int high = bss_conf->cqm_rssi_high;
-+
-+		if (sig < low &&
-+		    (last_event == 0 || last_event >= low)) {
-+			ifmgd->last_cqm_event_signal = sig;
-+			ieee80211_cqm_rssi_notify(
-+				&sdata->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+				sig, GFP_KERNEL);
-+		} else if (sig > high &&
-+			   (last_event == 0 || last_event <= high)) {
-+			ifmgd->last_cqm_event_signal = sig;
-+			ieee80211_cqm_rssi_notify(
-+				&sdata->vif,
-+				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+				sig, GFP_KERNEL);
-+		}
-+	}
-+
- 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
- 		mlme_dbg_ratelimited(sdata,
- 				     "cancelling AP probe due to a received beacon\n");
+@@ -1157,8 +1155,7 @@ static int _rtl8723e_set_media_status(struct ieee80211_hw *hw,
+ 			"Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			"Network type %d not support!\n", type);
++		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+ 		break;
+ 	}
+@@ -1852,7 +1849,7 @@ void rtl8723e_read_eeprom_info(struct ieee80211_hw *hw)
+ 	} else {
+ 		rtlefuse->autoload_failflag = true;
+ 		_rtl8723e_read_adapter_info(hw, false);
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	_rtl8723e_hal_customized_behavior(hw);
+ }
+@@ -2245,9 +2242,7 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id =
+ 					  rtl_cam_get_free_entry(hw, p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+index 77c1004..c2a6b2c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
+@@ -58,8 +58,7 @@ void rtl8723e_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -100,8 +99,7 @@ void rtl8723e_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n", pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+index 8001dce..393ac40 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+@@ -213,7 +213,7 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = _rtl8723e_phy_config_bb_with_headerfile(hw,
+ 						BASEBAND_CONFIG_PHY_REG);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -227,13 +227,13 @@ static bool _rtl8723e_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 					BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus =
+ 	  _rtl8723e_phy_config_bb_with_headerfile(hw, BASEBAND_CONFIG_AGC_TAB);
+ 	if (rtstatus != true) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool) (rtl_get_bbreg(hw,
+@@ -749,8 +749,7 @@ void rtl8723e_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -791,8 +790,7 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -816,8 +814,7 @@ void rtl8723e_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl8723e_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -977,8 +974,7 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n", *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+index 4227717..89958b6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/rf.c
+@@ -51,8 +51,7 @@ void rtl8723e_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+index c51a9e8..401f542 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
+@@ -172,8 +172,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x6000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw.\n");
++		pr_err("Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
+ 
+@@ -186,8 +185,7 @@ int rtl8723e_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 	return 0;
+@@ -270,7 +268,7 @@ static struct rtl_mod_params rtl8723e_mod_params = {
+ 	.inactiveps = true,
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ 	.msi_support = false,
+ 	.disable_watchdog = false,
+ };
 -- 
-2.9.3
+2.10.2
