@@ -1,513 +1,1138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:34083 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933120AbcLVFTH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 00:19:07 -0500
-Date: Thu, 22 Dec 2016 13:18:10 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Ozgur Karatas <okaratas@member.fsf.org>
-Cc: kbuild-all@01.org, johannes <johannes@sipsolutions.net>,
-        David Miller <davem@davemloft.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] net: wireless: fix to uses struct
-Message-ID: <201612221317.WKpDhOcc%fengguang.wu@intel.com> (sfid-20161222_061932_780035_561A6085)
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="Dxnq1zWXvFF0Q93v"
-In-Reply-To: <608881482358981@web17g.yandex.ru>
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34647 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbcLKFpg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 11 Dec 2016 00:45:36 -0500
+Received: by mail-oi0-f65.google.com with SMTP id m75so7285570oig.1
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:36 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 01/14] rtlwifi: Replace local debug macro RT_ASSERT
+Date: Sat, 10 Dec 2016 23:44:58 -0600
+Message-Id: <20161211054523.7119-2-Larry.Finger@lwfinger.net> (sfid-20161211_064548_077664_493CE1BB)
+In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This macro can be replaced with WARN_ONCE. In addition to using a
+standard debugging macro for these critical errors, we also get
+a stack dump.
 
---Dxnq1zWXvFF0Q93v
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In rtl8821ae/hw.c, a senseless comment was removed, and an incorrect
+indentation was fixed.
 
-Hi Ozgur,
+This patch also fixes two places in each of rtl8192ee, rtl8723be,
+and rtl8821ae where the logical condition was incorrect.
 
-[auto build test ERROR on mac80211-next/master]
-[also build test ERROR on v4.9 next-20161221]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Ozgur-Karatas/net-wireless-fixed-to-checkpatch-errors/20161222-125128
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-config: i386-randconfig-x006-201651 (attached as .config)
-compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=i386 
-
-All errors (new ones prefixed by >>):
-
-   net/wireless/reg.c: In function 'regulatory_hint_core':
->> net/wireless/reg.c:2294:28: error: 'regulatory_request' undeclared (first use in this function)
-     request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
-                               ^~~~~~~~~~~~~~~~~~
-   net/wireless/reg.c:2294:28: note: each undeclared identifier is reported only once for each function it appears in
-   net/wireless/reg.c: In function 'regulatory_hint_user':
-   net/wireless/reg.c:2316:28: error: 'regulatory_request' undeclared (first use in this function)
-     request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
-                               ^~~~~~~~~~~~~~~~~~
-   net/wireless/reg.c: In function 'regulatory_hint':
-   net/wireless/reg.c:2388:28: error: 'regulatory_request' undeclared (first use in this function)
-     request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
-                               ^~~~~~~~~~~~~~~~~~
-
-vim +/regulatory_request +2294 net/wireless/reg.c
-
-  2288	 * and when we restore regulatory settings.
-  2289	 */
-  2290	static int regulatory_hint_core(const char *alpha2)
-  2291	{
-  2292		struct regulatory_request *request;
-  2293	
-> 2294		request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
-  2295		if (!request)
-  2296			return -ENOMEM;
-  2297	
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/net/wireless/realtek/rtlwifi/core.c          |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/debug.h         | 14 --------------
+ drivers/net/wireless/realtek/rtlwifi/pci.c           | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c  |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c |  8 ++++----
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c    |  6 +++---
+ .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c   | 14 +++++++-------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c  |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 14 +++++++-------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 15 +++++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c |  6 +++---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c  |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 10 +++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c  |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c  |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 12 ++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 14 +++++++-------
+ .../wireless/realtek/rtlwifi/rtl8723com/phy_common.c |  2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c  |  4 ++--
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c  | 16 ++++++++--------
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c |  8 ++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 20 ++++++++++++--------
+ drivers/net/wireless/realtek/rtlwifi/usb.c           |  2 +-
+ 38 files changed, 133 insertions(+), 140 deletions(-)
 
---Dxnq1zWXvFF0Q93v
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-
---Dxnq1zWXvFF0Q93v--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 2caa4ad..7ae774d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1613,8 +1613,8 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+ 				 "set pairwise key\n");
+ 			if (!sta) {
+-				RT_ASSERT(false,
+-					  "pairwise key without mac_addr\n");
++				WARN_ONCE(true,
++					  "rtlwifi: pairwise key without mac_addr\n");
+ 
+ 				err = -EOPNOTSUPP;
+ 				goto out_unlock;
+@@ -1804,8 +1804,8 @@ bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
+ 					 "rtl_hal_pwrseqcmdparsing(): PWR_CMD_END\n");
+ 				return true;
+ 			default:
+-				RT_ASSERT(false,
+-					  "rtl_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
++				WARN_ONCE(true,
++					  "rtlwifi: rtl_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
+ 				break;
+ 			}
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
+index 6156a79..6f2e2b9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.h
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
+@@ -166,15 +166,6 @@ enum dbgp_flag_e {
+ 
+ #ifdef CONFIG_RTLWIFI_DEBUG
+ 
+-#define RT_ASSERT(_exp, fmt, ...)					\
+-do {									\
+-	if (!(_exp)) {							\
+-		printk(KERN_DEBUG KBUILD_MODNAME ":%s(): " fmt,		\
+-		       __func__, ##__VA_ARGS__);			\
+-	}								\
+-} while (0)
+-
+-
+ struct rtl_priv;
+ 
+ __printf(5, 6)
+@@ -210,11 +201,6 @@ do {									\
+ 
+ struct rtl_priv;
+ 
+-__printf(2, 3)
+-static inline void RT_ASSERT(int exp, const char *fmt, ...)
+-{
+-}
+-
+ __printf(4, 5)
+ static inline void RT_TRACE(struct rtl_priv *rtlpriv,
+ 			    int comp, int level,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 8bfe020..bb767186 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -2174,15 +2174,15 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+-		RT_ASSERT(false, "%s : Cannot enable new PCI device\n",
++		WARN_ONCE(true, "%s : Cannot enable new PCI device\n",
+ 			  pci_name(pdev));
+ 		return err;
+ 	}
+ 
+ 	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
+ 		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
+-			RT_ASSERT(false,
+-				  "Unable to obtain 32bit DMA for consistent allocations\n");
++			WARN_ONCE(true,
++				  "rtlwifi: Unable to obtain 32bit DMA for consistent allocations\n");
+ 			err = -ENOMEM;
+ 			goto fail1;
+ 		}
+@@ -2193,7 +2193,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	hw = ieee80211_alloc_hw(sizeof(struct rtl_pci_priv) +
+ 				sizeof(struct rtl_priv), &rtl_ops);
+ 	if (!hw) {
+-		RT_ASSERT(false,
++		WARN_ONCE(true,
+ 			  "%s : ieee80211 alloc failed\n", pci_name(pdev));
+ 		err = -ENOMEM;
+ 		goto fail1;
+@@ -2232,7 +2232,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 	/* MEM map */
+ 	err = pci_request_regions(pdev, KBUILD_MODNAME);
+ 	if (err) {
+-		RT_ASSERT(false, "Can't obtain PCI resources\n");
++		WARN_ONCE(true, "rtlwifi: Can't obtain PCI resources\n");
+ 		goto fail1;
+ 	}
+ 
+@@ -2245,7 +2245,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
+ 			(unsigned long)pci_iomap(pdev,
+ 			rtlpriv->cfg->bar_id, pmem_len);
+ 	if (rtlpriv->io.pci_mem_start == 0) {
+-		RT_ASSERT(false, "Can't map PCI mem\n");
++		WARN_ONCE(true, "rtlwifi: Can't map PCI mem\n");
+ 		err = -ENOMEM;
+ 		goto fail2;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index c66a2d1..fbd3eea 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -434,8 +434,8 @@ void rtl88e_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8188ee: error H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 37d6efc..1a17dfe 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1352,7 +1352,7 @@ void rtl88ee_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8188ee: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+index fffaa92..ece8691 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
+@@ -1231,8 +1231,8 @@ u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		return 0;
+ 	if (rtlphy->set_bwmode_inprogress)
+ 		return 0;
+-	RT_ASSERT((rtlphy->current_channel <= 14),
+-		  "WIRELESS_MODE_G but channel>14");
++	WARN_ONCE((rtlphy->current_channel > 14),
++		  "rtl8188ee: WIRELESS_MODE_G but channel>14");
+ 	rtlphy->sw_chnl_inprogress = true;
+ 	rtlphy->sw_chnl_stage = 0;
+ 	rtlphy->sw_chnl_step = 0;
+@@ -1280,8 +1280,8 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "illegal channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8188ee: illegal channel for Zebra: %d\n", channel);
+ 
+ 	_rtl88e_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
+@@ -1367,7 +1367,7 @@ static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
++		WARN_ONCE(true, "rtl8188ee: cmdtable cannot be NULL.\n");
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+index 3e3b886..09c908d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+@@ -760,7 +760,7 @@ void rtl88ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8188ee: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -779,7 +779,7 @@ void rtl88ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8188ee: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -799,7 +799,7 @@ u32 rtl88ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8188ee: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -815,7 +815,7 @@ u32 rtl88ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8188ee: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index ceacbf2..54fcf5a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -485,8 +485,8 @@ void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8192c-common: return H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 
+@@ -510,7 +510,7 @@ void rtl92c_firmware_selfreset(struct ieee80211_hw *hw)
+ 	while (u1b_tmp & BIT(2)) {
+ 		delay--;
+ 		if (delay == 0) {
+-			RT_ASSERT(false, "8051 reset fail.\n");
++			WARN_ONCE(true, "rtl8192c-common: 8051 reset fail.\n");
+ 			break;
+ 		}
+ 		udelay(50);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 94dd25c..32fc4b6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -77,7 +77,7 @@ EXPORT_SYMBOL(rtl92c_phy_set_bb_reg);
+ u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
+ 				  enum radio_path rfpath, u32 offset)
+ {
+-	RT_ASSERT(false, "deprecated!\n");
++	WARN_ONCE(true, "rtl8192c-common: _rtl92c_phy_fw_rf_serial_read deprecated!\n");
+ 	return 0;
+ }
+ EXPORT_SYMBOL(_rtl92c_phy_fw_rf_serial_read);
+@@ -86,7 +86,7 @@ void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
+ 				    enum radio_path rfpath, u32 offset,
+ 				    u32 data)
+ {
+-	RT_ASSERT(false, "deprecated!\n");
++	WARN_ONCE(true, "rtl8192c-common: _rtl92c_phy_fw_rf_serial_write deprecated!\n");
+ }
+ EXPORT_SYMBOL(_rtl92c_phy_fw_rf_serial_write);
+ 
+@@ -745,8 +745,8 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		return 0;
+ 	if (rtlphy->set_bwmode_inprogress)
+ 		return 0;
+-	RT_ASSERT((rtlphy->current_channel <= 14),
+-		  "WIRELESS_MODE_G but channel>14");
++	WARN_ONCE((rtlphy->current_channel > 14),
++		  "rtl8192c-common: WIRELESS_MODE_G but channel>14");
+ 	rtlphy->sw_chnl_inprogress = true;
+ 	rtlphy->sw_chnl_stage = 0;
+ 	rtlphy->sw_chnl_step = 0;
+@@ -792,7 +792,7 @@ static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
++		WARN_ONCE(true, "rtl8192c-common: cmdtable cannot be NULL.\n");
+ 		return false;
+ 	}
+ 
+@@ -837,8 +837,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "illegal channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8192c-common: illegal channel for Zebra: %d\n", channel);
+ 
+ 	_rtl92c_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+index 4483d40..b757a74 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+@@ -1292,7 +1292,7 @@ void rtl92ce_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8192ce: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
+index 2ab4a00..3616ba2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
+@@ -670,7 +670,7 @@ void rtl92ce_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192ce: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -690,7 +690,7 @@ void rtl92ce_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192ce: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -710,7 +710,7 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(p_desc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192ce: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -726,7 +726,7 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(p_desc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192ce: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 5c7da0c..ddfcf994 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -1790,7 +1790,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
+ 						u4b_ac_param);
+ 				break;
+ 			default:
+-				RT_ASSERT(false, "invalid aci: %d !\n",
++				WARN_ONCE(true, "rtl8192cu: invalid aci: %d !\n",
+ 					  e_aci);
+ 				break;
+ 			}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+index 1ea878f..6da6e2a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+@@ -241,7 +241,7 @@ u16 rtl8192cu_mq_to_hwq(__le16 fc, u16 mac80211_queue_index)
+ 		break;
+ 	default:
+ 		hw_queue_index = RTL_TXQ_BE;
+-		RT_ASSERT(false, "QSLT_BE queue, skb_queue:%d\n",
++		WARN_ONCE(true, "rtl8192cu: QSLT_BE queue, skb_queue:%d\n",
+ 			  mac80211_queue_index);
+ 		break;
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 83a87eb..452de25 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -182,7 +182,7 @@ void rtl92d_firmware_selfreset(struct ieee80211_hw *hw)
+ 		udelay(50);
+ 		u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
+ 	}
+-	RT_ASSERT((delay > 0), "8051 reset failed!\n");
++	WARN_ONCE((delay <= 0), "rtl8192de: 8051 reset failed!\n");
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
+ 		 "=====> 8051 reset success (%d)\n", delay);
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+index 424f54b..b0dc189 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
+@@ -2700,7 +2700,7 @@ static bool _rtl92d_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL\n");
++		WARN_ONCE(true, "rtl8192de: cmdtable cannot be NULL\n");
+ 		return false;
+ 	}
+ 	if (cmdtableidx >= cmdtablesz)
+@@ -2893,17 +2893,17 @@ u8 rtl92d_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		 * 5G and 2.4G band. */
+ 		if (channel <= 14)
+ 			return 0;
+-		RT_ASSERT((channel > 14), "5G but channel<=14\n");
++		WARN_ONCE((channel <= 14), "rtl8192de: 5G but channel<=14\n");
+ 		break;
+ 	case BAND_ON_2_4G:
+ 		/* Get first channel error when change between
+ 		 * 5G and 2.4G band. */
+ 		if (channel > 14)
+ 			return 0;
+-		RT_ASSERT((channel <= 14), "2G but channel>14\n");
++		WARN_ONCE((channel > 14), "rtl8192de: 2G but channel>14\n");
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "Invalid WirelessMode(%#x)!!\n",
++		WARN_ONCE(true, "rtl8192de: Invalid WirelessMode(%#x)!!\n",
+ 			  rtlpriv->mac80211.mode);
+ 		break;
+ 	}
+@@ -3336,7 +3336,7 @@ void rtl92d_phy_set_poweron(struct ieee80211_hw *hw)
+ 			}
+ 		}
+ 		if (i == 200)
+-			RT_ASSERT(false, "Another mac power off over time\n");
++			WARN_ONCE(true, "rtl8192de: Another mac power off over time\n");
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+index 2d65e40..0d98b34 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
+@@ -402,7 +402,7 @@ static int __init rtl92de_module_init(void)
+ 
+ 	ret = pci_register_driver(&rtl92de_driver);
+ 	if (ret)
+-		RT_ASSERT(false, "No device found\n");
++		WARN_ONCE(true, "rtl8192de: No device found\n");
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+index 5fb3756..5c9c874 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
+@@ -794,7 +794,7 @@ void rtl92de_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192de: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -814,7 +814,7 @@ void rtl92de_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192de: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -834,7 +834,7 @@ u32 rtl92de_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(p_desc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192de: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -848,7 +848,7 @@ u32 rtl92de_get_desc(u8 *p_desc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_PKT_LEN(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192de: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index a4aa239..9dfd74b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -462,8 +462,8 @@ void rtl92ee_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8192ee: error H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index ebf663e..00b211b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -1582,7 +1582,7 @@ void rtl92ee_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8192ee: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+index 5ad7e75..c35ba76 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+@@ -1176,7 +1176,7 @@ static u8 _rtl92ee_phy_get_ratesection_intxpower_byrate(enum radio_path path,
+ 		rate_section = 7;
+ 		break;
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8192ee: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 	return rate_section;
+@@ -1239,7 +1239,7 @@ static u8 _rtl92ee_get_txpower_by_rate(struct ieee80211_hw *hw,
+ 		shift = 24;
+ 		break;
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8192ee: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 
+@@ -1811,8 +1811,8 @@ u8 rtl92ee_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		return 0;
+ 	if (rtlphy->set_bwmode_inprogress)
+ 		return 0;
+-	RT_ASSERT((rtlphy->current_channel <= 14),
+-		  "WIRELESS_MODE_G but channel>14");
++	WARN_ONCE((rtlphy->current_channel > 14),
++		  "rtl8192ee: WIRELESS_MODE_G but channel>14");
+ 	rtlphy->sw_chnl_inprogress = true;
+ 	rtlphy->sw_chnl_stage = 0;
+ 	rtlphy->sw_chnl_step = 0;
+@@ -1860,8 +1860,8 @@ static bool _rtl92ee_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "illegal channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8192ee: illegal channel for Zebra: %d\n", channel);
+ 
+ 	_rtl92ee_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					  MAX_RFDEPENDCMD_CNT,
+@@ -1948,7 +1948,7 @@ static bool _rtl92ee_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
++		WARN_ONCE(true, "rtl8192ee: cmdtable cannot be NULL.\n");
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+index 2d48ccd..07440e9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+@@ -991,8 +991,9 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR rxdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8192ee: ERR rxdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	}
+@@ -1011,8 +1012,9 @@ u32 rtl92ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_TXBUFFER_DESC_ADDR_LOW(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR txdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8192ee: ERR txdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	} else {
+@@ -1027,8 +1029,9 @@ u32 rtl92ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR rxdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8192ee: ERR rxdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+index 26e06b2..f4ab721 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+@@ -1251,7 +1251,7 @@ void rtl92se_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, EDCAPARA_VO, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8192se: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+index fcb9216..6299dc1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+@@ -330,7 +330,7 @@ static bool _rtl92s_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL\n");
++		WARN_ONCE(true, "rtl8192se: cmdtable cannot be NULL\n");
+ 		return false;
+ 	}
+ 
+@@ -374,8 +374,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "invalid channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8192se: invalid channel for Zebra: %d\n", channel);
+ 
+ 	_rtl92s_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
+index 9a5a113..12cef01 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
+@@ -583,7 +583,7 @@ void rtl92se_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192se: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -603,7 +603,7 @@ void rtl92se_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
+ 			SET_RX_STATUS_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192se: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -623,7 +623,7 @@ u32 rtl92se_get_desc(u8 *desc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(desc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192se: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -639,7 +639,7 @@ u32 rtl92se_get_desc(u8 *desc, bool istx, u8 desc_name)
+ 			ret = GET_RX_STATUS_DESC_BUFF_ADDR(desc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8192se: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+index 1186755..164a27e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
+@@ -259,8 +259,8 @@ void rtl8723e_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8723ae: error H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 	memset(tmp_cmdbuf, 0, 8);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index f8be0bd..e0da8dc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1256,7 +1256,7 @@ void rtl8723e_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8723ae: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+index 17b58cb..8001dce 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
+@@ -133,7 +133,7 @@ static void _rtl8723e_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
+ 					     enum radio_path rfpath, u32 offset,
+ 					     u32 data)
+ {
+-	RT_ASSERT(false, "deprecated!\n");
++	WARN_ONCE(true, "rtl8723ae: _rtl8723e_phy_fw_rf_serial_write deprecated!\n");
+ }
+ 
+ static void _rtl8723e_phy_bb_config_1t(struct ieee80211_hw *hw)
+@@ -885,8 +885,8 @@ u8 rtl8723e_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		return 0;
+ 	if (rtlphy->set_bwmode_inprogress)
+ 		return 0;
+-	RT_ASSERT((rtlphy->current_channel <= 14),
+-		  "WIRELESS_MODE_G but channel>14");
++	WARN_ONCE((rtlphy->current_channel > 14),
++		  "rtl8723ae: WIRELESS_MODE_G but channel>14");
+ 	rtlphy->sw_chnl_inprogress = true;
+ 	rtlphy->sw_chnl_stage = 0;
+ 	rtlphy->sw_chnl_step = 0;
+@@ -954,8 +954,8 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "illegal channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8723ae: illegal channel for Zebra: %d\n", channel);
+ 
+ 	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+index e93125e..c9838f5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+@@ -617,7 +617,7 @@ void rtl8723e_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8723ae: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -636,7 +636,7 @@ void rtl8723e_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8723ae: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -656,7 +656,7 @@ u32 rtl8723e_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8723ae: ERR txdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+@@ -672,7 +672,7 @@ u32 rtl8723e_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8723ae: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index 8c5c27c..6b03c7f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -224,8 +224,8 @@ void rtl8723be_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8723be: error H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index aba60c3..56a1ae4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -1631,7 +1631,7 @@ void rtl8723be_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8723be: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+index 3cc2232..b4e0a58 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+@@ -939,7 +939,7 @@ static u8 _rtl8723be_phy_get_ratesection_intxpower_byrate(enum radio_path path,
+ 		break;
+ 
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8723be: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 
+@@ -1004,7 +1004,7 @@ static u8 _rtl8723be_get_txpower_by_rate(struct ieee80211_hw *hw,
+ 		shift = 24;
+ 		break;
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8723be: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 	tx_pwr_diff = (u8)(rtlphy->tx_power_by_rate_offset[band][rfpath][tx_num]
+@@ -1387,8 +1387,8 @@ u8 rtl8723be_phy_sw_chnl(struct ieee80211_hw *hw)
+ 		return 0;
+ 	if (rtlphy->set_bwmode_inprogress)
+ 		return 0;
+-	RT_ASSERT((rtlphy->current_channel <= 14),
+-		  "WIRELESS_MODE_G but channel>14");
++	WARN_ONCE((rtlphy->current_channel > 14),
++		  "rtl8723be: WIRELESS_MODE_G but channel>14");
+ 	rtlphy->sw_chnl_inprogress = true;
+ 	rtlphy->sw_chnl_stage = 0;
+ 	rtlphy->sw_chnl_step = 0;
+@@ -1438,8 +1438,8 @@ static bool _rtl8723be_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 
+ 	rfdependcmdcnt = 0;
+ 
+-	RT_ASSERT((channel >= 1 && channel <= 14),
+-		  "illegal channel for Zebra: %d\n", channel);
++	WARN_ONCE((channel < 1 || channel > 14),
++		  "rtl8723be: illegal channel for Zebra: %d\n", channel);
+ 
+ 	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
+ 					 MAX_RFDEPENDCMD_CNT,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+index 2175aec..6f65003 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+@@ -666,8 +666,8 @@ void rtl8723be_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
+-					  desc_name);
++			WARN_ONCE(true, "rtl8723be: ERR txdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	} else {
+@@ -685,8 +685,8 @@ void rtl8723be_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
+-					  desc_name);
++			WARN_ONCE(true, "rtl8723be: ERR rxdesc :%d not process\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	}
+@@ -705,8 +705,8 @@ u32 rtl8723be_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR txdesc :%d not process\n",
+-					  desc_name);
++			WARN_ONCE(true, "rtl8723be: ERR txdesc :%d not process\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	} else {
+@@ -721,7 +721,7 @@ u32 rtl8723be_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
++			WARN_ONCE(true, "rtl8723be: ERR rxdesc :%d not processed\n",
+ 				  desc_name);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
+index 75cbd15..6b80ddc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
+@@ -283,7 +283,7 @@ bool rtl8723_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
+ 	struct swchnlcmd *pcmd;
+ 
+ 	if (cmdtable == NULL) {
+-		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
++		WARN_ONCE(true, "rtl8723-common: cmdtable cannot be NULL.\n");
+ 		return false;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 2f598dd..e8688f4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -510,8 +510,8 @@ void rtl8821ae_fill_h2c_cmd(struct ieee80211_hw *hw,
+ 	u32 tmp_cmdbuf[2];
+ 
+ 	if (!rtlhal->fw_ready) {
+-		RT_ASSERT(false,
+-			  "return H2C cmd because of Fw download fail!!!\n");
++		WARN_ONCE(true,
++			  "rtl8821ae: error H2C cmd because of Fw download fail!!!\n");
+ 		return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 1281ebe..b045dd0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -2249,7 +2249,7 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
+ 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
+ 		break;
+ 	default:
+-		RT_ASSERT(false, "invalid aci: %d !\n", aci);
++		WARN_ONCE(true, "rtl8821ae: invalid aci: %d !\n", aci);
+ 		break;
+ 	}
+ }
+@@ -2601,11 +2601,10 @@ static u8 _rtl8821ae_get_chnl_group(u8 chnl)
+ 			group = 12;
+ 	else if (173 <= chnl && chnl <= 177)
+ 			group = 13;
+-		else
+-			/*RT_TRACE(rtlpriv, COMP_EFUSE,DBG_LOUD,
+-				"5G, Channel %d in Group not found\n",chnl);*/
+-			RT_ASSERT(!COMP_EFUSE,
+-				"5G, Channel %d in Group not found\n", chnl);
++	else
++		WARN_ONCE(true,
++			  "rtl8821ae: 5G, Channel %d in Group not found\n",
++			  chnl);
+ 	}
+ 	return group;
+ }
+@@ -4135,8 +4134,9 @@ void rtl8821ae_add_wowlan_pattern(struct ieee80211_hw *hw,
+ 			count++;
+ 		} while (tmp && count < 100);
+ 
+-		RT_ASSERT((count < 100),
+-			  "Write wake up frame mask FAIL %d value!\n", tmp);
++		WARN_ONCE((count >= 100),
++			  "rtl8821ae: Write wake up frame mask FAIL %d value!\n",
++			  tmp);
+ 	}
+ 	/* Disable Rx packet buffer access. */
+ 	rtl_write_byte(rtlpriv, REG_PKT_BUFF_ACCESS_CTRL,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 5dad402..7e2f7b0 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -1870,8 +1870,8 @@ static u8 _rtl8821ae_get_rate_section_index(u32 regaddr)
+ 	else if (regaddr >= 0xE20 && regaddr <= 0xE4C)
+ 		index = (u8)((regaddr - 0xE20) / 4);
+ 	else
+-		RT_ASSERT(!COMP_INIT,
+-			  "Invalid RegAddr 0x%x\n", regaddr);
++		WARN_ONCE(true,
++			  "rtl8821ae: Invalid RegAddr 0x%x\n", regaddr);
+ 	return index;
+ }
+ 
+@@ -2322,7 +2322,7 @@ static s8 _rtl8821ae_phy_get_ratesection_intxpower_byrate(u8 path, u8 rate)
+ 		rate_section = 11;
+ 		break;
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8821ae: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 
+@@ -2588,7 +2588,7 @@ static s8 _rtl8821ae_phy_get_txpower_by_rate(struct ieee80211_hw *hw,
+ 		shift = 24;
+ 		break;
+ 	default:
+-		RT_ASSERT(true, "Rate_Section is Illegal\n");
++		WARN_ONCE(true, "rtl8821ae: Rate_Section is Illegal\n");
+ 		break;
+ 	}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+index 2772718..1080981 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+@@ -904,8 +904,9 @@ void rtl8821ae_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR txdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8821ae: ERR txdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	} else {
+@@ -923,8 +924,9 @@ void rtl8821ae_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
+ 			SET_RX_DESC_EOR(pdesc, 1);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR rxdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8821ae: ERR rxdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	}
+@@ -943,8 +945,9 @@ u32 rtl8821ae_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR txdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8821ae: ERR txdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	} else {
+@@ -959,8 +962,9 @@ u32 rtl8821ae_get_desc(u8 *pdesc, bool istx, u8 desc_name)
+ 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
+ 			break;
+ 		default:
+-			RT_ASSERT(false,
+-				  "ERR rxdesc :%d not process\n", desc_name);
++			WARN_ONCE(true,
++				  "rtl8821ae: ERR rxdesc :%d not processed\n",
++				  desc_name);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 0a508649..1558f54 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1059,7 +1059,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
+ 				sizeof(struct rtl_usb_priv), &rtl_ops);
+ 	if (!hw) {
+-		RT_ASSERT(false, "ieee80211 alloc failed\n");
++		WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	rtlpriv = hw->priv;
+-- 
+2.10.2
