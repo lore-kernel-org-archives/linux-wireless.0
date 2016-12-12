@@ -1,79 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34320 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933945AbcLAUII (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54818 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750696AbcLLMAU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 15:08:08 -0500
-Received: by mail-wm0-f67.google.com with SMTP id g23so36000380wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 12:08:08 -0800 (PST)
-Date: Thu, 1 Dec 2016 21:08:04 +0100
-From: =?utf-8?B?TWljaGHFgiBLxJlwaWXFhA==?= <kernel@kempniu.pl>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
-        "David S . Miller" <davem@davemloft.net>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] net: rfkill: Add rfkill-any LED trigger
-Message-ID: <20161201200804.GA3872@kmp-mobile.hq.kempniu.pl> (sfid-20161201_210833_386801_EC27D316)
-References: <20161130120317.11851-2-kernel@kempniu.pl>
- <201612020131.aDbI7Mq9%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201612020131.aDbI7Mq9%fengguang.wu@intel.com>
+        Mon, 12 Dec 2016 07:00:20 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend@broadcom.com>
+Subject: [RFC V3 07/11] brcmfmac: add firmware feature detection for gscan feature
+Date: Mon, 12 Dec 2016 11:59:53 +0000
+Message-Id: <1481543997-24624-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130028_730626_DCD043CD)
+In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi Michał,
-> 
-> [auto build test ERROR on mac80211-next/master]
-> [also build test ERROR on v4.9-rc7 next-20161201]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Micha-K-pie/net-rfkill-Cleanup-error-handling-in-rfkill_init/20161202-002119
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> config: i386-randconfig-x004-201648 (attached as .config)
-> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    net/rfkill/core.c: In function 'rfkill_set_block':
-> >> net/rfkill/core.c:354:2: error: implicit declaration of function '__rfkill_any_led_trigger_event' [-Werror=implicit-function-declaration]
->      __rfkill_any_led_trigger_event();
->      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->    net/rfkill/core.c: In function 'rfkill_init':
->    net/rfkill/core.c:1349:1: warning: label 'error_led_trigger' defined but not used [-Wunused-label]
->     error_led_trigger:
->     ^~~~~~~~~~~~~~~~~
->    At top level:
->    net/rfkill/core.c:243:13: warning: 'rfkill_any_led_trigger_unregister' defined but not used [-Wunused-function]
->     static void rfkill_any_led_trigger_unregister(void)
->                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->    net/rfkill/core.c:238:12: warning: 'rfkill_any_led_trigger_register' defined but not used [-Wunused-function]
->     static int rfkill_any_led_trigger_register(void)
->                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->    cc1: some warnings being treated as errors
-> 
-> vim +/__rfkill_any_led_trigger_event +354 net/rfkill/core.c
-> 
->    348		rfkill->state &= ~RFKILL_BLOCK_SW_SETCALL;
->    349		rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
->    350		curr = rfkill->state & RFKILL_BLOCK_SW;
->    351		spin_unlock_irqrestore(&rfkill->lock, flags);
->    352	
->    353		rfkill_led_trigger_event(rfkill);
->  > 354		__rfkill_any_led_trigger_event();
->    355	
->    356		if (prev != curr)
->    357			rfkill_event(rfkill);
+From: Arend van Spriel <arend@broadcom.com>
 
-Thanks, these are obviously all valid concerns.  Sorry for being sloppy
-with the ifdefs.  If I get positive feedback on the proposed feature
-itself, all these issues (and the warning pointed out in the other
-message) will be resolved in v2.
+Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
+invalid version.
 
--- 
-Best regards,
-Michał Kępień
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 22 +++++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 59 ++++++++++++++++++++++
+ 3 files changed, 83 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 62985f2..8c7ef59 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -27,6 +27,7 @@
+ #include "feature.h"
+ #include "common.h"
+
++#define BRCMF_FW_UNSUPPORTED	23
+
+ /*
+  * expand feature list to array of feature strings.
+@@ -113,6 +114,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
+ 	}
+ }
+
++static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
++				      enum brcmf_feat_id id, char *name,
++				      const void *data, size_t len)
++{
++	int err;
++
++	err = brcmf_fil_iovar_data_set(ifp, name, data, len);
++	if (err != -BRCMF_FW_UNSUPPORTED) {
++		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
++		ifp->drvr->feat_flags |= BIT(id);
++	} else {
++		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
++			  brcmf_feat_names[id], err);
++	}
++}
++
+ static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ {
+ 	char caps[256];
+@@ -136,11 +153,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+ 	struct brcmf_pno_macaddr_le pfn_mac;
++	struct brcmf_gscan_config gscan_cfg;
+ 	u32 wowl_cap;
+ 	s32 err;
+
+ 	brcmf_feat_firmware_capabilities(ifp);
+-
++	memset(&gscan_cfg, 0, sizeof(gscan_cfg));
++	brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
++				  &gscan_cfg, sizeof(gscan_cfg));
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+ 	if (drvr->bus_if->wowl_supported)
+ 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index db4733a..c1dbd17 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -31,6 +31,7 @@
+  * WOWL_GTK: (WOWL) GTK rekeying offload
+  * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
+  * MFP: 802.11w Management Frame Protection.
++ * GSCAN: enhanced scan offload feature.
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -44,7 +45,8 @@
+ 	BRCMF_FEAT_DEF(WOWL_ND) \
+ 	BRCMF_FEAT_DEF(WOWL_GTK) \
+ 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
+-	BRCMF_FEAT_DEF(MFP)
++	BRCMF_FEAT_DEF(MFP) \
++	BRCMF_FEAT_DEF(GSCAN)
+
+ /*
+  * Quirks:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 9a1eb5a..8c18fad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -835,4 +835,63 @@ struct brcmf_gtk_keyinfo_le {
+ 	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
+ };
+
++/**
++ * struct brcmf_gscan_bucket_config - configuration data for channel bucket.
++ *
++ * @bucket_end_index: !unknown!
++ * @bucket_freq_multiple: !unknown!
++ * @flag: !unknown!
++ * @reserved: !unknown!
++ * @repeat: !unknown!
++ * @max_freq_multiple: !unknown!
++ */
++struct brcmf_gscan_bucket_config {
++	u8 bucket_end_index;
++	u8 bucket_freq_multiple;
++	u8 flag;
++	u8 reserved;
++	__le16 repeat;
++	__le16 max_freq_multiple;
++};
++
++/* version supported which must match firmware */
++#define BRCMF_GSCAN_CFG_VERSION                     1
++
++/**
++ * enum brcmf_gscan_cfg_flags - bit values for gscan flags.
++ *
++ * @BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS: send probe responses/beacons to host.
++ * @BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY: indicated only flags member is changed.
++ */
++enum brcmf_gscan_cfg_flags {
++	BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS = BIT(0),
++	BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY = BIT(7),
++};
++
++/**
++ * struct brcmf_gscan_config - configuration data for gscan.
++ *
++ * @version: version of the api to match firmware.
++ * @flags: flags according %enum brcmf_gscan_cfg_flags.
++ * @buffer_threshold: percentage threshold of buffer to generate an event.
++ * @swc_nbssid_threshold: number of BSSIDs with significant change that
++ *	will generate an event.
++ * @swc_rssi_window_size: size of rssi cache buffer (max=8).
++ * @count_of_channel_buckets: number of array members in @bucket.
++ * @retry_threshold: !unknown!
++ * @lost_ap_window: !unknown!
++ * @bucket: array of channel buckets.
++ */
++struct brcmf_gscan_config {
++	__le16 version;
++	u8  flags;
++	u8   buffer_threshold;
++	u8   swc_nbssid_threshold;
++	u8  swc_rssi_window_size;
++	u8  count_of_channel_buckets;
++	u8  retry_threshold;
++	__le16  lost_ap_window;
++	struct brcmf_gscan_bucket_config bucket[1];
++};
++
+ #endif /* FWIL_TYPES_H_ */
+--
+1.9.1
