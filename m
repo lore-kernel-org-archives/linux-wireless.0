@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward1o.cmail.yandex.net ([37.9.109.84]:39934 "EHLO
-        forward1o.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754415AbcLUWNh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Dec 2016 17:13:37 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-To: johannes <johannes@sipsolutions.net>,
-        David Miller <davem@davemloft.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: [PATCH 1/2] net: wireless: fixed to checkpatch errors
-MIME-Version: 1.0
-Message-Id: <577501482358413@web10g.yandex.ru> (sfid-20161221_231403_988729_F6A1ED68)
-Date: Thu, 22 Dec 2016 00:13:33 +0200
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:38218 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754111AbcLLK2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Dec 2016 05:28:00 -0500
+Message-ID: <1481538476.4067.2.camel@sipsolutions.net> (sfid-20161212_112803_342701_3B2A8D18)
+Subject: Re: [PATCH] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 12 Dec 2016 11:27:56 +0100
+In-Reply-To: <CAOq732Lvqez5mNne9YAk8aTrZyAQsxxL6pSwD9EkB4V0t2mLrg@mail.gmail.com> (sfid-20161212_110152_498754_AEAADC19)
+References: <20161212002911.5541-1-andrew.zaborowski@intel.com>
+         <8E332BC1-F05E-4771-ABA4-BD6C59449125@holtmann.org>
+         <CAOq732Lvqez5mNne9YAk8aTrZyAQsxxL6pSwD9EkB4V0t2mLrg@mail.gmail.com>
+         (sfid-20161212_110152_498754_AEAADC19)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2016-12-12 at 11:01 +0100, Andrew Zaborowski wrote:
+> On 12 December 2016 at 08:21, Marcel Holtmann <marcel@holtmann.org>
+> wrote:
+> > 
+> > > 
+> > > Disconnect or deauthenticate when the owning socket is closed if
+> > > this
+> > > flag is supplied to CMD_CONNECT or CMD_AUTHENTICATE.  This may be
+> > > used
+> > > to ensure userspace daemon doesn't leave an unmanaged connection
+> > > behind.
+> > 
+> > I think you have a typo here. The CMD_AUTHENTICATE should be
+> > CMD_ASSOCIATE?
+> 
+> Good point, let me change this and resend.
 
-Fixed to checkpatch errors, Normally, comment's */ had to be finish on the next line.
-The patch fix to readability and Coding Style.
+It'd be helpful if you could follow normal practice and add a v2/v3/...
+tag to your [PATCH] tag, that helps knowing which one's the latest.
 
-Sİgned-off-by: Ozgur Karatas <okaratas@member.fsf.org>
----
- net/wireless/chan.c |  3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/net/wireless/chan.c b/net/wireless/chan.c
-index 5497d022..8c7ac7f 100644
---- a/net/wireless/chan.c
-+++ b/net/wireless/chan.c
-@@ -891,7 +891,8 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
- 				  : CHAN_MODE_EXCLUSIVE;
- 
- 			/* consider worst-case - IBSS can try to return to the
--			 * original user-specified channel as creator */
-+			 * original user-specified channel as creator 
-+			 */
- 			if (wdev->ibss_dfs_possible)
- 				*radar_detect |= BIT(wdev->chandef.width);
- 			return;
--- 
-2.1.4
+johannes
