@@ -1,119 +1,426 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45090 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755305AbcLBCaF (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35806 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753202AbcLLBw2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 21:30:05 -0500
-From: greearb@candelatech.com
+        Sun, 11 Dec 2016 20:52:28 -0500
+Received: by mail-wm0-f66.google.com with SMTP id a20so8088746wme.2
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2016 17:52:28 -0800 (PST)
+Received: from localhost.localdomain ([92.185.195.211])
+        by smtp.gmail.com with ESMTPSA id ia7sm54561249wjb.23.2016.12.11.17.52.25
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 11 Dec 2016 17:52:26 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 1/2] mac80211:  do not iterate active interfaces when in re-configure
-Date: Thu,  1 Dec 2016 18:29:59 -0800
-Message-Id: <1480645800-2148-1-git-send-email-greearb@candelatech.com> (sfid-20161202_033017_562125_673160B5)
+Subject: [PATCH v2 3/4] cfg80211: Accept multiple RSSI thresholds for CQM
+Date: Mon, 12 Dec 2016 02:52:12 +0100
+Message-Id: <20161212015213.21323-3-andrew.zaborowski@intel.com> (sfid-20161212_025242_049227_EF1C6F2B)
+In-Reply-To: <20161212015213.21323-2-andrew.zaborowski@intel.com>
+References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Change the SET CQM command's RSSI threshold attribute to accept any
+number of thresholds as a sorted array.  The API should be backwards
+compatible so that if one s32 threshold value is passed, the old
+mechanism is enabled.  The netlink event generated is the same in both
+cases.
 
-This appears to fix a problem where ath10k firmware would crash,
-mac80211 would start re-adding interfaces to the driver, but the
-iterate-active-interfaces logic would then try to use the half-built
-interfaces.  With a bit of extra debug to catch the problem, the
-ath10k crash looks like this:
+cfg80211 handles an arbitrary number of RSSI thresholds but drivers have
+to provide a method (set_cqm_rssi_range_config) that configures a range
+set by a high and a low value.  Drivers have to call back when the RSSI
+goes out of that range and there's no additional event every time the
+range is reconfigured as there was with the current API.
 
-ath10k_pci 0000:05:00.0: Initializing arvif: ffff8801ce97e320 on vif: ffff8801ce97e1d8
+This method doesn't have a hysteresis parameter because there's no
+benefit to the cfg80211 code from having the hysteresis be handled by
+hardware/driver in terms of the number of wakeups.  At the same time
+it would likely be less consistent between drivers if offloaded or
+done in the drivers.
 
-[the print that happens after arvif->ar is assigned is not shown, so code did not make it that far before
- the tx-beacon-nowait method was called]
-
-tx-beacon-nowait:  arvif: ffff8801ce97e320  ar:           (null)
-arvif->magic: 0x87560001
-------------[ cut here ]------------
-kernel BUG at /home/greearb/git/linux-4.7.dev.y/drivers/net/wireless/ath/ath10k/wmi.c:1781!
-invalid opcode: 0000 [#1] PREEMPT SMP KASAN
-Modules linked in: nf_conntrack_netlink nf_conntrack nfnetlink nf_defrag_ipv4 bridge carl9170 mac80211_hwsim ath10k_pci ath10k_core ath5k ath9k ath9k_common ath9k_hw ath mac80211 cfg80211 8021q garp mrp stp llc bnep bluetooth fuse macvlan pktgen rpcsec_gss_krb5 nfsv4 nfs fscache snd_hda_codec_hdmi coretemp hwmon intel_rapl x86_pkg_temp_thermal intel_powerclamp snd_hda_codec_realtek snd_hda_codec_generic kvm iTCO_wdt irqbypass iTCO_vendor_support joydev snd_hda_intel snd_hda_codec snd_hda_core snd_hwdep snd_seq snd_seq_device pcspkr snd_pcm snd_timer shpchp snd i2c_i801 lpc_ich soundcore tpm_tis tpm nfsd auth_rpcgss nfs_acl lockd grace sunrpc i915 serio_raw i2c_algo_bit drm_kms_helper ata_generic e1000e pata_acpi drm ptp pps_core i2c_core fjes video ipv6 [last unloaded: nf_conntrack]
-CPU: 1 PID: 0 Comm: swapper/1 Not tainted 4.7.10+ #15
-Hardware name: To be filled by O.E.M. To be filled by O.E.M./ChiefRiver, BIOS 4.6.5 06/07/2013
-task: ffff8801d4f20000 ti: ffff8801d4f28000 task.ti: ffff8801d4f28000
-RIP: 0010:[<ffffffffa0efbcfb>]  [<ffffffffa0efbcfb>] ath10k_wmi_tx_beacons_iter+0x28b/0x290 [ath10k_core]
-RSP: 0018:ffff8801d6447a98  EFLAGS: 00010293
-RAX: 0000000000000018 RBX: ffff8801ce97e1d8 RCX: 0000000000000000
-RDX: 0000000000000018 RSI: 0000000000000003 RDI: ffffed003ac88f49
-RBP: ffff8801d6447af0 R08: 0000000000000003 R09: 0000000000000000
-R10: 0000000000000001 R11: 0000000000000001 R12: 0000000000000000
-R13: ffff8801ce97e320 R14: ffff8801ce97e378 R15: ffff8801ce97ca40
-FS:  0000000000000000(0000) GS:ffff8801d6440000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007eff191ef1ab CR3: 000000000260a000 CR4: 00000000001406e0
-Stack:
- 1ffff1003ac88f59 0000000041b58ab3 ffffffffa0f4d52a ffff8801d4f20000
- 0000000000000246 0000000000000002 ffff8801ce97e1d8 ffff8801bd5d39b8
- 0000000000000002 0000000000000001 ffff8801ce97ca40 ffff8801d6447b48
-Call Trace:
- <IRQ>
- [<ffffffffa0d03e5c>] __iterate_interfaces+0xfc/0x1d0 [mac80211]
- [<ffffffffa0efba70>] ? ath10k_wmi_cmd_send_nowait+0x260/0x260 [ath10k_core]
- [<ffffffffa0efba70>] ? ath10k_wmi_cmd_send_nowait+0x260/0x260 [ath10k_core]
- [<ffffffffa0d04477>] ieee80211_iterate_active_interfaces_atomic+0x67/0x100 [mac80211]
- [<ffffffffa0d04410>] ? ieee80211_handle_reconfig_failure+0x140/0x140 [mac80211]
- [<ffffffffa0ef4060>] ? ath10k_tpc_config_disp_tables+0x620/0x620 [ath10k_core]
- [<ffffffffa0ef408b>] ath10k_wmi_op_ep_tx_credits+0x2b/0x50 [ath10k_core]
- [<ffffffffa0ee2fd2>] ath10k_htc_rx_completion_handler+0x422/0x5c0 [ath10k_core]
- [<ffffffffa0b4301e>] ath10k_pci_process_rx_cb+0x37e/0x430 [ath10k_pci]
- [<ffffffffa0ee2bb0>] ? ath10k_htc_build_tx_ctrl_skb+0xc0/0xc0 [ath10k_core]
- [<ffffffffa0b42ca0>] ? ath10k_pci_rx_post_pipe+0x550/0x550 [ath10k_pci]
- [<ffffffff8120cbe5>] ? debug_lockdep_rcu_enabled+0x35/0x40
- [<ffffffff811e1893>] ? mark_held_locks+0x23/0xc0
- [<ffffffff8116019a>] ? __local_bh_enable_ip+0x6a/0xd0
- [<ffffffff811e1abb>] ? trace_hardirqs_on_caller+0x18b/0x290
- [<ffffffff811e1bcd>] ? trace_hardirqs_on+0xd/0x10
- [<ffffffff8116019a>] ? __local_bh_enable_ip+0x6a/0xd0
- [<ffffffff81df11d0>] ? _raw_spin_unlock_bh+0x30/0x40
- [<ffffffffa0b4902e>] ? ath10k_ce_per_engine_service+0xee/0x100 [ath10k_pci]
- [<ffffffffa0b43139>] ath10k_pci_htt_htc_rx_cb+0x29/0x30 [ath10k_pci]
- [<ffffffffa0b48fe6>] ath10k_ce_per_engine_service+0xa6/0x100 [ath10k_pci]
- [<ffffffffa0b49116>] ath10k_ce_per_engine_service_any+0xd6/0xf0 [ath10k_pci]
- [<ffffffffa0b45800>] ? ath10k_pci_enable_legacy_irq+0xe0/0xe0 [ath10k_pci]
- [<ffffffffa0b4585f>] ath10k_pci_tasklet+0x5f/0xb0 [ath10k_pci]
- [<ffffffff81160445>] tasklet_action+0x245/0x2b0
- [<ffffffff81df4831>] __do_softirq+0x181/0x595
- [<ffffffff8116137c>] irq_exit+0xbc/0xc0
- [<ffffffff81df423c>] do_IRQ+0x7c/0x150
- [<ffffffff81df23cc>] common_interrupt+0x8c/0x8c
- <EOI>
- [<ffffffff811e1abb>] ? trace_hardirqs_on_caller+0x18b/0x290
- [<ffffffff81b722ae>] ? cpuidle_enter_state+0x1ae/0x4b0
- [<ffffffff81b722a7>] ? cpuidle_enter_state+0x1a7/0x4b0
- [<ffffffff81b72602>] cpuidle_enter+0x12/0x20
- [<ffffffff811d0b6e>] call_cpuidle+0x4e/0x90
- [<ffffffff811d10e7>] cpu_startup_entry+0x3f7/0x540
- [<ffffffff811d0cf0>] ? default_idle_call+0x50/0x50
- [<ffffffff81234bdf>] ? clockevents_config_and_register+0x5f/0x70
- [<ffffffff81085a9a>] ? setup_APIC_timer+0xfa/0x110
- [<ffffffff81083b63>] start_secondary+0x253/0x2b0
- [<ffffffff81083910>] ? set_cpu_sibling_map+0x920/0x920
-Code: 4d 49 e0 8b b3 48 01 00 00 48 c7 c7 a0 ee f3 a0 e8 d9 c2 3f e0 49 81 fd 3f 1f 00 00 76 0f 49 81 fc 3f 1f 00 00 0f 87 c0 fd ff ff <0f> 0b 0f 0b 90 55 48 89 e5 41 57 41 56 48 8d 85 58 ff ff ff 41
-RIP  [<ffffffffa0efbcfb>] ath10k_wmi_tx_beacons_iter+0x28b/0x290 [ath10k_core]
- RSP <ffff8801d6447a98>
----[ end trace 6588464714e5163a ]---
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- net/mac80211/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/net/cfg80211.h       |  12 ++++
+ include/uapi/linux/nl80211.h |   4 +-
+ net/wireless/core.c          |   9 +++
+ net/wireless/core.h          |   9 +++
+ net/wireless/nl80211.c       | 136 +++++++++++++++++++++++++++++++++++++++----
+ net/wireless/rdev-ops.h      |  12 ++++
+ net/wireless/trace.h         |  22 +++++++
+ 7 files changed, 192 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 863f2c1..abe1f64 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -705,7 +705,7 @@ static void __iterate_interfaces(struct ieee80211_local *local,
- 			break;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9700a11..d0a242a 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2604,6 +2604,10 @@ struct cfg80211_nan_func {
+  *	the current level is above/below the configured threshold; this may
+  *	need some care when the configuration is changed (without first being
+  *	disabled.)
++ * @set_cqm_rssi_range_config: Configure two RSSI thresholds in the
++ *	connection quality monitor.  An event is to be sent only when the
++ *	signal level is found to be outside the two values.  If this method
++ *	is provided then there's no point providing @set_cqm_rssi_config.
+  * @set_cqm_txe_config: Configure connection quality monitor TX error
+  *	thresholds.
+  * @sched_scan_start: Tell the driver to start a scheduled scan.
+@@ -2887,6 +2891,10 @@ struct cfg80211_ops {
+ 				       struct net_device *dev,
+ 				       s32 rssi_thold, u32 rssi_hyst);
+ 
++	int	(*set_cqm_rssi_range_config)(struct wiphy *wiphy,
++					     struct net_device *dev,
++					     s32 rssi_low, s32 rssi_high);
++
+ 	int	(*set_cqm_txe_config)(struct wiphy *wiphy,
+ 				      struct net_device *dev,
+ 				      u32 rate, u32 pkts, u32 intvl);
+@@ -3709,6 +3717,7 @@ void wiphy_free(struct wiphy *wiphy);
+ struct cfg80211_conn;
+ struct cfg80211_internal_bss;
+ struct cfg80211_cached_keys;
++struct cfg80211_cqm_config;
+ 
+ /**
+  * struct wireless_dev - wireless device state
+@@ -3772,6 +3781,7 @@ struct cfg80211_cached_keys;
+  * @event_list: (private) list for internal event processing
+  * @event_lock: (private) lock for event list
+  * @owner_nlportid: (private) owner socket port ID
++ * @cqm_config: (private) nl80211 RSSI monitor state
+  */
+ struct wireless_dev {
+ 	struct wiphy *wiphy;
+@@ -3840,6 +3850,8 @@ struct wireless_dev {
+ 		bool prev_bssid_valid;
+ 	} wext;
+ #endif
++
++	struct cfg80211_cqm_config *cqm_config;
+ };
+ 
+ static inline u8 *wdev_address(struct wireless_dev *wdev)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 9043b77..e25e447 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -3841,7 +3841,9 @@ enum nl80211_ps_state {
+  * @__NL80211_ATTR_CQM_INVALID: invalid
+  * @NL80211_ATTR_CQM_RSSI_THOLD: RSSI threshold in dBm. This value specifies
+  *	the threshold for the RSSI level at which an event will be sent. Zero
+- *	to disable.
++ *	to disable.  Alternatively multiple values can be supplied as a
++ *	low-to-high sorted array of thresholds in dBm.  Events will be sent
++ *	when the RSSI value crosses any of the thresholds.
+  * @NL80211_ATTR_CQM_RSSI_HYST: RSSI hysteresis in dBm. This value specifies
+  *	the minimum amount the RSSI level must change after an event before a
+  *	new event may be issued (to reduce effects of RSSI oscillation).
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 6b8fd68..ed3efe0 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -958,6 +958,12 @@ void wiphy_rfkill_set_hw_state(struct wiphy *wiphy, bool blocked)
+ }
+ EXPORT_SYMBOL(wiphy_rfkill_set_hw_state);
+ 
++void cfg80211_cqm_config_free(struct wireless_dev *wdev)
++{
++	kfree(wdev->cqm_config);
++	wdev->cqm_config = NULL;
++}
++
+ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+@@ -984,6 +990,8 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ 		WARN_ON_ONCE(1);
+ 		break;
+ 	}
++
++	cfg80211_cqm_config_free(wdev);
+ }
+ EXPORT_SYMBOL(cfg80211_unregister_wdev);
+ 
+@@ -1238,6 +1246,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 			kzfree(wdev->wext.keys);
+ #endif
+ 			flush_work(&wdev->disconnect_wk);
++			cfg80211_cqm_config_free(wdev);
  		}
- 		if (!(iter_flags & IEEE80211_IFACE_ITER_RESUME_ALL) &&
--		    active_only && !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
-+		    (active_only && (local->in_reconfig || !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))))
- 			continue;
- 		if (ieee80211_sdata_running(sdata) || !active_only)
- 			iterator(data, sdata->vif.addr,
+ 		/*
+ 		 * synchronise (so that we won't find this netdev
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 08d2e94..b9498a2 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -270,6 +270,13 @@ struct cfg80211_iface_destroy {
+ 	u32 nlportid;
+ };
+ 
++struct cfg80211_cqm_config {
++	u32 rssi_hyst;
++	s32 last_rssi_event_value;
++	int n_rssi_thresholds;
++	s32 rssi_thresholds[0];
++};
++
+ void cfg80211_destroy_ifaces(struct cfg80211_registered_device *rdev);
+ 
+ /* free object */
+@@ -504,4 +511,6 @@ void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
+ #define CFG80211_DEV_WARN_ON(cond)	({bool __r = (cond); __r; })
+ #endif
+ 
++void cfg80211_cqm_config_free(struct wireless_dev *wdev);
++
+ #endif /* __NET_WIRELESS_CORE_H */
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 2ab3a56..831c8fb 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9290,7 +9290,7 @@ static int nl80211_get_power_save(struct sk_buff *skb, struct genl_info *info)
+ 
+ static const struct nla_policy
+ nl80211_attr_cqm_policy[NL80211_ATTR_CQM_MAX + 1] = {
+-	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_U32 },
++	[NL80211_ATTR_CQM_RSSI_THOLD] = { .type = NLA_BINARY },
+ 	[NL80211_ATTR_CQM_RSSI_HYST] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_RSSI_THRESHOLD_EVENT] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_CQM_TXE_RATE] = { .type = NLA_U32 },
+@@ -9319,28 +9319,126 @@ static int nl80211_set_cqm_txe(struct genl_info *info,
+ 	return rdev_set_cqm_txe_config(rdev, dev, rate, pkts, intvl);
+ }
+ 
++static int cfg80211_cqm_rssi_update(struct cfg80211_registered_device *rdev,
++				    struct net_device *dev)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	s32 last, low, high;
++	u32 hyst;
++	int i, n;
++	int err;
++
++	/* RSSI reporting disabled? */
++	if (!wdev->cqm_config)
++		return rdev_set_cqm_rssi_range_config(rdev, dev, 0, 0);
++
++	/*
++	 * Obtain current RSSI value if possible, if not and no RSSI threshold
++	 * event has been received yet, we should receive an event after a
++	 * connection is established and enough beacons received to calculate
++	 * the average.
++	 */
++	if (!wdev->cqm_config->last_rssi_event_value && wdev->current_bss) {
++		struct station_info sinfo;
++		u8 *mac_addr;
++
++		mac_addr = wdev->current_bss->pub.bssid;
++
++		err = rdev_get_station(rdev, dev, mac_addr, &sinfo);
++		if (err)
++			return err;
++
++		if (sinfo.filled & BIT(NL80211_STA_INFO_BEACON_SIGNAL_AVG))
++			wdev->cqm_config->last_rssi_event_value =
++				(s8) sinfo.rx_beacon_signal_avg;
++	}
++
++	last = wdev->cqm_config->last_rssi_event_value;
++	hyst = wdev->cqm_config->rssi_hyst;
++	n = wdev->cqm_config->n_rssi_thresholds;
++
++	for (i = 0; i < n; i++)
++		if (last < wdev->cqm_config->rssi_thresholds[i])
++			break;
++
++	low = i > 0 ? wdev->cqm_config->rssi_thresholds[i - 1] : S32_MIN;
++	high = i < n ? wdev->cqm_config->rssi_thresholds[i] : S32_MAX;
++
++	if (low > (s32) (last - hyst))
++		low = last - hyst;
++	if (high < (s32) (last + hyst))
++		high = last + hyst;
++
++	return rdev_set_cqm_rssi_range_config(rdev, dev, low, high - 1);
++}
++
+ static int nl80211_set_cqm_rssi(struct genl_info *info,
+-				s32 threshold, u32 hysteresis)
++				const s32 *thresholds, int n_thresholds,
++				u32 hysteresis)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct net_device *dev = info->user_ptr[1];
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	int i, err;
++	s32 prev = S32_MIN;
+ 
+-	if (threshold > 0)
+-		return -EINVAL;
++	/* Check all values negative and sorted */
++	for (i = 0; i < n_thresholds; i++) {
++		if (thresholds[i] > 0 || thresholds[i] <= prev)
++			return -EINVAL;
++
++		prev = thresholds[i];
++	}
++
++	if (n_thresholds == 1 && thresholds[0] == 0)
++		n_thresholds = 0;
+ 
+ 	/* disabling - hysteresis should also be zero then */
+-	if (threshold == 0)
++	if (n_thresholds == 0)
+ 		hysteresis = 0;
+ 
+-	if (!rdev->ops->set_cqm_rssi_config)
+-		return -EOPNOTSUPP;
+-
+ 	if (wdev->iftype != NL80211_IFTYPE_STATION &&
+ 	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
+ 		return -EOPNOTSUPP;
+ 
+-	return rdev_set_cqm_rssi_config(rdev, dev, threshold, hysteresis);
++	wdev_lock(wdev);
++	cfg80211_cqm_config_free(wdev);
++	wdev_unlock(wdev);
++
++	if (n_thresholds <= 1 && rdev->ops->set_cqm_rssi_config) {
++		const s32 disable = 0;
++
++		if (n_thresholds == 0) {
++			n_thresholds = 1;
++			thresholds = &disable;
++		}
++
++		return rdev_set_cqm_rssi_config(rdev, dev,
++						thresholds[0], hysteresis);
++	}
++
++	if (!rdev->ops->set_cqm_rssi_range_config || !rdev->ops->get_station)
++		return -EOPNOTSUPP;
++
++	wdev_lock(wdev);
++	if (n_thresholds) {
++		struct cfg80211_cqm_config *cqm_config;
++
++		cqm_config = kzalloc(sizeof(struct cfg80211_cqm_config) +
++				     n_thresholds * sizeof(s32), GFP_KERNEL);
++		cqm_config->rssi_hyst = hysteresis;
++		cqm_config->n_rssi_thresholds = n_thresholds;
++		memcpy(cqm_config->rssi_thresholds, thresholds,
++		       n_thresholds * sizeof(s32));
++
++		wdev->cqm_config = cqm_config;
++	}
++
++	err = cfg80211_cqm_rssi_update(rdev, dev);
++
++	wdev_unlock(wdev);
++
++	return err;
+ }
+ 
+ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+@@ -9360,10 +9458,15 @@ static int nl80211_set_cqm(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	if (attrs[NL80211_ATTR_CQM_RSSI_THOLD] &&
+ 	    attrs[NL80211_ATTR_CQM_RSSI_HYST]) {
+-		s32 threshold = nla_get_s32(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
++		s32 *thresholds = nla_data(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
++		int len = nla_len(attrs[NL80211_ATTR_CQM_RSSI_THOLD]);
+ 		u32 hysteresis = nla_get_u32(attrs[NL80211_ATTR_CQM_RSSI_HYST]);
+ 
+-		return nl80211_set_cqm_rssi(info, threshold, hysteresis);
++		if (len % 4)
++			return -EINVAL;
++
++		return nl80211_set_cqm_rssi(info, thresholds, len / 4,
++					    hysteresis);
+ 	}
+ 
+ 	if (attrs[NL80211_ATTR_CQM_TXE_RATE] &&
+@@ -13759,6 +13862,8 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      s32 rssi_level, gfp_t gfp)
+ {
+ 	struct sk_buff *msg;
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+ 
+ 	trace_cfg80211_cqm_rssi_notify(dev, rssi_event, rssi_level);
+ 
+@@ -13766,6 +13871,15 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 		    rssi_event != NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH))
+ 		return;
+ 
++	if (wdev->cqm_config) {
++		wdev->cqm_config->last_rssi_event_value = rssi_level;
++
++		cfg80211_cqm_rssi_update(rdev, dev);
++
++		if (rssi_level == 0)
++			rssi_level = wdev->cqm_config->last_rssi_event_value;
++	}
++
+ 	msg = cfg80211_prepare_cqm(dev, NULL, gfp);
+ 	if (!msg)
+ 		return;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 11cf83c..ae180f3 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -726,6 +726,18 @@ rdev_set_cqm_rssi_config(struct cfg80211_registered_device *rdev,
+ }
+ 
+ static inline int
++rdev_set_cqm_rssi_range_config(struct cfg80211_registered_device *rdev,
++			       struct net_device *dev, s32 low, s32 high)
++{
++	int ret;
++	trace_rdev_set_cqm_rssi_range_config(&rdev->wiphy, dev, low, high);
++	ret = rdev->ops->set_cqm_rssi_range_config(&rdev->wiphy, dev,
++						   low, high);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline int
+ rdev_set_cqm_txe_config(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, u32 rate, u32 pkts, u32 intvl)
+ {
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 6ac46a0..993f661 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1304,6 +1304,28 @@ TRACE_EVENT(rdev_set_cqm_rssi_config,
+ 		 __entry->rssi_thold, __entry->rssi_hyst)
+ );
+ 
++TRACE_EVENT(rdev_set_cqm_rssi_range_config,
++	TP_PROTO(struct wiphy *wiphy,
++		 struct net_device *netdev, s32 low, s32 high),
++	TP_ARGS(wiphy, netdev, low, high),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		NETDEV_ENTRY
++		__field(s32, rssi_low)
++		__field(s32, rssi_high)
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		NETDEV_ASSIGN;
++		__entry->rssi_low = low;
++		__entry->rssi_high = high;
++	),
++	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT
++		  ", range: %d - %d ",
++		  WIPHY_PR_ARG, NETDEV_PR_ARG,
++		  __entry->rssi_low, __entry->rssi_high)
++);
++
+ TRACE_EVENT(rdev_set_cqm_txe_config,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u32 rate,
+ 		 u32 pkts, u32 intvl),
 -- 
-2.4.11
+2.9.3
