@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:45443 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753202AbcLaLmj (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54813 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751544AbcLLMAU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Dec 2016 06:42:39 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH 3/3] nfc: Fix RC-S380* needs zero-length packet
-References: <8737h4nx6b.fsf@mail.parknet.co.jp>
-        <87y3ywmikp.fsf@mail.parknet.co.jp>
-Date: Sat, 31 Dec 2016 20:42:37 +0900
-In-Reply-To: <87y3ywmikp.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
-        "Sat, 31 Dec 2016 20:41:42 +0900")
-Message-ID: <87tw9kmij6.fsf_-_@mail.parknet.co.jp> (sfid-20161231_124443_085967_503D2DB6)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 12 Dec 2016 07:00:20 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFC V3 06/11] brcmfmac: fix uninitialized field in scheduled scan ssid configuration
+Date: Mon, 12 Dec 2016 11:59:52 +0000
+Message-Id: <1481543997-24624-7-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130022_852424_A1B85C18)
+In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The scheduled scan ssid configuration in firmware has a flags field that
+was not initialized resulting in unexpected behaviour.
 
-If sent packet size is wMaxPacketSize boundary, this device doesn't
-answer. To fix this, we have to send zero-length packet in usb spec.
-
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Fixes: e3bdb7cc0300 ("brcmfmac: fix handling ssids in .sched_scan_start() callback")
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-
- drivers/nfc/port100.c |    1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff -puN drivers/nfc/port100.c~nfc-need-zero-packet drivers/nfc/port100.c
---- linux/drivers/nfc/port100.c~nfc-need-zero-packet	2016-12-31 19:11:03.893974993 +0900
-+++ linux-hirofumi/drivers/nfc/port100.c	2016-12-31 19:11:03.895975004 +0900
-@@ -1540,6 +1540,7 @@ static int port100_probe(struct usb_inte
- 	usb_fill_bulk_urb(dev->out_urb, dev->udev,
- 			  usb_sndbulkpipe(dev->udev, out_endpoint),
- 			  NULL, 0, port100_send_complete, dev);
-+	dev->out_urb->transfer_flags = URB_ZERO_PACKET;
- 
- 	dev->skb_headroom = PORT100_FRAME_HEADER_LEN +
- 			    PORT100_COMM_RF_HEAD_MAX_LEN;
-_
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+index f273cab..9a25e79 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
+@@ -137,6 +137,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
+ 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
+ 	pfn.wsec = cpu_to_le32(0);
+ 	pfn.infra = cpu_to_le32(1);
++	pfn.flags = 0;
+ 	if (active)
+ 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
+ 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
+--
+1.9.1
