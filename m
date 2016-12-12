@@ -1,172 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36681 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755002AbcLNONH (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34089 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754053AbcLLBwa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 09:13:07 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/5] mwifiex: sdio card reset enhancement
-Date: Wed, 14 Dec 2016 19:40:49 +0530
-Message-ID: <1481724651-30397-3-git-send-email-akarwar@marvell.com> (sfid-20161214_151312_364096_BCDB26AD)
-In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
-References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Sun, 11 Dec 2016 20:52:30 -0500
+Received: by mail-wm0-f66.google.com with SMTP id g23so8100741wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2016 17:52:29 -0800 (PST)
+Received: from localhost.localdomain ([92.185.195.211])
+        by smtp.gmail.com with ESMTPSA id ia7sm54561249wjb.23.2016.12.11.17.52.27
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 11 Dec 2016 17:52:27 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 4/4] mac80211: Add set_cqm_rssi_range_config
+Date: Mon, 12 Dec 2016 02:52:13 +0100
+Message-Id: <20161212015213.21323-4-andrew.zaborowski@intel.com> (sfid-20161212_025242_357440_4EA50ECD)
+In-Reply-To: <20161212015213.21323-2-andrew.zaborowski@intel.com>
+References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Support .set_cqm_rssi_range_config if the beacons are available for
+processing in mac80211.  There's no reason that this couldn't be
+offloaded by mac80211-based drivers but there's no driver method for
+that added in this patch as I don't have the hardware.
 
-Commit b4336a282db8 ("mwifiex: sdio: reset adapter using mmc_hw_reset")
-introduces a simple sdio card reset solution based on card remove and
-re-probe. This solution has proved to be vulnerable, as card and
-adapter structures are not protected, concurrent access will result in
-kernel panic issues.
-
-Let's reuse PCIe FLR's functions for SDIO reset to avoid freeing and
-reallocating adapter and card structures.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.c | 73 +++++++++++++----------------
- drivers/net/wireless/marvell/mwifiex/sdio.h |  3 --
- 2 files changed, 33 insertions(+), 43 deletions(-)
+ include/net/mac80211.h |  6 ++++++
+ net/mac80211/cfg.c     | 28 ++++++++++++++++++++++++++++
+ net/mac80211/mlme.c    | 24 ++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 44eb65a..b3aca10 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -104,7 +104,6 @@ static int mwifiex_sdio_probe_of(struct device *dev)
- 	init_completion(&card->fw_done);
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 33026e1..671e498 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -502,6 +502,10 @@ struct ieee80211_mu_group_data {
+  *	implies disabled. As with the cfg80211 callback, a change here should
+  *	cause an event to be sent indicating where the current value is in
+  *	relation to the newly configured threshold.
++ * @cqm_rssi_low: Connection quality monitor RSSI lower threshold, a zero value
++ *	implies disabled.  This is an alternative mechanism to the single
++ *	threshold event and can't be enabled simultaneously.
++ * @cqm_rssi_high: Connection quality monitor RSSI upper threshold.
+  * @cqm_rssi_hyst: Connection quality monitor RSSI hysteresis
+  * @arp_addr_list: List of IPv4 addresses for hardware ARP filtering. The
+  *	may filter ARP queries targeted for other addresses than listed here.
+@@ -554,6 +558,8 @@ struct ieee80211_bss_conf {
+ 	u16 ht_operation_mode;
+ 	s32 cqm_rssi_thold;
+ 	u32 cqm_rssi_hyst;
++	s32 cqm_rssi_low;
++	s32 cqm_rssi_high;
+ 	struct cfg80211_chan_def chandef;
+ 	struct ieee80211_mu_group_data mu_group;
+ 	__be32 arp_addr_list[IEEE80211_BSS_ARP_ADDR_LIST_LEN];
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index fd6541f..6ac0523 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2647,6 +2647,33 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
  
- 	card->func = func;
--	card->device_id = id;
- 
- 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
- 
-@@ -2196,33 +2195,13 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
- 		    port, card->mp_data_port_mask);
- }
- 
--static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
-+static struct mwifiex_adapter *save_adapter;
-+static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
- {
-+	struct sdio_mmc_card *card = adapter->card;
- 	struct sdio_func *func = card->func;
--	const struct sdio_device_id *device_id = card->device_id;
--
--	/* TODO mmc_hw_reset does not require destroying and re-probing the
--	 * whole adapter. Hence there was no need to for this rube-goldberg
--	 * design to reload the fw from an external workqueue. If we don't
--	 * destroy the adapter we could reload the fw from
--	 * mwifiex_main_work_queue directly.
--	 * The real difficulty with fw reset is to restore all the user
--	 * settings applied through ioctl. By destroying and recreating the
--	 * adapter, we take the easy way out, since we rely on user space to
--	 * restore them. We assume that user space will treat the new
--	 * incarnation of the adapter(interfaces) as if they had been just
--	 * discovered and initializes them from scratch.
--	 */
- 
--	__mwifiex_sdio_remove(func);
--
--	/*
--	 * Normally, we would let the driver core take care of releasing these.
--	 * But we're not letting the driver core handle this one. See above
--	 * TODO.
--	 */
--	sdio_set_drvdata(func, NULL);
--	devm_kfree(&func->dev, card);
-+	mwifiex_shutdown_sw(adapter);
- 
- 	/* power cycle the adapter */
- 	sdio_claim_host(func);
-@@ -2235,21 +2214,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
- 	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &iface_work_flags);
- 
--	mwifiex_sdio_probe(func, device_id);
--}
--
--static struct mwifiex_adapter *save_adapter;
--static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
--{
--	struct sdio_mmc_card *card = adapter->card;
--
--	/* TODO card pointer is unprotected. If the adapter is removed
--	 * physically, sdio core might trigger mwifiex_sdio_remove, before this
--	 * workqueue is run, which will destroy the adapter struct. When this
--	 * workqueue eventually exceutes it will dereference an invalid adapter
--	 * pointer
--	 */
--	mwifiex_recreate_adapter(card);
-+	mwifiex_reinit_sw(adapter);
- }
- 
- /* This function read/write firmware */
-@@ -2677,6 +2642,33 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
- 	return p - drv_buf;
- }
- 
-+/* sdio device/function initialization, code is extracted
-+ * from init_if handler and register_dev handler.
-+ */
-+static void mwifiex_sdio_up_dev(struct mwifiex_adapter *adapter)
-+{
-+	struct sdio_mmc_card *card = adapter->card;
-+	u8 sdio_ireg;
+ 	bss_conf->cqm_rssi_thold = rssi_thold;
+ 	bss_conf->cqm_rssi_hyst = rssi_hyst;
++	bss_conf->cqm_rssi_low = 0;
++	bss_conf->cqm_rssi_high = 0;
++	sdata->u.mgd.last_cqm_event_signal = 0;
 +
-+	sdio_claim_host(card->func);
-+	sdio_enable_func(card->func);
-+	sdio_set_block_size(card->func, MWIFIEX_SDIO_BLOCK_SIZE);
-+	sdio_release_host(card->func);
++	/* tell the driver upon association, unless already associated */
++	if (sdata->u.mgd.associated &&
++	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
++		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
 +
-+	/* tx_buf_size might be changed to 3584 by firmware during
-+	 * data transfer, we will reset to default size.
-+	 */
-+	adapter->tx_buf_size = card->tx_buf_size;
-+
-+	/* Read the host_int_status_reg for ACK the first interrupt got
-+	 * from the bootloader. If we don't do this we get a interrupt
-+	 * as soon as we register the irq.
-+	 */
-+	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
-+
-+	mwifiex_init_sdio_ioport(adapter);
++	return 0;
 +}
 +
- static struct mwifiex_if_ops sdio_ops = {
- 	.init_if = mwifiex_init_sdio,
- 	.cleanup_if = mwifiex_cleanup_sdio,
-@@ -2702,6 +2694,7 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
- 	.reg_dump = mwifiex_sdio_reg_dump,
- 	.device_dump = mwifiex_sdio_device_dump,
- 	.deaggr_pkt = mwifiex_deaggr_sdio_pkt,
-+	.up_dev = mwifiex_sdio_up_dev,
- };
++static int ieee80211_set_cqm_rssi_range_config(struct wiphy *wiphy,
++					       struct net_device *dev,
++					       s32 rssi_low, s32 rssi_high)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
++
++	if (sdata->vif.driver_flags & IEEE80211_VIF_BEACON_FILTER)
++		return -EOPNOTSUPP;
++
++	bss_conf->cqm_rssi_low = rssi_low;
++	bss_conf->cqm_rssi_high = rssi_high;
++	bss_conf->cqm_rssi_thold = 0;
++	bss_conf->cqm_rssi_hyst = 0;
+ 	sdata->u.mgd.last_cqm_event_signal = 0;
  
- module_driver(mwifiex_sdio, sdio_register_driver, sdio_unregister_driver);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index cdbf3a3a..afa10d5 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -267,9 +267,6 @@ struct sdio_mmc_card {
+ 	/* tell the driver upon association, unless already associated */
+@@ -3645,6 +3672,7 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.mgmt_tx = ieee80211_mgmt_tx,
+ 	.mgmt_tx_cancel_wait = ieee80211_mgmt_tx_cancel_wait,
+ 	.set_cqm_rssi_config = ieee80211_set_cqm_rssi_config,
++	.set_cqm_rssi_range_config = ieee80211_set_cqm_rssi_range_config,
+ 	.mgmt_frame_register = ieee80211_mgmt_frame_register,
+ 	.set_antenna = ieee80211_set_antenna,
+ 	.get_antenna = ieee80211_get_antenna,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6898ecb..7f99918 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3416,6 +3416,30 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
  
- 	struct mwifiex_sdio_mpa_tx mpa_tx;
- 	struct mwifiex_sdio_mpa_rx mpa_rx;
--
--	/* needed for card reset */
--	const struct sdio_device_id *device_id;
- };
- 
- struct mwifiex_sdio_device {
++	if (bss_conf->cqm_rssi_low &&
++	    ifmgd->count_beacon_signal >= IEEE80211_SIGNAL_AVE_MIN_COUNT) {
++		int sig = -ewma_beacon_signal_read(&ifmgd->ave_beacon_signal);
++		int last_event = ifmgd->last_cqm_event_signal;
++		int low = bss_conf->cqm_rssi_low;
++		int high = bss_conf->cqm_rssi_high;
++
++		if (sig < low &&
++		    (last_event == 0 || last_event >= low)) {
++			ifmgd->last_cqm_event_signal = sig;
++			ieee80211_cqm_rssi_notify(
++				&sdata->vif,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++				sig, GFP_KERNEL);
++		} else if (sig > high &&
++			   (last_event == 0 || last_event <= high)) {
++			ifmgd->last_cqm_event_signal = sig;
++			ieee80211_cqm_rssi_notify(
++				&sdata->vif,
++				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++				sig, GFP_KERNEL);
++		}
++	}
++
+ 	if (ifmgd->flags & IEEE80211_STA_CONNECTION_POLL) {
+ 		mlme_dbg_ratelimited(sdata,
+ 				     "cancelling AP probe due to a received beacon\n");
 -- 
-1.9.1
+2.9.3
