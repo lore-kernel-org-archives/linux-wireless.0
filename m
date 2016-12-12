@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57540 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752102AbcLER3C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 12:29:02 -0500
-Subject: Re: [PATCH] mac80211: Return avg sig, rx, tx values in ethtool stats.
-To: Ben Greear <greearb@candelatech.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <1480442872-7358-1-git-send-email-greearb@candelatech.com>
- <1480946891.31788.10.camel@sipsolutions.net>
- <58457D63.2010605@candelatech.com>
- <1480949600.31788.29.camel@sipsolutions.net>
- <5845813C.8070904@candelatech.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <ca0c6cee-6a7c-509c-3d88-801dbca43ddc@nbd.name> (sfid-20161205_182906_204188_07364F01)
-Date: Mon, 5 Dec 2016 18:28:52 +0100
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:33076 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754011AbcLLJ0g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Dec 2016 04:26:36 -0500
+Received: by mail-pg0-f43.google.com with SMTP id 3so33640858pgd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 01:26:36 -0800 (PST)
+Subject: Re: Could we have request_firmware_nowait with FW_OPT_NO_WARN?
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <CACna6rxOGo0e9U7eXpUgnnBuxL+x1B0JBf9ZBq2WPbaBE=YZ-g@mail.gmail.com>
+ <1481530339.4067.1.camel@sipsolutions.net>
+ <CACna6rzZnO1YtS2=6S1PGCTJkzTeuz9oJ+1yHBgWNhvUPz4acg@mail.gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <815a15b6-f22d-8c45-f76c-2c756f159366@broadcom.com> (sfid-20161212_102651_716588_FEF6C687)
+Date: Mon, 12 Dec 2016 10:26:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <5845813C.8070904@candelatech.com>
+In-Reply-To: <CACna6rzZnO1YtS2=6S1PGCTJkzTeuz9oJ+1yHBgWNhvUPz4acg@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-12-05 16:01, Ben Greear wrote:
+On 12-12-2016 9:32, Rafał Miłecki wrote:
+> On 12 December 2016 at 09:12, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Sat, 2016-12-10 at 16:54 +0100, Rafał Miłecki wrote:
+>>> In brcmfmac we use request_firmware_nowait and if fetching firmware
+>>> with NVRAM variables fails then we try to fallback to the platform
+>>> one (see brcmf_fw_request_code_done & brcmf_fw_request_nvram_done).
+>>>
+>>> Some problem for us is that on devices with platform NVRAM we get
+>>> this error:
+>>> Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
+>>
+>> This also happens with iwlwifi, because it requests multiple firmware
+>> versions starting at the most recent supported one (which is often not
+>> released at the same time).
+> 
+> Good to know it may help others as well!
 > 
 > 
-> On 12/05/2016 06:53 AM, Johannes Berg wrote:
->>
->>> Unless I screwed up, this patch also returns an average.
->>
->> Oops, sorry. I missed the whole mac_div() indirection thing.
->>
->> I'm not super convinced anyway though - all of this data already is
->> available in a much more reliable fashion, even trackable when stations
->> are removed (all data gets sent in the DEL_STATION notification), so
->> adding a crippled way to get the same data seems a bit strange?
+>> So yeah, this would be really useful - why don't you just make a patch
+>> with some kind of flags, whether it's FW_OPT_* or new flags?
 > 
-> Ethtool stats are easy to program against, and I am already making the
-> get-stats call to get other things, so it was a quick tweak to return
-> these additional values.  I agree the stats are of somewhat limited worth,
-> but the cost to get them is also pretty small code wise :)
-You're still adding bloat for everybody for the sake of a little
-convenience on your side. I think that's a bad trade-off.
-nl80211 is not *that* hard to program against...
+> OK! If noone will come with any special comments/ideas soon, I'll
+> propose a patch for using some flags.
+> 
+> FWIW, meanwhile I submitted
+> [PATCH V2] firmware: simplify defining and handling FW_OPT_FALLBACK
+> https://patchwork.kernel.org/patch/9469875/
 
-I don't really see much point in duplicating an arbitrary subset of
-nl80211 information in ethtool.
+Similar thread couple of months ago [1]
 
-- Felix
+Regards,
+Arend
+
+[1] http://lists.infradead.org/pipermail/ath10k/2016-July/thread.html#8026
