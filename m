@@ -1,89 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34849 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752144AbcLBJvI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2016 04:51:08 -0500
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, Larry.Finger@lwfinger.net,
-        chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] net: wireless: realtek: constify rate_control_ops structures
-Date: Fri,  2 Dec 2016 15:20:54 +0530
-Message-Id: <1480672254-4986-1-git-send-email-bhumirks@gmail.com> (sfid-20161202_105134_222026_487D74BC)
+Received: from mx2.suse.de ([195.135.220.15]:58679 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752100AbcLLONK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Dec 2016 09:13:10 -0500
+Date: Mon, 12 Dec 2016 15:13:02 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+Subject: Re: Could we have request_firmware_nowait with FW_OPT_NO_WARN?
+Message-ID: <20161212141302.GC1402@wotan.suse.de> (sfid-20161212_151329_606563_88265219)
+References: <CACna6rxOGo0e9U7eXpUgnnBuxL+x1B0JBf9ZBq2WPbaBE=YZ-g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rxOGo0e9U7eXpUgnnBuxL+x1B0JBf9ZBq2WPbaBE=YZ-g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The structures rate_control_ops are only passed as an argument to the
-functions ieee80211_rate_control_{register/unregister}. This argument is
-of type const, so rate_control_ops having this property can also be 
-declared as const.
-Done using Coccinelle:
+On Sat, Dec 10, 2016 at 04:54:41PM +0100, Rafał Miłecki wrote:
+> So it would be nice to have version of request_firmware_nowait with
+> FW_OPT_NO_WARN. If requesting firmware NVRAM fails *and* getting
+> platform NVRAM fails, then I could to print error on my own.
+> Does it make sense? Can you see a point of my request?
 
-@r1 disable optional_qualifier @
-identifier i;
-position p;
-@@
-static struct rate_control_ops i@p = {...};
+request_firmware_direct() does hat you describe but this is only 
+available for synchronous requests. My old sysdata patches -- which
+I need to "rebrand" as the only issue found was the naming -- added
+an equivalent to request_firmware_direct() for async calls. The newer
+API simply has 2 API exported calls, the idea is we'd enable the caller
+to configure the request as per their requirements instead of adding
+a new exported routine per new feature.
 
-@ok1@
-identifier r1.i;
-position p;
-@@
-ieee80211_rate_control_register(&i@p)
+I'll update docs, rebase my patches by rebranding them, and also add
+a bit more as per some recent discussion to resolve the pivot_root()
+races upon init if you do not use initramfs. I'll be sure to Cc you.
 
-@ok2@
-identifier r1.i;
-position p;
-@@
-ieee80211_rate_control_unregister(&i@p)
-
-@bad@
-position p!={r1.p,ok1.p,ok2.p};
-identifier r1.i;
-@@
-i@p
-
-@depends on !bad disable optional_qualifier@
-identifier r1.i;
-@@
-static
-+const
-struct rate_control_ops i={...};
-
-@depends on !bad disable optional_qualifier@
-identifier r1.i;
-@@
-+const
-struct rate_control_ops i;
-
-File size before:
-   text	   data	    bss	    dec	    hex	filename
-   1991	    104	      0	   2095	    82f wireless/realtek/rtlwifi/rc.o
-
-File size after:
-   text	   data	    bss	    dec	    hex	filename
-   2095	      0	      0	   2095	    wireless/realtek/rtlwifi/rc.o
-
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index ce8621a..107c13c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -284,7 +284,7 @@ static void rtl_rate_free_sta(void *rtlpriv,
- 	kfree(rate_priv);
- }
- 
--static struct rate_control_ops rtl_rate_ops = {
-+static const struct rate_control_ops rtl_rate_ops = {
- 	.name = "rtl_rc",
- 	.alloc = rtl_rate_alloc,
- 	.free = rtl_rate_free,
--- 
-1.9.1
+  Luis
