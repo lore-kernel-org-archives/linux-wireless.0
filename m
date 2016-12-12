@@ -1,70 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42896 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753973AbcL3NCo (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54817 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750899AbcLLMAU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:02:44 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: net: wireless: marvell: libertas: constify cfg80211_ops structures
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
-References: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, libertas-dev@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
-Message-Id: <20161230130243.02DAF6145A@smtp.codeaurora.org> (sfid-20161230_140420_717269_D6915CDD)
-Date: Fri, 30 Dec 2016 13:02:42 +0000 (UTC)
+        Mon, 12 Dec 2016 07:00:20 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFC V3 05/11] brcmfmac: fix memory leak in brcmf_cfg80211_attach()
+Date: Mon, 12 Dec 2016 11:59:51 +0000
+Message-Id: <1481543997-24624-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130033_820003_88D57EFD)
+In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhumika Goyal <bhumirks@gmail.com> wrote:
-> cfg80211_ops structures are only passed as an argument to the function
-> wiphy_new. This argument is of type const, so cfg80211_ops strutures
-> having this property can be declared as const.
-> Done using Coccinelle
-> 
-> @r1 disable optional_qualifier @
-> identifier i;
-> position p;
-> @@
-> static struct cfg80211_ops i@p = {...};
-> 
-> @ok1@
-> identifier r1.i;
-> position p;
-> @@
-> wiphy_new(&i@p,...)
-> 
-> @bad@
-> position p!={r1.p,ok1.p};
-> identifier r1.i;
-> @@
-> i@p
-> 
-> @depends on !bad disable optional_qualifier@
-> identifier r1.i;
-> @@
-> +const
-> struct cfg80211_ops i;
-> 
-> File size before:
->    text	   data	    bss	    dec	    hex	filename
->   21225	   1954	     16	  23195	   5a9b	wireless/marvell/libertas/cfg.o
-> 
-> File size after:
->    text	   data	    bss	    dec	    hex	filename
->   22041	   1154	     16	  23211	   5aab	wireless/marvell/libertas/cfg.o
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+In brcmf_cfg80211_attach() there was one error path not properly
+handled as it leaked memory allocated in brcmf_btcoex_attach().
 
-The prefix should be "libertas:", I can fix that before I commit.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
--- 
-https://patchwork.kernel.org/patch/9479131/
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ccae3bb..7ffc4ab 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6868,7 +6868,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+ 	err = brcmf_p2p_attach(cfg, p2pdev_forced);
+ 	if (err) {
+-		brcmf_err("P2P initilisation failed (%d)\n", err);
++		brcmf_err("P2P initialisation failed (%d)\n", err);
+ 		goto wiphy_unreg_out;
+ 	}
+ 	err = brcmf_btcoex_attach(cfg);
+@@ -6893,7 +6893,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	err = brcmf_fweh_activate_events(ifp);
+ 	if (err) {
+ 		brcmf_err("FWEH activation failed (%d)\n", err);
+-		goto wiphy_unreg_out;
++		goto detach;
+ 	}
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+ 	/* Fill in some of the advertised nl80211 supported features */
+@@ -6908,6 +6908,9 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+
+ 	return cfg;
+
++detach:
++	brcmf_btcoex_detach(cfg);
++	brcmf_p2p_detach(&cfg->p2p);
+ wiphy_unreg_out:
+ 	wiphy_unregister(cfg->wiphy);
+ priv_out:
+--
+1.9.1
