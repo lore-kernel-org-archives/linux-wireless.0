@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54078 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752434AbcLGLEe (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33744 "EHLO
+        mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932123AbcLLKBs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 06:04:34 -0500
+        Mon, 12 Dec 2016 05:01:48 -0500
+Received: by mail-io0-f178.google.com with SMTP id d9so161040600ioe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 02:01:47 -0800 (PST)
+Received: from mail-io0-f178.google.com (mail-io0-f178.google.com. [209.85.223.178])
+        by smtp.gmail.com with ESMTPSA id l73sm15577115ioe.1.2016.12.12.02.01.47
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Dec 2016 02:01:47 -0800 (PST)
+Received: by mail-io0-f178.google.com with SMTP id a81so154411986ioe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 02:01:47 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 07 Dec 2016 16:34:33 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/4] cfg80211: Add support to enable or disable btcoex
-In-Reply-To: <1480949161.31788.23.camel@sipsolutions.net>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
- <1478610932-21954-2-git-send-email-c_traja@qti.qualcomm.com>
- <1480949161.31788.23.camel@sipsolutions.net>
-Message-ID: <576b59d939ecd1296b8550de2e63052d@codeaurora.org> (sfid-20161207_120437_989871_BF29515F)
+In-Reply-To: <8E332BC1-F05E-4771-ABA4-BD6C59449125@holtmann.org>
+References: <20161212002911.5541-1-andrew.zaborowski@intel.com> <8E332BC1-F05E-4771-ABA4-BD6C59449125@holtmann.org>
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Date: Mon, 12 Dec 2016 11:01:45 +0100
+Message-ID: <CAOq732Lvqez5mNne9YAk8aTrZyAQsxxL6pSwD9EkB4V0t2mLrg@mail.gmail.com> (sfid-20161212_110152_498754_AEAADC19)
+Subject: Re: [PATCH] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On 12 December 2016 at 08:21, Marcel Holtmann <marcel@holtmann.org> wrote:
+>> Disconnect or deauthenticate when the owning socket is closed if this
+>> flag is supplied to CMD_CONNECT or CMD_AUTHENTICATE.  This may be used
+>> to ensure userspace daemon doesn't leave an unmanaged connection behind.
+>
+> I think you have a typo here. The CMD_AUTHENTICATE should be CMD_ASSOCIATE?
 
-Thanks for the comments.
+Good point, let me change this and resend.
 
-On 2016-12-05 20:16, Johannes Berg wrote:
-> On Tue, 2016-11-08 at 18:45 +0530, c_traja@qti.qualcomm.com wrote:
->> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->> 
->> This patch adds support to enable or disable btcoex by
->> adding NL80211_ATTR_WIPHY_BTCOEX_ENABLE attribute in
->> NL80211_CMD_SET_WIPHY command. By default BTCOEX disabled in driver.
-> 
-> I think overloading SET_WIPHY even more is a mistake - why not group
-> this with the new command you're introducing in the second patch?
-> 
-Sure.
-
-> Also, can have a flag attribute to enable/disable, or better even
-> disable when you're not setting any other parameters.
-
-BTCOEX will be disabled by default. I will use 
-NL80211_ATTR_WIPHY_BTCOEX_ENABLE
-attribute to enable/disable BTCOEX.
+Best regards
