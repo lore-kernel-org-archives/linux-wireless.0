@@ -1,48 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f174.google.com ([209.85.210.174]:33444 "EHLO
-        mail-wj0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752148AbcLGUD1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 15:03:27 -0500
-Received: by mail-wj0-f174.google.com with SMTP id xy5so371059263wjc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 12:03:26 -0800 (PST)
-Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
- better BSSs
-To: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
+Received: from mx2.suse.de ([195.135.220.15]:57737 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751640AbcLLOHn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Dec 2016 09:07:43 -0500
+Date: Mon, 12 Dec 2016 15:07:39 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
         Johannes Berg <johannes@sipsolutions.net>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>
-References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
- <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
- <1481102727.4092.34.camel@sipsolutions.net>
- <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com> (sfid-20161207_210330_806615_F1B34F3C)
-Date: Wed, 7 Dec 2016 21:03:23 +0100
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+Subject: Re: Could we have request_firmware_nowait with FW_OPT_NO_WARN?
+Message-ID: <20161212140739.GB1402@wotan.suse.de> (sfid-20161212_150804_467929_DFA7B16B)
+References: <CACna6rxOGo0e9U7eXpUgnnBuxL+x1B0JBf9ZBq2WPbaBE=YZ-g@mail.gmail.com>
+ <1481530339.4067.1.camel@sipsolutions.net>
+ <CACna6rzZnO1YtS2=6S1PGCTJkzTeuz9oJ+1yHBgWNhvUPz4acg@mail.gmail.com>
+ <815a15b6-f22d-8c45-f76c-2c756f159366@broadcom.com>
+ <CACna6rzF3=A_FT6QBiO8_uDE5-Ey-AD-Gfh0OU+Z1G_N_fKv-A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rzF3=A_FT6QBiO8_uDE5-Ey-AD-Gfh0OU+Z1G_N_fKv-A@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7-12-2016 10:33, Vamsi, Krishna wrote:
->> -----Original Message-----
->> From: Johannes Berg [mailto:johannes@sipsolutions.net]
+On Mon, Dec 12, 2016 at 10:53:38AM +0100, Rafał Miłecki wrote:
+> On 12 December 2016 at 10:26, Arend Van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+> > On 12-12-2016 9:32, Rafał Miłecki wrote:
+> >> On 12 December 2016 at 09:12, Johannes Berg <johannes@sipsolutions.net> wrote:
+> >>> On Sat, 2016-12-10 at 16:54 +0100, Rafał Miłecki wrote:
+> >>>> In brcmfmac we use request_firmware_nowait and if fetching firmware
+> >>>> with NVRAM variables fails then we try to fallback to the platform
+> >>>> one (see brcmf_fw_request_code_done & brcmf_fw_request_nvram_done).
+> >>>>
+> >>>> Some problem for us is that on devices with platform NVRAM we get
+> >>>> this error:
+> >>>> Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error -2
+> >>>
+> >>> This also happens with iwlwifi, because it requests multiple firmware
+> >>> versions starting at the most recent supported one (which is often not
+> >>> released at the same time).
+> >>
+> >> Good to know it may help others as well!
+> >>
+> >>
+> >>> So yeah, this would be really useful - why don't you just make a patch
+> >>> with some kind of flags, whether it's FW_OPT_* or new flags?
+> >>
+> >> OK! If noone will come with any special comments/ideas soon, I'll
+> >> propose a patch for using some flags.
+> >>
+> >> FWIW, meanwhile I submitted
+> >> [PATCH V2] firmware: simplify defining and handling FW_OPT_FALLBACK
+> >> https://patchwork.kernel.org/patch/9469875/
+> >
+> > Similar thread couple of months ago [1]
+> >
+> > (...)
+> >
+> > [1] http://lists.infradead.org/pipermail/ath10k/2016-July/thread.html#8026
 > 
->> What about Arend's comment regarding this functionality overlapping with the
->> BSS selection offload configuration?
->>
->> Do you think there's any ability to share attributes/functionality?
-> 
-> Hi Johannes,
-> 
-> I think the later comment from Luca on this which I pasted below is more agreeable.
-> 
-> Yes, similar but not quite the same.  The existing case is for finding BSSs that are worth waking the host up for (while disconnected), so it needs to be better than the RSSI passed (absolute number).  Now this is about relative RSSI as compared to the current connection, so RELATIVE_RSSI is different than RSSI and I think the same attribute should not be used, to avoid confusion.
+> Oh, now I see it's a bit messy topic and not clearly maintained class.
+> It seems more ppl were confused by the API. I think having many
+> unrelated behavior bounded to few functions caused some of this
+> confusion. Let's hope adding some flags will let us use function the
+> way they were designed, I'll definitely try working on this.
 
-I noticed the response from Luca, but did not get back on this. I know
-it is not the same, but what I meant is whether we could extend it so it
-also covers your scenario.
+4.9 was just released, this means the merge window opened and no functional
+changes will be merged for a while. I'll revamp my new API whcih would allow
+what you describe to be an add-on flag without having to extend the API with
+yet another series of exported symbols just for a new option. I'll also
+CC you on a documentation revamp because as you note its much needed.
 
-Regards,
-Arend
+  Luis
