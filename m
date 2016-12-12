@@ -1,209 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:54154 "EHLO
-        mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751939AbcL1RmI (ORCPT
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:34351 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751266AbcLLJxo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 12:42:08 -0500
-From: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, michael.thalmeier@hale.at,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-Subject: [PATCH 3/3] NFC: pn533: change order operations in dev registation
-Date: Wed, 28 Dec 2016 20:10:59 +0300
-Message-Id: <1482945059-12249-4-git-send-email-arusalin@dev.rtsoft.ru> (sfid-20161228_184216_441180_563D6EAF)
-In-Reply-To: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
-References: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
+        Mon, 12 Dec 2016 04:53:44 -0500
+MIME-Version: 1.0
+In-Reply-To: <815a15b6-f22d-8c45-f76c-2c756f159366@broadcom.com>
+References: <CACna6rxOGo0e9U7eXpUgnnBuxL+x1B0JBf9ZBq2WPbaBE=YZ-g@mail.gmail.com>
+ <1481530339.4067.1.camel@sipsolutions.net> <CACna6rzZnO1YtS2=6S1PGCTJkzTeuz9oJ+1yHBgWNhvUPz4acg@mail.gmail.com>
+ <815a15b6-f22d-8c45-f76c-2c756f159366@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 12 Dec 2016 10:53:38 +0100
+Message-ID: <CACna6rzF3=A_FT6QBiO8_uDE5-Ey-AD-Gfh0OU+Z1G_N_fKv-A@mail.gmail.com> (sfid-20161212_105405_661675_F608B1AB)
+Subject: Re: Could we have request_firmware_nowait with FW_OPT_NO_WARN?
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes during probing and registration of pn533_i2c
-NULL pointer dereference happens.
-Reproduced in cycle of inserting and removing pn533_i2c
-and pn533 modules.
+On 12 December 2016 at 10:26, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 12-12-2016 9:32, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> On 12 December 2016 at 09:12, Johannes Berg <johannes@sipsolutions.net> =
+wrote:
+>>> On Sat, 2016-12-10 at 16:54 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>> In brcmfmac we use request_firmware_nowait and if fetching firmware
+>>>> with NVRAM variables fails then we try to fallback to the platform
+>>>> one (see brcmf_fw_request_code_done & brcmf_fw_request_nvram_done).
+>>>>
+>>>> Some problem for us is that on devices with platform NVRAM we get
+>>>> this error:
+>>>> Direct firmware load for brcm/brcmfmac43602-pcie.txt failed with error=
+ -2
+>>>
+>>> This also happens with iwlwifi, because it requests multiple firmware
+>>> versions starting at the most recent supported one (which is often not
+>>> released at the same time).
+>>
+>> Good to know it may help others as well!
+>>
+>>
+>>> So yeah, this would be really useful - why don't you just make a patch
+>>> with some kind of flags, whether it's FW_OPT_* or new flags?
+>>
+>> OK! If noone will come with any special comments/ideas soon, I'll
+>> propose a patch for using some flags.
+>>
+>> FWIW, meanwhile I submitted
+>> [PATCH V2] firmware: simplify defining and handling FW_OPT_FALLBACK
+>> https://patchwork.kernel.org/patch/9469875/
+>
+> Similar thread couple of months ago [1]
+>
+> (...)
+>
+> [1] http://lists.infradead.org/pipermail/ath10k/2016-July/thread.html#802=
+6
 
-Backtrace:
-[<8004205c>] (__queue_work) from [<80042324>] (queue_work_on+0x50/0x5c)
-r10:acdc7c80 r9:8006b330 r8:ac0dfb40 r7:ac50c600 r6:00000004 r5:acbbee40 r4:600f0113
-[<800422d4>] (queue_work_on) from [<7f7d5b6c>] (pn533_recv_frame+0x158/0x1fc [pn533])
-r7:ffffff87 r6:00000000 r5:acbbee40 r4:acbbee00
-[<7f7d5a14>] (pn533_recv_frame [pn533]) from [<7f7df4b8>] (pn533_i2c_irq_thread_fn+0x184/0x)
-r6:acb2a000 r5:00000000 r4:acdc7b90
-[<7f7df334>] (pn533_i2c_irq_thread_fn [pn533_i2c]) from [<8006b354>] (irq_thread_fn+0x24/0x)
-r7:00000000 r6:accde000 r5:ac0dfb40 r4:acdc7c80
-...
+Oh, now I see it's a bit messy topic and not clearly maintained class.
+It seems more ppl were confused by the API. I think having many
+unrelated behavior bounded to few functions caused some of this
+confusion. Let's hope adding some flags will let us use function the
+way they were designed, I'll definitely try working on this.
 
-Seems there is some race condition due registration of
-irq handler until all data stuctures that could be needed
-are ready. So I re-ordered some ops. After this, problem has gone.
-
-Changes in USB part was not tested, but it should not break
-anything.
-
-Signed-off-by: Andrey Rusalin <arusalin@dev.rtsoft.ru>
----
- drivers/nfc/pn533/i2c.c   | 28 ++++++++++++++++++----------
- drivers/nfc/pn533/pn533.c | 42 +++++++++++++++++++++++++-----------------
- drivers/nfc/pn533/pn533.h |  1 +
- drivers/nfc/pn533/usb.c   |  4 ++++
- 4 files changed, 48 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/nfc/pn533/i2c.c b/drivers/nfc/pn533/i2c.c
-index e2848e4..c1302de 100644
---- a/drivers/nfc/pn533/i2c.c
-+++ b/drivers/nfc/pn533/i2c.c
-@@ -206,14 +206,6 @@ static int pn533_i2c_probe(struct i2c_client *client,
- 	phy->i2c_dev = client;
- 	i2c_set_clientdata(client, phy);
- 
--	r = request_threaded_irq(client->irq, NULL, pn533_i2c_irq_thread_fn,
--				 IRQF_TRIGGER_FALLING |
--				 IRQF_SHARED | IRQF_ONESHOT,
--				 PN533_I2C_DRIVER_NAME, phy);
--
--	if (r < 0)
--		nfc_err(&client->dev, "Unable to register IRQ handler\n");
--
- 	priv = pn533_register_device(PN533_DEVICE_PN532,
- 				     PN533_NO_TYPE_B_PROTOCOLS,
- 				     PN533_PROTO_REQ_ACK_RESP,
-@@ -223,16 +215,32 @@ static int pn533_i2c_probe(struct i2c_client *client,
- 
- 	if (IS_ERR(priv)) {
- 		r = PTR_ERR(priv);
--		goto err_register;
-+		return r;
- 	}
- 
- 	phy->priv = priv;
- 
-+	r = request_threaded_irq(client->irq, NULL, pn533_i2c_irq_thread_fn,
-+				IRQF_TRIGGER_FALLING |
-+				IRQF_SHARED | IRQF_ONESHOT,
-+				PN533_I2C_DRIVER_NAME, phy);
-+	if (r < 0) {
-+		nfc_err(&client->dev, "Unable to register IRQ handler\n");
-+		goto irq_rqst_err;
-+	}
-+
-+	r = pn533_finalize_setup(priv);
-+	if (r)
-+		goto fn_setup_err;
-+
- 	return 0;
- 
--err_register:
-+fn_setup_err:
- 	free_irq(client->irq, phy);
- 
-+irq_rqst_err:
-+	pn533_unregister_device(phy->priv);
-+
- 	return r;
- }
- 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index c67150f..bbae44b 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -2570,6 +2570,31 @@ static int pn533_setup(struct pn533 *dev)
- 	return 0;
- }
- 
-+int pn533_finalize_setup(struct pn533 *dev)
-+{
-+
-+	struct pn533_fw_version fw_ver;
-+	int rc;
-+
-+	memset(&fw_ver, 0, sizeof(fw_ver));
-+
-+	rc = pn533_get_firmware_version(dev, &fw_ver);
-+	if (rc) {
-+		nfc_err(dev->dev, "Unable to get FW version\n");
-+		return rc;
-+	}
-+
-+	nfc_info(dev->dev, "NXP PN5%02X firmware ver %d.%d now attached\n",
-+		fw_ver.ic, fw_ver.ver, fw_ver.rev);
-+
-+	rc = pn533_setup(dev);
-+	if (rc)
-+		return rc;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pn533_finalize_setup);
-+
- struct pn533 *pn533_register_device(u32 device_type,
- 				u32 protocols,
- 				enum pn533_protocol_type protocol_type,
-@@ -2579,7 +2604,6 @@ struct pn533 *pn533_register_device(u32 device_type,
- 				struct device *dev,
- 				struct device *parent)
- {
--	struct pn533_fw_version fw_ver;
- 	struct pn533 *priv;
- 	int rc = -ENOMEM;
- 
-@@ -2622,15 +2646,6 @@ struct pn533 *pn533_register_device(u32 device_type,
- 
- 	INIT_LIST_HEAD(&priv->cmd_queue);
- 
--	memset(&fw_ver, 0, sizeof(fw_ver));
--	rc = pn533_get_firmware_version(priv, &fw_ver);
--	if (rc < 0)
--		goto destroy_wq;
--
--	nfc_info(dev, "NXP PN5%02X firmware ver %d.%d now attached\n",
--		 fw_ver.ic, fw_ver.ver, fw_ver.rev);
--
--
- 	priv->nfc_dev = nfc_allocate_device(&pn533_nfc_ops, protocols,
- 					   priv->ops->tx_header_len +
- 					   PN533_CMD_DATAEXCH_HEAD_LEN,
-@@ -2647,15 +2662,8 @@ struct pn533 *pn533_register_device(u32 device_type,
- 	if (rc)
- 		goto free_nfc_dev;
- 
--	rc = pn533_setup(priv);
--	if (rc)
--		goto unregister_nfc_dev;
--
- 	return priv;
- 
--unregister_nfc_dev:
--	nfc_unregister_device(priv->nfc_dev);
--
- free_nfc_dev:
- 	nfc_free_device(priv->nfc_dev);
- 
-diff --git a/drivers/nfc/pn533/pn533.h b/drivers/nfc/pn533/pn533.h
-index e26d634..12ea04e 100644
---- a/drivers/nfc/pn533/pn533.h
-+++ b/drivers/nfc/pn533/pn533.h
-@@ -231,6 +231,7 @@ struct pn533 *pn533_register_device(u32 device_type,
- 				struct device *dev,
- 				struct device *parent);
- 
-+int pn533_finalize_setup(struct pn533 *dev);
- void pn533_unregister_device(struct pn533 *priv);
- void pn533_recv_frame(struct pn533 *dev, struct sk_buff *skb, int status);
- 
-diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
-index bcf3f54..909806f 100644
---- a/drivers/nfc/pn533/usb.c
-+++ b/drivers/nfc/pn533/usb.c
-@@ -543,6 +543,10 @@ static int pn533_usb_probe(struct usb_interface *interface,
- 
- 	phy->priv = priv;
- 
-+	rc = pn533_finalize_setup(priv);
-+	if (rc)
-+		goto error;
-+
- 	usb_set_intfdata(interface, phy);
- 
- 	return 0;
--- 
-2.7.4
+--=20
+Rafa=C5=82
