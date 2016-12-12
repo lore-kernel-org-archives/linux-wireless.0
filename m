@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:36311 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935553AbcLVETZ (ORCPT
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:36046 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752801AbcLLUBF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Dec 2016 23:19:25 -0500
-Received: by mail-qt0-f172.google.com with SMTP id w33so224660039qtc.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2016 20:19:24 -0800 (PST)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
-        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>,
-        Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from crashing the kernel
-Date: Wed, 21 Dec 2016 23:18:34 -0500
-Message-Id: <1482380314-16440-3-git-send-email-geoff@kuvee.com> (sfid-20161222_052004_724616_86F73361)
-In-Reply-To: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+        Mon, 12 Dec 2016 15:01:05 -0500
+Received: by mail-qk0-f172.google.com with SMTP id n21so94776353qka.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 12:01:05 -0800 (PST)
+Subject: Re: [RFC V3 03/11] nl80211: add support for gscan
+To: Dan Williams <dcbw@redhat.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1481543997-24624-4-git-send-email-arend.vanspriel@broadcom.com>
+ <1481564592.6887.2.camel@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <286ed7bd-c23a-03c0-175f-7784fb235f7b@broadcom.com> (sfid-20161212_210108_518347_572F67AF)
+Date: Mon, 12 Dec 2016 21:01:01 +0100
+MIME-Version: 1.0
+In-Reply-To: <1481564592.6887.2.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jaret Cantu <jaret.cantu@timesys.com>
+On 12-12-2016 18:43, Dan Williams wrote:
+>> +
+>> +/**
+>> + * enum nl80211_bucket_band - GScan bucket band selection.
+> Quite possibly this was already covered and somebody requested you to
+> change this to the current name.  If that's the case, ignore this.
 
-Repeated polling attempts cause a NULL dereference error to occur.
-This is because the state of the trf7970a is currently reading but
-another request has been made to send a command before it has finished.
+Nope. You are the first ;-)
 
-The solution is to properly kill the waiting reading (workqueue)
-before failing on the send.
+> But shouldn't this enum and bucket_event_report include "gscan" in
+> their name, like the other gscan specific stuff does?  Are these going
+> to get used for something else too, and will that thing make sense with
+> the word "bucket"?  Just "nl80211_bucket_band" is pretty generic.
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
----
- drivers/nfc/trf7970a.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I figured the term bucket was making it gscan specific, but you are
+right. Will change it.
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index e3c72c6..ba5f9b8 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -1496,6 +1496,10 @@ static int trf7970a_send_cmd(struct nfc_digital_dev *ddev,
- 			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
- 		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
- 				trf->state);
-+		if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA ||
-+		    trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
-+			trf->ignore_timeout =
-+				!cancel_delayed_work(&trf->timeout_work);
- 		ret = -EIO;
- 		goto out_err;
- 	}
--- 
-2.7.4
+Thanks,
+Arend
