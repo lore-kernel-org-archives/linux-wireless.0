@@ -1,52 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:53084 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752194AbcLEXwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 18:52:24 -0500
-Date: Mon, 5 Dec 2016 15:51:49 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-Cc: Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: wl1251 & mac address & calibration data
-Message-ID: <20161205235149.GL4705@atomide.com> (sfid-20161206_005258_400567_407D0B49)
-References: <201611111820.52072@pali>
- <20161124152045.GK13735@pali>
- <20161124184601.wo4al6nyzb6rmiqs@raspberrypi-2.musicnaut.iki.fi>
- <201611261820.47995@pali>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34459 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752901AbcLMHy2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 02:54:28 -0500
+Date: Mon, 12 Dec 2016 23:54:25 -0800
+From: Eric Biggers <ebiggers3@gmail.com>
+To: Andy Lutomirski <luto@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-crypto@vger.kernel.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Stephan Mueller <smueller@chronox.de>
+Subject: Re: [PATCH] orinoco: Use shash instead of ahash for MIC calculations
+Message-ID: <20161213075425.GA5948@zzz> (sfid-20161213_085449_630139_5FE76F23)
+References: <8c273c9c41f51b34bb3115086f1d776895580637.1481575835.git.luto@kernel.org>
+ <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201611261820.47995@pali>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Pali Rohár <pali.rohar@gmail.com> [161126 09:21]:
-> On Thursday 24 November 2016 19:46:01 Aaro Koskinen wrote:
-> > Hi,
-> > 
-> > On Thu, Nov 24, 2016 at 04:20:45PM +0100, Pali Rohár wrote:
-> > > Proprietary, signed and closed bootloader NOLO does not support DT.
-> > > So for booting you need to append DTS file to kernel image.
-> > > 
-> > > U-Boot is optional and can be used as intermediate bootloader
-> > > between NOLO and kernel. But still it has problems with reading
-> > > from nand, so cannot read NVS data nor MAC address.
-> > 
-> > You could use kexec to pass the fixed DT.
-> > 
-> > A.
-> 
-> IIRC it was broken for N900/omap3, no idea if somebody fixed it.
+On Mon, Dec 12, 2016 at 12:55:55PM -0800, Andy Lutomirski wrote:
+> +int orinoco_mic(struct crypto_shash *tfm_michael, u8 *key,
+>  		u8 *da, u8 *sa, u8 priority,
+>  		u8 *data, size_t data_len, u8 *mic)
+>  {
+> -	AHASH_REQUEST_ON_STACK(req, tfm_michael);
+> -	struct scatterlist sg[2];
+> +	SHASH_DESC_ON_STACK(desc, tfm_michael);
+>  	u8 hdr[ETH_HLEN + 2]; /* size of header + padding */
+>  	int err;
+>  
+> @@ -67,18 +66,27 @@ int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
+>  	hdr[ETH_ALEN * 2 + 2] = 0;
+>  	hdr[ETH_ALEN * 2 + 3] = 0;
+>  
+> -	/* Use scatter gather to MIC header and data in one go */
+> -	sg_init_table(sg, 2);
+> -	sg_set_buf(&sg[0], hdr, sizeof(hdr));
+> -	sg_set_buf(&sg[1], data, data_len);
+> +	desc->tfm = tfm_michael;
+> +	desc->flags = 0;
+>  
+> -	if (crypto_ahash_setkey(tfm_michael, key, MIC_KEYLEN))
+> -		return -1;
+> +	err = crypto_shash_setkey(tfm_michael, key, MIC_KEYLEN);
+> +	if (err)
+> +		return err;
+> +
+> +	err = crypto_shash_init(desc);
+> +	if (err)
+> +		return err;
+> +
+> +	err = crypto_shash_update(desc, hdr, sizeof(hdr));
+> +	if (err)
+> +		return err;
+> +
+> +	err = crypto_shash_update(desc, data, data_len);
+> +	if (err)
+> +		return err;
+> +
+> +	err = crypto_shash_final(desc, mic);
+> +	shash_desc_zero(desc);
+>  
+> -	ahash_request_set_tfm(req, tfm_michael);
+> -	ahash_request_set_callback(req, 0, NULL, NULL);
+> -	ahash_request_set_crypt(req, sg, mic, data_len + sizeof(hdr));
+> -	err = crypto_ahash_digest(req);
+> -	ahash_request_zero(req);
+>  	return err;
 
-FYI, at least in next-20161205 kexec works on omap3 for me.
+It's probably a good idea to always do shash_desc_zero(), even when something
+above it fails.  Otherwise this looks fine.  Thanks for sending these patches!
 
-Regards,
-
-Tony
+Eric
