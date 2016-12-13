@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:45440 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753202AbcLaLlt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Dec 2016 06:41:49 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH resend 2/3] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
-References: <8737h4nx6b.fsf@mail.parknet.co.jp>
-Date: Sat, 31 Dec 2016 20:41:42 +0900
-In-Reply-To: <8737h4nx6b.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
-        "Sat, 31 Dec 2016 20:41:00 +0900")
-Message-ID: <87y3ywmikp.fsf@mail.parknet.co.jp> (sfid-20161231_124442_813359_FC6A8269)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:47368 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932193AbcLMIlc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 03:41:32 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: don't call drv_set_default_unicast_key() for VLANs
+Date: Tue, 13 Dec 2016 09:41:29 +0100
+Message-Id: <20161213084129.8268-1-johannes@sipsolutions.net> (sfid-20161213_094135_577435_195D0687)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
-NFC_CMD_GET_DEVICE send.
+Since drivers know nothing about AP_VLAN interfaces, trying to
+call drv_set_default_unicast_key() just results in a warning
+and no call to the driver. Avoid the warning by not calling the
+driver for this on AP_VLAN interfaces.
 
-To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
-NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
+This means that drivers that somehow need this call for AP mode
+will fail to work properly in the presence of VLAN interfaces,
+but the current drivers don't seem to use it, and mac80211 will
+select and indicate the key - so drivers should be OK now.
 
-This fixes those inconsistent.
-
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
+ net/mac80211/key.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- net/nfc/netlink.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
---- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
-+++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
-@@ -311,6 +311,17 @@ free_msg:
- 	return -EMSGSIZE;
- }
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index edd6f2945f69..a98fc2b5e0dc 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -265,7 +265,8 @@ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
+ 	if (uni) {
+ 		rcu_assign_pointer(sdata->default_unicast_key, key);
+ 		ieee80211_check_fast_xmit_iface(sdata);
+-		drv_set_default_unicast_key(sdata->local, sdata, idx);
++		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
++			drv_set_default_unicast_key(sdata->local, sdata, idx);
+ 	}
  
-+static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
-+{
-+	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
-+	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
-+	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
-+	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
-+	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+		return -1;
-+	return 0;
-+}
-+
- int nfc_genl_device_added(struct nfc_dev *dev)
- {
- 	struct sk_buff *msg;
-@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
- 	if (!hdr)
- 		goto free_msg;
- 
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
- 	if (cb)
- 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
- 
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
--	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-_
+ 	if (multi)
 -- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+2.9.3
