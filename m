@@ -1,83 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51882 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752082AbcLSILg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32741 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932455AbcLMMDs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 03:11:36 -0500
+        Tue, 13 Dec 2016 07:03:48 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+Date: Tue, 13 Dec 2016 12:03:18 +0000
+Message-ID: <87twa8yr22.fsf@kamboji.qca.qualcomm.com> (sfid-20161213_130353_309370_EC594742)
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+        <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+        <87insxg0yc.fsf@kamboji.qca.qualcomm.com>
+        <871sxza9al.fsf@kamboji.qca.qualcomm.com>
+        <CAFBinCC6JWBhZwma=66fBi3_to2SaHOMNDQS23jHNhcc+RUcYQ@mail.gmail.com>
+In-Reply-To: <CAFBinCC6JWBhZwma=66fBi3_to2SaHOMNDQS23jHNhcc+RUcYQ@mail.gmail.com>       (Martin
+ Blumenstingl's message of "Mon, 12 Dec 2016 21:05:53 +0100")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 19 Dec 2016 13:41:35 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
- support BTCOEX
-In-Reply-To: <1481881024.27953.14.camel@sipsolutions.net>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
- <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
- <1480949353.31788.27.camel@sipsolutions.net>
- <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
- <1481645351.20412.34.camel@sipsolutions.net>
- <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
- <1481881024.27953.14.camel@sipsolutions.net>
-Message-ID: <ae82112880d55451342e7a6e5a47c33f@codeaurora.org> (sfid-20161219_091252_937848_9991609E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Thanks for your comments.
+> Hello Kalle,
+>
+> On Fri, Nov 25, 2016 at 4:06 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wro=
+te:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>
+>>> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+>>>
+>>>> There are two types of swapping the EEPROM data in the ath9k driver.
+>>>> Before this series one type of swapping could not be used without the
+>>>> other.
+>>>>
+>>>> The first type of swapping looks at the "magic bytes" at the start of
+>>>> the EEPROM data and performs swab16 on the EEPROM contents if needed.
+>>>> The second type of swapping is EEPROM format specific and swaps
+>>>> specific fields within the EEPROM itself (swab16, swab32 - depends on
+>>>> the EEPROM format).
+>>>>
+>>>> With this series the second part now looks at the EEPMISC register
+>>>> inside the EEPROM, which uses a bit to indicate if the EEPROM data
+>>>> is Big Endian (this is also done by the FreeBSD kernel).
+>>>> This has a nice advantage: currently there are some out-of-tree hacks
+>>>> (in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
+>>>> Big Endian system (=3D no swab16 is performed) but the EEPROM itself
+>>>> indicates that it's data is Little Endian. Until now the out-of-tree
+>>>> code simply did a swab16 before passing the data to ath9k, so ath9k
+>>>> first did the swab16 - this also enabled the format specific swapping.
+>>>> These out-of-tree hacks are still working with the new logic, but it
+>>>> is recommended to remove them. This implementation is based on a
+>>>> discussion with Arnd Bergmann who raised concerns about the
+>>>> robustness and portability of the swapping logic in the original OF
+>>>> support patch review, see [0].
+>>>>
+>>>> After a second round of patches (=3D v1 of this series) neither Arnd
+>>>> Bergmann nor I were really happy with the complexity of the EEPROM
+>>>> swapping logic. Based on a discussion (see [1] and [2]) we decided
+>>>> that ath9k should use a defined format (specifying the endianness
+>>>> of the data - I went with __le16 and __le32) when accessing the
+>>>> EEPROM fields. A benefit of this is that we enable the EEPMISC based
+>>>> swapping logic by default, just like the FreeBSD driver, see [3]. On
+>>>> the devices which I have tested (see below) ath9k now works without
+>>>> having to specify the "endian_check" field in ath9k_platform_data (or
+>>>> a similar logic which could provide this via devicetree) as ath9k now
+>>>> detects the endianness automatically. Only EEPROMs which are mangled
+>>>> by some out-of-tree code still need the endian_check flag (or one can
+>>>> simply remove that mangling from the out-of-tree code).
+>>>>
+>>>> Testing:
+>>>> - tested by myself on AR9287 with Big Endian EEPROM
+>>>> - tested by myself on AR9227 with Little Endian EEPROM
+>>>> - tested by myself on AR9381 (using the ar9003_eeprom implementation,
+>>>>   which did not suffer from this whole problem)
+>>>> - how do we proceed with testing? maybe we could keep this in a
+>>>>   feature-branch and add these patches to LEDE once we have an ACK to
+>>>>   get more people to test this
+>>>>
+>>>> This series depends on my other series (v7):
+>>>> "add devicetree support to ath9k" - see [4]
+>>>
+>>> I think this looks pretty good. If there's a bug somewhere it should be
+>>> quite easy to fix so I'm not that worried and would be willing to take
+>>> these as soon as I have applied the dependency series. IIRC your
+>>> devicetree patches will have at least one more review round so that wil=
+l
+>>> take some time still. In the meantime it would be great if LEDE folks
+>>> could take a look at these and comment (or test).
+>>
+>> So are everyone happy with this? I haven't seen any comments. If I don't
+>> here anything I'm planning to take these, most likely for 4.11.
+>
+> the patches have been in LEDE for almost two weeks now and I did not
+> see any reports of ath9k breakage (footnote below).
+>
+> It seems that there are a few devices out there where the whole EEPROM
+> is swab16'ed which switches the position of the 1-byte fields
+> opCapFlags and eepMisc.
+> those still work fine with the new code, however I had a second patch
+> in LEDE [0] which results in ath9k_platform_data.endian_check NOT
+> being set anymore.
+> that endian_check flag was used before to swab16 the whole EEPROM, to
+> correct the position of the 1-byte fields again.
+> Currently we are fixing this in the firmware hotplug script: [1]
+> This is definitely not a blocker for this series though (if we want to
+> have a devicetree replacement for "ath9k_platform_data.endian_check"
+> then I'd work on that within a separate series, but I somewhat
+> consider these EEPROMs as "broken" so fixing them in
+> userspace/firmware hotplug script is fine for me)
 
-On 2016-12-16 15:07, Johannes Berg wrote:
->> > > is it fine to have as WIPHY_BTCOEX_BE_PREFERRED ?
->> >
->> > It's not really clear to me what you intend to do this - if it's
->> > really support flags then you really should name those better.
->> >
->> 
->> This is support flags and it used by the driver to intimate driver 
->> supported frame type for the BTCOEX to cfg like
->> "wiphy_wowlan_support_flags" implementation. Please suggest if this
->> is ok ? I will be thankful if you can suggest a  better one if this
->> is not ok "WIPHY_BTCOEX_SUPPORTS_BE"
-> 
-> Well, I see a few things here:
-> 
-> 1) does it even make sense to split it out per AC? wouldn't it be weird
-> if you supported this only for VO and BK, and not the others, or
-> something like that?
-> 
-It has support for BE, VI, management and beacon frames also.
-Or do you meant to say like support only for VO and BK?
+Sounds good to me, thanks for the thorough followup. I'm planning to
+apply these any day.
 
-> 2) Wouldn't it make more sense to define this in nl80211 and just pass
-> the bitmap through to userspace? That would save quite a bit of netlink
-> mangling complexity.
-> 
-Please let me know if the below design/thought is fine to you.
-
-iw phyX set btcoex_priority <[vi, vo, be, bk, mgmt, beacon]>
-
-By this command user should give one or more than one frame types for 
-this btcoex priority,
-we will parse that in "iw" and send as a single bitmap(less than 0x64) 
-to
-the driver?
-
-> 3) I think the naming is confusing - "WIPHY_BTCOEX_SUPPORTS_BE_PREF" or
-> so might be more appropriate?
-> 
-If the above suggestion is fine, we may not need these flags.
-
->> Do you mean to say, sending a value from user space and parse that
->> in  the driver?
-> 
-> I was more thinking of the capability advertisement, but yeah, both
-> ways seems reasonable.
-> 
-Okay.
-
-Thanks,
-Tamizh.
+--=20
+Kalle Valo=
