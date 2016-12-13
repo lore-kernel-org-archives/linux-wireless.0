@@ -1,59 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52908 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbcLAKfs (ORCPT
+Received: from mout1.fh-giessen.de ([212.201.18.42]:36148 "EHLO
+        mout1.fh-giessen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933149AbcLMNlU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 05:35:48 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Fix soft lockup during firmware
- crash/hw-restart
-Date: Thu, 1 Dec 2016 10:35:38 +0000
-Message-ID: <87inr4rl6t.fsf@kamboji.qca.qualcomm.com> (sfid-20161201_113551_534585_4C07F663)
-References: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com>
-        (Mohammed Shafi Shajakhan's message of "Wed, 30 Nov 2016 10:59:29       +0530")
-Content-Type: text/plain; charset="us-ascii"
+        Tue, 13 Dec 2016 08:41:20 -0500
+Received: from mx2.fh-giessen.de ([212.201.18.41])
+        by mout1.fh-giessen.de with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.84_2)
+        (envelope-from <tobias.johannes.klausmann@mni.thm.de>)
+        id 1cGnKS-0006pC-RS
+        for linux-wireless@vger.kernel.org; Tue, 13 Dec 2016 14:41:12 +0100
+Subject: Re: [PATCH] ath9k: unlock rcu read when returning early
+To: Felix Fietkau <nbd@nbd.name>, kvalo@codeaurora.org,
+        helgaas@kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, marc.zyngier@arm.com,
+        Janusz.Dziedzic@tieto.com, rmanohar@qti.qualcomm.com,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        rmanohar@qca.qualcomm.com, bharat.kumar.gogada@xilinx.com
+References: <1cFMHb-00BdWd-Ks>
+ <20161212185001.3857-1-tobias.johannes.klausmann@mni.thm.de>
+ <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Message-ID: <7b4b7748-06d6-92d4-228c-e7ebf00f8699@mni.thm.de> (sfid-20161213_144140_392380_AE48D441)
+Date: Tue, 13 Dec 2016 14:41:12 +0100
 MIME-Version: 1.0
+In-Reply-To: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> During firmware crash (or) user requested manual restart
-> the system gets into a soft lock up state because of the
-> below root cause.
->
-> During user requested hardware restart / firmware crash
-> the system goes into a soft lockup state as 'napi_synchronize'
-> is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-> bit) and it sleeps into infinite loop as it waits for
-> 'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-> 'ath10k_hif_stop' is called twice as below (resulting in calling
-> 'napi_synchronize' after 'napi_disable')
->
-> 'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
-> -> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-> 'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
->
-> Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-> as it makes more sense before informing mac80211 to restart h/w
-> Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
->
-> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> ---
-> [v2 Added Fixes ]
 
-I'll also add:
+On 13.12.2016 11:41, Felix Fietkau wrote:
+> On 2016-12-12 19:50, Tobias Klausmann wrote:
+>> Starting with ath9k: use ieee80211_tx_status_noskb where possible
+>> [d94a461d7a7df68991fb9663531173f60ef89c68] the driver uses rcu_read_lock() &&
+>> rcu_read_unlock() yet on returning early in ath_tx_edma_tasklet() the unlock is
+>> missing leading to stalls and suspicious RCU usage:
+>>
+>>   ===============================
+>>   [ INFO: suspicious RCU usage. ]
+>>   4.9.0-rc8 #11 Not tainted
+>>   -------------------------------
+>>   kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
+>>
+>>   other info that might help us debug this:
+>>
+>>   RCU used illegally from idle CPU!
+>>   rcu_scheduler_active = 1, debug_locks = 0
+>>   RCU used illegally from extended quiescent state!
+>>   1 lock held by swapper/7/0:
+>>   #0:
+>>    (
+>>   rcu_read_lock
+>>   ){......}
+>>   , at:
+>>   [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
+>>
+>>   stack backtrace:
+>>   CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+>>   Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+>>    ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+>>    ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+>>    ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+>>   Call Trace:
+>>    <IRQ>
+>>    [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+>>    [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+>>    [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+>>    [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+>>    [<ffffffff81058631>] irq_exit+0x61/0xd0
+>>    [<ffffffff81018d25>] do_IRQ+0x65/0x110
+>>    [<ffffffff81672189>] common_interrupt+0x89/0x89
+>>    <EOI>
+>>    [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+>>    [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+>>    [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+>>    [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+>>    [<ffffffff810336f8>] start_secondary+0x148/0x170
+>>
+>> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+>> ---
+>>   drivers/net/wireless/ath/ath9k/xmit.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index 52bfbb988611..857d5ae09a1d 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -2787,6 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+>>   		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
+>>   		if (list_empty(fifo_list)) {
+>>   			ath_txq_unlock(sc, txq);
+>> +			rcu_read_unlock();
+> Technically this is fine as well, but I'd prefer a fix where you replace
+> the 'return' with 'break', thus avoiding the duplication of
+> rcu_read_unlock()
 
-Cc: <stable@vger.kernel.org> # v4.9
+Actually if you want to avoid it, maybe skipping over the rest is better 
+(as originally intended):
 
---=20
-Kalle Valo=
+...
+
+ath_txq_unlock(sc, txq);
+
+
+goto unlock;
+}
+...
+
+unlock:
+rcu_read_unlock();
+
+Thanks,
+Tobias
+>
+> Thanks,
+>
+> - Felix
+>
