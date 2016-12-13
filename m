@@ -1,63 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59888 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50572 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752951AbcLIMAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Dec 2016 07:00:23 -0500
+        id S1753425AbcLMQUa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 11:20:30 -0500
+Message-ID: <1481645962.20412.41.camel@sipsolutions.net> (sfid-20161213_172414_030331_A1776E96)
+Subject: Re: [RFC V3 03/11] nl80211: add support for gscan
 From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-12-09
-Date: Fri,  9 Dec 2016 13:00:13 +0100
-Message-Id: <20161209120014.20292-1-johannes@sipsolutions.net> (sfid-20161209_130028_205058_DAEBE931)
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Dec 2016 17:19:22 +0100
+In-Reply-To: <1481543997-24624-4-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1481543997-24624-4-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Mon, 2016-12-12 at 11:59 +0000, Arend van Spriel wrote:
+> This patch adds support for GScan which is a scan offload feature
+> used in Android.
 
-Closing net-next caught me by surprise, so I had to rebase a bit,
-but these three patches really should go in soon. I'm not sending
-them for 4.9 this late though.
+Found a few places with spaces instead of tabs as indentation, and
+spurious braces around single-statement things, but other than that it
+looks fine from a patch/nl80211 POV.
 
-Please pull and let me know if there's any problem.
+Haven't really looked into the details of gscan itself now though,
+sorry.
 
-Thanks,
+There's a bit of a weird hard-coded restriction to 16 channels too,
+that's due to the bucket map?
+
 johannes
-
-
-
-The following changes since commit f81a8a02bb3b3e882ba6aa580230c13b5be64849:
-
-  Merge branch 'mV88e6xxx-interrupt-fixes' (2016-11-20 21:16:14 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-12-09
-
-for you to fetch changes up to e6f462df9acd2a3295e5d34eb29e2823220cf129:
-
-  cfg80211/mac80211: fix BSS leaks when abandoning assoc attempts (2016-12-09 12:57:49 +0100)
-
-----------------------------------------------------------------
-Three fixes:
- * fix a logic bug introduced by a previous cleanup
- * fix nl80211 attribute confusing (trying to use
-   a single attribute for two purposes)
- * fix a long-standing BSS leak that happens when an
-   association attempt is abandoned
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      nl80211: fix logic inversion in start_nan()
-      cfg80211/mac80211: fix BSS leaks when abandoning assoc attempts
-
-Vamsi Krishna (1):
-      nl80211: Use different attrs for BSSID and random MAC addr in scan req
-
- include/net/cfg80211.h       | 11 +++++++++++
- include/uapi/linux/nl80211.h |  7 ++++++-
- net/mac80211/mlme.c          | 21 ++++++++++++---------
- net/wireless/core.h          |  1 +
- net/wireless/mlme.c          | 12 ++++++++++++
- net/wireless/nl80211.c       | 18 ++++++++++++++++--
- net/wireless/sme.c           | 14 ++++++++++++++
- 7 files changed, 72 insertions(+), 12 deletions(-)
