@@ -1,57 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36120 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750776AbcLRXNV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2016 18:13:21 -0500
-Subject: Re: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU
- read-side critical section
-To: paulmck@linux.vnet.ibm.com, "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
- <20161218155938.GP3924@linux.vnet.ibm.com>
- <58b67d5b-0275-f80f-479f-78cf748b4319@mni.thm.de>
- <87pokpc8ng.fsf@qca.qualcomm.com> <20161218201410.GS3924@linux.vnet.ibm.com>
-Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
-        lkml <linux-kernel@vger.kernel.org>,
-        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "nbd@nbd.name" <nbd@nbd.name>
-From: Gabriel C <nix.or.die@gmail.com>
-Message-ID: <20b64afc-8270-27d5-6d45-592ce6dd24c7@gmail.com> (sfid-20161219_001433_955183_1AA1C91F)
-Date: Mon, 19 Dec 2016 00:11:32 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161218201410.GS3924@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:53028 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932529AbcLMWaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 17:30:02 -0500
+Message-ID: <1481668194.22319.0.camel@sipsolutions.net> (sfid-20161213_233010_819467_2D076F17)
+Subject: Re: [RFC V3 03/11] nl80211: add support for gscan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Dec 2016 23:29:54 +0100
+In-Reply-To: <3dd64ef5-f05e-4a80-0c98-9a2548affd1c@broadcom.com> (sfid-20161213_210929_370410_C9505C9C)
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1481543997-24624-4-git-send-email-arend.vanspriel@broadcom.com>
+         <1481645962.20412.41.camel@sipsolutions.net>
+         <3dd64ef5-f05e-4a80-0c98-9a2548affd1c@broadcom.com>
+         (sfid-20161213_210929_370410_C9505C9C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2016-12-13 at 21:09 +0100, Arend Van Spriel wrote:
+> 
+> > There's a bit of a weird hard-coded restriction to 16 channels too,
+> > that's due to the bucket map?
+> 
+> Uhm. Is there? I will check, but if you can give me a pointer where
+> to look it is appreciated.
 
+Just look for "< 16" or "<= 16" or so in the patch. I do think that's
+because the channel map is a u16 though, not sure we'd want to change
+that.
 
-On 18.12.2016 21:14, Paul E. McKenney wrote:
-> On Sun, Dec 18, 2016 at 07:57:42PM +0000, Valo, Kalle wrote:
->> Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
->>
->>> A patch for this is already floating on the ML for a while now latest:
->>> (ath9k: do not return early to fix rcu unlocking)
->>
->> It's here:
->>
->> https://patchwork.kernel.org/patch/9472709/
->
-> Feel free to add:
->
-> Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
->
-
-This patch fixes the bug for me.
-
-You can add my Tested-by if you wish.
-
-Tested-by: Gabriel Craciunescu <nix.or.die@gmail.com>
-
-
-Regards,
-
-Gabriel
+johannes
