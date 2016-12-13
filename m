@@ -1,301 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35963 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753075AbcLKFps (ORCPT
+Received: from mail-vk0-f42.google.com ([209.85.213.42]:33271 "EHLO
+        mail-vk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753320AbcLMQlW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 00:45:48 -0500
-Received: by mail-oi0-f66.google.com with SMTP id u15so7277486oie.3
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:48 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 10/14] rtlwifi_new: rtl8192cu: Remove all instances of DBG_EMERG
-Date: Sat, 10 Dec 2016 23:45:15 -0600
-Message-Id: <20161211054523.7119-19-Larry.Finger@lwfinger.net> (sfid-20161211_070931_468309_4E3AC6D5)
-In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
-References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+        Tue, 13 Dec 2016 11:41:22 -0500
+Received: by mail-vk0-f42.google.com with SMTP id 137so69886867vkl.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 08:41:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87mvg0kqno.fsf@purkki.adurom.net>
+References: <8c273c9c41f51b34bb3115086f1d776895580637.1481575835.git.luto@kernel.org>
+ <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org> <87mvg0kqno.fsf@purkki.adurom.net>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Tue, 13 Dec 2016 08:41:01 -0800
+Message-ID: <CALCETrXxQ9FxuqV5A1rkj2SpeFfd89njDP9h5VBuNx387ieKdQ@mail.gmail.com> (sfid-20161213_174436_197434_1773ED3F)
+Subject: Re: [PATCH] orinoco: Use shash instead of ahash for MIC calculations
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Andy Lutomirski <luto@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Eric Biggers <ebiggers3@gmail.com>,
+        linux-crypto@vger.kernel.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Stephan Mueller <smueller@chronox.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a step toward eliminating the RT_TRACE macros. Those calls that
-have DBG_EMERG as the level are always logged, and they represent error
-conditions, thus they are replaced with pr_err().
+On Tue, Dec 13, 2016 at 3:35 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Andy Lutomirski <luto@kernel.org> writes:
+>
+>> Eric Biggers pointed out that the orinoco driver pointed scatterlists
+>> at the stack.
+>>
+>> Fix it by switching from ahash to shash.  The result should be
+>> simpler, faster, and more correct.
+>>
+>> Cc: stable@vger.kernel.org # 4.9 only
+>> Reported-by: Eric Biggers <ebiggers3@gmail.com>
+>> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+>
+> "more correct"? Does this fix a real user visible bug or what? And why
+> just stable 4.9, does this maybe have something to do with
+> CONFIG_VMAP_STACK?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 33 ++++++++--------------
- .../net/wireless/realtek/rtlwifi/rtl8192cu/led.c   |  6 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   | 12 +++-----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/phy.c   | 12 +++-----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 ++--
- 6 files changed, 24 insertions(+), 47 deletions(-)
+Whoops, I had that text in some other patches but forgot to put it in
+this one.  It'll blow up with CONFIG_VMAP_STACK=y if a debug option
+like CONFIG_DEBUG_VIRTUAL=y is set.  It may work by accident if
+debugging is off.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index ddfcf994..9db6ec6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -452,8 +452,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 			break;
- 		}
- 		if (pollingCount++ > 100) {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--				 "Failed to polling REG_APS_FSMCO[PFM_ALDN] done!\n");
-+			pr_err("Failed to polling REG_APS_FSMCO[PFM_ALDN] done!\n");
- 			return -ENODEV;
- 		}
- 	} while (true);
-@@ -486,8 +485,7 @@ static int _rtl92cu_init_power_on(struct ieee80211_hw *hw)
- 			break;
- 		}
- 		if (pollingCount++ > 1000) {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--				 "Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
-+			pr_err("Failed to polling REG_APS_FSMCO[APFM_ONMAC] done!\n");
- 			return -ENODEV;
- 		}
- 	} while (true);
-@@ -687,7 +685,6 @@ static void _rtl92cu_init_chipN_three_out_ep_priority(struct ieee80211_hw *hw,
- 						      u8 queue_sel)
- {
- 	u16 beQ, bkQ, viQ, voQ, mgtQ, hiQ;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
- 	if (!wmm_enable) { /* typical setting */
- 		beQ	= QUEUE_LOW;
-@@ -705,8 +702,7 @@ static void _rtl92cu_init_chipN_three_out_ep_priority(struct ieee80211_hw *hw,
- 		hiQ	= QUEUE_HIGH;
- 	}
- 	_rtl92c_init_chipN_reg_priority(hw, beQ, bkQ, viQ, voQ, mgtQ, hiQ);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Tx queue select :0x%02x..\n",
--		 queue_sel);
-+	pr_info("Tx queue select :0x%02x..\n", queue_sel);
- }
- 
- static void _rtl92cu_init_chipN_queue_priority(struct ieee80211_hw *hw,
-@@ -765,8 +761,7 @@ static void _rtl92cu_init_chipT_queue_priority(struct ieee80211_hw *hw,
- 		break;
- 	}
- 	rtl_write_byte(rtlpriv, (REG_TRXDMA_CTRL+1), hq_sele);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Tx queue select :0x%02x..\n",
--		 hq_sele);
-+	pr_info("Tx queue select :0x%02x..\n", hq_sele);
- }
- 
- static void _rtl92cu_init_queue_priority(struct ieee80211_hw *hw,
-@@ -848,8 +843,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 	err = _rtl92cu_init_power_on(hw);
- 
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Failed to init power on!\n");
-+		pr_err("Failed to init power on!\n");
- 		return err;
- 	}
- 	if (!wmm_enable) {
-@@ -860,8 +854,7 @@ static int _rtl92cu_init_mac(struct ieee80211_hw *hw)
- 					: WMM_CHIP_A_TX_PAGE_BOUNDARY;
- 	}
- 	if (false == rtl92c_init_llt_table(hw, boundary)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Failed to init LLT Table!\n");
-+		pr_err("Failed to init LLT Table!\n");
- 		return -EINVAL;
- 	}
- 	_rtl92cu_init_queue_reserved_page(hw, wmm_enable, out_ep_nums,
-@@ -986,7 +979,7 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	rtlhal->hw_type = HARDWARE_TYPE_RTL8192CU;
- 	err = _rtl92cu_init_mac(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "init mac failed!\n");
-+		pr_err("init mac failed!\n");
- 		goto exit;
- 	}
- 	err = rtl92c_download_fw(hw);
-@@ -1099,8 +1092,7 @@ static void  _ResetDigitalProcedure1(struct ieee80211_hw *hw, bool bWithoutHWSM)
- 				udelay(50);
- 			}
- 			if (retry_cnts >= 100) {
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "#####=> 8051 reset failed!.........................\n");
-+				pr_err("8051 reset failed!.........................\n");
- 				/* if 8051 reset fail, reset MAC. */
- 				rtl_write_byte(rtlpriv,
- 					       REG_SYS_FUNC_EN + 1,
-@@ -1340,8 +1332,7 @@ static int _rtl92cu_set_media_status(struct ieee80211_hw *hw,
- 			 "Set Network type to AP!\n");
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Network type %d not supported!\n", type);
-+		pr_err("Network type %d not supported!\n", type);
- 		goto error_out;
- 	}
- 	rtl_write_byte(rtlpriv, MSR, bt_msr);
-@@ -1555,8 +1546,7 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 	case HAL_DEF_WOWLAN:
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
-+		pr_err("switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -1926,8 +1916,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 			break;
- 		}
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
-+		pr_err("switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-index c624081..9d83f08 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-@@ -57,8 +57,7 @@ void rtl92cu_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg & 0x0f) | BIT(5));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -90,8 +89,7 @@ void rtl92cu_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, REG_LEDCFG2, (ledcfg | BIT(3)));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-index cf212f6..1b124ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/mac.c
-@@ -157,9 +157,8 @@ bool rtl92c_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
- 		if (_LLT_NO_ACTIVE == _LLT_OP_VALUE(value))
- 			break;
- 		if (count > POLLING_LLT_THRESHOLD) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Failed to polling write LLT done at address %d! _LLT_OP_VALUE(%x)\n",
--				 address, _LLT_OP_VALUE(value));
-+			pr_err("Failed to polling write LLT done at address %d! _LLT_OP_VALUE(%x)\n",
-+			       address, _LLT_OP_VALUE(value));
- 			status = false;
- 			break;
- 		}
-@@ -262,8 +261,7 @@ void rtl92c_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			enc_algo = CAM_AES;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "illegal switch case\n");
-+			pr_err("illegal switch case\n");
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-@@ -280,9 +278,7 @@ void rtl92c_set_key(struct ieee80211_hw *hw, u32 key_index,
- 					entry_id = rtl_cam_get_free_entry(hw,
- 								 p_macaddr);
- 					if (entry_id >=  TOTAL_CAM_ENTRY) {
--						RT_TRACE(rtlpriv, COMP_SEC,
--							 DBG_EMERG,
--							 "Can not find free hw security cam entry\n");
-+						pr_err("Can not find free hw security cam entry\n");
- 						return;
- 					}
- 				} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-index f35f435..452437f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-@@ -274,8 +274,7 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		break;
- 	case RF90_PATH_C:
- 	case RF90_PATH_D:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", rfpath);
-+		pr_err("switch case %#x not processed\n", rfpath);
- 		break;
- 	default:
- 		break;
-@@ -314,8 +313,7 @@ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
- 		break;
- 	}
- 	switch (rtlphy->current_chan_bw) {
-@@ -336,8 +334,7 @@ void rtl92cu_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
- 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
- 		break;
- 	}
- 	rtl92cu_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
-@@ -509,8 +506,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		_rtl92c_phy_set_rf_sleep(hw);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", rfpwr_state);
-+		pr_err("switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-index 5e31830..9cff6bc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/rf.c
-@@ -51,8 +51,7 @@ void rtl92cu_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
- 			      rtlphy->rfreg_chnlval[0]);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", bandwidth);
-+		pr_err("unknown bandwidth: %#X\n", bandwidth);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index b84e13a..935e830 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -68,8 +68,7 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- 	/* for firmware buf */
- 	rtlpriv->rtlhal.pfirmware = vzalloc(0x4000);
- 	if (!rtlpriv->rtlhal.pfirmware) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't alloc buffer for fw\n");
-+		pr_err("Can't alloc buffer for fw\n");
- 		return 1;
- 	}
- 	if (IS_VENDOR_UMC_A_CUT(rtlpriv->rtlhal.version) &&
-@@ -158,7 +157,7 @@ static struct rtl_hal_ops rtl8192cu_hal_ops = {
- 
- static struct rtl_mod_params rtl92cu_mod_params = {
- 	.sw_crypto = 0,
--	.debug = DBG_EMERG,
-+	.debug = 0,
- };
- 
- module_param_named(swenc, rtl92cu_mod_params.sw_crypto, bool, 0444);
--- 
-2.10.2
+--Andy
