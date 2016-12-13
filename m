@@ -1,99 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp29.msg.oleane.net ([62.161.4.29]:48924 "EHLO
-        smtp29.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754198AbcLZLQQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39077 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933085AbcLMNow (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Dec 2016 06:16:16 -0500
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Jouni Malinen'" <j@w1.fi>
-Cc: "'Ben Greear'" <greearb@candelatech.com>,
-        <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr> <20161214195805.GA15022@w1.fi> <00f501d256e7$0f8d5380$2ea7fa80$@acksys.fr> <5852C5AC.6090408@candelatech.com> <00fd01d256fc$2f780db0$8e682910$@acksys.fr> <20161215225827.GB24883@w1.fi>
-In-Reply-To: <20161215225827.GB24883@w1.fi>
-Subject: RE: ath10k firmware sends probes on DFS channels without radar detection
-Date: Mon, 26 Dec 2016 12:15:02 +0100
-Message-ID: <012001d25f69$4df62ef0$e9e28cd0$@acksys.fr> (sfid-20161226_121619_915631_C224303D)
+        Tue, 13 Dec 2016 08:44:52 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [RFC v2 05/11] ath10k: htc: refactorization
+Date: Tue, 13 Dec 2016 13:44:44 +0000
+Message-ID: <87inqoymd0.fsf@kamboji.qca.qualcomm.com> (sfid-20161213_144456_000465_7BEFAEFF)
+References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
+        <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com>
+In-Reply-To: <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com>
+        (Erik Stromdahl's message of "Fri, 18 Nov 2016 20:22:45 +0100")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Message d'origine-----
-> De : Jouni Malinen [mailto:j@w1.fi]
-> Envoyé : jeudi 15 décembre 2016 23:58
-> À : Jean-Pierre Tosoni
-> Cc : 'Ben Greear'; linux-wireless@vger.kernel.org;
-> ath10k@lists.infradead.org
-> Objet : Re: ath10k firmware sends probes on DFS channels without radar
-> detection
-> 
-> On Thu, Dec 15, 2016 at 06:53:47PM +0100, Jean-Pierre Tosoni wrote:
-> > > > Thanks for the suggestion, I already tried something like this in
-> > > > wmi.c, with the same result:
-> > > >
-> > > > - Before patching the firmware scans DFS channels actively (with
-> > > probes).
-> > > >
-> > > > - After patching, the firmware scans DFS channels passively
-> > > > *until* any beacon is received on the DFS channel. When *any*
-> > > > beacon is seen, the firmware decides to scan actively on its own,
-> > > > without any new IR/RADAR info from the driver.
-> > > >
-> > > > So, your patch is required but not sufficient.
-> > > >
-> > > > Somehow I was able to overcome this by reloading the regulation
-> > > > domain in the radio card before each scan request:
-> 
-> Interesting.. I'm not completely sure what could have changed the behavior
-> based on beacon hint. I thought it was cfg80211, but if the simple change
-> for doing NO_IR | RADAR is not sufficient, it would seem to imply that
-> something else can do this. Some more debugging to do, I guess.
+Erik Stromdahl <erik.stromdahl@gmail.com> writes:
 
-After some debugging I think the card firmware does this, probably due to
-the lack of precise definition of NO_IR, see below.
+> Code refactorization:
+>
+> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+> to ath10k_htc_control_rx_complete.
+>
+> This eases the implementation of SDIO/mbox significantly since
+> the ep_rx_complete cb is invoked directly from the SDIO/mbox
+> hif layer.
+>
+> Since the ath10k_htc_control_rx_complete already is present
+> (only containing a warning message) there is no reason for not
+> using it (instead of having a special case for ep 0 in
+> ath10k_htc_rx_completion_handler).
+>
+> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-> 
-> > The distinction between NO_IR and CHAN_RADAR is not very clear to me.
-> > NO_IR appears only in the world regulatory domain so it's not relevant
-> here.
-> 
-> NO_IR is a combination of not allowing AP, IBSS, or active scanning
-> without having somehow been enabled by another device. RADAR has that same
-> impact and in addition, requirement for doing radar detection and DFS by a
-> master device.
+I tested this on QCA988X PCI board just to see if there are any
+regressions. It crashes immediately during module load, every time, and
+bisected that the crashing starts on this patch:
 
-Ah, thanks. But then, NO_IR does not define the way for the "other device"
-to enable the local device? So, depending on the interpretation, it can
-render the local device unusable. OTOH RADAR defines a way which depends on
-the local regulations.
+[ 1239.715325] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mod=
+e 0 reset_mode 0
+[ 1239.885125] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/pre=
+-cal-pci-0000:02:00.0.bin failed with error -2
+[ 1239.885260] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/cal=
+-pci-0000:02:00.0.bin failed with error -2
+[ 1239.885687] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chi=
+p_id 0x043202ff sub 0000:0000
+[ 1239.885699] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1=
+ dfs 1 testmode 1
+[ 1239.885899] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api 5 f=
+eatures no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
+[ 1239.941836] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/QCA=
+988X/hw2.0/board-2.bin failed with error -2
+[ 1239.941993] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 b=
+ebc7c08
+[ 1241.136693] BUG: unable to handle kernel NULL pointer dereference at   (=
+null)
+[ 1241.136738] IP: [<  (null)>]   (null)
+[ 1241.136759] *pdpt =3D 0000000000000000 *pde =3D f0002a55f0002a55 [ 1241.=
+136781]=20
+[ 1241.136793] Oops: 0010 [#1] SMP
 
-> 
-> > I'd say
-> >  "the CHAN_RADAR flag should always make the firmware never do IR when
-> > probing"
-> > ...maybe, except if the channel is the operating channel. (this should
-> > exclude unassociated stations)
-> 
-> For most cases, I'd agree that active scanning should not be used on DFS
-> channels. That said, unicast Probe Request frame to the current AP while
-> associated could be a reasonable exception. In addition, WPS with PBC
-> depends on Probe Request frames to allow PBC session overlap detection, so
-> there might be sufficient justification to allow Probe Request frame to be
-> sent out for a very short duration (couple of seconds) after seeing a
-> Beacon frame on the channel for such special cases.
+What's odd is that when I added some printks on my own and enabled both
+boot and htc debug levels it doesn't crash anymore. After everything
+works normally after that, I can start AP mode and connect to it. Is it
+a race somewhere?
 
-I agree that unicast probes to the current AP should go through. It goes
-with my condition "operating channel".
-
-For WPS, I do not know it well, but I guess probes are acceptable if
-1) they are not sent repeatedly over a long period of time during
-unassociated state,
-2) the AP uses CAC.
-And here, both seem to be true.
-
-> 
-> --
-> Jouni Malinen                                            PGP id EFC895FA
-
-Regards, Jean-Pierre
+--=20
+Kalle Valo=
