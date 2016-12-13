@@ -1,127 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34256 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760622AbcLRLE4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Dec 2016 06:04:56 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Subject: Re: wl1251 & mac address & calibration data
-Date: Sun, 18 Dec 2016 12:04:52 +0100
-Cc: Daniel Wagner <wagi@monom.org>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Tom Gundersen <teg@jklm.no>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Ming Lei <ming.lei@canonical.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Takashi Iwai <tiwai@suse.de>,
-        Josh Boyer <jwboyer@fedoraproject.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-References: <201611111820.52072@pali> <201612161140.27241@pali> <68166247-bcd3-f598-7f9e-2139e732233e@broadcom.com>
-In-Reply-To: <68166247-bcd3-f598-7f9e-2139e732233e@broadcom.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart7309338.hiFcT6WmFj";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201612181204.52928@pali> (sfid-20161218_120637_967668_3E14FFFB)
+Received: from s3.sipsolutions.net ([5.9.151.49]:50406 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932760AbcLMP46 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 10:56:58 -0500
+Message-ID: <1481644615.20412.25.camel@sipsolutions.net> (sfid-20161213_170026_876273_904A6E1A)
+Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>
+Cc: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Dec 2016 16:56:55 +0100
+In-Reply-To: <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com> (sfid-20161208_213521_115415_9F816683)
+References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
+         <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
+         <1481102727.4092.34.camel@sipsolutions.net>
+         <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
+         <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
+         <20161208175236.GA6121@jouni.qca.qualcomm.com>
+         <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com>
+         (sfid-20161208_213521_115415_9F816683)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7309338.hiFcT6WmFj
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Ok... this is getting complicated :)
 
-On Sunday 18 December 2016 11:49:53 Arend Van Spriel wrote:
-> On 16-12-2016 11:40, Pali Roh=C3=A1r wrote:
-> > On Friday 16 December 2016 08:25:44 Daniel Wagner wrote:
-> >> On 12/16/2016 03:03 AM, Luis R. Rodriguez wrote:
-> >>> For the new API a solution for "fallback mechanisms" should be
-> >>> clean though and I am looking to stay as far as possible from the
-> >>> existing mess. A solution to help both the old API and new API is
-> >>> possible for the "fallback mechanism" though -- but for that I
-> >>> can only refer you at this point to some of Daniel Wagner and
-> >>> Tom Gunderson's firmwared deamon prospect. It should help pave
-> >>> the way for a clean solution and help address other stupid
-> >>> issues.
-> >>=20
-> >> The firmwared project is hosted here
-> >>=20
-> >> https://github.com/teg/firmwared
-> >>=20
-> >> As Luis pointed out, firmwared relies on
-> >> FW_LOADER_USER_HELPER_FALLBACK, which is not enabled by default.
-> >=20
-> > I know. But it does not mean that I cannot enable this option at
-> > kernel compile time.
-> >=20
-> > Bigger problem is that currently request_firmware() first try to
-> > load firmware directly from VFS and after that (if fails) fallback
-> > to user helper.
-> >=20
-> > So I would need to extend kernel firmware code with new function
-> > (or flag) to not use VFS and try only user mode helper.
->=20
-> Why do you need the user-mode helper anyway. This is all static data,
-> right?
+Regarding reusing attributes, we have (for the BSS selection thing) the
+attribute NL80211_BSS_SELECT_ATTR_RSSI_ADJUST, which is really quite
+similar to your new NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF since
+while connected (which BSS_SELECT_ATTR_* assumes) the current BSS is
+always part of the considered BSSes, I'd think.
 
-Those are static data, but device specific!
+However, I tend to think now that reusing the attribute is perhaps not
+the right thing to do - but defining them with the same semantics would
+still make sense.
 
-> So why not cook up a firmware file in user-space once and put
-> it in /lib/firmware for the driver to request directly.
+Assuming that the value defined in NL80211_BSS_SELECT_ATTR_RSSI_ADJUST
+applies also to the *current* BSS, it's actually quite pointless to
+define there the band to adjust - if you want to adjust 2.4 GHz
+positively you might as well adjust 5 GHz negatively, and vice versa,
+and both ways are supported.
 
-1. Violates FHS
+OTOH, the new NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF doesn't
+make this quite clear - is the current BSS to be adjusted before
+comparing, if it's 5 GHz? If so, the semantics are equivalent. If not,
+it doesn't actually make much sense ;-)
+So assuming that it is in fact taken into account after the same
+adjustment, the two attributes are equivalent, and then perhaps it
+would make sense to use struct nl80211_bss_select_rssi_adjust for the
+new attribute. If a driver doesn't support arbitrary bands, but just 5
+GHz as in your example, it can just flip it around to 2.4 GHz by
+switching the sign.
 
-2. Does not work for readonly /, readonly /lib, readonly /lib/firmware
+Perhaps we should even consider doing that in cfg80211 and adjusting
+the internal API for both that way?
 
-3. Backup & restore of rootfs between same devices does not work (as=20
-rootfs now contains device specific data).
+> I am not saying it should be avoided. Just looking at it conceptually
+> the scheduled scan request holds so-called matchsets that specify the
+> constraints to determine whether a BSS was found that is worth
+> notifying the host/user-space about. As such I would expect the
+> relative RSSI attribute(s) to be part of the matchset. That way you
+> can specify it together with the currently connected SSID in a single
+> matchset.
 
-4. Sharing one rootfs (either via nfs or other technology) does not work=20
-for more devices (even in state when rootfs is used only by one device=20
-at one time).
+I think this makes a lot of sense.
 
-And it is common that N900 developers have rootfs in laptop and via usb=20
-(cdc_ether) exports it over nfs to N900 device and boot system. It=20
-basically break booting from one nfs-exported rootfs, as that export=20
-become model specific...
+We already have NL80211_SCHED_SCAN_MATCH_ATTR_RSSI, which asks to be
+reporting only networks that have an *absolute* RSSI value above the
+value of the attribute - a new attribute to make it relative to the
+current network instead would make sense.
 
-> Seems a bit
-> overkill to have a {e,}udev or whatever daemon running if the result
-> is always the same. Just my 2 cents.
+That would indeed be equivalent to NL80211_BSS_SELECT_ATTR_RSSI then.
 
-No it is not. It will break couple of other things in Linux and device=20
-and model specific calibration data should not be in /lib/firmware! That=20
-directory is used for firmware files, not calibration.
+Now, if we consider this, NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI
+actually is equivalent to NL80211_BSS_SELECT_ATTR_RSSI (a flag
+attribute indicating whether or not RSSI-based selection/matching is
+done) and NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI_5G_PREF is equivalent
+to NL80211_BSS_SELECT_ATTR_RSSI_ADJUST, both need to be given with the
+flag and affect operation.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+However, NL80211_BSS_SELECT_ATTR_BAND_PREF doesn't exist, and reusing
+the BSS_SELECT namespace also doesn't make sense.
 
---nextPart7309338.hiFcT6WmFj
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+So, how about we move these into NL80211_SCHED_SCAN_MATCH_ATTR_* as
+suggested by Arend, and define them with the same content as  the
+corresponding NL80211_BSS_SELECT_ATTR_*?
 
-iEYEABECAAYFAlhWbVQACgkQi/DJPQPkQ1JU0ACfbpV61HLErshDjxcPW1WMNO8r
-dm4AnRZZOuhu3SZaUvKdNgQfHwAzwZhk
-=RKyJ
------END PGP SIGNATURE-----
+If they're part of match attributes, we might even remove the feature
+flag entirely - those were always defined to be optional, but it very
+well be worthwhile for userspace to know if they're supported if it
+wants to behave differently depending on whether they're supported or
+not, I'll leave that up to you since presumably you know the userspace
+implementation that you're planning to create.
 
---nextPart7309338.hiFcT6WmFj--
+johannes
