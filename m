@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44220 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50216 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750733AbcL1EB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 23:01:56 -0500
-Date: Wed, 28 Dec 2016 11:59:59 +0800
-From: Peter Xu <peterx@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: Intel Wireless 7260 failed to work
-Message-ID: <20161228035959.GB3924@pxdev.xzpeter.org> (sfid-20161228_050239_180744_1AEB5088)
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
- <871swtkvdc.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <871swtkvdc.fsf@purkki.adurom.net>
+        id S932277AbcLMPXo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 10:23:44 -0500
+Message-ID: <1481642621.20412.4.camel@sipsolutions.net> (sfid-20161213_162347_962784_6FFFF119)
+Subject: Re: [PATCH v2 1/2] mac80211: Remove invalid flag operations in mesh
+ TSF synchronization
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>, me@bobcopeland.com
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Dec 2016 16:23:41 +0100
+In-Reply-To: <1481159751-4097-1-git-send-email-masashi.honma@gmail.com> (sfid-20161208_021606_564192_26DE0C5C)
+References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+         <1481159751-4097-1-git-send-email-masashi.honma@gmail.com>
+         (sfid-20161208_021606_564192_26DE0C5C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 27, 2016 at 09:46:55PM +0200, Kalle Valo wrote:
-> Peter Xu <peterx@redhat.com> writes:
-> 
-> > Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
-> > with my wireless card, which is:
-> >
-> >   Intel Corporation Wireless 7260 (rev bb)
-> >
-> > Boot message shows that no suitable firmware found:
-> >
-> >     # journalctl -kp3
-> >     Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
-> >     Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
-> >     Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
-> >     Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
-> >     Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
-> >     Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
-> >
-> > Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
-> > further tests have been done yet.
-> >
-> > Is this a known issue? Please let me know if anyone wants more info or
-> > logs, since this error triggers easily (everytime I boot).
-> 
-> The error message isn't really telling much to the user (hint hint) but
-> I suspect this is by design:
-> 
-> "iwlwifi: remove support for fw older than -17 and -22
-> 
-> FW versions older than -17 for 3160 and 7260 and older than -22 for
-> newer NICs are not supported anymore.  Don't load these versions
-> and remove code that handles them."
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4b87e5af638b6056bd6c20b0954d09a5a58633be
-> 
-> Adding luca.
+On Thu, 2016-12-08 at 10:15 +0900, Masashi Honma wrote:
+> mesh_sync_offset_adjust_tbtt() implements Extensible synchronization
+> framework ([1] 13.13.2 Extensible synchronization framework). It
+> shall
+> not operate the flag "TBTT Adjusting subfield" ([1] 8.4.2.100.8 Mesh
+> Capability), since it is used only for MBCA ([1] 13.13.4 Mesh beacon
+> collision avoidance, see 13.13.4.4.3 TBTT scanning and adjustment
+> procedures for detail). So this patch remove the flag operations.
+> 
 
-Thanks for the triage.
+Both applied; I changed this patch to remove ifmsh->adjusting_tbtt
+completely since it was now unused.
 
-Larry's link for -17 firmware solved my issue. Though I still don't
-know whether it is too aggresive if we just remove the support for -16
-(which is the one I was using with the old 4.6 kernel, btw I am using
-Fedora 24, which is relatively new as well).
-
-Regards,
-
--- peterx
+johannes
