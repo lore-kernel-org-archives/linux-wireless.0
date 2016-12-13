@@ -1,66 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50164 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754614AbcLVPLj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 10:11:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-12-22
-Date: Thu, 22 Dec 2016 17:11:27 +0200
-Message-ID: <8760mcrobk.fsf@kamboji.qca.qualcomm.com> (sfid-20161222_161206_751303_EF140EFC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:50444 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753253AbcLMQEd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Dec 2016 11:04:33 -0500
+Message-ID: <1481645071.20412.30.camel@sipsolutions.net> (sfid-20161213_170602_582992_C60E6119)
+Subject: Re: [PATCH] RFC: Universal scan proposal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Shmidt <dimitrysh@google.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 13 Dec 2016 17:04:31 +0100
+In-Reply-To: <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com> (sfid-20161207_193938_431091_4D11FB31)
+References: <94eb2c110db85c2379054172dad0@google.com>
+         <1480948100.31788.15.camel@sipsolutions.net>
+         <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
+         <1481093061.4092.17.camel@sipsolutions.net>
+         <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
+         (sfid-20161207_193938_431091_4D11FB31)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+> > Well eventually we also have to clear for location if we run out of
+> > memory, that usually means dumping them out to the host, no?
+> 
+> Being out of memory and consuming more memory are different
+> things, but I agree - maybe we don't need to worry about it.
 
-before the holidays a really small pull request for 4.10. I just want to
-have the regressions in rtlwifi and ath9k fixed quickly so I send this
-earlier than I normally would.
+Well, reaching the limit of what we're willing to spend on it is
+equivalent I guess :)
 
-Please let me know if there are any problems.
+> > I'm not entirely sure about this case - surely noticing "we can do
+> > better now" is still better than waiting for being able to make the
+> > perfect decision?
+> 
+> Maybe we can just keep flag saying that currently available results
+> were not received by usual full scan.
 
-Kalle
+Elsewhere we were planning per-channel results, and a cookie to filter
+them - perhaps we could have a similar thing where you may even have to
+request these scan results specifically with a certain cookie you got
+from the scanning, or so. Or indicate the cookie there so you can tie
+it back to the scan request somehow?
 
-The following changes since commit ad688cdbb076833ba17fc65591cd0fe01900a5cf:
+> So, let's summarize:
+> Instead of creating new type of generic scan with special types,
+> we want to go with additional expansion of scheduled scan options and
+> parameters (in order not to "multiply entities"), including ability
+> to send new scheduled scan request without stopping previous one.
+> 
+> Is it Ok?
 
-  stmmac: fix memory barriers (2016-12-19 11:05:02 -0500)
+Sounds fine to me.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-12-22
-
-for you to fetch changes up to 22b68b93ae2506bd56ee3bf232a51bc8ab955b56:
-
-  rtlwifi: Fix kernel oops introduced with commit e49656147359 (2016-12-21 16:34:16 +0200)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.10
-
-All small fixes this time, especially important are the regression
-fixes for rtlwifi and ath9k.
-
-----------------------------------------------------------------
-Arend Van Spriel (2):
-      brcmfmac: fix memory leak in brcmf_cfg80211_attach()
-      brcmfmac: fix uninitialized field in scheduled scan ssid configuration
-
-Ben Greear (1):
-      ath10k: free host-mem with DMA_BIRECTIONAL flag
-
-Larry Finger (1):
-      rtlwifi: Fix kernel oops introduced with commit e49656147359
-
-Tobias Klausmann (1):
-      ath9k: do not return early to fix rcu unlocking
-
- drivers/net/wireless/ath/ath10k/wmi.c              |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c              |    2 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |    7 +++++--
- .../net/wireless/broadcom/brcm80211/brcmfmac/pno.c |    1 +
- drivers/net/wireless/realtek/rtlwifi/core.c        |    3 ++-
- 5 files changed, 10 insertions(+), 5 deletions(-)
+johannes
