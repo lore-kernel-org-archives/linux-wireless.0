@@ -1,62 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58291 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751675AbcL3JPU (ORCPT
+Received: from mout1.fh-giessen.de ([212.201.18.42]:38547 "EHLO
+        mout1.fh-giessen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935160AbcLMRJm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 04:15:20 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: recal the txpower when removing interface
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1482445906-20421-1-git-send-email-ryanhsu@qca.qualcomm.com>
-References: <1482445906-20421-1-git-send-email-ryanhsu@qca.qualcomm.com>
-To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <ryanhsu@qca.qualcomm.com>
-Message-ID: <9db0c0c5b7294f3fa73d25bf70eebad6@euamsexm01a.eu.qualcomm.com> (sfid-20161230_101524_442778_8E1DE1A2)
-Date: Fri, 30 Dec 2016 10:15:13 +0100
+        Tue, 13 Dec 2016 12:09:42 -0500
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+To: kvalo@codeaurora.org, helgaas@kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        marc.zyngier@arm.com, Janusz.Dziedzic@tieto.com,
+        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        rmanohar@qca.qualcomm.com, bharat.kumar.gogada@xilinx.com
+Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
+        "# v4 . 9" <stable@vger.kernel.org>
+Subject: [PATCH v2] ath9k: do not return early to fix rcu unlocking
+Date: Tue, 13 Dec 2016 18:08:07 +0100
+Message-Id: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de> (sfid-20161213_181016_272864_D9AFD4EE)
+In-Reply-To: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
+References: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
-> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-> 
-> The txpower is being recalculated when adding interface to make sure
-> txpower won't overshoot the spec, and when removing the interface,
-> the txpower should again to be recalculated to restore the correct value
-> from the active interface list.
-> 
-> Following is one of the scenario
-> 	vdev0 is created as STA and connected: txpower:23
-> 	vdev1 is created as P2P_DEVICE for control interface: txpower:0
-> 	vdev2 is created as p2p go/gc interface: txpower is 21
-> 
-> So the vdev2@txpower:21 will be set to firmware when vdev2 is created.
-> When we tear down the vdev2, the txpower needs to be recalculated to
-> re-set it to vdev0@txpower:23 as vdev0/vdev1 are the active interface.
-> 
-> 	ath10k_pci mac vdev 0 peer create 8c:fd:f0:01:62:98
-> 	ath10k_pci mac vdev_id 0 txpower 23
-> 	... (adding interface)
-> 	ath10k_pci mac vdev create 2 (add interface) type 1 subtype 3
-> 	ath10k_pci mac vdev_id 2 txpower 21
-> 	ath10k_pci mac txpower 21
-> 	... (removing interface)
-> 	ath10k_pci mac vdev 2 delete (remove interface)
-> 	ath10k_pci vdev 1 txpower 0
-> 	ath10k_pci vdev 0 txpower 23
-> 	ath10k_pci mac txpower 23
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
+where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
+returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
+and suspicious RCU usage:
 
-Patch applied to ath-next branch of ath.git, thanks.
+ ===============================
+ [ INFO: suspicious RCU usage. ]
+ 4.9.0-rc8 #11 Not tainted
+ -------------------------------
+ kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
 
-d679fa1b3c89 ath10k: recal the txpower when removing interface
+ other info that might help us debug this:
 
+ RCU used illegally from idle CPU!
+ rcu_scheduler_active = 1, debug_locks = 0
+ RCU used illegally from extended quiescent state!
+ 1 lock held by swapper/7/0:
+ #0:
+  (
+ rcu_read_lock
+ ){......}
+ , at:
+ [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
+
+ stack backtrace:
+ CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+ Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+  ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+  ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+  ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+ Call Trace:
+  <IRQ>
+  [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+  [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+  [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+  [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+  [<ffffffff81058631>] irq_exit+0x61/0xd0
+  [<ffffffff81018d25>] do_IRQ+0x65/0x110
+  [<ffffffff81672189>] common_interrupt+0x89/0x89
+  <EOI>
+  [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+  [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+  [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+  [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+  [<ffffffff810336f8>] start_secondary+0x148/0x170
+
+Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
+Cc: <stable@vger.kernel.org> # v4.9
+
+---
+v2: break instead of unlock (rename patch) [Felix Fietkau],
+    fix reference to commit [Kalle Valo]
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 52bfbb988611..e47286bf378e 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2787,7 +2787,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		fifo_list = &txq->txq_fifo[txq->txq_tailidx];
+ 		if (list_empty(fifo_list)) {
+ 			ath_txq_unlock(sc, txq);
+-			return;
++			break;
+ 		}
+ 
+ 		bf = list_first_entry(fifo_list, struct ath_buf, list);
 -- 
-https://patchwork.kernel.org/patch/9486925/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
