@@ -1,159 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward1h.cmail.yandex.net ([87.250.230.16]:45814 "EHLO
-        forward1h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753615AbcLUWuT (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33961 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932883AbcLMMlm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Dec 2016 17:50:19 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-To: Paul Bolle <pebolle@tiscali.nl>,
-        johannes <johannes@sipsolutions.net>,
-        David Miller <davem@davemloft.net>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-In-Reply-To: <1482359625.28171.2.camel@tiscali.nl>
-References: <608881482358981@web17g.yandex.ru> <1482359625.28171.2.camel@tiscali.nl>
-Subject: Re: [PATCH 2/2] net: wireless: fix to uses struct
+        Tue, 13 Dec 2016 07:41:42 -0500
+Received: by mail-wm0-f67.google.com with SMTP id g23so18178262wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 04:41:41 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer statistics
+Date: Tue, 13 Dec 2016 13:41:33 +0100
+Message-ID: <2870294.lMmxz9iPmq@debian64> (sfid-20161213_134146_301362_D8D4A5FB)
+In-Reply-To: <20161207062824.GA3404@atheros-ThinkPad-T61>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com> <20161207062824.GA3404@atheros-ThinkPad-T61>
 MIME-Version: 1.0
-Message-Id: <601101482360611@web25o.yandex.ru> (sfid-20161221_235301_910556_4A8EB6D7)
-Date: Thu, 22 Dec 2016 01:50:11 +0300
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello,
 
-22.12.2016, 00:34, "Paul Bolle" <pebolle@tiscali.nl>:
-> On Thu, 2016-12-22 at 00:23 +0200, Ozgur Karatas wrote:
->>  I compiled and didn't to errors.
->
-> Really?
+It looks like google put your mail into the spam-can. 
+I'm sorry for not answering sooner.
 
-I'm very sorry. The "regulatory_request" is defined a static struct. I missed.
-
-line: static struct regulatory_request core_request_world = {
-
-I send to wrong line please can ignore last message and should be fix to as follows:
-
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5dbac37..5b70970 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -490,7 +490,7 @@ static int reg_query_builtin(const char *alpha2)
- 	if (!regdom)
- 		return -ENODATA;
+On Wednesday, December 7, 2016 11:58:24 AM CET Mohammed Shafi Shajakhan wrote:
+> On Mon, Dec 05, 2016 at 10:52:45PM +0100, Christian Lamparter wrote:
+> > The 10.4 firmware adds extended peer information to the
+> > firmware's statistics payload. This additional info is
+> > stored as a separate data field and the elements are
+> > stored in their own "peers_extd" list.
+> > 
+> > These elements can pile up in the same way as the peer
+> > information elements. This is because the
+> > ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+> > pull the same amount (num_peer_stats) for every statistic
+> > data unit.
+> > 
+> > Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+> > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> > ---
+> >  drivers/net/wireless/ath/ath10k/debug.c | 7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> > index 82a4c67f3672..4acd9eb65910 100644
+> > --- a/drivers/net/wireless/ath/ath10k/debug.c
+> > +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> > @@ -399,6 +399,7 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+> >  			 * prevent firmware from DoS-ing the host.
+> >  			 */
+> >  			ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
+> > +			ath10k_fw_extd_stats_peers_free(&ar->debug.fw_stats.peers_extd);
+> 
+> [shafi] thanks for fixing this !
+> 
+> >  			ath10k_warn(ar, "dropping fw peer stats\n");
+> >  			goto free;
+> >  		}
+> > @@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+> >  			goto free;
+> >  		}
+> >  
+> > +		if (!list_empty(&stats.peers))
+> 
+> [shafi] sorry please correct me if i am wrong, for 'extended peer stats' we are checking
+> for normal 'peer stats' ? Is this the fix intended, i had started a build to
+> check your change and we will keep you posted, does this fix displaying
+> 'rx_duration' in ath10k fw_stats.
+The idea is not to queue any "extended peer stats" when there where no "peer stats" to
+begin with. Because otherwise, the function is still vulnerable to OOM since the 
+extended peers stats will be queued unchecked (not that this is currently a problem).
  
--	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*reg_regdb_apply_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2291,7 +2291,7 @@ static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2313,7 +2313,7 @@ int regulatory_hint_user(const char *alpha2,
- 	if (WARN_ON(!alpha2))
- 		return -EINVAL;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2385,7 +2385,7 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 
- 	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2661,7 +2661,7 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
- 	if (processing)
- 		return 0;
- 
--	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
-+	reg_beacon = kzalloc(sizeof(*reg_beacon), gfp);
- 	if (!reg_beacon)
- 		return -ENOMEM;
- 
--- 
-2.1.4
-
-> $ make net/wireless/reg.o
->   CHK include/config/kernel.release
->   CHK include/generated/uapi/linux/version.h
->   CHK include/generated/utsrelease.h
->   CHK include/generated/bounds.h
->   CHK include/generated/timeconst.h
->   CHK include/generated/asm-offsets.h
->   CALL scripts/checksyscalls.sh
->   CC net/wireless/reg.o
-> net/wireless/reg.c: In function ‘regulatory_hint_core’:
-> net/wireless/reg.c:2294:28: error: ‘regulatory_request’ undeclared (first use in this function)
->   request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
->                             ^~~~~~~~~~~~~~~~~~
-> net/wireless/reg.c:2294:28: note: each undeclared identifier is reported only once for each function it appears in
-> net/wireless/reg.c: In function ‘regulatory_hint_user’:
-> net/wireless/reg.c:2316:28: error: ‘regulatory_request’ undeclared (first use in this function)
->   request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
->                             ^~~~~~~~~~~~~~~~~~
-> net/wireless/reg.c: In function ‘regulatory_hint’:
-> net/wireless/reg.c:2388:28: error: ‘regulatory_request’ undeclared (first use in this function)
->   request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
->                             ^~~~~~~~~~~~~~~~~~
-> scripts/Makefile.build:293: recipe for target 'net/wireless/reg.o' failed
-> make[1]: *** [net/wireless/reg.o] Error 1
-> Makefile:1640: recipe for target 'net/wireless/reg.o' failed
-> make: *** [net/wireless/reg.o] Error 2
-
-$ make M=net/wireless/
-  CC      net/wireless//core.o
-  CC      net/wireless//sysfs.o
-  CC      net/wireless//radiotap.o
-  CC      net/wireless//util.o
-  CC      net/wireless//reg.o
-  CC      net/wireless//scan.o
-  CC      net/wireless//nl80211.o
-  CC      net/wireless//mlme.o
-  CC      net/wireless//ibss.o
-  CC      net/wireless//sme.o
-  CC      net/wireless//chan.o
-  CC      net/wireless//ethtool.o
-  CC      net/wireless//mesh.o
-  CC      net/wireless//ap.o
-  CC      net/wireless//trace.o
-  CC      net/wireless//ocb.o
-  LD      net/wireless//cfg80211.o
-  LD      net/wireless//built-in.o
-  Building modules, stage 2.
-  MODPOST 0 modules
-
-$ make net/wireless/reg.o
-scripts/kconfig/conf  --silentoldconfig Kconfig
-*
-* Restart config...
-*
-*
-* Memory power savings
-*
-
-> Didn't Thomas Gleixner suggest that you do a basic C course just yesterday?
-
-I don't have a problem with C programming, So only I'm learning the kernel. 
-Also, this is a lie if say "I'm expert to C".
-
-I think be re-learned every day. wrong?
-
-> Paul Bolle
+> > +			list_splice_tail_init(&stats.peers_extd,
+> > +					      &ar->debug.fw_stats.peers_extd);
+> > +
+> >  		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
+> >  		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
+> > -		list_splice_tail_init(&stats.peers_extd,
+> > -				      &ar->debug.fw_stats.peers_extd);
+> >  	}
+> >  
+> >  	complete(&ar->debug.fw_stats_complete);
 
 Regards,
-
-~ Ozgur
+Christian
