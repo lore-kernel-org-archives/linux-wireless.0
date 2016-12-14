@@ -1,50 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33224 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbcL3NxI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:53:08 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: Re: [PATCH 14/14 V2] rtlwifi: Remove some redundant code
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-        <20161215182310.13713-15-Larry.Finger@lwfinger.net>
-Date: Fri, 30 Dec 2016 15:53:03 +0200
-In-Reply-To: <20161215182310.13713-15-Larry.Finger@lwfinger.net> (Larry
-        Finger's message of "Thu, 15 Dec 2016 12:23:10 -0600")
-Message-ID: <87ful5jzgg.fsf@purkki.adurom.net> (sfid-20161230_145312_153105_3797BFF4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:54228 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756532AbcLNTrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 14:47:17 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
+Subject: [PATCH 10/10] mac80211: minstrel: avoid port control frames for sampling
+Date: Wed, 14 Dec 2016 20:47:03 +0100
+Message-Id: <20161214194703.33429-10-nbd@nbd.name> (sfid-20161214_204753_287020_F714EB0B)
+In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
+References: <20161214194703.33429-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+From: Thomas Huehn <thomas.huehn@evernet-eg.de>
 
-> The symbol DBG_EMERG is no longer used and is removed.
->
-> In a number of places, the code has redundant messages. For example, if
-> the failure for the firmware to run is logged, it is not necessary to
-> log that the firmware has been started. In addition, extraneous braces are
-> removed.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+Makes connections more reliable
 
-[...]
+Signed-off-by: Thomas Huehn <thomas.huehn@evernet-eg.de>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> --- wireless-drivers-next.orig/drivers/net/wireless/realtek/rtlwifi/debug.h
-> +++ wireless-drivers-next/drivers/net/wireless/realtek/rtlwifi/debug.h
-> @@ -36,7 +36,7 @@
->   *unexpected HW behavior, HW BUG
->   *and so on.
->   */
-> -#define DBG_EMERG			0
-> +/*#define DBG_EMERG			0 */
-
-You are not really removing, just commenting it out :) But this is good
-enough for me, if you really want to remove it submit a followup patch.
-
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 11a4cc3..3ebe440 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -367,6 +367,11 @@ minstrel_get_rate(void *priv, struct ieee80211_sta *sta,
+ 		return;
+ #endif
+ 
++	/* Don't use EAPOL frames for sampling on non-mrr hw */
++	if (mp->hw->max_rates == 1 &&
++	    (info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO))
++		return;
++
+ 	delta = (mi->total_packets * sampling_ratio / 100) -
+ 			(mi->sample_packets + mi->sample_deferred / 2);
+ 
 -- 
-Kalle Valo
+2.10.1
