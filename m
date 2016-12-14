@@ -1,184 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42004 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758306AbcLSKzF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:55:05 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 04/11] rt2800: set MAX_PSDU len according to remote STAs capabilities
-Date: Mon, 19 Dec 2016 11:52:50 +0100
-Message-Id: <1482144777-16760-5-git-send-email-sgruszka@redhat.com> (sfid-20161219_115704_337433_825A36C8)
-In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
-References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:50590 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754178AbcLNS2t (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 13:28:49 -0500
+Subject: Re: ath10k firmware sends probes on DFS channels without radar
+ detection
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr>
+ <63c731f2-ee21-6450-2ae4-2808e7130eb5@candelatech.com>
+ <00e701d25635$e0108480$a0318d80$@acksys.fr>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <3f785944-2fd6-17e0-71f5-1e2668a4ae33@candelatech.com> (sfid-20161214_192859_571384_29E4AA8B)
+Date: Wed, 14 Dec 2016 10:28:44 -0800
+MIME-Version: 1.0
+In-Reply-To: <00e701d25635$e0108480$a0318d80$@acksys.fr>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MAX_LEN_CFG_MAX_PSDU specify maximum transmitted by HW AMPDU length
-(0 - 8kB, 1 - 16kB, 2 - 32kB, 3 - 64kB). Set this option according to
-remote stations capabilities (based on HT ampdu_factor). However limit
-the value based our hardware TX capabilities as some chips can not send
-more than 16kB (factor 1). Limit for all chips is currently 32kB
-(factor 2), but perhaps for some chips this could be increased
-to 64kB by setting drv_data->max_psdu to 3.
+On 12/14/2016 10:14 AM, Jean-Pierre Tosoni wrote:
+> On 12/06/15 08:36 PM, Ben Greear wrote:
+>> On 12/06/2016 09:02 AM, Jean-Pierre Tosoni wrote:
+>>> This follows on the previous discussion
+>>> 	"Client station sends probes on DFS channels"
+>>>
+>>> Problem:
+>>> The combination of QCA988X firmware v10.2.4.70-2 + ath10k +
+>>> wpa_supplicant do not comply with the norm ETSI/EN 301-893 section
+>>> 4.7; because they can send probes for 600s when no AP is around.
+>>>
+>>> Analysis:
+>>> The problem seems to lie in the firmware, which regards the presence
+>>> of *any* beacon as a proof that the channel is radar-clean for 600s.
+>>>
+>>> This is a wrong hypothesis, since a rogue AP sending fraudulent
+>>> beacons should not induce a scrupulous STA in sending illegal probes.
+>>>
+>>> Moreover, the norm (table D.1) sets a time limit of 10s to shutdown
+>>> when no AP positively allows the STA to transmit on the DFS channel.
+>>>
+>>> Status:
+>>> - there is no known plan at QCA to fix the issue.
+>>> - ath10k firmware is not publicly available for fixes.
+>>> - there is no obvious fix working in ath10k.
+>>> - the issue does not show up with other mac80211 devices like ath9k.
+>>> - wpa_supplicant considers this is a kernel issue [2]
+>>
+>> Have you confirmed that there are no probe requests being sent by ath10k
+>> driver?
+>
+> I have put a printk in the ath10k_tx function (in the path for management
+> frames) and it does not show up.
+> On another hand I cannot find any other function preparing / sending probes.
+> There is only the wmi command that starts scans.
 
-Since MAX_LEN_CFG_MAX_PSDU is global setting, on multi stations modes
-(AP, IBSS, mesh) we limit according to less capable remote STA. We can
-not set bigger value to speed up communication with some stations and
-do not break communication with slow stations.
+That wmi command causes probes, so make sure it is not being called.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |    2 +
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |   45 ++++++++++++++++++++++--
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h |    2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |    2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00mac.c |    3 +-
- 5 files changed, 47 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 95c1d7c..ec622a0 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -2979,7 +2979,9 @@ struct rt2800_drv_data {
- 	u8 bbp26;
- 	u8 txmixer_gain_24g;
- 	u8 txmixer_gain_5g;
-+	u8 max_psdu;
- 	unsigned int tbtt_tick;
-+	unsigned int ampdu_factor_cnt[4];
- 	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
- };
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index ef71722..a6f3f78 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1418,6 +1418,23 @@ int rt2800_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
- }
- EXPORT_SYMBOL_GPL(rt2800_config_pairwise_key);
- 
-+static void rt2800_set_max_psdu_len(struct rt2x00_dev *rt2x00dev)
-+{
-+	u8 i, max_psdu;
-+	u32 reg;
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+
-+	for (i = 0; i < 3; i++)
-+		if (drv_data->ampdu_factor_cnt[i] > 0)
-+			break;
-+
-+	max_psdu = min(drv_data->max_psdu, i);
-+
-+	rt2800_register_read(rt2x00dev, MAX_LEN_CFG, &reg);
-+	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, max_psdu);
-+	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
-+}
-+
- int rt2800_sta_add(struct rt2x00_dev *rt2x00dev, struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta)
- {
-@@ -1426,6 +1443,17 @@ int rt2800_sta_add(struct rt2x00_dev *rt2x00dev, struct ieee80211_vif *vif,
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
- 
- 	/*
-+	 * Limit global maximum TX AMPDU length to smallest value of all
-+	 * connected stations. In AP mode this can be suboptimal, but we
-+	 * do not have a choice if some connected STA is not capable to
-+	 * receive the same amount of data like the others.
-+	 */
-+	if (sta->ht_cap.ht_supported) {
-+		drv_data->ampdu_factor_cnt[sta->ht_cap.ampdu_factor & 3]++;
-+		rt2800_set_max_psdu_len(rt2x00dev);
-+	}
-+
-+	/*
- 	 * Search for the first free WCID entry and return the corresponding
- 	 * index.
- 	 */
-@@ -1457,9 +1485,16 @@ int rt2800_sta_add(struct rt2x00_dev *rt2x00dev, struct ieee80211_vif *vif,
- }
- EXPORT_SYMBOL_GPL(rt2800_sta_add);
- 
--int rt2800_sta_remove(struct rt2x00_dev *rt2x00dev, int wcid)
-+int rt2800_sta_remove(struct rt2x00_dev *rt2x00dev, struct ieee80211_sta *sta)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-+	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
-+	int wcid = sta_priv->wcid;
-+
-+	if (sta->ht_cap.ht_supported) {
-+		drv_data->ampdu_factor_cnt[sta->ht_cap.ampdu_factor & 3]--;
-+		rt2800_set_max_psdu_len(rt2x00dev);
-+	}
- 
- 	if (wcid > WCID_END)
- 		return 0;
-@@ -4536,6 +4571,7 @@ void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
-  */
- static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- {
-+	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
- 	u32 reg;
- 	u16 eeprom;
- 	unsigned int i;
-@@ -4704,10 +4740,13 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
- 	if (rt2x00_rt_rev_gte(rt2x00dev, RT2872, REV_RT2872E) ||
- 	    rt2x00_rt(rt2x00dev, RT2883) ||
--	    rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E))
-+	    rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E)) {
-+		drv_data->max_psdu = 2;
- 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
--	else
-+	} else {
-+		drv_data->max_psdu = 1;
- 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 1);
-+	}
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_PSDU, 10);
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 10);
- 	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-index 83f1a44..0a8b4df 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-@@ -183,7 +183,7 @@ int rt2800_config_pairwise_key(struct rt2x00_dev *rt2x00dev,
- 			       struct ieee80211_key_conf *key);
- int rt2800_sta_add(struct rt2x00_dev *rt2x00dev, struct ieee80211_vif *vif,
- 		   struct ieee80211_sta *sta);
--int rt2800_sta_remove(struct rt2x00_dev *rt2x00dev, int wcid);
-+int rt2800_sta_remove(struct rt2x00_dev *rt2x00dev, struct ieee80211_sta *sta);
- void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
- 			  const unsigned int filter_flags);
- void rt2800_config_intf(struct rt2x00_dev *rt2x00dev, struct rt2x00_intf *intf,
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index f68d492..01ce8a4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -627,7 +627,7 @@ struct rt2x00lib_ops {
- 			struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta);
- 	int (*sta_remove) (struct rt2x00_dev *rt2x00dev,
--			   int wcid);
-+			   struct ieee80211_sta *sta);
- };
- 
- /*
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-index 13da95a..d4b50fb 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-@@ -539,9 +539,8 @@ int rt2x00mac_sta_remove(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			 struct ieee80211_sta *sta)
- {
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
--	struct rt2x00_sta *sta_priv = sta_to_rt2x00_sta(sta);
- 
--	return rt2x00dev->ops->lib->sta_remove(rt2x00dev, sta_priv->wcid);
-+	return rt2x00dev->ops->lib->sta_remove(rt2x00dev, sta);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_sta_remove);
- 
+>> You could also try disabling the station keep-alive and roaming logic in
+>> the firmware by tweaking the wmi initial setup logic.  I disable that in
+>> my firmware, for instance, because mac80211 can do a better job and then I
+>> can save resources in the firmware.
+>
+> Do you mean the values set in wmi.c:: ath10k_wmi_start_scan_init() ?
+>
+> Should I replace all the scan offload by a mac80211-controlled scan like
+> in ath9k? The problem then is to switch channels; channel switching
+> seems very different from ath9k.
+
+You might try one or more of these settings in the ath10k_wmi_10_1_op_gen_init
+method (or 10.2 if that is the FW you are using):
+
+	config.roam_offload_max_vdev = 0; /* disable roaming */
+	config.roam_offload_max_ap_profiles = 0; /* disable roaming */
+	config.bmiss_offload_max_vdev = 0;
+
+I have only tested this using my CT firmware, and I have some additional
+patches in my driver to enable mac80211 keep-alive logic when using my
+CT firmware.
+
+Thanks,
+Ben
+
+>
+> Thanks,
+> JP
+>
+>> Finally, if that doesn't work, then I could probably fix that in CT
+>> firmware in case that is of interest.
+>>
+>> Thanks,
+>> Ben
+>>
+>>>
+>>> Jean-Pierre Tosoni
+>>>
+>>>
+>>>
+>>>> -----Message d'origine-----
+>>>> De : ath10k [mailto:ath10k-bounces@lists.infradead.org] De la part de
+>>>> Jean-Pierre Tosoni Envoyé : mercredi 30 novembre 2016 19:04 À :
+>>>> ath10k@lists.infradead.org Objet : Client station sends probes on DFS
+>>>> channels
+>>>>
+>>>> Hello list,
+>>>>
+>>>> There is a case where I can see probes on a DFS channel, from a non-
+>>>> associated station using ath10k. (note that the problem does not
+>>>> arise when using ath9k).
+>>>>
+>>>> *The setup*
+>>>>
+>>>> I am using Openwrt, wpa_supplicant and compat-wireless 2016-10-08,
+>>>> Card firmware is	ath10k_pci: qca988x hw2.0 (0x4100016c, 0x043202ff)
+>>>> 		fw 10.2.4.70-2 api 5 htt-ver 2.1 wmi-op 5 htt-op 2
+>>>> 		cal otp max-sta 128 features no-p2p
+>>>> 	ath10k_pci: debug 0 debugfs 1 tracing 0 dfs 1 testmode 1
+>>>>
+>>>> I am using channel 116, regdom US or FR, where I see no traffic at
+>>>> all using wireshark+Airpcap.
+>>>> I set wpa_supplicant to scan this channel only for a specific SSID
+>>>> "ssid1".
+>>>>
+>>>> At initial startup of the client device, no probes are going out,
+>>>> which is OK.
+>>>>
+>>>> Then, on another device, I start a hostapd set to channel 116, with a
+>>>> different SSID "otherssid" so that the supplicant will not associate.
+>>>>
+>>>> Shortly (1-2s) after the beacons appear in the air, the client begins
+>>>> to Send probe request in the air, which is unexpected, but acceptable
+>>>> since the client can infer absence of radars from the presence of
+>> beacons.
+>>>>
+>>>> *The problem*
+>>>>
+>>>> If I power down the AP, the client continues to send probes for
+>>>> around
+>>>> 10 minutes, which is unacceptable since it cannot handle radar
+>>>> detection, as it is a slave device in the meaning of ETSI/EN 301-
+>> 893[1].
+>>>>
+>>>>
+>>>> Some tests I made:
+>>>> - I tried to investigate the "beacon hint" mechanism but it appears
+>>>>   that it is not used on DFS channels.
+>>>>
+>>>> - I tried to force the IEEE80211_NO_IR flag when IEEE80211_CHAN_DFS
+>>>>   is set.
+>>>>
+>>>> - When I reload the reg. domain using "iw reg set", the probes cease,
+>>>>   but will reappear if I cycle my AP again On then Off.
+>>>>
+>>>> - When I let the client associate, then disassociate and stop the AP,
+>>>>   the same problem arises. It disappears if I add a call to
+>>>>   ath10k_regd_update() in mac.c after a disconnection (This is not a
+>>>>   fix, since in my case the client never associates).
+>>>>
+>>>> - Since at startup, the client does not send probes, I infer that the
+>>>>   problem is *not* caused by a hidden AP that the card could see but
+>>>>   not airpcap.
+>>>>
+>>>> - I tried with channels 52 and 100, with regdom FR or US: same problem.
+>>>>
+>>>> Any ideas?
+>>>>
+>>>>
+>>>> [1] http://www.etsi.org/deliver/etsi_en/301800_301899/301893/
+>>>> 01.08.01_60/en_301893v010801p.pdf
+>>> [2] http://lists.shmoo.com/pipermail/hostap/2015-January/031906.html
+>>>>
+>>>> J.P. Tosoni - ACKSYS
+>>>>
+>>>>
+>>>>
+>>>>
+>>>> _______________________________________________
+>>>> ath10k mailing list
+>>>> ath10k@lists.infradead.org
+>>>> http://lists.infradead.org/mailman/listinfo/ath10k
+>>>
+>>
+>>
+>> --
+>> Ben Greear <greearb@candelatech.com>
+>> Candela Technologies Inc  http://www.candelatech.com
+>>
+>>
+>> _______________________________________________
+>> ath10k mailing list
+>> ath10k@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/ath10k
+>
+
+
 -- 
-1.7.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
