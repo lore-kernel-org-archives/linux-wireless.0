@@ -1,41 +1,212 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58536 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:54227 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755003AbcLPNJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 08:09:41 -0500
-Message-ID: <1481891767.27953.27.camel@sipsolutions.net> (sfid-20161216_140944_876661_F21B6A23)
-Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 16 Dec 2016 13:36:07 +0100
-In-Reply-To: <9715e731-efcc-0252-ed7b-5ca67e2c0b5b@broadcom.com> (sfid-20161216_131757_938930_7ED92539)
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
-         <1481646049.20412.43.camel@sipsolutions.net>
-         <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com>
-         <1481882578.27953.20.camel@sipsolutions.net>
-         <9715e731-efcc-0252-ed7b-5ca67e2c0b5b@broadcom.com>
-         (sfid-20161216_131757_938930_7ED92539)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1756530AbcLNTrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 14:47:17 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
+Subject: [PATCH 07/10] mac80211: minstrel: store probability variance instead of standard deviation
+Date: Wed, 14 Dec 2016 20:47:00 +0100
+Message-Id: <20161214194703.33429-7-nbd@nbd.name> (sfid-20161214_204725_135213_259EB5FC)
+In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
+References: <20161214194703.33429-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-12-16 at 13:17 +0100, Arend Van Spriel wrote:
-> 
-> > I have no problem introducing a common storage for this, if
-> > necessary with some fields/nl attributes being optional, but I
-> > suspect this is actually a necessary part of gscan, otherwise
-> > you're not able to report all the necessary data?
-> 
-> If you just look at the gscan api in wifihal then yes. I was just
-> wondering whether "all the necessary data" really comprises all these
-> from a use-case perspective. As an example the api also has rtt
-> fields, but both brcm and intel solutions do not report that.
+This avoids the costly int_sqrt calls in the statistics update and moves
+it to the debugfs code instead.
+This also fixes an overflow in the previous standard deviation
+calculation.
 
-Yeah, no idea. Sorry - my wording wasn't quite precise. By "this is
-actually a necessary part of gscan" I meant the partial history
-reporting itself, not any particular field thereof.
+Signed-off-by: Thomas Huehn <thomas.huehn@evernet-eg.de>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel.c            |  8 ++++----
+ net/mac80211/rc80211_minstrel.h            | 25 ++++++++++++++-----------
+ net/mac80211/rc80211_minstrel_debugfs.c    |  8 ++++++--
+ net/mac80211/rc80211_minstrel_ht_debugfs.c |  8 ++++++--
+ 4 files changed, 30 insertions(+), 19 deletions(-)
 
-johannes
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index a284ea0..11a4cc3 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -168,10 +168,10 @@ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+ 			mrs->prob_ewma = cur_prob;
+ 		} else {
+ 			/* update exponential weighted moving variance */
+-			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
+-							 cur_prob,
+-							 mrs->prob_ewma,
+-							 EWMA_LEVEL);
++			mrs->prob_ewmv = minstrel_ewmv(mrs->prob_ewmv,
++							cur_prob,
++							mrs->prob_ewma,
++							EWMA_LEVEL);
+ 
+ 			/*update exponential weighted moving avarage */
+ 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 03716fd..ea86e67 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -36,21 +36,16 @@ minstrel_ewma(int old, int new, int weight)
+ }
+ 
+ /*
+- * Perform EWMSD (Exponentially Weighted Moving Standard Deviation) calculation
++ * Perform EWMV (Exponentially Weighted Moving Variance) calculation
+  */
+ static inline int
+-minstrel_ewmsd(int old_ewmsd, int cur_prob, int prob_ewma, int weight)
++minstrel_ewmv(int old_ewmv, int cur_prob, int prob_ewma, int weight)
+ {
+-	int diff, incr, tmp_var;
++	int diff, incr;
+ 
+-	/* calculate exponential weighted moving variance */
+-	diff = MINSTREL_TRUNC((cur_prob - prob_ewma) * 1000000);
++	diff = cur_prob - prob_ewma;
+ 	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
+-	tmp_var = old_ewmsd * old_ewmsd;
+-	tmp_var = weight * (tmp_var + diff * incr / 1000000) / EWMA_DIV;
+-
+-	/* return standard deviation */
+-	return (u16) int_sqrt(tmp_var);
++	return weight * (old_ewmv + MINSTREL_TRUNC(diff * incr)) / EWMA_DIV;
+ }
+ 
+ struct minstrel_rate_stats {
+@@ -65,7 +60,7 @@ struct minstrel_rate_stats {
+ 	 *  prob_ewma - exponential weighted moving average of prob
+ 	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
+ 	unsigned int prob_ewma;
+-	u16 prob_ewmsd;
++	u16 prob_ewmv;
+ 
+ 	/* maximum retry counts */
+ 	u8 retry_count;
+@@ -151,6 +146,14 @@ struct minstrel_debugfs_info {
+ 	char buf[];
+ };
+ 
++/* Get EWMSD (Exponentially Weighted Moving Standard Deviation) * 10 */
++static inline int
++minstrel_get_ewmsd10(struct minstrel_rate_stats *mrs)
++{
++	unsigned int ewmv = mrs->prob_ewmv;
++	return int_sqrt(MINSTREL_TRUNC(ewmv * 1000 * 1000));
++}
++
+ extern const struct rate_control_ops mac80211_minstrel;
+ void minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir);
+ void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index ca0bafd..36fc971 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -93,6 +93,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
++		unsigned int prob_ewmsd;
+ 
+ 		*(p++) = (i == mi->max_tp_rate[0]) ? 'A' : ' ';
+ 		*(p++) = (i == mi->max_tp_rate[1]) ? 'B' : ' ';
+@@ -108,6 +109,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
+ 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
++		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ 
+ 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
+ 				"     %3u   %3u %-3u   "
+@@ -115,7 +117,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+-				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
++				prob_ewmsd / 10, prob_ewmsd % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+@@ -159,6 +161,7 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+ 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
++		unsigned int prob_ewmsd;
+ 
+ 		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[0]) ? "A" : ""));
+ 		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[1]) ? "B" : ""));
+@@ -174,13 +177,14 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
+ 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
++		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ 
+ 		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
+ 				"%llu,%llu,%d,%d\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+-				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
++				prob_ewmsd / 10, prob_ewmsd % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 0cecd23..7d969e3 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -41,6 +41,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
+ 		static const int bitrates[4] = { 10, 20, 55, 110 };
+ 		int idx = i * MCS_GROUP_RATES + j;
++		unsigned int prob_ewmsd;
+ 
+ 		if (!(mi->supported[i] & BIT(j)))
+ 			continue;
+@@ -84,6 +85,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
+ 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
++		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ 
+ 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
+ 				"     %3u   %3u %-3u   "
+@@ -91,7 +93,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+-				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
++				prob_ewmsd / 10, prob_ewmsd % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+@@ -185,6 +187,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
+ 		static const int bitrates[4] = { 10, 20, 55, 110 };
+ 		int idx = i * MCS_GROUP_RATES + j;
++		unsigned int prob_ewmsd;
+ 
+ 		if (!(mi->supported[i] & BIT(j)))
+ 			continue;
+@@ -225,13 +228,14 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
+ 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
++		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ 
+ 		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
+ 				"%u,%llu,%llu,",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+-				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
++				prob_ewmsd / 10, prob_ewmsd % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+-- 
+2.10.1
