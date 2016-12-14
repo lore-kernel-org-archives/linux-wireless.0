@@ -1,40 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43442 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751100AbcLEO6W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:58:22 -0500
-Message-ID: <1480949899.31788.34.camel@sipsolutions.net> (sfid-20161205_155824_650603_A91753C0)
-Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 05 Dec 2016 15:58:19 +0100
-In-Reply-To: <58457FEA.4030305@gmail.com> (sfid-20161205_155540_425685_7615F26E)
-References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
-         <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
-         (sfid-20161205_155540_425685_7615F26E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:35289 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752752AbcLNKH2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 05:07:28 -0500
+Received: by mail-pg0-f44.google.com with SMTP id p66so6746026pga.2
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2016 02:07:28 -0800 (PST)
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
+ <1481646049.20412.43.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com> (sfid-20161214_110732_496364_994CEB1B)
+Date: Wed, 14 Dec 2016 11:07:24 +0100
+MIME-Version: 1.0
+In-Reply-To: <1481646049.20412.43.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Detecting it is easy, sure.  But I'm a bit lost on how you propose
-> to 
-> 'use' it.  The connection is active up until the next rekey
-> event.  If 
-> rekey offloading is supported, then this might never involve user
-> space. 
->   But if it isn't (and I can't get rekey offload to work on any
-> recent 
-> kernel I tried) then how do you propose userspace obtains the rekey 
-> counter, or the various keys used in the connection?
+On 13-12-2016 17:20, Johannes Berg wrote:
+> On Mon, 2016-12-12 at 11:59 +0000, Arend van Spriel wrote:
+>> The driver can indicate gscan results are available or gscan
+>> operation has stopped.
 > 
-> What about all the other state information?  FT, Pre-Authentication,
-> etc?
+> This patch is renumbering the previous patches' nl80211 API, which is
+> best avoided, even if I do realize it doesn't matter now. :)
 
-Well, no, that'd only work with an open connection :)
+Indeed. Will be more careful in upcoming revision(s).
 
-johannes
+> Even here it's not clear how things are reported though. Somehow I
+> thought that gscan was reporting only partial information through the
+> buckets, or is that not true?
+
+Not sure what is meant by "through the buckets". Referring to your
+remark/question in the "Unversal scan proposal" thread:
+
+"""
+I'm much more worried about the "bucket reporting" since that doesn't
+fit into the current full BSS reporting model at all. What's your
+suggestion for this?
+"""
+
+So this is exactly the dilemma I considered so I decided to stick with
+the full BSS reporting model for gscan as well merely to get it
+discussed so glad you brought it up ;-). The problem here is that
+gscan is a vehicle that serves a number of use-cases. So ignoring
+hotlists, ePNO, etc. the gscan configuration still hold several
+notification types:
+
+- report after completing M scans capturing N best APs or a
+  percentage of (M * N).
+- report after completing a scan include a specific bucket.
+- report full scan results.
+
+The first two notification trigger retrieval of gscan results which are
+historic, ie. partial scan results for max M scans.
+
+As said earlier the universal scan proposal has some similarities to
+gscan. Guess you share that as you are using the term "bucket reporting"
+in that discussion ;-). The historic results are needed for location (if
+I am not mistaken) so the full BSS reporting model does not fit that.
+Question is what particular attribute in the historic results is needed
+for location (suspecting only rssi and possibly the timestamp, but would
+like to see that confirmed). I was thinking about have historic storage
+in cfg80211 so we do not need a per-driver solution.
+
+Regards,
+Arend
