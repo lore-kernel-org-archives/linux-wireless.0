@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45538 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751493AbcL3NK1 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53614 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752786AbcLNTas (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:10:27 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [01/14] rtlwifi: Correct power save capability while init mac80211
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161202014833.6856-2-Larry.Finger@lwfinger.net>
-References: <20161202014833.6856-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Vincent Fann <vincent_fann@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        shaofu <shaofu@realtek.com>, Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20161230131026.C825561389@smtp.codeaurora.org> (sfid-20161230_141030_846260_D34DCF97)
-Date: Fri, 30 Dec 2016 13:10:26 +0000 (UTC)
+        Wed, 14 Dec 2016 14:30:48 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2] mac80211:  fix legacy and invalid rx-rate rpt
+Date: Wed, 14 Dec 2016 11:30:38 -0800
+Message-Id: <1481743838-20323-1-git-send-email-greearb@candelatech.com> (sfid-20161214_203106_040361_5B59E911)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> Set IEEE80211_HW_SUPPORTS_PS when driver is fwlps
-> Because mac80211 control SW-LPS only, we add constraints to avoid errors.
-> 
-> Signed-off-by: Vincent Fann <vincent_fann@realtek.com>
-> Signed-off-by: shaofu <shaofu@realtek.com>
-> Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+From: Ben Greear <greearb@candelatech.com>
 
-Dropped per Larry's request.
+This fixes obtaining the rate info via sta_set_sinfo
+when the rx rate is invalid (for instance, on IBSS
+interface that has received no frames from one of its
+peers).
 
-14 patches set to Changes Requested.
+This also fixes a more general issue with rinfo->flags
+not being properly initialized for legacy rates.
 
-9457587 [01/14] rtlwifi: Correct power save capability while init mac80211
-9457609 [02/14] rtlwifi: Fix programing CAM content sequence.
-9457607 [03/14] rtlwifi: Set retry limit depends on vif type.
-9457601 [03/14] rtlwifi: extend debug_comp to u64
-9457613 [05/14] rtlwifi: Add TX report and disable key will wait until report acked.
-9457611 [06/14] rtlwifi: rtl8723be: btcoexist: Add single_ant_path
-9457589 [07/14] rtlwifi: move btcoex's ant_num declaration
-9457603 [08/14] rtlwifi: rtl8723be: btcoex: add package_type function to btcoex
-9457593 [09/14] rtlwifi: ibtcoex: move bt_type declaration
-9457591 [10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-9457605 [11/14] rtlwifi: Add a new enumeration value to btc_set_type
-9457595 [12/14] rtlwifi: btcoexist: Add vendor definition for new btcoexist
-9457597 [13/14] rtlwifi: rtl8723be: fix ant_sel code
-9457599 [14/14] rtlwifi: Add work queue for c2h cmd.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
 
+Patch is against 4.7
+
+ net/mac80211/sta_info.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 01868f9..6d27813e 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -2057,6 +2057,7 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 		u16 brate;
+ 		unsigned int shift;
+ 
++		rinfo->flags = 0;
+ 		sband = local->hw.wiphy->bands[(rate >> 4) & 0xf];
+ 		brate = sband->bitrates[rate & 0xf].bitrate;
+ 		if (rinfo->bw == RATE_INFO_BW_5)
+@@ -2072,14 +2073,15 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
+ 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
+ }
+ 
+-static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
++static int sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
+ {
+ 	u16 rate = ACCESS_ONCE(sta_get_last_rx_stats(sta)->last_rate);
+-
+-	if (rate == STA_STATS_RATE_INVALID)
+-		rinfo->flags = 0;
+-	else
++	if (rate == STA_STATS_RATE_INVALID) {
++		return -EINVAL;
++	} else {
+ 		sta_stats_decode_rate(sta->local, rate, rinfo);
++		return 0;
++	}
+ }
+ 
+ static void sta_set_tidstats(struct sta_info *sta,
+@@ -2284,8 +2286,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 	}
+ 
+ 	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_BITRATE))) {
+-		sta_set_rate_info_rx(sta, &sinfo->rxrate);
+-		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
++		if (sta_set_rate_info_rx(sta, &sinfo->rxrate) == 0)
++			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
+ 	}
+ 
+ 	sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
 -- 
-https://patchwork.kernel.org/patch/9457587/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.4.11
