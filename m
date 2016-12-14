@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21341 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751771AbcL3JOl (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36692 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755182AbcLNONH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 04:14:41 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 14 Dec 2016 09:13:07 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 4/5] mwifiex: get rid of __mwifiex_sdio_remove helper
+Date: Wed, 14 Dec 2016 19:40:50 +0530
+Message-ID: <1481724651-30397-4-git-send-email-akarwar@marvell.com> (sfid-20161214_151311_977178_EDEF5711)
+In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: support dev_coredump for crash dump
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161221121921.25119.93932.stgit@potku.adurom.net>
-References: <20161221121921.25119.93932.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <ea5cf07e249847d5a4f5078c8f31889e@euamsexm01a.eu.qualcomm.com> (sfid-20161230_101445_031176_1186916B)
-Date: Fri, 30 Dec 2016 10:14:34 +0100
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Arun Khandavalli <akhandav@qti.qualcomm.com>
-> 
-> Whenever firmware crashes, and both CONFIG_ATH10K_DEBUGFS and
-> CONFIG_ALLOW_DEV_COREDUMP are enabled, dump information about the crash via a
-> devcoredump device. Dump can be read from userspace for further analysis from:
-> 
-> /sys/class/devcoredump/devcd*/data
-> 
-> As until now we have provided the firmware crash dump file via fw_crash_dump
-> debugfs keep it still available but deprecate and a warning print that the user
-> should switch to using dev_coredump.
-> 
-> Future improvement would be not to depend on CONFIG_ATH10K_DEBUGFS, as there
-> might be systems which want to get the firmware crash dump but not enable
-> debugfs. How to handle memory consumption is also something which needs to be
-> taken into account.
-> 
-> Signed-off-by: Arun Khandavalli <akhandav@qti.qualcomm.com>
-> [kvalo@qca.qualcomm.com: rebase, fixes, improve commit log]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+__mwifiex_sdio_remove helper is not needed after
+our enhancements in SDIO card reset.
 
-727000e6af34 ath10k: support dev_coredump for crash dump
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index b3aca10..0fda87a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -370,7 +370,7 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+  * This function removes the interface and frees up the card structure.
+  */
+ static void
+-__mwifiex_sdio_remove(struct sdio_func *func)
++mwifiex_sdio_remove(struct sdio_func *func)
+ {
+ 	struct sdio_mmc_card *card;
+ 	struct mwifiex_adapter *adapter;
+@@ -388,6 +388,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 	if (!adapter || !adapter->priv_num)
+ 		return;
+ 
++	cancel_work_sync(&sdio_work);
++
+ 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+ 
+ 	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
+@@ -402,13 +404,6 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 	mwifiex_remove_card(adapter);
+ }
+ 
+-static void
+-mwifiex_sdio_remove(struct sdio_func *func)
+-{
+-	cancel_work_sync(&sdio_work);
+-	__mwifiex_sdio_remove(func);
+-}
+-
+ /*
+  * SDIO suspend.
+  *
 -- 
-https://patchwork.kernel.org/patch/9482989/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
