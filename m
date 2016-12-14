@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33274 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752418AbcLXQ5T (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:52426 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933320AbcLNQGM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 11:57:19 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH 0/6] wl1251: Fix MAC address for Nokia N900
-Date: Sat, 24 Dec 2016 17:52:55 +0100
-Message-Id: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> (sfid-20161224_175739_468925_0446FDAA)
+        Wed, 14 Dec 2016 11:06:12 -0500
+Date: Wed, 14 Dec 2016 08:57:43 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>
+Subject: Re: [Patch] NFC: trf7970a:
+Message-ID: <20161214155743.GA22282@animalcreek.com> (sfid-20161214_170620_460579_E0D8442C)
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+ <20160422000119.GA21754@animalcreek.com>
+ <20161213220545.GA29317@animalcreek.com>
+ <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series fix processing MAC address for wl1251 chip found in Nokia N900.
+On Tue, Dec 13, 2016 at 08:50:04PM -0500, Geoff Lansberry wrote:
+> Hi Mark -  Thanks for getting back to me.   It's funny that you ask,
+> because we are currently chasing a segfault that is happening in neard, but
+> may end up back in the trf7970a driver.   Have you ever heard on anyone
+> having segfault problems related to the trf7970a hardware drivers?
 
-Pali Rohár (6):
-  firmware: Add request_firmware_prefer_user() function
-  wl1251: Use request_firmware_prefer_user() for loading NVS
-    calibration data
-  wl1251: Update wl->nvs_len after wl->nvs is valid
-  wl1251: Generate random MAC address only if driver does not have
-    valid
-  wl1251: Parse and use MAC address from supplied NVS data
-  wl1251: Set generated MAC address back to NVS data
+No.  Mind sharing more info on that segfault?
 
- drivers/base/firmware_class.c          |   45 +++++++++++++++-
- drivers/net/wireless/ti/wl1251/Kconfig |    1 +
- drivers/net/wireless/ti/wl1251/main.c  |   91 +++++++++++++++++++++++++-------
- include/linux/firmware.h               |    9 ++++
- 4 files changed, 125 insertions(+), 21 deletions(-)
+> I'll get you an update later tonight or tomorrow.
 
--- 
-1.7.9.5
+Okay, thanks.
+
+Mark
+--
