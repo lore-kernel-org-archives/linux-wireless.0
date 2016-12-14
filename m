@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:56363 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932465AbcLILeb (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:36627 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753656AbcLNGR7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Dec 2016 06:34:31 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.10 1/2] brcmfmac: fix memory leak in brcmf_cfg80211_attach()
-Date: Fri,  9 Dec 2016 11:34:13 +0000
-Message-Id: <1481283254-17883-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161209_123447_759712_2A8023F3)
-In-Reply-To: <1481283254-17883-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481283254-17883-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 14 Dec 2016 01:17:59 -0500
+Received: by mail-io0-f193.google.com with SMTP id b194so2860452ioa.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 22:17:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAAnMG+MY=LhfJxxUVdfRNYUW-2R+EXdLm2o6yDcCH0T1brRVxw@mail.gmail.com>
+References: <583DD564.8040704@cococorp.com> <20161201070908.GB11953@atheros-ThinkPad-T61>
+ <58421FA2.2020004@cococorp.com> <20161203124358.GB31861@atheros-ThinkPad-T61>
+ <20161203124600.GC31861@atheros-ThinkPad-T61> <5845B325.6060002@cococorp.com>
+ <d8eb0ba5828d43dd83030247ba443b88@aphydexm01f.ap.qualcomm.com>
+ <58472E7B.7090603@cococorp.com> <58504113.2080702@cococorp.com>
+ <5850831D.7020206@cococorp.com> <ccf17009a52748c99accdaa005ea837a@NALASEXR01H.na.qualcomm.com>
+ <CAAnMG+OmeataRKYRjOjtBXF_1-De-F4zWbUsWoYRhVu02NPrrw@mail.gmail.com>
+ <CAJ-Vmo=iLryhOS--PPYCGa9pE2GovPDOXi6xoH22xFOYXXKNVA@mail.gmail.com> <CAAnMG+MY=LhfJxxUVdfRNYUW-2R+EXdLm2o6yDcCH0T1brRVxw@mail.gmail.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Tue, 13 Dec 2016 22:17:57 -0800
+Message-ID: <CAJ-VmomEMCxfyy2=440epuTP1rGMaEKBKwPA4qC5V8Hj8LmSbw@mail.gmail.com> (sfid-20161214_071804_926775_305D25F9)
+Subject: Re: ath10k firmware crashes in mesh mode on QCA9880
+To: Alexis Green <agreen@cococorp.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+        Benjamin Morgan <bmorgan@cococorp.com>,
+        "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>,
+        Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+        "lede-dev@lists.infradead.org" <lede-dev@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_cfg80211_attach() there was one error path not properly
-handled as it leaked memory allocated in brcmf_btcoex_attach().
+Hi!
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ok, thanks! I've seen some .. annoying rate control related firmware
+crashes if you aren't using 11ac / 11n rates (ie you're /really/
+legacy, so I wondered if something similar is going on here.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index ccae3bb..7ffc4ab 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6868,7 +6868,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+Thanks!
 
- 	err = brcmf_p2p_attach(cfg, p2pdev_forced);
- 	if (err) {
--		brcmf_err("P2P initilisation failed (%d)\n", err);
-+		brcmf_err("P2P initialisation failed (%d)\n", err);
- 		goto wiphy_unreg_out;
- 	}
- 	err = brcmf_btcoex_attach(cfg);
-@@ -6893,7 +6893,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 	err = brcmf_fweh_activate_events(ifp);
- 	if (err) {
- 		brcmf_err("FWEH activation failed (%d)\n", err);
--		goto wiphy_unreg_out;
-+		goto detach;
- 	}
 
- 	/* Fill in some of the advertised nl80211 supported features */
-@@ -6908,6 +6908,9 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+-a
 
- 	return cfg;
 
-+detach:
-+	brcmf_btcoex_detach(cfg);
-+	brcmf_p2p_detach(&cfg->p2p);
- wiphy_unreg_out:
- 	wiphy_unregister(cfg->wiphy);
- priv_out:
---
-1.9.1
+On 13 December 2016 at 22:06, Alexis Green <agreen@cococorp.com> wrote:
+> Hi Adrian,
+>
+> I have not done much testing of ath10k and ath9k devices in a single
+> encrypted mesh recently, but I have a memory of only having this issue
+> when communicating between ath10k devices.
+>
+> Alexis
+>
+> On Tue, Dec 13, 2016 at 9:53 PM, Adrian Chadd <adrian@freebsd.org> wrote:
+>> Hi!
+>>
+>> Hm! So is there a firmware bug if there are 11n only capable nodes in
+>> an 11s mesh?
+>>
+>>
+>>
+>> -adrian
