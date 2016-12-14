@@ -1,69 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35424 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbcL1Vkg (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36669 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752680AbcLNONH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 16:40:36 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: Fix alignment issues
-Date: Wed, 28 Dec 2016 15:40:04 -0600
-Message-Id: <20161228214004.6309-1-Larry.Finger@lwfinger.net> (sfid-20161228_224040_711540_6B0AD1C2)
+        Wed, 14 Dec 2016 09:13:07 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/5] mwifiex: cleanup in PCIe flr code path
+Date: Wed, 14 Dec 2016 19:40:48 +0530
+Message-ID: <1481724651-30397-2-git-send-email-akarwar@marvell.com> (sfid-20161214_151338_306269_6D3B3D3B)
+In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+From: Xinming Hu <huxm@marvell.com>
 
-The addresses of Wlan NIC registers are natural alignment, but some
-drivers have bugs. These are evident on platforms that need natural
-alignment to access registers.  This change contains the following:
- 1. Function _rtl8821ae_dbi_read() is used to read one byte from DBI,
-    thus it should use rtl_read_byte().
- 2. Register 0x4C7 of 8192ee is single byte.
+adapter and card variables don't get freed during PCIe function level
+reset. "adapter->ext_scan" variable need not be re-initialized.
+fw_name and tx_buf_size initialization is moved to pcie specific code
+so that mwifiex_reinit_sw() can be used by SDIO.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
-Kalle,
+ drivers/net/wireless/marvell/mwifiex/main.c |  9 ---------
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 12 +++++++++++-
+ 2 files changed, 11 insertions(+), 10 deletions(-)
 
-Please send this upstream when convenient. These fixes will improve operations
-on architectures that are fussy about alignment.
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c |    2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 99827d2..54ea173 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -1006,7 +1006,7 @@ static void _rtl92ee_hw_configure(struct ieee80211_hw *hw)
- 	rtl_write_word(rtlpriv, REG_SIFS_TRX, 0x100a);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 3fc6221..9d80180 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1425,9 +1425,6 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ int
+ mwifiex_reinit_sw(struct mwifiex_adapter *adapter)
+ {
+-	char fw_name[32];
+-	struct pcie_service_card *card = adapter->card;
+-
+ 	mwifiex_init_lock_list(adapter);
+ 	if (adapter->if_ops.up_dev)
+ 		adapter->if_ops.up_dev(adapter);
+@@ -1468,18 +1465,12 @@ static void mwifiex_main_work_queue(struct work_struct *work)
+ 	 * mwifiex_register_dev()
+ 	 */
+ 	mwifiex_dbg(adapter, INFO, "%s, mwifiex_init_hw_fw()...\n", __func__);
+-	strcpy(fw_name, adapter->fw_name);
+-	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
  
- 	/* Note Data sheet don't define */
--	rtl_write_word(rtlpriv, 0x4C7, 0x80);
-+	rtl_write_byte(rtlpriv, 0x4C7, 0x80);
- 
- 	rtl_write_byte(rtlpriv, REG_RX_PKT_LIMIT, 0x20);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 0b26bd0..e374320 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -1124,7 +1124,7 @@ static u8 _rtl8821ae_dbi_read(struct rtl_priv *rtlpriv, u16 addr)
+-	adapter->tx_buf_size = card->pcie.tx_buf_size;
+-	adapter->ext_scan = card->pcie.can_ext_scan;
+ 	if (mwifiex_init_hw_fw(adapter, false)) {
+-		strcpy(adapter->fw_name, fw_name);
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "%s: firmware init failed\n", __func__);
+ 		goto err_init_fw;
  	}
- 	if (0 == tmp) {
- 		read_addr = REG_DBI_RDATA + addr % 4;
--		ret = rtl_read_word(rtlpriv, read_addr);
-+		ret = rtl_read_byte(rtlpriv, read_addr);
- 	}
- 	return ret;
- }
+-	strcpy(adapter->fw_name, fw_name);
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
+ 
+ 	complete_all(adapter->fw_done);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 02f6db0..66226c6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -3082,6 +3082,17 @@ static void mwifiex_pcie_up_dev(struct mwifiex_adapter *adapter)
+ 	struct pci_dev *pdev = card->dev;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 
++	/* Bluetooth is not on pcie interface. Download Wifi only firmware
++	 * during pcie FLR, so that bluetooth part of firmware which is
++	 * already running doesn't get affected.
++	 */
++	strcpy(adapter->fw_name, PCIE8997_DEFAULT_WIFIFW_NAME);
++
++	/* tx_buf_size might be changed to 3584 by firmware during
++	 * data transfer, we should reset it to default size.
++	 */
++	adapter->tx_buf_size = card->pcie.tx_buf_size;
++
+ 	card->cmdrsp_buf = NULL;
+ 	ret = mwifiex_pcie_create_txbd_ring(adapter);
+ 	if (ret) {
+@@ -3143,7 +3154,6 @@ static void mwifiex_pcie_down_dev(struct mwifiex_adapter *adapter)
+ 		mwifiex_dbg(adapter, ERROR, "Failed to write driver not-ready signature\n");
+ 
+ 	adapter->seq_num = 0;
+-	adapter->tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K;
+ 
+ 	if (reg->sleep_cookie)
+ 		mwifiex_pcie_delete_sleep_cookie_buf(adapter);
 -- 
-1.7.9.5
+1.9.1
