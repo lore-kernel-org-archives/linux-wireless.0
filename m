@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34050 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbcL3NzU (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:36384 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751123AbcLNGHG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:55:20 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 14 Dec 2016 01:07:06 -0500
+Received: by mail-io0-f195.google.com with SMTP id b194so2820148ioa.3
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 22:07:06 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [01/14,V2] rtlwifi: Replace local debug macro RT_ASSERT
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161215182310.13713-2-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20161230135520.4E3CC61482@smtp.codeaurora.org> (sfid-20161230_145529_565973_503A6756)
-Date: Fri, 30 Dec 2016 13:55:20 +0000 (UTC)
+In-Reply-To: <CAAnMG+OmeataRKYRjOjtBXF_1-De-F4zWbUsWoYRhVu02NPrrw@mail.gmail.com>
+References: <583DD564.8040704@cococorp.com> <20161201070908.GB11953@atheros-ThinkPad-T61>
+ <58421FA2.2020004@cococorp.com> <20161203124358.GB31861@atheros-ThinkPad-T61>
+ <20161203124600.GC31861@atheros-ThinkPad-T61> <5845B325.6060002@cococorp.com>
+ <d8eb0ba5828d43dd83030247ba443b88@aphydexm01f.ap.qualcomm.com>
+ <58472E7B.7090603@cococorp.com> <58504113.2080702@cococorp.com>
+ <5850831D.7020206@cococorp.com> <ccf17009a52748c99accdaa005ea837a@NALASEXR01H.na.qualcomm.com>
+ <CAAnMG+OmeataRKYRjOjtBXF_1-De-F4zWbUsWoYRhVu02NPrrw@mail.gmail.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Tue, 13 Dec 2016 21:53:46 -0800
+Message-ID: <CAJ-Vmo=iLryhOS--PPYCGa9pE2GovPDOXi6xoH22xFOYXXKNVA@mail.gmail.com> (sfid-20161214_070709_653282_51A264EC)
+Subject: Re: ath10k firmware crashes in mesh mode on QCA9880
+To: Alexis Green <agreen@cococorp.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>,
+        Benjamin Morgan <bmorgan@cococorp.com>,
+        "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>,
+        Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+        "lede-dev@lists.infradead.org" <lede-dev@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> This macro can be replaced with WARN_ONCE. In addition to using a
-> standard debugging macro for these critical errors, we also get
-> a stack dump.
-> 
-> In rtl8821ae/hw.c, a senseless comment was removed, and an incorrect
-> indentation was fixed.
-> 
-> This patch also fixes two places in each of rtl8192ee, rtl8723be,
-> and rtl8821ae where the logical condition was incorrect.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+Hi!
 
-14 patches applied to wireless-drivers-next.git, thanks.
+Hm! So is there a firmware bug if there are 11n only capable nodes in
+an 11s mesh?
 
-531940f9644d rtlwifi: Replace local debug macro RT_ASSERT
-b03d968b6644 rtlwifi: Remove RT_TRACE messages that use DBG_EMERG
-004a1e167905 rtlwifi: rtl8821ae: Remove all instances of DBG_EMERG
-4e2b4378f9d7 rtlwifi: rtl8723be: Remove all instances of DBG_EMERG
-a67005bc46d9 rtlwifi: rtl8723ae: Remove all instances of DBG_EMERG
-a44f59d60365 rtlwifi: rtl8192ee: Remove all instances of DBG_EMERG
-c7532b87653b rtlwifi: rtl8723-common: Remove all instances of DBG_EMERG
-2d15acac2354 rtlwifi: rtl8192se: Remove all instances of DBG_EMERG
-b8c79f454880 rtlwifi: rtl8192de: Remove all instances of DBG_EMERG
-c38af3f06af4 rtlwifi: rtl8192cu: Remove all instances of DBG_EMERG
-e40a005652ad rtlwifi: rtl8192ce: Remove all instances of DBG_EMERG
-0fc30e9350be rtlwifi: rtl8192c-common: Remove all instances of DBG_EMERG
-02527a73beb3 rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG
-c93ac39da006 rtlwifi: Remove some redundant code
 
--- 
-https://patchwork.kernel.org/patch/9476703/
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+-adrian
