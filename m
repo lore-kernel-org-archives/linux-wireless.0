@@ -1,105 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50690 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751201AbcLES7J (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:36806 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754305AbcLNSfu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 13:59:09 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 1/2] mac80211:  Return avg sig, rx, tx values in ethtool stats.
-Date: Mon,  5 Dec 2016 10:58:29 -0800
-Message-Id: <1480964310-16698-1-git-send-email-greearb@candelatech.com> (sfid-20161205_195914_504879_CF1E4B76)
+        Wed, 14 Dec 2016 13:35:50 -0500
+Received: by mail-qk0-f173.google.com with SMTP id n21so30855220qka.3
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2016 10:35:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20161214171010.GA29321@animalcreek.com>
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+ <20160422000119.GA21754@animalcreek.com> <20161213220545.GA29317@animalcreek.com>
+ <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
+ <20161214155743.GA22282@animalcreek.com> <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
+ <20161214171010.GA29321@animalcreek.com>
+From: Geoff Lansberry <geoff@kuvee.com>
+Date: Wed, 14 Dec 2016 13:35:03 -0500
+Message-ID: <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com> (sfid-20161214_193600_102908_13A2EA05)
+Subject: Re: [Patch] NFC: trf7970a:
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Wed, Dec 14, 2016 at 12:10 PM, Mark Greer <mgreer@animalcreek.com> wrote:
+> On Wed, Dec 14, 2016 at 11:17:33AM -0500, Geoff Lansberry wrote:
+>> On Wed, Dec 14, 2016 at 10:57 AM, Mark Greer <mgreer@animalcreek.com> wrote:
+>> >
+>> > On Tue, Dec 13, 2016 at 08:50:04PM -0500, Geoff Lansberry wrote:
+>> > > Hi Mark -  Thanks for getting back to me.   It's funny that you ask,
+>> > > because we are currently chasing a segfault that is happening in neard, but
+>> > > may end up back in the trf7970a driver.   Have you ever heard on anyone
+>> > > having segfault problems related to the trf7970a hardware drivers?
+>> >
+>> > No.  Mind sharing more info on that segfault?
+>> >
+>> > > I'll get you an update later tonight or tomorrow.
+>> >
+>> > Okay, thanks.
+>> >
+>> > Mark
+>> > --
+>>
+>> Mark - The segfault issue is only happening on writing, The work on
+>> the segfault is being done by a consultant, but here is his statement
+>> on how to recreate it on our build:
+>>
+>> I am able to reliably force neard to segfault by flooding it with
+>> write requests. I have attached a python script called flood.py that
+>> can be used to do this. The script uses utilities that ship with
+>> neard.
+>>
+>> The segfault does not appear deterministic. It usually happens within
+>> 1000 writes, but the time can varying greatly. The logs output from
+>> neard are inconsistent between crashes, which suggests this may be a
+>> timing or race condition related issue.
+>>
+>> I have been running neard manually to obtain the log information and a
+>> core file for debugging (attached). I run neard as,
+>>
+>>   $ /usr/lib/neard/nfc/neard -d -n
+>>
+>> In a separate terminal I run,
+>>
+>>   $ python flood.py
+>>
+>> And the resulting core file provides the following backtrace,
+>>
+>> (gdb) bt
+>> #0  0xb6caed64 in ?? ()
+>> #1  0x0001ed7c in data_recv (resp=0x5bd90 "", length=17, data=0x58348)
+>> at plugins/nfctype2.c:156
+>> #2  0x00024ecc in execute_recv_cb (user_data=0x5bd88) at src/adapter.c:979
+>> #3  0xb6e70d60 in ?? ()
+>> Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+>> (gdb)
+>>
+>> The line at nfctype2.c:156 contains a memcpy operation.
+>
+> Thanks Geoff.
+>
+> What are the values of the arguments to memcpy()?
+>
+> I will look at it later today/tomorrow but if you have another NFC device
+> to test with, it would help isolate whether it is neard or the trf7970a
+> driver.  The driver shouldn't be able to make neard crash like this but
+> who knows.
+>
+> You could also try testing older versions of neard to see if they also
+> fail and if not, start bisecting from there.  Maybe test a different
+> tag type too.
+>
+> Mark
+> --
+Mark - We can't seem to get gdb to run on our board, so we can't see
+the exact arguments.  Here is what our consultant has to say about
+your question:
 
-For non-station devices.  This gives at least some useful
-summary in some cases (especially when we know AP has only one
-station attached, for instance).
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+The backtrace seems to indicate that the error is occurring in neard,
+not the driver.
 
-v2:  Remove commented out pr_err code, remove trailing i++ that had no effect.
+Since the driver is built as a module, your kernel won't crash if
+there is a problem in it, but you should be told that the error is
+originating in the module.
 
- net/mac80211/ethtool.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
+It is also possible that the NFC driver does have a non-fatal problem
+in it (such as returning unexpected data) that is propagating to neard
+and causing the error there.
 
-diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
-index 4e937c1..e7df3d3 100644
---- a/net/mac80211/ethtool.c
-+++ b/net/mac80211/ethtool.c
-@@ -12,6 +12,25 @@
- #include "ieee80211_i.h"
- #include "sta_info.h"
- #include "driver-ops.h"
-+#include <asm/div64.h>
-+
-+static inline __s64 mac_div(__s64 n, __u32 base)
-+{
-+	if (n < 0) {
-+		__u64 tmp = -n;
-+		do_div(tmp, base);
-+		/* printk("pktgen: pg_div, n: %llu  base: %d  rv: %llu\n",
-+		   n, base, tmp); */
-+		return -tmp;
-+	}
-+	else {
-+		__u64 tmp = n;
-+		do_div(tmp, base);
-+		/* printk("pktgen: pg_div, n: %llu  base: %d  rv: %llu\n",
-+		   n, base, tmp); */
-+		return tmp;
-+	}
-+}
- 
- static int ieee80211_set_ringparam(struct net_device *dev,
- 				   struct ethtool_ringparam *rp)
-@@ -128,6 +147,12 @@ static void ieee80211_get_stats(struct net_device *dev,
- 			data[i] = (u8)sinfo.signal_avg;
- 		i++;
- 	} else {
-+		int amt_tx = 0;
-+		int amt_rx = 0;
-+		int amt_sig = 0;
-+		s64 tx_accum = 0;
-+		s64 rx_accum = 0;
-+		s64 sig_accum = 0;
- 		list_for_each_entry(sta, &local->sta_list, list) {
- 			/* Make sure this station belongs to the proper dev */
- 			if (sta->sdata->dev != dev)
-@@ -137,6 +162,30 @@ static void ieee80211_get_stats(struct net_device *dev,
- 			sta_set_sinfo(sta, &sinfo);
- 			i = 0;
- 			ADD_STA_STATS(sta);
-+
-+			i++; /* skip sta state */
-+
-+			if (sinfo.filled & BIT(NL80211_STA_INFO_TX_BITRATE)) {
-+				tx_accum += 100000 *
-+					cfg80211_calculate_bitrate(&sinfo.txrate);
-+				amt_tx++;
-+				data[i] = mac_div(tx_accum, amt_tx);
-+			}
-+			i++;
-+
-+			if (sinfo.filled & BIT(NL80211_STA_INFO_RX_BITRATE)) {
-+				rx_accum += 100000 *
-+					cfg80211_calculate_bitrate(&sinfo.rxrate);
-+				amt_rx++;
-+				data[i] = mac_div(rx_accum, amt_rx);
-+			}
-+			i++;
-+
-+			if (sinfo.filled & BIT(NL80211_STA_INFO_SIGNAL_AVG)) {
-+				sig_accum += sinfo.signal_avg;
-+				amt_sig++;
-+				data[i] = (mac_div(sig_accum, amt_sig) & 0xFF);
-+			}
- 		}
- 	}
- 
--- 
-2.4.11
+
+Of course, it is also worth noting:
+
+Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+
+and the same address appearing twice -- what I would assume to be your
+memcpy address, since that is the last call made on a given source
+line. If the stack is corrupt, then the error could very well
+originate in the driver and not neard.
