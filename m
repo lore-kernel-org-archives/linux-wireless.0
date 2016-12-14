@@ -1,94 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:32868 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750744AbcL1H1Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 02:27:25 -0500
-Message-ID: <1482910035.8602.3.camel@coelho.fi> (sfid-20161228_082749_758370_778F06C8)
-From: Luca Coelho <luca@coelho.fi>
-To: Peter Xu <peterx@redhat.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 28 Dec 2016 09:27:15 +0200
-In-Reply-To: <20161228035959.GB3924@pxdev.xzpeter.org>
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
-         <871swtkvdc.fsf@purkki.adurom.net>
-         <20161228035959.GB3924@pxdev.xzpeter.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Intel Wireless 7260 failed to work
+Received: from nbd.name ([46.4.11.11]:54204 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756511AbcLNTrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 14:47:12 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
+Subject: [PATCH 05/10] mac80211: minstrel: remove cur_prob from debugfs
+Date: Wed, 14 Dec 2016 20:46:58 +0100
+Message-Id: <20161214194703.33429-5-nbd@nbd.name> (sfid-20161214_204724_455890_F41147E4)
+In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
+References: <20161214194703.33429-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-12-28 at 11:59 +0800, Peter Xu wrote:
-> On Tue, Dec 27, 2016 at 09:46:55PM +0200, Kalle Valo wrote:
-> > Peter Xu <peterx@redhat.com> writes:
-> > 
-> > > Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
-> > > with my wireless card, which is:
-> > > 
-> > >   Intel Corporation Wireless 7260 (rev bb)
-> > > 
-> > > Boot message shows that no suitable firmware found:
-> > > 
-> > >     # journalctl -kp3
-> > >     Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
-> > >     Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
-> > >     Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
-> > >     Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
-> > >     Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
-> > >     Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
-> > > 
-> > > Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
-> > > further tests have been done yet.
-> > > 
-> > > Is this a known issue? Please let me know if anyone wants more info or
-> > > logs, since this error triggers easily (everytime I boot).
-> > 
-> > The error message isn't really telling much to the user (hint hint) but
-> > I suspect this is by design:
-> > 
-> > "iwlwifi: remove support for fw older than -17 and -22
+This field is redundant, because it is simply last success divided by
+last attempt count. Removing it from the rate stats struct saves about
+1.2 KiB per HT station.
 
-Right, we only maintain support for a certain number of firmware
-versions.  The FW APIs change with time and we don't want to keep all
-legacy code supporting old firmwares in the driver forever.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/rc80211_minstrel.c            | 10 ++++++----
+ net/mac80211/rc80211_minstrel.h            |  2 --
+ net/mac80211/rc80211_minstrel_debugfs.c    | 16 ++++++----------
+ net/mac80211/rc80211_minstrel_ht_debugfs.c | 16 ++++++----------
+ 4 files changed, 18 insertions(+), 26 deletions(-)
 
-I agree that "no suitable firmware found!" is a bit scarce.  I'll see
-if we can improve that with something: "no suitable firmware found! You
-need iwlwifi-7260-17.ucode (<link to git>)".
-
-
-> > FW versions older than -17 for 3160 and 7260 and older than -22 for
-> > newer NICs are not supported anymore.  Don't load these versions
-> > and remove code that handles them."
-> > 
-> > https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4b87e5af638b6056bd6c20b0954d09a5a58633be
-> > 
-> > Adding luca.
-> 
-> Thanks for the triage.
-> 
-> Larry's link for -17 firmware solved my issue. Though I still don't
-> know whether it is too aggresive if we just remove the support for -16
-> (which is the one I was using with the old 4.6 kernel, btw I am using
-> Fedora 24, which is relatively new as well).
-
-I don't think we are very aggressive, we have been supporting -17 since
-v4.3:
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5865f3658ba37c54e346b0fdee08a1c7a152681b
-
-And we have published the firmware about half a year ago:
-
-http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/iwlwifi-7260-17.ucode?id=f2cf4d67e8eced29c8a473d3a27057aa2df57c42
-
-I understand your concern, but if you want to be on the bleeding-edge
-kernel, you should be on the bleeding-edge linux-firmware as well. ;)
-
-But as I said, I'll try to improve the error message, as that should
-make it easier to figure out.
-
---
-Cheers,
-Luca.
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 14c5ba3..a284ea0 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -159,21 +159,23 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
+ void
+ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
+ {
++	unsigned int cur_prob;
++
+ 	if (unlikely(mrs->attempts > 0)) {
+ 		mrs->sample_skipped = 0;
+-		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
++		cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
+ 		if (unlikely(!mrs->att_hist)) {
+-			mrs->prob_ewma = mrs->cur_prob;
++			mrs->prob_ewma = cur_prob;
+ 		} else {
+ 			/* update exponential weighted moving variance */
+ 			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
+-							 mrs->cur_prob,
++							 cur_prob,
+ 							 mrs->prob_ewma,
+ 							 EWMA_LEVEL);
+ 
+ 			/*update exponential weighted moving avarage */
+ 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
+-						       mrs->cur_prob,
++						       cur_prob,
+ 						       EWMA_LEVEL);
+ 		}
+ 		mrs->att_hist += mrs->attempts;
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 209961c..94b89b1 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -62,10 +62,8 @@ struct minstrel_rate_stats {
+ 	u32 att_hist, succ_hist;
+ 
+ 	/* statistis of packet delivery probability
+-	 *  cur_prob  - current prob within last update intervall
+ 	 *  prob_ewma - exponential weighted moving average of prob
+ 	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
+-	unsigned int cur_prob;
+ 	unsigned int prob_ewma;
+ 	u16 prob_ewmsd;
+ 
+diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
+index 820b0ab..ca0bafd 100644
+--- a/net/mac80211/rc80211_minstrel_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_debugfs.c
+@@ -75,7 +75,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ {
+ 	struct minstrel_sta_info *mi = inode->i_private;
+ 	struct minstrel_debugfs_info *ms;
+-	unsigned int i, tp_max, tp_avg, prob, eprob;
++	unsigned int i, tp_max, tp_avg, eprob;
+ 	char *p;
+ 
+ 	ms = kmalloc(2048, GFP_KERNEL);
+@@ -86,9 +86,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 	p = ms->buf;
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p,
+-		     "best   __________rate_________    ________statistics________    ________last_______    ______sum-of________\n");
++		     "best   __________rate_________    ________statistics________    ____last_____    ______sum-of________\n");
+ 	p += sprintf(p,
+-		     "rate  [name idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
++		     "rate  [name idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [retry|suc|att]  [#success | #attempts]\n");
+ 
+ 	for (i = 0; i < mi->n_rates; i++) {
+ 		struct minstrel_rate *mr = &mi->r[i];
+@@ -107,17 +107,15 @@ minstrel_stats_open(struct inode *inode, struct file *file)
+ 
+ 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
+ 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
+-		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+ 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
+-				"     %3u.%1u %3u   %3u %-3u   "
++				"     %3u   %3u %-3u   "
+ 				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+ 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+-				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+@@ -148,7 +146,7 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ {
+ 	struct minstrel_sta_info *mi = inode->i_private;
+ 	struct minstrel_debugfs_info *ms;
+-	unsigned int i, tp_max, tp_avg, prob, eprob;
++	unsigned int i, tp_max, tp_avg, eprob;
+ 	char *p;
+ 
+ 	ms = kmalloc(2048, GFP_KERNEL);
+@@ -175,16 +173,14 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
+ 
+ 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
+ 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
+-		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
+ 				"%llu,%llu,%d,%d\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+ 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+-				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+index 1942d4b..0cecd23 100644
+--- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
++++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
+@@ -19,7 +19,7 @@ static char *
+ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ {
+ 	const struct mcs_group *mg;
+-	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
++	unsigned int j, tp_max, tp_avg, eprob, tx_time;
+ 	char htmode = '2';
+ 	char gimode = 'L';
+ 	u32 gflags;
+@@ -83,17 +83,15 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 
+ 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
+ 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
+-		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+ 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
+-				"     %3u.%1u %3u   %3u %-3u   "
++				"     %3u   %3u %-3u   "
+ 				"%9llu   %-9llu\n",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+ 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+-				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+@@ -130,9 +128,9 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
+ 
+ 	p += sprintf(p, "\n");
+ 	p += sprintf(p,
+-		     "              best   ____________rate__________    ________statistics________    ________last_______    ______sum-of________\n");
++		     "              best   ____________rate__________    ________statistics________    _____last____    ______sum-of________\n");
+ 	p += sprintf(p,
+-		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
++		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob) sd(prob)]  [retry|suc|att]  [#success | #attempts]\n");
+ 
+ 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
+ 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
+@@ -165,7 +163,7 @@ static char *
+ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ {
+ 	const struct mcs_group *mg;
+-	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
++	unsigned int j, tp_max, tp_avg, eprob, tx_time;
+ 	char htmode = '2';
+ 	char gimode = 'L';
+ 	u32 gflags;
+@@ -226,16 +224,14 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
+ 
+ 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
+ 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
+-		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
+ 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
+ 
+-		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
++		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
+ 				"%u,%llu,%llu,",
+ 				tp_max / 10, tp_max % 10,
+ 				tp_avg / 10, tp_avg % 10,
+ 				eprob / 10, eprob % 10,
+ 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
+-				prob / 10, prob % 10,
+ 				mrs->retry_count,
+ 				mrs->last_success,
+ 				mrs->last_attempts,
+-- 
+2.10.1
