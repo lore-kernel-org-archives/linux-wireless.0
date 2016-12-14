@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47368 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:54224 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932193AbcLMIlc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 03:41:32 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+        id S1756527AbcLNTrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Dec 2016 14:47:17 -0500
+From: Felix Fietkau <nbd@nbd.name>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: don't call drv_set_default_unicast_key() for VLANs
-Date: Tue, 13 Dec 2016 09:41:29 +0100
-Message-Id: <20161213084129.8268-1-johannes@sipsolutions.net> (sfid-20161213_094135_577435_195D0687)
+Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
+Subject: [PATCH 06/10] mac80211: minstrel: reduce MINSTREL_SCALE
+Date: Wed, 14 Dec 2016 20:46:59 +0100
+Message-Id: <20161214194703.33429-6-nbd@nbd.name> (sfid-20161214_204742_851193_0D79CBC1)
+In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
+References: <20161214194703.33429-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The loss of a bit of extra precision does not hurt the calculation, 12
+bits is still enough to calculate probabilities well. Reducing the scale
+makes it easier to avoid overflows
 
-Since drivers know nothing about AP_VLAN interfaces, trying to
-call drv_set_default_unicast_key() just results in a warning
-and no call to the driver. Avoid the warning by not calling the
-driver for this on AP_VLAN interfaces.
-
-This means that drivers that somehow need this call for AP mode
-will fail to work properly in the presence of VLAN interfaces,
-but the current drivers don't seem to use it, and mac80211 will
-select and indicate the key - so drivers should be OK now.
-
-Reported-by: Jouni Malinen <j@w1.fi>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
- net/mac80211/key.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ net/mac80211/rc80211_minstrel.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/key.c b/net/mac80211/key.c
-index edd6f2945f69..a98fc2b5e0dc 100644
---- a/net/mac80211/key.c
-+++ b/net/mac80211/key.c
-@@ -265,7 +265,8 @@ static void __ieee80211_set_default_key(struct ieee80211_sub_if_data *sdata,
- 	if (uni) {
- 		rcu_assign_pointer(sdata->default_unicast_key, key);
- 		ieee80211_check_fast_xmit_iface(sdata);
--		drv_set_default_unicast_key(sdata->local, sdata, idx);
-+		if (sdata->vif.type != NL80211_IFTYPE_AP_VLAN)
-+			drv_set_default_unicast_key(sdata->local, sdata, idx);
- 	}
+diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
+index 94b89b1..03716fd 100644
+--- a/net/mac80211/rc80211_minstrel.h
++++ b/net/mac80211/rc80211_minstrel.h
+@@ -14,7 +14,7 @@
+ #define SAMPLE_COLUMNS	10	/* number of columns in sample table */
  
- 	if (multi)
+ /* scaled fraction values */
+-#define MINSTREL_SCALE  16
++#define MINSTREL_SCALE  12
+ #define MINSTREL_FRAC(val, div) (((val) << MINSTREL_SCALE) / div)
+ #define MINSTREL_TRUNC(val) ((val) >> MINSTREL_SCALE)
+ 
 -- 
-2.9.3
+2.10.1
