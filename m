@@ -1,578 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33577 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751839AbcLKFph (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33224 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751350AbcLNGqw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 00:45:37 -0500
-Received: by mail-oi0-f68.google.com with SMTP id f201so7294037oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:36 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 02/14] rtlwifi_new: Remove RT_TRACE messages that use DBG_EMERG
-Date: Sat, 10 Dec 2016 23:44:59 -0600
-Message-Id: <20161211054523.7119-3-Larry.Finger@lwfinger.net> (sfid-20161211_070933_073841_B309E84F)
-In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
-References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+        Wed, 14 Dec 2016 01:46:52 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAFBinCC6JWBhZwma=66fBi3_to2SaHOMNDQS23jHNhcc+RUcYQ@mail.gmail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20161002222913.12223-1-martin.blumenstingl@googlemail.com>
+ <87insxg0yc.fsf@kamboji.qca.qualcomm.com> <871sxza9al.fsf@kamboji.qca.qualcomm.com>
+ <CAFBinCC6JWBhZwma=66fBi3_to2SaHOMNDQS23jHNhcc+RUcYQ@mail.gmail.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Tue, 13 Dec 2016 22:45:51 -0800
+Message-ID: <CAJ-Vmo=3zox7QkFUA-3yxtvSTzPT4GiFkoOUU3cPTXSN4xV8vQ@mail.gmail.com> (sfid-20161214_074658_511784_6446BEC8)
+Subject: Re: [PATCH v2 0/7] ath9k: EEPROM swapping improvements
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "chunkeey@googlemail.com" <chunkeey@googlemail.com>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These messages are always logged and reprresent error conditions, thus
-we can use pr_err().
+hi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c  | 15 ++++-----
- drivers/net/wireless/realtek/rtlwifi/cam.c   | 14 +++------
- drivers/net/wireless/realtek/rtlwifi/core.c  | 21 +++++--------
- drivers/net/wireless/realtek/rtlwifi/debug.c |  9 ++----
- drivers/net/wireless/realtek/rtlwifi/debug.h |  2 +-
- drivers/net/wireless/realtek/rtlwifi/efuse.c |  3 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c   | 36 ++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/ps.c    |  3 +-
- drivers/net/wireless/realtek/rtlwifi/rc.c    |  3 +-
- drivers/net/wireless/realtek/rtlwifi/usb.c   | 46 +++++++++-------------------
- 10 files changed, 53 insertions(+), 99 deletions(-)
+On 12 December 2016 at 12:05, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index 4ac928b..e7346cd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -207,8 +207,7 @@ static void _rtl_init_hw_ht_capab(struct ieee80211_hw *hw,
- 	 *highest supported RX rate
- 	 */
- 	if (rtlpriv->dm.supp_phymode_switch) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "Support phy mode switch\n");
-+		pr_err("rtlwifi: Support phy mode switch\n");
- 
- 		ht_cap->mcs.rx_mask[0] = 0xFF;
- 		ht_cap->mcs.rx_mask[1] = 0xFF;
-@@ -389,8 +388,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
- 			/* <4> set mac->sband to wiphy->sband */
- 			hw->wiphy->bands[NL80211_BAND_5GHZ] = sband;
- 		} else {
--			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Err BAND %d\n",
--				 rtlhal->current_bandtype);
-+			pr_err("rtlwifi: Err BAND %d\n",
-+			       rtlhal->current_bandtype);
- 		}
- 	}
- 	/* <5> set hw caps */
-@@ -544,7 +543,7 @@ int rtl_init_core(struct ieee80211_hw *hw)
- 	 * mac80211 hw  in _rtl_init_mac80211.
- 	 */
- 	if (rtl_regd_init(hw, rtl_reg_notifier)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "REGD init failed\n");
-+		pr_err("rtlwifi: REGD init failed\n");
- 		return 1;
- 	}
- 
-@@ -1694,8 +1693,7 @@ void rtl_watchdog_wq_callback(void *data)
- 			 * we should reconnect this AP
- 			 */
- 			if (rtlpriv->link_info.roam_times >= 5) {
--				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "AP off, try to reconnect now\n");
-+				pr_err("rtlwifi: AP off, try to reconnect now\n");
- 				rtlpriv->link_info.roam_times = 0;
- 				ieee80211_connection_loss(
- 					rtlpriv->mac80211.vif);
-@@ -1886,8 +1884,7 @@ void rtl_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
- 						      (u8 *)&iotype);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unknown Scan Backup operation.\n");
-+			pr_err("rtlwifi: Unknown Scan Backup operation.\n");
- 			break;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
-index 8fe8b4c..ed67694 100644
---- a/drivers/net/wireless/realtek/rtlwifi/cam.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/cam.c
-@@ -285,8 +285,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	u8 i, *addr;
- 
- 	if (NULL == sta_addr) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is NULL.\n");
-+		pr_err("rtlwifi: sta_addr is NULL.\n");
- 		return TOTAL_CAM_ENTRY;
- 	}
- 	/* Does STA already exist? */
-@@ -298,9 +297,8 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	/* Get a free CAM entry. */
- 	for (entry_idx = 4; entry_idx < TOTAL_CAM_ENTRY; entry_idx++) {
- 		if ((bitmap & BIT(0)) == 0) {
--			RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--				 "-----hwsec_cam_bitmap: 0x%x entry_idx=%d\n",
--				 rtlpriv->sec.hwsec_cam_bitmap, entry_idx);
-+			pr_err("rtlwifi: -----hwsec_cam_bitmap: 0x%x entry_idx=%d\n",
-+			       rtlpriv->sec.hwsec_cam_bitmap, entry_idx);
- 			rtlpriv->sec.hwsec_cam_bitmap |= BIT(0) << entry_idx;
- 			memcpy(rtlpriv->sec.hwsec_cam_sta_addr[entry_idx],
- 			       sta_addr, ETH_ALEN);
-@@ -319,14 +317,12 @@ void rtl_cam_del_entry(struct ieee80211_hw *hw, u8 *sta_addr)
- 	u8 i, *addr;
- 
- 	if (NULL == sta_addr) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is NULL.\n");
-+		pr_err("rtlwifi: sta_addr is NULL.\n");
- 		return;
- 	}
- 
- 	if (is_zero_ether_addr(sta_addr)) {
--		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
--			 "sta_addr is %pM\n", sta_addr);
-+		pr_err("rtlwifi: sta_addr is %pM\n", sta_addr);
- 		return;
- 	}
- 	/* Does STA already exist? */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 7ae774d..36ee812 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -117,8 +117,7 @@ static void rtl_fw_do_work(const struct firmware *firmware, void *context,
- 	}
- found_alt:
- 	if (firmware->size > rtlpriv->max_fw_size) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Firmware is too big!\n");
-+		pr_err("rtlwifi: Firmware is too big!\n");
- 		release_firmware(firmware);
- 		return;
- 	}
-@@ -303,8 +302,8 @@ static int rtl_op_add_interface(struct ieee80211_hw *hw,
- 				(u8 *)(&mac->basic_rates));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "operation mode %d is not support!\n", vif->type);
-+		pr_err("rtlwifi: operation mode %d is not support!\n",
-+		       vif->type);
- 		err = -EOPNOTSUPP;
- 		goto out;
- 	}
-@@ -764,9 +763,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 			default:
- 					mac->bw_40 = false;
- 					mac->bw_80 = false;
--					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case %#x not processed\n",
--						 channel_type);
-+					pr_err("rtlwifi: switch case %#x not processed\n",
-+					       channel_type);
- 					break;
- 			}
- 		}
-@@ -1399,8 +1397,7 @@ static int rtl_op_ampdu_action(struct ieee80211_hw *hw,
- 			 "IEEE80211_AMPDU_RX_STOP:TID:%d\n", tid);
- 		return rtl_rx_agg_stop(hw, sta, tid);
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "IEEE80211_AMPDU_ERR!!!!:\n");
-+		pr_err("rtlwifi: IEEE80211_AMPDU_ERR!!!!:\n");
- 		return -EOPNOTSUPP;
- 	}
- 	return 0;
-@@ -1536,8 +1533,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		err = -EOPNOTSUPP;
- 		goto out_unlock;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "alg_err:%x!!!!:\n", key->cipher);
-+		pr_err("rtlwifi: alg_err:%x!!!!:\n", key->cipher);
- 		goto out_unlock;
- 	}
- 	if (key_type == WEP40_ENCRYPTION ||
-@@ -1662,8 +1658,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		rtl_cam_delete_one_entry(hw, mac_addr, key_idx);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "cmd_err:%x!!!!:\n", cmd);
-+		pr_err("rtlwifi: cmd_err:%x!!!!:\n", cmd);
- 	}
- out_unlock:
- 	mutex_unlock(&rtlpriv->locks.conf_mutex);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-index 33905bb..0b3e516 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-@@ -41,16 +41,13 @@ void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
- 	    COMP_EASY_CONCURRENT | COMP_EFUSE | COMP_QOS | COMP_MAC80211 |
- 	    COMP_REGD | COMP_CHAN | COMP_BT_COEXIST;
- 
--
- 	for (i = 0; i < DBGP_TYPE_MAX; i++)
- 		rtlpriv->dbg.dbgp_type[i] = 0;
--
--	/*Init Debug flag enable condition */
--}
-+};
- EXPORT_SYMBOL_GPL(rtl_dbgp_flag_init);
- 
- #ifdef CONFIG_RTLWIFI_DEBUG
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-+void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *modname, const char *fmt, ...)
- {
- 	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
-@@ -70,6 +67,6 @@ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
- 
- 		va_end(args);
- 	}
--}
-+};
- EXPORT_SYMBOL_GPL(_rtl_dbg_trace);
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-index 6f2e2b9..51794bc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -169,7 +169,7 @@ enum dbgp_flag_e {
- struct rtl_priv;
- 
- __printf(5, 6)
--void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-+void _rtl_dbg_trace(struct rtl_priv *rtlpriv, u64 comp, int level,
- 		    const char *modname, const char *fmt, ...);
- 
- #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
-diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.c b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-index 7becfef..afc7550 100644
---- a/drivers/net/wireless/realtek/rtlwifi/efuse.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/efuse.c
-@@ -1259,8 +1259,7 @@ int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
- 		break;
- 
- 	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL8XXX did not boot from eeprom, check it !!\n");
-+		pr_err("RTL8XXX did not boot from eeprom, check it !!\n");
- 		return 1;
- 
- 	default:
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index bb767186..7efe683 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -174,9 +174,8 @@ static void _rtl_pci_update_default_setting(struct ieee80211_hw *hw)
- 		}
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n",
--			 rtlpci->const_support_pciaspm);
-+		pr_err("rtlwifi: switch case %#x not processed\n",
-+		       rtlpci->const_support_pciaspm);
- 		break;
- 	}
- 
-@@ -1247,9 +1246,8 @@ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
- 					 &buffer_desc_dma);
- 
- 		if (!buffer_desc || (unsigned long)buffer_desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate TX ring (prio = %d)\n",
--				 prio);
-+			pr_err("rtlwifi: Cannot allocate TX ring (prio = %d)\n",
-+			       prio);
- 			return -ENOMEM;
- 		}
- 
-@@ -1266,8 +1264,7 @@ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
- 				     sizeof(*desc) * entries, &desc_dma);
- 
- 	if (!desc || (unsigned long)desc & 0xFF) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Cannot allocate TX ring (prio = %d)\n", prio);
-+		pr_err("rtlwifi: Cannot allocate TX ring (prio = %d)\n", prio);
- 		return -ENOMEM;
- 	}
- 
-@@ -1314,8 +1311,7 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw, int rxring_idx)
- 					  &rtlpci->rx_ring[rxring_idx].dma);
- 		if (!rtlpci->rx_ring[rxring_idx].buffer_desc ||
- 		    (ulong)rtlpci->rx_ring[rxring_idx].buffer_desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate RX ring\n");
-+			pr_err("rtlwifi: Cannot allocate RX ring\n");
- 			return -ENOMEM;
- 		}
- 
-@@ -1338,8 +1334,7 @@ static int _rtl_pci_init_rx_ring(struct ieee80211_hw *hw, int rxring_idx)
- 					  &rtlpci->rx_ring[rxring_idx].dma);
- 		if (!rtlpci->rx_ring[rxring_idx].desc ||
- 		    (unsigned long)rtlpci->rx_ring[rxring_idx].desc & 0xFF) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Cannot allocate RX ring\n");
-+			pr_err("rtlwifi: Cannot allocate RX ring\n");
- 			return -ENOMEM;
- 		}
- 
-@@ -1799,15 +1794,13 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
- 
- static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err;
- 
- 	_rtl_pci_init_struct(hw, pdev);
- 
- 	err = _rtl_pci_init_trx_ring(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "tx ring initialization failed\n");
-+		pr_err("rtlwifi: tx ring initialization failed\n");
- 		return err;
- 	}
- 
-@@ -2275,7 +2268,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	rtlpriv->cfg->ops->read_eeprom_info(hw);
- 
- 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		pr_err("rtlwifi: Can't init_sw_vars\n");
- 		err = -ENODEV;
- 		goto fail3;
- 	}
-@@ -2287,22 +2280,20 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate sw for mac80211\n");
-+		pr_err("rtlwifi: Can't allocate sw for mac80211\n");
- 		goto fail3;
- 	}
- 
- 	/* Init PCI sw */
- 	err = rtl_pci_init(hw, pdev);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init PCI\n");
-+		pr_err("rtlwifi: Failed to init PCI\n");
- 		goto fail3;
- 	}
- 
- 	err = ieee80211_register_hw(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw.\n");
-+		pr_err("rtlwifi: Can't register mac80211 hw.\n");
- 		err = -ENODEV;
- 		goto fail3;
- 	}
-@@ -2310,8 +2301,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 
- 	err = sysfs_create_group(&pdev->dev.kobj, &rtl_attribute_group);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "failed to create sysfs device attributes\n");
-+		pr_err("rtlwifi: failed to create sysfs device attributes\n");
- 		goto fail3;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index d0ffc4d..ba5c23b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -150,8 +150,7 @@ static bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 		break;
- 
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", state_toset);
-+		pr_err("rtlwifi: switch case %#x not processed\n", state_toset);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rc.c b/drivers/net/wireless/realtek/rtlwifi/rc.c
-index ce8621a..c2e3d44 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rc.c
-@@ -267,8 +267,7 @@ static void *rtl_rate_alloc_sta(void *ppriv,
- 
- 	rate_priv = kzalloc(sizeof(struct rtl_rate_priv), gfp);
- 	if (!rate_priv) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Unable to allocate private rc structure\n");
-+		pr_err("rtlwifi: Unable to allocate private rc structure\n");
- 		return NULL;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 1558f54..df46cfd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -421,14 +421,12 @@ static void _rtl_rx_completed(struct urb *urb);
- static int _rtl_prep_rx_urb(struct ieee80211_hw *hw, struct rtl_usb *rtlusb,
- 			      struct urb *urb, gfp_t gfp_mask)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	void *buf;
- 
- 	buf = usb_alloc_coherent(rtlusb->udev, rtlusb->rx_max_size, gfp_mask,
- 				 &urb->transfer_dma);
- 	if (!buf) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Failed to usb_alloc_coherent!!\n");
-+		pr_err("rtlwifi: Failed to usb_alloc_coherent!!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -613,8 +611,6 @@ static unsigned int _rtl_rx_get_padding(struct ieee80211_hdr *hdr,
- static void _rtl_rx_completed(struct urb *_urb)
- {
- 	struct rtl_usb *rtlusb = (struct rtl_usb *)_urb->context;
--	struct ieee80211_hw *hw = usb_get_intfdata(rtlusb->intf);
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	int err = 0;
- 
- 	if (unlikely(IS_USB_STOP(rtlusb)))
-@@ -628,17 +624,15 @@ static void _rtl_rx_completed(struct urb *_urb)
- 		struct ieee80211_hdr *hdr;
- 
- 		if (size < RTL_RX_DESC_SIZE + sizeof(struct ieee80211_hdr)) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Too short packet from bulk IN! (len: %d)\n",
--				 size);
-+			pr_err("rtlwifi: Too short packet from bulk IN! (len: %d)\n",
-+			       size);
- 			goto resubmit;
- 		}
- 
- 		qlen = skb_queue_len(&rtlusb->rx_queue);
- 		if (qlen >= __RX_SKB_MAX_QUEUED) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Pending RX skbuff queue full! (qlen: %d)\n",
--				 qlen);
-+			pr_err("rtlwifi: Pending RX skbuff queue full! (qlen: %d)\n",
-+			       qlen);
- 			goto resubmit;
- 		}
- 
-@@ -647,8 +641,7 @@ static void _rtl_rx_completed(struct urb *_urb)
- 
- 		skb = dev_alloc_skb(size + __RADIO_TAP_SIZE_RSV + padding);
- 		if (!skb) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Can't allocate skb for bulk IN!\n");
-+			pr_err("rtlwifi: Can't allocate skb for bulk IN!\n");
- 			goto resubmit;
- 		}
- 
-@@ -725,7 +718,6 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 	struct urb *urb;
- 	int err;
- 	int i;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
- 	WARN_ON(0 == rtlusb->rx_urb_num);
-@@ -740,8 +732,7 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 
- 		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
- 		if (err < 0) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Failed to prep_rx_urb!!\n");
-+			pr_err("rtlwifi: Failed to prep_rx_urb!!\n");
- 			usb_free_urb(urb);
- 			goto err_out;
- 		}
-@@ -839,7 +830,6 @@ static void rtl_usb_stop(struct ieee80211_hw *hw)
- static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- {
- 	int err;
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 
- 	usb_anchor_urb(_urb, &rtlusb->tx_submitted);
-@@ -847,8 +837,7 @@ static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- 	if (err < 0) {
- 		struct sk_buff *skb;
- 
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Failed to submit urb\n");
-+		pr_err("rtlwifi: Failed to submit urb\n");
- 		usb_unanchor_urb(_urb);
- 		skb = (struct sk_buff *)_urb->context;
- 		kfree_skb(skb);
-@@ -859,7 +848,6 @@ static void _rtl_submit_tx_urb(struct ieee80211_hw *hw, struct urb *_urb)
- static int _usb_tx_post(struct ieee80211_hw *hw, struct urb *urb,
- 			struct sk_buff *skb)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 	struct ieee80211_tx_info *txinfo;
- 
-@@ -870,8 +858,7 @@ static int _usb_tx_post(struct ieee80211_hw *hw, struct urb *urb,
- 	txinfo->flags |= IEEE80211_TX_STAT_ACK;
- 
- 	if (urb->status) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Urb has error status 0x%X\n", urb->status);
-+		pr_err("rtlwifi: Urb has error status 0x%X\n", urb->status);
- 		goto out;
- 	}
- 	/*  TODO:	statistics */
-@@ -919,7 +906,6 @@ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
- static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 		       enum rtl_txq qnum)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 	u32 ep_num;
- 	struct urb *_urb = NULL;
-@@ -927,8 +913,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 
- 	WARN_ON(NULL == rtlusb->usb_tx_aggregate_hdl);
- 	if (unlikely(IS_USB_STOP(rtlusb))) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "USB device is stopping...\n");
-+		pr_err("rtlwifi: USB device is stopping...\n");
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -936,8 +921,7 @@ static void _rtl_usb_transmit(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	_skb = skb;
- 	_urb = _rtl_usb_tx_urb_setup(hw, _skb, ep_num);
- 	if (unlikely(!_urb)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate urb. Drop skb!\n");
-+		pr_err("rtlwifi: Can't allocate urb. Drop skb!\n");
- 		kfree_skb(skb);
- 		return;
- 	}
-@@ -1102,20 +1086,18 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	/* Init mac80211 sw */
- 	err = rtl_init_core(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't allocate sw for mac80211\n");
-+		pr_err("rtlwifi: Can't allocate sw for mac80211\n");
- 		goto error_out;
- 	}
- 	if (rtlpriv->cfg->ops->init_sw_vars(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Can't init_sw_vars\n");
-+		pr_err("rtlwifi: Can't init_sw_vars\n");
- 		goto error_out;
- 	}
- 	rtlpriv->cfg->ops->init_sw_leds(hw);
- 
- 	err = ieee80211_register_hw(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Can't register mac80211 hw.\n");
-+		pr_err("rtlwifi: Can't register mac80211 hw.\n");
- 		err = -ENODEV;
- 		goto error_out;
- 	}
--- 
-2.10.2
+>
+> It seems that there are a few devices out there where the whole EEPROM
+> is swab16'ed which switches the position of the 1-byte fields
+> opCapFlags and eepMisc.
+> those still work fine with the new code, however I had a second patch
+> in LEDE [0] which results in ath9k_platform_data.endian_check NOT
+> being set anymore.
+> that endian_check flag was used before to swab16 the whole EEPROM, to
+> correct the position of the 1-byte fields again.
+> Currently we are fixing this in the firmware hotplug script: [1]
+> This is definitely not a blocker for this series though (if we want to
+> have a devicetree replacement for "ath9k_platform_data.endian_check"
+> then I'd work on that within a separate series, but I somewhat
+> consider these EEPROMs as "broken" so fixing them in
+> userspace/firmware hotplug script is fine for me)
+
+As a reference - the reference driver has been doign this for a while.
+It attempts to detect the endianness by looking at the 0xa55a
+signature endian and figuring out which endian the actual contents are
+in.
+
+So just FYI yeah, this is a "thing" for reasons I don't quite know.
+
+
+
+-adrian
+
+>
+>
+> Regards,
+> Martin
+>
+>
+> [0] https://git.lede-project.org/?p=source.git;a=commitdiff;h=a20616863d32d91163043b6657a63c836bd9c5ba
+> [1] https://git.lede-project.org/?p=source.git;a=commitdiff;h=afa37092663d00aa0abf8c61943d9a1b5558b144
