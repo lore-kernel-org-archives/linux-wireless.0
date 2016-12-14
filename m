@@ -1,126 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:33466 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753533AbcLXRBs (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36681 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755002AbcLNONH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 12:01:48 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH 5/6] wl1251: Parse and use MAC address from supplied NVS data
-Date: Sat, 24 Dec 2016 17:53:00 +0100
-Message-Id: <1482598381-16513-6-git-send-email-pali.rohar@gmail.com> (sfid-20161224_180213_166645_084760F0)
-In-Reply-To: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        Wed, 14 Dec 2016 09:13:07 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 3/5] mwifiex: sdio card reset enhancement
+Date: Wed, 14 Dec 2016 19:40:49 +0530
+Message-ID: <1481724651-30397-3-git-send-email-akarwar@marvell.com> (sfid-20161214_151312_364096_BCDB26AD)
+In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch implements parsing MAC address from NVS data which are sent to
-wl1251 chip. Calibration NVS data could contain valid MAC address and it
-will be used instead randomly generated.
+From: Xinming Hu <huxm@marvell.com>
 
-This patch also move code for requesting NVS data from userspace to driver
-initialization code to make sure that NVS data will be there at time when
-permanent MAC address is needed.
+Commit b4336a282db8 ("mwifiex: sdio: reset adapter using mmc_hw_reset")
+introduces a simple sdio card reset solution based on card remove and
+re-probe. This solution has proved to be vulnerable, as card and
+adapter structures are not protected, concurrent access will result in
+kernel panic issues.
 
-Calibration NVS data for wl1251 are model specific. Every one device with
-wl1251 chip should have been calibrated in factory and needs to provide own
-calibration data.
+Let's reuse PCIe FLR's functions for SDIO reset to avoid freeing and
+reallocating adapter and card structures.
 
-Default example wl1251-nvs.bin data found in linux-firmware repository and
-contains MAC address 00:00:20:07:03:09. So this MAC address is marked as
-invalid as it is not real device specific address, just example one.
-
-Format of calibration NVS data can be found at:
-http://notaz.gp2x.de/misc/pnd/wl1251/nvs_map.txt
-
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/ti/wl1251/main.c |   39 ++++++++++++++++++++++++++-------
- 1 file changed, 31 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 73 +++++++++++++----------------
+ drivers/net/wireless/marvell/mwifiex/sdio.h |  3 --
+ 2 files changed, 33 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index c3fa0b6..1454ba2 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -205,13 +205,6 @@ static int wl1251_chip_wakeup(struct wl1251 *wl)
- 			goto out;
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 44eb65a..b3aca10 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -104,7 +104,6 @@ static int mwifiex_sdio_probe_of(struct device *dev)
+ 	init_completion(&card->fw_done);
  
--	if (wl->nvs == NULL && !wl->use_eeprom) {
--		/* No NVS from netlink, try to get it from the filesystem */
--		ret = wl1251_fetch_nvs(wl);
--		if (ret < 0)
--			goto out;
--	}
+ 	card->func = func;
+-	card->device_id = id;
+ 
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+ 
+@@ -2196,33 +2195,13 @@ static void mwifiex_cleanup_sdio(struct mwifiex_adapter *adapter)
+ 		    port, card->mp_data_port_mask);
+ }
+ 
+-static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
++static struct mwifiex_adapter *save_adapter;
++static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
+ {
++	struct sdio_mmc_card *card = adapter->card;
+ 	struct sdio_func *func = card->func;
+-	const struct sdio_device_id *device_id = card->device_id;
 -
- out:
- 	return ret;
- }
-@@ -1538,6 +1531,30 @@ static int wl1251_read_eeprom_mac(struct wl1251 *wl)
- 	return 0;
+-	/* TODO mmc_hw_reset does not require destroying and re-probing the
+-	 * whole adapter. Hence there was no need to for this rube-goldberg
+-	 * design to reload the fw from an external workqueue. If we don't
+-	 * destroy the adapter we could reload the fw from
+-	 * mwifiex_main_work_queue directly.
+-	 * The real difficulty with fw reset is to restore all the user
+-	 * settings applied through ioctl. By destroying and recreating the
+-	 * adapter, we take the easy way out, since we rely on user space to
+-	 * restore them. We assume that user space will treat the new
+-	 * incarnation of the adapter(interfaces) as if they had been just
+-	 * discovered and initializes them from scratch.
+-	 */
+ 
+-	__mwifiex_sdio_remove(func);
+-
+-	/*
+-	 * Normally, we would let the driver core take care of releasing these.
+-	 * But we're not letting the driver core handle this one. See above
+-	 * TODO.
+-	 */
+-	sdio_set_drvdata(func, NULL);
+-	devm_kfree(&func->dev, card);
++	mwifiex_shutdown_sw(adapter);
+ 
+ 	/* power cycle the adapter */
+ 	sdio_claim_host(func);
+@@ -2235,21 +2214,7 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
+ 	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
+ 	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &iface_work_flags);
+ 
+-	mwifiex_sdio_probe(func, device_id);
+-}
+-
+-static struct mwifiex_adapter *save_adapter;
+-static void mwifiex_sdio_card_reset_work(struct mwifiex_adapter *adapter)
+-{
+-	struct sdio_mmc_card *card = adapter->card;
+-
+-	/* TODO card pointer is unprotected. If the adapter is removed
+-	 * physically, sdio core might trigger mwifiex_sdio_remove, before this
+-	 * workqueue is run, which will destroy the adapter struct. When this
+-	 * workqueue eventually exceutes it will dereference an invalid adapter
+-	 * pointer
+-	 */
+-	mwifiex_recreate_adapter(card);
++	mwifiex_reinit_sw(adapter);
  }
  
-+static int wl1251_read_nvs_mac(struct wl1251 *wl)
+ /* This function read/write firmware */
+@@ -2677,6 +2642,33 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ 	return p - drv_buf;
+ }
+ 
++/* sdio device/function initialization, code is extracted
++ * from init_if handler and register_dev handler.
++ */
++static void mwifiex_sdio_up_dev(struct mwifiex_adapter *adapter)
 +{
-+	u8 mac[ETH_ALEN];
-+	int i;
++	struct sdio_mmc_card *card = adapter->card;
++	u8 sdio_ireg;
 +
-+	if (wl->nvs_len < 0x24)
-+		return -ENODATA;
++	sdio_claim_host(card->func);
++	sdio_enable_func(card->func);
++	sdio_set_block_size(card->func, MWIFIEX_SDIO_BLOCK_SIZE);
++	sdio_release_host(card->func);
 +
-+	/* length is 2 and data address is 0x546c (mask is 0xfffe) */
-+	if (wl->nvs[0x19] != 2 || wl->nvs[0x1a] != 0x6d || wl->nvs[0x1b] != 0x54)
-+		return -EINVAL;
++	/* tx_buf_size might be changed to 3584 by firmware during
++	 * data transfer, we will reset to default size.
++	 */
++	adapter->tx_buf_size = card->tx_buf_size;
 +
-+	/* MAC is stored in reverse order */
-+	for (i = 0; i < ETH_ALEN; i++)
-+		mac[i] = wl->nvs[0x1c + ETH_ALEN - i - 1];
++	/* Read the host_int_status_reg for ACK the first interrupt got
++	 * from the bootloader. If we don't do this we get a interrupt
++	 * as soon as we register the irq.
++	 */
++	mwifiex_read_reg(adapter, card->reg->host_int_status_reg, &sdio_ireg);
 +
-+	/* 00:00:20:07:03:09 is in default example wl1251-nvs.bin, so invalid */
-+	if (ether_addr_equal_unaligned(mac, "\x00\x00\x20\x07\x03\x09"))
-+		return -EINVAL;
-+
-+	memcpy(wl->mac_addr, mac, ETH_ALEN);
-+	return 0;
++	mwifiex_init_sdio_ioport(adapter);
 +}
 +
- static int wl1251_register_hw(struct wl1251 *wl)
- {
- 	int ret;
-@@ -1581,10 +1598,16 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+ static struct mwifiex_if_ops sdio_ops = {
+ 	.init_if = mwifiex_init_sdio,
+ 	.cleanup_if = mwifiex_cleanup_sdio,
+@@ -2702,6 +2694,7 @@ static void mwifiex_sdio_device_dump(struct mwifiex_adapter *adapter)
+ 	.reg_dump = mwifiex_sdio_reg_dump,
+ 	.device_dump = mwifiex_sdio_device_dump,
+ 	.deaggr_pkt = mwifiex_deaggr_sdio_pkt,
++	.up_dev = mwifiex_sdio_up_dev,
+ };
  
- 	wl->hw->queues = 4;
+ module_driver(mwifiex_sdio, sdio_register_driver, sdio_unregister_driver);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
+index cdbf3a3a..afa10d5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.h
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
+@@ -267,9 +267,6 @@ struct sdio_mmc_card {
  
-+	if (wl->nvs == NULL && !wl->use_eeprom) {
-+		ret = wl1251_fetch_nvs(wl);
-+		if (ret < 0)
-+			goto out;
-+	}
-+
- 	if (wl->use_eeprom)
- 		ret = wl1251_read_eeprom_mac(wl);
- 	else
--		ret = -EINVAL;
-+		ret = wl1251_read_nvs_mac(wl);
+ 	struct mwifiex_sdio_mpa_tx mpa_tx;
+ 	struct mwifiex_sdio_mpa_rx mpa_rx;
+-
+-	/* needed for card reset */
+-	const struct sdio_device_id *device_id;
+ };
  
- 	if (ret == 0 && !is_valid_ether_addr(wl->mac_addr))
- 		ret = -EINVAL;
+ struct mwifiex_sdio_device {
 -- 
-1.7.9.5
+1.9.1
