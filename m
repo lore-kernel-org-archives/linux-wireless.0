@@ -1,106 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18152 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751423AbcLAFNw (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45288 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758347AbcLOQ1R (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 00:13:52 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-CC: "k.eugene.e@gmail.com" <k.eugene.e@gmail.com>,
-        Andy Gross <andy.gross@linaro.org>,
-        "wcn36xx@lists.infradead.org" <wcn36xx@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Subject: Re: [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
-Date: Thu, 1 Dec 2016 05:13:41 +0000
-Message-ID: <874m2otenv.fsf@kamboji.qca.qualcomm.com> (sfid-20161201_061417_351361_97289A74)
-References: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
-        <a4095c49fe5a42c4a405b1faf6c0f3b7@euamsexm01a.eu.qualcomm.com>
-        <20161118183541.GI28340@tuxbot> <877f7vimyg.fsf@kamboji.qca.qualcomm.com>
-        <878ts0u7z3.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <878ts0u7z3.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Wed, 30 Nov 2016 20:40:32 +0200")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 15 Dec 2016 11:27:17 -0500
+Date: Thu, 15 Dec 2016 21:56:59 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer
+ statistics
+Message-ID: <20161215162659.GA8030@atheros-ThinkPad-T61> (sfid-20161215_172720_898289_CCBDB4FC)
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+ <2870294.lMmxz9iPmq@debian64>
+ <20161214073337.GA4046@atheros-ThinkPad-T61>
+ <1859306.unY1Rqbrx8@debian64>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1859306.unY1Rqbrx8@debian64>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+Hello Christian,
 
-> "Valo, Kalle" <kvalo@qca.qualcomm.com> writes:
+On Wed, Dec 14, 2016 at 05:38:02PM +0100, Christian Lamparter wrote:
+> On Wednesday, December 14, 2016 1:03:38 PM CET Mohammed Shafi Shajakhan wrote:
+> > > On Wednesday, December 7, 2016 11:58:24 AM CET Mohammed Shafi Shajakhan wrote:
+> > > > On Mon, Dec 05, 2016 at 10:52:45PM +0100, Christian Lamparter wrote:
+> > > > > @@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+> > > > >  			goto free;
+> > > > >  		}
+> > > > >  
+> > > > > +		if (!list_empty(&stats.peers))
+> > > > 
+> > > > [shafi] sorry please correct me if i am wrong, for 'extended peer stats' we are checking
+> > > > for normal 'peer stats' ? Is this the fix intended, i had started a build to
+> > > > check your change and we will keep you posted, does this fix displaying
+> > > > 'rx_duration' in ath10k fw_stats.
+> > > The idea is not to queue any "extended peer stats" when there where no "peer stats" to
+> > > begin with. Because otherwise, the function is still vulnerable to OOM since the 
+> > > extended peers stats will be queued unchecked (not that this is currently a problem).
+> > 
+> > [shafi] list_splice_tail_init should still check for non-empty 'peers_extd' list
+> > and append if required ? please let me know if i am still missing something
+> Well, you can also count the entries in peers_extd and delete the old entries
+> if they start to overflow. If you want to do it differently, please go ahead.
 >
->> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
->>
->>> On Wed 16 Nov 10:49 PST 2016, Kalle Valo wrote:
->>>
->>>> Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
->>>> > The correct include file for getting errno constants and ERR_PTR() i=
-s
->>>> > linux/err.h, rather than linux/errno.h, so fix the include.
->>>> >=20
->>>> > Fixes: e8b123e60084 ("soc: qcom: smem_state: Add stubs for disabled =
-smem_state")
->>>> > Acked-by: Andy Gross <andy.gross@linaro.org>
->>>> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->>>>=20
->>>> For some reason this fails to compile now. Can you take a look, please=
-?
->>>>=20
->>>> ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn=
-36xx.ko] undefined!
->>>> make[1]: *** [__modpost] Error 1
->>>> make: *** [modules] Error 2
->>>>=20
->>>> 5 patches set to Changes Requested.
->>>>=20
->>>> 9429045 [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
->>>> 9429047 [v5,2/5] wcn36xx: Transition driver to SMD client
->>>
->>> This patch was updated with the necessary depends in Kconfig to catch
->>> this exact issue and when I pull in your .config (which has QCOM_SMD=3D=
-n,
->>> QCOM_WCNSS_CTRL=3Dn and WCN36XX=3Dy) I can build this just fine.
->>>
->>> I've tested the various combinations and it seems to work fine. Do you
->>> have any other patches in your tree?
->>
->> This was with the pending branch of my ath.git tree. There are other
->> wireless patches (ath10k etc) but I would guess they don't affect here.
->>
->>> Any stale objects?
->>
->> Not sure what you mean with this question, but I didn't run 'make clean'
->> if that's what you are asking.
->>
->>> Would you mind retesting this, before I invest more time in trying to
->>> reproduce the issue you're seeing?
->>
->> Sure, I'll take a look but that might take few days.
->
-> I didn't find enough time to look at this in detail. I applied this to
-> my ath.git pending branch, let's see what the kbuild bot finds.
+[shafi] sorry for the delay (got stuck up with something else), I will add some prints explicitly
+and keep you posted ASAP. Since the extended peer stats gets updated periodically I
+would like to confirm the debug linked list associated to the extended peer
+stats does not overflows and potentially cause OOM.
 
-It found the same problem. Interestingly I'm also building x86 with 32
-bit, maybe it's related?
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git pendi=
-ng
-head:   1ea16a1c457939b4564643f7637d5cc639a8d3b7
-commit: 5eb09c672b01460804fd49b1c9cc7d1072a102f0 [96/99] wcn36xx: Transitio=
-n driver to SMD client
-config: i386-allmodconfig (attached as .config)
-compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
-reproduce:
-        git checkout 5eb09c672b01460804fd49b1c9cc7d1072a102f0
-        # save the attached .config to linux build tree
-        make ARCH=3Di386=20
-
-All errors (new ones prefixed by >>):
-
->> ERROR: "qcom_wcnss_open_channel" [drivers/net/wireless/ath/wcn36xx/wcn36=
-xx.ko] undefined!
-
---=20
-Kalle Valo=
+regards,
+shafi
