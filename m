@@ -1,110 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43374 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751168AbcLEOtS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:49:18 -0500
-Message-ID: <1480949353.31788.27.camel@sipsolutions.net> (sfid-20161205_154934_689693_20238DA8)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: ath10k@lists.infradead.org, tamizhchelvam@codeaurora.org
-Date: Mon, 05 Dec 2016 15:49:13 +0100
-In-Reply-To: <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51206 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752138AbcLOLxN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 06:53:13 -0500
+Date: Thu, 15 Dec 2016 03:50:59 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        devel@driverdev.osuosl.org, Jakub Kicinski <kubakici@wp.pl>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        linux-mediatek@lists.infradead.org, wil6210@qca.qualcomm.com,
+        linux-arm-kernel@lists.infradead.org,
+        Chris Snook <chris.snook@gmail.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Jay Cliburn <jcliburn@gmail.com>, linux-wpan@vger.kernel.org,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Alexander Aring <aar@pengutronix.de>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-can@vger.kernel.org, Marc Kleine-Budde <mkl@pengutronix.de>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        linux-wireless@vger.kernel.org,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-bluetooth@vger.kernel.org,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        Vince Bridgers <vbridger@opensource.altera.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
+Message-ID: <20161215115059.GA22750@kroah.com> (sfid-20161215_125425_931060_53DD5F18)
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-9-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-11-08 at 18:45 +0530, c_traja@qti.qualcomm.com wrote:
-> 
-> + * struct cfg80211_btcoex_priority - BTCOEX support frame type
-> + *
-> + * This structure defines the driver supporting frame types for
-> BTCOEX
-> + *
-> + * @wlan_be_preferred: best effort frames preferred over bt traffic
-> + * @wlan_bk_preferred: background frames preferred over bt traffic
-> + * @wlan_vi_preferred: video frames preferred over bt traffic
-> + * @wlan_vo_preferred: voice frames preferred over bt traffic
-> + * @wlan_beacon_preferred: beacon preferred over bt traffic
-> + * @wlan_mgmt_preferred: management frames preferred ovet bt traffic
+On Thu, Dec 15, 2016 at 07:15:30AM +0200, Michael S. Tsirkin wrote:
+> That's the default now, no need for makefiles to set it.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  drivers/bluetooth/Makefile                                | 2 --
+>  drivers/net/can/Makefile                                  | 1 -
+>  drivers/net/ethernet/altera/Makefile                      | 1 -
+>  drivers/net/ethernet/atheros/alx/Makefile                 | 1 -
+>  drivers/net/ethernet/freescale/Makefile                   | 2 --
+>  drivers/net/wireless/ath/Makefile                         | 2 --
+>  drivers/net/wireless/ath/wil6210/Makefile                 | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile | 1 -
+>  drivers/net/wireless/intel/iwlegacy/Makefile              | 2 --
+>  drivers/net/wireless/intel/iwlwifi/Makefile               | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/dvm/Makefile           | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/mvm/Makefile           | 2 +-
+>  drivers/net/wireless/intersil/orinoco/Makefile            | 3 ---
+>  drivers/net/wireless/mediatek/mt7601u/Makefile            | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/Makefile             | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile    | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile   | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile  | 2 --
+>  drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile   | 2 --
+>  drivers/net/wireless/ti/wl1251/Makefile                   | 2 --
+>  drivers/net/wireless/ti/wlcore/Makefile                   | 2 --
+>  drivers/staging/rtl8188eu/Makefile                        | 2 +-
+>  drivers/staging/rtl8192e/Makefile                         | 2 --
+>  drivers/staging/rtl8192e/rtl8192e/Makefile                | 2 --
+>  net/bluetooth/Makefile                                    | 2 --
+>  net/ieee802154/Makefile                                   | 2 --
+>  net/mac80211/Makefile                                     | 2 +-
+>  net/mac802154/Makefile                                    | 2 --
+>  net/wireless/Makefile                                     | 2 --
+>  38 files changed, 5 insertions(+), 68 deletions(-)
 
-typo: over
+For drivers/staging:
 
->  
->  /**
-> + * wiphy_btcoex_support_flags
-> + *	This enum has the driver supported frame types for BTCOEX.
-> + * @WIPHY_WLAN_BE_PREFERRED - Supports Best Effort frame for BTCOEX
-> + * @WIPHY_WLAN_BK_PREFERRED - supports Background frame for BTCOEX
-> + * @WIPHY_WLAN_VI_PREFERRED - supports Video frame for BTCOEX
-> + * @WIPHY_WLAN_VO_PREFERRED - supports Voice frame for BTCOEX
-> + * @WIPHY_WLAN_BEACON_PREFERRED - supports Beacon frame for BTCOEX
-> + * @WIPHY_WLAN_MGMT_PREFERRED - supports Management frames for
-> BTCOEX.
-> + */
-
-That's not making much sense to me?
-
-> +/**
-> + * enum wiphy_btcoex_priority - BTCOEX priority level
-> + *	This enum defines priority level for BTCOEX
-> + * WIPHY_WLAN_PREFERRED_LOW - low priority frames over BT traffic
-> + * WIPHY_WLAN_PREFERRED_HIGH - high priority frames over BT traffic
-> + */
-> +
-> +enum wiphy_btcoex_priority {
-> +	WIPHY_WLAN_PREFERRED_LOW = false,
-> +	WIPHY_WLAN_PREFERRED_HIGH = true,
-> +};
-
-That false/true seems just strange.
-
-> + * @btcoex_support_flags: This will have the driver supported
-> + *	frame types for BTCOEX. This value filled by using
-> + *	%enum wiphy_btcoex_support_flags while driver
-> + *	initialization.
-
-The whole "will have" isn't really clear.
-
-> + * @NL80211_ATTR_SET_BTCOEX_PRIORITY: nested attribute for driver
-> supporting
-> + *	the BTCOEX. When used with
-> %NL80211_CMD_SET_BTCOEX_PRIORITY it contains
-> + *	attributes according &enum nl80211_btcoex_priority to
-> indicate
-> + *	which frame has high priority over BT.
-
-There should be no "SET" in there.
-
->  /**
-> + * enum nl80211_btcoex_priority - BTCOEX parameter attributes
-> + *	This strcuture has enum values for driver supported wlan
-> + *	frame type for BTCOEX.
-> + * @NL80211_WLAN_BE_PREFERRED - Best Effort frame
-> + * @NL80211_WLAN_BK_PREFERRED - Background frame
-> + * @NL80211_WLAN_VI_PREFERRED - Video frame
-> + * @NL80211_WLAN_VO_PREFERRED - Voice frame
-> + * @NL80211_WLAN_BEACON_PREFERRED - BEACON frame
-> + * @NL80211_WLAN_MGMT_PREFERRED - MGMT frame
-> + */
-> +
-> +enum nl80211_btcoex_priority {
-> +	__NL80211_WLAN_PREFERRED_INVALID,
-> +	NL80211_WLAN_BE_PREFERRED,
-> +	NL80211_WLAN_BK_PREFERRED,
-> +	NL80211_WLAN_VI_PREFERRED,
-> +	NL80211_WLAN_VO_PREFERRED,
-> +	NL80211_WLAN_BEACON_PREFERRED,
-> +	NL80211_WLAN_MGMT_PREFERRED,
-> +	__NL80211_WLAN_PREFERRED_LAST,
-> +	NL80211_WLAN_PREFERRED_MAX =
-> +			__NL80211_WLAN_PREFERRED_LAST - 1,
-> +};
-
-Wouldn't a bitmap be easier?
-
-johannes
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
