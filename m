@@ -1,181 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34326 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753753AbcLXSOY (ORCPT
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:46919 "EHLO
+        smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753532AbcLORy5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 13:14:24 -0500
-Date: Sat, 24 Dec 2016 19:14:21 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 5/6] wl1251: Parse and use MAC address from supplied NVS
- data
-Message-ID: <20161224181421.GC13590@amd> (sfid-20161224_191446_844354_9AD826AA)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-6-git-send-email-pali.rohar@gmail.com>
+        Thu, 15 Dec 2016 12:54:57 -0500
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: "'Ben Greear'" <greearb@candelatech.com>,
+        "'Jouni Malinen'" <j@w1.fi>
+Cc: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr> <20161214195805.GA15022@w1.fi> <00f501d256e7$0f8d5380$2ea7fa80$@acksys.fr> <5852C5AC.6090408@candelatech.com>
+In-Reply-To: <5852C5AC.6090408@candelatech.com>
+Subject: RE: ath10k firmware sends probes on DFS channels without radar detection
+Date: Thu, 15 Dec 2016 18:53:47 +0100
+Message-ID: <00fd01d256fc$2f780db0$8e682910$@acksys.fr> (sfid-20161215_185501_608452_D99D2836)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="S1BNGpv0yoYahz37"
-In-Reply-To: <1482598381-16513-6-git-send-email-pali.rohar@gmail.com>
+Content-Type: text/plain;
+        charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> -----Message d'origine-----
+> De : Ben Greear [mailto:greearb@candelatech.com]
+> Envoyé : jeudi 15 décembre 2016 17:33
+> À : Jean-Pierre Tosoni; 'Jouni Malinen'
+> Cc : linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
+> Objet : Re: ath10k firmware sends probes on DFS channels without radar
+> detection
+> 
+> On 12/15/2016 07:22 AM, Jean-Pierre Tosoni wrote:
+> > Jouni,
+> >
+> > Thanks for the suggestion, I already tried something like this in
+> > wmi.c, with the same result:
+> >
+> > - Before patching the firmware scans DFS channels actively (with
+> probes).
+> >
+> > - After patching, the firmware scans DFS channels passively *until*
+> > any beacon is received on the DFS channel. When *any* beacon is seen,
+> > the firmware decides to scan actively on its own, without any new
+> > IR/RADAR info from the driver.
+> >
+> > So, your patch is required but not sufficient.
+> >
+> > Somehow I was able to overcome this by reloading the regulation domain
+> > in the radio card before each scan request:
+> >
+> > ////// awful patch ahead ////////
+> >
+> > --- a/drivers/net/wireless/ath/ath10k/mac.c
+> > +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> > @@ -2842,7 +2842,9 @@ static int ath10k_update_channel_list(st
+> >   			ch->chan_radar =
+> >   				!!(channel->flags & IEEE80211_CHAN_RADAR);
+> >
+> > -			passive = channel->flags & IEEE80211_CHAN_NO_IR;
+> > +			passive = channel->flags & (IEEE80211_CHAN_NO_IR |
+> > +						    IEEE80211_CHAN_RADAR);
+> 
+> So, should we add a new flag in firmware and driver that means 'really-no-
+> IR', or should the NO_IR flag here just always make the firmware never do
+> IR when probing regardless of whether it has seen beacons or not?
 
---S1BNGpv0yoYahz37
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The distinction between NO_IR and CHAN_RADAR is not very clear to me.
+NO_IR appears only in the world regulatory domain so it's not relevant here.
 
-On Sat 2016-12-24 17:53:00, Pali Roh=E1r wrote:
-> This patch implements parsing MAC address from NVS data which are sent to
-> wl1251 chip. Calibration NVS data could contain valid MAC address and it
-> will be used instead randomly generated.
+I'd say
+ "the CHAN_RADAR flag should always make the firmware never do IR when
+probing"
+...maybe, except if the channel is the operating channel. (this should
+exclude
+unassociated stations)
 
-will be used instead of randomly generated one.
-
-> This patch also move code for requesting NVS data from userspace to driver
-
-"moves"
-
-> initialization code to make sure that NVS data will be there at time when
-> permanent MAC address is needed.
-
-"at a time"
-
-> Calibration NVS data for wl1251 are model specific. Every one device with
-
-"device specific"? "Every device".
-
-> wl1251 chip should have been calibrated in factory and needs to provide o=
-wn
-> calibration data.
->=20
-> Default example wl1251-nvs.bin data found in linux-firmware repository and
-
-"are found"
-
-> contains MAC address 00:00:20:07:03:09. So this MAC address is marked as
-
-"contain"
-
-> invalid as it is not real device specific address, just example one.
->=20
-> Format of calibration NVS data can be found at:
-> http://notaz.gp2x.de/misc/pnd/wl1251/nvs_map.txt
->=20
-> Signed-off-by: Pali Roh=E1r <pali.rohar@gmail.com>
-> ---
->  drivers/net/wireless/ti/wl1251/main.c |   39 ++++++++++++++++++++++++++-=
-------
->  1 file changed, 31 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
-/ti/wl1251/main.c
-> index c3fa0b6..1454ba2 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -205,13 +205,6 @@ static int wl1251_chip_wakeup(struct wl1251 *wl)
->  			goto out;
->  	}
-> =20
-> -	if (wl->nvs =3D=3D NULL && !wl->use_eeprom) {
-> -		/* No NVS from netlink, try to get it from the filesystem */
-> -		ret =3D wl1251_fetch_nvs(wl);
-> -		if (ret < 0)
-> -			goto out;
-> -	}
-> -
->  out:
->  	return ret;
->  }
-> @@ -1538,6 +1531,30 @@ static int wl1251_read_eeprom_mac(struct wl1251 *w=
-l)
->  	return 0;
->  }
-> =20
-> +static int wl1251_read_nvs_mac(struct wl1251 *wl)
-> +{
-> +	u8 mac[ETH_ALEN];
-> +	int i;
-> +
-> +	if (wl->nvs_len < 0x24)
-> +		return -ENODATA;
-> +
-> +	/* length is 2 and data address is 0x546c (mask is 0xfffe) */
-> +	if (wl->nvs[0x19] !=3D 2 || wl->nvs[0x1a] !=3D 0x6d || wl->nvs[0x1b] !=
-=3D 0x54)
-> +		return -EINVAL;
-> +
-> +	/* MAC is stored in reverse order */
-> +	for (i =3D 0; i < ETH_ALEN; i++)
-> +		mac[i] =3D wl->nvs[0x1c + ETH_ALEN - i - 1];
-> +
-> +	/* 00:00:20:07:03:09 is in default example wl1251-nvs.bin, so invalid */
-
-remove "default".
-
-> +	if (ether_addr_equal_unaligned(mac, "\x00\x00\x20\x07\x03\x09"))
-> +		return -EINVAL;
-> +
-> +	memcpy(wl->mac_addr, mac, ETH_ALEN);
-> +	return 0;
-> +}
-> +
->  static int wl1251_register_hw(struct wl1251 *wl)
->  {
->  	int ret;
-> @@ -1581,10 +1598,16 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
-> =20
->  	wl->hw->queues =3D 4;
-> =20
-> +	if (wl->nvs =3D=3D NULL && !wl->use_eeprom) {
-> +		ret =3D wl1251_fetch_nvs(wl);
-> +		if (ret < 0)
-> +			goto out;
-> +	}
-
-Is goto out here good idea? IMNSHO it is copy&paste bug, it should
-just proceed with generating random address.
-
->  	if (wl->use_eeprom)
->  		ret =3D wl1251_read_eeprom_mac(wl);
->  	else
-> -		ret =3D -EINVAL;
-> +		ret =3D wl1251_read_nvs_mac(wl);
-> =20
->  	if (ret =3D=3D 0 && !is_valid_ether_addr(wl->mac_addr))
->  		ret =3D -EINVAL;
-
-Best regards,
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---S1BNGpv0yoYahz37
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlheuv0ACgkQMOfwapXb+vKARgCghV/H0hHp+ZnaUpaS7KImU99z
-QM4AnjH6IvqOkuGibtSOhds4YWPEOKIG
-=nOeh
------END PGP SIGNATURE-----
-
---S1BNGpv0yoYahz37--
+I am out of office for the next week.
+Regards,
+Jean-Pierre
+> 
+> Thanks,
+> Ben
+> 
+> > +
+> >   			ch->passive = passive;
+> >
+> >   			ch->freq = channel->center_freq;
+> > @@ -3548,6 +3550,9 @@ static int ath10k_start_scan(struct ath1
+> >
+> >   	lockdep_assert_held(&ar->conf_mutex);
+> >
+> > +	if (ar->state == ATH10K_STATE_ON)
+> > +		ath10k_regd_update(ar);
+> > +
+> >   	ret = ath10k_wmi_start_scan(ar, arg);
+> >   	if (ret)
+> >   		return ret;
+> >
+> > ////////////////////////////////////////
+> >
+> > ...But this sets a terrible penalty on performance when applied to
+> > background scan.
+> >
+> >
+> > On 12/14/16 20:58 Jouni Malinen wrote:
+> >>
+> >> On Tue, Dec 06, 2016 at 06:02:52PM +0100, Jean-Pierre Tosoni wrote:
+> >>> This follows on the previous discussion
+> >>> 	"Client station sends probes on DFS channels"
+> >>>
+> >>> Problem:
+> >>> The combination of QCA988X firmware v10.2.4.70-2 + ath10k +
+> >>> wpa_supplicant do not comply with the norm ETSI/EN 301-893 section
+> >>> 4.7; because they can send probes for 600s when no AP is around.
+> >>>
+> >>> Analysis:
+> >>> The problem seems to lie in the firmware, which regards the presence
+> >>> of *any* beacon as a proof that the channel is radar-clean for 600s.
+> >>
+> >> I don't think this is really firmware, but cfg80211 regulatory code
+> >> and how it interacts with ath10k..
+> >>
+> >>> - there is no obvious fix working in ath10k.
+> >>> - the issue does not show up with other mac80211 devices like ath9k.
+> >>> - wpa_supplicant considers this is a kernel issue [2]
+> >>
+> >> There seems to be a difference between ath9k (mac80211-based Probe
+> >> Request frame sending) and ath10k (firmware) in this area for active
+> scanning.
+> >> mac80211 uses IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR while
+> >> ath10k uses IEEE80211_CHAN_NO_IR. I'd assume this difference results
+> >> in ath10k using cfg80211 beacon hints (etc.) to update the NO_IR flag
+> >> and that might be behind the difference you see.
+> >>
+> >> Could you check whether the following change gets you the behavior
+> >> you want to see here? I have not had a chance to test this yet, but
+> >> based on code review, it looks like something that brings the same
+> >> behavior to ath10k that ath9k has for this through mac80211.
+> >>
+> >>
+> >> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
+> >> b/drivers/net/wireless/ath/ath10k/mac.c
+> >> index aa545a1..758dbbd 100644
+> >> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> >> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> >> @@ -2973,7 +2973,8 @@ static int ath10k_update_channel_list(struct
+> >> ath10k
+> >> *ar)
+> >>   			ch->chan_radar =
+> >>   				!!(channel->flags & IEEE80211_CHAN_RADAR);
+> >>
+> >> -			passive = channel->flags & IEEE80211_CHAN_NO_IR;
+> >> +			passive = channel->flags & (IEEE80211_CHAN_NO_IR |
+> >> +						    IEEE80211_CHAN_RADAR);
+> >>   			ch->passive = passive;
+> >>
+> >>   			ch->freq = channel->center_freq;
+> >>
+> >> --
+> >> Jouni Malinen                                            PGP id
+> EFC895FA
+> >>
+> >> _______________________________________________
+> >> ath10k mailing list
+> >> ath10k@lists.infradead.org
+> >> http://lists.infradead.org/mailman/listinfo/ath10k
+> >
+> 
+> 
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
