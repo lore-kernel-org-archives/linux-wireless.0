@@ -1,1140 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33475 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755937AbcLOSYD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60330 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934983AbcLOGBJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 13:24:03 -0500
-Received: by mail-oi0-f68.google.com with SMTP id f201so7108571oib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:26 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 01/14 V2] rtlwifi: Replace local debug macro RT_ASSERT
-Date: Thu, 15 Dec 2016 12:22:57 -0600
-Message-Id: <20161215182310.13713-2-Larry.Finger@lwfinger.net> (sfid-20161215_192420_469754_12724E50)
-In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Dec 2016 01:01:09 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFC 3/3] mac80211: Add receive path for ethernet frame format
+Date: Thu, 15 Dec 2016 11:30:08 +0530
+Message-ID: <1481781608-5181-4-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20161215_070135_463388_B0B59A8D)
+In-Reply-To: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This macro can be replaced with WARN_ONCE. In addition to using a
-standard debugging macro for these critical errors, we also get
-a stack dump.
+Implement rx path which does fewer processing on the
+received data frame which has already gone through
+802.11 header decapsulation and other functionalities
+which require 802.11 header in the low level driver
+or hardware. Currently this rx path is restricted
+to AP and STA mode, but can be extended for Adhoc
+mode as well.
 
-In rtl8821ae/hw.c, a senseless comment was removed, and an incorrect
-indentation was fixed.
+This rx path only checks if the driver has advertised
+it's support of 802.11 header encap/decap offload for
+data frames. It is upto the low level driver to make
+sure if the frame that it passes is in ethernet format
+and the sta pointer is valid.
 
-This patch also fixes two places in each of rtl8192ee, rtl8723be,
-and rtl8821ae where the logical condition was incorrect.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
-V2 - eliminate some files that should not have been sent.
----
- drivers/net/wireless/realtek/rtlwifi/core.c          |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/debug.h         | 14 --------------
- drivers/net/wireless/realtek/rtlwifi/pci.c           | 12 ++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 10 +++++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c |  8 ++++----
- .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c    |  6 +++---
- .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c   | 14 +++++++-------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 10 +++++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 14 +++++++-------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 15 +++++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c |  6 +++---
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 10 +++++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c  |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 12 ++++++------
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 14 +++++++-------
- .../wireless/realtek/rtlwifi/rtl8723com/phy_common.c |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c  | 16 ++++++++--------
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c |  8 ++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 20 ++++++++++++--------
- drivers/net/wireless/realtek/rtlwifi/usb.c           |  2 +-
- 38 files changed, 133 insertions(+), 140 deletions(-)
+ include/net/mac80211.h |  19 +++++
+ net/mac80211/rx.c      | 189 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 206 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 2caa4ad..7ae774d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1613,8 +1613,8 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 			RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
- 				 "set pairwise key\n");
- 			if (!sta) {
--				RT_ASSERT(false,
--					  "pairwise key without mac_addr\n");
-+				WARN_ONCE(true,
-+					  "rtlwifi: pairwise key without mac_addr\n");
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 225abaa..75c55e2 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1088,6 +1088,9 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_ALLOW_SAME_PN: Allow the same PN as same packet before.
+  *	This is used for AMSDU subframes which can have the same PN as
+  *	the first subframe.
++ * @RX_FLAG_MCAST: If the receiver address (addr1) in the frame is multicast.
++ *	This is used with the data frames by the drivers supporting 802.11 hdr
++ *	decap offload.
+  */
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -1123,6 +1126,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
+ 	RX_FLAG_MIC_STRIPPED		= BIT_ULL(32),
+ 	RX_FLAG_ALLOW_SAME_PN		= BIT_ULL(33),
++	RX_FLAG_MCAST			= BIT_ULL(34),
+ };
  
- 				err = -EOPNOTSUPP;
- 				goto out_unlock;
-@@ -1804,8 +1804,8 @@ bool rtl_hal_pwrseqcmdparsing(struct rtl_priv *rtlpriv, u8 cut_version,
- 					 "rtl_hal_pwrseqcmdparsing(): PWR_CMD_END\n");
- 				return true;
- 			default:
--				RT_ASSERT(false,
--					  "rtl_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
-+				WARN_ONCE(true,
-+					  "rtlwifi: rtl_hal_pwrseqcmdparsing(): Unknown CMD!!\n");
- 				break;
- 			}
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-index 6156a79..6f2e2b9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -166,15 +166,6 @@ enum dbgp_flag_e {
- 
- #ifdef CONFIG_RTLWIFI_DEBUG
- 
--#define RT_ASSERT(_exp, fmt, ...)					\
--do {									\
--	if (!(_exp)) {							\
--		printk(KERN_DEBUG KBUILD_MODNAME ":%s(): " fmt,		\
--		       __func__, ##__VA_ARGS__);			\
--	}								\
--} while (0)
--
--
- struct rtl_priv;
- 
- __printf(5, 6)
-@@ -210,11 +201,6 @@ do {									\
- 
- struct rtl_priv;
- 
--__printf(2, 3)
--static inline void RT_ASSERT(int exp, const char *fmt, ...)
--{
--}
--
- __printf(4, 5)
- static inline void RT_TRACE(struct rtl_priv *rtlpriv,
- 			    int comp, int level,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 8bfe020..bb767186 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -2174,15 +2174,15 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 
- 	err = pci_enable_device(pdev);
- 	if (err) {
--		RT_ASSERT(false, "%s : Cannot enable new PCI device\n",
-+		WARN_ONCE(true, "%s : Cannot enable new PCI device\n",
- 			  pci_name(pdev));
- 		return err;
- 	}
- 
- 	if (!pci_set_dma_mask(pdev, DMA_BIT_MASK(32))) {
- 		if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
--			RT_ASSERT(false,
--				  "Unable to obtain 32bit DMA for consistent allocations\n");
-+			WARN_ONCE(true,
-+				  "rtlwifi: Unable to obtain 32bit DMA for consistent allocations\n");
- 			err = -ENOMEM;
- 			goto fail1;
- 		}
-@@ -2193,7 +2193,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	hw = ieee80211_alloc_hw(sizeof(struct rtl_pci_priv) +
- 				sizeof(struct rtl_priv), &rtl_ops);
- 	if (!hw) {
--		RT_ASSERT(false,
-+		WARN_ONCE(true,
- 			  "%s : ieee80211 alloc failed\n", pci_name(pdev));
- 		err = -ENOMEM;
- 		goto fail1;
-@@ -2232,7 +2232,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 	/* MEM map */
- 	err = pci_request_regions(pdev, KBUILD_MODNAME);
- 	if (err) {
--		RT_ASSERT(false, "Can't obtain PCI resources\n");
-+		WARN_ONCE(true, "rtlwifi: Can't obtain PCI resources\n");
- 		goto fail1;
- 	}
- 
-@@ -2245,7 +2245,7 @@ int rtl_pci_probe(struct pci_dev *pdev,
- 			(unsigned long)pci_iomap(pdev,
- 			rtlpriv->cfg->bar_id, pmem_len);
- 	if (rtlpriv->io.pci_mem_start == 0) {
--		RT_ASSERT(false, "Can't map PCI mem\n");
-+		WARN_ONCE(true, "rtlwifi: Can't map PCI mem\n");
- 		err = -ENOMEM;
- 		goto fail2;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-index c66a2d1..fbd3eea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-@@ -434,8 +434,8 @@ void rtl88e_fill_h2c_cmd(struct ieee80211_hw *hw,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8188ee: error H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index 37d6efc..1a17dfe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -1352,7 +1352,7 @@ void rtl88ee_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8188ee: invalid aci: %d !\n", aci);
- 		break;
- 	}
+ #define RX_FLAG_STBC_SHIFT		26
+@@ -3989,6 +3993,21 @@ static inline void ieee80211_rx_ni(struct ieee80211_hw *hw,
  }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index fffaa92..ece8691 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -1231,8 +1231,8 @@ u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 	if (rtlphy->set_bwmode_inprogress)
- 		return 0;
--	RT_ASSERT((rtlphy->current_channel <= 14),
--		  "WIRELESS_MODE_G but channel>14");
-+	WARN_ONCE((rtlphy->current_channel > 14),
-+		  "rtl8188ee: WIRELESS_MODE_G but channel>14");
- 	rtlphy->sw_chnl_inprogress = true;
- 	rtlphy->sw_chnl_stage = 0;
- 	rtlphy->sw_chnl_step = 0;
-@@ -1280,8 +1280,8 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
  
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "illegal channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8188ee: illegal channel for Zebra: %d\n", channel);
- 
- 	_rtl88e_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
-@@ -1367,7 +1367,7 @@ static bool _rtl88e_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-+		WARN_ONCE(true, "rtl8188ee: cmdtable cannot be NULL.\n");
- 		return false;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-index 3e3b886..09c908d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
-@@ -760,7 +760,7 @@ void rtl88ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8188ee: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -779,7 +779,7 @@ void rtl88ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8188ee: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -799,7 +799,7 @@ u32 rtl88ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8188ee: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -815,7 +815,7 @@ u32 rtl88ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8188ee: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-index ceacbf2..54fcf5a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -485,8 +485,8 @@ void rtl92c_fill_h2c_cmd(struct ieee80211_hw *hw,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8192c-common: return H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 
-@@ -510,7 +510,7 @@ void rtl92c_firmware_selfreset(struct ieee80211_hw *hw)
- 	while (u1b_tmp & BIT(2)) {
- 		delay--;
- 		if (delay == 0) {
--			RT_ASSERT(false, "8051 reset fail.\n");
-+			WARN_ONCE(true, "rtl8192c-common: 8051 reset fail.\n");
- 			break;
- 		}
- 		udelay(50);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-index 94dd25c..32fc4b6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-@@ -77,7 +77,7 @@ EXPORT_SYMBOL(rtl92c_phy_set_bb_reg);
- u32 _rtl92c_phy_fw_rf_serial_read(struct ieee80211_hw *hw,
- 				  enum radio_path rfpath, u32 offset)
- {
--	RT_ASSERT(false, "deprecated!\n");
-+	WARN_ONCE(true, "rtl8192c-common: _rtl92c_phy_fw_rf_serial_read deprecated!\n");
+ /**
++ * ieee80211_rx_decap_offl - Receive frames in 802.11 decapsulated format
++ *
++ * Low level driver capable of 802.11 header decap uses this function. The frame
++ * will be in ethernet format.
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other.
++ *
++ * @hw: the hardware this frame came in on
++ * @sta : the station the frame was received from, must not be %NULL
++ * @skb: the buffer to receive, owned by mac80211 after this call
++ */
++void ieee80211_rx_decap_offl(struct ieee80211_hw *hw, struct ieee80211_sta *sta,
++			     struct sk_buff *skb);
++
++/**
+  * ieee80211_sta_ps_transition - PS transition for connected sta
+  *
+  * When operating in AP mode with the %IEEE80211_HW_AP_LINK_PS
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 2e8a902..3cb8d6e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2103,13 +2103,14 @@ __ieee80211_data_to_8023(struct ieee80211_rx_data *rx, bool *port_control)
  	return 0;
  }
- EXPORT_SYMBOL(_rtl92c_phy_fw_rf_serial_read);
-@@ -86,7 +86,7 @@ void _rtl92c_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
- 				    enum radio_path rfpath, u32 offset,
- 				    u32 data)
+ 
++static const u8 pae_group_addr[ETH_ALEN] __aligned(2)
++	= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
++
+ /*
+  * requires that rx->skb is a frame with ethernet header
+  */
+ static bool ieee80211_frame_allowed(struct ieee80211_rx_data *rx, __le16 fc)
  {
--	RT_ASSERT(false, "deprecated!\n");
-+	WARN_ONCE(true, "rtl8192c-common: _rtl92c_phy_fw_rf_serial_write deprecated!\n");
+-	static const u8 pae_group_addr[ETH_ALEN] __aligned(2)
+-		= { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x03 };
+ 	struct ethhdr *ehdr = (struct ethhdr *) rx->skb->data;
+ 
+ 	/*
+@@ -4180,3 +4181,187 @@ void ieee80211_rx_irqsafe(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	tasklet_schedule(&local->tasklet);
  }
- EXPORT_SYMBOL(_rtl92c_phy_fw_rf_serial_write);
- 
-@@ -745,8 +745,8 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 	if (rtlphy->set_bwmode_inprogress)
- 		return 0;
--	RT_ASSERT((rtlphy->current_channel <= 14),
--		  "WIRELESS_MODE_G but channel>14");
-+	WARN_ONCE((rtlphy->current_channel > 14),
-+		  "rtl8192c-common: WIRELESS_MODE_G but channel>14");
- 	rtlphy->sw_chnl_inprogress = true;
- 	rtlphy->sw_chnl_stage = 0;
- 	rtlphy->sw_chnl_step = 0;
-@@ -792,7 +792,7 @@ static bool _rtl92c_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-+		WARN_ONCE(true, "rtl8192c-common: cmdtable cannot be NULL.\n");
- 		return false;
- 	}
- 
-@@ -837,8 +837,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "illegal channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8192c-common: illegal channel for Zebra: %d\n", channel);
- 
- 	_rtl92c_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 4483d40..b757a74 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -1292,7 +1292,7 @@ void rtl92ce_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8192ce: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-index 2ab4a00..3616ba2 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/trx.c
-@@ -670,7 +670,7 @@ void rtl92ce_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192ce: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -690,7 +690,7 @@ void rtl92ce_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192ce: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -710,7 +710,7 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(p_desc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192ce: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -726,7 +726,7 @@ u32 rtl92ce_get_desc(u8 *p_desc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(p_desc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192ce: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index 5c7da0c..ddfcf994 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -1790,7 +1790,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 						u4b_ac_param);
- 				break;
- 			default:
--				RT_ASSERT(false, "invalid aci: %d !\n",
-+				WARN_ONCE(true, "rtl8192cu: invalid aci: %d !\n",
- 					  e_aci);
- 				break;
- 			}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-index 1ea878f..6da6e2a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-@@ -241,7 +241,7 @@ u16 rtl8192cu_mq_to_hwq(__le16 fc, u16 mac80211_queue_index)
- 		break;
- 	default:
- 		hw_queue_index = RTL_TXQ_BE;
--		RT_ASSERT(false, "QSLT_BE queue, skb_queue:%d\n",
-+		WARN_ONCE(true, "rtl8192cu: QSLT_BE queue, skb_queue:%d\n",
- 			  mac80211_queue_index);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index 83a87eb..452de25 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -182,7 +182,7 @@ void rtl92d_firmware_selfreset(struct ieee80211_hw *hw)
- 		udelay(50);
- 		u1b_tmp = rtl_read_byte(rtlpriv, REG_SYS_FUNC_EN + 1);
- 	}
--	RT_ASSERT((delay > 0), "8051 reset failed!\n");
-+	WARN_ONCE((delay <= 0), "rtl8192de: 8051 reset failed!\n");
- 	RT_TRACE(rtlpriv, COMP_FW, DBG_DMESG,
- 		 "=====> 8051 reset success (%d)\n", delay);
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index 424f54b..b0dc189 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -2700,7 +2700,7 @@ static bool _rtl92d_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL\n");
-+		WARN_ONCE(true, "rtl8192de: cmdtable cannot be NULL\n");
- 		return false;
- 	}
- 	if (cmdtableidx >= cmdtablesz)
-@@ -2893,17 +2893,17 @@ u8 rtl92d_phy_sw_chnl(struct ieee80211_hw *hw)
- 		 * 5G and 2.4G band. */
- 		if (channel <= 14)
- 			return 0;
--		RT_ASSERT((channel > 14), "5G but channel<=14\n");
-+		WARN_ONCE((channel <= 14), "rtl8192de: 5G but channel<=14\n");
- 		break;
- 	case BAND_ON_2_4G:
- 		/* Get first channel error when change between
- 		 * 5G and 2.4G band. */
- 		if (channel > 14)
- 			return 0;
--		RT_ASSERT((channel <= 14), "2G but channel>14\n");
-+		WARN_ONCE((channel > 14), "rtl8192de: 2G but channel>14\n");
- 		break;
- 	default:
--		RT_ASSERT(false, "Invalid WirelessMode(%#x)!!\n",
-+		WARN_ONCE(true, "rtl8192de: Invalid WirelessMode(%#x)!!\n",
- 			  rtlpriv->mac80211.mode);
- 		break;
- 	}
-@@ -3336,7 +3336,7 @@ void rtl92d_phy_set_poweron(struct ieee80211_hw *hw)
- 			}
- 		}
- 		if (i == 200)
--			RT_ASSERT(false, "Another mac power off over time\n");
-+			WARN_ONCE(true, "rtl8192de: Another mac power off over time\n");
- 	}
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-index 2d65e40..0d98b34 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c
-@@ -402,7 +402,7 @@ static int __init rtl92de_module_init(void)
- 
- 	ret = pci_register_driver(&rtl92de_driver);
- 	if (ret)
--		RT_ASSERT(false, "No device found\n");
-+		WARN_ONCE(true, "rtl8192de: No device found\n");
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
-index 5fb3756..5c9c874 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/trx.c
-@@ -794,7 +794,7 @@ void rtl92de_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192de: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -814,7 +814,7 @@ void rtl92de_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192de: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -834,7 +834,7 @@ u32 rtl92de_get_desc(u8 *p_desc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(p_desc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192de: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -848,7 +848,7 @@ u32 rtl92de_get_desc(u8 *p_desc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_PKT_LEN(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192de: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index a4aa239..9dfd74b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -462,8 +462,8 @@ void rtl92ee_fill_h2c_cmd(struct ieee80211_hw *hw,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8192ee: error H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index ebf663e..00b211b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -1582,7 +1582,7 @@ void rtl92ee_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8192ee: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-index 5ad7e75..c35ba76 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-@@ -1176,7 +1176,7 @@ static u8 _rtl92ee_phy_get_ratesection_intxpower_byrate(enum radio_path path,
- 		rate_section = 7;
- 		break;
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8192ee: Rate_Section is Illegal\n");
- 		break;
- 	}
- 	return rate_section;
-@@ -1239,7 +1239,7 @@ static u8 _rtl92ee_get_txpower_by_rate(struct ieee80211_hw *hw,
- 		shift = 24;
- 		break;
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8192ee: Rate_Section is Illegal\n");
- 		break;
- 	}
- 
-@@ -1811,8 +1811,8 @@ u8 rtl92ee_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 	if (rtlphy->set_bwmode_inprogress)
- 		return 0;
--	RT_ASSERT((rtlphy->current_channel <= 14),
--		  "WIRELESS_MODE_G but channel>14");
-+	WARN_ONCE((rtlphy->current_channel > 14),
-+		  "rtl8192ee: WIRELESS_MODE_G but channel>14");
- 	rtlphy->sw_chnl_inprogress = true;
- 	rtlphy->sw_chnl_stage = 0;
- 	rtlphy->sw_chnl_step = 0;
-@@ -1860,8 +1860,8 @@ static bool _rtl92ee_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "illegal channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8192ee: illegal channel for Zebra: %d\n", channel);
- 
- 	_rtl92ee_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					  MAX_RFDEPENDCMD_CNT,
-@@ -1948,7 +1948,7 @@ static bool _rtl92ee_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-+		WARN_ONCE(true, "rtl8192ee: cmdtable cannot be NULL.\n");
- 		return false;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-index 2d48ccd..07440e9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-@@ -991,8 +991,9 @@ void rtl92ee_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR rxdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8192ee: ERR rxdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	}
-@@ -1011,8 +1012,9 @@ u32 rtl92ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_TXBUFFER_DESC_ADDR_LOW(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR txdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8192ee: ERR txdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	} else {
-@@ -1027,8 +1029,9 @@ u32 rtl92ee_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR rxdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8192ee: ERR rxdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-index 26e06b2..f4ab721 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-@@ -1251,7 +1251,7 @@ void rtl92se_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, EDCAPARA_VO, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8192se: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-index fcb9216..6299dc1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-@@ -330,7 +330,7 @@ static bool _rtl92s_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL\n");
-+		WARN_ONCE(true, "rtl8192se: cmdtable cannot be NULL\n");
- 		return false;
- 	}
- 
-@@ -374,8 +374,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "invalid channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8192se: invalid channel for Zebra: %d\n", channel);
- 
- 	_rtl92s_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-index 9a5a113..12cef01 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/trx.c
-@@ -583,7 +583,7 @@ void rtl92se_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192se: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -603,7 +603,7 @@ void rtl92se_set_desc(struct ieee80211_hw *hw, u8 *pdesc, bool istx,
- 			SET_RX_STATUS_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192se: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -623,7 +623,7 @@ u32 rtl92se_get_desc(u8 *desc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(desc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192se: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -639,7 +639,7 @@ u32 rtl92se_get_desc(u8 *desc, bool istx, u8 desc_name)
- 			ret = GET_RX_STATUS_DESC_BUFF_ADDR(desc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8192se: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-index 1186755..164a27e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-@@ -259,8 +259,8 @@ void rtl8723e_fill_h2c_cmd(struct ieee80211_hw *hw,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8723ae: error H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 	memset(tmp_cmdbuf, 0, 8);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index f8be0bd..e0da8dc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1256,7 +1256,7 @@ void rtl8723e_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8723ae: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-index 17b58cb..8001dce 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-@@ -133,7 +133,7 @@ static void _rtl8723e_phy_fw_rf_serial_write(struct ieee80211_hw *hw,
- 					     enum radio_path rfpath, u32 offset,
- 					     u32 data)
- {
--	RT_ASSERT(false, "deprecated!\n");
-+	WARN_ONCE(true, "rtl8723ae: _rtl8723e_phy_fw_rf_serial_write deprecated!\n");
- }
- 
- static void _rtl8723e_phy_bb_config_1t(struct ieee80211_hw *hw)
-@@ -885,8 +885,8 @@ u8 rtl8723e_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 	if (rtlphy->set_bwmode_inprogress)
- 		return 0;
--	RT_ASSERT((rtlphy->current_channel <= 14),
--		  "WIRELESS_MODE_G but channel>14");
-+	WARN_ONCE((rtlphy->current_channel > 14),
-+		  "rtl8723ae: WIRELESS_MODE_G but channel>14");
- 	rtlphy->sw_chnl_inprogress = true;
- 	rtlphy->sw_chnl_stage = 0;
- 	rtlphy->sw_chnl_step = 0;
-@@ -954,8 +954,8 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "illegal channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8723ae: illegal channel for Zebra: %d\n", channel);
- 
- 	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					 MAX_RFDEPENDCMD_CNT, CMDID_RF_WRITEREG,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-index e93125e..c9838f5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
-@@ -617,7 +617,7 @@ void rtl8723e_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *) val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8723ae: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -636,7 +636,7 @@ void rtl8723e_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8723ae: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -656,7 +656,7 @@ u32 rtl8723e_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8723ae: ERR txdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-@@ -672,7 +672,7 @@ u32 rtl8723e_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8723ae: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index 8c5c27c..6b03c7f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -224,8 +224,8 @@ void rtl8723be_fill_h2c_cmd(struct ieee80211_hw *hw, u8 element_id,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8723be: error H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index aba60c3..56a1ae4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -1631,7 +1631,7 @@ void rtl8723be_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8723be: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index 3cc2232..b4e0a58 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -939,7 +939,7 @@ static u8 _rtl8723be_phy_get_ratesection_intxpower_byrate(enum radio_path path,
- 		break;
- 
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8723be: Rate_Section is Illegal\n");
- 		break;
- 	}
- 
-@@ -1004,7 +1004,7 @@ static u8 _rtl8723be_get_txpower_by_rate(struct ieee80211_hw *hw,
- 		shift = 24;
- 		break;
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8723be: Rate_Section is Illegal\n");
- 		break;
- 	}
- 	tx_pwr_diff = (u8)(rtlphy->tx_power_by_rate_offset[band][rfpath][tx_num]
-@@ -1387,8 +1387,8 @@ u8 rtl8723be_phy_sw_chnl(struct ieee80211_hw *hw)
- 		return 0;
- 	if (rtlphy->set_bwmode_inprogress)
- 		return 0;
--	RT_ASSERT((rtlphy->current_channel <= 14),
--		  "WIRELESS_MODE_G but channel>14");
-+	WARN_ONCE((rtlphy->current_channel > 14),
-+		  "rtl8723be: WIRELESS_MODE_G but channel>14");
- 	rtlphy->sw_chnl_inprogress = true;
- 	rtlphy->sw_chnl_stage = 0;
- 	rtlphy->sw_chnl_step = 0;
-@@ -1438,8 +1438,8 @@ static bool _rtl8723be_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 
- 	rfdependcmdcnt = 0;
- 
--	RT_ASSERT((channel >= 1 && channel <= 14),
--		  "illegal channel for Zebra: %d\n", channel);
-+	WARN_ONCE((channel < 1 || channel > 14),
-+		  "rtl8723be: illegal channel for Zebra: %d\n", channel);
- 
- 	rtl8723_phy_set_sw_chnl_cmdarray(rfdependcmd, rfdependcmdcnt++,
- 					 MAX_RFDEPENDCMD_CNT,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-index 2175aec..6f65003 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
-@@ -666,8 +666,8 @@ void rtl8723be_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
--					  desc_name);
-+			WARN_ONCE(true, "rtl8723be: ERR txdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	} else {
-@@ -685,8 +685,8 @@ void rtl8723be_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
--					  desc_name);
-+			WARN_ONCE(true, "rtl8723be: ERR rxdesc :%d not process\n",
-+				  desc_name);
- 			break;
- 		}
- 	}
-@@ -705,8 +705,8 @@ u32 rtl8723be_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR txdesc :%d not process\n",
--					  desc_name);
-+			WARN_ONCE(true, "rtl8723be: ERR txdesc :%d not process\n",
-+				  desc_name);
- 			break;
- 		}
- 	} else {
-@@ -721,7 +721,7 @@ u32 rtl8723be_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false, "ERR rxdesc :%d not process\n",
-+			WARN_ONCE(true, "rtl8723be: ERR rxdesc :%d not processed\n",
- 				  desc_name);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
-index 75cbd15..6b80ddc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/phy_common.c
-@@ -283,7 +283,7 @@ bool rtl8723_phy_set_sw_chnl_cmdarray(struct swchnlcmd *cmdtable,
- 	struct swchnlcmd *pcmd;
- 
- 	if (cmdtable == NULL) {
--		RT_ASSERT(false, "cmdtable cannot be NULL.\n");
-+		WARN_ONCE(true, "rtl8723-common: cmdtable cannot be NULL.\n");
- 		return false;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 2f598dd..e8688f4 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -510,8 +510,8 @@ void rtl8821ae_fill_h2c_cmd(struct ieee80211_hw *hw,
- 	u32 tmp_cmdbuf[2];
- 
- 	if (!rtlhal->fw_ready) {
--		RT_ASSERT(false,
--			  "return H2C cmd because of Fw download fail!!!\n");
-+		WARN_ONCE(true,
-+			  "rtl8821ae: error H2C cmd because of Fw download fail!!!\n");
- 		return;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 1281ebe..b045dd0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -2249,7 +2249,7 @@ void rtl8821ae_set_qos(struct ieee80211_hw *hw, int aci)
- 		rtl_write_dword(rtlpriv, REG_EDCA_VO_PARAM, 0x2f3222);
- 		break;
- 	default:
--		RT_ASSERT(false, "invalid aci: %d !\n", aci);
-+		WARN_ONCE(true, "rtl8821ae: invalid aci: %d !\n", aci);
- 		break;
- 	}
- }
-@@ -2601,11 +2601,10 @@ static u8 _rtl8821ae_get_chnl_group(u8 chnl)
- 			group = 12;
- 	else if (173 <= chnl && chnl <= 177)
- 			group = 13;
--		else
--			/*RT_TRACE(rtlpriv, COMP_EFUSE,DBG_LOUD,
--				"5G, Channel %d in Group not found\n",chnl);*/
--			RT_ASSERT(!COMP_EFUSE,
--				"5G, Channel %d in Group not found\n", chnl);
-+	else
-+		WARN_ONCE(true,
-+			  "rtl8821ae: 5G, Channel %d in Group not found\n",
-+			  chnl);
- 	}
- 	return group;
- }
-@@ -4135,8 +4134,9 @@ void rtl8821ae_add_wowlan_pattern(struct ieee80211_hw *hw,
- 			count++;
- 		} while (tmp && count < 100);
- 
--		RT_ASSERT((count < 100),
--			  "Write wake up frame mask FAIL %d value!\n", tmp);
-+		WARN_ONCE((count >= 100),
-+			  "rtl8821ae: Write wake up frame mask FAIL %d value!\n",
-+			  tmp);
- 	}
- 	/* Disable Rx packet buffer access. */
- 	rtl_write_byte(rtlpriv, REG_PKT_BUFF_ACCESS_CTRL,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index 5dad402..7e2f7b0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -1870,8 +1870,8 @@ static u8 _rtl8821ae_get_rate_section_index(u32 regaddr)
- 	else if (regaddr >= 0xE20 && regaddr <= 0xE4C)
- 		index = (u8)((regaddr - 0xE20) / 4);
- 	else
--		RT_ASSERT(!COMP_INIT,
--			  "Invalid RegAddr 0x%x\n", regaddr);
-+		WARN_ONCE(true,
-+			  "rtl8821ae: Invalid RegAddr 0x%x\n", regaddr);
- 	return index;
- }
- 
-@@ -2322,7 +2322,7 @@ static s8 _rtl8821ae_phy_get_ratesection_intxpower_byrate(u8 path, u8 rate)
- 		rate_section = 11;
- 		break;
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8821ae: Rate_Section is Illegal\n");
- 		break;
- 	}
- 
-@@ -2588,7 +2588,7 @@ static s8 _rtl8821ae_phy_get_txpower_by_rate(struct ieee80211_hw *hw,
- 		shift = 24;
- 		break;
- 	default:
--		RT_ASSERT(true, "Rate_Section is Illegal\n");
-+		WARN_ONCE(true, "rtl8821ae: Rate_Section is Illegal\n");
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-index 2772718..1080981 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-@@ -904,8 +904,9 @@ void rtl8821ae_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_TX_DESC_NEXT_DESC_ADDRESS(pdesc, *(u32 *)val);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR txdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8821ae: ERR txdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	} else {
-@@ -923,8 +924,9 @@ void rtl8821ae_set_desc(struct ieee80211_hw *hw, u8 *pdesc,
- 			SET_RX_DESC_EOR(pdesc, 1);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR rxdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8821ae: ERR rxdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	}
-@@ -943,8 +945,9 @@ u32 rtl8821ae_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_TX_DESC_TX_BUFFER_ADDRESS(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR txdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8821ae: ERR txdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	} else {
-@@ -959,8 +962,9 @@ u32 rtl8821ae_get_desc(u8 *pdesc, bool istx, u8 desc_name)
- 			ret = GET_RX_DESC_BUFF_ADDR(pdesc);
- 			break;
- 		default:
--			RT_ASSERT(false,
--				  "ERR rxdesc :%d not process\n", desc_name);
-+			WARN_ONCE(true,
-+				  "rtl8821ae: ERR rxdesc :%d not processed\n",
-+				  desc_name);
- 			break;
- 		}
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 0a508649..1558f54 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1059,7 +1059,7 @@ int rtl_usb_probe(struct usb_interface *intf,
- 	hw = ieee80211_alloc_hw(sizeof(struct rtl_priv) +
- 				sizeof(struct rtl_usb_priv), &rtl_ops);
- 	if (!hw) {
--		RT_ASSERT(false, "ieee80211 alloc failed\n");
-+		WARN_ONCE(true, "rtl_usb: ieee80211 alloc failed\n");
- 		return -ENOMEM;
- 	}
- 	rtlpriv = hw->priv;
+ EXPORT_SYMBOL(ieee80211_rx_irqsafe);
++
++/* Receive path for decap offloaded data frames */
++
++static void
++ieee80211_rx_handle_decap_offl(struct ieee80211_sub_if_data *sdata,
++				     struct sta_info *sta, struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_vif *vif = &sdata->vif;
++	struct net_device *dev = sdata->dev;
++	struct ieee80211_rx_status *status;
++	struct ieee80211_key *key = NULL;
++	struct ieee80211_rx_data rx;
++	int i;
++	struct ethhdr *ehdr;
++
++	ehdr = (struct ethhdr *)skb->data;
++	status = IEEE80211_SKB_RXCB(skb);
++
++	/* TODO: Extend ieee80211_rx_decap_offl() with bssid so that Ethernet
++	 * encap/decap can be supported in Adhoc interface type as well.
++	 * Adhoc interface depends on bssid to udpate last_rx.
++	 */
++	if (vif->type != NL80211_IFTYPE_STATION &&
++	    vif->type != NL80211_IFTYPE_AP_VLAN &&
++	    vif->type != NL80211_IFTYPE_AP)
++		goto drop;
++
++	I802_DEBUG_INC(local->dot11ReceivedFragmentCount);
++
++	if (!(status->flag & RX_FLAG_MCAST)) {
++		sta->rx_stats.last_rx = jiffies;
++		sta->rx_stats.last_rate = sta_stats_encode_rate(status);
++	}
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++	    !is_multicast_ether_addr(ehdr->h_dest))
++		ieee80211_sta_reset_conn_monitor(sdata);
++
++	sta->rx_stats.fragments++;
++
++	u64_stats_update_begin(&sta->rx_stats.syncp);
++	sta->rx_stats.bytes += skb->len;
++	u64_stats_update_end(&sta->rx_stats.syncp);
++
++	if (!(status->flag & RX_FLAG_NO_SIGNAL_VAL)) {
++		sta->rx_stats.last_signal = status->signal;
++		ewma_signal_add(&sta->rx_stats_avg.signal, -status->signal);
++	}
++
++	if (status->chains) {
++		sta->rx_stats.chains = status->chains;
++		for (i = 0; i < ARRAY_SIZE(status->chain_signal); i++) {
++			int signal = status->chain_signal[i];
++
++			if (!(status->chains & BIT(i)))
++				continue;
++
++			sta->rx_stats.chain_signal_last[i] = signal;
++			ewma_signal_add(&sta->rx_stats_avg.chain_signal[i],
++					-signal);
++		}
++	}
++
++	if (status->flag & RX_FLAG_MCAST) {
++		for (i = 0; i < NUM_DEFAULT_KEYS; i++) {
++			key = rcu_dereference(sta->gtk[i]);
++			if (key)
++				break;
++		}
++	} else {
++		key = rcu_dereference(sta->ptk[sta->ptk_idx]);
++	}
++
++	if (key && unlikely(key->flags & KEY_FLAG_TAINTED))
++		goto drop;
++
++	if (status->flag & RX_FLAG_MMIC_ERROR) {
++		if (key)
++			key->u.tkip.mic_failures++;
++		goto mic_fail;
++	}
++
++	if (unlikely(!test_sta_flag(sta, WLAN_STA_AUTHORIZED))) {
++		if (ehdr->h_proto != sdata->control_port_protocol)
++			goto drop;
++		else if (!ether_addr_equal(ehdr->h_dest, vif->addr) &&
++			 !ether_addr_equal(ehdr->h_dest, pae_group_addr))
++			goto drop;
++	}
++
++	if (unlikely(ehdr->h_proto == cpu_to_be16(ETH_P_TDLS))) {
++		struct ieee80211_tdls_data *tf = (void *)skb->data;
++
++		if (pskb_may_pull(skb,
++				  offsetof(struct ieee80211_tdls_data, u)) &&
++		    tf->payload_type == WLAN_TDLS_SNAP_RFTYPE &&
++		    tf->category == WLAN_CATEGORY_TDLS &&
++		    (tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_REQUEST ||
++		     tf->action_code == WLAN_TDLS_CHANNEL_SWITCH_RESPONSE)) {
++			skb_queue_tail(&local->skb_queue_tdls_chsw, skb);
++			schedule_work(&local->tdls_chsw_work);
++			sta->rx_stats.packets++;
++			return;
++		}
++	}
++
++	memset(&rx, 0, sizeof(rx));
++	rx.skb = skb;
++	rx.sdata = sdata;
++	rx.local = local;
++	rx.sta = sta;
++
++	if (vif->type == NL80211_IFTYPE_AP_VLAN && sdata->bss &&
++	    unlikely(ehdr->h_proto == sdata->control_port_protocol)) {
++		sdata = container_of(sdata->bss, struct ieee80211_sub_if_data,
++				     u.ap);
++		dev = sdata->dev;
++		rx.sdata = sdata;
++	}
++
++	rx.skb->dev = dev;
++
++	/* XXX: Since rx.seqno_idx is not available for decap offloaded frames
++	 * rx msdu stats update at the seqno_idx in ieee80211_deliver_skb()
++	 * will always be updated at index 0 and will not be very useful.
++	 */
++	ieee80211_deliver_skb(&rx);
++
++	return;
++
++mic_fail:
++	cfg80211_michael_mic_failure(sdata->dev, sta->addr,
++				     (status->flag & RX_FLAG_MCAST) ?
++				     NL80211_KEYTYPE_GROUP :
++				     NL80211_KEYTYPE_PAIRWISE,
++				     key ? key->conf.keyidx : -1,
++				     NULL, GFP_ATOMIC);
++
++drop:
++	sta->rx_stats.dropped++;
++	dev_kfree_skb(skb);
++}
++
++/* Receive path handler that a low level driver supporting 802.11 hdr decap
++ * offload can call. The frame is in ethernet format and the assumption is
++ * all necessary operations like decryption, defrag, deaggregation, etc.
++ * requiring 802.11 headers are already performed in the low level driver
++ * or hardware.
++ */
++void ieee80211_rx_decap_offl(struct ieee80211_hw *hw,
++			     struct ieee80211_sta *pubsta, struct sk_buff *skb)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++
++	if (unlikely(local->quiescing || local->suspended))
++		goto drop;
++
++	if (unlikely(local->in_reconfig))
++		goto drop;
++
++	if (WARN_ON(!local->started))
++		goto drop;
++
++	/* TODO: Sanity checks on flags/rx_flags like done in
++	 * ieee80211_invoke_fast_rx() to confirm if the frame
++	 * has gone through all the functionalities which require
++	 * 802.11 frame header.
++	 */
++
++	rcu_read_lock();
++
++	/* TODO: Toggle Rx throughput LED */
++
++	ieee80211_rx_handle_decap_offl(sta->sdata, sta, skb);
++
++	rcu_read_unlock();
++
++	return;
++drop:
++	kfree_skb(skb);
++}
++EXPORT_SYMBOL(ieee80211_rx_decap_offl);
 -- 
-2.10.2
+1.9.1
