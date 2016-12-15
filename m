@@ -1,40 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39940 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757691AbcLSKy7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:54:59 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 00/11] rt2800 patches 19.12.2016
-Date: Mon, 19 Dec 2016 11:52:46 +0100
-Message-Id: <1482144777-16760-1-git-send-email-sgruszka@redhat.com> (sfid-20161219_115556_324768_F9416C4E)
+Received: from coyote.holtmann.net ([212.227.132.17]:58515 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755546AbcLOHAO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 02:00:14 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
+Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
+Date: Thu, 15 Dec 2016 08:00:09 +0100
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        "Gustavo F. Padovan" <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Vince Bridgers <vbridger@opensource.altera.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
+        linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Message-Id: <DF6B4348-C994-47D1-89C9-1BE16062C2B3@holtmann.org> (sfid-20161215_080040_755475_D5B4C464)
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-9-git-send-email-mst@redhat.com>
+To: "Michael S. Tsirkin" <mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Random fixes for rt2800 driver.
+Hi Michael,
 
-Stanislaw Gruszka (11):
-  rt2800: make rx ampdu_factor depend on number of rx chains
-  rt2800: don't set ht parameters for non-aggregated frames
-  rt2800: set minimum MPDU and PSDU lengths to sane values
-  rt2800: set MAX_PSDU len according to remote STAs capabilities
-  rt2800: rename adjust_freq_offset function
-  rt2800: warn if doing VCO recalibration for unknow RF chip
-  rt2800: perform VCO recalibration for RF5592 chip
-  rt2x00: merge agc and vco works with link tuner
-  rt2800: replace mdelay by usleep on vco calibration.
-  rt2800: replace msleep() with usleep_range() on channel switch
-  rt2x00: add mutex to synchronize config and link tuner
+> That's the default now, no need for makefiles to set it.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+> drivers/bluetooth/Makefile                                | 2 --
+> drivers/net/can/Makefile                                  | 1 -
+> drivers/net/ethernet/altera/Makefile                      | 1 -
+> drivers/net/ethernet/atheros/alx/Makefile                 | 1 -
+> drivers/net/ethernet/freescale/Makefile                   | 2 --
+> drivers/net/wireless/ath/Makefile                         | 2 --
+> drivers/net/wireless/ath/wil6210/Makefile                 | 2 --
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 2 --
+> drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile | 1 -
+> drivers/net/wireless/intel/iwlegacy/Makefile              | 2 --
+> drivers/net/wireless/intel/iwlwifi/Makefile               | 2 +-
+> drivers/net/wireless/intel/iwlwifi/dvm/Makefile           | 2 +-
+> drivers/net/wireless/intel/iwlwifi/mvm/Makefile           | 2 +-
+> drivers/net/wireless/intersil/orinoco/Makefile            | 3 ---
+> drivers/net/wireless/mediatek/mt7601u/Makefile            | 2 --
+> drivers/net/wireless/realtek/rtlwifi/Makefile             | 2 --
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile    | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile   | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile  | 2 --
+> drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile   | 2 --
+> drivers/net/wireless/ti/wl1251/Makefile                   | 2 --
+> drivers/net/wireless/ti/wlcore/Makefile                   | 2 --
+> drivers/staging/rtl8188eu/Makefile                        | 2 +-
+> drivers/staging/rtl8192e/Makefile                         | 2 --
+> drivers/staging/rtl8192e/rtl8192e/Makefile                | 2 --
+> net/bluetooth/Makefile                                    | 2 --
+> net/ieee802154/Makefile                                   | 2 --
+> net/mac80211/Makefile                                     | 2 +-
+> net/mac802154/Makefile                                    | 2 --
+> net/wireless/Makefile                                     | 2 --
+> 38 files changed, 5 insertions(+), 68 deletions(-)
 
- drivers/net/wireless/ralink/rt2x00/rt2800.h      |    2 +
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c   |   79 ++++++++++---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h   |    2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00.h      |    6 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c   |    7 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00lib.h   |   31 +-----
- drivers/net/wireless/ralink/rt2x00/rt2x00link.c  |  132 ++++++----------------
- drivers/net/wireless/ralink/rt2x00/rt2x00mac.c   |    8 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   12 +-
- 9 files changed, 124 insertions(+), 155 deletions(-)
+for drivers/bluetooth, net/bluetooth, net/ieee802154 and net/mac802154
+
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
