@@ -1,63 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54817 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750899AbcLLMAU (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36591 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756810AbcLORY3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 07:00:20 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC V3 05/11] brcmfmac: fix memory leak in brcmf_cfg80211_attach()
-Date: Mon, 12 Dec 2016 11:59:51 +0000
-Message-Id: <1481543997-24624-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130033_820003_88D57EFD)
-In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 15 Dec 2016 12:24:29 -0500
+Received: by mail-wm0-f65.google.com with SMTP id m203so7850997wma.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 09:24:16 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer statistics
+Date: Thu, 15 Dec 2016 18:24:13 +0100
+Message-ID: <2970240.ih558OrmaK@debian64> (sfid-20161215_182725_116913_1E110BB6)
+In-Reply-To: <20161215164338.GB8030@atheros-ThinkPad-T61>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com> <20161215162659.GA8030@atheros-ThinkPad-T61> <20161215164338.GB8030@atheros-ThinkPad-T61>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_cfg80211_attach() there was one error path not properly
-handled as it leaked memory allocated in brcmf_btcoex_attach().
+Hello Shafi,
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+On Thursday, December 15, 2016 10:13:39 PM CET Mohammed Shafi Shajakhan wrote:
+> I am also thinking, as of now there is not much use in appending
+> the extended peer stats (which gets periodically ) to the linked list
+> '&ar->debug.fw_stats.peers_extd)'  and should we get rid of the below
+> (and the required cleanup as well) 
+> 
+> list_splice_tail_init(&stats.peers_extd,
+> 		&ar->debug.fw_stats.peers_extd);
+> 
+> 
+> since rx_duration is getting updated periodically to the per sta
+> information. Kindly let me know your thoughts about this.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index ccae3bb..7ffc4ab 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6868,7 +6868,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+Yes, of course. I see what your are trying to do and I think it's much better
+to get rid of peers_extd and ath10k_fw_extd_stats_peers_free.
 
- 	err = brcmf_p2p_attach(cfg, p2pdev_forced);
- 	if (err) {
--		brcmf_err("P2P initilisation failed (%d)\n", err);
-+		brcmf_err("P2P initialisation failed (%d)\n", err);
- 		goto wiphy_unreg_out;
- 	}
- 	err = brcmf_btcoex_attach(cfg);
-@@ -6893,7 +6893,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
- 	err = brcmf_fweh_activate_events(ifp);
- 	if (err) {
- 		brcmf_err("FWEH activation failed (%d)\n", err);
--		goto wiphy_unreg_out;
-+		goto detach;
- 	}
-
- 	/* Fill in some of the advertised nl80211 supported features */
-@@ -6908,6 +6908,9 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
-
- 	return cfg;
-
-+detach:
-+	brcmf_btcoex_detach(cfg);
-+	brcmf_p2p_detach(&cfg->p2p);
- wiphy_unreg_out:
- 	wiphy_unregister(cfg->wiphy);
- priv_out:
---
-1.9.1
+Regards,
+Christian
