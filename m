@@ -1,89 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22751 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750895AbcLGFDT (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34489 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755972AbcLOSYD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 00:03:19 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Avoid potential page alloc BUG_ON in tx free path
-Date: Wed, 7 Dec 2016 10:30:32 +0530
-Message-ID: <1481086832-17281-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161207_060323_650720_89BEB873)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 15 Dec 2016 13:24:03 -0500
+Received: by mail-oi0-f67.google.com with SMTP id m75so7099971oig.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:40 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 12/14 V2] rtlwifi: rtl8192c-common: Remove all instances of DBG_EMERG
+Date: Thu, 15 Dec 2016 12:23:08 -0600
+Message-Id: <20161215182310.13713-13-Larry.Finger@lwfinger.net> (sfid-20161215_192418_707049_ED9D9362)
+In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-'ath10k_htt_tx_free_cont_txbuf' and 'ath10k_htt_tx_free_cont_frag_desc'
-have NULL pointer checks to avoid crash if they are called twice
-but this is as of now not sufficient as these pointers are not assigned
-to NULL once the contiguous DMA memory allocation is freed, fix this.
-Though this may not be hit with the explicity check of state variable
-'tx_mem_allocated' check, good to have this addressed as well.
-
-Below BUG_ON is hit when the above scenario is simulated
-with kernel debugging enabled
-
- page:f6d09a00 count:0 mapcount:-127 mapping:  (null)
-index:0x0
- flags: 0x40000000()
- page dumped because: VM_BUG_ON_PAGE(page_ref_count(page)
-== 0)
- ------------[ cut here ]------------
- kernel BUG at ./include/linux/mm.h:445!
- invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
- EIP is at put_page_testzero.part.88+0xd/0xf
- Call Trace:
-  [<c118a2cc>] __free_pages+0x3c/0x40
-  [<c118a30e>] free_pages+0x3e/0x50
-  [<c10222b4>] dma_generic_free_coherent+0x24/0x30
-  [<f8c1d9a8>] ath10k_htt_tx_free_cont_txbuf+0xf8/0x140
-
-  [<f8c1e2a9>] ath10k_htt_tx_destroy+0x29/0xa0
-
-  [<f8c143e0>] ath10k_core_destroy+0x60/0x80 [ath10k_core]
-  [<f8acd7e9>] ath10k_pci_remove+0x79/0xa0 [ath10k_pci]
-  [<c13ed7a8>] pci_device_remove+0x38/0xb0
-  [<c14d3492>] __device_release_driver+0x72/0x100
-  [<c14d36b7>] driver_detach+0x97/0xa0
-  [<c14d29c0>] bus_remove_driver+0x40/0x80
-  [<c14d427a>] driver_unregister+0x2a/0x60
-  [<c13ec768>] pci_unregister_driver+0x18/0x70
-  [<f8aced4f>] ath10k_pci_exit+0xd/0x2be [ath10k_pci]
-  [<c1101e78>] SyS_delete_module+0x158/0x210
-  [<c11b34f1>] ? __might_fault+0x41/0xa0
-  [<c11b353b>] ? __might_fault+0x8b/0xa0
-  [<c1001a4b>] do_fast_syscall_32+0x9b/0x1c0
-  [<c178da34>] sysenter_past_esp+0x45/0x74
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_tx.c | 2 ++
- 1 file changed, 2 insertions(+)
+V2 - eliminate some files that should not have been sent.
+---
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 33 ++++++----------------
+ .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 13 ++++-----
+ 2 files changed, 15 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 27e49db..86b427f 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -239,6 +239,7 @@ static void ath10k_htt_tx_free_cont_txbuf(struct ath10k_htt *htt)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 4a49e66..e739e56 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -145,10 +145,8 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 		pageNums = size / FW_8192C_PAGE_SIZE;
+ 		remainsize = size % FW_8192C_PAGE_SIZE;
  
- 	size = htt->max_num_pending_tx * sizeof(struct ath10k_htt_txbuf);
- 	dma_free_coherent(ar->dev, size, htt->txbuf.vaddr, htt->txbuf.paddr);
-+	htt->txbuf.vaddr = NULL;
- }
+-		if (pageNums > 4) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Page numbers should not greater then 4\n");
+-		}
++		if (pageNums > 4)
++			pr_err("Page numbers should not greater then 4\n");
  
- static int ath10k_htt_tx_alloc_cont_txbuf(struct ath10k_htt *htt)
-@@ -268,6 +269,7 @@ static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
- 			  size,
- 			  htt->frag_desc.vaddr,
- 			  htt->frag_desc.paddr);
-+	htt->frag_desc.vaddr = NULL;
- }
+ 		for (page = 0; page < pageNums; page++) {
+ 			offset = page * FW_8192C_PAGE_SIZE;
+@@ -180,15 +178,10 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_ChkSum_rpt)));
  
- static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
++		       value32);
+ 		goto exit;
+ 	}
+-
+-	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+-
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+ 	value32 &= ~WINTINI_RDY;
+@@ -198,20 +191,15 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	do {
+ 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+-		if (value32 & WINTINI_RDY) {
+-			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-				 "Polling FW ready success!! REG_MCUFWDL:0x%08x .\n",
+-					value32);
+-			err = 0;
+-			goto exit;
+-		}
++		if (value32 & WINTINI_RDY)
++			return 0;
+ 
+ 		mdelay(FW_8192C_POLLING_DELAY);
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
++	pr_err("Polling FW ready fail! REG_MCUFWDL:0x%08x.\n",
++	       value32);
+ 
+ exit:
+ 	return err;
+@@ -251,8 +238,7 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
+ 
+ 	err = _rtl92c_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+ 			 "Firmware is ready to run!\n");
+@@ -327,8 +313,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+index 30c2d12..5f8fa4a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
+@@ -104,7 +104,7 @@ u32 _rtl92c_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0x3f;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -152,7 +152,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("stop\n");
+ 		return;
+ 	}
+ 	offset &= 0x3f;
+@@ -209,7 +209,7 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	if (rtlphy->rf_type == RF_1T2R) {
+@@ -222,13 +222,13 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
+ 						   BASEBAND_CONFIG_PHY_REG);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
+ 						 BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power =
+@@ -860,8 +860,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
 -- 
-1.9.1
+2.10.2
