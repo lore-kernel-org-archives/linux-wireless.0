@@ -1,49 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52432 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51892 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932495AbcLIIu4 (ORCPT
+        with ESMTP id S1755649AbcLOQnr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Dec 2016 03:50:56 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: devel@driverdev.osuosl.org, Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
-        <20161202014833.6856-11-Larry.Finger@lwfinger.net>
-        <20161205213447.GJ8176@mwanda>
-        <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
-        <20161206071340.GB10292@kroah.com>
-        <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
-        <20161207133219.GM8176@mwanda>
-        <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com>
-        <20161208115049.GR8176@mwanda> <20161208115450.GK8244@mwanda>
-Date: Fri, 09 Dec 2016 10:50:50 +0200
-In-Reply-To: <20161208115450.GK8244@mwanda> (Dan Carpenter's message of "Thu,
-        8 Dec 2016 14:54:50 +0300")
-Message-ID: <87vaut32qd.fsf@kamboji.qca.qualcomm.com> (sfid-20161209_095104_641661_730D69AE)
+        Thu, 15 Dec 2016 11:43:47 -0500
+Date: Thu, 15 Dec 2016 22:13:39 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer
+ statistics
+Message-ID: <20161215164338.GB8030@atheros-ThinkPad-T61> (sfid-20161215_174350_747315_F320D714)
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+ <2870294.lMmxz9iPmq@debian64>
+ <20161214073337.GA4046@atheros-ThinkPad-T61>
+ <1859306.unY1Rqbrx8@debian64>
+ <20161215162659.GA8030@atheros-ThinkPad-T61>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161215162659.GA8030@atheros-ThinkPad-T61>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+Hi Christian,
 
-> On Thu, Dec 08, 2016 at 02:50:49PM +0300, Dan Carpenter wrote:
->> On Thu, Dec 08, 2016 at 01:43:42PM +0200, Kalle Valo wrote:
->> > But it would make me very happy if someone would add a similar grouping
->> > functionality to dyndbg to make it easy to enable a set of debug
->> > messages in a driver.
->> 
->> Thats seems like a reasonable thing as well.
->
-> I actually like the ath code...  We could easily change it to be more
-> generic and make it a top level function for everyone to use.
+I am also thinking, as of now there is not much use in appending
+the extended peer stats (which gets periodically ) to the linked list
+'&ar->debug.fw_stats.peers_extd)'  and should we get rid of the below
+(and the required cleanup as well) 
 
-That would be great. And maybe add a sysfs file with a description
-different levels, like module parameters have. Too bad that I can't work
-on that, too much stuff on my plate right now.
+list_splice_tail_init(&stats.peers_extd,
+		&ar->debug.fw_stats.peers_extd);
 
--- 
-Kalle Valo
+
+since rx_duration is getting updated periodically to the per sta
+information. Kindly let me know your thoughts about this.
+
+regards,
+shafi
+
+On Thu, Dec 15, 2016 at 09:56:59PM +0530, Mohammed Shafi Shajakhan wrote:
+> Hello Christian,
+> 
+> On Wed, Dec 14, 2016 at 05:38:02PM +0100, Christian Lamparter wrote:
+> > On Wednesday, December 14, 2016 1:03:38 PM CET Mohammed Shafi Shajakhan wrote:
+> > > > On Wednesday, December 7, 2016 11:58:24 AM CET Mohammed Shafi Shajakhan wrote:
+> > > > > On Mon, Dec 05, 2016 at 10:52:45PM +0100, Christian Lamparter wrote:
+> > > > > > @@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+> > > > > >  			goto free;
+> > > > > >  		}
+> > > > > >  
+> > > > > > +		if (!list_empty(&stats.peers))
+> > > > > 
+> > > > > [shafi] sorry please correct me if i am wrong, for 'extended peer stats' we are checking
+> > > > > for normal 'peer stats' ? Is this the fix intended, i had started a build to
+> > > > > check your change and we will keep you posted, does this fix displaying
+> > > > > 'rx_duration' in ath10k fw_stats.
+> > > > The idea is not to queue any "extended peer stats" when there where no "peer stats" to
+> > > > begin with. Because otherwise, the function is still vulnerable to OOM since the 
+> > > > extended peers stats will be queued unchecked (not that this is currently a problem).
+> > > 
+> > > [shafi] list_splice_tail_init should still check for non-empty 'peers_extd' list
+> > > and append if required ? please let me know if i am still missing something
+> > Well, you can also count the entries in peers_extd and delete the old entries
+> > if they start to overflow. If you want to do it differently, please go ahead.
+> >
+> [shafi] sorry for the delay (got stuck up with something else), I will add some prints explicitly
+> and keep you posted ASAP. Since the extended peer stats gets updated periodically I
+> would like to confirm the debug linked list associated to the extended peer
+> stats does not overflows and potentially cause OOM.
+> 
+> regards,
+> shafi
