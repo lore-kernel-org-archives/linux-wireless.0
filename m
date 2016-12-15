@@ -1,51 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41960 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935111AbcLOJIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 04:08:49 -0500
-Message-ID: <1481792926.31776.1.camel@sipsolutions.net> (sfid-20161215_100908_037429_65531052)
-Subject: Re: [RFC 0/3] Add new data path for ethernet frame format
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 15 Dec 2016 10:08:46 +0100
-In-Reply-To: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44409 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757415AbcLOKt3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 05:49:29 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 1/3] mac80211: Add provision for 802.11 encap/decap offload
+Date: Thu, 15 Dec 2016 10:43:33 +0000
+Message-ID: <585273D4.7030100@qti.qualcomm.com> (sfid-20161215_114949_057832_ED0EAD9D)
 References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+         <1481781608-5181-2-git-send-email-vthiagar@qti.qualcomm.com>
+ <1481793392.31776.3.camel@sipsolutions.net>
+In-Reply-To: <1481793392.31776.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-12-15 at 11:30 +0530, Vasanthakumar Thiagarajan wrote:
-> This patch set adds a new data path to offload 802.11 header
-> encap/decap to driver or hardware. Drivers having support
-> for ieee80211 header encap/decap and other offload functionalities
-> which can't be done before encap or after decap can make use of
-> this new data path. Currently it is implemented for STA and AP
-> interface type, this can be extend other interface types like
-> adhoc.  
-
-Thanks for posting this!
-
-> With ath10k driver changes using this new Tx/Rx path, 10 - 15%
-> CPU usage and upto ~20Mbps TCP performance improvements are
-> observed with this ethernet data path. 
-
-I'm sure that's because your CPU is severely limited :-)
-
-> This patch set is
-> prepared on a older mac80211 code base on top of
-> commit 7d27a0ba7adc ("cfg80211: Add mesh peer AID setting API").
-> Sorry, I could not get a chance to rework it on top of latest
-> mac80211 code base.
-
-Ok. I guess that doesn't matter much for review now.
-
-> 	- Consider ieee8011 header and cipher header size also while
-> updating tx/rx stats for
-> 	  ethernet frame format.
-
-I wonder if we really shouldn't be going the other way around instead,
-to be closer to what Ethernet and likely other drivers do.
-
-johannes
+T24gVGh1cnNkYXkgMTUgRGVjZW1iZXIgMjAxNiAwMjo0NiBQTSwgSm9oYW5uZXMgQmVyZyB3cm90
+ZToNCj4NCj4+IERyaXZlcnMgYWR2ZXJ0aXNpbmcgdGhpcyBjYXBhYmlsaXR5IHNob3VsZCBhbHNv
+IGltcGxlbWVudCBvdGhlcg0KPj4gZnVuY3Rpb25hbGl0aWVzIHdoaWNoIGRlYWwgd2l0aCA4MDIu
+MTEgZnJhbWUgZm9ybWF0IGxpa2UgYmVsb3cNCj4NCj4+IAktIEFEREJBL0RFTEJBIG9mZmxvYWQN
+Cj4NCj4gVGhpcyBzaG91bGRuJ3QgYmUgbmVjZXNzYXJ5Lg0KDQpPay4gU2luY2UgZHJpdmVyL2h3
+IG5lZWRzIHRvIGltcGxlbWVudCBUeC9SeCBhZ2dyZWdhdGlvbiByZWxhdGVkIGZ1bmN0aW9uYWxp
+dGllcw0KSSB0aG91Z2h0IEFEREJBL0RFTEJBIHByb2Nlc3Npbmcgd2lsbCBiZSBsaXR0bGUgaW1w
+b3J0YW50IHRvIG1hYzgwMjExLiBNYXkgYmUgSSdtDQptaXNzaW5nIHNvbWV0aGluZy4NCg0KPg0K
+Pj4gCS0gSGFyZHdhcmUgcmF0ZSBjb250cm9sDQo+DQo+IE5laXRoZXIgaXMgdGhpcywgaWYgd2Ug
+ZmluZCBzb21lIEFQSSB0byBkbyBzYW1wbGluZy4gVGhlIGV4aXN0aW5nIHJhdGUNCj4gdGFibGUg
+QVBJIGFscmVhZHkgYWxsb3dzIHNldHRpbmcgdGhlIHJhdGVzIG91dCBvZiBiYW5kLCBzbyB0aGUg
+b25seQ0KPiB0aGluZyB0aGF0IHlvdSdkIGhhdmUgdG8gc3VwcG9ydCBvdXQgb2YgYmFuZCBpcyBz
+YW1wbGluZy4NCg0KT2suDQoNCj4NCj4+IAktIFBvd2Vyc2F2ZSBvZmZsb2FkDQo+DQo+IFRoYXQn
+cyBhbWJpZ3VvdXMgLSB5b3UgZG8gbmVlZCB0byBoYW5kbGUgc2xlZXBpbmcgc3RhdGlvbnMgKGFu
+ZCBQUy0NCj4gUG9sbC9VLUFQU0QpIGluIEFQIG1vZGUgaW4gdGhlIGRldmljZSB3aXRoIHRoaXMs
+DQoNCkkgZGlkIG5vdCBkaWcgZGVlcCBpbnRvIFBTIHJlcXVpcmVtZW50IHdpdGggZXRoZXJuZXQg
+ZnJhbWUgZm9ybWF0IGJlY2F1c2UNCmZyYW1lIGNvbnRyb2wgaXMgbm90IGF2YWlsYWJsZSB0byBt
+YWM4MDIxMSwgc28gSSB0aG91Z2h0IHRvIG1lbnRpb24gUFMgb2ZmbG9hZA0KaXMgYSByZXF1aXJl
+bWVudC4gTWF5IGJlIHRoZXJlIGlzIGFscmVhZHkgYW4gaW5mcmFzdHJ1Y3R1cmUgaW4gbWFjODAy
+MTEgdG8NCmxlYXJuIFBTIHN0YXRlIG9mIGNsaWVudCB3aGljaCB3YXMgbm90aWZpZWQgaW4gdGhl
+IGN1cnJlbnQgZGF0YSBmcmFtZSAob3RoZXINCnRoYW4gODAyLjExIGZyYW1lIGNvbnRyb2wpLg0K
+DQogIGJ1dCBJIGRvbid0IHNlZSBhIGRlZXANCj4gdGVjaG5pY2FsIHJlYXNvbiB0byByZXF1aXJl
+IGl0IGZvciBjbGllbnQgbW9kZS4gT1RPSCwgY2xpZW50IG1vZGUgaXMNCj4gYWxtb3N0IGFsd2F5
+cyBvZmZsb2FkZWQgYW55d2F5Lg0KDQpPay4NCg0KPg0KPiBJIHRoaW5rIHlvdSBtYXkgaGF2ZSBm
+b3Jnb3R0ZW4gb25lIGltcG9ydGFudCBpdGVtLA0KPg0KPiAJLSBjb250cm9sIHBvcnQgaGFuZGxp
+bmcNCg0KSG1tbSwgSSdtIGdldHRpbmcgV1BBLVBTSyB3b3JraW5nIHdpdGggdGhpcy4gTWF5IGJl
+IHRoZXJlIGFyZSBvdGhlcg0KY29udHJvbCBwb3J0IGhhbmRsaW5nIHdoaWNoIHdpbGwgbm90IHdv
+cmsgd2l0aCBldGhlcm5ldCBmcmFtZSBmb3JtYXQ/DQoNCj4NCj4gPw0KPg0KPj4gKyAqIEBJRUVF
+ODAyMTFfSFdfU1VQUE9SVFNfODAyMTFfRU5DQVBfREVDQVA6IEhhcmR3YXJlL2RyaXZlcg0KPj4g
+c3VwcG9ydHMgODAyLjExDQo+PiArICoJZW5jYXAvZGVjYXAgZm9yIGRhdGEgZnJhbWVzLiBTdXBw
+b3J0aW5nIGRyaXZlciBoYXZlIHRvDQo+PiBpbXBsZW1lbnQNCj4+ICsgKglnZXRfdmlmXzgwMjEx
+X2VuY2FwX2RlY2FwX29mZmxvYWQoKSB0byBwYXNzIGlmIDgwMi4xMQ0KPj4gZW5jYXAvZGVjYXAN
+Cj4+ICsgKglvZmZsb2FkCWlzIHN1cHBvcnRlZCBmb3IgdGhlIHZpZi4NCj4NCj4gSSBkb24ndCBz
+ZWUgd2h5IHlvdSBuZWVkIHRoaXMsIHdoZW4geW91IGhhdmUgdGhlIG1ldGhvZCAtIHlvdSBjYW4g
+anVzdA0KPiBhc3N1bWUgdGhhdCB0aGUgbWV0aG9kIHJldHVybnMgZmFsc2Ugd2hlbiBpdCdzIG5v
+dCBpbXBsZW1lbnRlZC4NCg0KT2ssIEkgd2FzIHRyeWluZyBkZWZpbmUgYW4gaW50ZXJmYWNlIGZv
+ciBkcml2ZXIgdG8gcmV0dXJuIHZpZiB0eXBlIGJhc2VkDQplbmNhcC9kZWNhcCBjYXBhYmlsaXR5
+IHNvIHRoYXQgaW4gNC1hZGRyIGFuZCBNZXNoIHR5cGUgODAyLjExIGZyYW1lIGZvcm1hdA0KaXMg
+dXNlZC4NCg0KPg0KPj4gICBzdHJ1Y3QgaWVlZTgwMjExX29wcyB7DQo+PiAgIAl2b2lkICgqdHgp
+KHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LA0KPj4gQEAgLTM2MzksNiArMzY1MSwxMCBAQCBzdHJ1
+Y3QgaWVlZTgwMjExX29wcyB7DQo+PiAgIAl2b2lkICgqd2FrZV90eF9xdWV1ZSkoc3RydWN0IGll
+ZWU4MDIxMV9odyAqaHcsDQo+PiAgIAkJCSAgICAgIHN0cnVjdCBpZWVlODAyMTFfdHhxICp0eHEp
+Ow0KPj4gICAJdm9pZCAoKnN5bmNfcnhfcXVldWVzKShzdHJ1Y3QgaWVlZTgwMjExX2h3ICpodyk7
+DQo+PiArDQo+PiArCWludCAoKmdldF92aWZfODAyMTFfaGRyX29mZmxvYWQpKHN0cnVjdCBpZWVl
+ODAyMTFfaHcgKmh3LA0KPj4gKwkJCQkJIHN0cnVjdCBpZWVlODAyMTFfdmlmICp2aWYsDQo+PiAr
+CQkJCQkgYm9vbCBpc180YWRkciwgYm9vbA0KPj4gKnN1cHBvcnRlZCk7DQo+DQo+IFdoeSBhcmUg
+eW91IG5vdCBzaW1wbHkgcmV0dXJuaW5nICJzdXBwb3J0ZWQiPw0KPg0KPiBJIGRvbid0IGxpa2Ug
+cGFzc2luZyB0aGUgdmlmIHBvaW50ZXIgaGVyZS4gQXQgdGhpcyBwb2ludCwgdGhlIHZpZg0KPiBw
+b2ludGVyIGlzbid0IGtub3duIHRvIHRoZSBkcml2ZXIgeWV0ICh0aHJvdWdoIGRydl9hZGRfaW50
+ZXJmYWNlKSBzbw0KPiBpdCdzIGEgZGVhZCBwb2ludGVyIGFzIGZhciBhcyB0aGUgc2VxdWVuY2lu
+ZyBpcyBjb25jZXJuZWQuDQo+DQo+IElzIHRoZXJlIGEgcG9zc2liaWxpdHkgdGhhdCBkcml2ZXJz
+IG5lZWQgdG8gc3dpdGNoIG9mZiBldGhlcm5ldCBmb3JtYXQNCj4gaGFuZGxpbmcgZW50aXJlbHkg
+d2hlbiBhbiBpbmNvbXBhdGlibGUgaW50ZXJmYWNlIGlzIGFkZGVkPyBGb3IgZXhhbXBsZSwNCj4g
+aWYgeW91IGFkZCBhIG1lc2ggaW50ZXJmYWNlLCBpcyB0aGVyZSBhIGNoYW5jZSB0aGF0IHRoZSBB
+UCBpbnRlcmZhY2UNCj4gbWlnaHQgbm8gbG9uZ2VyIGJlIGFibGUgdG8gaGFuZGxlIHRoaXM/DQog
+Pg0KID4gSSdkIGhvcGUgdGhpcyBkb2Vzbid0IGhhcHBlbiBiZWNhdXNlIEkgdGhpbmsgdGhhdCB3
+b3VsZCBiZSBleHRyZW1lbHkNCiA+IGNvbXBsaWNhdGVkIHRvIGhhbmRsZSBzYWZlbHkuDQoNClVu
+Zm9ydHVuYXRlbHkgIltSRkMgMi8zXSBtYWM4MDIxMTogSW1wbGVtZW50IGRhdGEgeG1pdCBmb3Ig
+ODAyLjExIGVuY2FwIG9mZmxvYWQiDQp0cmllcyB0byBpbXBsZW1lbnQgdGhpcyBidXQgbW9yZSBs
+aWtlbHkgYnVnZ3kgOiguIFlvdSBhcmUgcmlnaHQsIGl0IGlzIHZlcnkNCmNvbXBsZXggdG8gZ2V0
+IHRoYXQgcmlnaHQuIE1heSBiZSB3ZSBzaG91bGQgbm90IGFsbG93IGludGVyZmFjZSBuZWVkaW5n
+DQpkeW5hbWljIHN3aXRjaD8NCg0KVmFzYW50aA==
