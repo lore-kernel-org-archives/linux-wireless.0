@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:52868 "EHLO
-        sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751610AbcLFMkL (ORCPT
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:36109 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755660AbcLOWa5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Dec 2016 07:40:11 -0500
-From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Laurent Trarieux <Laurent.Trarieux@ceva-dsp.com>
-Subject: [PATCH] mac80211: Ensure enough headroom when forwarding mesh pkt
-Date: Tue, 6 Dec 2016 12:23:28 +0000
-Message-ID: <356db1fcf788467f9145abc10e218d66@ceva-dsp.com> (sfid-20161206_134746_387190_5D33F815)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Thu, 15 Dec 2016 17:30:57 -0500
+Received: by mail-qk0-f175.google.com with SMTP id n21so72961380qka.3
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 14:30:56 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>,
+        Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 3/3] nfc: trf7970a: Prevent repeated polling from crashing the kernel
+Date: Thu, 15 Dec 2016 17:30:44 -0500
+Message-Id: <1481841044-4314-3-git-send-email-glansberry@gmail.com> (sfid-20161215_233158_599555_18893524)
+In-Reply-To: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a buffer is duplicated during MESH packet forwarding,
-this patch ensures that the new buffer has enough headroom.
+From: Jaret Cantu <jaret.cantu@timesys.com>
 
-Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+Repeated polling attempts cause a NULL dereference error to occur.
+This is because the curent state of the trf7970a is reading but
+a request has been made to send a command.
+
+The solution is to properly kill the waiting reading (workqueue)
+before failing on the send.
 ---
- net/mac80211/rx.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/nfc/trf7970a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d2a00f2..1ed32b4 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2468,7 +2468,11 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	if (!ifmsh->mshcfg.dot11MeshForwarding)
- 		goto out;
- 
--	fwd_skb = skb_copy(skb, GFP_ATOMIC);
-+	if (skb_headroom(skb) >= local->tx_headroom)
-+		fwd_skb = skb_copy(skb, GFP_ATOMIC);
-+	else
-+		fwd_skb = skb_copy_expand(skb, local->tx_headroom,
-+					  0, GFP_ATOMIC);
- 	if (!fwd_skb) {
- 		net_info_ratelimited("%s: failed to clone mesh frame\n",
- 				    sdata->name);
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index b4c37ab..f96a321 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1493,6 +1493,10 @@ static int trf7970a_send_cmd(struct nfc_digital_dev *ddev,
+ 			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
+ 		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
+ 				trf->state);
++		if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA ||
++		    trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
++			trf->ignore_timeout =
++				!cancel_delayed_work(&trf->timeout_work);
+ 		ret = -EIO;
+ 		goto out_err;
+ 	}
 -- 
-2.7.4
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
