@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:35355 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751936AbcLMNwn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 08:52:43 -0500
-Received: by mail-qk0-f177.google.com with SMTP id n204so116494343qke.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 05:52:43 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:44141 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932426AbcLONcW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 08:32:22 -0500
+Subject: Re: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
+ <1481794142.31776.5.camel@sipsolutions.net>
+ <58528607.7090101@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <85c98160-3ee9-07db-cb4c-9e300f0ba798@nbd.name> (sfid-20161215_143226_525233_F0E5074A)
+Date: Thu, 15 Dec 2016 14:32:18 +0100
 MIME-Version: 1.0
-In-Reply-To: <87inqoymd0.fsf@kamboji.qca.qualcomm.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
- <1479496971-19174-6-git-send-email-erik.stromdahl@gmail.com> <87inqoymd0.fsf@kamboji.qca.qualcomm.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Tue, 13 Dec 2016 14:52:41 +0100
-Message-ID: <CA+BoTQkuUFxnra75B4LpF5+k9yE7hkNYDXbtUMBLq2LFuPSasg@mail.gmail.com> (sfid-20161213_145256_234838_AECF2426)
-Subject: Re: [RFC v2 05/11] ath10k: htc: refactorization
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <58528607.7090101@qti.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 December 2016 at 14:44, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
->
->> Code refactorization:
+On 2016-12-15 13:01, Thiagarajan, Vasanthakumar wrote:
+> On Thursday 15 December 2016 02:59 PM, Johannes Berg wrote:
+>>> + * @IEEE80211_CONF_CHANGE_80211_HDR_OFFL: Offload configuration
+>>> + *	implementing 802.11 encap/decap for data frames changed.
+>>>    */
+>>>   enum ieee80211_conf_changed {
+>>>   	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+>>> @@ -1279,6 +1286,7 @@ enum ieee80211_conf_changed {
+>>>   	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+>>>   	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+>>>   	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+>>> +	IEEE80211_CONF_CHANGE_80211_HDR_OFFL	= BIT(9),
+>>>   };
 >>
->> Moved the code for ep 0 in ath10k_htc_rx_completion_handler
->> to ath10k_htc_control_rx_complete.
->>
->> This eases the implementation of SDIO/mbox significantly since
->> the ep_rx_complete cb is invoked directly from the SDIO/mbox
->> hif layer.
->>
->> Since the ath10k_htc_control_rx_complete already is present
->> (only containing a warning message) there is no reason for not
->> using it (instead of having a special case for ep 0 in
->> ath10k_htc_rx_completion_handler).
->>
->> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
->
-> I tested this on QCA988X PCI board just to see if there are any
-> regressions. It crashes immediately during module load, every time, and
-> bisected that the crashing starts on this patch:
->
-> [ 1239.715325] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_m=
-ode 0 reset_mode 0
-> [ 1239.885125] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/p=
-re-cal-pci-0000:02:00.0.bin failed with error -2
-> [ 1239.885260] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/c=
-al-pci-0000:02:00.0.bin failed with error -2
-> [ 1239.885687] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c c=
-hip_id 0x043202ff sub 0000:0000
-> [ 1239.885699] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing=
- 1 dfs 1 testmode 1
-> [ 1239.885899] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api 5=
- features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
-> [ 1239.941836] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/Q=
-CA988X/hw2.0/board-2.bin failed with error -2
-> [ 1239.941993] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32=
- bebc7c08
-> [ 1241.136693] BUG: unable to handle kernel NULL pointer dereference at  =
- (null)
-> [ 1241.136738] IP: [<  (null)>]   (null)
-> [ 1241.136759] *pdpt =3D 0000000000000000 *pde =3D f0002a55f0002a55 [ 124=
-1.136781]
-> [ 1241.136793] Oops: 0010 [#1] SMP
->
-> What's odd is that when I added some printks on my own and enabled both
-> boot and htc debug levels it doesn't crash anymore. After everything
-> works normally after that, I can start AP mode and connect to it. Is it
-> a race somewhere?
+>> Given the requirements (PN check, etc.) I'm not sure how this can
+>> change dynamically?
+> 
+> I agree. Dynamic switch part is buggy, we can start with not allowing
+> interfaces resulting in dynamic switch.
+Does this mean that when bringing up multiple interfaces, users would
+need to figure out the 'magic' order that works?
 
-Yes. htc_wait_target() is called after hif_start(). The ep_rx_complete
-is set in htc_wait_target() [changed patch 4, but still too late].
-
-ep_rx_complete must be set prior to calling hif_start(). You probably
-crash on end of ath10k_htc_rx_completion_handler() when trying to call
-ep->ep_ops.ep_rx_complete(ar, skb).
-
-
-Micha=C5=82
+- Felix
