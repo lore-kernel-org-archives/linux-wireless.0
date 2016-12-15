@@ -1,174 +1,489 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25483 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751621AbcLTUkH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 15:40:07 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        vamsi krishna <vamsin@qti.qualcomm.com>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH] cfg80211: Random local address for Public Action frame exchange
-Date: Tue, 20 Dec 2016 22:39:39 +0200
-Message-ID: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20161220_214025_146580_43F8C0D2)
+Received: from mail.kernel.org ([198.145.29.136]:34596 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752523AbcLOFPi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 00:15:38 -0500
+Date: Thu, 15 Dec 2016 07:15:30 +0200
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Vince Bridgers <vbridger@opensource.altera.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
+        linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
+Message-ID: <1481778865-27667-9-git-send-email-mst@redhat.com> (sfid-20161215_061605_513718_B41921D9)
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481778865-27667-1-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: vamsi krishna <vamsin@qti.qualcomm.com>
+That's the default now, no need for makefiles to set it.
 
-Add support to use random local address (Address 2 = SA in transmit and
-the same address in receive functionality) for Public Action frames in
-order to improve privacy of WLAN clients. Applications fill the random
-source address in the frame buffer along with setting the
-NL80211_ATTR_RANDOM_SA flag when using the NL80211_CMD_FRAME command.
-This can be used only with the drivers that indicate support for random
-local address by setting the new NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA
-and/or NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED in ext_features.
-
-The driver needs to configure receive behavior to accept frames to the
-specified random address during the time the frame exchange is pending
-and such frames need to be acknowledged similarly to frames sent to the
-local permanent address when this random address functionality is not
-used.
-
-Signed-off-by: vamsi krishna <vamsin@qti.qualcomm.com>
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 ---
- include/net/cfg80211.h       |  6 ++++++
- include/uapi/linux/nl80211.h | 16 ++++++++++++++++
- net/wireless/mlme.c          |  5 ++++-
- net/wireless/nl80211.c       | 14 ++++++++++++++
- 4 files changed, 40 insertions(+), 1 deletion(-)
+ drivers/bluetooth/Makefile                                | 2 --
+ drivers/net/can/Makefile                                  | 1 -
+ drivers/net/ethernet/altera/Makefile                      | 1 -
+ drivers/net/ethernet/atheros/alx/Makefile                 | 1 -
+ drivers/net/ethernet/freescale/Makefile                   | 2 --
+ drivers/net/wireless/ath/Makefile                         | 2 --
+ drivers/net/wireless/ath/wil6210/Makefile                 | 2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 2 --
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile | 1 -
+ drivers/net/wireless/intel/iwlegacy/Makefile              | 2 --
+ drivers/net/wireless/intel/iwlwifi/Makefile               | 2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/Makefile           | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/Makefile           | 2 +-
+ drivers/net/wireless/intersil/orinoco/Makefile            | 3 ---
+ drivers/net/wireless/mediatek/mt7601u/Makefile            | 2 --
+ drivers/net/wireless/realtek/rtlwifi/Makefile             | 2 --
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile    | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile   | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile  | 2 --
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile   | 2 --
+ drivers/net/wireless/ti/wl1251/Makefile                   | 2 --
+ drivers/net/wireless/ti/wlcore/Makefile                   | 2 --
+ drivers/staging/rtl8188eu/Makefile                        | 2 +-
+ drivers/staging/rtl8192e/Makefile                         | 2 --
+ drivers/staging/rtl8192e/rtl8192e/Makefile                | 2 --
+ net/bluetooth/Makefile                                    | 2 --
+ net/ieee802154/Makefile                                   | 2 --
+ net/mac80211/Makefile                                     | 2 +-
+ net/mac802154/Makefile                                    | 2 --
+ net/wireless/Makefile                                     | 2 --
+ 38 files changed, 5 insertions(+), 68 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ca2ac1c..c442e4c 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2303,6 +2303,11 @@ struct cfg80211_update_ft_ies_params {
-  * @dont_wait_for_ack: tells the low level not to wait for an ack
-  * @n_csa_offsets: length of csa_offsets array
-  * @csa_offsets: array of all the csa offsets in the frame
-+ * @random_sa: indicates whether the source address is randomized. When this is
-+ *	true, the driver needs to transmit the management frame using the
-+ *	address specified in the SA field (Address 2) in the buffer and the
-+ *	driver needs to receive and acknowledge the response frame to this
-+ *	address instead of its permanent MAC address.
-  */
- struct cfg80211_mgmt_tx_params {
- 	struct ieee80211_channel *chan;
-@@ -2314,6 +2319,7 @@ struct cfg80211_mgmt_tx_params {
- 	bool dont_wait_for_ack;
- 	int n_csa_offsets;
- 	const u16 *csa_offsets;
-+	bool random_sa;
- };
+diff --git a/drivers/bluetooth/Makefile b/drivers/bluetooth/Makefile
+index b1fc29a..8062718 100644
+--- a/drivers/bluetooth/Makefile
++++ b/drivers/bluetooth/Makefile
+@@ -40,5 +40,3 @@ hci_uart-$(CONFIG_BT_HCIUART_QCA)	+= hci_qca.o
+ hci_uart-$(CONFIG_BT_HCIUART_AG6XX)	+= hci_ag6xx.o
+ hci_uart-$(CONFIG_BT_HCIUART_MRVL)	+= hci_mrvl.o
+ hci_uart-objs				:= $(hci_uart-y)
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/can/Makefile b/drivers/net/can/Makefile
+index 26ba4b7..7a85495 100644
+--- a/drivers/net/can/Makefile
++++ b/drivers/net/can/Makefile
+@@ -31,5 +31,4 @@ obj-$(CONFIG_CAN_TI_HECC)	+= ti_hecc.o
+ obj-$(CONFIG_CAN_XILINXCAN)	+= xilinx_can.o
+ obj-$(CONFIG_PCH_CAN)		+= pch_can.o
  
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d74e10b..cffc117 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -567,6 +567,9 @@
-  *	%NL80211_ATTR_CSA_C_OFFSETS_TX is an array of offsets to CSA
-  *	counters which will be updated to the current value. This attribute
-  *	is used during CSA period.
-+ *	When sending a Public Action frame, %NL80211_ATTR_MGMT_TX_RANDOM_SA can
-+ *	be used to indicate that random local address (SA) is used for the
-+ *	exchange.
-  * @NL80211_CMD_FRAME_WAIT_CANCEL: When an off-channel TX was requested, this
-  *	command may be used with the corresponding cookie to cancel the wait
-  *	time if it is known that it is no longer necessary.
-@@ -1915,6 +1918,11 @@ enum nl80211_commands {
-  *	%NL80211_ATTR_IFTYPE, %NL80211_ATTR_EXT_CAPA,
-  *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended capabilities per
-  *	interface type.
-+ * @NL80211_ATTR_MGMT_TX_RANDOM_SA: A flag attribute indicating whether the
-+ *	source address is randomized in frames sent using %NL80211_CMD_FRAME.
-+ *	If this flag is not set, the source address field is verified to match
-+ *	local MAC address. Random SA can be used only with Public Action frames
-+ *	(e.g., GAS/ANQP).
-  *
-  * @NL80211_ATTR_MU_MIMO_GROUP_DATA: array of 24 bytes that defines a MU-MIMO
-  *	groupID for monitor mode.
-@@ -2386,6 +2394,8 @@ enum nl80211_attrs {
+-subdir-ccflags-y += -D__CHECK_ENDIAN__
+ subdir-ccflags-$(CONFIG_CAN_DEBUG_DEVICES) += -DDEBUG
+diff --git a/drivers/net/ethernet/altera/Makefile b/drivers/net/ethernet/altera/Makefile
+index 3eff2fd..d4a187e 100644
+--- a/drivers/net/ethernet/altera/Makefile
++++ b/drivers/net/ethernet/altera/Makefile
+@@ -5,4 +5,3 @@
+ obj-$(CONFIG_ALTERA_TSE) += altera_tse.o
+ altera_tse-objs := altera_tse_main.o altera_tse_ethtool.o \
+ altera_msgdma.o altera_sgdma.o altera_utils.o
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/ethernet/atheros/alx/Makefile b/drivers/net/ethernet/atheros/alx/Makefile
+index 5901fa4..ed4a605 100644
+--- a/drivers/net/ethernet/atheros/alx/Makefile
++++ b/drivers/net/ethernet/atheros/alx/Makefile
+@@ -1,3 +1,2 @@
+ obj-$(CONFIG_ALX) += alx.o
+ alx-objs := main.o ethtool.o hw.o
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/ethernet/freescale/Makefile b/drivers/net/ethernet/freescale/Makefile
+index 4a13115..c46df5c 100644
+--- a/drivers/net/ethernet/freescale/Makefile
++++ b/drivers/net/ethernet/freescale/Makefile
+@@ -4,8 +4,6 @@
  
- 	NL80211_ATTR_BSSID,
+ obj-$(CONFIG_FEC) += fec.o
+ fec-objs :=fec_main.o fec_ptp.o
+-CFLAGS_fec_main.o := -D__CHECK_ENDIAN__
+-CFLAGS_fec_ptp.o := -D__CHECK_ENDIAN__
  
-+	NL80211_ATTR_MGMT_TX_RANDOM_SA,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+ obj-$(CONFIG_FEC_MPC52xx) += fec_mpc52xx.o
+ ifeq ($(CONFIG_FEC_MPC52xx_MDIO),y)
+diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+index 89f8d59..4cdebc7 100644
+--- a/drivers/net/wireless/ath/Makefile
++++ b/drivers/net/wireless/ath/Makefile
+@@ -19,6 +19,4 @@ ath-objs :=	main.o \
+ ath-$(CONFIG_ATH_DEBUG) += debug.o
+ ath-$(CONFIG_ATH_TRACEPOINTS) += trace.o
  
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4697,6 +4707,10 @@ enum nl80211_feature_flags {
-  *	configuration (AP/mesh) with VHT rates.
-  * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial Link Setup
-  *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
-+ * @NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA: This driver supports randomized SA
-+ *	in @NL80211_CMD_FRAME while not associated.
-+ * @NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED: This driver supports
-+ *	randomized SA in @NL80211_CMD_FRAME while associated.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4712,6 +4726,8 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_BEACON_RATE_HT,
- 	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
- 	NL80211_EXT_FEATURE_FILS_STA,
-+	NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA,
-+	NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED,
+-ccflags-y += -D__CHECK_ENDIAN__
+-
+ CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 11b544b..89bf2f9 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -22,5 +22,3 @@ wil6210-y += p2p.o
  
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index 4646cf5..9568a72 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -657,7 +657,10 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			return err;
- 	}
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+-
+-subdir-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+index d1568be..0383ba5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
+@@ -19,8 +19,6 @@ ccflags-y += \
+ 	-Idrivers/net/wireless/broadcom/brcm80211/brcmfmac	\
+ 	-Idrivers/net/wireless/broadcom/brcm80211/include
  
--	if (!ether_addr_equal(mgmt->sa, wdev_address(wdev)))
-+	if (!(params->random_sa &&
-+	      (ieee80211_is_action(mgmt->frame_control) &&
-+	       mgmt->u.action.category == WLAN_CATEGORY_PUBLIC)) &&
-+	    !ether_addr_equal(mgmt->sa, wdev_address(wdev)))
- 		return -EINVAL;
+-ccflags-y += -D__CHECK_ENDIAN__
+-
+ obj-$(CONFIG_BRCMFMAC) += brcmfmac.o
+ brcmfmac-objs += \
+ 		cfg80211.o \
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile
+index 960e6b8..ed83f33 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile
+@@ -16,7 +16,6 @@
+ # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  
- 	/* Transmit the Action frame as requested by user space */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 2369265..efced76 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -405,6 +405,7 @@ enum nl80211_multicast_groups {
- 	[NL80211_ATTR_FILS_NONCES] = { .len = 2 * FILS_NONCE_LEN },
- 	[NL80211_ATTR_MULTICAST_TO_UNICAST_ENABLED] = { .type = NLA_FLAG, },
- 	[NL80211_ATTR_BSSID] = { .len = ETH_ALEN },
-+	[NL80211_ATTR_MGMT_TX_RANDOM_SA] = { .type = NLA_FLAG },
- };
+ ccflags-y := \
+-	-D__CHECK_ENDIAN__ \
+ 	-Idrivers/net/wireless/broadcom/brcm80211/brcmsmac \
+ 	-Idrivers/net/wireless/broadcom/brcm80211/brcmsmac/phy \
+ 	-Idrivers/net/wireless/broadcom/brcm80211/include
+diff --git a/drivers/net/wireless/intel/iwlegacy/Makefile b/drivers/net/wireless/intel/iwlegacy/Makefile
+index c985a01..c826a6b 100644
+--- a/drivers/net/wireless/intel/iwlegacy/Makefile
++++ b/drivers/net/wireless/intel/iwlegacy/Makefile
+@@ -13,5 +13,3 @@ iwl4965-$(CONFIG_IWLEGACY_DEBUGFS) += 4965-debug.o
+ obj-$(CONFIG_IWL3945)	+= iwl3945.o
+ iwl3945-objs		:= 3945-mac.o 3945.o 3945-rs.o
+ iwl3945-$(CONFIG_IWLEGACY_DEBUGFS) += 3945-debug.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/intel/iwlwifi/Makefile b/drivers/net/wireless/intel/iwlwifi/Makefile
+index 6e7ed90..92e6118 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/Makefile
+@@ -15,7 +15,7 @@ iwlwifi-objs += $(iwlwifi-m)
  
- /* policy for the key attributes */
-@@ -9209,6 +9210,19 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
- 		}
- 	}
+ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
  
-+	params.random_sa = nla_get_flag(
-+		info->attrs[NL80211_ATTR_MGMT_TX_RANDOM_SA]);
-+	if (params.random_sa &&
-+	    ((!wdev->current_bss &&
-+	      !wiphy_ext_feature_isset(
-+		      &rdev->wiphy,
-+		      NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA)) ||
-+	     (wdev->current_bss &&
-+	      !wiphy_ext_feature_isset(
-+		      &rdev->wiphy,
-+		      NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED))))
-+		return -EINVAL;
-+
- 	if (!params.dont_wait_for_ack) {
- 		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
- 		if (!msg)
+-ccflags-y += -D__CHECK_ENDIAN__ -I$(src)
++ccflags-y += -I$(src)
+ 
+ obj-$(CONFIG_IWLDVM)	+= dvm/
+ obj-$(CONFIG_IWLMVM)	+= mvm/
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/Makefile b/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
+index 4d19685..b256a354 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/Makefile
+@@ -10,4 +10,4 @@ iwldvm-objs		+= rxon.o devices.o
+ iwldvm-$(CONFIG_IWLWIFI_LEDS) += led.o
+ iwldvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o
+ 
+-ccflags-y += -D__CHECK_ENDIAN__ -I$(src)/../
++ccflags-y += -I$(src)/../
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
+index 2e06dfc..83ac807 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/Makefile
+@@ -9,4 +9,4 @@ iwlmvm-$(CONFIG_IWLWIFI_LEDS) += led.o
+ iwlmvm-y += tof.o fw-dbg.o
+ iwlmvm-$(CONFIG_PM) += d3.o
+ 
+-ccflags-y += -D__CHECK_ENDIAN__ -I$(src)/../
++ccflags-y += -I$(src)/../
+diff --git a/drivers/net/wireless/intersil/orinoco/Makefile b/drivers/net/wireless/intersil/orinoco/Makefile
+index bfdefb8..b7ecef8 100644
+--- a/drivers/net/wireless/intersil/orinoco/Makefile
++++ b/drivers/net/wireless/intersil/orinoco/Makefile
+@@ -12,6 +12,3 @@ obj-$(CONFIG_TMD_HERMES)	+= orinoco_tmd.o
+ obj-$(CONFIG_NORTEL_HERMES)	+= orinoco_nortel.o
+ obj-$(CONFIG_PCMCIA_SPECTRUM)	+= spectrum_cs.o
+ obj-$(CONFIG_ORINOCO_USB)	+= orinoco_usb.o
+-
+-# Orinoco should be endian clean.
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/mediatek/mt7601u/Makefile b/drivers/net/wireless/mediatek/mt7601u/Makefile
+index ea9ed8a..08fc802 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/Makefile
++++ b/drivers/net/wireless/mediatek/mt7601u/Makefile
+@@ -1,5 +1,3 @@
+-ccflags-y += -D__CHECK_ENDIAN__
+-
+ obj-$(CONFIG_MT7601U)	+= mt7601u.o
+ 
+ mt7601u-objs	= \
+diff --git a/drivers/net/wireless/realtek/rtlwifi/Makefile b/drivers/net/wireless/realtek/rtlwifi/Makefile
+index ad6d3c5..84c2e82 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/Makefile
+@@ -30,5 +30,3 @@ obj-$(CONFIG_RTLBTCOEXIST)	+= btcoexist/
+ obj-$(CONFIG_RTL8723_COMMON)	+= rtl8723com/
+ obj-$(CONFIG_RTL8821AE)		+= rtl8821ae/
+ obj-$(CONFIG_RTL8192EE)		+= rtl8192ee/
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+index 47ceecf..d1454d4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/Makefile
+@@ -3,5 +3,3 @@ btcoexist-objs :=	halbtc8723b2ant.o	\
+ 			rtl_btc.o
+ 
+ obj-$(CONFIG_RTLBTCOEXIST) += btcoexist.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
+index 676e7de..dae4f0f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
+@@ -11,5 +11,3 @@ rtl8188ee-objs :=		\
+ 		trx.o
+ 
+ obj-$(CONFIG_RTL8188EE) += rtl8188ee.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile
+index aee42d7..0546b75 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/Makefile
+@@ -5,5 +5,3 @@ rtl8192c-common-objs :=		\
+ 		phy_common.o
+ 
+ obj-$(CONFIG_RTL8192C_COMMON) += rtl8192c-common.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile
+index c0cb0cf..577c7ad 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/Makefile
+@@ -9,5 +9,3 @@ rtl8192ce-objs :=		\
+ 		trx.o
+ 
+ obj-$(CONFIG_RTL8192CE) += rtl8192ce.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile
+index ad2de6b..97437da 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/Makefile
+@@ -10,5 +10,3 @@ rtl8192cu-objs :=		\
+ 		trx.o
+ 
+ obj-$(CONFIG_RTL8192CU) += rtl8192cu.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile
+index e3213c8..d0703f2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/Makefile
+@@ -10,5 +10,3 @@ rtl8192de-objs :=		\
+ 		trx.o
+ 
+ obj-$(CONFIG_RTL8192DE) += rtl8192de.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile
+index 0315eed..f254b9f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/Makefile
+@@ -12,5 +12,3 @@ rtl8192ee-objs :=		\
+ 
+ 
+ obj-$(CONFIG_RTL8192EE) += rtl8192ee.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile
+index b7eb138..dfa9dbb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/Makefile
+@@ -11,5 +11,3 @@ rtl8192se-objs :=		\
+ 
+ obj-$(CONFIG_RTL8192SE) += rtl8192se.o
+ 
+-ccflags-y += -D__CHECK_ENDIAN__
+-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile
+index 6220672..e7607d2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/Makefile
+@@ -14,5 +14,3 @@ rtl8723ae-objs :=		\
+ 
+ 
+ obj-$(CONFIG_RTL8723AE) += rtl8723ae.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile
+index a77c341..a841cbd 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/Makefile
+@@ -12,5 +12,3 @@ rtl8723be-objs :=		\
+ 
+ 
+ obj-$(CONFIG_RTL8723BE) += rtl8723be.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile
+index 345a68a..73da755 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/Makefile
+@@ -5,5 +5,3 @@ rtl8723-common-objs :=		\
+ 		phy_common.o
+ 
+ obj-$(CONFIG_RTL8723_COMMON) += rtl8723-common.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile
+index f7a26f7..8ca406b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/Makefile
+@@ -12,5 +12,3 @@ rtl8821ae-objs :=		\
+ 
+ 
+ obj-$(CONFIG_RTL8821AE) += rtl8821ae.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/ti/wl1251/Makefile b/drivers/net/wireless/ti/wl1251/Makefile
+index a5c6328..58b4f93 100644
+--- a/drivers/net/wireless/ti/wl1251/Makefile
++++ b/drivers/net/wireless/ti/wl1251/Makefile
+@@ -6,5 +6,3 @@ wl1251_sdio-objs	+= sdio.o
+ obj-$(CONFIG_WL1251)		+= wl1251.o
+ obj-$(CONFIG_WL1251_SPI)	+= wl1251_spi.o
+ obj-$(CONFIG_WL1251_SDIO)	+= wl1251_sdio.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/ti/wlcore/Makefile b/drivers/net/wireless/ti/wlcore/Makefile
+index 0a69c13..e286713 100644
+--- a/drivers/net/wireless/ti/wlcore/Makefile
++++ b/drivers/net/wireless/ti/wlcore/Makefile
+@@ -8,5 +8,3 @@ wlcore-$(CONFIG_NL80211_TESTMODE)	+= testmode.o
+ obj-$(CONFIG_WLCORE)			+= wlcore.o
+ obj-$(CONFIG_WLCORE_SPI)		+= wlcore_spi.o
+ obj-$(CONFIG_WLCORE_SDIO)		+= wlcore_sdio.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/staging/rtl8188eu/Makefile b/drivers/staging/rtl8188eu/Makefile
+index 29b9834..27af86e 100644
+--- a/drivers/staging/rtl8188eu/Makefile
++++ b/drivers/staging/rtl8188eu/Makefile
+@@ -53,4 +53,4 @@ r8188eu-y :=				\
+ 
+ obj-$(CONFIG_R8188EU)	:= r8188eu.o
+ 
+-ccflags-y += -D__CHECK_ENDIAN__ -I$(srctree)/$(src)/include
++ccflags-y += -I$(srctree)/$(src)/include
+diff --git a/drivers/staging/rtl8192e/Makefile b/drivers/staging/rtl8192e/Makefile
+index cb18db7..7101fcc 100644
+--- a/drivers/staging/rtl8192e/Makefile
++++ b/drivers/staging/rtl8192e/Makefile
+@@ -17,5 +17,3 @@ obj-$(CONFIG_RTLLIB_CRYPTO_TKIP) += rtllib_crypt_tkip.o
+ obj-$(CONFIG_RTLLIB_CRYPTO_WEP) += rtllib_crypt_wep.o
+ 
+ obj-$(CONFIG_RTL8192E) += rtl8192e/
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/staging/rtl8192e/rtl8192e/Makefile b/drivers/staging/rtl8192e/rtl8192e/Makefile
+index a2c4fb4..176a4a2 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/Makefile
++++ b/drivers/staging/rtl8192e/rtl8192e/Makefile
+@@ -16,5 +16,3 @@ r8192e_pci-objs :=		\
+ 	rtl_wx.o		\
+ 
+ obj-$(CONFIG_RTL8192E) += r8192e_pci.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/bluetooth/Makefile b/net/bluetooth/Makefile
+index b3ff12e..4bfaa19 100644
+--- a/net/bluetooth/Makefile
++++ b/net/bluetooth/Makefile
+@@ -20,5 +20,3 @@ bluetooth-$(CONFIG_BT_HS) += a2mp.o amp.o
+ bluetooth-$(CONFIG_BT_LEDS) += leds.o
+ bluetooth-$(CONFIG_BT_DEBUGFS) += hci_debugfs.o
+ bluetooth-$(CONFIG_BT_SELFTEST) += selftest.o
+-
+-subdir-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/ieee802154/Makefile b/net/ieee802154/Makefile
+index 4adfd4d..9b92ade 100644
+--- a/net/ieee802154/Makefile
++++ b/net/ieee802154/Makefile
+@@ -7,5 +7,3 @@ ieee802154-y := netlink.o nl-mac.o nl-phy.o nl_policy.o core.o \
+ ieee802154_socket-y := socket.o
+ 
+ CFLAGS_trace.o := -I$(src)
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/mac80211/Makefile b/net/mac80211/Makefile
+index 0b202b3..2829122 100644
+--- a/net/mac80211/Makefile
++++ b/net/mac80211/Makefile
+@@ -61,4 +61,4 @@ rc80211_minstrel_ht-$(CONFIG_MAC80211_DEBUGFS) += rc80211_minstrel_ht_debugfs.o
+ mac80211-$(CONFIG_MAC80211_RC_MINSTREL) += $(rc80211_minstrel-y)
+ mac80211-$(CONFIG_MAC80211_RC_MINSTREL_HT) += $(rc80211_minstrel_ht-y)
+ 
+-ccflags-y += -D__CHECK_ENDIAN__ -DDEBUG
++ccflags-y += -DDEBUG
+diff --git a/net/mac802154/Makefile b/net/mac802154/Makefile
+index 17a51e8..5857bb1 100644
+--- a/net/mac802154/Makefile
++++ b/net/mac802154/Makefile
+@@ -3,5 +3,3 @@ mac802154-objs		:= main.o rx.o tx.o mac_cmd.o mib.o \
+ 			   iface.o llsec.o util.o cfg.o trace.o
+ 
+ CFLAGS_trace.o := -I$(src)
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/net/wireless/Makefile b/net/wireless/Makefile
+index 4c9e39f..816c933 100644
+--- a/net/wireless/Makefile
++++ b/net/wireless/Makefile
+@@ -17,8 +17,6 @@ cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
+ 
+ CFLAGS_trace.o := -I$(src)
+ 
+-ccflags-y += -D__CHECK_ENDIAN__
+-
+ $(obj)/regdb.c: $(src)/db.txt $(src)/genregdb.awk
+ 	@$(AWK) -f $(srctree)/$(src)/genregdb.awk < $< > $@
+ 
 -- 
-1.9.1
+MST
