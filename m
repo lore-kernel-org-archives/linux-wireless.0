@@ -1,219 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54198 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755165AbcL0Sww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 13:52:52 -0500
-From: Mark Rutland <mark.rutland@arm.com>
-To: linux-kernel@vger.kernel.org
-Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        netdev@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
-Subject: [PATCH 1/2] ath9k: ar9002_mac: kill off ACCESS_ONCE()
-Date: Tue, 27 Dec 2016 18:49:58 +0000
-Message-Id: <1482864599-19995-2-git-send-email-mark.rutland@arm.com> (sfid-20161227_195311_505212_712484CE)
-In-Reply-To: <1482864599-19995-1-git-send-email-mark.rutland@arm.com>
-References: <1482864599-19995-1-git-send-email-mark.rutland@arm.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34459 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755957AbcLOSYD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 13:24:03 -0500
+Received: by mail-oi0-f66.google.com with SMTP id m75so7099699oig.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:33 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 06/14 V2] rtlwifi: rtl8192ee: Remove all instances of DBG_EMERG
+Date: Thu, 15 Dec 2016 12:23:02 -0600
+Message-Id: <20161215182310.13713-7-Larry.Finger@lwfinger.net> (sfid-20161215_192424_002534_D97B76CC)
+In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For several reasons, it is desirable to use {READ,WRITE}_ONCE() in
-preference to ACCESS_ONCE(), and new code is expected to use one of the
-former. So far, there's been no reason to change most existing uses of
-ACCESS_ONCE(), as these aren't currently harmful.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-However, for some new features (e.g. KTSAN / Kernel Thread Sanitizer),
-it is necessary to instrument reads and writes separately, which is not
-possible with ACCESS_ONCE(). This distinction is critical to correct
-operation.
-
-It's possible to transform the bulk of kernel code using the Coccinelle
-script below. However, for some files (including the ath9k ar9002 mac
-driver), this mangles the formatting. As a preparatory step, this patch
-converts the driver to use {READ,WRITE}_ONCE() without said mangling.
-
-----
-virtual patch
-
-@ depends on patch @
-expression E1, E2;
-@@
-
-- ACCESS_ONCE(E1) = E2
-+ WRITE_ONCE(E1, E2)
-
-@ depends on patch @
-expression E;
-@@
-
-- ACCESS_ONCE(E)
-+ READ_ONCE(E)
-----
-
-Signed-off-by: Mark Rutland <mark.rutland@arm.com>
-Cc: ath9k-devel@qca.qualcomm.com
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org
-Cc: netdev@vger.kernel.org
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9002_mac.c | 64 ++++++++++++++---------------
- 1 file changed, 32 insertions(+), 32 deletions(-)
+V2 - eliminate some files that should not have been sent, and remove the
+     module name from the format. It is already specified by a pr_fmt().
+---
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 21 ++++++++-------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    | 11 ++++-------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   | 22 +++++++++-------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/rf.c    |  3 +--
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  8 +++-----
+ 5 files changed, 25 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-index f816909..4b3c9b1 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
-@@ -220,8 +220,8 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
- 	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index c2dc26d..27f9608 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -122,10 +122,8 @@ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
+ 	pagenums = size / FW_8192C_PAGE_SIZE;
+ 	remainsize = size % FW_8192C_PAGE_SIZE;
  
--	ACCESS_ONCE(ads->ds_link) = i->link;
--	ACCESS_ONCE(ads->ds_data) = i->buf_addr[0];
-+	WRITE_ONCE(ads->ds_link, i->link);
-+	WRITE_ONCE(ads->ds_data, i->buf_addr[0]);
+-	if (pagenums > 8) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Page numbers should not greater then 8\n");
+-	}
++	if (pagenums > 8)
++		pr_err("Page numbers should not greater then 8\n");
  
- 	ctl1 = i->buf_len[0] | (i->is_last ? 0 : AR_TxMore);
- 	ctl6 = SM(i->keytype, AR_EncrType);
-@@ -235,26 +235,26 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+@@ -155,14 +153,13 @@ static int _rtl92ee_fw_free_to_go(struct ieee80211_hw *hw)
+ 		 (!(value32 & FWDL_CHKSUM_RPT)));
  
- 	if ((i->is_first || i->is_last) &&
- 	    i->aggr != AGGR_BUF_MIDDLE && i->aggr != AGGR_BUF_LAST) {
--		ACCESS_ONCE(ads->ds_ctl2) = set11nTries(i->rates, 0)
-+		WRITE_ONCE(ads->ds_ctl2, set11nTries(i->rates, 0)
- 			| set11nTries(i->rates, 1)
- 			| set11nTries(i->rates, 2)
- 			| set11nTries(i->rates, 3)
- 			| (i->dur_update ? AR_DurUpdateEna : 0)
--			| SM(0, AR_BurstDur);
-+			| SM(0, AR_BurstDur));
- 
--		ACCESS_ONCE(ads->ds_ctl3) = set11nRate(i->rates, 0)
-+		WRITE_ONCE(ads->ds_ctl3, set11nRate(i->rates, 0)
- 			| set11nRate(i->rates, 1)
- 			| set11nRate(i->rates, 2)
--			| set11nRate(i->rates, 3);
-+			| set11nRate(i->rates, 3));
- 	} else {
--		ACCESS_ONCE(ads->ds_ctl2) = 0;
--		ACCESS_ONCE(ads->ds_ctl3) = 0;
-+		WRITE_ONCE(ads->ds_ctl2, 0);
-+		WRITE_ONCE(ads->ds_ctl3, 0);
+ 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
+-			  value32);
++		pr_err("chksum report fail! REG_MCUFWDL:0x%08x\n",
++		       value32);
+ 		goto exit;
  	}
  
- 	if (!i->is_first) {
--		ACCESS_ONCE(ads->ds_ctl0) = 0;
--		ACCESS_ONCE(ads->ds_ctl1) = ctl1;
--		ACCESS_ONCE(ads->ds_ctl6) = ctl6;
-+		WRITE_ONCE(ads->ds_ctl0, 0);
-+		WRITE_ONCE(ads->ds_ctl1, ctl1);
-+		WRITE_ONCE(ads->ds_ctl6, ctl6);
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
+-		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
++		 "Checksum report OK! REG_MCUFWDL:0x%08x\n", value32);
+ 
+ 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+ 	value32 |= MCUFWDL_RDY;
+@@ -186,9 +183,8 @@ static int _rtl92ee_fw_free_to_go(struct ieee80211_hw *hw)
+ 
+ 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
+ 
+-	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x. count = %d\n",
+-		 value32, counter);
++	pr_err("Polling FW ready fail!! REG_MCUFWDL:0x%08x. count = %d\n",
++	       value32, counter);
+ 
+ exit:
+ 	return err;
+@@ -241,8 +237,7 @@ int rtl92ee_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+ 
+ 	err = _rtl92ee_fw_free_to_go(hw);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Firmware is not ready to run!\n");
++		pr_err("Firmware is not ready to run!\n");
+ 	} else {
+ 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD ,
+ 			 "Firmware is ready to run!\n");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index bd416b8..c2a7666 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -1320,7 +1320,7 @@ int rtl92ee_hw_init(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, 0x65, 1);
+ 	}
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("Init MAC failed\n");
+ 		err = 1;
+ 		return err;
+ 	}
+@@ -1485,8 +1485,7 @@ static int _rtl92ee_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not support!\n", type);
++		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+ 	}
+ 
+@@ -2206,7 +2205,7 @@ void rtl92ee_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl92ee_read_adapter_info(hw);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	_rtl92ee_hal_customized_behavior(hw);
+ 
+@@ -2484,9 +2483,7 @@ void rtl92ee_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								     p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+index 5e476af..e95efba 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+@@ -170,7 +170,7 @@ static u32 _rtl92ee_phy_rf_serial_read(struct ieee80211_hw *hw,
+ 	offset &= 0xff;
+ 	newoffset = offset;
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
++		pr_err("return all one\n");
+ 		return 0xFFFFFFFF;
+ 	}
+ 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
+@@ -214,7 +214,7 @@ static void _rtl92ee_phy_rf_serial_write(struct ieee80211_hw *hw,
+ 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
+ 
+ 	if (RT_CANNOT_IO(hw)) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
++		pr_err("stop\n");
  		return;
  	}
+ 	offset &= 0xff;
+@@ -650,7 +650,7 @@ static bool _rtl92ee_phy_bb8192ee_config_parafile(struct ieee80211_hw *hw)
  
-@@ -279,7 +279,7 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	rtstatus = phy_config_bb_with_hdr_file(hw, BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 
+@@ -662,12 +662,12 @@ static bool _rtl92ee_phy_bb8192ee_config_parafile(struct ieee80211_hw *hw)
+ 	}
+ 	_rtl92ee_phy_txpower_by_rate_configuration(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = phy_config_bb_with_hdr_file(hw, BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool)(rtl_get_bbreg(hw,
+@@ -1675,8 +1675,7 @@ void rtl92ee_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -1717,8 +1716,8 @@ void rtl92ee_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
  		break;
  	}
  
--	ACCESS_ONCE(ads->ds_ctl0) = (i->pkt_len & AR_FrameLen)
-+	WRITE_ONCE(ads->ds_ctl0, (i->pkt_len & AR_FrameLen)
- 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
- 		| SM(i->txpower[0], AR_XmitPower0)
- 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
-@@ -287,29 +287,29 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
- 		| (i->flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
- 		| (i->flags & ATH9K_TXDESC_RTSENA ? AR_RTSEnable :
--		   (i->flags & ATH9K_TXDESC_CTSENA ? AR_CTSEnable : 0));
-+		   (i->flags & ATH9K_TXDESC_CTSENA ? AR_CTSEnable : 0)));
- 
--	ACCESS_ONCE(ads->ds_ctl1) = ctl1;
--	ACCESS_ONCE(ads->ds_ctl6) = ctl6;
-+	WRITE_ONCE(ads->ds_ctl1, ctl1);
-+	WRITE_ONCE(ads->ds_ctl6, ctl6);
- 
- 	if (i->aggr == AGGR_BUF_MIDDLE || i->aggr == AGGR_BUF_LAST)
- 		return;
- 
--	ACCESS_ONCE(ads->ds_ctl4) = set11nPktDurRTSCTS(i->rates, 0)
--		| set11nPktDurRTSCTS(i->rates, 1);
-+	WRITE_ONCE(ads->ds_ctl4, set11nPktDurRTSCTS(i->rates, 0)
-+		| set11nPktDurRTSCTS(i->rates, 1));
- 
--	ACCESS_ONCE(ads->ds_ctl5) = set11nPktDurRTSCTS(i->rates, 2)
--		| set11nPktDurRTSCTS(i->rates, 3);
-+	WRITE_ONCE(ads->ds_ctl5, set11nPktDurRTSCTS(i->rates, 2)
-+		| set11nPktDurRTSCTS(i->rates, 3));
- 
--	ACCESS_ONCE(ads->ds_ctl7) = set11nRateFlags(i->rates, 0)
-+	WRITE_ONCE(ads->ds_ctl7, set11nRateFlags(i->rates, 0)
- 		| set11nRateFlags(i->rates, 1)
- 		| set11nRateFlags(i->rates, 2)
- 		| set11nRateFlags(i->rates, 3)
--		| SM(i->rtscts_rate, AR_RTSCTSRate);
-+		| SM(i->rtscts_rate, AR_RTSCTSRate));
- 
--	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower[1], AR_XmitPower1);
--	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower[2], AR_XmitPower2);
--	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower[3], AR_XmitPower3);
-+	WRITE_ONCE(ads->ds_ctl9, SM(i->txpower[1], AR_XmitPower1));
-+	WRITE_ONCE(ads->ds_ctl10, SM(i->txpower[2], AR_XmitPower2));
-+	WRITE_ONCE(ads->ds_ctl11, SM(i->txpower[3], AR_XmitPower3));
- }
- 
- static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
-@@ -318,7 +318,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	struct ar5416_desc *ads = AR5416DESC(ds);
- 	u32 status;
- 
--	status = ACCESS_ONCE(ads->ds_txstatus9);
-+	status = READ_ONCE(ads->ds_txstatus9);
- 	if ((status & AR_TxDone) == 0)
- 		return -EINPROGRESS;
- 
-@@ -332,7 +332,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	ts->ts_rateindex = MS(status, AR_FinalTxIdx);
- 	ts->ts_seqnum = MS(status, AR_SeqNum);
- 
--	status = ACCESS_ONCE(ads->ds_txstatus0);
-+	status = READ_ONCE(ads->ds_txstatus0);
- 	ts->ts_rssi_ctl0 = MS(status, AR_TxRSSIAnt00);
- 	ts->ts_rssi_ctl1 = MS(status, AR_TxRSSIAnt01);
- 	ts->ts_rssi_ctl2 = MS(status, AR_TxRSSIAnt02);
-@@ -342,7 +342,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 		ts->ba_high = ads->AR_BaBitmapHigh;
- 	}
- 
--	status = ACCESS_ONCE(ads->ds_txstatus1);
-+	status = READ_ONCE(ads->ds_txstatus1);
- 	if (status & AR_FrmXmitOK)
- 		ts->ts_status |= ATH9K_TX_ACKED;
- 	else {
-@@ -371,7 +371,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
- 	ts->ts_longretry = MS(status, AR_DataFailCnt);
- 	ts->ts_virtcol = MS(status, AR_VirtRetryCnt);
- 
--	status = ACCESS_ONCE(ads->ds_txstatus5);
-+	status = READ_ONCE(ads->ds_txstatus5);
- 	ts->ts_rssi = MS(status, AR_TxRSSICombined);
- 	ts->ts_rssi_ext0 = MS(status, AR_TxRSSIAnt10);
- 	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
-@@ -390,13 +390,13 @@ static int ar9002_hw_get_duration(struct ath_hw *ah, const void *ds, int index)
- 
- 	switch (index) {
- 	case 0:
--		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur0);
-+		return MS(READ_ONCE(ads->ds_ctl4), AR_PacketDur0);
- 	case 1:
--		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur1);
-+		return MS(READ_ONCE(ads->ds_ctl4), AR_PacketDur1);
- 	case 2:
--		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur2);
-+		return MS(READ_ONCE(ads->ds_ctl5), AR_PacketDur2);
- 	case 3:
--		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur3);
-+		return MS(READ_ONCE(ads->ds_ctl5), AR_PacketDur3);
+@@ -1742,8 +1740,8 @@ void rtl92ee_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
  	default:
- 		return -1;
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
  	}
+ 	rtl92ee_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -1884,8 +1881,8 @@ static bool _rtl92ee_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n" , *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/rf.c
+index 73716c0..bc76a91 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/rf.c
+@@ -55,8 +55,7 @@ void rtl92ee_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index 46b605de3..eddc704 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -165,8 +165,7 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw\n");
++		pr_err("Can't alloc buffer for fw\n");
+ 		return 1;
+ 	}
+ 
+@@ -179,8 +178,7 @@ int rtl92ee_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 
+@@ -260,7 +258,7 @@ static struct rtl_mod_params rtl92ee_mod_params = {
+ 	.swctrl_lps = false,
+ 	.fwctrl_lps = true,
+ 	.msi_support = true,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ };
+ 
+ static const struct rtl_hal_cfg rtl92ee_hal_cfg = {
 -- 
-2.7.4
+2.10.2
