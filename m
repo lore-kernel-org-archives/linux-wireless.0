@@ -1,79 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43188 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750998AbcLEO2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:28:23 -0500
-Message-ID: <1480948100.31788.15.camel@sipsolutions.net> (sfid-20161205_152827_051758_080948A3)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: dimitrysh@google.com, linux-wireless@vger.kernel.org
-Date: Mon, 05 Dec 2016 15:28:20 +0100
-In-Reply-To: <94eb2c110db85c2379054172dad0@google.com> (sfid-20161116_235236_736106_A8DBAB02)
-References: <94eb2c110db85c2379054172dad0@google.com>
-         (sfid-20161116_235236_736106_A8DBAB02)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56200 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935301AbcLOMBf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 07:01:35 -0500
+Date: Thu, 15 Dec 2016 03:51:46 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Javier Martinez Canillas <javier@osg.samsung.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        Shaohua Li <shli@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Jason Wang <jasowang@redhat.com>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-raid@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-mm@kvack.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-wpan@vger.kernel.org
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Message-ID: <20161215115146.GB22750@kroah.com> (sfid-20161215_130223_015532_F6BA3DDB)
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-6-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitry,
+On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
+>  include/linux/mmzone.h                           | 2 +-
+>  include/linux/serial_core.h                      | 4 ++--
+>  include/linux/types.h                            | 4 ++--
+>  include/scsi/iscsi_proto.h                       | 2 +-
+>  include/target/target_core_base.h                | 2 +-
+>  include/uapi/linux/virtio_types.h                | 6 +++---
+>  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
+>  net/mac80211/ieee80211_i.h                       | 4 ++--
+>  12 files changed, 20 insertions(+), 20 deletions(-)
 
-Sorry I didn't respond earlier.
+for include/linux/serial_core.h:
 
->    Currently we have sched scan with possibility of various
-> intervals. We would like to extend it to support also
-> different types of scan.
-
-"Different types of scan" is a bit misleading though, isn't it? I mean,
-mostly they differ in the reporting modes - the scanning itself still
-happens at "various intervals"?
-
->    In case of powerful wlan CPU, all this functionality
-> can be offloaded.
->    In general case FW processes additional scan requests
-> and puts them into queue based on start time and interval.
-> Once current request is fulfilled, FW adds it (if interval != 0)
-> again to the queue with proper interval. If requests are
-> overlapping, new request can be combined with either one before,
-> or one after, assuming that requests are not mutually exclusive.
->    Combining requests is done by combining scan channels, ssids,
-> bssids and types of scan result. Once combined request was fulfilled
-> it will be reinserted as two (or three) different requests based on
-> their type and interval.
->    Each request has attribute:
-> Type: connectivity / location
-
-I'm not super happy with this - after all, in theory nothing precludes
-using the results for one thing or the other, it's just about when and
-how they are gathered, no?
-
-You do have a point wrt. an incomplete scan triggering something wrt.
-roaming or so in the connection manager, but I think that if it finds a
-better result there than the current connection it would make sense to
-pick it - even without full information.
-
-So ultimately, I think this might boil down to reporting the scan
-finished more accurately/precisely, rather than saying the type of
-scan?
-
-> Report: none / batch / immediate
-
-Not sure I see much point in "none"??
-
-Can you define these more clearly? Do you think "batch" reporting
-should be like the gscan buckets? Or actually have full information?
-
->    Request may have priority and can be inserted into
-> the head of the queue.
->    Types of scans:
-> - Normal scan
-> - Scheduled scan
-> - Hotlist (BSSID scan)
-> - Roaming
-> - AutoJoin
-
-I think somebody else said this but I didn't find it now - I think this
-would make more sense to define in terms of expected behaviour than use
-cases for each type of scan.
-
-johannes
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
