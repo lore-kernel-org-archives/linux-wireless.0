@@ -1,65 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:32813 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765105AbcLWRr0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48716 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751367AbcLOKNI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Dec 2016 12:47:26 -0500
-Received: by mail-wm0-f68.google.com with SMTP id u144so42716592wmu.0
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2016 09:47:25 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: igor.mitsyanko.os@quantenna.com
-Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>
-Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-Date: Fri, 23 Dec 2016 18:47:22 +0100
-Message-ID: <1796267.ZQn77y5fxL@debian64> (sfid-20161223_184825_069858_8DEC9A11)
-In-Reply-To: <1482505955-9310-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-References: <87d1hmnrqj.fsf@purkki.adurom.net> <1482505955-9310-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+        Thu, 15 Dec 2016 05:13:08 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 0/3] Add new data path for ethernet frame format
+Date: Thu, 15 Dec 2016 10:03:06 +0000
+Message-ID: <58526A59.7050506@qti.qualcomm.com> (sfid-20161215_111312_750698_44F84D9E)
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <1481792926.31776.1.camel@sipsolutions.net>
+In-Reply-To: <1481792926.31776.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, December 23, 2016 6:12:35 PM CET igor.mitsyanko.os@quantenna.com wrote:
-> From: Igor Mitsyanko <imitsyanko@quantenna.com>
-> 
-> QSR10G is Quantenna's 8x8, 160M, 11ac WiFi card.
-> 
-> Signed-off-by: Kamlesh Rath <krath@quantenna.com>
-> Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
-> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
-> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-> ---
-> This is an RFC patch that we sent to linux-wireless mailing list a while ago,
-> and it spawned a discussion regarding whether GPL sources has to be submitted
-> together with this firmware. We would like to clarify with linux-firmware maintainers
-> to understnad what should be our actions to allow this to be accepted.
-> - firmware contains GPL components;
-> - LICENCE file states that sources for GPL components will be provided on request
-> to oslegal@quantenna.com
-> 
-> There was an opinion that it is not enough: precedent case like this with carl9170
-> firmware was resolved by submitting GPL sources into linux-firmware repository
-> itself.
-The ar9170-usb firmware was released as GPL v2.0 from the get-go.
-<http://git.sipsolutions.net/ar9170-fw.git/commit/GPL?id=2e3574ce10c74a82047a06b046855de14d969948>
-
-And this was never a problem. What is THE PROBLEM though:
-"if all the patches from ar9170fw to carl9170fw and beyond (i.e new versions)
-have to be added to linux-firmware.git." Or not.
-
-That's why there was never a update to the carl9170fw.
-So be prepared for this scenario too.
-
-> Does the same applies to qsr10g firmware?
->
-> The SDK that we use to build it is quite heavy (> 100MB, but with toolchain). 
-> Maybe we can take another approach to place SDK separately on Quantenna website
-> (as a compressed archive), and add a link in linux-firmware?
-Yes, I would like to know this as well.
-
-Regards,
-Christian
+T24gVGh1cnNkYXkgMTUgRGVjZW1iZXIgMjAxNiAwMjozOCBQTSwgSm9oYW5uZXMgQmVyZyB3cm90
+ZToNCj4gT24gVGh1LCAyMDE2LTEyLTE1IGF0IDExOjMwICswNTMwLCBWYXNhbnRoYWt1bWFyIFRo
+aWFnYXJhamFuIHdyb3RlOg0KPj4gVGhpcyBwYXRjaCBzZXQgYWRkcyBhIG5ldyBkYXRhIHBhdGgg
+dG8gb2ZmbG9hZCA4MDIuMTEgaGVhZGVyDQo+PiBlbmNhcC9kZWNhcCB0byBkcml2ZXIgb3IgaGFy
+ZHdhcmUuIERyaXZlcnMgaGF2aW5nIHN1cHBvcnQNCj4+IGZvciBpZWVlODAyMTEgaGVhZGVyIGVu
+Y2FwL2RlY2FwIGFuZCBvdGhlciBvZmZsb2FkIGZ1bmN0aW9uYWxpdGllcw0KPj4gd2hpY2ggY2Fu
+J3QgYmUgZG9uZSBiZWZvcmUgZW5jYXAgb3IgYWZ0ZXIgZGVjYXAgY2FuIG1ha2UgdXNlIG9mDQo+
+PiB0aGlzIG5ldyBkYXRhIHBhdGguIEN1cnJlbnRseSBpdCBpcyBpbXBsZW1lbnRlZCBmb3IgU1RB
+IGFuZCBBUA0KPj4gaW50ZXJmYWNlIHR5cGUsIHRoaXMgY2FuIGJlIGV4dGVuZCBvdGhlciBpbnRl
+cmZhY2UgdHlwZXMgbGlrZQ0KPj4gYWRob2MuDQo+DQo+IFRoYW5rcyBmb3IgcG9zdGluZyB0aGlz
+IQ0KPg0KPj4gV2l0aCBhdGgxMGsgZHJpdmVyIGNoYW5nZXMgdXNpbmcgdGhpcyBuZXcgVHgvUngg
+cGF0aCwgMTAgLSAxNSUNCj4+IENQVSB1c2FnZSBhbmQgdXB0byB+MjBNYnBzIFRDUCBwZXJmb3Jt
+YW5jZSBpbXByb3ZlbWVudHMgYXJlDQo+PiBvYnNlcnZlZCB3aXRoIHRoaXMgZXRoZXJuZXQgZGF0
+YSBwYXRoLg0KPg0KPiBJJ20gc3VyZSB0aGF0J3MgYmVjYXVzZSB5b3VyIENQVSBpcyBzZXZlcmVs
+eSBsaW1pdGVkIDotKQ0KDQpSaWdodCwgbW9zdCBvZiB0aGUgdGltZSBJIHdhcyBvYnNlcnZpbmcg
+bWF4IENQVSB1c2FnZS4NCg0KPg0KPj4gVGhpcyBwYXRjaCBzZXQgaXMNCj4+IHByZXBhcmVkIG9u
+IGEgb2xkZXIgbWFjODAyMTEgY29kZSBiYXNlIG9uIHRvcCBvZg0KPj4gY29tbWl0IDdkMjdhMGJh
+N2FkYyAoImNmZzgwMjExOiBBZGQgbWVzaCBwZWVyIEFJRCBzZXR0aW5nIEFQSSIpLg0KPj4gU29y
+cnksIEkgY291bGQgbm90IGdldCBhIGNoYW5jZSB0byByZXdvcmsgaXQgb24gdG9wIG9mIGxhdGVz
+dA0KPj4gbWFjODAyMTEgY29kZSBiYXNlLg0KPg0KPiBPay4gSSBndWVzcyB0aGF0IGRvZXNuJ3Qg
+bWF0dGVyIG11Y2ggZm9yIHJldmlldyBub3cuDQo+DQo+PiAJLSBDb25zaWRlciBpZWVlODAxMSBo
+ZWFkZXIgYW5kIGNpcGhlciBoZWFkZXIgc2l6ZSBhbHNvIHdoaWxlDQo+PiB1cGRhdGluZyB0eC9y
+eCBzdGF0cyBmb3INCj4+IAkgIGV0aGVybmV0IGZyYW1lIGZvcm1hdC4NCj4NCj4gSSB3b25kZXIg
+aWYgd2UgcmVhbGx5IHNob3VsZG4ndCBiZSBnb2luZyB0aGUgb3RoZXIgd2F5IGFyb3VuZCBpbnN0
+ZWFkLA0KPiB0byBiZSBjbG9zZXIgdG8gd2hhdCBFdGhlcm5ldCBhbmQgbGlrZWx5IG90aGVyIGRy
+aXZlcnMgZG8uDQoNCk9rLiBJIGNhcHR1cmVkIHRoYXQgYmVjYXVzZSByeC90eCBieXRlcyBzdGF0
+cyB3aWxsIGJlIGluY29uc2lzdGVudCBiZXR3ZWVuIGV0aGVybmV0DQphbmQgODAyLjExIGZyYW1l
+IGZvcm1hdC4NCg0KVmFzYW50aA==
