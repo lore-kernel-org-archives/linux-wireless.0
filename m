@@ -1,39 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42870 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751096AbcLEN5O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 08:57:14 -0500
-Message-ID: <1480946188.31788.6.camel@sipsolutions.net> (sfid-20161205_145718_364291_A5E87328)
-Subject: Re: [PATCH 2/2] mac80211:  put upper bound on txqi queue length.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Mon, 05 Dec 2016 14:56:28 +0100
-In-Reply-To: <1480442753-6830-2-git-send-email-greearb@candelatech.com> (sfid-20161129_190601_774406_10D2EEDF)
-References: <1480442753-6830-1-git-send-email-greearb@candelatech.com>
-         <1480442753-6830-2-git-send-email-greearb@candelatech.com>
-         (sfid-20161129_190601_774406_10D2EEDF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33634 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbcLOR2t (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 12:28:49 -0500
+Date: Thu, 15 Dec 2016 19:28:39 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Javier Martinez Canillas <javier@osg.samsung.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Alasdair Kergon <agk@redhat.com>,
+        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
+        Shaohua Li <shli@kernel.org>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
+        Jason Wang <jasowang@redhat.com>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, linux-raid@vger.kernel.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-mm@kvack.org, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-wpan@vger.kernel.org
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Message-ID: <20161215172839.GA6520@kozik-lap> (sfid-20161215_182954_793620_D93B1512)
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-6-git-send-email-mst@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-11-29 at 10:05 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
 > 
-> This fixes OOM when using pktgen to drive a wifi station at more than
-> the station can transmit.  pktgen uses ndo_start_xmit instead of
-> going
-> through the queue layer, so it will not back off when the queues are
-> stopped, and would thus cause packets to be added to the txqi->queue
-> until the system goes OOM and crashes.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 > ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
+>  include/linux/mmzone.h                           | 2 +-
+>  include/linux/serial_core.h                      | 4 ++--
+>  include/linux/types.h                            | 4 ++--
+>  include/scsi/iscsi_proto.h                       | 2 +-
+>  include/target/target_core_base.h                | 2 +-
+>  include/uapi/linux/virtio_types.h                | 6 +++---
+>  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
+>  net/mac80211/ieee80211_i.h                       | 4 ++--
+>  12 files changed, 20 insertions(+), 20 deletions(-)
 > 
-> This is against 4.7.10+, not sure if it is actually needed in latest
-> kernel.
+> diff --git a/arch/arm/plat-samsung/include/plat/gpio-cfg.h b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> index 21391fa..e55d1f5 100644
+> --- a/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> +++ b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> @@ -26,7 +26,7 @@
+>  
+>  #include <linux/types.h>
+>  
+> -typedef unsigned int __bitwise__ samsung_gpio_pull_t;
+> +typedef unsigned int __bitwise samsung_gpio_pull_t;
+>  
+>  /* forward declaration if gpio-core.h hasn't been included */
+>  struct samsung_gpio_chip;
 
-One would hope that fq_tin_enqueue() does something like that, but
-anyway the patch doesn't apply so I'm dropping it.
+For plat-samsung:
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
 
-johannes
+Best regards,
+Krzysztof
