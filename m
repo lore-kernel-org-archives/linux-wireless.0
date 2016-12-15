@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36046 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752801AbcLLUBF (ORCPT
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:34761 "EHLO
+        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753938AbcLOUPt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 15:01:05 -0500
-Received: by mail-qk0-f172.google.com with SMTP id n21so94776353qka.3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2016 12:01:05 -0800 (PST)
-Subject: Re: [RFC V3 03/11] nl80211: add support for gscan
-To: Dan Williams <dcbw@redhat.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
- <1481543997-24624-4-git-send-email-arend.vanspriel@broadcom.com>
- <1481564592.6887.2.camel@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+        Thu, 15 Dec 2016 15:15:49 -0500
+Received: by mail-qk0-f171.google.com with SMTP id q130so69388350qke.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 12:15:29 -0800 (PST)
+Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-9-git-send-email-mst@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Vince Bridgers <vbridger@opensource.altera.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
+        linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <286ed7bd-c23a-03c0-175f-7784fb235f7b@broadcom.com> (sfid-20161212_210108_518347_572F67AF)
-Date: Mon, 12 Dec 2016 21:01:01 +0100
+Message-ID: <5186291e-90ed-3070-72ad-d6f78fd1a410@broadcom.com> (sfid-20161215_211629_028106_2B8A7BDF)
+Date: Thu, 15 Dec 2016 21:15:23 +0100
 MIME-Version: 1.0
-In-Reply-To: <1481564592.6887.2.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-12-2016 18:43, Dan Williams wrote:
->> +
->> +/**
->> + * enum nl80211_bucket_band - GScan bucket band selection.
-> Quite possibly this was already covered and somebody requested you to
-> change this to the current name.  If that's the case, ignore this.
+On 15-12-2016 6:15, Michael S. Tsirkin wrote:
+> That's the default now, no need for makefiles to set it.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  drivers/bluetooth/Makefile                                | 2 --
+>  drivers/net/can/Makefile                                  | 1 -
+>  drivers/net/ethernet/altera/Makefile                      | 1 -
+>  drivers/net/ethernet/atheros/alx/Makefile                 | 1 -
+>  drivers/net/ethernet/freescale/Makefile                   | 2 --
+>  drivers/net/wireless/ath/Makefile                         | 2 --
+>  drivers/net/wireless/ath/wil6210/Makefile                 | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile | 1 -
 
-Nope. You are the first ;-)
+For brcm80211 drivers:
 
-> But shouldn't this enum and bucket_event_report include "gscan" in
-> their name, like the other gscan specific stuff does?  Are these going
-> to get used for something else too, and will that thing make sense with
-> the word "bucket"?  Just "nl80211_bucket_band" is pretty generic.
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-I figured the term bucket was making it gscan specific, but you are
-right. Will change it.
-
-Thanks,
+Regards,
 Arend
