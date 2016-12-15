@@ -1,75 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55350 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42390 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754053AbcLNUqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 15:46:12 -0500
-Subject: Re: [PATCH v2] ath9k: do not return early to fix rcu unlocking
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
-        kvalo@codeaurora.org, helgaas@kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        marc.zyngier@arm.com, Janusz.Dziedzic@tieto.com,
-        ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        rmanohar@qca.qualcomm.com, bharat.kumar.gogada@xilinx.com
-References: <e15c5efc-d548-8b32-ca86-5ec26506ff7c@nbd.name>
- <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
-Cc: "# v4 . 9" <stable@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <b68fee2a-901b-c2ce-f59e-5968f8846d0f@nbd.name> (sfid-20161214_214642_966843_2F201223)
-Date: Wed, 14 Dec 2016 21:45:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
-Content-Type: text/plain; charset=utf-8
+        id S1757601AbcLOJ3J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 04:29:09 -0500
+Message-ID: <1481794142.31776.5.camel@sipsolutions.net> (sfid-20161215_102938_964410_E8E5838B)
+Subject: Re: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 15 Dec 2016 10:29:02 +0100
+In-Reply-To: <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-12-13 18:08, Tobias Klausmann wrote:
-> Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
-> where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
-> returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
-> and suspicious RCU usage:
-> 
->  ===============================
->  [ INFO: suspicious RCU usage. ]
->  4.9.0-rc8 #11 Not tainted
->  -------------------------------
->  kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
-> 
->  other info that might help us debug this:
-> 
->  RCU used illegally from idle CPU!
->  rcu_scheduler_active = 1, debug_locks = 0
->  RCU used illegally from extended quiescent state!
->  1 lock held by swapper/7/0:
->  #0:
->   (
->  rcu_read_lock
->  ){......}
->  , at:
->  [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
-> 
->  stack backtrace:
->  CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
->  Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
->   ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
->   ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
->   ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
->  Call Trace:
->   <IRQ>
->   [<ffffffff8132b1e5>] dump_stack+0x68/0x93
->   [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
->   [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
->   [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
->   [<ffffffff81058631>] irq_exit+0x61/0xd0
->   [<ffffffff81018d25>] do_IRQ+0x65/0x110
->   [<ffffffff81672189>] common_interrupt+0x89/0x89
->   <EOI>
->   [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
->   [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
->   [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
->   [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
->   [<ffffffff810336f8>] start_secondary+0x148/0x170
-> 
-> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
-> Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
-> Cc: <stable@vger.kernel.org> # v4.9
-Acked-by: Felix Fietkau <nbd@nbd.name>
+
+> There is a field, no_80211_encap, added to ieee80211_tx_info:control
+> to mark if the 802.11 encapsulation is offloaded to driver.
+> There is also a new callback for tx completion status indication
+> to handle data frames using 802.11 encap offload.
+
+I'm not sure I see the need for this? Maybe I'll find out in this patch
+:)
+
+> +			/* XXX: This frame is not encaptulated with
+> 802.11
+> +			 * header. Should this be added to
+> %IEEE80211_TX_CTRL_*
+> +			 * flags?.
+> +			 */
+> +			bool no_80211_encap;
+> +			/* 3 bytes free */
+>  		} control;
+
+probably - just to preserve more space.
+
+> + * @IEEE80211_CONF_CHANGE_80211_HDR_OFFL: Offload configuration
+> + *	implementing 802.11 encap/decap for data frames changed.
+>   */
+>  enum ieee80211_conf_changed {
+>  	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+> @@ -1279,6 +1286,7 @@ enum ieee80211_conf_changed {
+>  	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+>  	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+>  	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
+> +	IEEE80211_CONF_CHANGE_80211_HDR_OFFL	= BIT(9),
+>  };
+
+Given the requirements (PN check, etc.) I'm not sure how this can
+change dynamically?
+
+> + * @encap_decap_80211_offloaded: Whether 802.11 header encap/decap
+> offload
+> + *	is enabled
+>   */
+>  struct ieee80211_conf {
+>  	u32 flags;
+> @@ -1346,6 +1357,7 @@ struct ieee80211_conf {
+>  	struct cfg80211_chan_def chandef;
+>  	bool radar_enabled;
+>  	enum ieee80211_smps_mode smps_mode;
+> +	bool encap_decap_80211_offloaded;
+
+Please don't add anything here that's interface specific.
+
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -107,6 +107,10 @@ static int ieee80211_change_iface(struct wiphy
+> *wiphy,
+>  		}
+>  	}
+>  
+> +	ieee80211_if_check_80211_hdr_offl(sdata,
+> +					  params ? params->use_4addr 
+> : false,
+> +					  true);
+> +
+>  	return 0;
+>  }
+
+Wouldn't it be better to simply prohibit changing this while the
+interface is up, and re-init it later when it goes up?
+
+> +++ b/net/mac80211/ieee80211_i.h
+> @@ -1373,6 +1373,8 @@ struct ieee80211_local {
+>  	/* TDLS channel switch */
+>  	struct work_struct tdls_chsw_work;
+>  	struct sk_buff_head skb_queue_tdls_chsw;
+> +
+> +	bool data_80211_hdr_offloaded;
+
+Again, don't put interface specific things into device structures.
+
+> +int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+> +			    struct sk_buff *skb,
+> +			    struct sta_info **sta_out);
+
+Return the sta_info pointer, and ERR_PTR() if needed.
+
+> +++ b/net/mac80211/iface.c
+> @@ -698,6 +698,11 @@ int ieee80211_do_open(struct wireless_dev *wdev,
+> bool coming_up)
+>  		rcu_assign_pointer(local->p2p_sdata, sdata);
+>  	}
+>  
+> +	if (local->open_count == 0 && local-
+> >data_80211_hdr_offloaded) {
+> +		local->hw.conf.encap_decap_80211_offloaded = true;
+> +		hw_reconf_flags |=
+> IEEE80211_CONF_CHANGE_80211_HDR_OFFL;
+> +	}
+
+I don't see how this helps anything, I think you should remove it.
+
+> +void ieee80211_if_config_80211_hdr_offl(struct ieee80211_local
+> *local,
+> +					bool enable_80211_hdr_offl)
+> +{
+> +	struct ieee80211_sub_if_data *sdata;
+> +	unsigned long flags;
+> +	int n_acs = IEEE80211_NUM_ACS;
+> +	int ac;
+> +
+> +	ASSERT_RTNL();
+> +
+> +	if (!ieee80211_hw_check(&local->hw,
+> SUPPORTS_80211_ENCAP_DECAP) ||
+> +	    !(ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)))
+> +		return;
+> +
+> +	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
+> +	    !local->ops->set_frag_threshold)
+> +		return;
+> +
+> +	mutex_lock(&local->iflist_mtx);
+> +
+> +	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		if (!sdata->dev)
+> +			continue;
+> +
+> +		netif_tx_stop_all_queues(sdata->dev);
+> +
+> +		if (enable_80211_hdr_offl)
+> +			sdata->dev->netdev_ops =
+> &ieee80211_dataif_8023_ops;
+> +		else
+> +			sdata->dev->netdev_ops =
+> &ieee80211_dataif_ops;
+> +	}
+> +
+> +	mutex_unlock(&local->iflist_mtx);
+> +
+> +	local->data_80211_hdr_offloaded = enable_80211_hdr_offl;
+> +
+> +	if (local->started) {
+> +		if (enable_80211_hdr_offl)
+> +			local->hw.conf.encap_decap_80211_offloaded =
+> true;
+> +		else
+> +			local->hw.conf.encap_decap_80211_offloaded =
+> false;
+> +		ieee80211_hw_config(local,
+> +				    IEEE80211_CONF_CHANGE_80211_HDR_
+> OFFL);
+> +	}
+> +
+> +	mutex_lock(&local->iflist_mtx);
+> +
+> +	list_for_each_entry(sdata, &local->interfaces, list) {
+> +		if (!sdata->dev)
+> +			continue;
+> +
+> +		if (local->hw.queues < IEEE80211_NUM_ACS)
+> +			n_acs = 1;
+> +
+> +		spin_lock_irqsave(&local->queue_stop_reason_lock,
+> flags);
+> +		if (sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE
+> ||
+> +		    (local->queue_stop_reasons[sdata->vif.cab_queue] 
+> == 0 &&
+> +		     skb_queue_empty(&local->pending[sdata-
+> >vif.cab_queue]))) {
+> +			for (ac = 0; ac < n_acs; ac++) {
+> +				int ac_queue = sdata-
+> >vif.hw_queue[ac];
+> +
+> +				if (local-
+> >queue_stop_reasons[ac_queue] == 0 &&
+> +				    skb_queue_empty(&local-
+> >pending[ac_queue]))
+> +					netif_start_subqueue(sdata-
+> >dev, ac);
+> +			}
+> +		}
+> +		spin_unlock_irqrestore(&local-
+> >queue_stop_reason_lock, flags);
+> +	}
+> +
+> +	mutex_unlock(&local->iflist_mtx);
+> +}
+
+I really would prefer we could simply avoid doing these manipulations
+while the interface is UP and can have data queued.
+
+> +++ b/net/mac80211/key.c
+> @@ -208,13 +208,25 @@ static int ieee80211_key_enable_hw_accel(struct
+> ieee80211_key *key)
+>  	case WLAN_CIPHER_SUITE_GCMP_256:
+>  		/* all of these we can do in software - if driver
+> can */
+>  		if (ret == 1)
+> -			return 0;
+> +			goto check_8023_txrx;
+>  		if (ieee80211_hw_check(&key->local->hw,
+> SW_CRYPTO_CONTROL))
+>  			return -EINVAL;
+> -		return 0;
+> +		goto check_8023_txrx;
+>  	default:
+>  		return -EINVAL;
+>  	}
+> +
+> +check_8023_txrx:
+> +	/* When sw crypto is enabled make sure data tx/rx happens
+> +	 * in 802.11 format.
+> +	 */
+> +	if (key->local->data_80211_hdr_offloaded) {
+> +		rtnl_lock();
+> +		ieee80211_if_config_80211_hdr_offl(key->local,
+> false);
+> +		rtnl_unlock();
+> +	}
+> +
+> +	return 0;
+>  }
+
+Why not just refuse the key instead? It also seems wrong to do anything
+with local-> here, it should be per interface.
+
+> +++ b/net/mac80211/status.c
+> @@ -506,12 +506,14 @@ static void ieee80211_report_used_skb(struct
+> ieee80211_local *local,
+>  				      struct sk_buff *skb, bool
+> dropped)
+>  {
+>  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> -	struct ieee80211_hdr *hdr = (void *)skb->data;
+> +	struct ieee80211_hdr *hdr;
+>  	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
+>  
+>  	if (dropped)
+>  		acked = false;
+>  
+> +	hdr = (void *)skb->data;
+
+That change make no sense.
+
+>  	if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
+>  		struct ieee80211_sub_if_data *sdata;
+>  
+> @@ -945,6 +947,85 @@ void ieee80211_tx_status(struct ieee80211_hw
+> *hw, struct sk_buff *skb)
+>  }
+>  EXPORT_SYMBOL(ieee80211_tx_status);
+>  
+> +void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
+> +			      struct ieee80211_vif *vif,
+> +			      struct sk_buff *skb)
+
+I think this could share some code with the 802.11 version?
+
+> +	/* XXX: Add a generic helper for this */
+> +	if (sdata->vif.type == NL80211_IFTYPE_AP ||
+> +	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+> +	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
+> +		ether_addr_copy(ra_addr, ehdr->h_dest);
+
+nit, but the "A" in "RA" already means address ... :)
+
+You also don't need to copy it - just keeping a pointer should be fine?
+
+> +	/* TODO: Handle frames requiring wifi tx status to be
+> notified */
+> +	if (skb->sk && skb_shinfo(skb)->tx_flags &
+> SKBTX_WIFI_STATUS)
+> +		goto out_free;
+
+Surely you shouldn't free them, even if you don't handle the status?!
+
+johannes
