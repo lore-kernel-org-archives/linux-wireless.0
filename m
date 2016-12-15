@@ -1,73 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53258 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750705AbcL1Duu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 22:50:50 -0500
-Date: Wed, 28 Dec 2016 11:50:44 +0800
-From: Peter Xu <peterx@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Intel Wireless 7260 failed to work
-Message-ID: <20161228035044.GA3924@pxdev.xzpeter.org> (sfid-20161228_045110_342878_84703DB0)
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
- <a1fbf107-24df-d9e8-1c69-78025c70a79c@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <a1fbf107-24df-d9e8-1c69-78025c70a79c@lwfinger.net>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35186 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755953AbcLOSYD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Dec 2016 13:24:03 -0500
+Received: by mail-oi0-f68.google.com with SMTP id v84so7054913oie.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:31 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 04/14 V2] rtlwifi: rtl8723be: Remove all instances of DBG_EMERG
+Date: Thu, 15 Dec 2016 12:23:00 -0600
+Message-Id: <20161215182310.13713-5-Larry.Finger@lwfinger.net> (sfid-20161215_193931_271592_9BBF4751)
+In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 27, 2016 at 10:41:22AM -0600, Larry Finger wrote:
-> On 12/27/2016 03:17 AM, Peter Xu wrote:
-> >Hello,
-> >
-> >Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
-> >with my wireless card, which is:
-> >
-> >  Intel Corporation Wireless 7260 (rev bb)
-> >
-> >Boot message shows that no suitable firmware found:
-> >
-> >    # journalctl -kp3
-> >    Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
-> >    Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
-> >    Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
-> >    Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
-> >    Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
-> >    Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
-> >
-> >Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
-> >further tests have been done yet.
-> >
-> >Is this a known issue? Please let me know if anyone wants more info or
-> >logs, since this error triggers easily (everytime I boot).
-> >
-> 
-> The problem appears to be specific for your system. On my Toshiba Tecra
-> A50A, kernel 4.10-rc1 the driver works the same as in earlier kernels. The
-> dmesg log shows the following:
-> 
-> [    4.760600] Intel(R) Wireless WiFi driver for Linux
-> [    4.760601] Copyright(c) 2003- 2015 Intel Corporation
-> [    4.799519] iwlwifi 0000:04:00.0: loaded firmware version 17.352738.0
-> op_mode iwlmvm
-> [    4.880820] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless AC
-> 7260, REV=0x144
-> [    4.883340] iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-> [    4.883584] iwlwifi 0000:04:00.0: L1 Enabled - LTR Enabled
-> 
-> I'm not sure if the driver would look for firmware version 16 if 17 would
-> not be available, but I think it would.
-> 
-> Check for firmware file /lib/firmware/iwlwifi-7260-17.ucode. If that is not
-> present for your distro, it is in the repo at
-> git://git.kernel.org/pub/scm/linux/kernel/git/dwmw2/linux-firmware.git.
+This is a step toward eliminating the RT_TRACE macros. Those calls that
+have DBG_EMERG as the level are always logged, and they represent error
+conditions, thus they are replaced with pr_err().
 
-This is useful. :-)
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+V2 - eliminate some files that should not have been sent, and remove the
+     module name from the format. It is already specified by a pr_fmt().
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c  |  9 +++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c  | 16 ++++++----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c |  6 ++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 18 +++++++-----------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c  |  3 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c  |  8 +++-----
+ 6 files changed, 22 insertions(+), 38 deletions(-)
 
-Putting iwlwifi-7260-17.ucode into /lib/firmware fixes my issue.
-
-Thanks for the link!
-
--- peterx
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+index f9a2c8b..89bba11 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
+@@ -97,8 +97,7 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 	while (!bwrite_sucess) {
+ 		wait_writeh2c_limmit--;
+ 		if (wait_writeh2c_limmit == 0) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Write H2C fail because no trigger for FW INT!\n");
++			pr_err("Write H2C fail because no trigger for FW INT!\n");
+ 			break;
+ 		}
+ 
+@@ -121,8 +120,8 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			box_extreg = REG_HMEBOX_EXT_3;
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", boxnum);
++			pr_err("switch case %#x not processed\n",
++			       boxnum);
+ 			break;
+ 		}
+ 
+@@ -194,8 +192,8 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
+ 			}
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "switch case %#x not processed\n", cmd_len);
++			pr_err("switch case %#x not processed\n",
++			       cmd_len);
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 0ae5562..2fb39f6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -747,9 +747,8 @@ static bool _rtl8723be_llt_write(struct ieee80211_hw *hw, u32 address, u32 data)
+ 			break;
+ 
+ 		if (count > POLLING_LLT_THRESHOLD) {
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Failed to polling write LLT done at address %d!\n",
+-				 address);
++			pr_err("Failed to polling write LLT done at address %d!\n",
++			       address);
+ 			status = false;
+ 			break;
+ 		}
+@@ -1383,7 +1382,7 @@ int rtl8723be_hw_init(struct ieee80211_hw *hw)
+ 	}
+ 	rtstatus = _rtl8723be_init_mac(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Init MAC failed\n");
++		pr_err("Init MAC failed\n");
+ 		err = 1;
+ 		goto exit;
+ 	}
+@@ -1532,8 +1531,7 @@ static int _rtl8723be_set_media_status(struct ieee80211_hw *hw,
+ 			 "Set Network type to AP!\n");
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Network type %d not support!\n", type);
++		pr_err("Network type %d not support!\n", type);
+ 		return 1;
+ 	}
+ 
+@@ -2247,7 +2245,7 @@ void rtl8723be_read_eeprom_info(struct ieee80211_hw *hw)
+ 		rtlefuse->autoload_failflag = false;
+ 		_rtl8723be_read_adapter_info(hw, false);
+ 	} else {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
++		pr_err("Autoload ERR!!\n");
+ 	}
+ 	_rtl8723be_hal_customized_behavior(hw);
+ }
+@@ -2584,9 +2582,7 @@ void rtl8723be_set_key(struct ieee80211_hw *hw, u32 key_index,
+ 					entry_id = rtl_cam_get_free_entry(hw,
+ 								p_macaddr);
+ 					if (entry_id >=  TOTAL_CAM_ENTRY) {
+-						RT_TRACE(rtlpriv, COMP_SEC,
+-							 DBG_EMERG,
+-							 "Can not find free hw security cam entry\n");
++						pr_err("Can not find free hw security cam entry\n");
+ 						return;
+ 					}
+ 				} else {
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
+index 497913e..193125b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
+@@ -57,8 +57,8 @@ void rtl8723be_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 		rtl_write_byte(rtlpriv, REG_LEDCFG1, ledcfg & 0x10);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = true;
+@@ -99,8 +98,8 @@ void rtl8723be_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
+ 
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "switch case %#x not processed\n", pled->ledpin);
++		pr_err("switch case %#x not processed\n",
++		       pled->ledpin);
+ 		break;
+ 	}
+ 	pled->ledon = false;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+index 0ee11cb..36acd1e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+@@ -467,7 +467,7 @@ static bool _rtl8723be_phy_bb8723b_config_parafile(struct ieee80211_hw *hw)
+ 	rtstatus = _rtl8723be_phy_config_bb_with_headerfile(hw,
+ 						BASEBAND_CONFIG_PHY_REG);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
++		pr_err("Write BB Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	_rtl8723be_phy_init_tx_power_by_rate(hw);
+@@ -478,13 +478,13 @@ static bool _rtl8723be_phy_bb8723b_config_parafile(struct ieee80211_hw *hw)
+ 	}
+ 	phy_txpower_by_rate_config(hw);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
++		pr_err("BB_PG Reg Fail!!\n");
+ 		return false;
+ 	}
+ 	rtstatus = _rtl8723be_phy_config_bb_with_headerfile(hw,
+ 						BASEBAND_CONFIG_AGC_TAB);
+ 	if (!rtstatus) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
++		pr_err("AGC Table Fail\n");
+ 		return false;
+ 	}
+ 	rtlphy->cck_high_power = (bool)(rtl_get_bbreg(hw,
+@@ -1249,8 +1249,7 @@ void rtl8723be_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
+ 						      (u8 *)&iotype);
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Unknown Scan Backup operation.\n");
++			pr_err("Unknown Scan Backup operation.\n");
+ 			break;
+ 		}
+ 	}
+@@ -1291,8 +1290,8 @@ void rtl8723be_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 		rtl_write_byte(rtlpriv, REG_RRSR + 2, reg_prsr_rsc);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 
+@@ -1316,8 +1314,8 @@ void rtl8723be_phy_set_bw_mode_callback(struct ieee80211_hw *hw)
+ 			       HAL_PRIME_CHNL_OFFSET_LOWER) ? 2 : 1);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
++		pr_err("unknown bandwidth: %#X\n",
++		       rtlphy->current_chan_bw);
+ 		break;
+ 	}
+ 	rtl8723be_phy_rf6052_set_bandwidth(hw, rtlphy->current_chan_bw);
+@@ -1462,8 +1459,8 @@ static bool _rtl8723be_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
+ 			currentcmd = &postcommoncmd[*step];
+ 			break;
+ 		default:
+-			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-				 "Invalid 'stage' = %d, Check it!\n", *stage);
++			pr_err("Invalid 'stage' = %d, Check it!\n",
++			       *stage);
+ 			return true;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
+index 78f4f18..4849145 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
+@@ -51,8 +51,7 @@ void rtl8723be_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
+ 			      rtlphy->rfreg_chnlval[0]);
+ 		break;
+ 	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "unknown bandwidth: %#X\n", bandwidth);
++		pr_err("unknown bandwidth: %#X\n", bandwidth);
+ 		break;
+ 	}
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 847644d..dd42c1a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -179,8 +179,7 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 	/* for firmware buf */
+ 	rtlpriv->rtlhal.pfirmware = vzalloc(0x8000);
+ 	if (!rtlpriv->rtlhal.pfirmware) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Can't alloc buffer for fw.\n");
++		pr_err("Can't alloc buffer for fw.\n");
+ 		return 1;
+ 	}
+ 
+@@ -190,8 +189,7 @@ int rtl8723be_init_sw_vars(struct ieee80211_hw *hw)
+ 				      rtlpriv->io.dev, GFP_KERNEL, hw,
+ 				      rtl_fw_cb);
+ 	if (err) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "Failed to request firmware!\n");
++		pr_err("Failed to request firmware!\n");
+ 		return 1;
+ 	}
+ 	return 0;
+@@ -273,7 +271,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
+ 	.fwctrl_lps = true,
+ 	.msi_support = false,
+ 	.disable_watchdog = false,
+-	.debug = DBG_EMERG,
++	.debug = 0,
+ 	.ant_sel = 0,
+ };
+ 
+-- 
+2.10.2
