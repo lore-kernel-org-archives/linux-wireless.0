@@ -1,485 +1,804 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33609 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751252AbcLKFpq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53728 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934995AbcLOGA7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 00:45:46 -0500
-Received: by mail-oi0-f65.google.com with SMTP id f201so7294235oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:46 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 08/14] rtlwifi: rtl8192se: Remove all instances of DBG_EMERG
-Date: Sat, 10 Dec 2016 23:45:12 -0600
-Message-Id: <20161211054523.7119-16-Larry.Finger@lwfinger.net> (sfid-20161211_064549_065448_520A66F3)
-In-Reply-To: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
-References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
+        Thu, 15 Dec 2016 01:00:59 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
+Date: Thu, 15 Dec 2016 11:30:07 +0530
+Message-ID: <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20161215_070115_734096_6ACB30B5)
+In-Reply-To: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a step toward eliminating the RT_TRACE macros. Those calls that
-have DBG_EMERG as the level are always logged, and they represent error
-conditions, thus they are replaced with pr_err().
+Driver (or hw) supporting 802.11 encapsulation offload
+for data frames can make use of this new xmit path.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+This patch defines new ndo_ops, all these callbacks are same as
+ieee80211_dataif_ops other than ndo_start_xmit() which does
+minimal processing leaving 802.11 encap related to driver.
+This patch makes netdev_ops registration dynamic based on the
+interface type, at any time the netdev_ops of netdev will be
+assigned to either the ndo_ops defined to do 802.11 encap or
+the ones defined for 802.11 encap offload. There is a new hw
+config notification, IEEE80211_CONF_CHANGE_80211_HDR_OFFL, to make
+the driver aware of any configuration change in 802.11 encap/decap
+offload.
+
+There is a field, no_80211_encap, added to ieee80211_tx_info:control
+to mark if the 802.11 encapsulation is offloaded to driver.
+There is also a new callback for tx completion status indication
+to handle data frames using 802.11 encap offload. Currently ath10k
+fw is capable of doing 802.11 encapsulation/decapsulationi offload.
+With the corresponding driver changes, using 802.11 encap/decap offload
+might improve performance.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
- .../net/wireless/realtek/rtlwifi/rtl8192se/fw.c    | 46 ++++++++--------------
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    | 40 +++++++------------
- .../net/wireless/realtek/rtlwifi/rtl8192se/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   | 36 ++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8192se/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  8 ++--
- 6 files changed, 51 insertions(+), 88 deletions(-)
+ include/net/mac80211.h     |  33 ++++++-
+ net/mac80211/cfg.c         |   8 ++
+ net/mac80211/ieee80211_i.h |  12 +++
+ net/mac80211/iface.c       | 147 +++++++++++++++++++++++++++++
+ net/mac80211/key.c         |  16 +++-
+ net/mac80211/main.c        |   3 +
+ net/mac80211/status.c      |  83 ++++++++++++++++-
+ net/mac80211/tx.c          | 225 ++++++++++++++++++++++++++++++++++++++++++++-
+ 8 files changed, 519 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
-index 32f9207..1922e78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/fw.c
-@@ -113,8 +113,7 @@ static u8 _rtl92s_firmware_header_map_rftype(struct ieee80211_hw *hw)
- 	case RF_2T2R:
- 		return 0x22;
- 	default:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Unknown RF type(%x)\n",
--			 rtlphy->rf_type);
-+		pr_err("rtl8192se: Unknown RF type(%x)\n", rtlphy->rf_type);
- 		break;
- 	}
- 	return 0x22;
-@@ -168,9 +167,7 @@ static bool _rtl92s_firmware_downloadcode(struct ieee80211_hw *hw,
- 	_rtl92s_fw_set_rqpn(hw);
- 
- 	if (buffer_len >= MAX_FIRMWARE_CODE_SIZE) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Size over FIRMWARE_CODE_SIZE!\n");
--
-+		pr_err("rtl8192se: Size over FIRMWARE_CODE_SIZE!\n");
- 		return false;
- 	}
- 
-@@ -239,9 +236,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
- 		} while (pollingcnt--);
- 
- 		if (!(cpustatus & IMEM_CHK_RPT) || (pollingcnt <= 0)) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "FW_STATUS_LOAD_IMEM FAIL CPU, Status=%x\n",
--				 cpustatus);
-+			pr_err("rtl8192se: FW_STATUS_LOAD_IMEM FAIL CPU, Status=%x\n",
-+			       cpustatus);
- 			goto status_check_fail;
- 		}
- 		break;
-@@ -257,17 +253,15 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
- 		} while (pollingcnt--);
- 
- 		if (!(cpustatus & EMEM_CHK_RPT) || (pollingcnt <= 0)) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "FW_STATUS_LOAD_EMEM FAIL CPU, Status=%x\n",
--				 cpustatus);
-+			pr_err("rtl8192se: FW_STATUS_LOAD_EMEM FAIL CPU, Status=%x\n",
-+			       cpustatus);
- 			goto status_check_fail;
- 		}
- 
- 		/* Turn On CPU */
- 		rtstatus = _rtl92s_firmware_enable_cpu(hw);
- 		if (!rtstatus) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Enable CPU fail!\n");
-+			pr_err("rtl8192se: Enable CPU fail!\n");
- 			goto status_check_fail;
- 		}
- 		break;
-@@ -282,9 +276,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
- 		} while (pollingcnt--);
- 
- 		if (!(cpustatus & DMEM_CODE_DONE) || (pollingcnt <= 0)) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Polling DMEM code done fail ! cpustatus(%#x)\n",
--				 cpustatus);
-+			pr_err("rtl8192se: Polling DMEM code done fail ! cpustatus(%#x)\n",
-+			       cpustatus);
- 			goto status_check_fail;
- 		}
- 
-@@ -308,9 +301,8 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
- 
- 		if (((cpustatus & LOAD_FW_READY) != LOAD_FW_READY) ||
- 		    (pollingcnt <= 0)) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Polling Load Firmware ready fail ! cpustatus(%x)\n",
--				 cpustatus);
-+			pr_err("rtl8192se: Polling Load Firmware ready fail ! cpustatus(%x)\n",
-+			       cpustatus);
- 			goto status_check_fail;
- 		}
- 
-@@ -331,8 +323,7 @@ static bool _rtl92s_firmware_checkready(struct ieee80211_hw *hw,
- 		break;
- 
- 	default:
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "Unknown status check!\n");
-+		pr_err("rtl8192se: Unknown status check!\n");
- 		rtstatus = false;
- 		break;
- 	}
-@@ -380,8 +371,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
- 	/* 2. Retrieve IMEM image. */
- 	if ((pfwheader->img_imem_size == 0) || (pfwheader->img_imem_size >
- 	    sizeof(firmware->fw_imem))) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "memory for data image is less than IMEM required\n");
-+		pr_err("rtl8192se: memory for data image is less than IMEM required\n");
- 		goto fail;
- 	} else {
- 		puc_mappedfile += fwhdr_size;
-@@ -393,8 +383,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
- 
- 	/* 3. Retriecve EMEM image. */
- 	if (pfwheader->img_sram_size > sizeof(firmware->fw_emem)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "memory for data image is less than EMEM required\n");
-+		pr_err("rtl8192se: memory for data image is less than EMEM required\n");
- 		goto fail;
- 	} else {
- 		puc_mappedfile += firmware->fw_imem_len;
-@@ -428,8 +417,7 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
- 					RT_8192S_FIRMWARE_HDR_EXCLUDE_PRI_SIZE;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unexpected Download step!!\n");
-+			pr_err("rtl8192se: Unexpected Download step!!\n");
- 			goto fail;
- 		}
- 
-@@ -438,14 +426,14 @@ int rtl92s_download_fw(struct ieee80211_hw *hw)
- 				ul_filelength);
- 
- 		if (!rtstatus) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "fail!\n");
-+			pr_err("rtl8192se: fail!\n");
- 			goto fail;
- 		}
- 
- 		/* <3> Check whether load FW process is ready */
- 		rtstatus = _rtl92s_firmware_checkready(hw, fwstatus);
- 		if (!rtstatus) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "fail!\n");
-+			pr_err("rtl8192se: rtl8192se: firmware fail!\n");
- 			goto fail;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-index d320118..c2ff879 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-@@ -75,11 +75,9 @@ void rtl92se_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	case HAL_DEF_WOWLAN:
- 		break;
--	default: {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
--			break;
--		}
-+	default:
-+		pr_err("rtl8192se: switch case %#x not processed\n", variable);
-+		break;
- 	}
- }
- 
-@@ -294,9 +292,8 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 					acm_ctrl &= (~AcmHw_VoqEn);
- 					break;
- 				default:
--					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case %#x not processed\n",
--						 e_aci);
-+					pr_err("rtl8192se: switch case %#x not processed\n",
-+					       e_aci);
- 					break;
- 				}
- 			}
-@@ -431,8 +428,7 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 		break; }
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", variable);
-+		pr_err("rtl8192se: switch case %#x not processed\n", variable);
- 		break;
- 	}
- 
-@@ -745,9 +741,8 @@ static void _rtl92se_macconfig_before_fwdownload(struct ieee80211_hw *hw)
- 	} while (pollingcnt--);
- 
- 	if (pollingcnt <= 0) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Polling TXDMA_INIT_VALUE timeout!! Current TCR(%#x)\n",
--			 tmpu1b);
-+		pr_err("rtl8192se: Polling TXDMA_INIT_VALUE timeout!! Current TCR(%#x)\n",
-+		       tmpu1b);
- 		tmpu1b = rtl_read_byte(rtlpriv, CMDR);
- 		rtl_write_byte(rtlpriv, CMDR, tmpu1b & (~TXDMA_EN));
- 		udelay(2);
-@@ -1004,7 +999,7 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 	/* 3. Initialize MAC/PHY Config by MACPHY_reg.txt */
- 	if (!rtl92s_phy_mac_config(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "MAC Config failed\n");
-+		pr_err("rtl8192se: MAC Config failed\n");
- 		err = rtstatus;
- 		goto exit;
- 	}
-@@ -1024,7 +1019,7 @@ int rtl92se_hw_init(struct ieee80211_hw *hw)
- 
- 	/* 4. Initialize BB After MAC Config PHY_reg.txt, AGC_Tab.txt */
- 	if (!rtl92s_phy_bb_config(hw)) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "BB Config failed\n");
-+		pr_err("rtl8192se: BB Config failed\n");
- 		err = rtstatus;
- 		goto exit;
- 	}
-@@ -1194,8 +1189,7 @@ static int _rtl92se_set_media_status(struct ieee80211_hw *hw,
- 			 "Set Network type to AP!\n");
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Network type %d not supported!\n", type);
-+		pr_err("rtl8192se: Network type %d not supported!\n", type);
- 		return 1;
- 
- 	}
-@@ -1685,8 +1679,7 @@ static void _rtl92se_read_adapter_info(struct ieee80211_hw *hw)
- 		break;
- 
- 	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+		pr_err("rtl8192se: RTL819X Not boot from eeprom, check it !!\n");
- 		return;
- 
- 	default:
-@@ -2030,7 +2023,7 @@ void rtl92se_read_eeprom_info(struct ieee80211_hw *hw)
- 		rtlefuse->autoload_failflag = false;
- 		_rtl92se_read_adapter_info(hw);
- 	} else {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Autoload ERR!!\n");
-+		pr_err("rtl8192se: Autoload ERR!!\n");
- 		rtlefuse->autoload_failflag = true;
- 	}
- }
-@@ -2463,8 +2456,8 @@ void rtl92se_set_key(struct ieee80211_hw *hw, u32 key_index, u8 *p_macaddr,
- 			enc_algo = CAM_AES;
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n", enc_algo);
-+			pr_err("rtl8192se: switch case %#x not processed\n",
-+			       enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-@@ -2481,9 +2473,7 @@ void rtl92se_set_key(struct ieee80211_hw *hw, u32 key_index, u8 *p_macaddr,
- 					entry_id = rtl_cam_get_free_entry(hw,
- 								 p_macaddr);
- 					if (entry_id >=  TOTAL_CAM_ENTRY) {
--						RT_TRACE(rtlpriv,
--							 COMP_SEC, DBG_EMERG,
--							 "Can not find free hw security cam entry\n");
-+						pr_err("rtl8192se: Can not find free hw security cam entry\n");
- 						return;
- 					}
- 				} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-index 8700078..b6b890f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-@@ -63,8 +63,8 @@ void rtl92se_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, LEDCFG, ledcfg & 0x0f);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("rtl8192se: switch case %#x not processed\n",
-+		       pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -99,8 +98,8 @@ void rtl92se_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		rtl_write_byte(rtlpriv, LEDCFG, (ledcfg | BIT(3)));
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", pled->ledpin);
-+		pr_err("rtl8192se: switch case %#x not processed\n",
-+		       pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-index 71b2f46e..f835d99 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-@@ -235,7 +235,6 @@ void rtl92s_phy_set_rf_reg(struct ieee80211_hw *hw, enum radio_path rfpath,
- void rtl92s_phy_scan_operation_backup(struct ieee80211_hw *hw,
- 				      u8 operation)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
- 
- 	if (!is_hal_stop(rtlhal)) {
-@@ -247,8 +246,7 @@ void rtl92s_phy_scan_operation_backup(struct ieee80211_hw *hw,
- 			rtl92s_phy_set_fw_cmd(hw, FW_CMD_RESUME_DM_BY_SCAN);
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Unknown operation\n");
-+			pr_err("rtl8192se: Unknown operation\n");
- 			break;
- 		}
- 	}
-@@ -288,8 +286,8 @@ void rtl92s_phy_set_bw_mode(struct ieee80211_hw *hw,
- 		rtl_write_byte(rtlpriv, BW_OPMODE, reg_bw_opmode);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("rtl8192se: unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
- 		break;
- 	}
- 
-@@ -313,8 +310,8 @@ void rtl92s_phy_set_bw_mode(struct ieee80211_hw *hw,
- 			rtl_write_byte(rtlpriv, RFPGA0_ANALOGPARAMETER2, 0x18);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", rtlphy->current_chan_bw);
-+		pr_err("rtl8192se: unknown bandwidth: %#X\n",
-+		       rtlphy->current_chan_bw);
- 		break;
- 	}
- 
-@@ -437,9 +433,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			}
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case %#x not processed\n",
--				 currentcmd->cmdid);
-+			pr_err("rtl8192se: switch case %#x not processed\n",
-+			       currentcmd->cmdid);
- 			break;
- 		}
- 
-@@ -644,8 +639,8 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 			_rtl92se_phy_set_rf_sleep(hw);
- 			break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case %#x not processed\n", rfpwr_state);
-+		pr_err("rtl8192se: switch case %#x not processed\n",
-+		       rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-@@ -937,8 +931,7 @@ static bool _rtl92s_phy_bb_config_parafile(struct ieee80211_hw *hw)
- 	}
- 
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "Write BB Reg Fail!!\n");
-+		pr_err("rtl8192se: Write BB Reg Fail!!\n");
- 		goto phy_BB8190_Config_ParaFile_Fail;
- 	}
- 
-@@ -951,8 +944,7 @@ static bool _rtl92s_phy_bb_config_parafile(struct ieee80211_hw *hw)
- 						 BASEBAND_CONFIG_PHY_REG);
- 	}
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "_rtl92s_phy_bb_config_parafile(): BB_PG Reg Fail!!\n");
-+		pr_err("rtl8192se: _rtl92s_phy_bb_config_parafile(): BB_PG Reg Fail!!\n");
- 		goto phy_BB8190_Config_ParaFile_Fail;
- 	}
- 
-@@ -1077,12 +1069,10 @@ bool rtl92s_phy_bb_config(struct ieee80211_hw *hw)
- 	    (rtlphy->rf_type == RF_1T2R && rf_num != 2) ||
- 	    (rtlphy->rf_type == RF_2T2R && rf_num != 2) ||
- 	    (rtlphy->rf_type == RF_2T2R_GREEN && rf_num != 2)) {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "RF_Type(%x) does not match RF_Num(%x)!!\n",
--			 rtlphy->rf_type, rf_num);
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
--			 "path1 0x%x, path2 0x%x, pathmap 0x%x\n",
--			 path1, path2, pathmap);
-+		pr_err("rtl8192se: RF_Type(%x) does not match RF_Num(%x)!!\n",
-+		       rtlphy->rf_type, rf_num);
-+		pr_err("rtl8192se: path1 0x%x, path2 0x%x, pathmap 0x%x\n",
-+		       path1, path2, pathmap);
- 	}
- 
- 	return rtstatus;
-@@ -1221,7 +1211,7 @@ void rtl92s_phy_chk_fwcmd_iodone(struct ieee80211_hw *hw)
- 	} while (--pollingcnt);
- 
- 	if (pollingcnt == 0)
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Set FW Cmd fail!!\n");
-+		pr_err("rtl8192se: Set FW Cmd fail!!\n");
- }
- 
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
-index bd2fa77..ea5b8ec 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
-@@ -523,8 +523,7 @@ void rtl92s_phy_rf6052_set_bandwidth(struct ieee80211_hw *hw, u8 bandwidth)
- 					rtlphy->rfreg_chnlval[0]);
- 		break;
- 	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "unknown bandwidth: %#X\n", bandwidth);
-+		pr_err("rtl8192se: unknown bandwidth: %#X\n", bandwidth);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 998cefb..3c66d00 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -96,8 +96,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
- 		return;
- 	}
- 	if (firmware->size > rtlpriv->max_fw_size) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Firmware is too big!\n");
-+		pr_err("rtl8192se: Firmware is too big!\n");
- 		rtlpriv->max_fw_size = 0;
- 		release_firmware(firmware);
- 		return;
-@@ -218,8 +217,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 				      rtlpriv->io.dev, GFP_KERNEL, hw,
- 				      rtl92se_fw_cb);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Failed to request firmware!\n");
-+		pr_err("rtl8192se: Failed to request firmware!\n");
- 		return 1;
- 	}
- 
-@@ -299,7 +297,7 @@ static struct rtl_mod_params rtl92se_mod_params = {
- 	.inactiveps = true,
- 	.swctrl_lps = true,
- 	.fwctrl_lps = false,
--	.debug = DBG_EMERG,
-+	.debug = 0,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 1e3c8b5..225abaa 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -910,7 +910,12 @@ struct ieee80211_tx_info {
+ 			};
+ 			struct ieee80211_key_conf *hw_key;
+ 			u32 flags;
+-			/* 4 bytes free */
++			/* XXX: This frame is not encaptulated with 802.11
++			 * header. Should this be added to %IEEE80211_TX_CTRL_*
++			 * flags?.
++			 */
++			bool no_80211_encap;
++			/* 3 bytes free */
+ 		} control;
+ 		struct {
+ 			u64 cookie;
+@@ -1269,6 +1274,8 @@ enum ieee80211_conf_flags {
+  * @IEEE80211_CONF_CHANGE_SMPS: Spatial multiplexing powersave mode changed
+  *	Note that this is only valid if channel contexts are not used,
+  *	otherwise each channel context has the number of chains listed.
++ * @IEEE80211_CONF_CHANGE_80211_HDR_OFFL: Offload configuration
++ *	implementing 802.11 encap/decap for data frames changed.
+  */
+ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_SMPS		= BIT(1),
+@@ -1279,6 +1286,7 @@ enum ieee80211_conf_changed {
+ 	IEEE80211_CONF_CHANGE_CHANNEL		= BIT(6),
+ 	IEEE80211_CONF_CHANGE_RETRY_LIMITS	= BIT(7),
+ 	IEEE80211_CONF_CHANGE_IDLE		= BIT(8),
++	IEEE80211_CONF_CHANGE_80211_HDR_OFFL	= BIT(9),
  };
  
- /* Because memory R/W bursting will cause system hang/crash
+ /**
+@@ -1333,6 +1341,9 @@ enum ieee80211_smps_mode {
+  *	configured for an HT channel.
+  *	Note that this is only valid if channel contexts are not used,
+  *	otherwise each channel context has the number of chains listed.
++ *
++ * @encap_decap_80211_offloaded: Whether 802.11 header encap/decap offload
++ *	is enabled
+  */
+ struct ieee80211_conf {
+ 	u32 flags;
+@@ -1346,6 +1357,7 @@ struct ieee80211_conf {
+ 	struct cfg80211_chan_def chandef;
+ 	bool radar_enabled;
+ 	enum ieee80211_smps_mode smps_mode;
++	bool encap_decap_80211_offloaded;
+ };
+ 
+ /**
+@@ -4178,6 +4190,25 @@ void ieee80211_tx_status_irqsafe(struct ieee80211_hw *hw,
+ 				 struct sk_buff *skb);
+ 
+ /**
++ * ieee80211_tx_status_8023 - transmit status callback for 802.3 frame format
++ *
++ * Call this function for all transmitted data frames after their transmit
++ * completion. This callback should only be called for data frames which
++ * are are using driver's (or hardware's) offload capability of encap/decap
++ * 802.11 frames.
++ *
++ * This function may not be called in IRQ context. Calls to this function
++ * for a single hardware must be synchronized against each other.
++ *
++ * @hw: the hardware the frame was transmitted by
++ * @vif: the interface for which the frame was transmitted
++ * @skb: the frame that was transmitted, owned by mac80211 after this call
++ */
++void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct sk_buff *skb);
++
++/**
+  * ieee80211_report_low_ack - report non-responding station
+  *
+  * When operating in AP-mode, call this function to report a non-responding
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 47e99ab8..0e53873 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -107,6 +107,10 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		}
+ 	}
+ 
++	ieee80211_if_check_80211_hdr_offl(sdata,
++					  params ? params->use_4addr : false,
++					  true);
++
+ 	return 0;
+ }
+ 
+@@ -2116,6 +2120,10 @@ static int ieee80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 	if (changed & WIPHY_PARAM_FRAG_THRESHOLD) {
+ 		ieee80211_check_fast_xmit_all(local);
+ 
++		if (!local->ops->set_frag_threshold &&
++		    local->data_80211_hdr_offloaded)
++			return -EINVAL;
++
+ 		err = drv_set_frag_threshold(local, wiphy->frag_threshold);
+ 
+ 		if (err) {
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f56d342..8d6abad 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1373,6 +1373,8 @@ struct ieee80211_local {
+ 	/* TDLS channel switch */
+ 	struct work_struct tdls_chsw_work;
+ 	struct sk_buff_head skb_queue_tdls_chsw;
++
++	bool data_80211_hdr_offloaded;
+ };
+ 
+ static inline struct ieee80211_sub_if_data *
+@@ -1641,6 +1643,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     struct vif_params *params);
+ int ieee80211_if_change_type(struct ieee80211_sub_if_data *sdata,
+ 			     enum nl80211_iftype type);
++void ieee80211_if_check_80211_hdr_offl(struct ieee80211_sub_if_data *sdata,
++				       bool use_4addr, bool add);
++void ieee80211_if_config_80211_hdr_offl(struct ieee80211_local *local,
++					bool enable_80211_hdr_offload);
+ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_remove_interfaces(struct ieee80211_local *local);
+ u32 ieee80211_idle_off(struct ieee80211_local *local);
+@@ -1668,6 +1674,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 					 struct net_device *dev);
+ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				       struct net_device *dev);
++netdev_tx_t ieee80211_subif_8023_start_xmit(struct sk_buff *skb,
++					    struct net_device *dev);
+ void __ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 				  struct net_device *dev,
+ 				  u32 info_flags);
+@@ -1822,6 +1830,10 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 				 struct sk_buff *skb, int tid,
+ 				 enum nl80211_band band);
+ 
++int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb,
++			    struct sta_info **sta_out);
++
+ static inline void
+ ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 			  struct sk_buff *skb, int tid,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b123a9e..d5f6649 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -698,6 +698,11 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		rcu_assign_pointer(local->p2p_sdata, sdata);
+ 	}
+ 
++	if (local->open_count == 0 && local->data_80211_hdr_offloaded) {
++		local->hw.conf.encap_decap_80211_offloaded = true;
++		hw_reconf_flags |= IEEE80211_CONF_CHANGE_80211_HDR_OFFL;
++	}
++
+ 	/*
+ 	 * set_multicast_list will be invoked by the networking core
+ 	 * which will check whether any increments here were done in
+@@ -1148,6 +1153,18 @@ static const struct net_device_ops ieee80211_dataif_ops = {
+ 	.ndo_get_stats64	= ieee80211_get_stats64,
+ };
+ 
++static const struct net_device_ops ieee80211_dataif_8023_ops = {
++	.ndo_open		= ieee80211_open,
++	.ndo_stop		= ieee80211_stop,
++	.ndo_uninit		= ieee80211_uninit,
++	.ndo_start_xmit		= ieee80211_subif_8023_start_xmit,
++	.ndo_set_rx_mode	= ieee80211_set_multicast_list,
++	.ndo_change_mtu		= ieee80211_change_mtu,
++	.ndo_set_mac_address	= ieee80211_change_mac,
++	.ndo_select_queue	= ieee80211_netdev_select_queue,
++	.ndo_get_stats64	= ieee80211_get_stats64,
++};
++
+ static u16 ieee80211_monitor_select_queue(struct net_device *dev,
+ 					  struct sk_buff *skb,
+ 					  void *accel_priv,
+@@ -1703,6 +1720,132 @@ static void ieee80211_assign_perm_addr(struct ieee80211_local *local,
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
++void ieee80211_if_config_80211_hdr_offl(struct ieee80211_local *local,
++					bool enable_80211_hdr_offl)
++{
++	struct ieee80211_sub_if_data *sdata;
++	unsigned long flags;
++	int n_acs = IEEE80211_NUM_ACS;
++	int ac;
++
++	ASSERT_RTNL();
++
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_80211_ENCAP_DECAP) ||
++	    !(ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)))
++		return;
++
++	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
++	    !local->ops->set_frag_threshold)
++		return;
++
++	mutex_lock(&local->iflist_mtx);
++
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!sdata->dev)
++			continue;
++
++		netif_tx_stop_all_queues(sdata->dev);
++
++		if (enable_80211_hdr_offl)
++			sdata->dev->netdev_ops = &ieee80211_dataif_8023_ops;
++		else
++			sdata->dev->netdev_ops = &ieee80211_dataif_ops;
++	}
++
++	mutex_unlock(&local->iflist_mtx);
++
++	local->data_80211_hdr_offloaded = enable_80211_hdr_offl;
++
++	if (local->started) {
++		if (enable_80211_hdr_offl)
++			local->hw.conf.encap_decap_80211_offloaded = true;
++		else
++			local->hw.conf.encap_decap_80211_offloaded = false;
++		ieee80211_hw_config(local,
++				    IEEE80211_CONF_CHANGE_80211_HDR_OFFL);
++	}
++
++	mutex_lock(&local->iflist_mtx);
++
++	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (!sdata->dev)
++			continue;
++
++		if (local->hw.queues < IEEE80211_NUM_ACS)
++			n_acs = 1;
++
++		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++		if (sdata->vif.cab_queue == IEEE80211_INVAL_HW_QUEUE ||
++		    (local->queue_stop_reasons[sdata->vif.cab_queue] == 0 &&
++		     skb_queue_empty(&local->pending[sdata->vif.cab_queue]))) {
++			for (ac = 0; ac < n_acs; ac++) {
++				int ac_queue = sdata->vif.hw_queue[ac];
++
++				if (local->queue_stop_reasons[ac_queue] == 0 &&
++				    skb_queue_empty(&local->pending[ac_queue]))
++					netif_start_subqueue(sdata->dev, ac);
++			}
++		}
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++	}
++
++	mutex_unlock(&local->iflist_mtx);
++}
++
++void ieee80211_if_check_80211_hdr_offl(struct ieee80211_sub_if_data *sdata,
++				       bool use_4addr, bool add)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_sub_if_data *iface;
++	bool supported = false;
++	bool switch_to_80211 = false;
++	int iface_num = 0;
++	int ret;
++
++	ASSERT_RTNL();
++
++	/* TODO: Extend this function to switch data tx/rx mode upon
++	 * deletion of an interface.
++	 */
++	if (!add)
++		return;
++
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_80211_ENCAP_DECAP) ||
++	    !(ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL)))
++		return;
++
++	if (local->hw.wiphy->frag_threshold != (u32)-1 &&
++	    !local->ops->set_frag_threshold)
++		return;
++
++	ret = drv_get_vif_80211_hdr_offload(local, sdata, use_4addr,
++					    &supported);
++	if (ret)
++		return;
++
++	mutex_lock(&local->iflist_mtx);
++	list_for_each_entry(iface, &local->interfaces, list) {
++		iface_num++;
++	}
++	mutex_unlock(&local->iflist_mtx);
++
++	if (WARN_ON(iface_num == 0))
++		return;
++
++	switch_to_80211 = local->data_80211_hdr_offloaded && !supported;
++
++	if (switch_to_80211) {
++		ieee80211_if_config_80211_hdr_offl(local, false);
++		return;
++	}
++
++	if (!supported || !sdata->dev)
++		return;
++
++	sdata->dev->netdev_ops = &ieee80211_dataif_8023_ops;
++	local->data_80211_hdr_offloaded = true;
++}
++
+ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 		     unsigned char name_assign_type,
+ 		     struct wireless_dev **new_wdev, enum nl80211_iftype type,
+@@ -1866,6 +2009,10 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	list_add_tail_rcu(&sdata->list, &local->interfaces);
+ 	mutex_unlock(&local->iflist_mtx);
+ 
++	ieee80211_if_check_80211_hdr_offl(sdata,
++					  params ? params->use_4addr : false,
++					  true);
++
+ 	if (new_wdev)
+ 		*new_wdev = &sdata->wdev;
+ 
+diff --git a/net/mac80211/key.c b/net/mac80211/key.c
+index edd6f29..efcb1c4 100644
+--- a/net/mac80211/key.c
++++ b/net/mac80211/key.c
+@@ -208,13 +208,25 @@ static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
+ 	case WLAN_CIPHER_SUITE_GCMP_256:
+ 		/* all of these we can do in software - if driver can */
+ 		if (ret == 1)
+-			return 0;
++			goto check_8023_txrx;
+ 		if (ieee80211_hw_check(&key->local->hw, SW_CRYPTO_CONTROL))
+ 			return -EINVAL;
+-		return 0;
++		goto check_8023_txrx;
+ 	default:
+ 		return -EINVAL;
+ 	}
++
++check_8023_txrx:
++	/* When sw crypto is enabled make sure data tx/rx happens
++	 * in 802.11 format.
++	 */
++	if (key->local->data_80211_hdr_offloaded) {
++		rtnl_lock();
++		ieee80211_if_config_80211_hdr_offl(key->local, false);
++		rtnl_unlock();
++	}
++
++	return 0;
+ }
+ 
+ static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 2095d7c..a1dc809 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -164,6 +164,9 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
+ 
+ 	might_sleep();
+ 
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_80211_ENCAP_DECAP))
++		changed &= ~IEEE80211_CONF_CHANGE_80211_HDR_OFFL;
++
+ 	if (!local->use_chanctx)
+ 		changed |= ieee80211_hw_conf_chan(local);
+ 	else
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index c6d5c72..804fd53 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -506,12 +506,14 @@ static void ieee80211_report_used_skb(struct ieee80211_local *local,
+ 				      struct sk_buff *skb, bool dropped)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_hdr *hdr = (void *)skb->data;
++	struct ieee80211_hdr *hdr;
+ 	bool acked = info->flags & IEEE80211_TX_STAT_ACK;
+ 
+ 	if (dropped)
+ 		acked = false;
+ 
++	hdr = (void *)skb->data;
++
+ 	if (info->flags & IEEE80211_TX_INTFL_MLME_CONN_TX) {
+ 		struct ieee80211_sub_if_data *sdata;
+ 
+@@ -945,6 +947,85 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_tx_status);
+ 
++void ieee80211_tx_status_8023(struct ieee80211_hw *hw,
++			      struct ieee80211_vif *vif,
++			      struct sk_buff *skb)
++{
++	struct ieee80211_local *local = hw_to_local(hw);
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct sta_info *sta;
++	int retry_count;
++	int rates_idx;
++	bool acked;
++
++	if (WARN_ON(!ieee80211_hw_check(hw, SUPPORTS_80211_ENCAP_DECAP)))
++		goto skip_stats_update;
++
++	sdata = vif_to_sdata(info->control.vif);
++
++	acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
++	rates_idx = ieee80211_tx_get_rates(hw, info, &retry_count);
++
++	rcu_read_lock();
++
++	if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
++		rcu_read_unlock();
++		goto counters_update;
++	}
++
++	if (!sta || IS_ERR(sta)) {
++		rcu_read_unlock();
++		goto counters_update;
++	}
++
++	if (!acked)
++		sta->status_stats.retry_failed++;
++
++	if (rates_idx != -1)
++		sta->tx_stats.last_rate = info->status.rates[rates_idx];
++
++	sta->status_stats.retry_count += retry_count;
++
++	if (ieee80211_hw_check(hw, REPORTS_TX_ACK_STATUS)) {
++		if (acked && vif->type == NL80211_IFTYPE_STATION)
++			ieee80211_sta_reset_conn_monitor(sdata);
++
++		sta->status_stats.last_ack = jiffies;
++		if (info->flags & IEEE80211_TX_STAT_ACK) {
++			if (sta->status_stats.lost_packets)
++				sta->status_stats.lost_packets = 0;
++
++			if (test_sta_flag(sta, WLAN_STA_TDLS_PEER_AUTH))
++				sta->status_stats.last_tdls_pkt_time = jiffies;
++		} else {
++			ieee80211_lost_packet(sta, info);
++		}
++	}
++
++	rcu_read_unlock();
++
++counters_update:
++	ieee80211_led_tx(local);
++
++	if (!(info->flags & IEEE80211_TX_STAT_ACK) &&
++	    !(info->flags & IEEE80211_TX_STAT_NOACK_TRANSMITTED))
++		goto skip_stats_update;
++
++	I802_DEBUG_INC(local->dot11TransmittedFrameCount);
++	if (is_multicast_ether_addr(skb->data))
++		I802_DEBUG_INC(local->dot11MulticastTransmittedFrameCount);
++	if (retry_count > 0)
++		I802_DEBUG_INC(local->dot11RetryCount);
++	if (retry_count > 1)
++		I802_DEBUG_INC(local->dot11MultipleRetryCount);
++
++skip_stats_update:
++	ieee80211_report_used_skb(local, skb, false);
++	dev_kfree_skb(skb);
++}
++EXPORT_SYMBOL(ieee80211_tx_status_8023);
++
+ void ieee80211_report_low_ack(struct ieee80211_sta *pubsta, u32 num_packets)
+ {
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 91461c4..d73cf79 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1485,6 +1485,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	struct sk_buff *skb = NULL;
+ 	struct fq *fq = &local->fq;
+ 	struct fq_tin *tin = &txqi->tin;
++	struct ieee80211_tx_info *info;
+ 
+ 	spin_lock_bh(&fq->lock);
+ 
+@@ -1497,11 +1498,15 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 
+ 	ieee80211_set_skb_vif(skb, txqi);
+ 
++	info = IEEE80211_SKB_CB(skb);
++
++	if (info->control.no_80211_encap)
++		goto out;
++
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (txq->sta && ieee80211_is_data_qos(hdr->frame_control)) {
+ 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
+ 						    sta);
+-		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 
+ 		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, txq->tid);
+ 		if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
+@@ -2226,9 +2231,9 @@ static inline bool ieee80211_is_tdls_setup(struct sk_buff *skb)
+ 	       skb->data[14] == WLAN_TDLS_SNAP_RFTYPE;
+ }
+ 
+-static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+-				   struct sk_buff *skb,
+-				   struct sta_info **sta_out)
++int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
++			    struct sk_buff *skb,
++			    struct sta_info **sta_out)
+ {
+ 	struct sta_info *sta;
+ 
+@@ -3433,6 +3438,208 @@ netdev_tx_t ieee80211_subif_start_xmit(struct sk_buff *skb,
+ 	return NETDEV_TX_OK;
+ }
+ 
++static bool ieee80211_tx_8023(struct ieee80211_local *local,
++			      struct sk_buff *skb, int led_len,
++			      struct sta_info *sta,
++			      bool txpending)
++{
++	struct ieee80211_tx_control control = {};
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_vif *vif = info->control.vif;
++	struct ieee80211_sta *pubsta = NULL;
++	struct ieee80211_txq *txq = NULL;
++	struct fq *fq = &local->fq;
++	unsigned long flags;
++	int q = info->hw_queue;
++
++	if (sta)
++		pubsta = &sta->sta;
++
++	if (pubsta) {
++		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
++
++		txq = pubsta->txq[tid];
++	} else if (vif) {
++		txq = vif->txq;
++	}
++
++	if (txq) {
++		struct txq_info *txqi = to_txq_info(txq);
++
++		info->control.vif = vif;
++
++		spin_lock_bh(&fq->lock);
++		ieee80211_txq_enqueue(local, txqi, skb);
++		spin_unlock_bh(&fq->lock);
++
++		drv_wake_tx_queue(local, txqi);
++
++		return true;
++	}
++
++	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
++
++	if (local->queue_stop_reasons[q] ||
++	    (!txpending && !skb_queue_empty(&local->pending[q]))) {
++		if (txpending)
++			skb_queue_head(&local->pending[q], skb);
++		else
++			skb_queue_tail(&local->pending[q], skb);
++
++		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++		return false;
++	}
++
++	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
++
++	control.sta = pubsta;
++
++	drv_tx(local, &control, skb);
++
++	/* TODO: Update throughput led trigger with the number of tx bytes */
++
++	return true;
++}
++
++static void ieee80211_8023_xmit(struct ieee80211_sub_if_data *sdata,
++				struct net_device *dev, struct sta_info *sta,
++				struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
++	struct ieee80211_local *local = sdata->local;
++	bool authorized = false;
++	bool multicast;
++	bool tdls_peer;
++	u8 ra_addr[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
++
++	if (IS_ERR(sta) || (sta && !sta->uploaded))
++		sta = NULL;
++
++	/* XXX: Add a generic helper for this */
++	if (sdata->vif.type == NL80211_IFTYPE_AP ||
++	    sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
++	    sdata->vif.type == NL80211_IFTYPE_ADHOC)
++		ether_addr_copy(ra_addr, ehdr->h_dest);
++
++	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
++		tdls_peer = test_sta_flag(sta, WLAN_STA_TDLS_PEER);
++		if (tdls_peer)
++			memcpy(ra_addr, skb->data, ETH_ALEN);
++		else
++			memcpy(ra_addr, sdata->u.mgd.bssid, ETH_ALEN);
++	}
++
++	if (is_zero_ether_addr(ra_addr))
++		goto out_free;
++
++	multicast = is_multicast_ether_addr(ra_addr);
++
++	if (sta)
++		authorized = test_sta_flag(sta, WLAN_STA_AUTHORIZED);
++
++	/* XXX: Should we add new txrx stats for 802.3 to update stats
++	 * like if the frame is dropped due to unathourized port,
++	 * just like the ones available in tx_handlers?.
++	 */
++
++	if (!multicast && !authorized &&
++	    ((ehdr->h_proto != sdata->control_port_protocol) ||
++	    !ether_addr_equal(sdata->vif.addr, ehdr->h_source)))
++		goto out_free;
++
++	if (multicast && sdata->vif.type == NL80211_IFTYPE_AP &&
++	    !atomic_read(&sdata->u.ap.num_mcast_sta))
++		goto out_free;
++
++	if (unlikely(test_bit(SCAN_SW_SCANNING, &local->scanning)) &&
++	    test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))
++		goto out_free;
++
++	/* TODO: Handle frames requiring wifi tx status to be notified */
++	if (skb->sk && skb_shinfo(skb)->tx_flags & SKBTX_WIFI_STATUS)
++		goto out_free;
++
++	memset(info, 0, sizeof(*info));
++
++	if (unlikely(sdata->control_port_protocol == ehdr->h_proto)) {
++		if (sdata->control_port_no_encrypt)
++			info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++		info->control.flags |= IEEE80211_TX_CTRL_PORT_CTRL_PROTO;
++	}
++
++	if (multicast)
++		info->flags |= IEEE80211_TX_CTL_NO_ACK;
++
++	info->hw_queue = sdata->vif.hw_queue[skb_get_queue_mapping(skb)];
++
++	ieee80211_tx_stats(dev, skb->len);
++
++	if (sta) {
++		sta->tx_stats.bytes[skb_get_queue_mapping(skb)] += skb->len;
++		sta->tx_stats.packets[skb_get_queue_mapping(skb)]++;
++	}
++
++	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++		sdata = container_of(sdata->bss,
++				     struct ieee80211_sub_if_data, u.ap);
++
++	info->control.no_80211_encap = true;
++
++	info->control.vif = &sdata->vif;
++
++	ieee80211_tx_8023(local, skb, skb->len, sta, false);
++
++	return;
++
++out_free:
++	kfree_skb(skb);
++}
++
++netdev_tx_t ieee80211_subif_8023_start_xmit(struct sk_buff *skb,
++					    struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	if (WARN_ON(unlikely(!local->data_80211_hdr_offloaded))) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	if (unlikely(skb->len < ETH_HLEN)) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	/* TODO: Extend it for Adhoc interface type */
++	if (WARN_ON(dev->ieee80211_ptr->use_4addr ||
++		    (sdata->vif.type != NL80211_IFTYPE_STATION &&
++		     sdata->vif.type != NL80211_IFTYPE_AP &&
++		     sdata->vif.type != NL80211_IFTYPE_AP_VLAN))) {
++		kfree_skb(skb);
++		return NETDEV_TX_OK;
++	}
++
++	rcu_read_lock();
++
++	if (ieee80211_lookup_ra_sta(sdata, skb, &sta))
++		goto out_free;
++
++	ieee80211_8023_xmit(sdata, dev, sta, skb);
++
++	goto out;
++
++ out_free:
++	kfree_skb(skb);
++ out:
++	rcu_read_unlock();
++
++	return NETDEV_TX_OK;
++}
++
+ struct sk_buff *
+ ieee80211_build_data_template(struct ieee80211_sub_if_data *sdata,
+ 			      struct sk_buff *skb, u32 info_flags)
+@@ -3511,6 +3718,16 @@ static bool ieee80211_tx_pending_skb(struct ieee80211_local *local,
+ 		}
+ 		info->band = chanctx_conf->def.chan->band;
+ 		result = ieee80211_tx(sdata, NULL, skb, true);
++	} else if (info->control.no_80211_encap) {
++		if (ieee80211_lookup_ra_sta(sdata, skb, &sta)) {
++			dev_kfree_skb(skb);
++			return true;
++		}
++
++		if (IS_ERR(sta) || (sta && !sta->uploaded))
++			sta = NULL;
++
++		result = ieee80211_tx_8023(local, skb, skb->len, sta, true);
+ 	} else {
+ 		struct sk_buff_head skbs;
+ 
 -- 
-2.10.2
+1.9.1
