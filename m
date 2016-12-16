@@ -1,57 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:37867 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751605AbcLEVfL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 16:35:11 -0500
-Date: Tue, 6 Dec 2016 00:34:47 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-Message-ID: <20161205213447.GJ8176@mwanda> (sfid-20161205_223517_078106_AE53D3A6)
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
- <20161202014833.6856-11-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161202014833.6856-11-Larry.Finger@lwfinger.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:57286 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759552AbcLPMeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 07:34:18 -0500
+Message-ID: <1481891640.27953.25.camel@sipsolutions.net> (sfid-20161216_133425_208965_63432A5C)
+Subject: Re: [PATCH] nl80211: rework {sched_,}scan event related functions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 16 Dec 2016 13:34:00 +0100
+In-Reply-To: <1481887314-9471-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481887314-9471-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 07:48:29PM -0600, Larry Finger wrote:
-> --- wireless-drivers-next.orig/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> +++ wireless-drivers-next/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-> @@ -27,6 +27,29 @@
->  
->  #include	"../wifi.h"
->  
-> +#ifdef CONFIG_RTLWIFI_DEBUG
-> +
-> +#define BTC_SPRINTF(ptr, ...)	snprintf(ptr, ##__VA_ARGS__)
-> +#define BTC_TRACE(fmt)						\
-> +do {								\
-> +	struct rtl_priv *rtlpriv = gl_bt_coexist.adapter;	\
-> +	if (!rtlpriv)					\
-> +		break;						\
-> +	RT_TRACE_STRING(rtlpriv, COMP_COEX, DBG_LOUD, fmt);	\
-> +} while (0)
-> +
+On Fri, 2016-12-16 at 11:21 +0000, Arend van Spriel wrote:
+> A couple of functions used with scan events were named with
+> term "send" although they were only preparing the the event
+> message so renamed those.
 
-This sort of macro is exactly when the rtl drivers spent so long in
-staging...  Subsystems should not invent their own tracing but in
-particular these macros are so very very ugly.
+Applied - I added a mention of nl80211_send_sched_scan_results() to the
+commit log since I was confused about that at first :)
 
-It's just super frustrating to even look at this...
-
-There are a lot of staging drivers I feel good about when they leave.
-The HyperV drivers.  The IIO stuff.  A lot of the media stuff and
-generally the media tree is getting better and better.  I like comedi
-and unisys, those are in staging, but they are great and could move out
-any time as far as I'm concerned.
-
-But this patch just makes me super discouraged.  What are we doing???
-
-regards,
-dan carpenter
+johannes
