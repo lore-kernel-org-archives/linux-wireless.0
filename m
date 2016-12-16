@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33270 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751373AbcLER7r (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:45783 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754012AbcLPBOM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 12:59:47 -0500
-Received: by mail-oi0-f50.google.com with SMTP id w63so349910064oiw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2016 09:59:47 -0800 (PST)
+        Thu, 15 Dec 2016 20:14:12 -0500
+Date: Thu, 15 Dec 2016 18:13:41 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
+        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        justin@kuvee.com
+Subject: Re: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO
+ voltage
+Message-ID: <20161216011341.GB25227@animalcreek.com> (sfid-20161216_021444_800305_B2EB6918)
+References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+ <1481841044-4314-2-git-send-email-glansberry@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
-References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
- <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
- <20161202211351.GA5571@localhost> <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
-From: Thomas Pedersen <thomas@eero.com>
-Date: Mon, 5 Dec 2016 09:59:45 -0800
-Message-ID: <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com> (sfid-20161205_185950_753650_D2725CC5)
-Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF synchronization
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481841044-4314-2-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 2, 2016 at 10:59 PM, Masashi Honma <masashi.honma@gmail.com> wrote:
-> On 2016/12/03 06:13, Bob Copeland wrote:
->>
->> On Fri, Dec 02, 2016 at 12:07:18PM -0800, Thomas Pedersen wrote:
->
->
-> # Rejected by linux wireless ML. This is resubmission.
->
-> thomas and Bob, Thanks for comments.
->
->> 802.11-2012 13.13.2.2.3:
->> The mesh STA checks if the transmitter of the Beacon frame or Probe
->> Response frame is in the
->> process of the TBTT adjustment (see 13.13.4.4.3).
->
-> There are two functionalities.
->
-> 1) 13.13.2.2 Neighbor offset synchronization method
-> 2) 13.13.4.4 TBTT adjustment
->
-> The ifmsh->adjusting_tbtt flag implements "TBTT Adjusting field" in the
-> Mesh Configuration field.
->
-> The flag is updated by 2).
-> 13.13.4.4.3 TBTT scanning and adjustment procedures:
-> The mesh STA shall set the TBTT Adjusting field in the Mesh
-> Configuration element to 1 in order to announce that the TBTT
-> adjustment procedure is ongoing.
->
-> And the flag is refered by 1) as you said.
->
->
-> The purpose of the flag is to prevent 1) while 2) is ongoing.
->
-> In other words, 1) has only read access authority to the flag. However,
-> previous code updated the flag in 1). In addition, there is no code for
-> 2). So I just remove the invalid accessing codes.
+On Thu, Dec 15, 2016 at 05:30:43PM -0500, Geoff Lansberry wrote:
+> From: Geoff Lansberry <geoff@kuvee.com>
 
-I don't think 1) has read only access to that flag. A TSF adjust will
-by definition move the TBTT as well.
+Missing commit description.
 
--- 
-thomas
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 2d2a077..b4c37ab 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+
+> @@ -1048,6 +1049,11 @@ static int trf7970a_init(struct trf7970a *trf)
+>  	if (ret)
+>  		goto err_out;
+>  
+> +	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
+> +			trf->io_ctrl|TRF7970A_REG_IO_CTRL_VRS(0x1));
+
+s/l|T/l | T/
+
+Otherwise, looks good.
+
+Mark
+--
