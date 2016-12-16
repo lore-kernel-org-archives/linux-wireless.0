@@ -1,79 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53614 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752786AbcLNTas (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33621 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754110AbcLPLEB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:30:48 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] mac80211:  fix legacy and invalid rx-rate rpt
-Date: Wed, 14 Dec 2016 11:30:38 -0800
-Message-Id: <1481743838-20323-1-git-send-email-greearb@candelatech.com> (sfid-20161214_203106_040361_5B59E911)
+        Fri, 16 Dec 2016 06:04:01 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Gery Kahn <geryk@ti.com>, Shahar Lev <shahar@wizery.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+Subject: wl1251 NVS calibration data format
+Date: Fri, 16 Dec 2016 12:01:48 +0100
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart12672099.PnFCeYFKkR";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201612161201.48356@pali> (sfid-20161216_120456_202266_1CD0A788)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+--nextPart12672099.PnFCeYFKkR
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-This fixes obtaining the rate info via sta_set_sinfo
-when the rx rate is invalid (for instance, on IBSS
-interface that has received no frames from one of its
-peers).
+Hi! Do you know format of wl1251 NVS calibration data file?
 
-This also fixes a more general issue with rinfo->flags
-not being properly initialized for legacy rates.
+I found that there is tool for changing NVS file for wl1271 and newer=20
+chips (so not for wl1251!) at: https://github.com/gxk/ti-utils
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
+And wl1271 has in NVS data already place for MAC address. And in wlcore=20
+(for wl1271 and newer) there is really kernel code which is doing=20
+something with MAC address in NVS, see:=20
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/driver=
+s/net/wireless/ti/wlcore/boot.c#n352
 
-Patch is against 4.7
+So... I would like to know if in wl1251 NVS calibration file is also=20
+some place for MAC address or not.
 
- net/mac80211/sta_info.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Default wl1251 NVS calibration file is available in linux-firmware:=20
+https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tr=
+ee/ti-connectivity/wl1251-nvs.bin
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 01868f9..6d27813e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2057,6 +2057,7 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
- 		u16 brate;
- 		unsigned int shift;
- 
-+		rinfo->flags = 0;
- 		sband = local->hw.wiphy->bands[(rate >> 4) & 0xf];
- 		brate = sband->bitrates[rate & 0xf].bitrate;
- 		if (rinfo->bw == RATE_INFO_BW_5)
-@@ -2072,14 +2073,15 @@ static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
- 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
- }
- 
--static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
-+static int sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
- {
- 	u16 rate = ACCESS_ONCE(sta_get_last_rx_stats(sta)->last_rate);
--
--	if (rate == STA_STATS_RATE_INVALID)
--		rinfo->flags = 0;
--	else
-+	if (rate == STA_STATS_RATE_INVALID) {
-+		return -EINVAL;
-+	} else {
- 		sta_stats_decode_rate(sta->local, rate, rinfo);
-+		return 0;
-+	}
- }
- 
- static void sta_set_tidstats(struct sta_info *sta,
-@@ -2284,8 +2286,8 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	}
- 
- 	if (!(sinfo->filled & BIT(NL80211_STA_INFO_RX_BITRATE))) {
--		sta_set_rate_info_rx(sta, &sinfo->rxrate);
--		sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
-+		if (sta_set_rate_info_rx(sta, &sinfo->rxrate) == 0)
-+			sinfo->filled |= BIT(NL80211_STA_INFO_RX_BITRATE);
- 	}
- 
- 	sinfo->filled |= BIT(NL80211_STA_INFO_TID_STATS);
--- 
-2.4.11
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart12672099.PnFCeYFKkR
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlhTyZwACgkQi/DJPQPkQ1JBkgCeM46e33Ht7Gadp0git2HSFknS
+p5UAoKgURIPXzLlMT1oewT5hLM0qa/7M
+=GLUu
+-----END PGP SIGNATURE-----
+
+--nextPart12672099.PnFCeYFKkR--
