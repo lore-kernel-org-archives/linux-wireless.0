@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f179.google.com ([209.85.210.179]:35438 "EHLO
-        mail-wj0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753362AbcLMUJW (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:57979 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935057AbcLPMQA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 15:09:22 -0500
-Received: by mail-wj0-f179.google.com with SMTP id v7so112550589wjy.2
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2016 12:09:21 -0800 (PST)
-Subject: Re: [RFC V3 01/11] nl80211: add reporting of gscan capabilities
+        Fri, 16 Dec 2016 07:16:00 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
- <1481543997-24624-2-git-send-email-arend.vanspriel@broadcom.com>
- <1481645701.20412.39.camel@sipsolutions.net>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend@broadcom.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <ee7475ce-7346-a0f1-1587-caf69b9498fb@broadcom.com> (sfid-20161213_211232_120608_110D1341)
-Date: Tue, 13 Dec 2016 21:02:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <1481645701.20412.39.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] nl80211: better describe field in struct nl80211_bss_select_rssi_adjust
+Date: Fri, 16 Dec 2016 12:15:54 +0000
+Message-Id: <1481890554-18019-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161216_131612_655873_D2BDA4ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The two fields in struct nl80211_bss_select_rssi_adjust did not state
+their type or unit. Adding documentation.
 
+Reported-by: Jouni Malinen <j@w1.fi>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ include/uapi/linux/nl80211.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-On 13-12-2016 17:15, Johannes Berg wrote:
-> 
->> +	case 14:
->> +		if (!rdev->wiphy.gscan) {
->> +			/* done */
->> +			state->split_start = 0;
->> +			break;
->> +		}
->>
-> 
-> Nit, but I'm not really happy with this - this assumes that case 14 is
-> the last case, if anyone ever adds one we break this code but it would
-> still work if the device has gscan. Move the gscan stuff into a new
-> function and make that return immediately if gscan is NULL or so?
-
-Agree. When coding this piece I was aware that this would need to change
-when 'case 15' would be added, which is probably too easy to overlook. I
-will change it.
-
-Regards,
-Arend
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6b76e3b..d74e10b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -4964,8 +4964,9 @@ enum nl80211_sched_scan_plan {
+ /**
+  * struct nl80211_bss_select_rssi_adjust - RSSI adjustment parameters.
+  *
+- * @band: band of BSS that must match for RSSI value adjustment.
+- * @delta: value used to adjust the RSSI value of matching BSS.
++ * @band: band of BSS that must match for RSSI value adjustment. The value
++ *	of this field is according to &enum nl80211_band.
++ * @delta: value used to adjust the RSSI value of matching BSS in dB.
+  */
+ struct nl80211_bss_select_rssi_adjust {
+ 	__u8 band;
+-- 
+1.9.1
