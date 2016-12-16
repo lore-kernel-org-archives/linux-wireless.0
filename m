@@ -1,72 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37239 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751911AbcL1UFH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 15:05:07 -0500
-Received: by mail-wm0-f51.google.com with SMTP id t79so317455117wmt.0
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2016 12:05:06 -0800 (PST)
-Subject: Re: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency
- properties
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org
-References: <20161228155955.25518-1-zajec5@gmail.com>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
-        devicetree@vger.kernel.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f387d897-a1e9-c932-8317-41246be245b0@broadcom.com> (sfid-20161228_210517_679638_3ACB0F1B)
-Date: Wed, 28 Dec 2016 21:05:03 +0100
-MIME-Version: 1.0
-In-Reply-To: <20161228155955.25518-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:55154 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754747AbcLPJPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 04:15:09 -0500
+Message-ID: <1481879623.27953.4.camel@sipsolutions.net> (sfid-20161216_101518_098951_90B6EDA3)
+Subject: Re: [RFC 3/3] mac80211: Add receive path for ethernet frame format
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 16 Dec 2016 10:13:43 +0100
+In-Reply-To: <58538DFA.1090808@qti.qualcomm.com>
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1481781608-5181-4-git-send-email-vthiagar@qti.qualcomm.com>
+         <1481794695.31776.7.camel@sipsolutions.net>
+         <58538DFA.1090808@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+> Ok. So it is mainly for encap there needs to be some capability
+> advertisement from driver 
 
-On 28-12-16 16:59, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+Obviously, since mac80211 needs to pick the ndo struct to use.
+
+> because for decap driver would use appropriate mac80211 Rx function
+> to indicate?
+
+That should be sufficient, no?
+
+In fact, for RX, assuming that the relevant things are offloaded (and
+we should ensure that in the RX function(s)), the driver could be
+allowed to switch around as dynamically as it wants to (as long as it's
+not mixing in _irqsafe calls or doing other things that might cause
+reordering)
+
+> > > +	memset(&rx, 0, sizeof(rx));
+> > 
+> > That seems a bit pointless?
 > 
-> This new file should be used for properties handled at higher level and
-> so usable with all drivers.
+> Hmmm, is it not that all member other than the ones initialized will
+> be junk and might result in crash when accessing uninitialized
+> pointer member like napi?
+
+Oh, ok. I thought it was actually all filled.
+
+You really should support NAPI though.
+
+> > Yeah, that's not nice - perhaps we can provide the TID out of band?
 > 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
->  .../devicetree/bindings/net/wireless/ieee80211.txt       | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+> Right. This is possible with ath10k where 802.11 header is also
+> available in Rx desc of the frame irrespective of the format of the
+> Rx payload
+
+We could go with that for now then. Leave a comment indicating that if
+it can't be provided, we need to disable statistics for it?
+
+> > 
+> > > +	return;
+> > > +
+> > > +mic_fail:
+> > > +	cfg80211_michael_mic_failure(sdata->dev, sta->addr,
+> > > +				     (status->flag &
+> > > RX_FLAG_MCAST)
+> > > ?
+> > > +				     NL80211_KEYTYPE_GROUP :
+> > > +				     NL80211_KEYTYPE_PAIRWISE,
+> > > +				     key ? key->conf.keyidx :
+> > > -1,
+> > > +				     NULL, GFP_ATOMIC);
+> > 
+> > Do we really want to handle that inline here? The driver probably
+> > has a different check to even set RX_FLAG_MMIC_ERROR, so we could
+> > just ask it to call cfg80211_michael_mic_failure() [or a wrapper to
+> > get sdata->dev] instead? I guess this works too though, and might
+> > be easier to understand.
 > 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-> new file mode 100644
-> index 0000000..c762769
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-> @@ -0,0 +1,16 @@
-> +Common IEEE 802.11 properties
-> +
-> +This provides documentation of common properties that are handled by a proper
-> +net layer and don't require extra driver code.
+> Yeah, driver directly reporting MIC failure will be fine. I think a
+> wrapper may be required rather than mac80211 based driver directly
+> calling cfg80211 function?
 
-Please do not make any assumptions on how DT properties are handled nor
-by what. Just state that these properties apply to all wireless devices
-and are applicable to device specific bindings.
+It would be, because the driver can't get sdata->dev (although I think
+there's now a hidden path to do this?)
 
-> +Optional properties:
-> + - ieee80211-min-center-freq : minimal supported frequency in KHz
-> + - ieee80211-max-center-freq : maximal supported frequency in KHz
-> +
-> +Example:
-> +
-> +pcie@0,0 {
-> +	reg = <0x0000 0 0 0 0>;
-> +	ieee80211-min-center-freq = <2437000>;
-> +	ieee80211-max-center-freq = <2457000>;
-> +};
-
-Is this the proper level to define it. I was expecting a child node of
-the pci(e) controller. Maybe I am misreading the example.
-
-Regards,
+johannes
