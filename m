@@ -1,129 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:54156 "EHLO
-        mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751628AbcL1RmI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40408 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752509AbcLPFzC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 12:42:08 -0500
-From: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, michael.thalmeier@hale.at,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-Subject: [PATCH 2/3] NFC: pn533: improve cmd queue handling
-Date: Wed, 28 Dec 2016 20:10:58 +0300
-Message-Id: <1482945059-12249-3-git-send-email-arusalin@dev.rtsoft.ru> (sfid-20161228_184212_027937_E0D5DBBF)
-In-Reply-To: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
-References: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
+        Fri, 16 Dec 2016 00:55:02 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 16 Dec 2016 11:23:52 +0530
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
+ support BTCOEX
+In-Reply-To: <1481645351.20412.34.camel@sipsolutions.net>
+References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+ <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
+ <1480949353.31788.27.camel@sipsolutions.net>
+ <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
+ <1481645351.20412.34.camel@sipsolutions.net>
+Message-ID: <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org> (sfid-20161216_065617_263612_A0092E8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make sure cmd is set before a frame is passed to the transport layer for
-sending. In addition pn533_send_async_complete checks if cmd is set before
-accessing its members.
+Hi Johannes,
 
-Signed-off-by: Michael Thalmeier <michael.thalmeier@hale.at>
+Thanks for the comments
 
-Rework a little bit changes in pn532_send_async_complete.
+On 2016-12-13 21:39, Johannes Berg wrote:
+>> > >  /**
+>> > > + * wiphy_btcoex_support_flags
+>> > > + *	This enum has the driver supported frame types for
+>> > > BTCOEX.
+>> > > + * @WIPHY_WLAN_BE_PREFERRED - Supports Best Effort frame for
+>> > > BTCOEX
+>> > > + * @WIPHY_WLAN_BK_PREFERRED - supports Background frame for
+>> > > BTCOEX
+>> > > + * @WIPHY_WLAN_VI_PREFERRED - supports Video frame for BTCOEX
+>> > > + * @WIPHY_WLAN_VO_PREFERRED - supports Voice frame for BTCOEX
+>> > > + * @WIPHY_WLAN_BEACON_PREFERRED - supports Beacon frame for
+>> > > BTCOEX
+>> > > + * @WIPHY_WLAN_MGMT_PREFERRED - supports Management frames for
+>> > > BTCOEX.
+>> > > + */
+>> >
+>> > That's not making much sense to me?
+>> >
+>> 
+>> is it fine to have as WIPHY_BTCOEX_BE_PREFERRED ?
+> 
+> It's not really clear to me what you intend to do this - if it's really
+> support flags then you really should name those better.
+> 
+This is support flags and it used by the driver to intimate driver 
+supported frame type
+for the BTCOEX to cfg like "wiphy_wowlan_support_flags" implementation.
+Please suggest if this is ok ? I will be thankful if you can suggest a 
+better one if this is not ok
+"WIPHY_BTCOEX_SUPPORTS_BE"
 
-Signed-off-by: Andrey Rusalin <arusalin@dev.rtsoft.ru>
----
- drivers/nfc/pn533/pn533.c | 40 +++++++++++++++++++++++++++-------------
- 1 file changed, 27 insertions(+), 13 deletions(-)
+>> > > +/**
+>> > > + * enum wiphy_btcoex_priority - BTCOEX priority level
+>> > > + *	This enum defines priority level for BTCOEX
+>> > > + * WIPHY_WLAN_PREFERRED_LOW - low priority frames over BT
+>> > > traffic
+>> > > + * WIPHY_WLAN_PREFERRED_HIGH - high priority frames over BT
+>> > > traffic
+>> > > + */
+>> > > +
+>> > > +enum wiphy_btcoex_priority {
+>> > > +	WIPHY_WLAN_PREFERRED_LOW = false,
+>> > > +	WIPHY_WLAN_PREFERRED_HIGH = true,
+>> > > +};
+>> >
+>> > That false/true seems just strange.
+>> >
+>> 
+>> I will just use as a enum without assigning false/true.
+> 
+> What do you even need this enum for though?
+> 
+Ok. I will directly assign true for the flag.
 
-diff --git a/drivers/nfc/pn533/pn533.c b/drivers/nfc/pn533/pn533.c
-index 2f817b3..c67150f 100644
---- a/drivers/nfc/pn533/pn533.c
-+++ b/drivers/nfc/pn533/pn533.c
-@@ -383,14 +383,18 @@ static void pn533_build_cmd_frame(struct pn533 *dev, u8 cmd_code,
- static int pn533_send_async_complete(struct pn533 *dev)
- {
- 	struct pn533_cmd *cmd = dev->cmd;
--	int status = cmd->status;
-+	struct sk_buff *resp;
-+	int status, rc = 0;
- 
--	struct sk_buff *req = cmd->req;
--	struct sk_buff *resp = cmd->resp;
-+	if (!cmd) {
-+		dev_dbg(dev->dev, "%s: cmd not set\n", __func__);
-+		goto done;
-+	}
- 
--	int rc;
-+	dev_kfree_skb(cmd->req);
- 
--	dev_kfree_skb(req);
-+	status = cmd->status;
-+	resp = cmd->resp;
- 
- 	if (status < 0) {
- 		rc = cmd->complete_cb(dev, cmd->complete_cb_context,
-@@ -399,8 +403,14 @@ static int pn533_send_async_complete(struct pn533 *dev)
- 		goto done;
- 	}
- 
--	skb_pull(resp, dev->ops->rx_header_len);
--	skb_trim(resp, resp->len - dev->ops->rx_tail_len);
-+	/* when no response is set we got interrupted */
-+	if (!resp)
-+		resp = ERR_PTR(-EINTR);
-+
-+	if (!IS_ERR(resp)) {
-+		skb_pull(resp, dev->ops->rx_header_len);
-+		skb_trim(resp, resp->len - dev->ops->rx_tail_len);
-+	}
- 
- 	rc = cmd->complete_cb(dev, cmd->complete_cb_context, resp);
- 
-@@ -434,12 +444,14 @@ static int __pn533_send_async(struct pn533 *dev, u8 cmd_code,
- 	mutex_lock(&dev->cmd_lock);
- 
- 	if (!dev->cmd_pending) {
-+		dev->cmd = cmd;
- 		rc = dev->phy_ops->send_frame(dev, req);
--		if (rc)
-+		if (rc) {
-+			dev->cmd = NULL;
- 			goto error;
-+		}
- 
- 		dev->cmd_pending = 1;
--		dev->cmd = cmd;
- 		goto unlock;
- 	}
- 
-@@ -511,11 +523,12 @@ static int pn533_send_cmd_direct_async(struct pn533 *dev, u8 cmd_code,
- 
- 	pn533_build_cmd_frame(dev, cmd_code, req);
- 
-+	dev->cmd = cmd;
- 	rc = dev->phy_ops->send_frame(dev, req);
--	if (rc < 0)
-+	if (rc < 0) {
-+		dev->cmd = NULL;
- 		kfree(cmd);
--	else
--		dev->cmd = cmd;
-+	}
- 
- 	return rc;
- }
-@@ -550,14 +563,15 @@ static void pn533_wq_cmd(struct work_struct *work)
- 
- 	mutex_unlock(&dev->cmd_lock);
- 
-+	dev->cmd = cmd;
- 	rc = dev->phy_ops->send_frame(dev, cmd->req);
- 	if (rc < 0) {
-+		dev->cmd = NULL;
- 		dev_kfree_skb(cmd->req);
- 		kfree(cmd);
- 		return;
- 	}
- 
--	dev->cmd = cmd;
- }
- 
- struct pn533_sync_cmd_response {
--- 
-2.7.4
+>> > > +enum nl80211_btcoex_priority {
+>> > > +	__NL80211_WLAN_PREFERRED_INVALID,
+>> > > +	NL80211_WLAN_BE_PREFERRED,
+>> > > +	NL80211_WLAN_BK_PREFERRED,
+>> > > +	NL80211_WLAN_VI_PREFERRED,
+>> > > +	NL80211_WLAN_VO_PREFERRED,
+>> > > +	NL80211_WLAN_BEACON_PREFERRED,
+>> > > +	NL80211_WLAN_MGMT_PREFERRED,
+>> > > +	__NL80211_WLAN_PREFERRED_LAST,
+>> > > +	NL80211_WLAN_PREFERRED_MAX =
+>> > > +			__NL80211_WLAN_PREFERRED_LAST - 1,
+>> > > +};
+>> >
+>> > Wouldn't a bitmap be easier?
+>> >
+>> since this is to distinguish between different btcoex priorities and
+>> we 
+>> are not going to do any manipulations on these parameters.
+>> It is just used as flag attribute.
+> 
+> But why the (parsing) complexity, when a single bitmap would do?
+> 
+Do you mean to say, sending a value from user space and parse that in 
+the driver?
