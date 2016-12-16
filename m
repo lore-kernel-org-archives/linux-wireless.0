@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:35638 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763858AbcLTQLM (ORCPT
+Received: from smtprelay0156.hostedemail.com ([216.40.44.156]:36426 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752219AbcLPTe7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 11:11:12 -0500
-Received: by mail-qt0-f169.google.com with SMTP id c47so180971382qtc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:12 -0800 (PST)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
-        justin@kuvee.com, Geoff Lansberry <glansberry@gmail.com>,
-        Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 3/3] mod of frequency
-Date: Tue, 20 Dec 2016 11:10:48 -0500
-Message-Id: <1482250250-4192-5-git-send-email-glansberry@gmail.com> (sfid-20161220_171544_429326_372BF8B9)
-In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
-References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+        Fri, 16 Dec 2016 14:34:59 -0500
+Message-ID: <1481916894.20419.3.camel@perches.com> (sfid-20161216_203502_606792_31B7C777)
+Subject: Re: [PATCH 03/14 V2] rtlwifi: rtl8821ae: Remove all instances of
+ DBG_EMERG
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Ping-Ke Shih <pkshih@realtek.com>
+Date: Fri, 16 Dec 2016 11:34:54 -0800
+In-Reply-To: <20161215182310.13713-4-Larry.Finger@lwfinger.net>
+References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+         <20161215182310.13713-4-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
- drivers/nfc/trf7970a.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+On Thu, 2016-12-15 at 12:22 -0600, Larry Finger wrote:
+> This is a step toward eliminating the RT_TRACE macros. Those calls that
+> have DBG_EMERG as the level are always logged, and they represent error
+> conditions, thus they are replaced with pr_err().
 
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index e9e93ea..5916737 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -2076,10 +2076,10 @@ static int trf7970a_probe(struct spi_device *spi)
- 	of_property_read_u32(np, "clock-frequency", &clk_freq);
- 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
- 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
--	        dev_err(trf->dev,
--	                "clock-frequency (%u Hz) unsupported\n",
--	                clk_freq);
--	        return -EINVAL;
-+		dev_err(trf->dev,
-+			"clock-frequency (%u Hz) unsupported\n",
-+			clk_freq);
-+		return -EINVAL;
- 	}
- 
- 	if (of_property_read_bool(np, "en2-rf-quirk"))
--- 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+OK,
+
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+[]
+> @@ -162,8 +161,8 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
+>  		goto exit;
+>  	}
+>  
+> -	RT_TRACE(rtlpriv, COMP_FW, DBG_EMERG,
+> -		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
+> +	pr_err("Checksum report OK! REG_MCUFWDL:0x%08x\n",
+> +	       value32);
+>  
+>  	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
+>  	value32 |= MCUFWDL_RDY;
+> @@ -186,9 +184,8 @@ static int _rtl8821ae_fw_free_to_go(struct ieee80211_hw *hw)
+>  		udelay(FW_8821AE_POLLING_DELAY);
+>  	} while (counter++ < FW_8821AE_POLLING_TIMEOUT_COUNT);
+>  
+> -	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+> -		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n",
+> -		 value32);
+> +	pr_err("Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n",
+> +	       value32);
+
+It's odd to fix / remove " .\n" above but here and
+the wrapping comment on the first patch applies too.
+
+I didn't look at the rest and I won't comment on
+other uses in any further patches in the series.
+
+Thanks,  Joe
