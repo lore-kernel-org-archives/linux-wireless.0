@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28928 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751501AbcLALNo (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:40128 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754105AbcLPUv5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 06:13:44 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 16 Dec 2016 15:51:57 -0500
+Date: Fri, 16 Dec 2016 13:35:38 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>
+Subject: Re: [Patch] NFC: trf7970a:
+Message-ID: <20161216203538.GA12608@animalcreek.com> (sfid-20161216_215200_877106_4E3E5B05)
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+ <20160422000119.GA21754@animalcreek.com>
+ <20161213220545.GA29317@animalcreek.com>
+ <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
+ <20161214155743.GA22282@animalcreek.com>
+ <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
+ <20161214171010.GA29321@animalcreek.com>
+ <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
+ <20161214223123.GA10281@animalcreek.com>
+ <20161216045210.GA29196@animalcreek.com>
 MIME-Version: 1.0
-Subject: Re: [v2] ath10k: Fix soft lockup during firmware crash/hw-restart
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <f957e5d085a347b59d9eae0d2c794d1e@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121347_440727_DC841C25)
-Date: Thu, 1 Dec 2016 12:13:36 +0100
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161216045210.GA29196@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Thu, Dec 15, 2016 at 09:52:10PM -0700, Mark Greer wrote:
+> On Wed, Dec 14, 2016 at 03:31:23PM -0700, Mark Greer wrote:
+> > I'll start on this
+> > tonight but won't likely get far until tomorrow.  In the meantime,
+> > if you and/or your contractor make progress, please share.
 > 
-> During firmware crash (or) user requested manual restart
-> the system gets into a soft lock up state because of the
-> below root cause.
+> Geoff,
 > 
-> During user requested hardware restart / firmware crash
-> the system goes into a soft lockup state as 'napi_synchronize'
-> is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-> bit) and it sleeps into infinite loop as it waits for
-> 'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-> 'ath10k_hif_stop' is called twice as below (resulting in calling
-> 'napi_synchronize' after 'napi_disable')
-> 
-> 'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
-> -> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-> 'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
-> 
-> Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-> as it makes more sense before informing mac80211 to restart h/w
-> Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
-> 
-> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> Which version of neard are you using?  0.16?
 
-Patch applied to ath-next branch of ath.git, thanks.
+Also, the flood.py script doesn't work well at all for me.  At best,
+it works successfully for one iteration and then fails continually for
+all other iterations.  This is true when using the trf7970a and pn533
+drivers.
 
-c2cac2f74ab4 ath10k: fix soft lockup during firmware crash/hw-restart
+I've tweaked it a but but still no success.  I haven't looked all that
+closely at it but since you said you were persuing this, I'll wait to
+hear more from you.
 
--- 
-https://patchwork.kernel.org/patch/9453609/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Mark
+--
