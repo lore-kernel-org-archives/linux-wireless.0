@@ -1,72 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:56200 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935301AbcLOMBf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 07:01:35 -0500
-Date: Thu, 15 Dec 2016 03:51:46 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Javier Martinez Canillas <javier@osg.samsung.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Alasdair Kergon <agk@redhat.com>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        Shaohua Li <shli@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Intel Linux Wireless <linuxwifi@intel.com>,
+Received: from mail.monom.org ([188.138.9.77]:42245 "EHLO mail.monom.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753742AbcLPHZy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 02:25:54 -0500
+Subject: Re: wl1251 & mac address & calibration data
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Tom Gundersen <teg@jklm.no>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Ming Lei <ming.lei@canonical.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <201611111820.52072@pali> <201611241749.33681@pali>
+ <20161124181138.4i6ehkpohjxfgpbn@earth> <201611241935.32796@pali>
+ <87d1gtli57.fsf@purkki.adurom.net> <1481816017.2090.2.camel@Pali-Nokia-N900>
+ <76365770-f5ba-9565-3fca-710518f64d81@broadcom.com>
+ <CAB=NE6VHF+U7DzapENvLMKtN4Dgi9J0qMoeUJ8o4vSwc2-rRFQ@mail.gmail.com>
+Cc: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>,
-        Chris Leech <cleech@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Nicholas A. Bellinger" <nab@linux-iscsi.org>,
-        Jason Wang <jasowang@redhat.com>,
-        Alexander Aring <aar@pengutronix.de>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, linux-raid@vger.kernel.org,
-        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-mm@kvack.org, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-wpan@vger.kernel.org
-Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
-Message-ID: <20161215115146.GB22750@kroah.com> (sfid-20161215_130223_015532_F6BA3DDB)
-References: <1481778865-27667-1-git-send-email-mst@redhat.com>
- <1481778865-27667-6-git-send-email-mst@redhat.com>
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Takashi Iwai <tiwai@suse.de>,
+        Josh Boyer <jwboyer@fedoraproject.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+From: Daniel Wagner <wagi@monom.org>
+Message-ID: <07be7fc8-6c7f-6e03-379d-fa781b248259@monom.org> (sfid-20161216_082628_406283_25B640C5)
+Date: Fri, 16 Dec 2016 08:25:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
+In-Reply-To: <CAB=NE6VHF+U7DzapENvLMKtN4Dgi9J0qMoeUJ8o4vSwc2-rRFQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
-> __bitwise__ used to mean "yes, please enable sparse checks
-> unconditionally", but now that we dropped __CHECK_ENDIAN__
-> __bitwise is exactly the same.
-> There aren't many users, replace it by __bitwise everywhere.
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
->  drivers/md/dm-cache-block-types.h                | 6 +++---
->  drivers/net/ethernet/sun/sunhme.h                | 2 +-
->  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
->  include/linux/mmzone.h                           | 2 +-
->  include/linux/serial_core.h                      | 4 ++--
->  include/linux/types.h                            | 4 ++--
->  include/scsi/iscsi_proto.h                       | 2 +-
->  include/target/target_core_base.h                | 2 +-
->  include/uapi/linux/virtio_types.h                | 6 +++---
->  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
->  net/mac80211/ieee80211_i.h                       | 4 ++--
->  12 files changed, 20 insertions(+), 20 deletions(-)
+On 12/16/2016 03:03 AM, Luis R. Rodriguez wrote:
+> For the new API a solution for "fallback mechanisms" should be clean
+> though and I am looking to stay as far as possible from the existing
+> mess. A solution to help both the old API and new API is possible for
+> the "fallback mechanism" though -- but for that I can only refer you
+> at this point to some of Daniel Wagner and Tom Gunderson's firmwared
+> deamon prospect. It should help pave the way for a clean solution and
+> help address other stupid issues.
 
-for include/linux/serial_core.h:
+The firmwared project is hosted here
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+https://github.com/teg/firmwared
+
+As Luis pointed out, firmwared relies on FW_LOADER_USER_HELPER_FALLBACK, 
+which is not enabled by default. I don't see any reason why firmwared 
+should not also support loading calibration data. If we find a sound way 
+to do this.
+
+As you can see from the commit history it is a pretty young project and 
+more ore less reanimation of the old udev firmware loader feature.  We 
+are getting int into shape, adding integration tests etc.
+
+The main motivation for this project is the get movement back in stuck 
+discussion on the firmware loader API. Luis was very busy writing up all 
+the details on the current situation and purely from the amount of 
+documentation need to describe the API you can tell something is awry.
+
+Thanks,
+Daniel
