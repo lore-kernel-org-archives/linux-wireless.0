@@ -1,170 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp06.msg.oleane.net ([62.161.4.6]:46919 "EHLO
-        smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753532AbcLORy5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 12:54:57 -0500
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Ben Greear'" <greearb@candelatech.com>,
-        "'Jouni Malinen'" <j@w1.fi>
-Cc: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-References: <004a01d24fe2$94da8dc0$be8fa940$@acksys.fr> <20161214195805.GA15022@w1.fi> <00f501d256e7$0f8d5380$2ea7fa80$@acksys.fr> <5852C5AC.6090408@candelatech.com>
-In-Reply-To: <5852C5AC.6090408@candelatech.com>
-Subject: RE: ath10k firmware sends probes on DFS channels without radar detection
-Date: Thu, 15 Dec 2016 18:53:47 +0100
-Message-ID: <00fd01d256fc$2f780db0$8e682910$@acksys.fr> (sfid-20161215_185501_608452_D99D2836)
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="iso-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:55772 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757360AbcLPKjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 05:39:41 -0500
+Message-ID: <1481882578.27953.20.camel@sipsolutions.net> (sfid-20161216_114046_131366_455EB8BE)
+Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 16 Dec 2016 11:02:58 +0100
+In-Reply-To: <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com> (sfid-20161214_110729_469384_D509A875)
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
+         <1481646049.20412.43.camel@sipsolutions.net>
+         <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com>
+         (sfid-20161214_110729_469384_D509A875)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> -----Message d'origine-----
-> De : Ben Greear [mailto:greearb@candelatech.com]
-> Envoyé : jeudi 15 décembre 2016 17:33
-> À : Jean-Pierre Tosoni; 'Jouni Malinen'
-> Cc : linux-wireless@vger.kernel.org; ath10k@lists.infradead.org
-> Objet : Re: ath10k firmware sends probes on DFS channels without radar
-> detection
-> 
-> On 12/15/2016 07:22 AM, Jean-Pierre Tosoni wrote:
-> > Jouni,
-> >
-> > Thanks for the suggestion, I already tried something like this in
-> > wmi.c, with the same result:
-> >
-> > - Before patching the firmware scans DFS channels actively (with
-> probes).
-> >
-> > - After patching, the firmware scans DFS channels passively *until*
-> > any beacon is received on the DFS channel. When *any* beacon is seen,
-> > the firmware decides to scan actively on its own, without any new
-> > IR/RADAR info from the driver.
-> >
-> > So, your patch is required but not sufficient.
-> >
-> > Somehow I was able to overcome this by reloading the regulation domain
-> > in the radio card before each scan request:
-> >
-> > ////// awful patch ahead ////////
-> >
-> > --- a/drivers/net/wireless/ath/ath10k/mac.c
-> > +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> > @@ -2842,7 +2842,9 @@ static int ath10k_update_channel_list(st
-> >   			ch->chan_radar =
-> >   				!!(channel->flags & IEEE80211_CHAN_RADAR);
-> >
-> > -			passive = channel->flags & IEEE80211_CHAN_NO_IR;
-> > +			passive = channel->flags & (IEEE80211_CHAN_NO_IR |
-> > +						    IEEE80211_CHAN_RADAR);
-> 
-> So, should we add a new flag in firmware and driver that means 'really-no-
-> IR', or should the NO_IR flag here just always make the firmware never do
-> IR when probing regardless of whether it has seen beacons or not?
 
-The distinction between NO_IR and CHAN_RADAR is not very clear to me.
-NO_IR appears only in the world regulatory domain so it's not relevant here.
+> Not sure what is meant by "through the buckets".
 
-I'd say
- "the CHAN_RADAR flag should always make the firmware never do IR when
-probing"
-...maybe, except if the channel is the operating channel. (this should
-exclude
-unassociated stations)
+TBH, I was handwaving because I don't understand this part of gscan
+well :-)
 
-I am out of office for the next week.
-Regards,
-Jean-Pierre
+> Referring to your
+> remark/question in the "Unversal scan proposal" thread:
 > 
-> Thanks,
-> Ben
+> """
+> I'm much more worried about the "bucket reporting" since that doesn't
+> fit into the current full BSS reporting model at all. What's your
+> suggestion for this?
+> """
 > 
-> > +
-> >   			ch->passive = passive;
-> >
-> >   			ch->freq = channel->center_freq;
-> > @@ -3548,6 +3550,9 @@ static int ath10k_start_scan(struct ath1
-> >
-> >   	lockdep_assert_held(&ar->conf_mutex);
-> >
-> > +	if (ar->state == ATH10K_STATE_ON)
-> > +		ath10k_regd_update(ar);
-> > +
-> >   	ret = ath10k_wmi_start_scan(ar, arg);
-> >   	if (ret)
-> >   		return ret;
-> >
-> > ////////////////////////////////////////
-> >
-> > ...But this sets a terrible penalty on performance when applied to
-> > background scan.
-> >
-> >
-> > On 12/14/16 20:58 Jouni Malinen wrote:
-> >>
-> >> On Tue, Dec 06, 2016 at 06:02:52PM +0100, Jean-Pierre Tosoni wrote:
-> >>> This follows on the previous discussion
-> >>> 	"Client station sends probes on DFS channels"
-> >>>
-> >>> Problem:
-> >>> The combination of QCA988X firmware v10.2.4.70-2 + ath10k +
-> >>> wpa_supplicant do not comply with the norm ETSI/EN 301-893 section
-> >>> 4.7; because they can send probes for 600s when no AP is around.
-> >>>
-> >>> Analysis:
-> >>> The problem seems to lie in the firmware, which regards the presence
-> >>> of *any* beacon as a proof that the channel is radar-clean for 600s.
-> >>
-> >> I don't think this is really firmware, but cfg80211 regulatory code
-> >> and how it interacts with ath10k..
-> >>
-> >>> - there is no obvious fix working in ath10k.
-> >>> - the issue does not show up with other mac80211 devices like ath9k.
-> >>> - wpa_supplicant considers this is a kernel issue [2]
-> >>
-> >> There seems to be a difference between ath9k (mac80211-based Probe
-> >> Request frame sending) and ath10k (firmware) in this area for active
-> scanning.
-> >> mac80211 uses IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR while
-> >> ath10k uses IEEE80211_CHAN_NO_IR. I'd assume this difference results
-> >> in ath10k using cfg80211 beacon hints (etc.) to update the NO_IR flag
-> >> and that might be behind the difference you see.
-> >>
-> >> Could you check whether the following change gets you the behavior
-> >> you want to see here? I have not had a chance to test this yet, but
-> >> based on code review, it looks like something that brings the same
-> >> behavior to ath10k that ath9k has for this through mac80211.
-> >>
-> >>
-> >> diff --git a/drivers/net/wireless/ath/ath10k/mac.c
-> >> b/drivers/net/wireless/ath/ath10k/mac.c
-> >> index aa545a1..758dbbd 100644
-> >> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> >> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> >> @@ -2973,7 +2973,8 @@ static int ath10k_update_channel_list(struct
-> >> ath10k
-> >> *ar)
-> >>   			ch->chan_radar =
-> >>   				!!(channel->flags & IEEE80211_CHAN_RADAR);
-> >>
-> >> -			passive = channel->flags & IEEE80211_CHAN_NO_IR;
-> >> +			passive = channel->flags & (IEEE80211_CHAN_NO_IR |
-> >> +						    IEEE80211_CHAN_RADAR);
-> >>   			ch->passive = passive;
-> >>
-> >>   			ch->freq = channel->center_freq;
-> >>
-> >> --
-> >> Jouni Malinen                                            PGP id
-> EFC895FA
-> >>
-> >> _______________________________________________
-> >> ath10k mailing list
-> >> ath10k@lists.infradead.org
-> >> http://lists.infradead.org/mailman/listinfo/ath10k
-> >
+> So this is exactly the dilemma I considered so I decided to stick
+> with the full BSS reporting model for gscan as well merely to get it
+> discussed so glad you brought it up ;-).
+
+Heh.
+
+Ok, so I missed that. Somehow I thought hidden in the buckets was a
+partial reporting :-)
+
+> The problem here is that gscan is a vehicle that serves a number of
+> use-cases. So ignoring hotlists, ePNO, etc. the gscan configuration
+> still hold several notification types:
 > 
+> - report after completing M scans capturing N best APs or a
+> Â  percentage of (M * N).
+> - report after completing a scan include a specific bucket.
+> - report full scan results.
 > 
-> --
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
+> The first two notification trigger retrieval of gscan results which
+> are historic, ie. partial scan results for max M scans.
+> 
+> As said earlier the universal scan proposal has some similarities to
+> gscan. Guess you share that as you are using the term "bucket
+> reporting" in that discussion ;-). The historic results are needed
+> for location (if I am not mistaken) so the full BSS reporting model
+> does not fit that. Question is what particular attribute in the
+> historic results is needed for location (suspecting only rssi and
+> possibly the timestamp, but would like to see that confirmed). I was
+> thinking about have historic storage in cfg80211 so we do not need a
+> per-driver solution.
+
+Ok, now I'm starting to understand this better, I guess.
+
+As far as I can tell from our code, for cached results we're reporting
+the following data:
+
+ * some flags
+ * a scan ID
+ * and for each AP:
+   * RSSI
+   * timestamp
+   * channel
+   * BSSID
+   * SSID (which internally we even have a separate table for and each
+           AP just has an index to it, to save memory I guess)
+   * beacon period
+   * capability field
+
+No IEs and similar things like differentiating probe response/beacon,
+so we can't use the full reporting for this.
+
+I have no problem introducing a common storage for this, if necessary
+with some fields/nl attributes being optional, but I suspect this is
+actually a necessary part of gscan, otherwise you're not able to report
+all the necessary data?
+
+johannes
