@@ -1,98 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:40792 "EHLO mail.ispras.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752008AbcLBVxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Dec 2016 16:53:06 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] adm80211: add checks for dma mapping errors
-Date: Sat,  3 Dec 2016 00:52:46 +0300
-Message-Id: <1480715566-17027-1-git-send-email-khoroshilov@ispras.ru> (sfid-20161202_225331_454120_0C223A65)
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35387 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756140AbcLPRJp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 12:09:45 -0500
+Date: Fri, 16 Dec 2016 20:09:33 +0300
+From: Mike Krinkin <krinkin.m.u@gmail.com>
+To: kernel@kempniu.pl, johannes.berg@intel.com,
+        linux-wireless@vger.kernel.org, davem@davemloft.net,
+        netdev@vger.kernel.org
+Subject: "rfkill: Add rfkill-any LED trigger" causes deadlock
+Message-ID: <20161216170930.GA6368@gmail.com> (sfid-20161216_181015_514948_79C2126E)
+References: <20161216163707.GA2629@gmail.com>
+ <CACpa5=_chGuU3zVcVR3nkNySwz1cGAQTs39v+BjwcDNSvOqhTw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACpa5=_chGuU3zVcVR3nkNySwz1cGAQTs39v+BjwcDNSvOqhTw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver does not check if mapping dma memory succeed.
-The patch adds the checks and failure handling.
-
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/admtek/adm8211.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
-index 70ecd82d674d..2b4a3eb38dfa 100644
---- a/drivers/net/wireless/admtek/adm8211.c
-+++ b/drivers/net/wireless/admtek/adm8211.c
-@@ -413,6 +413,13 @@ static void adm8211_interrupt_rci(struct ieee80211_hw *dev)
- 						       skb_tail_pointer(newskb),
- 						       RX_PKT_SIZE,
- 						       PCI_DMA_FROMDEVICE);
-+				if (pci_dma_mapping_error(priv->pdev,
-+					   priv->rx_buffers[entry].mapping)) {
-+					priv->rx_buffers[entry].skb = NULL;
-+					dev_kfree_skb(newskb);
-+					skb = NULL;
-+					/* TODO: update rx dropped stats */
-+				}
- 			} else {
- 				skb = NULL;
- 				/* TODO: update rx dropped stats */
-@@ -1450,6 +1457,12 @@ static int adm8211_init_rings(struct ieee80211_hw *dev)
- 						  skb_tail_pointer(rx_info->skb),
- 						  RX_PKT_SIZE,
- 						  PCI_DMA_FROMDEVICE);
-+		if (pci_dma_mapping_error(priv->pdev, rx_info->mapping)) {
-+			dev_kfree_skb(rx_info->skb);
-+			rx_info->skb = NULL;
-+			break;
-+		}
-+
- 		desc->buffer1 = cpu_to_le32(rx_info->mapping);
- 		desc->status = cpu_to_le32(RDES0_STATUS_OWN | RDES0_STATUS_SQL);
- 	}
-@@ -1613,7 +1626,7 @@ static void adm8211_calc_durations(int *dur, int *plcp, size_t payload_len, int
- }
- 
- /* Transmit skb w/adm8211_tx_hdr (802.11 header created by hardware) */
--static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
-+static int adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
- 			   u16 plcp_signal,
- 			   size_t hdrlen)
- {
-@@ -1625,6 +1638,8 @@ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
- 
- 	mapping = pci_map_single(priv->pdev, skb->data, skb->len,
- 				 PCI_DMA_TODEVICE);
-+	if (pci_dma_mapping_error(priv->pdev, mapping))
-+		return -ENOMEM;
- 
- 	spin_lock_irqsave(&priv->lock, flags);
- 
-@@ -1657,6 +1672,8 @@ static void adm8211_tx_raw(struct ieee80211_hw *dev, struct sk_buff *skb,
- 
- 	/* Trigger transmit poll */
- 	ADM8211_CSR_WRITE(TDR, 0);
-+
-+	return 0;
- }
- 
- /* Put adm8211_tx_hdr on skb and transmit */
-@@ -1710,7 +1727,10 @@ static void adm8211_tx(struct ieee80211_hw *dev,
- 
- 	txhdr->retry_limit = info->control.rates[0].count;
- 
--	adm8211_tx_raw(dev, skb, plcp_signal, hdrlen);
-+	if (adm8211_tx_raw(dev, skb, plcp_signal, hdrlen)) {
-+		/* Drop packet */
-+		ieee80211_free_txskb(dev, skb);
-+	}
- }
- 
- static int adm8211_alloc_rings(struct ieee80211_hw *dev)
--- 
-2.7.4
+On Fri, Dec 16, 2016 at 07:46:06PM +0300, Михаил Кринкин wrote:
+> Hi,
+> 
+> with recent i can't load my thinkpad with recent linux-next, bisect points
+> at the commit 73f4f76a196d7adb ("rfkill: Add rfkill-any LED trigger").
+> 
+> Problem occurs because thinkapd_acpi rfkill set_block handler
+> tpacpi_rfk_hook_set_block calls rfkill_set_sw_state, which in turn calls
+> new rfkill_any_led_trigger_event. So when rfkill_set_block called from
+> rfkill_register we have deadlock.
+> 
+> I added WARN to __rfkill_any_led_trigger_event to see how deadlock occurs,
+> here is backtrace:
+> 
+> [    6.090079] WARNING: CPU: 2 PID: 307 at net/rfkill/core.c:184
+> rfkill_any_led_trigger_event+0x2d/0x40
+> [    6.090080] reached __rfkill_any_led_trigger_event
+> [    6.090081] Modules linked in:
+> [    6.090082]  snd_pcm sg thinkpad_acpi(+) mei_me nvram snd_seq mei
+> idma64 virt_dma intel_pch_thermal ucsi intel_lpss_pci snd_seq_device
+> hci_uart snd_timer snd btbcm soundcore btqca led_class btintel
+> bluetooth i8042 rtc_cmos serio evdev intel_lpss_acpi intel_lpss
+> acpi_pad tpm_infineon mfd_core kvm_intel kvm irqbypass ipv6 autofs4
+> ext4 jbd2 mbcache sd_mod i915 i2c_algo_bit drm_kms_helper syscopyarea
+> sysfillrect sysimgblt fb_sys_fops drm ahci libahci video
+> pinctrl_sunrisepoint pinctrl_intel
+> [    6.090112] CPU: 2 PID: 307 Comm: systemd-udevd Tainted: G        W
+>       4.9.0-01741-g73f4f76-dirty #106
+> [    6.090113] Hardware name: LENOVO 20GJ004ERT/20GJ004ERT, BIOS
+> R0CET21W (1.09 ) 03/07/2016
+> [    6.090114]  ffffb199c023f998 ffffffffb4334b6b ffffb199c023f9e8
+> 0000000000000000
+> [    6.090117]  ffffb199c023f9d8 ffffffffb40658ab 000000b84dd75d28
+> 0000000080000006
+> [    6.090119]  ffff99ea4dd75d28 0000000000000001 0000000000000001
+> 0000000000000000
+> [    6.090122] Call Trace:
+> [    6.090126]  [<ffffffffb4334b6b>] dump_stack+0x4d/0x72
+> [    6.090128]  [<ffffffffb40658ab>] __warn+0xcb/0xf0
+> [    6.090130]  [<ffffffffb406592f>] warn_slowpath_fmt+0x5f/0x80
+> [    6.090132]  [<ffffffffb4631bfd>] rfkill_any_led_trigger_event+0x2d/0x40
+> [    6.090135]  [<ffffffffb46322d9>] rfkill_set_sw_state+0x89/0xd0
+> [    6.090142]  [<ffffffffc06c9921>]
+> tpacpi_rfk_update_swstate+0x31/0x50 [thinkpad_acpi]
+> [    6.090148]  [<ffffffffc06c9972>]
+> tpacpi_rfk_hook_set_block+0x32/0x70 [thinkpad_acpi]
+> [    6.090150]  [<ffffffffb46327f0>] rfkill_set_block+0x90/0x160
+> [    6.090152]  [<ffffffffb4632930>] __rfkill_switch_all+0x70/0xa0
+> [    6.090154]  [<ffffffffb4633028>] rfkill_register+0x278/0x2b0
+> [    6.090159]  [<ffffffffc06e1f0e>] tpacpi_new_rfkill+0xef/0x15d
+> [thinkpad_acpi]
+> [    6.090164]  [<ffffffffc06e2407>] bluetooth_init+0x15e/0x1a9 [thinkpad_acpi]
+> [    6.090169]  [<ffffffffc06e2fb5>]
+> thinkpad_acpi_module_init.part.47+0x5e7/0x996 [thinkpad_acpi]
+> [    6.090174]  [<ffffffffc06e3364>] ?
+> thinkpad_acpi_module_init.part.47+0x996/0x996 [thinkpad_acpi]
+> [    6.090179]  [<ffffffffc06e36af>]
+> thinkpad_acpi_module_init+0x34b/0xc9c [thinkpad_acpi]
+> [    6.090181]  [<ffffffffb4000450>] do_one_initcall+0x50/0x180
+> [    6.090184]  [<ffffffffb4177e12>] ? do_init_module+0x27/0x1ee
+> [    6.090186]  [<ffffffffb41cc4b6>] ? kmem_cache_alloc_trace+0x156/0x1a0
+> [    6.090188]  [<ffffffffb4177e4a>] do_init_module+0x5f/0x1ee
+> [    6.090191]  [<ffffffffb40ed562>] load_module+0x22c2/0x28d0
+> [    6.090192]  [<ffffffffb40ea0f0>] ? __symbol_put+0x60/0x60
+> [    6.090195]  [<ffffffffb42ee15d>] ? ima_post_read_file+0x7d/0xa0
+> [    6.090198]  [<ffffffffb42a809b>] ? security_kernel_post_read_file+0x6b/0x80
+> [    6.090200]  [<ffffffffb40eddcf>] SYSC_finit_module+0xdf/0x110
+> [    6.090202]  [<ffffffffb40ede1e>] SyS_finit_module+0xe/0x10
+> [    6.090204]  [<ffffffffb463d524>] entry_SYSCALL_64_fastpath+0x17/0x98
+> [    6.090206] ---[ end trace ea6da61c1ec208d1 ]---
+> [    6.090207] rfkill_any_led_trigger unlocked
+> [    6.091664] ------------[ cut here ]------------
