@@ -1,132 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:35603 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763428AbcLTQLK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 11:11:10 -0500
-Received: by mail-qt0-f181.google.com with SMTP id c47so180969908qtc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:09 -0800 (PST)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        netdev@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
-        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 1/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
-Date: Tue, 20 Dec 2016 11:10:45 -0500
-Message-Id: <1482250250-4192-2-git-send-email-glansberry@gmail.com> (sfid-20161220_171220_280344_B20554B2)
-In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
-References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58536 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755003AbcLPNJl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Dec 2016 08:09:41 -0500
+Message-ID: <1481891767.27953.27.camel@sipsolutions.net> (sfid-20161216_140944_876661_F21B6A23)
+Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 16 Dec 2016 13:36:07 +0100
+In-Reply-To: <9715e731-efcc-0252-ed7b-5ca67e2c0b5b@broadcom.com> (sfid-20161216_131757_938930_7ED92539)
+References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
+         <1481646049.20412.43.camel@sipsolutions.net>
+         <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com>
+         <1481882578.27953.20.camel@sipsolutions.net>
+         <9715e731-efcc-0252-ed7b-5ca67e2c0b5b@broadcom.com>
+         (sfid-20161216_131757_938930_7ED92539)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Geoff Lansberry <geoff@kuvee.com>
+On Fri, 2016-12-16 at 13:17 +0100, Arend Van Spriel wrote:
+> 
+> > I have no problem introducing a common storage for this, if
+> > necessary with some fields/nl attributes being optional, but I
+> > suspect this is actually a necessary part of gscan, otherwise
+> > you're not able to report all the necessary data?
+> 
+> If you just look at the gscan api in wifihal then yes. I was just
+> wondering whether "all the necessary data" really comprises all these
+> from a use-case perspective. As an example the api also has rtt
+> fields, but both brcm and intel solutions do not report that.
 
-The TRF7970A has configuration options for supporting hardware designs
-with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
-using a fixed regulator binding, for setting the io voltage to match
-the hardware configuration. If no option is supplied it defaults to
-3.3 volt configuration.
----
- .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
- drivers/nfc/trf7970a.c                             | 28 +++++++++++++++++++++-
- 2 files changed, 29 insertions(+), 3 deletions(-)
+Yeah, no idea. Sorry - my wording wasn't quite precise. By "this is
+actually a necessary part of gscan" I meant the partial history
+reporting itself, not any particular field thereof.
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index e262ac1..b5777d8 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -21,9 +21,9 @@ Optional SoC Specific Properties:
- - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
-   where an extra byte is returned by Read Multiple Block commands issued
-   to Type 5 tags.
-+- vdd-io-supply: Regulator specifying voltage for vdd-io
- - clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
- 
--
- Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 
- &spi1 {
-@@ -41,11 +41,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 				  <&gpio2 5 GPIO_ACTIVE_LOW>;
- 		vin-supply = <&ldo3_reg>;
- 		vin-voltage-override = <5000000>;
-+		vdd-io-supply = <&ldo2_reg>;
- 		autosuspend-delay = <30000>;
- 		irq-status-read-quirk;
- 		en2-rf-quirk;
- 		t5t-rmb-extra-byte-quirk;
--		vdd_io_1v8;
- 		clock-frequency = <27120000>;
- 		status = "okay";
- 	};
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index c9cb278..94c31f8 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -444,6 +444,7 @@ struct trf7970a {
- 	u8				iso_ctrl_tech;
- 	u8				modulator_sys_clk_ctrl;
- 	u8				special_fcn_reg1;
-+	u8				io_ctrl;
- 	unsigned int			guard_time;
- 	int				technology;
- 	int				framing;
-@@ -1051,6 +1052,11 @@ static int trf7970a_init(struct trf7970a *trf)
- 	if (ret)
- 		goto err_out;
- 
-+	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
-+			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
-+	if (ret)
-+		goto err_out;
-+
- 	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
- 	if (ret)
- 		goto err_out;
-@@ -1767,7 +1773,7 @@ static int _trf7970a_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
- 		goto out_err;
- 
- 	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
--			TRF7970A_REG_IO_CTRL_VRS(0x1));
-+			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
- 	if (ret)
- 		goto out_err;
- 
-@@ -2062,6 +2068,7 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
-+
- 	of_property_read_u32(np, "clock-frequency", &clk_freq);
- 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
- 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
-@@ -2105,6 +2112,25 @@ static int trf7970a_probe(struct spi_device *spi)
- 	if (uvolts > 4000000)
- 		trf->chip_status_ctrl = TRF7970A_CHIP_STATUS_VRS5_3;
- 
-+	trf->regulator = devm_regulator_get(&spi->dev, "vdd-io");
-+	if (IS_ERR(trf->regulator)) {
-+		ret = PTR_ERR(trf->regulator);
-+		dev_err(trf->dev, "Can't get VDD_IO regulator: %d\n", ret);
-+		goto err_destroy_lock;
-+	}
-+
-+	ret = regulator_enable(trf->regulator);
-+	if (ret) {
-+		dev_err(trf->dev, "Can't enable VDD_IO: %d\n", ret);
-+		goto err_destroy_lock;
-+	}
-+
-+
-+	if (regulator_get_voltage(trf->regulator) == 1800000) {
-+		trf->io_ctrl = TRF7970A_REG_IO_CTRL_IO_LOW;
-+		dev_dbg(trf->dev, "trf7970a config vdd_io to 1.8V\n");
-+	}
-+
- 	trf->ddev = nfc_digital_allocate_device(&trf7970a_nfc_ops,
- 			TRF7970A_SUPPORTED_PROTOCOLS,
- 			NFC_DIGITAL_DRV_CAPS_IN_CRC |
--- 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+johannes
