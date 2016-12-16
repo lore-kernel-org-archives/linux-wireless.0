@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34270 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbcL3N41 (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:46718 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754042AbcLPBGP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:56:27 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 15 Dec 2016 20:06:15 -0500
+Date: Thu, 15 Dec 2016 18:06:13 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
+        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        justin@kuvee.com
+Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+Message-ID: <20161216010613.GA25227@animalcreek.com> (sfid-20161216_020643_790325_5D47DE31)
+References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
 MIME-Version: 1.0
-Subject: Re: libertas: constify cfg80211_ops structures
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
-References: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, libertas-dev@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
-Message-Id: <20161230135627.06A91613B1@smtp.codeaurora.org> (sfid-20161230_145702_893239_E34B94A2)
-Date: Fri, 30 Dec 2016 13:56:26 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhumika Goyal <bhumirks@gmail.com> wrote:
-> cfg80211_ops structures are only passed as an argument to the function
-> wiphy_new. This argument is of type const, so cfg80211_ops strutures
-> having this property can be declared as const.
-> Done using Coccinelle
-> 
-> @r1 disable optional_qualifier @
-> identifier i;
-> position p;
-> @@
-> static struct cfg80211_ops i@p = {...};
-> 
-> @ok1@
-> identifier r1.i;
-> position p;
-> @@
-> wiphy_new(&i@p,...)
-> 
-> @bad@
-> position p!={r1.p,ok1.p};
-> identifier r1.i;
-> @@
-> i@p
-> 
-> @depends on !bad disable optional_qualifier@
-> identifier r1.i;
-> @@
-> +const
-> struct cfg80211_ops i;
-> 
-> File size before:
->    text	   data	    bss	    dec	    hex	filename
->   21225	   1954	     16	  23195	   5a9b	wireless/marvell/libertas/cfg.o
-> 
-> File size after:
->    text	   data	    bss	    dec	    hex	filename
->   22041	   1154	     16	  23211	   5aab	wireless/marvell/libertas/cfg.o
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Hi Geoff.
 
-Patch applied to wireless-drivers-next.git, thanks.
+On Thu, Dec 15, 2016 at 05:30:42PM -0500, Geoff Lansberry wrote:
+> From: Geoff Lansberry <geoff@kuvee.com>
 
-26eb994d5239 libertas: constify cfg80211_ops structures
+Please add an informative commit description to all of your commits.
+No matter how trivial this patch may seem to you now, it may not be
+to others (or to you in a few years).
 
--- 
-https://patchwork.kernel.org/patch/9479131/
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 26c9dbb..2d2a077 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+> @@ -1181,27 +1180,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+>  	switch (tech) {
+>  	case NFC_DIGITAL_RF_TECH_106A:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+nit: s/0xF8/0xf8/ please (for consistency with the rest of the file.).
+
+Otherwise, it looks good.
+
+Thanks,
+
+Mark
