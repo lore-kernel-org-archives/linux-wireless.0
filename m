@@ -1,62 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38298 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755335AbcLALMv (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33010 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752695AbcLQWow (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 06:12:51 -0500
-Date: Thu, 1 Dec 2016 16:42:38 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-        <mohammed@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Fix soft lockup during firmware
- crash/hw-restart
-Message-ID: <20161201111238.GA12384@atheros-ThinkPad-T61> (sfid-20161201_121254_838888_4158D213)
-References: <1480483769-17693-1-git-send-email-mohammed@qca.qualcomm.com>
- <87inr4rl6t.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87inr4rl6t.fsf@kamboji.qca.qualcomm.com>
+        Sat, 17 Dec 2016 17:44:52 -0500
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, qca_merez@qca.qualcomm.com,
+        kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+        wil6210@qca.qualcomm.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] net: wireless: ath: wil6210: constify cfg80211_ops structures
+Date: Sun, 18 Dec 2016 04:14:27 +0530
+Message-Id: <1482014667-27082-1-git-send-email-bhumirks@gmail.com> (sfid-20161217_234520_110976_DE25CB8F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 10:35:38AM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> 
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >
-> > During firmware crash (or) user requested manual restart
-> > the system gets into a soft lock up state because of the
-> > below root cause.
-> >
-> > During user requested hardware restart / firmware crash
-> > the system goes into a soft lockup state as 'napi_synchronize'
-> > is called after 'napi_disable' (which sets 'NAPI_STATE_SCHED'
-> > bit) and it sleeps into infinite loop as it waits for
-> > 'NAPI_STATE_SCHED' to be cleared. This condition is hit because
-> > 'ath10k_hif_stop' is called twice as below (resulting in calling
-> > 'napi_synchronize' after 'napi_disable')
-> >
-> > 'ath10k_core_restart' -> 'ath10k_hif_stop' (ATH10K_STATE_ON) ->
-> > -> 'ieee80211_restart_hw' -> 'ath10k_start' -> 'ath10k_halt' ->
-> > 'ath10k_core_stop' -> 'ath10k_hif_stop' (ATH10K_STATE_RESTARTING)
-> >
-> > Fix this by calling 'ath10k_halt' in ath10k_core_restart itself
-> > as it makes more sense before informing mac80211 to restart h/w
-> > Also remove 'ath10k_halt' in ath10k_start for the state of 'restarting'
-> >
-> > Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> > ---
-> > [v2 Added Fixes ]
-> 
-> I'll also add:
-> 
-> Cc: <stable@vger.kernel.org> # v4.9
->
-thank you Kalle.
+cfg80211_ops structures are only passed as an argument to the function
+wiphy_new. This argument is of type const, so cfg80211_ops strutures
+having this property can be declared as const.
+Done using Coccinelle
 
-regards,
-shafi
+@r1 disable optional_qualifier @
+identifier i;
+position p;
+@@
+static struct cfg80211_ops i@p = {...};
+
+@ok1@
+identifier r1.i;
+position p;
+@@
+wiphy_new(&i@p,...)
+
+@bad@
+position p!={r1.p,ok1.p};
+identifier r1.i;
+@@
+i@p
+
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
++const
+struct cfg80211_ops i;
+
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+  18133	   6632	      0	  24765	   60bd wireless/ath/wil6210/cfg80211.o
+
+File size after:
+   text	   data	    bss	    dec	    hex	filename
+  18933	   5832	      0	  24765	   60bd wireless/ath/wil6210/cfg80211.o
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 6aa3ff4..54dd116 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -1499,7 +1499,7 @@ static int wil_cfg80211_set_power_mgmt(struct wiphy *wiphy,
+ 	return rc;
+ }
+ 
+-static struct cfg80211_ops wil_cfg80211_ops = {
++static const struct cfg80211_ops wil_cfg80211_ops = {
+ 	.add_virtual_intf = wil_cfg80211_add_iface,
+ 	.del_virtual_intf = wil_cfg80211_del_iface,
+ 	.scan = wil_cfg80211_scan,
+-- 
+1.9.1
