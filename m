@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45089 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752580AbcLEVsw (ORCPT
+Received: from mout1.fh-giessen.de ([212.201.18.42]:48668 "EHLO
+        mout1.fh-giessen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752170AbcLRUEL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 16:48:52 -0500
-Date: Tue, 6 Dec 2016 00:48:23 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH 1/7] rtlwifi: btcoexist: Update routines for RTL8192EE
-Message-ID: <20161205214823.GK8176@mwanda> (sfid-20161205_224858_881953_670350E5)
-References: <20161203173207.17774-1-Larry.Finger@lwfinger.net>
- <20161203173207.17774-2-Larry.Finger@lwfinger.net>
- <20161205113832.GD8176@mwanda>
- <e4d07a23-d4d6-7ebd-7acd-69de3218a685@lwfinger.net>
+        Sun, 18 Dec 2016 15:04:11 -0500
+Subject: Re: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU
+ read-side critical section
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>,
+        Gabriel C <nix.or.die@gmail.com>,
+        lkml <linux-kernel@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "nbd@nbd.name" <nbd@nbd.name>
+References: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
+ <20161218155938.GP3924@linux.vnet.ibm.com>
+ <58b67d5b-0275-f80f-479f-78cf748b4319@mni.thm.de>
+ <87pokpc8ng.fsf@qca.qualcomm.com>
+From: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Message-ID: <aa88f071-edb7-7690-e0e5-b3e2c93e6539@mni.thm.de> (sfid-20161218_210516_678210_AE0E9755)
+Date: Sun, 18 Dec 2016 21:04:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <e4d07a23-d4d6-7ebd-7acd-69de3218a685@lwfinger.net>
+In-Reply-To: <87pokpc8ng.fsf@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 05, 2016 at 11:17:28AM -0600, Larry Finger wrote:
-> On 12/05/2016 05:38 AM, Dan Carpenter wrote:
-> >On Sat, Dec 03, 2016 at 11:32:01AM -0600, Larry Finger wrote:
-> >>From: Ping-Ke Shih <pkshih@realtek.com>
-> >>
-> >>The btcoexist routines for the RTL8192EE have been extensively rewritten.
-> >>
-> >
-> >This patch does a million things and is totally unreviewable.  The
-> >patch description doesn't say what patch does or why.  It's 5k lines
-> >of diff.  What the heck???
-> 
-> I am caught in a bind. The BT coexistence routines are written by a
-> Realtek contractor. As I cannot get the individual patches from
-> Realtek, there is no chance of getting them from a 3rd party.
 
-These patches are absolutely impenetrable.  A few years ago in SCSI we
-gave a vendor a one time pass to just merge a huge patch and sync with
-mainline.  We could view this in the same light, except that I think
-when we moved this driver out of staging that was the one time pass.  By
-now they should be proper kernel devs who can wipe their own bottoms...
+On 18.12.2016 20:57, Valo, Kalle wrote:
+> Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
+>
+>> A patch for this is already floating on the ML for a while now latest:
+>> (ath9k: do not return early to fix rcu unlocking)
+> It's here:
+>
+> https://patchwork.kernel.org/patch/9472709/
 
-We maybe should merge this and move the driver back to staging until
-they can figure out how to maintain stuff?  That's a serious suggestion.
-This patch is no way close to minimum quality requirements for upstream.
+Good to know!
+>
+>> Hopefully Kalle will include it in one of his upcoming pull requests.
+> Yes, I'll try to get it to 4.10-rc2.
 
-regards,
-dan carpenter
+Thanks for the update!
