@@ -1,59 +1,266 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0059.hostedemail.com ([216.40.44.59]:35753 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751263AbcLJGpc (ORCPT
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:33739 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753624AbcLRA0E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Dec 2016 01:45:32 -0500
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave02.hostedemail.com (Postfix) with ESMTP id 022102E71
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 06:39:39 +0000 (UTC)
-Message-ID: <1481351974.5946.49.camel@perches.com> (sfid-20161210_074811_823128_5B33185C)
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-From: Joe Perches <joe@perches.com>
-To: Markus =?ISO-8859-1?Q?B=F6hme?= <markus.boehme@mailbox.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Cc: devel@driverdev.osuosl.org, Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Date: Fri, 09 Dec 2016 22:39:34 -0800
-In-Reply-To: <77555ffb-de05-2837-2e13-aaf4ec710fc3@mailbox.org>
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
-         <20161202014833.6856-11-Larry.Finger@lwfinger.net>
-         <20161205213447.GJ8176@mwanda>
-         <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
-         <20161206071340.GB10292@kroah.com>
-         <871sxkdjeh.fsf@kamboji.qca.qualcomm.com> <20161207133219.GM8176@mwanda>
-         <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com> <20161208115049.GR8176@mwanda>
-         <20161208115450.GK8244@mwanda> <87vaut32qd.fsf@kamboji.qca.qualcomm.com>
-         <77555ffb-de05-2837-2e13-aaf4ec710fc3@mailbox.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Sat, 17 Dec 2016 19:26:04 -0500
+Received: by mail-ua0-f195.google.com with SMTP id b35so5085673uaa.0
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2016 16:26:04 -0800 (PST)
+Received: from localhost.localdomain ([190.232.43.60])
+        by smtp.gmail.com with ESMTPSA id k84sm3156278vke.0.2016.12.17.16.26.02
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 17 Dec 2016 16:26:02 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v4] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
+Date: Sat, 17 Dec 2016 19:25:54 -0500
+Message-Id: <20161218002554.6362-1-andrew.zaborowski@intel.com> (sfid-20161218_013029_456399_B1802872)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-12-10 at 00:56 +0100, Markus Böhme wrote:
-> On 12/09/2016 09:50 AM, Kalle Valo wrote:
-> > Dan Carpenter <dan.carpenter@oracle.com> writes:
-> > 
-> > > On Thu, Dec 08, 2016 at 02:50:49PM +0300, Dan Carpenter wrote:
-> > > > On Thu, Dec 08, 2016 at 01:43:42PM +0200, Kalle Valo wrote:
-> > > > > But it would make me very happy if someone would add a similar grouping
-> > > > > functionality to dyndbg to make it easy to enable a set of debug
-> > > > > messages in a driver.
-> > > > 
-> > > > Thats seems like a reasonable thing as well.
-> > > 
-> > > I actually like the ath code...  We could easily change it to be more
-> > > generic and make it a top level function for everyone to use.
-> > 
-> > That would be great. And maybe add a sysfs file with a description
-> > different levels, like module parameters have. Too bad that I can't work
-> > on that, too much stuff on my plate right now.
-> > 
-> 
-> In this case I would like to step in and try to implement grouping of
-> messages in the dynamic debug code. This seems to be an interesting
-> learning opportunity.
+Disconnect or deauthenticate when the owning socket is closed if this
+flag is supplied to CMD_CONNECT or CMD_ASSOCIATE.  This may be used
+to ensure userspace daemon doesn't leave an unmanaged connection behind.
 
-Use bitmaps and levels.
+In some situations it would be possible to account for that, to some
+degree, in the deamon restart code or in the up/down scripts without
+the use of this attribute.  But there will be systems where the daemon
+can go away for varying periods without a warning due to local resource
+management.
+
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+---
+changes in v2:
+ - add wdev.disconnect_bssid so we can deauthenticate from a BSS before
+   association finishes
+ - dropped CMD_AUTHENTICATE changes
+changes in v3:
+ - commit message fix
+changes in v4:
+ - move cfg80211_autodisconnect_wk to sme.c
+ - drop two "wdev->conn_owner_nlportid = 0" lines in nl80211.c found redundant
+ - use wdev_lock when setting wdev->conn_owner_nlportid
+ - drop wdev->netdev check in cfg80211_autodisconnect_wk
+---
+ include/net/cfg80211.h       |  7 +++++++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/core.c          |  3 +++
+ net/wireless/core.h          |  1 +
+ net/wireless/mlme.c          |  2 ++
+ net/wireless/nl80211.c       | 27 +++++++++++++++++++++++++--
+ net/wireless/sme.c           | 33 +++++++++++++++++++++++++++++++++
+ 7 files changed, 73 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 814be4b..57383a1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3837,6 +3837,9 @@ struct cfg80211_cached_keys;
+  * @conn: (private) cfg80211 software SME connection state machine data
+  * @connect_keys: (private) keys to set after connection is established
+  * @conn_bss_type: connecting/connected BSS type
++ * @conn_owner_nlportid: (private) connection owner socket port ID
++ * @disconnect_wk: (private) auto-disconnect work
++ * @disconnect_bssid: (private) the BSSID to use for auto-disconnect
+  * @ibss_fixed: (private) IBSS is using fixed BSSID
+  * @ibss_dfs_possible: (private) IBSS may change to a DFS channel
+  * @event_list: (private) list for internal event processing
+@@ -3868,6 +3871,10 @@ struct wireless_dev {
+ 	struct cfg80211_conn *conn;
+ 	struct cfg80211_cached_keys *connect_keys;
+ 	enum ieee80211_bss_type conn_bss_type;
++	u32 conn_owner_nlportid;
++
++	struct work_struct disconnect_wk;
++	u8 disconnect_bssid[ETH_ALEN];
+ 
+ 	struct list_head event_list;
+ 	spinlock_t event_lock;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6b76e3b..455ed9b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1820,6 +1820,8 @@ enum nl80211_commands {
+  *	and remove functions. NAN notifications will be sent in unicast to that
+  *	socket. Without this attribute, any socket can add functions and the
+  *	notifications will be sent to the %NL80211_MCGRP_NAN multicast group.
++ *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
++ *	station will deauthenticate when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 158c59e..903fc41 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1142,6 +1142,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
+ 
++		INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
++
+ 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+@@ -1230,6 +1232,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ #ifdef CONFIG_CFG80211_WEXT
+ 			kzfree(wdev->wext.keys);
+ #endif
++			flush_work(&wdev->disconnect_wk);
+ 		}
+ 		/*
+ 		 * synchronise (so that we won't find this netdev
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index af6e023..9d1a030 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -400,6 +400,7 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
+ 		       const u8 *resp_ie, size_t resp_ie_len);
+ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev);
++void cfg80211_autodisconnect_wk(struct work_struct *work);
+ 
+ /* SME implementation */
+ void cfg80211_conn_work(struct work_struct *work);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 4646cf5..5511990 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -340,6 +340,8 @@ int cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
++	wdev->conn_owner_nlportid = 0;
++
+ 	if (local_state_change &&
+ 	    (!wdev->current_bss ||
+ 	     !ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 3df85a7..9a318d9 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8053,8 +8053,17 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	err = nl80211_crypto_settings(rdev, info, &req.crypto, 1);
+ 	if (!err) {
+ 		wdev_lock(dev->ieee80211_ptr);
++
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid,
+ 					  ssid, ssid_len, &req);
++
++		if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++			dev->ieee80211_ptr->conn_owner_nlportid =
++				info->snd_portid;
++			memcpy(dev->ieee80211_ptr->disconnect_bssid,
++			       bssid, ETH_ALEN);
++		}
++
+ 		wdev_unlock(dev->ieee80211_ptr);
+ 	}
+ 
+@@ -8773,11 +8782,17 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
++
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys,
+ 			       connect.prev_bssid);
+-	wdev_unlock(dev->ieee80211_ptr);
+ 	if (err)
+ 		kzfree(connkeys);
++
++	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER])
++		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
++
++	wdev_unlock(dev->ieee80211_ptr);
++
+ 	return err;
+ }
+ 
+@@ -14539,13 +14554,21 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 				spin_unlock(&rdev->destroy_list_lock);
+ 				schedule_work(&rdev->destroy_work);
+ 			}
+-		} else if (schedule_scan_stop) {
++
++			continue;
++		}
++
++		if (schedule_scan_stop) {
+ 			sched_scan_req->owner_nlportid = 0;
+ 
+ 			if (rdev->ops->sched_scan_stop &&
+ 			    rdev->wiphy.flags & WIPHY_FLAG_SUPPORTS_SCHED_SCAN)
+ 				schedule_work(&rdev->sched_scan_stop_wk);
+ 		}
++
++		list_for_each_entry_rcu(wdev, &rdev->wiphy.wdev_list, list)
++			if (wdev->conn_owner_nlportid == notify->portid)
++				schedule_work(&wdev->disconnect_wk);
+ 	}
+ 
+ 	rcu_read_unlock();
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 5e0d193..4669391 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -727,6 +727,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		kzfree(wdev->connect_keys);
+ 		wdev->connect_keys = NULL;
+ 		wdev->ssid_len = 0;
++		wdev->conn_owner_nlportid = 0;
+ 		if (bss) {
+ 			cfg80211_unhold_bss(bss_from_pub(bss));
+ 			cfg80211_put_bss(wdev->wiphy, bss);
+@@ -955,6 +956,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 
+ 	wdev->current_bss = NULL;
+ 	wdev->ssid_len = 0;
++	wdev->conn_owner_nlportid = 0;
+ 
+ 	nl80211_send_disconnected(rdev, dev, reason, ie, ie_len, from_ap);
+ 
+@@ -1098,6 +1100,8 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 	kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
+ 
++	wdev->conn_owner_nlportid = 0;
++
+ 	if (wdev->conn)
+ 		err = cfg80211_sme_disconnect(wdev, reason);
+ 	else if (!rdev->ops->disconnect)
+@@ -1107,3 +1111,32 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 
+ 	return err;
+ }
++
++/*
++ * Used to clean up after the connection / connection attempt owner socket
++ * disconnects
++ */
++void cfg80211_autodisconnect_wk(struct work_struct *work)
++{
++	struct wireless_dev *wdev =
++		container_of(work, struct wireless_dev, disconnect_wk);
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
++
++	wdev_lock(wdev);
++
++	if (wdev->conn_owner_nlportid) {
++		/*
++		 * Use disconnect_bssid if still connecting and ops->disconnect
++		 * not implemented.  Otherwise we can use cfg80211_disconnect.
++		 */
++		if (rdev->ops->disconnect || wdev->current_bss)
++			cfg80211_disconnect(rdev, wdev->netdev,
++					    WLAN_REASON_DEAUTH_LEAVING, true);
++		else
++			cfg80211_mlme_deauth(rdev, wdev->netdev,
++					     wdev->disconnect_bssid, NULL, 0,
++					     WLAN_REASON_DEAUTH_LEAVING, false);
++	}
++
++	wdev_unlock(wdev);
++}
+-- 
+2.9.3
