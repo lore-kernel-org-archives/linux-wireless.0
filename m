@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42797 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751388AbcLALK3 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36120 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750776AbcLRXNV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 06:10:29 -0500
-Content-Type: text/plain; charset="utf-8"
+        Sun, 18 Dec 2016 18:13:21 -0500
+Subject: Re: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU
+ read-side critical section
+To: paulmck@linux.vnet.ibm.com, "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
+ <20161218155938.GP3924@linux.vnet.ibm.com>
+ <58b67d5b-0275-f80f-479f-78cf748b4319@mni.thm.de>
+ <87pokpc8ng.fsf@qca.qualcomm.com> <20161218201410.GS3924@linux.vnet.ibm.com>
+Cc: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
+        lkml <linux-kernel@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "nbd@nbd.name" <nbd@nbd.name>
+From: Gabriel C <nix.or.die@gmail.com>
+Message-ID: <20b64afc-8270-27d5-6d45-592ce6dd24c7@gmail.com> (sfid-20161219_001433_955183_1AA1C91F)
+Date: Mon, 19 Dec 2016 00:11:32 +0100
 MIME-Version: 1.0
-Subject: Re: ath10k: fix TLV set regdomain command
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1480275440-9919-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1480275440-9919-1-git-send-email-erik.stromdahl@gmail.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>,
-        "Erik Stromdahl" <erik.stromdahl@gmail.com>
-Message-ID: <d72fc1b1dafe443f93e103ae02d8a0a5@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121033_411822_081EDD26)
-Date: Thu, 1 Dec 2016 12:09:26 +0100
+In-Reply-To: <20161218201410.GS3924@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> wrote:
-> There is a typo bug in the current implementation of
-> ath10k_wmi_tlv_op_gen_pdev_set_rd.
-> The conformance test limits are not set up properly.
-> 
-> The two arguments ctl2g and ctl5g were not used at all.
-> Instead, the regdomain arguments rd2g and rd5g were used
-> for the ctl settings as well.
-> 
-> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
 
-4e322f7db51a ath10k: fix TLV set regdomain command
+On 18.12.2016 21:14, Paul E. McKenney wrote:
+> On Sun, Dec 18, 2016 at 07:57:42PM +0000, Valo, Kalle wrote:
+>> Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
+>>
+>>> A patch for this is already floating on the ML for a while now latest:
+>>> (ath9k: do not return early to fix rcu unlocking)
+>>
+>> It's here:
+>>
+>> https://patchwork.kernel.org/patch/9472709/
+>
+> Feel free to add:
+>
+> Acked-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+>
 
--- 
-https://patchwork.kernel.org/patch/9448885/
+This patch fixes the bug for me.
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+You can add my Tested-by if you wish.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Tested-by: Gabriel Craciunescu <nix.or.die@gmail.com>
+
+
+Regards,
+
+Gabriel
