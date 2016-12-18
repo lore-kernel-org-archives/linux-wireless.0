@@ -1,122 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:51019 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753827AbcLZPoW (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:33467 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757927AbcLRLyE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Dec 2016 10:44:22 -0500
-Date: Mon, 26 Dec 2016 16:43:53 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
+        Sun, 18 Dec 2016 06:54:04 -0500
+Received: by mail-wm0-f52.google.com with SMTP id c184so22941354wmd.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2016 03:54:03 -0800 (PST)
+Subject: Re: wl1251 & mac address & calibration data
+To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
+References: <201611111820.52072@pali> <201612161140.27241@pali>
+ <68166247-bcd3-f598-7f9e-2139e732233e@broadcom.com> <201612181204.52928@pali>
+Cc: Daniel Wagner <wagi@monom.org>,
         "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Ming Lei <ming.lei@canonical.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
         Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
         Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
         Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20161226154353.GA27087@amd> (sfid-20161226_164458_737182_B665B568)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
- <201612252146.44496@pali>
+        Tony Lindgren <tony@atomide.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Takashi Iwai <tiwai@suse.de>,
+        Josh Boyer <jwboyer@fedoraproject.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <83b2e9a4-f990-68a8-241e-375e46448d47@broadcom.com> (sfid-20161218_125514_347913_9C411ADD)
+Date: Sun, 18 Dec 2016 12:54:00 +0100
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
-In-Reply-To: <201612252146.44496@pali>
+In-Reply-To: <201612181204.52928@pali>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 18-12-2016 12:04, Pali Rohár wrote:
+> On Sunday 18 December 2016 11:49:53 Arend Van Spriel wrote:
+>> On 16-12-2016 11:40, Pali Rohár wrote:
+>>> On Friday 16 December 2016 08:25:44 Daniel Wagner wrote:
+>>>> On 12/16/2016 03:03 AM, Luis R. Rodriguez wrote:
+>>>>> For the new API a solution for "fallback mechanisms" should be
+>>>>> clean though and I am looking to stay as far as possible from the
+>>>>> existing mess. A solution to help both the old API and new API is
+>>>>> possible for the "fallback mechanism" though -- but for that I
+>>>>> can only refer you at this point to some of Daniel Wagner and
+>>>>> Tom Gunderson's firmwared deamon prospect. It should help pave
+>>>>> the way for a clean solution and help address other stupid
+>>>>> issues.
+>>>>
+>>>> The firmwared project is hosted here
+>>>>
+>>>> https://github.com/teg/firmwared
+>>>>
+>>>> As Luis pointed out, firmwared relies on
+>>>> FW_LOADER_USER_HELPER_FALLBACK, which is not enabled by default.
+>>>
+>>> I know. But it does not mean that I cannot enable this option at
+>>> kernel compile time.
+>>>
+>>> Bigger problem is that currently request_firmware() first try to
+>>> load firmware directly from VFS and after that (if fails) fallback
+>>> to user helper.
+>>>
+>>> So I would need to extend kernel firmware code with new function
+>>> (or flag) to not use VFS and try only user mode helper.
+>>
+>> Why do you need the user-mode helper anyway. This is all static data,
+>> right?
+> 
+> Those are static data, but device specific!
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+So what?
 
-Hi!
+>> So why not cook up a firmware file in user-space once and put
+>> it in /lib/firmware for the driver to request directly.
+> 
+> 1. Violates FHS
 
-> > > NVS calibration data for wl1251 are model specific. Every one
-> > > device with wl1251 chip has different and calibrated in factory.
-> > >=20
-> > > Not all wl1251 chips have own EEPROM where are calibration data
-> > > stored. And in that case there is no "standard" place. Every
-> > > device has stored them on different place (some in rootfs file,
-> > > some in dedicated nand partition, some in another proprietary
-> > > structure).
-> > >=20
-> > > Kernel wl1251 driver cannot support every one different storage
-> > > decided by device manufacture so it will use
-> > > request_firmware_prefer_user() call for loading NVS calibration
-> > > data and userspace helper will be responsible to prepare correct
-> > > data.
-> >=20
-> > Responding to this patch as it provides a lot of context to discuss.
-> > As you might have gathered from earlier discussions I am not a fan
-> > of using user-space helper. I can agree that the kernel driver,
-> > wl1251 in this case, should be agnostic to platform specific details
-> > regarding storage solutions and the firmware api should hide that.
-> > However, it seems your only solution is adding user-space to the mix
-> > and changing the api towards that. Can we solve it without
-> > user-space help?
->=20
-> Without userspace helper it means that userspace helper code must be=20
-> integrated into kernel.
->=20
-> So what is userspace helper doing?
->=20
-> 1) Read MAC address from CAL
-> 2) Read NVS data from CAL
-> 3) Modify MAC address in memory NVS data (new for this patch series)
-> 4) Modify in memory NVS data if we in FCC country
->=20
-> Checking for country is done via dbus call to either Maemo cellular=20
-> daemon or alternatively via REGDOMAIN in /etc/default/crda. I have plan=
-=20
-> to use ofono (instead Maemo cellular daemon) too...
->=20
-> Currently we are using closed Nokia proprietary CAL library.
->=20
-> Steps 1) and 2) needs closed library, step 4) needs dbus call.
+How?
 
-I guess pointer to the source code implementing this would be welcome.
+> 2. Does not work for readonly /, readonly /lib, readonly /lib/firmware
 
-> > But on other devices that use wl1251, but for instance have no
-> > userspace helper the request to userspace will fail (after 60 sec?)
-> > and try VFS after that. Maybe not so nice.
->=20
-> Currently support for those devices is broken (like for N900) as without=
-=20
-> proper NVS data they do not work correctly...
+Que?
 
-Is it expected to work at all, perhaps with degraded performance /
-range? Because it seems to work for me.
+> 3. Backup & restore of rootfs between same devices does not work (as 
+> rootfs now contains device specific data).
 
-Thanks,
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+True.
 
---y0ulUmNC+osPPQO6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+> 4. Sharing one rootfs (either via nfs or other technology) does not work 
+> for more devices (even in state when rootfs is used only by one device 
+> at one time).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+Indeed.
 
-iEYEARECAAYFAlhhOrkACgkQMOfwapXb+vIJqgCgw0tnfrODGbsPnBpMzA4rxgtr
-99sAn0v9SsNhaOQAYNu3EQECGsCdYzOk
-=pwaf
------END PGP SIGNATURE-----
+> And it is common that N900 developers have rootfs in laptop and via usb 
+> (cdc_ether) exports it over nfs to N900 device and boot system. It 
+> basically break booting from one nfs-exported rootfs, as that export 
+> become model specific...
 
---y0ulUmNC+osPPQO6--
+These are all you choices and more a logistic issue. If your take is
+that udev is the way to solve those, fine by me.
+
+>> Seems a bit
+>> overkill to have a {e,}udev or whatever daemon running if the result
+>> is always the same. Just my 2 cents.
+> 
+> No it is not. It will break couple of other things in Linux and device 
+
+Now I am curious. What "couple of other things" will be broken.
+
+> and model specific calibration data should not be in /lib/firmware! That 
+> directory is used for firmware files, not calibration.
+
+What is "firmware"? Really. These are binary blobs required to make the
+device work. And guess what, your device needs calibration data. Why
+make the distinction.
+
+Regards,
+Arend
