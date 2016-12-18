@@ -1,137 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f196.google.com ([209.85.210.196]:34752 "EHLO
-        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753067AbcLQNLB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12163 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752112AbcLRT5v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Dec 2016 08:11:01 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Sebastian Reichel <sre@kernel.org>
-Subject: MAC address in wl1251 NVS data (Was: Re: wl1251 NVS calibration data format)
-Date: Sat, 17 Dec 2016 14:10:57 +0100
-Cc: Gery Kahn <gery.kahn@gmail.com>, Shahar Lev <shahar@wizery.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
-References: <201612161201.48356@pali> <201612171214.50820@pali> <20161217120350.phnlfhklwfqqgbjr@earth>
-In-Reply-To: <20161217120350.phnlfhklwfqqgbjr@earth>
+        Sun, 18 Dec 2016 14:57:51 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+CC: "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>,
+        Gabriel C <nix.or.die@gmail.com>,
+        lkml <linux-kernel@vger.kernel.org>,
+        ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "nbd@nbd.name" <nbd@nbd.name>
+Subject: Re: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU
+ read-side critical section
+Date: Sun, 18 Dec 2016 19:57:42 +0000
+Message-ID: <87pokpc8ng.fsf@qca.qualcomm.com> (sfid-20161218_205903_749562_FA94F2E7)
+References: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com>
+        <20161218155938.GP3924@linux.vnet.ibm.com>
+        <58b67d5b-0275-f80f-479f-78cf748b4319@mni.thm.de>
+In-Reply-To: <58b67d5b-0275-f80f-479f-78cf748b4319@mni.thm.de> (Tobias
+        Klausmann's message of "Sun, 18 Dec 2016 17:17:54 +0100")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart3979182.UCilIFt6EB";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201612171410.57556@pali> (sfid-20161217_141127_752454_1596830F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart3979182.UCilIFt6EB
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> writes:
 
-> On Sat, Dec 17, 2016 at 12:14:50PM +0100, Pali Roh=C3=A1r wrote:
-> > > [1] http://notaz.gp2x.de/misc/pnd/wl1251/nvs_map.txt
-> > In that description is something about STA mac address:
-> >=20
+> A patch for this is already floating on the ML for a while now latest:
+> (ath9k: do not return early to fix rcu unlocking)
 
-    019       02           //length
+It's here:
 
-> > 01a       6d           //STA_ADDR_L Register Address.  (STA MAC
-> > Address)
-> > 01b       54           //
-> > 01c       00           //STA_ADDR_L Register
-> > 01d       00           //
-> > 01e       32           //
-> > 01f       28           //
-> > 020       00           //STA_ADDR_H Register Data.
+https://patchwork.kernel.org/patch/9472709/
 
-    021       08           //
-    022       00           //
-    023       00           //
+> Hopefully Kalle will include it in one of his upcoming pull requests.
 
-So... above data means:
+Yes, I'll try to get it to 4.10-rc2.
 
-019 - number of words
-01a - low bits of offset applied with mask 0xfe
-01b - high bits of offset
-01c-01f first word
-020-023 second word
-
-Interpreted as: at address offset 0x536c are written two words=20
-0x28320000 and 0x00000800
-
-wl1271 driver has in linux/drivers/net/wireless/ti/wlcore/boot.c this:
-
-	/* update current MAC address to NVS */
-	nvs_ptr[11] =3D wl->addresses[0].addr[0];
-	nvs_ptr[10] =3D wl->addresses[0].addr[1];
-	nvs_ptr[6] =3D wl->addresses[0].addr[2];
-	nvs_ptr[5] =3D wl->addresses[0].addr[3];
-	nvs_ptr[4] =3D wl->addresses[0].addr[4];
-	nvs_ptr[3] =3D wl->addresses[0].addr[5];
-
-Looking at wl1271-nvs.bin file (which is "modified" in kernel by boot.c)
-
-000: 01
-001: 6d
-002: 54
-003: 00
-004: 00
-005: ef
-006: be
-
-Means: at address offset 0x536c is written one word 0xBEEF0000
-
-007: 01
-008: 71
-009: 54
-00a: ad
-00b: de
-00c: 00
-00d: 00
-
-Means: at address offset 0x5371 is written one word 0x0000DEAD
-
-Above boot.c kernel code updates those data to MAC address, so at=20
-address offset 0x536c is written four low bytes of MAC address and to=20
-0x5371 are written remaining two bytes. So 00:00:DE:AD:BE:EF
-
-So conclusion: address offset for wl1271 (where is written MAC address)=20
-is exactly same as for wl1251 which is marked in that documentation as=20
-STA_ADDR_L Register.
-
-Btw, in our wl1251-nvs.bin found in Maemo rootfs, which is exactly same=20
-as in linux-firmware.git tree there are those data:
-
-019: 02
-01a: 6d
-01b: 54
-01c: 09
-01d: 03
-01e: 07
-01f: 20
-020: 00
-021: 00
-022: 00
-023: 00
-
-So hardcoded MAC address in wl1251-nvs.bin is: 00:00:20:07:03:09. Which=20
-is assigned to DIAB. Strange that it is not TI...
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart3979182.UCilIFt6EB
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlhVOWEACgkQi/DJPQPkQ1KYsgCeO0IIYGM6CTR7MVdneCZ3PCU6
-CgsAoJIYFoQn1FCYZUKd2Zb8d1HbWdd+
-=S5h0
------END PGP SIGNATURE-----
-
---nextPart3979182.UCilIFt6EB--
+--=20
+Kalle Valo=
