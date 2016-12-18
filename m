@@ -1,603 +1,855 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0052.outbound.protection.outlook.com ([104.47.34.52]:64768
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750881AbcLIOuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Dec 2016 09:50:21 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "Janusz.Dziedzic@tieto.com" <Janusz.Dziedzic@tieto.com>,
-        "rmanohar@qti.qualcomm.com" <rmanohar@qti.qualcomm.com>,
-        "ath9k-devel@qca.qualcomm.com" <ath9k-devel@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "rmanohar@qca.qualcomm.com" <rmanohar@qca.qualcomm.com>
-Subject: RE: ATH9 driver issues on ARM64
-Date: Fri, 9 Dec 2016 14:35:50 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263A803D@XAP-PVEXMBX02.xlnx.xilinx.com> (sfid-20161209_155025_804224_8B233BE1)
-References: <8520D5D51A55D047800579B094147198263A7222@XAP-PVEXMBX02.xlnx.xilinx.com>
- <20161208145608.GA19822@bhelgaas-glaptop.roam.corp.google.com>
- <8520D5D51A55D047800579B094147198263A72F5@XAP-PVEXMBX02.xlnx.xilinx.com>
- <874m2emif9.fsf@purkki.adurom.net>
- <8b348550-d909-cd98-4c04-dcf37b41f1ee@mni.thm.de>
-In-Reply-To: <8b348550-d909-cd98-4c04-dcf37b41f1ee@mni.thm.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wj0-f193.google.com ([209.85.210.193]:36553 "EHLO
+        mail-wj0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761756AbcLRNyj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Dec 2016 08:54:39 -0500
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org,
+        "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+        netdev@vger.kernel.org
+From: Gabriel C <nix.or.die@gmail.com>
+Subject: regression: ath_tx_edma_tasklet() Illegal idle entry in RCU read-side
+ critical section
+Message-ID: <23a2a3ab-974a-ed26-6afa-aafab9bb972e@gmail.com> (sfid-20161218_145556_097930_FA604C62)
+Date: Sun, 18 Dec 2016 14:52:48 +0100
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Correcting Manohar Mail ID.
+Hello,
 
-> Hello there,
->=20
-> as this is a thread about ath9k and ARM64, i'm not sure if i should
-> answer here or not, but i have similar "stalls" with ath9k on x86_64
-> (starting with 4.9rc), stack trace is posted down below where the
-> original ARM64 stall traces are.
->=20
-> Greetings,
->=20
-> Tobias
->=20
->=20
-> On 08.12.2016 18:36, Kalle Valo wrote:
-> > Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> writes:
-> >
-> >>   > [+cc Kalle, ath9k list]
-> > Thanks, but please also CC linux-wireless. Full thread below for the
-> > folks there.
-> >
-> >>> On Thu, Dec 08, 2016 at 01:49:42PM +0000, Bharat Kumar Gogada wrote:
-> >>>> Hi,
-> >>>>
-> >>>> Did anyone test Atheros ATH9 driver(drivers/net/wireless/ath/ath9k/)
-> >>>> on ARM64.  The end point is TP link wifi card with which supports
-> >>>> only legacy interrupts.
-> >>> If it works on other arches and the arm64 PCI enumeration works, my
-> >>> first guess would be an INTx issue, e.g., maybe the driver is waiting
-> >>> for an interrupt that never arrives.
-> >> We are not sure for now.
-> >>>> We are trying to test it on ARM64 with
-> >>>> (drivers/pci/host/pcie-xilinx-nwl.c) as root port.
-> >>>>
-> >>>> EP is getting enumerated and able to link up.
-> >>>>
-> >>>> But when we start scan system gets hanged.
-> >>> When you say the system hangs when you start a scan, I assume you mea=
-n
-> >>> a wifi scan, not the PCI enumeration.  A problem with a wifi scan
-> >>> might cause a *process* to hang, but it shouldn't hang the entire
-> >>> system.
-> >>>
-> >> Yes wifi scan.
-> >>>> When we took trace we see that after we start scan assert message is
-> >>>> sent but there is no de assert from end point.
-> >>> Are you talking about a trace from a PCIe analyzer?  Do you see an
-> >>> Assert_INTx PCIe message on the link?
-> >>>
-> >> Yes lecroy trace, yes we do see Assert_INTx and Deassert_INTx happenin=
-g
-> when we do interface link up.
-> >> When we have less debug prints in Atheros driver, and do wifi scan we =
-see
-> Assert_INTx but never Deassert_INTx,
-> >>>> What might cause end point not sending de assert ?
-> >>> If the endpoint doesn't send a Deassert_INTx message, I expect that
-> >>> would mean the driver didn't service the interrupt and remove the
-> >>> condition that caused the device to assert the interrupt in the first
-> >>> place.
-> >>>
-> >>> If the driver didn't receive the interrupt, it couldn't service it, o=
-f
-> >>> course.  You could add a printk in the ath9k interrupt service
-> >>> routine to see if you ever get there.
-> >>>
-> >> The interrupt behavior is changing w.r.t amount of debug prints we add=
-. (I
-> kept many prints to aid debug)
-> >> root@Xilinx-ZCU102-2016_3:~# iw dev wlan0 scan
-> >> [   83.064675] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.069486] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.074257] ath9k_hw_kill_interrupts	 793
-> >> [   83.078260] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.083107] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.087882] ath9k_hw_kill_interrupts	 793
-> >> [   83.095450] ath9k_hw_enable_interrupts	 821
-> >> [   83.099557] ath9k_hw_enable_interrupts	 825
-> >> [   83.103721] ath9k_hw_enable_interrupts	 832
-> >> [   83.107887] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.112748] AR_SREV_9100 0
-> >> [   83.115438] ath9k_hw_enable_interrupts	 848
-> >> [   83.119607] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.124389] ath9k_hw_intrpend	 762
-> >> [   83.127761] (AR_SREV_9340(ah) val 0
-> >> [   83.131234] ath9k_hw_intrpend	 767
-> >> [   83.134628] ath_isr	 603
-> >> [   83.137134] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.141995] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.146771] ath9k_hw_kill_interrupts	 793
-> >> [   83.150864] ath9k_hw_enable_interrupts	 821
-> >> [   83.154971] ath9k_hw_enable_interrupts	 825
-> >> [   83.159135] ath9k_hw_enable_interrupts	 832
-> >> [   83.163300] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.168161] AR_SREV_9100 0
-> >> [   83.170852] ath9k_hw_enable_interrupts	 848
-> >> [   83.170855] ath9k_hw_intrpend	 762
-> >> [   83.178398] (AR_SREV_9340(ah) val 0
-> >> [   83.181873] ath9k_hw_intrpend	 767
-> >> [   83.185265] ath_isr	 603
-> >> [   83.187773] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.192635] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.197411] ath9k_hw_kill_interrupts	 793
-> >> [   83.201414] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.206258] ath9k_hw_enable_interrupts	 821
-> >> [   83.210368] ath9k_hw_enable_interrupts	 825
-> >> [   83.214531] ath9k_hw_enable_interrupts	 832
-> >> [   83.218698] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.223558] AR_SREV_9100 0
-> >> [   83.226243] ath9k_hw_enable_interrupts	 848
-> >> [   83.226246] ath9k_hw_intrpend	 762
-> >> [   83.233794] (AR_SREV_9340(ah) val 0
-> >> [   83.237268] ath9k_hw_intrpend	 767
-> >> [   83.240661] ath_isr	 603
-> >> [   83.243169] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.248030] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.252806] ath9k_hw_kill_interrupts	 793
-> >> [   83.256811] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.261651] ath9k_hw_enable_interrupts	 821
-> >> [   83.265753] ath9k_hw_enable_interrupts	 825
-> >> [   83.269919] ath9k_hw_enable_interrupts	 832
-> >> [   83.274083] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.278945] AR_SREV_9100 0
-> >> [   83.281630] ath9k_hw_enable_interrupts	 848
-> >> [   83.281633] ath9k_hw_intrpend	 762
-> >> [   83.281634] (AR_SREV_9340(ah) val 0
-> >> [   83.281637] ath9k_hw_intrpend	 767
-> >> [   83.281648] ath_isr	 603
-> >> [   83.281649] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.281651] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.281654] ath9k_hw_kill_interrupts	 793
-> >> [   83.312192] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [   83.317030] ath9k_hw_enable_interrupts	 821
-> >> [   83.321132] ath9k_hw_enable_interrupts	 825
-> >> [   83.325297] ath9k_hw_enable_interrupts	 832
-> >> [   83.329463] ath9k: ath9k_iowrite32 ffffff800a400024
-> >> [   83.334324] AR_SREV_9100 0
-> >> [   83.337014] ath9k_hw_enable_interrupts	 848
-> >> ..
-> >> ..
-> >> This log continues until I turn off board without obtaining scanning r=
-esult.
-> >>
-> >> In between I get following cpu stall outputs :
-> >>    230.457179] INFO: rcu_sched self-detected stall on CPU
-> >> [  230.457185] 	2-...: (31314 ticks this GP)
-> idle=3D2d1/140000000000001/0 softirq=3D1400/1400 fqs=3D36713
-> >> [  230.457189] 	 (t=3D36756 jiffies g=3D161 c=3D160 q=3D16169)
-> >> [  230.457191] Task dump for CPU 2:
-> >> [  230.457196] kworker/u8:4    R  running task        0  1342      2 0=
-x00000002
-> >> [  230.457207] Workqueue: phy0 ieee80211_scan_work
-> >> [  230.457208] Call trace:
-> >> [  230.457214] [<ffffff8008089860>] dump_backtrace+0x0/0x198
-> >> [  230.457219] [<ffffff8008089a0c>] show_stack+0x14/0x20
-> >> [  230.457224] [<ffffff80080c0930>] sched_show_task+0x98/0xf8
-> >> [  230.457228] [<ffffff80080c2628>] dump_cpu_task+0x40/0x50
-> >> [  230.457233] [<ffffff80080e14a8>] rcu_dump_cpu_stacks+0xa0/0xf0
-> >> [  230.457239] [<ffffff80080e4cd8>] rcu_check_callbacks+0x468/0x748
-> >> [  230.457243] [<ffffff80080e7cfc>] update_process_times+0x3c/0x68
-> >> [  230.457249] [<ffffff80080f6dfc>] tick_sched_handle.isra.5+0x3c/0x50
-> >> [  230.457253] [<ffffff80080f6e54>] tick_sched_timer+0x44/0x90
-> >> [  230.457257] [<ffffff80080e86b0>] __hrtimer_run_queues+0xf0/0x178
-> >> ** 10 printk messages dropped ** [  230.457302] f8c0: 0000000000000000
-> 0000000005f5e0ff 000000000001379a 3866666666666620
-> >> [  230.457306] f8e0: ffffff800a1b4065 0000000000000006 ffffff800a12900=
-0
-> ffffffc87b8010a8
-> >> [  230.457310] f900: ffffff808a1b4057 ffffff800a1c3000 ffffff800a1b300=
-0
-> ffffff800a13b000
-> >> [  230.457314] f920: 0000000000000140 0000000000000006
-> ffffff800a1b3b10 ffffff800a1c39e8
-> >> [  230.457318] f940: 000000000000002f ffffff800a1b8a98 ffffff800a1b3ae=
-8
-> ffffffc87b07f990
-> >> [  230.457322] f960: ffffff80080d6230 ffffffc87b07f990 ffffff80080d623=
-4
-> 0000000060000145
-> >> ** 1 printk messages dropped ** [  230.457329] [<ffffff8008085720>]
-> el1_irq+0xa0/0x100
-> >> ** 9 printk messages dropped ** [  230.457373] [<ffffff800885ad60>]
-> ieee80211_hw_config+0x50/0x290
-> >> [  230.457377] [<ffffff8008863690>] ieee80211_scan_work+0x1f8/0x480
-> >> [  230.457383] [<ffffff80080b15d0>] process_one_work+0x120/0x378
-> >> [  230.457386] [<ffffff80080b1870>] worker_thread+0x48/0x4b0
-> >> [  230.457391] [<ffffff80080b7108>] kthread+0xd0/0xe8
-> >> [  230.457395] [<ffffff8008085dd0>] ret_from_fork+0x10/0x40
-> >> [  230.480389] ath9k_hw_intrpend	 762
-> >>
-> >>
-> >> [  545.487987] ath9k: ath9k_ioread32 ffffff800a400024
-> >> [  545.526189] INFO: rcu_sched self-detected stall on CPU
-> >> [  545.526195] 	2-...: (97636 ticks this GP)
-> idle=3D2d1/140000000000001/0 softirq=3D1400/1400 fqs=3D115374
-> >> [  545.526199] 	 (t=3D115523 jiffies g=3D161 c=3D160 q=3D51066)
-> >> [  545.526201] Task dump for CPU 2:
-> >> [  545.526206] kworker/u8:4    R  running task        0  1342      2 0=
-x00000002
-> >> ** 3 printk messages dropped ** [  545.526231] [<ffffff8008089a0c>]
-> show_stack+0x14/0x20
-> >> ** 9 printk messages dropped ** [  545.526280] [<ffffff80086a71e8>]
-> arch_timer_handler_phys+0x30/0x40
-> >> [  545.526284] [<ffffff80080dbe18>] handle_percpu_devid_irq+0x78/0xa0
-> >> [  545.526291] [<ffffff80080d760c>] generic_handle_irq+0x24/0x38
-> >> [  545.526296] [<ffffff80080d7944>] __handle_domain_irq+0x5c/0xb8
-> >> [  545.526299] [<ffffff80080824bc>] gic_handle_irq+0x64/0xc0
-> >> [  545.526302] Exception stack(0xffffffc87b07f870 to 0xffffffc87b07f99=
-0)
-> >> [  545.526306] f860:                                   000000000000973=
-2 ffffff800a1eaaa8
-> >> ** 8 printk messages dropped ** [  545.526341] f980: ffffff800a1c39e8
-> 0000000000000036
-> >> [  545.526345] [<ffffff8008085720>] el1_irq+0xa0/0x100
-> >> [  545.526349] [<ffffff80080d6234>] console_unlock+0x384/0x5b0
-> >> [  545.526353] [<ffffff80080d673c>] vprintk_emit+0x2dc/0x4b0
-> >> [  545.526357] [<ffffff80080d6a50>] vprintk_default+0x38/0x40
-> >> [  545.526362] [<ffffff8008129704>] printk+0x58/0x60
-> >> [  545.526366] [<ffffff800859e3e4>] ath9k_iowrite32+0x9c/0xa8
-> >> [  545.526372] [<ffffff80085c7ca8>] ath9k_hw_kill_interrupts+0x28/0xf0
-> >> [  545.526376] [<ffffff80085a18ec>] ath_reset+0x24/0x68
-> >> ** 2 printk messages dropped ** [  545.526391] [<ffffff800885ad60>]
-> ieee80211_hw_config+0x50/0x290
-> >> ** 11 printk messages dropped ** [  545.532834] ath9k_hw_kill_interrup=
-ts
-> 	 793
-> >> [  545.532890] ath9k_hw_enable_interrupts	 821
->=20
-> [   81.876902] INFO: rcu_preempt detected stalls on CPUs/tasks:
-> [   81.876912]     Tasks blocked on level-0 rcu_node (CPUs 0-7): P0
-> [   81.876932]     (detected by 4, t=3D60002 jiffies, g=3D1873, c=3D1872,=
- q=3D4967)
-> [   81.876936] swapper/4       R  running task        0     0      1
-> 0x00000000
-> [   81.876941]  0000000000000001 ffffffff810725f6 ffff88017edbc240
-> ffffffff81a3dc40
-> [   81.876945]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40
-> ffffffff81a3dc40
-> [   81.876948]  00000000ffffffff ffffffff810a7333 ffff88017ecee698
-> ffff88017edbc240
-> [   81.876951] Call Trace:
-> [   81.876970]  <IRQ>
-> [   81.876979]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
-> [   81.876983]  [<ffffffff81101e46>] ?
-> rcu_print_detail_task_stall_rnp+0x40/0x61
-> [   81.876989]  [<ffffffff810a7333>] ? rcu_check_callbacks+0x6b3/0x8c0
-> [   81.876993]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x4=
-0
-> [   81.876996]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
-> [   81.876999]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
-> [   81.877002]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
-> [   81.877004]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
-> [   81.877008]  [<ffffffff81031b1e>] ?
-> smp_trace_apic_timer_interrupt+0x5e/0x90
-> [   81.877012]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
-> [   81.877013]  <EOI>
-> [   81.877017]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
-> [   81.877019]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
-> [   81.877021]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
-> [   81.877027]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
-> [   81.877029] swapper/4       R  running task        0     0      1
-> 0x00000000
-> [   81.877032]  0000000000000001 ffffffff810725f6 ffff88017edbc240
-> ffffffff81a3dc40
-> [   81.877035]  ffffffff81101e46 ffff88025ef173c0 ffffffff81a3dc40
-> ffffffff81a3dc40
-> [   81.877038]  00000000ffffffff ffffffff810a7368 ffff88017ecee698
-> ffff88017edbc240
-> [   81.877041] Call Trace:
-> [   81.877045]  <IRQ>
-> [   81.877049]  [<ffffffff810725f6>] ? sched_show_task+0xd6/0x140
-> [   81.877051]  [<ffffffff81101e46>] ?
-> rcu_print_detail_task_stall_rnp+0x40/0x61
-> [   81.877055]  [<ffffffff810a7368>] ? rcu_check_callbacks+0x6e8/0x8c0
-> [   81.877058]  [<ffffffff810b8350>] ? tick_sched_handle.isra.14+0x40/0x4=
-0
-> [   81.877060]  [<ffffffff810aa4c3>] ? update_process_times+0x23/0x50
-> [   81.877063]  [<ffffffff810b8383>] ? tick_sched_timer+0x33/0x60
-> [   81.877065]  [<ffffffff810aaf09>] ? __hrtimer_run_queues+0xb9/0x150
-> [   81.877068]  [<ffffffff810ab198>] ? hrtimer_interrupt+0x98/0x1a0
-> [   81.877070]  [<ffffffff81031b1e>] ?
-> smp_trace_apic_timer_interrupt+0x5e/0x90
-> [   81.877073]  [<ffffffff815b31bf>] ? apic_timer_interrupt+0x7f/0x90
-> [   81.877074]  <EOI>
-> [   81.877076]  [<ffffffff8147f28d>] ? cpuidle_enter_state+0x13d/0x1f0
-> [   81.877078]  [<ffffffff8147f289>] ? cpuidle_enter_state+0x139/0x1f0
-> [   81.877080]  [<ffffffff81088c19>] ? cpu_startup_entry+0x139/0x210
-> [   81.877084]  [<ffffffff8102fc9e>] ? start_secondary+0x13e/0x170
-> [   91.132787] INFO: rcu_preempt detected expedited stalls on
-> CPUs/tasks: { P0 } 63785 jiffies s: 505 root: 0x0/T
-> [   91.132796] blocking rcu_node structures:
->=20
-> >>
-> >>
-> >> But if we have less debug prints it does not reach EP handler sometime=
-s, due
-> to following
-> >> Condition in "kernel/irq/chip.c" in function handle_simple_irq
-> >>
-> >> if (unlikely(!desc->action || irqd_irq_disabled(&desc->irq_data))) {
-> >>                  desc->istate |=3D IRQS_PENDING;
-> >>                  goto out_unlock;
-> >>          }
-> >> Here irqd_irq_disabled is being set to 1.
-> >>
-> >> With lesser debug prints it stops after following prints:
-> >> root@Xilinx-ZCU102-2016_3:~# iw dev wlan0 scan
-> >> [   54.781045] ath9k_hw_kill_interrupts	 793
-> >> [   54.785007] ath9k_hw_kill_interrupts	 793
-> >> [   54.792535] ath9k_hw_enable_interrupts	 821
-> >> [   54.796642] ath9k_hw_enable_interrupts	 825
-> >> [   54.800807] ath9k_hw_enable_interrupts	 832
-> >> [   54.804973] AR_SREV_9100 0
-> >> [   54.807663] ath9k_hw_enable_interrupts	 848
-> >> [   54.811843] ath9k_hw_intrpend	 762
-> >> [   54.815211] (AR_SREV_9340(ah) val 0
-> >> [   54.818684] ath9k_hw_intrpend	 767
-> >> [   54.822078] ath_isr	 603
-> >> [   54.824587] ath9k_hw_kill_interrupts	 793
-> >> [   54.828601] ath9k_hw_enable_interrupts	 821
-> >> [   54.832750] ath9k_hw_enable_interrupts	 825
-> >> [   54.836916] ath9k_hw_enable_interrupts	 832
-> >> [   54.841082] AR_SREV_9100 0
-> >> [   54.843772] ath9k_hw_enable_interrupts	 848
-> >> [   54.843775] ath9k_hw_intrpend	 762
-> >> [   54.851319] (AR_SREV_9340(ah) val 0
-> >> [   54.854793] ath9k_hw_intrpend	 767
-> >> [   54.858185] ath_isr	 603
-> >> [   54.860696] ath9k_hw_kill_interrupts	 793
-> >> [   54.864776] ath9k_hw_enable_interrupts	 821
-> >> [   54.867061] ath9k_hw_kill_interrupts	 793
-> >> [   54.872870] ath9k_hw_enable_interrupts	 825
-> >> [   54.877036] ath9k_hw_enable_interrupts	 832
-> >> [   54.881202] AR_SREV_9100 0
-> >> [   54.883892] ath9k_hw_enable_interrupts	 848
-> >> [   75.963129] INFO: rcu_sched detected stalls on CPUs/tasks:
-> >> [   75.968602] 	0-...: (2 GPs behind) idle=3D9d5/140000000000001/0
-> softirq=3D1103/1109 fqs=3D519
-> >> [   75.976675] 	(detected by 2, t=3D5274 jiffies, g=3D64, c=3D63, q=3D=
-11)
-> >> [   75.982485] Task dump for CPU 0:
-> >> [   75.985696] ksoftirqd/0     R  running task        0     3      2 0=
-x00000002
-> >> [   75.992726] Call trace:
-> >> [   75.995165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0
-> >> [   76.000281] [<ffffffc87b830500>] 0xffffffc87b830500
-> >> [  139.059027] INFO: rcu_sched detected stalls on CPUs/tasks:
-> >> [  139.064430] 	0-...: (2 GPs behind) idle=3D9d5/140000000000001/0
-> softirq=3D1103/1109 fqs=3D2097
-> >> [  139.072593] 	(detected by 2, t=3D21049 jiffies, g=3D64, c=3D63, q=
-=3D11)
-> >> [  139.078489] Task dump for CPU 0:
-> >> [  139.081700] ksoftirqd/0     R  running task        0     3      2 0=
-x00000002
-> >> [  139.088731] Call trace:
-> >> [  139.091165] [<ffffff8008086b3c>] __switch_to+0xc4/0xd0
-> >> [  139.096285] [<ffffffc87b830500>] 0xffffffc87b830500
-> >>
-> >>
-> >>>> We are not seeing any issues on 32-bit ARM platform and X86
-> >>>> platform.
-> >>> Can you collect a dmesg log (or, if the system hang means you can't
-> >>> collect that, a console log with "ignore_loglevel"), and "lspci -vv"
-> >>> output as root?  That should have clues about whether the INTx got
-> >>> routed correctly.  /proc/interrupts should also show whether we're
-> >>> receiving interrupts from the device.
-> >> Here is the lspci output:
-> >> 00:00.0 PCI bridge: Xilinx Corporation Device d022 (prog-if 00 [Normal
-> decode])
-> >> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx-
-> >> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >> 	Latency: 0
-> >> 	Interrupt: pin A routed to IRQ 224
-> >> 	Bus: primary=3D00, secondary=3D01, subordinate=3D0c, sec-latency=3D0
-> >> 	I/O behind bridge: 00000000-00000fff
-> >> 	Memory behind bridge: e0000000-e00fffff
-> >> 	Prefetchable memory behind bridge: 00000000fff00000-
-> 00000000000fffff
-> >> 	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- <SERR- <PERR-
-> >> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-> >> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> >> 	Capabilities: [40] Power Management version 3
-> >> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
-> PME(D0+,D1+,D2+,D3hot+,D3cold-)
-> >> 		Status: D0 NoSoftRst+ PME-Enable- DSel=3D0 DScale=3D0 PME-
-> >> 	Capabilities: [60] Express (v2) Root Port (Slot-), MSI 00
-> >> 		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-> >> 			ExtTag- RBE+
-> >> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal-
-> Unsupported-
-> >> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-> >> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> >> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-> TransPend+
-> >> 		LnkCap:	Port #0, Speed 5GT/s, Width x2, ASPM not supported,
-> Exit Latency L0s unlimited, L1 unlimited
-> >> 			ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
-> >> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-> >> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
-> DLActive- BWMgmt- ABWMgmt-
-> >> 		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna-
-> CRSVisible+
-> >> 		RootCap: CRSVisible+
-> >> 		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-> >> 		DevCap2: Completion Timeout: Range B, TimeoutDis+, LTR-,
-> OBFF Not Supported ARIFwd-
-> >> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
-> OBFF Disabled ARIFwd-
-> >> 		LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance- SpeedDis-
-> >> 			 Transmit Margin: Normal Operating Range,
-> EnterModifiedCompliance- ComplianceSOS-
-> >> 			 Compliance De-emphasis: -6dB
-> >> 		LnkSta2: Current De-emphasis Level: -3.5dB,
-> EqualizationComplete-, EqualizationPhase1-
-> >> 			 EqualizationPhase2-, EqualizationPhase3-,
-> LinkEqualizationRequest-
-> >> 	Capabilities: [100 v1] Device Serial Number 00-00-00-00-00-00-00-00
-> >> 	Capabilities: [10c v1] Virtual Channel
-> >> 		Caps:	LPEVC=3D0 RefClk=3D100ns PATEntryBits=3D1
-> >> 		Arb:	Fixed- WRR32- WRR64- WRR128-
-> >> 		Ctrl:	ArbSelect=3DFixed
-> >> 		Status:	InProgress-
-> >> 		VC0:	Caps:	PATOffset=3D00 MaxTimeSlots=3D1 RejSnoopTrans-
-> >> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128-
-> WRR256-
-> >> 			Ctrl:	Enable+ ID=3D0 ArbSelect=3DFixed TC/VC=3Dff
-> >> 			Status:	NegoPending- InProgress-
-> >> 	Capabilities: [128 v1] Vendor Specific Information: ID=3D1234 Rev=3D1
-> Len=3D018 <?>
-> >>
-> >> 01:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network
-> Adapter (rev 01)
-> >> 	Subsystem: Qualcomm Atheros Device 3112
-> >> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR- FastB2B- DisINTx-
-> >> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort-
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
-> >> 	Latency: 0, Cache Line Size: 128 bytes
-> >> 	Interrupt: pin A routed to IRQ 224
-> >> 	Region 0: Memory at e0000000 (64-bit, non-prefetchable) [size=3D128K]
-> >> 	[virtual] Expansion ROM at e0020000 [disabled] [size=3D64K]
-> >> 	Capabilities: [40] Power Management version 3
-> >> 		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=3D375mA
-> PME(D0+,D1+,D2-,D3hot+,D3cold-)
-> >> 		Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 PME-
-> >> 	Capabilities: [50] MSI: Enable- Count=3D1/4 Maskable+ 64bit+
-> >> 		Address: 0000000000000000  Data: 0000
-> >> 		Masking: 00000000  Pending: 00000000
-> >> 	Capabilities: [70] Express (v2) Endpoint, MSI 00
-> >> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency
-> L0s <1us, L1 <8us
-> >> 			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> SlotPowerLimit 0.000W
-> >> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal-
-> Unsupported-
-> >> 			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> >> 			MaxPayload 128 bytes, MaxReadReq 512 bytes
-> >> 		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-> TransPend-
-> >> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit
-> Latency L0s <2us, L1 <64us
-> >> 			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-> >> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-> >> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> >> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+
-> DLActive- BWMgmt- ABWMgmt-
-> >> 		DevCap2: Completion Timeout: Not Supported, TimeoutDis+,
-> LTR-, OBFF Not Supported
-> >> 		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-,
-> OBFF Disabled
-> >> 		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance-
-> SpeedDis-
-> >> 			 Transmit Margin: Normal Operating Range,
-> EnterModifiedCompliance- ComplianceSOS-
-> >> 			 Compliance De-emphasis: -6dB
-> >> 		LnkSta2: Current De-emphasis Level: -6dB,
-> EqualizationComplete-, EqualizationPhase1-
-> >> 			 EqualizationPhase2-, EqualizationPhase3-,
-> LinkEqualizationRequest-
-> >> 	Capabilities: [100 v1] Advanced Error Reporting
-> >> 		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >> 		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-> >> 		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt-
-> RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-> >> 		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> NonFatalErr-
-> >> 		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-> NonFatalErr+
-> >> 		AERCap:	First Error Pointer: 00, GenCap- CGenEn-
-> ChkCap- ChkEn-
-> >> 	Capabilities: [140 v1] Virtual Channel
-> >> 		Caps:	LPEVC=3D0 RefClk=3D100ns PATEntryBits=3D1
-> >> 		Arb:	Fixed- WRR32- WRR64- WRR128-
-> >> 		Ctrl:	ArbSelect=3DFixed
-> >> 		Status:	InProgress-
-> >> 		VC0:	Caps:	PATOffset=3D00 MaxTimeSlots=3D1 RejSnoopTrans-
-> >> 			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128-
-> WRR256-
-> >> 			Ctrl:	Enable+ ID=3D0 ArbSelect=3DFixed TC/VC=3Dff
-> >> 			Status:	NegoPending- InProgress-
-> >> 	Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
-> >> 	Kernel driver in use: ath9k
-> >>
-> >> Here is the cat /proc/interrupts (after we do interface up):
-> >>
-> >> root@:~# ifconfig wlan0 up
-> >> [ 1548.926601] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> >> root@Xilinx-ZCU102-2016_3:~# cat /proc/interrupts
-> >>             CPU0       CPU1       CPU2       CPU3
-> >>    1:          0          0          0          0     GICv2  29 Edge  =
-    arch_timer
-> >>    2:      19873      20058      19089      17435     GICv2  30 Edge  =
-    arch_timer
-> >>   12:          0          0          0          0     GICv2 156 Level =
-    zynqmp-dma
-> >>   13:          0          0          0          0     GICv2 157 Level =
-    zynqmp-dma
-> >>   14:          0          0          0          0     GICv2 158 Level =
-    zynqmp-dma
-> >>   15:          0          0          0          0     GICv2 159 Level =
-    zynqmp-dma
-> >>   16:          0          0          0          0     GICv2 160 Level =
-    zynqmp-dma
-> >>   17:          0          0          0          0     GICv2 161 Level =
-    zynqmp-dma
-> >>   18:          0          0          0          0     GICv2 162 Level =
-    zynqmp-dma
-> >>   19:          0          0          0          0     GICv2 163 Level =
-    zynqmp-dma
-> >>   20:          0          0          0          0     GICv2 164 Level =
-    Mali_GP_MMU,
-> Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
-> >>   30:          0          0          0          0     GICv2  95 Level =
-    eth0, eth0
-> >> 206:        314          0          0          0     GICv2  49 Level  =
-   cdns-i2c
-> >> 207:         40          0          0          0     GICv2  50 Level  =
-   cdns-i2c
-> >> 209:          0          0          0          0     GICv2 150 Level  =
-   nwl_pcie:misc
-> >> 214:         12          0          0          0     GICv2  47 Level  =
-   ff0f0000.spi
-> >> 215:          0          0          0          0     GICv2  58 Level  =
-   ffa60000.rtc
-> >> 216:          0          0          0          0     GICv2  59 Level  =
-   ffa60000.rtc
-> >> 217:          0          0          0          0     GICv2 165 Level  =
-   ahci-
-> ceva[fd0c0000.ahci]
-> >> 218:         61          0          0          0     GICv2  81 Level  =
-   mmc0
-> >> 219:          0          0          0          0     GICv2 187 Level  =
-   arm-smmu global fault
-> >> 220:        471          0          0          0     GICv2  53 Level  =
-   xuartps
-> >> 223:          0          0          0          0     GICv2 154 Level  =
-   fd4c0000.dma
-> >> 224:          3          0          0          0     dummy   1 Edge   =
-   ath9k
-> >> 225:          0          0          0          0     GICv2  97 Level  =
-   xhci-hcd:usb1
-> >>
-> >> Regards,
-> >> Bharat
+while testing kernel 4.9 I run into a weird issue with the ath9k driver.
+
+I can boot the box in console mode and it stay up sometime but is not usable.
+
+
+from dmesg :
+
+===============================
+[ INFO: suspicious RCU usage. ]
+4.9-fw1 #1 Tainted: G          I
+-------------------------------
+kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
+
+other info that might help us debug this:
+
+
+RCU used illegally from idle CPU!
+rcu_scheduler_active = 1, debug_locks = 1
+RCU used illegally from extended quiescent state!
+1 lock held by swapper/0/0:
+  #0:  (rcu_read_lock){......}, at: [<ffffffffa0ee0240>] ath_tx_edma_tasklet+0x0/0x460 [ath9k]
+
+stack backtrace:
+CPU: 0 PID: 0 Comm: swapper/0 Tainted: G          I     4.9-fw1 #1
+Hardware name: FUJITSU                          PRIMERGY TX200 S5             /D2709, BIOS 6.00 Rev. 1.14.2709              02/04/2013
+  ffff88043ee03f38 ffffffff812cf0f3 ffffffff81a11540 0000000000000001
+  ffff88043ee03f68 ffffffff810b7865 ffffffff81a55d58 ffff88043efcedc0
+  ffff88083cb1ca00 00000000000000d1 ffff88043ee03f88 ffffffff810dbfe8
+Call Trace:
+  <IRQ>
+  [<ffffffff812cf0f3>] dump_stack+0x86/0xc3
+  [<ffffffff810b7865>] lockdep_rcu_suspicious+0xc5/0x100
+  [<ffffffff810dbfe8>] rcu_eqs_enter_common.constprop.62+0x128/0x130
+  [<ffffffff810ddc78>] rcu_irq_exit+0x38/0x70
+  [<ffffffff81067ec4>] irq_exit+0x74/0xd0
+  [<ffffffff8101e561>] do_IRQ+0x71/0x130
+  [<ffffffff8158700c>] common_interrupt+0x8c/0x8c
+  <EOI>
+  [<ffffffff81472836>] ? cpuidle_enter_state+0x156/0x220
+  [<ffffffff81472922>] cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] x86_64_start_kernel+0xeb/0xf8
+
+...
+
+perf: interrupt took too long (2766 > 2500), lowering kernel.perf_event_max_sample_rate to 72000
+perf: interrupt took too long (3510 > 3457), lowering kernel.perf_event_max_sample_rate to 56000
+perf: interrupt took too long (4689 > 4387), lowering kernel.perf_event_max_sample_rate to 42000
+perf: interrupt took too long (5980 > 5861), lowering kernel.perf_event_max_sample_rate to 33000
+INFO: rcu_preempt detected stalls on CPUs/tasks:
+	Tasks blocked on level-0 rcu_node (CPUs 0-15): P0
+	(detected by 5, t=65002 jiffies, g=3241, c=3240, q=8520)
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a03e90 ffffffff8139bf30 ffffffff81ae30b8 00000000810253a9
+  ffff88083cb1e600 ffffffff81ae30a0 0000000000000002 ffffffff81ae30b8
+  ffffffff81ae2fe0 ffffffff81a03ed0 ffffffff81472814 0000001823671b47
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a03e90 ffffffff8139bf30 ffffffff81ae30b8 00000000810253a9
+  ffff88083cb1e600 ffffffff81ae30a0 0000000000000002 ffffffff81ae30b8
+  ffffffff81ae2fe0 ffffffff81a03ed0 ffffffff81472814 0000001823671b47
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+perf: interrupt took too long (7746 > 7475), lowering kernel.perf_event_max_sample_rate to 25000
+systemd-hostnamed.service: State 'stop-sigterm' timed out. Killing.
+systemd-hostnamed.service: Killing process 1507 (systemd-hostnam) with signal SIGKILL.
+perf: interrupt took too long (10065 > 9682), lowering kernel.perf_event_max_sample_rate to 19000
+perf: interrupt took too long (12596 > 12581), lowering kernel.perf_event_max_sample_rate to 15000
+INFO: task systemd-hostnam:1507 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+systemd-hostnam D    0  1507      1 0x00000002
+  ffff88043a29f200 000000000000c460 ffff88043ab0a1c0 ffff88043cdc0000
+  ffff88043f9d6718 ffffc9000b67fb88 ffffffff8157ff6e ffffc9000b67fbf8
+  ffff88043ab0abc0 ffff88043f9d6718 0000000000000000 ffff88043ab0a1c0
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e82>] schedule_timeout+0x222/0x3a0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff81585d17>] ? _raw_spin_unlock_irq+0x27/0x50
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81580ffa>] wait_for_common+0xca/0x180
+  [<ffffffff8108e150>] ? wake_up_q+0x80/0x80
+  [<ffffffff815810c8>] wait_for_completion+0x18/0x20
+  [<ffffffff810d82e5>] __wait_rcu_gp+0xc5/0x100
+  [<ffffffff810dbccd>] synchronize_rcu.part.53+0x2d/0x50
+  [<ffffffff810dc7e0>] ? __call_rcu.constprop.59+0x270/0x270
+  [<ffffffff810d8210>] ? rcu_panic+0x20/0x20
+  [<ffffffff81580f69>] ? wait_for_common+0x39/0x180
+  [<ffffffff810dbd17>] synchronize_rcu+0x27/0x90
+  [<ffffffff811fd887>] namespace_unlock+0x47/0x60
+  [<ffffffff81200639>] drop_collected_mounts+0x89/0x90
+  [<ffffffff8120246b>] ? put_mnt_ns+0x1b/0x30
+  [<ffffffff8120246b>] put_mnt_ns+0x1b/0x30
+  [<ffffffff81085798>] free_nsproxy+0x18/0xb0
+  [<ffffffff8108593e>] switch_task_namespaces+0x5e/0x70
+  [<ffffffff8108595b>] exit_task_namespaces+0xb/0x10
+  [<ffffffff8106652e>] do_exit+0x2de/0xb30
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81066e00>] do_group_exit+0x40/0xc0
+  [<ffffffff81066e8f>] SyS_exit_group+0xf/0x10
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+
+=============================================
+
+systemd-hostnamed.service: Processes still around after SIGKILL. Ignoring.
+INFO: rcu_preempt detected stalls on CPUs/tasks:
+	Tasks blocked on level-0 rcu_node (CPUs 0-15): P0
+	(detected by 9, t=260007 jiffies, g=3241, c=3240, q=12143)
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a11540 000000000000001f 0000000000000007 ffffffff817d2a6f
+  ffffffff817a0867 ffffffffffffffcf ffffffff81472836 0000000000000010
+  0000000000000212 ffffffff81a03ea0 ffffffff81085cb8 ffffffff81085c70
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a03e90 ffffffff8139bf30 ffffffff81ae30b8 00000000810253a9
+  ffff88083cb1e600 ffffffff81ae30a0 0000000000000002 ffffffff81ae30b8
+  ffffffff81ae2fe0 ffffffff81a03ed0 ffffffff81472814 000000458b315be4
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+systemd-hostnamed.service: State 'stop-final-sigterm' timed out. Killing.
+systemd-hostnamed.service: Killing process 1507 (systemd-hostnam) with signal SIGKILL.
+INFO: task systemd-hostnam:1507 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+systemd-hostnam D    0  1507      1 0x00000002
+  ffff88043a29f200 000000000000c460 ffff88043ab0a1c0 ffff88043cdc0000
+  ffff88043f9d6718 ffffc9000b67fb88 ffffffff8157ff6e ffffc9000b67fbf8
+  ffff88043ab0abc0 ffff88043f9d6718 0000000000000000 ffff88043ab0a1c0
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e82>] schedule_timeout+0x222/0x3a0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff81585d17>] ? _raw_spin_unlock_irq+0x27/0x50
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81580ffa>] wait_for_common+0xca/0x180
+  [<ffffffff8108e150>] ? wake_up_q+0x80/0x80
+  [<ffffffff815810c8>] wait_for_completion+0x18/0x20
+  [<ffffffff810d82e5>] __wait_rcu_gp+0xc5/0x100
+  [<ffffffff810dbccd>] synchronize_rcu.part.53+0x2d/0x50
+  [<ffffffff810dc7e0>] ? __call_rcu.constprop.59+0x270/0x270
+  [<ffffffff810d8210>] ? rcu_panic+0x20/0x20
+  [<ffffffff81580f69>] ? wait_for_common+0x39/0x180
+  [<ffffffff810dbd17>] synchronize_rcu+0x27/0x90
+  [<ffffffff811fd887>] namespace_unlock+0x47/0x60
+  [<ffffffff81200639>] drop_collected_mounts+0x89/0x90
+  [<ffffffff8120246b>] ? put_mnt_ns+0x1b/0x30
+  [<ffffffff8120246b>] put_mnt_ns+0x1b/0x30
+  [<ffffffff81085798>] free_nsproxy+0x18/0xb0
+  [<ffffffff8108593e>] switch_task_namespaces+0x5e/0x70
+  [<ffffffff8108595b>] exit_task_namespaces+0xb/0x10
+  [<ffffffff8106652e>] do_exit+0x2de/0xb30
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81066e00>] do_group_exit+0x40/0xc0
+  [<ffffffff81066e8f>] SyS_exit_group+0xf/0x10
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+
+=============================================
+
+perf: interrupt took too long (15815 > 15745), lowering kernel.perf_event_max_sample_rate to 12000
+INFO: rcu_preempt detected expedited stalls on CPUs/tasks: { P0 } 67953 jiffies s: 1039 root: 0x0/T
+blocking rcu_node structures:
+systemd-hostnamed.service: Processes still around after final SIGKILL. Entering failed mode.
+systemd-hostnamed.service: Unit entered failed state.
+systemd-hostnamed.service: Failed with result 'timeout'.
+Starting system activity accounting tool...
+INFO: task NetworkManager:1475 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+NetworkManager  D    0  1475      1 0x00000000
+  ffff88083a8eaf80 000000000000d4d0 ffff88083955c380 ffff8804371d4380
+  ffff88043f3d6718 ffffc90007f57640 ffffffff8157ff6e ffffc90007f57608
+  ffff88083955cd80 ffff88043f3d6718 0000000000000000 ffff88083955c380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff810da9d4>] _synchronize_rcu_expedited+0x344/0x350
+  [<ffffffff810da5c0>] ? rcu_momentary_dyntick_idle+0xa0/0xa0
+  [<ffffffff810acd10>] ? wake_atomic_t_function+0x50/0x50
+  [<ffffffff810da5c0>] ? rcu_momentary_dyntick_idle+0xa0/0xa0
+  [<ffffffff810dacf0>] ? rcu_seq_end+0x40/0x40
+  [<ffffffff810daca7>] synchronize_rcu_expedited+0x17/0x20
+  [<ffffffff814aaf6c>] synchronize_net+0x2c/0x30
+  [<ffffffff814daf8c>] dev_deactivate_many+0x2cc/0x2e0
+  [<ffffffff814a6971>] __dev_close_many+0x71/0xe0
+  [<ffffffff814a6b21>] __dev_close+0x31/0x50
+  [<ffffffff814b16a8>] __dev_change_flags+0x98/0x160
+  [<ffffffff814b1794>] dev_change_flags+0x24/0x60
+  [<ffffffff810253a9>] ? sched_clock+0x9/0x10
+  [<ffffffff814c3c96>] do_setlink+0x2e6/0xcc0
+  [<ffffffff810b9b64>] ? __lock_acquire+0x454/0x1b00
+  [<ffffffff813081c1>] ? nla_parse+0x31/0x120
+  [<ffffffff814c6750>] rtnl_newlink+0x5c0/0x860
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff814c6a6f>] rtnetlink_rcv_msg+0x7f/0x1e0
+  [<ffffffff8158178a>] ? mutex_lock_nested+0x2fa/0x430
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c69f0>] ? rtnl_newlink+0x860/0x860
+  [<ffffffff814e7eef>] netlink_rcv_skb+0x9f/0xc0
+  [<ffffffff814c3295>] rtnetlink_rcv+0x25/0x30
+  [<ffffffff814e7865>] netlink_unicast+0x155/0x1f0
+  [<ffffffff814e7cad>] netlink_sendmsg+0x2dd/0x360
+  [<ffffffff8148d682>] sock_sendmsg+0x12/0x20
+  [<ffffffff8148ddfc>] ___sys_sendmsg+0x2ac/0x2c0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff811fb60b>] ? __fget+0x10b/0x1f0
+  [<ffffffff811fb500>] ? expand_files+0x2a0/0x2a0
+  [<ffffffff811fb730>] ? __fget_light+0x20/0x60
+  [<ffffffff8148ed60>] __sys_sendmsg+0x40/0x70
+  [<ffffffff8148ed9d>] SyS_sendmsg+0xd/0x20
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+2 locks held by nano/2071:
+  #0:  (&tty->ldisc_sem){++++.+}, at: [<ffffffff8158549d>] ldsem_down_read+0x2d/0x40
+  #1:  (&ldata->atomic_read_lock){+.+...}, at: [<ffffffff813c4363>] n_tty_read+0xb3/0x8e0
+
+=============================================
+
+INFO: task systemd-hostnam:1507 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+systemd-hostnam D    0  1507      1 0x00000002
+  ffff88043a29f200 000000000000c460 ffff88043ab0a1c0 ffff88043cdc0000
+  ffff88043f9d6718 ffffc9000b67fb88 ffffffff8157ff6e ffffc9000b67fbf8
+  ffff88043ab0abc0 ffff88043f9d6718 0000000000000000 ffff88043ab0a1c0
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e82>] schedule_timeout+0x222/0x3a0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff81585d17>] ? _raw_spin_unlock_irq+0x27/0x50
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81580ffa>] wait_for_common+0xca/0x180
+  [<ffffffff8108e150>] ? wake_up_q+0x80/0x80
+  [<ffffffff815810c8>] wait_for_completion+0x18/0x20
+  [<ffffffff810d82e5>] __wait_rcu_gp+0xc5/0x100
+  [<ffffffff810dbccd>] synchronize_rcu.part.53+0x2d/0x50
+  [<ffffffff810dc7e0>] ? __call_rcu.constprop.59+0x270/0x270
+  [<ffffffff810d8210>] ? rcu_panic+0x20/0x20
+  [<ffffffff81580f69>] ? wait_for_common+0x39/0x180
+  [<ffffffff810dbd17>] synchronize_rcu+0x27/0x90
+  [<ffffffff811fd887>] namespace_unlock+0x47/0x60
+  [<ffffffff81200639>] drop_collected_mounts+0x89/0x90
+  [<ffffffff8120246b>] ? put_mnt_ns+0x1b/0x30
+  [<ffffffff8120246b>] put_mnt_ns+0x1b/0x30
+  [<ffffffff81085798>] free_nsproxy+0x18/0xb0
+  [<ffffffff8108593e>] switch_task_namespaces+0x5e/0x70
+  [<ffffffff8108595b>] exit_task_namespaces+0xb/0x10
+  [<ffffffff8106652e>] do_exit+0x2de/0xb30
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81066e00>] do_group_exit+0x40/0xc0
+  [<ffffffff81066e8f>] SyS_exit_group+0xf/0x10
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+2 locks held by nano/2071:
+  #0:  (&tty->ldisc_sem){++++.+}, at: [<ffffffff8158549d>] ldsem_down_read+0x2d/0x40
+  #1:  (&ldata->atomic_read_lock){+.+...}, at: [<ffffffff813c4363>] n_tty_read+0xb3/0x8e0
+
+=============================================
+
+INFO: rcu_preempt detected stalls on CPUs/tasks:
+	Tasks blocked on level-0 rcu_node (CPUs 0-15): P0
+	(detected by 5, t=455012 jiffies, g=3241, c=3240, q=17768)
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a11540 000000000000001f 0000000000000007 ffffffff817d2a6f
+  ffffffff817a0867 ffffffffffffffcf ffffffff81472836 0000000000000010
+  0000000000000216 ffffffff81a03ea0 0000000000000018 00000072f2ea5c0d
+Call Trace:
+  [<ffffffff81472836>] ? cpuidle_enter_state+0x156/0x220
+  [<ffffffff815804eb>] ? schedule+0x3b/0x90
+  [<ffffffff81580943>] ? schedule_preempt_disabled+0x13/0x20
+  [<ffffffff810ad4c9>] ? cpu_startup_entry+0x179/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+swapper/0       R  running task        0     0      0 0x00000000
+  ffff880439c31c80 0000000000003392 ffffffff81a11540 ffff88043cd40000
+  ffff88043efd6718 ffffffff81a03ec8 ffffffff8157ff6e 00000000001d6700
+  ffffffff81a11f48 ffff88043efd6718 0000000000000000 ffffffff81a11540
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff811736c7>] ? quiet_vmstat+0x47/0x50
+  [<ffffffff81026654>] ? arch_cpu_idle_enter+0x24/0x30
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+perf: interrupt took too long (19983 > 19768), lowering kernel.perf_event_max_sample_rate to 10000
+
+......
+
+INFO: task sd-resolve:1445 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+sd-resolve      D    0  1445      1 0x00000000
+  ffff88043a299300 00000000000078cb ffff88043c56c380 ffff88043cdc4380
+  ffff88043fdd6718 ffffc90008093c90 ffffffff8157ff6e ffff88043c56cff0
+  ffff88043c56cd80 ffff88043fdd6718 0000000000000000 ffff88043c56c380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815815ef>] ? mutex_lock_nested+0x15f/0x430
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81580943>] schedule_preempt_disabled+0x13/0x20
+  [<ffffffff81581630>] mutex_lock_nested+0x1a0/0x430
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814e4870>] ? netlink_deliver_tap+0x90/0x2b0
+  [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  [<ffffffff814e7865>] netlink_unicast+0x155/0x1f0
+  [<ffffffff814e7cad>] netlink_sendmsg+0x2dd/0x360
+  [<ffffffff8148d682>] sock_sendmsg+0x12/0x20
+  [<ffffffff8148e952>] SyS_sendto+0xf2/0x170
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff8100201a>] ? trace_hardirqs_on_thunk+0x1a/0x1c
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+INFO: task NetworkManager:1475 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+NetworkManager  D    0  1475      1 0x00000000
+  ffff88083a8eaf80 000000000000d4d0 ffff88083955c380 ffff8804371d4380
+  ffff88043f3d6718 ffffc90007f57640 ffffffff8157ff6e ffffc90007f57608
+  ffff88083955cd80 ffff88043f3d6718 0000000000000000 ffff88083955c380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff810da9d4>] _synchronize_rcu_expedited+0x344/0x350
+  [<ffffffff810da5c0>] ? rcu_momentary_dyntick_idle+0xa0/0xa0
+  [<ffffffff810acd10>] ? wake_atomic_t_function+0x50/0x50
+  [<ffffffff810da5c0>] ? rcu_momentary_dyntick_idle+0xa0/0xa0
+  [<ffffffff810dacf0>] ? rcu_seq_end+0x40/0x40
+  [<ffffffff810daca7>] synchronize_rcu_expedited+0x17/0x20
+  [<ffffffff814aaf6c>] synchronize_net+0x2c/0x30
+  [<ffffffff814daf8c>] dev_deactivate_many+0x2cc/0x2e0
+  [<ffffffff814a6971>] __dev_close_many+0x71/0xe0
+  [<ffffffff814a6b21>] __dev_close+0x31/0x50
+  [<ffffffff814b16a8>] __dev_change_flags+0x98/0x160
+  [<ffffffff814b1794>] dev_change_flags+0x24/0x60
+  [<ffffffff810253a9>] ? sched_clock+0x9/0x10
+  [<ffffffff814c3c96>] do_setlink+0x2e6/0xcc0
+  [<ffffffff810b9b64>] ? __lock_acquire+0x454/0x1b00
+  [<ffffffff813081c1>] ? nla_parse+0x31/0x120
+  [<ffffffff814c6750>] rtnl_newlink+0x5c0/0x860
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff814c6a6f>] rtnetlink_rcv_msg+0x7f/0x1e0
+  [<ffffffff8158178a>] ? mutex_lock_nested+0x2fa/0x430
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c69f0>] ? rtnl_newlink+0x860/0x860
+  [<ffffffff814e7eef>] netlink_rcv_skb+0x9f/0xc0
+  [<ffffffff814c3295>] rtnetlink_rcv+0x25/0x30
+  [<ffffffff814e7865>] netlink_unicast+0x155/0x1f0
+  [<ffffffff814e7cad>] netlink_sendmsg+0x2dd/0x360
+  [<ffffffff8148d682>] sock_sendmsg+0x12/0x20
+  [<ffffffff8148ddfc>] ___sys_sendmsg+0x2ac/0x2c0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff811fb60b>] ? __fget+0x10b/0x1f0
+  [<ffffffff811fb500>] ? expand_files+0x2a0/0x2a0
+  [<ffffffff811fb730>] ? __fget_light+0x20/0x60
+  [<ffffffff8148ed60>] __sys_sendmsg+0x40/0x70
+  [<ffffffff8148ed9d>] SyS_sendmsg+0xd/0x20
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+INFO: task systemd-hostnam:1507 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+systemd-hostnam D    0  1507      1 0x00000002
+  ffff88043a29f200 000000000000c460 ffff88043ab0a1c0 ffff88043cdc0000
+  ffff88043f9d6718 ffffc9000b67fb88 ffffffff8157ff6e ffffc9000b67fbf8
+  ffff88043ab0abc0 ffff88043f9d6718 0000000000000000 ffff88043ab0a1c0
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e82>] schedule_timeout+0x222/0x3a0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff81585d17>] ? _raw_spin_unlock_irq+0x27/0x50
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81580ffa>] wait_for_common+0xca/0x180
+  [<ffffffff8108e150>] ? wake_up_q+0x80/0x80
+  [<ffffffff815810c8>] wait_for_completion+0x18/0x20
+  [<ffffffff810d82e5>] __wait_rcu_gp+0xc5/0x100
+  [<ffffffff810dbccd>] synchronize_rcu.part.53+0x2d/0x50
+  [<ffffffff810dc7e0>] ? __call_rcu.constprop.59+0x270/0x270
+  [<ffffffff810d8210>] ? rcu_panic+0x20/0x20
+  [<ffffffff81580f69>] ? wait_for_common+0x39/0x180
+  [<ffffffff810dbd17>] synchronize_rcu+0x27/0x90
+  [<ffffffff811fd887>] namespace_unlock+0x47/0x60
+  [<ffffffff81200639>] drop_collected_mounts+0x89/0x90
+  [<ffffffff8120246b>] ? put_mnt_ns+0x1b/0x30
+  [<ffffffff8120246b>] put_mnt_ns+0x1b/0x30
+  [<ffffffff81085798>] free_nsproxy+0x18/0xb0
+  [<ffffffff8108593e>] switch_task_namespaces+0x5e/0x70
+  [<ffffffff8108595b>] exit_task_namespaces+0xb/0x10
+  [<ffffffff8106652e>] do_exit+0x2de/0xb30
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81066e00>] do_group_exit+0x40/0xc0
+  [<ffffffff81066e8f>] SyS_exit_group+0xf/0x10
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+INFO: task kworker/2:7:1630 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kworker/2:7     D    0  1630      2 0x00000000
+Workqueue: events wait_rcu_exp_gp
+  ffff880439c31c80 000000000000affb ffff8804371d4380 ffff88043bddc380
+  ffff88043f3d6718 ffffc9000c157be8 ffffffff8157ff6e ffffc9000c157bb0
+  ffff8804371d4d80 ffff88043f3d6718 0000000000000000 ffff8804371d4380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e4b>] schedule_timeout+0x1eb/0x3a0
+  [<ffffffff810e1410>] ? del_timer_sync+0xd0/0xd0
+  [<ffffffff810acdf7>] ? prepare_to_swait+0x67/0x90
+  [<ffffffff810daff5>] wait_rcu_exp_gp+0x305/0xa10
+  [<ffffffff8107d62c>] process_one_work+0x24c/0x4d0
+  [<ffffffff8107d5c6>] ? process_one_work+0x1e6/0x4d0
+  [<ffffffff8107d8f6>] worker_thread+0x46/0x4f0
+  [<ffffffff8107d8b0>] ? process_one_work+0x4d0/0x4d0
+  [<ffffffff810840fe>] kthread+0xee/0x110
+  [<ffffffff81084010>] ? kthread_park+0x60/0x60
+  [<ffffffff815868ea>] ret_from_fork+0x2a/0x40
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+INFO: rcu_preempt detected expedited stalls on CPUs/tasks: { P0 } 264561 jiffies s: 1039 root: 0x0/T
+blocking rcu_node structures:
+session-c1.scope: Stopping timed out. Killing.
+session-c1.scope: Killing process 2214 (sudo) with signal SIGKILL.
+gpm.service: State 'stop-sigterm' timed out. Killing.
+gpm.service: Killing process 1461 (gpm) with signal SIGKILL.
+perf: interrupt took too long (25099 > 24978), lowering kernel.perf_event_max_sample_rate to 7000
+INFO: rcu_preempt detected stalls on CPUs/tasks:
+	Tasks blocked on level-0 rcu_node (CPUs 0-15): P0
+	(detected by 1, t=650017 jiffies, g=3241, c=3240, q=28138)
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a03e90 ffffffff8139bf30 ffffffff81ae30b8 00000000810253a9
+  ffff88083cb1e600 ffffffff81ae30a0 0000000000000002 ffffffff81ae30b8
+  ffffffff81ae2fe0 ffffffff81a03ed0 ffffffff81472814 000000a05ac4422f
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+swapper/0       R  running task        0     0      0 0x00000000
+  ffffffff81a03e90 ffffffff8139bf30 ffffffff81ae30b8 00000000810253a9
+  ffff88083cb1e600 ffffffff81ae30a0 0000000000000002 ffffffff81ae30b8
+  ffffffff81ae2fe0 ffffffff81a03ed0 ffffffff81472814 000000a05ac4422f
+Call Trace:
+  [<ffffffff8139bf30>] ? acpi_idle_enter+0x116/0x1fb
+  [<ffffffff81472814>] ? cpuidle_enter_state+0x134/0x220
+  [<ffffffff81472922>] ? cpuidle_enter+0x12/0x20
+  [<ffffffff810ad23e>] ? call_cpuidle+0x1e/0x40
+  [<ffffffff810ad46d>] ? cpu_startup_entry+0x11d/0x210
+  [<ffffffff8157892c>] ? rest_init+0x12c/0x140
+  [<ffffffff81d02ec3>] ? start_kernel+0x40f/0x41c
+  [<ffffffff81d02120>] ? early_idt_handler_array+0x120/0x120
+  [<ffffffff81d02299>] ? x86_64_start_reservations+0x2a/0x2c
+  [<ffffffff81d02386>] ? x86_64_start_kernel+0xeb/0xf8
+session-c1.scope: Still around after SIGKILL. Ignoring.
+Stopped Session c1 of user root.
+session-c1.scope: Unit entered failed state.
+gpm.service: Processes still around after SIGKILL. Ignoring.
+Removed slice User Slice of root.
+Stopping Login Service...
+Stopping Permit User Sessions...
+Stopped Permit User Sessions.
+Stopped target Remote File Systems.
+Stopped target Network.
+Stopping Network Manager...
+Stopping WPA supplicant...
+INFO: task sd-resolve:1445 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+sd-resolve      D    0  1445      1 0x00000000
+  ffff88043a299300 00000000000078cb ffff88043c56c380 ffff88043cdc4380
+  ffff88043fdd6718 ffffc90008093c90 ffffffff8157ff6e ffff88043c56cff0
+  ffff88043c56cd80 ffff88043fdd6718 0000000000000000 ffff88043c56c380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815815ef>] ? mutex_lock_nested+0x15f/0x430
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81580943>] schedule_preempt_disabled+0x13/0x20
+  [<ffffffff81581630>] mutex_lock_nested+0x1a0/0x430
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814c3286>] ? rtnetlink_rcv+0x16/0x30
+  [<ffffffff814e4870>] ? netlink_deliver_tap+0x90/0x2b0
+  [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  [<ffffffff814e7865>] netlink_unicast+0x155/0x1f0
+  [<ffffffff814e7cad>] netlink_sendmsg+0x2dd/0x360
+  [<ffffffff8148d682>] sock_sendmsg+0x12/0x20
+  [<ffffffff8148e952>] SyS_sendto+0xf2/0x170
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff8100201a>] ? trace_hardirqs_on_thunk+0x1a/0x1c
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+1 lock held by wpa_supplicant/1512:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+INFO: task gpm:1461 blocked for more than 120 seconds.
+       Tainted: G          I     4.9-fw1 #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+gpm             D    0  1461      1 0x00000002
+  ffff880439d59300 0000000000001482 ffff8804371bc380 ffff88083c8e8000
+  ffff88083efd6718 ffffc9000b523b78 ffffffff8157ff6e ffffc9000b523be8
+  ffff8804371bcd80 ffff88083efd6718 0000000000000000 ffff8804371bc380
+Call Trace:
+  [<ffffffff8157ff6e>] ? __schedule+0x2ce/0x810
+  [<ffffffff815804eb>] schedule+0x3b/0x90
+  [<ffffffff81584e82>] schedule_timeout+0x222/0x3a0
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff812fe1f7>] ? debug_smp_processor_id+0x17/0x20
+  [<ffffffff810b5de9>] ? get_lock_stats+0x19/0x50
+  [<ffffffff81585d17>] ? _raw_spin_unlock_irq+0x27/0x50
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81580ffa>] wait_for_common+0xca/0x180
+  [<ffffffff8108e150>] ? wake_up_q+0x80/0x80
+  [<ffffffff815810c8>] wait_for_completion+0x18/0x20
+  [<ffffffff810d82e5>] __wait_rcu_gp+0xc5/0x100
+  [<ffffffff810dbccd>] synchronize_rcu.part.53+0x2d/0x50
+  [<ffffffff810dc7e0>] ? __call_rcu.constprop.59+0x270/0x270
+  [<ffffffff810d8210>] ? rcu_panic+0x20/0x20
+  [<ffffffff81580f69>] ? wait_for_common+0x39/0x180
+  [<ffffffff810dbd17>] synchronize_rcu+0x27/0x90
+  [<ffffffff81459c5e>] mousedev_release+0x4e/0x70
+  [<ffffffff811dc51a>] __fput+0xba/0x200
+  [<ffffffff811dc699>] ____fput+0x9/0x10
+  [<ffffffff81082680>] task_work_run+0x80/0xb0
+  [<ffffffff81066533>] do_exit+0x2e3/0xb30
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+  [<ffffffff810b92cf>] ? trace_hardirqs_on_caller+0xef/0x200
+  [<ffffffff81066e00>] do_group_exit+0x40/0xc0
+  [<ffffffff81066e8f>] SyS_exit_group+0xf/0x10
+  [<ffffffff81586681>] entry_SYSCALL_64_fastpath+0x1f/0xc2
+  [<ffffffff812fe213>] ? __this_cpu_preempt_check+0x13/0x20
+
+Showing all locks held in the system:
+2 locks held by khungtaskd/108:
+  #0:  (rcu_read_lock){......}, at: [<ffffffff811269af>] watchdog+0x9f/0x490
+  #1:  (tasklist_lock){.+.+..}, at: [<ffffffff810b760d>] debug_show_all_locks+0x3d/0x1a0
+1 lock held by sd-resolve/1445:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by NetworkManager/1475:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+  #1:  (rcu_preempt_state.exp_mutex){+.+...}, at: [<ffffffff810da7d9>] _synchronize_rcu_expedited+0x149/0x350
+1 lock held by wpa_supplicant/1512:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+2 locks held by kworker/2:7/1630:
+  #0:  ("events"){.+.+.+}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+  #1:  ((&rew.rew_work)){+.+...}, at: [<ffffffff8107d5c6>] process_one_work+0x1e6/0x4d0
+1 lock held by sudo/2214:
+  #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff814c3286>] rtnetlink_rcv+0x16/0x30
+
+=============================================
+
+
+Full log can be found there :
+
+http://ftp.frugalware.org/pub/other/people/crazy/journalctl-4.9-log
+
+lspci -vv for the card :
+
+02:00.0 Network controller: Qualcomm Atheros AR93xx Wireless Network Adapter (rev 01)
+         Subsystem: Qualcomm Atheros AR93xx Wireless Network Adapter
+         Physical Slot: 6
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0, Cache Line Size: 32 bytes
+         Interrupt: pin A routed to IRQ 25
+         Region 0: Memory at b0220000 (64-bit, non-prefetchable) [size=128K]
+         [virtual] Expansion ROM at b0200000 [disabled] [size=64K]
+         Capabilities: [40] Power Management version 3
+                 Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+         Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+                 Address: 0000000000000000  Data: 0000
+                 Masking: 00000000  Pending: 00000000
+         Capabilities: [70] Express (v2) Endpoint, MSI 00
+                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <1us, L1 <8us
+                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 25.000W
+                 DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported-
+                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+                 DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
+                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <2us, L1 <64us
+                         ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+                          Compliance De-emphasis: -6dB
+                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+         Capabilities: [100 v1] Advanced Error Reporting
+                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+                 AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap- ChkEn-
+         Capabilities: [140 v1] Virtual Channel
+                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                 Arb:    Fixed- WRR32- WRR64- WRR128-
+                 Ctrl:   ArbSelect=Fixed
+                 Status: InProgress-
+                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                         Status: NegoPending- InProgress-
+         Capabilities: [300 v1] Device Serial Number 00-00-00-00-00-00-00-00
+         Kernel driver in use: ath9k
+         Kernel modules: ath9k
+
+
+
+Also when disabling the ath9k driver or blacklisting it everything seems normal.
+
+Please let me know when you need more infos.
+
+Best Regards,
+
+Gabrile C
