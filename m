@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:35584 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753083AbcLSWfH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 17:35:07 -0500
-Date: Mon, 19 Dec 2016 16:35:04 -0600
-From: Rob Herring <robh@kernel.org>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com
-Subject: Re: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO
- voltage
-Message-ID: <20161219223504.ttwayzpfvdumgouu@rob-hp-laptop> (sfid-20161219_233627_672561_FD72E55A)
-References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
- <1481841044-4314-2-git-send-email-glansberry@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481841044-4314-2-git-send-email-glansberry@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:36640 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758363AbcLSKzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:14 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 10/11] rt2800: replace msleep() with usleep_range() on channel switch
+Date: Mon, 19 Dec 2016 11:52:56 +0100
+Message-Id: <1482144777-16760-11-git-send-email-sgruszka@redhat.com> (sfid-20161219_120239_378724_FC90D445)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2016 at 05:30:43PM -0500, Geoff Lansberry wrote:
-> From: Geoff Lansberry <geoff@kuvee.com>
-> 
-> ---
->  Documentation/devicetree/bindings/net/nfc/trf7970a.txt |  2 ++
->  drivers/nfc/trf7970a.c                                 | 13 ++++++++++++-
->  2 files changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> index 9dda879..208f045 100644
-> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-> @@ -21,6 +21,7 @@ Optional SoC Specific Properties:
->  - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
->    where an extra byte is returned by Read Multiple Block commands issued
->    to Type 5 tags.
-> +- vdd_io_1v8: Set to specify that the trf7970a io voltage should be set to 1.8V
+msleep(1) can sleep much more time then requested 1ms, this is not good
+on channel switch, which we want to be performed fast (i.e. to make scan
+faster). Replace msleep() with usleep_range(), which has much smaller
+maximum sleeping time boundary.
 
-Use the regulator binding and provide a fixed 1.8V supply.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
->  - crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
->  
->  
-> @@ -45,6 +46,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
->  		irq-status-read-quirk;
->  		en2-rf-quirk;
->  		t5t-rmb-extra-byte-quirk;
-> +		vdd_io_1v8;
->  		crystal_27mhz;
->  		status = "okay";
->  	};
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 29d98e4..0220184 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -2110,7 +2110,9 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+-	msleep(1);
++
++	usleep_range(1000, 1500);
++
+ 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+ 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+ }
+@@ -3442,7 +3444,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		}
+ 	}
+ 
+-	msleep(1);
++	usleep_range(1000, 1500);
+ 
+ 	/*
+ 	 * Clear channel statistic counters
+-- 
+1.7.1
