@@ -1,93 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34390 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753536AbcLXSRd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 13:17:33 -0500
-Date: Sat, 24 Dec 2016 19:17:30 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
-Message-ID: <20161224181730.GD13590@amd> (sfid-20161224_191755_493648_19AFC471)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="RYJh/3oyKhIjGcML"
-In-Reply-To: <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47634 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757691AbcLSKzA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:00 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 01/11] rt2800: make rx ampdu_factor depend on number of rx chains
+Date: Mon, 19 Dec 2016 11:52:47 +0100
+Message-Id: <1482144777-16760-2-git-send-email-sgruszka@redhat.com> (sfid-20161219_120337_096294_CE7A1B40)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Initalize max ampdu_factor supported by us based on rx chains, vendor
+driver do the same.
 
---RYJh/3oyKhIjGcML
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Hi!
-
-> In case there is no valid MAC address kernel generates random one. This
-> patch propagate this generated MAC address back to NVS data which will be
-> uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
-> uses.
-
->  	return 0;
->  }
-> =20
-> +static int wl1251_write_nvs_mac(struct wl1251 *wl)
-> +{
-
-The name is quite confusing, this sounds like writing into
-non-volatile storage.
-
-> +	int i;
-> +
-> +	if (wl->nvs_len < 0x24)
-> +		return -ENODATA;
-> +
-> +	/* length is 2 and data address is 0x546c (mask is 0xfffe) */
-
-You don't actually check for the mask.
-
-> +	if (wl->nvs[0x19] !=3D 2 || wl->nvs[0x1a] !=3D 0x6d || wl->nvs[0x1b] !=
-=3D 0x54)
-> +		return -EINVAL;
-
-You have two copies of these. Does it make sense to move it to helper
-function?
-
-Thanks,
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---RYJh/3oyKhIjGcML
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlheu7oACgkQMOfwapXb+vJfSwCgrwQYFkfPI2CSIlLo2J07YCoK
-afwAniXEYCwILW244Gn3kA1bPezLPNCO
-=FNYC
------END PGP SIGNATURE-----
-
---RYJh/3oyKhIjGcML--
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 2515702..62bb9a6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7596,7 +7596,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 
+ 	spec->ht.cap |= rx_chains << IEEE80211_HT_CAP_RX_STBC_SHIFT;
+ 
+-	spec->ht.ampdu_factor = 3;
++	spec->ht.ampdu_factor = (rx_chains > 1) ? 3 : 2;
+ 	spec->ht.ampdu_density = 4;
+ 	spec->ht.mcs.tx_params = IEEE80211_HT_MCS_TX_DEFINED;
+ 	if (tx_chains != rx_chains) {
+-- 
+1.7.1
