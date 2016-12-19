@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47348 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752957AbcLMIjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 03:39:17 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] rfkill: simplify rfkill_set_hw_state() slightly
-Date: Tue, 13 Dec 2016 09:39:13 +0100
-Message-Id: <20161213083913.8156-1-johannes@sipsolutions.net> (sfid-20161213_093919_781754_B6F0308F)
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:40963 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752738AbcLSDHf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Dec 2016 22:07:35 -0500
+Date: Sun, 18 Dec 2016 20:07:33 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Justin Bronder <justin@kuvee.com>
+Subject: Re: [Patch] NFC: trf7970a:
+Message-ID: <20161219030733.GA14962@animalcreek.com> (sfid-20161219_040831_038721_56B4E02F)
+References: <20161213220545.GA29317@animalcreek.com>
+ <CAO7Z3WJwf80mCqubSYTeK=BHN9sd=mzmL9th4Su-E25de6TmAg@mail.gmail.com>
+ <20161214155743.GA22282@animalcreek.com>
+ <CAO7Z3WKqhS5Q6qAaDs8364KP5-7ma=b_ic2B10=njngMmp5noQ@mail.gmail.com>
+ <20161214171010.GA29321@animalcreek.com>
+ <CAO7Z3WLpp0YVxXxo6M11PMPu+5OaA1fRhNQNoPJ-b4LRCPrLAg@mail.gmail.com>
+ <20161214223123.GA10281@animalcreek.com>
+ <20161216045210.GA29196@animalcreek.com>
+ <20161216203538.GA12608@animalcreek.com>
+ <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO7Z3W+grhLnP05bPShheuvSet08CoYhFStDpDVgztf=Wz42Fw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Sat, Dec 17, 2016 at 04:19:04PM -0500, Geoff Lansberry wrote:
+> Mark,   from our consultant:
+> 
+> It isn't important whether the flood script is successful in writing
+> or not. The point of it is to force a segfault by making many
+> requests. It needs to run for several hundred iterations (successful
+> or not) in order to generate the segfault.
 
-Simplify the two conditions gating the schedule_work() into
-a single one and get rid of the additional exit point from
-the function in doing so.
+So neard crashes even when the write fails??  Okay, I'll let it run for
+a while tomorrow (Monday).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/rfkill/core.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Thanks,
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 884027f62783..184bb711a06d 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -478,10 +478,7 @@ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
- 
- 	rfkill_led_trigger_event(rfkill);
- 
--	if (!rfkill->registered)
--		return ret;
--
--	if (prev != blocked)
-+	if (rfkill->registered && prev != blocked)
- 		schedule_work(&rfkill->uevent_work);
- 
- 	return ret;
--- 
-2.9.3
+Mark
+--
