@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40272 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751100AbcLEO6S (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40808 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753161AbcLSK6N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:58:18 -0500
-Message-ID: <58458088.5020202@candelatech.com> (sfid-20161205_155820_838835_BC3F104A)
-Date: Mon, 05 Dec 2016 06:58:16 -0800
-From: Ben Greear <greearb@candelatech.com>
+        Mon, 19 Dec 2016 05:58:13 -0500
+Subject: Re: cfg80211: add set/get link loss profile
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+ <1480344742.8107.63.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+From: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
+Message-ID: <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org> (sfid-20161219_120024_256957_7D58B89B)
+Date: Mon, 19 Dec 2016 12:58:09 +0200
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] mac80211:  Show pending txqlen in debugfs.
-References: <1480442753-6830-1-git-send-email-greearb@candelatech.com>           (sfid-20161129_190601_478280_B404B299) <1480946371.31788.7.camel@sipsolutions.net>      <58457DF8.5020808@candelatech.com> <1480949686.31788.31.camel@sipsolutions.net>
-In-Reply-To: <1480949686.31788.31.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1480344742.8107.63.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 11/28/2016 4:52 PM, Johannes Berg wrote:
+> 
+>> Introduce NL80211_CMD_SET_LINK_LOSS_PROFILE and
+>> NL80211_CMD_GET_LINK_LOSS_PROFILE as it required by the user space
+>> to configure the link loss profile.
+> 
+> I'm not convinced.
+> 
+>> The link loss profile represents the priority of maintaining link up
+>> in different link quality environments.
+>> Three types of behavior for link loss defined:
+>> LINK_LOSS_PROFILE_RELAXED: prefer maintaining link up even in poor
+>> link quality environment.
+>> LINK_LOSS_PROFILE_DEFAULT: The default behavior for maintaining link
+>> up vs link quality.
+>> LINK_LOSS_PROFILE_AGGRESSIVE: prefer losing link up in poor link
+>> quality environment.
+> 
+> What you're doing here is *extremely* vague. No definitions of what
+> this means, no description of how it's intended to be implemented, no
+> note even on whether or not this is for full-MAC chips or not, etc.
+> 
 
+The patch is intended for full-MAC chips and I will update the commit
+message to include more details.
 
-On 12/05/2016 06:54 AM, Johannes Berg wrote:
-> On Mon, 2016-12-05 at 06:47 -0800, Ben Greear wrote:
->>
->> On 12/05/2016 05:59 AM, Johannes Berg wrote:
->>>
->>> +static ssize_t misc_read(struct file *file, char __user *user_buf,
->>>>
->>>> +			 size_t count, loff_t *ppos)
->>>> +{
->>>> +	struct ieee80211_local *local = file->private_data;
->>>> +	size_t bufsz = 1000;
->>>> +	char *buf = kzalloc(bufsz, GFP_KERNEL);
->>>
->>> You need at most IEEE80211_MAX_QUEUES * 16 (==256) which I think
->>> you
->>> can put on the stack?
->>
->> I actually run with 64 queues in my tree,
->
-> Heh, well, in that case the 1000 is actually potentially too small for
-> you :) (it'll work because there never are many packets on the queues
-> though)
->
->> and either way, I thought large-ish things on the stack were frowned
->> upon for systems that want to run smaller stacks?
->
-> Yeah but the limit is more like 1KB :)
->
-> Maybe allocate, but actually do 16*NUM_QUEUES? The 1000 is just
-> arbitrarily magic in there.
+> At least for mac80211, we can define signals to userspace regarding
+> "link quality" and make decisions in wpa_s then?
+> 
 
-Sounds good, I'll respin it.
+The policy is offloaded today to the FW and the decision being made by the FW.
+We are only modifying the behavior and not making the decision.
 
-Thanks,
-Ben
-
->
+> 
+>> --- a/drivers/net/wireless/ath/wil6210/cfg80211.c
+> 
+> Those changes obviously don't belong into this patch anyway.
+> 
 > johannes
->
+> 
+
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Alexei Lazar
+Qualcomm Israel, on behalf of Qualcomm Innovation Center, Inc. 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum a Linux Foundation Collaborative Project
