@@ -1,56 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60727 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933423AbcLVXDV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 18:03:21 -0500
-From: <ryanhsu@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-CC: <ryanhsu@qca.qualcomm.com>
-Subject: [PATCH] ath10k: ignore configuring the incorrect board_id
-Date: Thu, 22 Dec 2016 15:02:37 -0800
-Message-ID: <1482447757-23577-1-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20161223_000324_375825_E9764934)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:42362 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758345AbcLSKzL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:11 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 08/11] rt2x00: merge agc and vco works with link tuner
+Date: Mon, 19 Dec 2016 11:52:54 +0100
+Message-Id: <1482144777-16760-9-git-send-email-sgruszka@redhat.com> (sfid-20161219_120124_488300_E6E4BF39)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+We need to perform different actions (AGC and VCO calibrations and VGC
+tuning) periodically at different intervals. We don't need separate
+works for those, we can use link tuner work and just check for proper
+interval on it.
 
-With command to get board_id from otp, in the case of following
+This fixes performing AGC and VCO calibration when scanning on STA
+mode. We need to be on-channel to perform those calibrations.
 
-  boot get otp board id result 0x00000000 board_id 0 chip_id 0
-  boot using board name 'bus=pci,bmi-chip-id=0,bmi-board-id=0"
-  ...
-  failed to fetch board data for bus=pci,bmi-chip-id=0,bmi-board-id=0 from
-  ath10k/QCA6174/hw3.0/board-2.bin
-
-The invalid board_id=0 will be used as index to search in the board-2.bin.
-
-Ignore the case with board_id=0, as it means the otp is not carrying
-the board id information.
-
-Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c  |    6 -
+ drivers/net/wireless/ralink/rt2x00/rt2x00lib.h  |   31 +-----
+ drivers/net/wireless/ralink/rt2x00/rt2x00link.c |  127 ++++++-----------------
+ 3 files changed, 36 insertions(+), 128 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 749e381..1bf67ad 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -694,8 +694,11 @@ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
- 		   "boot get otp board id result 0x%08x board_id %d chip_id %d\n",
- 		   result, board_id, chip_id);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 4e0c565..550eaf1 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -85,9 +85,6 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
+ 	 */
+ 	rt2x00queue_start_queues(rt2x00dev);
+ 	rt2x00link_start_tuner(rt2x00dev);
+-	rt2x00link_start_agc(rt2x00dev);
+-	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
+-		rt2x00link_start_vcocal(rt2x00dev);
  
--	if ((result & ATH10K_BMI_BOARD_ID_STATUS_MASK) != 0)
-+	if ((result & ATH10K_BMI_BOARD_ID_STATUS_MASK) != 0 ||
-+	    (board_id == 0)) {
-+		ath10k_warn(ar, "board id is not exist in otp, ignore it\n");
- 		return -EOPNOTSUPP;
-+	}
+ 	/*
+ 	 * Start watchdog monitoring.
+@@ -110,9 +107,6 @@ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Stop all queues
+ 	 */
+-	rt2x00link_stop_agc(rt2x00dev);
+-	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
+-		rt2x00link_stop_vcocal(rt2x00dev);
+ 	rt2x00link_stop_tuner(rt2x00dev);
+ 	rt2x00queue_stop_queues(rt2x00dev);
+ 	rt2x00queue_flush_queues(rt2x00dev, true);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h b/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
+index fb7c349..9ddc168 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00lib.h
+@@ -29,9 +29,10 @@
+  * Interval defines
+  */
+ #define WATCHDOG_INTERVAL	round_jiffies_relative(HZ)
+-#define LINK_TUNE_INTERVAL	round_jiffies_relative(HZ)
+-#define AGC_INTERVAL		round_jiffies_relative(4 * HZ)
+-#define VCO_INTERVAL		round_jiffies_relative(10 * HZ) /* 10 sec */
++#define LINK_TUNE_SECONDS	1
++#define LINK_TUNE_INTERVAL	round_jiffies_relative(LINK_TUNE_SECONDS * HZ)
++#define AGC_SECONDS		4
++#define VCO_SECONDS		10
  
- 	ar->id.bmi_ids_valid = true;
- 	ar->id.bmi_board_id = board_id;
+ /*
+  * rt2x00_rate: Per rate device information
+@@ -271,30 +272,6 @@ void rt2x00link_update_stats(struct rt2x00_dev *rt2x00dev,
+ void rt2x00link_stop_watchdog(struct rt2x00_dev *rt2x00dev);
+ 
+ /**
+- * rt2x00link_start_agc - Start periodic gain calibration
+- * @rt2x00dev: Pointer to &struct rt2x00_dev.
+- */
+-void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev);
+-
+-/**
+- * rt2x00link_start_vcocal - Start periodic VCO calibration
+- * @rt2x00dev: Pointer to &struct rt2x00_dev.
+- */
+-void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev);
+-
+-/**
+- * rt2x00link_stop_agc - Stop periodic gain calibration
+- * @rt2x00dev: Pointer to &struct rt2x00_dev.
+- */
+-void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev);
+-
+-/**
+- * rt2x00link_stop_vcocal - Stop periodic VCO calibration
+- * @rt2x00dev: Pointer to &struct rt2x00_dev.
+- */
+-void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev);
+-
+-/**
+  * rt2x00link_register - Initialize link tuning & watchdog functionality
+  * @rt2x00dev: Pointer to &struct rt2x00_dev.
+  *
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
+index 017188e..73cbf23 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00link.c
+@@ -233,15 +233,13 @@ void rt2x00link_start_tuner(struct rt2x00_dev *rt2x00dev)
+ 	struct link *link = &rt2x00dev->link;
+ 
+ 	/*
+-	 * Link tuning should only be performed when
+-	 * an active sta interface exists. AP interfaces
+-	 * don't need link tuning and monitor mode interfaces
+-	 * should never have to work with link tuners.
++	 * Single monitor mode interfaces should never have
++	 * work with link tuners.
+ 	 */
+-	if (!rt2x00dev->intf_sta_count)
++	if (!rt2x00dev->intf_ap_count && !rt2x00dev->intf_sta_count)
+ 		return;
+ 
+-	/**
++	/*
+ 	 * While scanning, link tuning is disabled. By default
+ 	 * the most sensitive settings will be used to make sure
+ 	 * that all beacons and probe responses will be received
+@@ -308,22 +306,11 @@ static void rt2x00link_reset_qual(struct rt2x00_dev *rt2x00dev)
+ 	qual->tx_failed = 0;
+ }
+ 
+-static void rt2x00link_tuner(struct work_struct *work)
++static void rt2x00link_tuner_sta(struct rt2x00_dev *rt2x00dev, struct link *link)
+ {
+-	struct rt2x00_dev *rt2x00dev =
+-	    container_of(work, struct rt2x00_dev, link.work.work);
+-	struct link *link = &rt2x00dev->link;
+ 	struct link_qual *qual = &rt2x00dev->link.qual;
+ 
+ 	/*
+-	 * When the radio is shutting down we should
+-	 * immediately cease all link tuning.
+-	 */
+-	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
+-	    test_bit(DEVICE_STATE_SCANNING, &rt2x00dev->flags))
+-		return;
+-
+-	/*
+ 	 * Update statistics.
+ 	 */
+ 	rt2x00dev->ops->lib->link_stats(rt2x00dev, qual);
+@@ -360,6 +347,33 @@ static void rt2x00link_tuner(struct work_struct *work)
+ 	 */
+ 	if (rt2x00lib_antenna_diversity(rt2x00dev))
+ 		rt2x00link_reset_qual(rt2x00dev);
++}
++
++static void rt2x00link_tuner(struct work_struct *work)
++{
++	struct rt2x00_dev *rt2x00dev =
++	    container_of(work, struct rt2x00_dev, link.work.work);
++	struct link *link = &rt2x00dev->link;
++
++	/*
++	 * When the radio is shutting down we should
++	 * immediately cease all link tuning.
++	 */
++	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags) ||
++	    test_bit(DEVICE_STATE_SCANNING, &rt2x00dev->flags))
++		return;
++
++	if (rt2x00dev->intf_sta_count)
++		rt2x00link_tuner_sta(rt2x00dev, link);
++
++	if (rt2x00dev->ops->lib->gain_calibration &&
++	    (link->count % (AGC_SECONDS / LINK_TUNE_SECONDS)) == 0)
++		rt2x00dev->ops->lib->gain_calibration(rt2x00dev);
++
++	if (rt2x00dev->ops->lib->vco_calibration &&
++	    rt2x00_has_cap_vco_recalibration(rt2x00dev) &&
++	    (link->count % (VCO_SECONDS / LINK_TUNE_SECONDS)) == 0)
++		rt2x00dev->ops->lib->vco_calibration(rt2x00dev);
+ 
+ 	/*
+ 	 * Increase tuner counter, and reschedule the next link tuner run.
+@@ -408,85 +422,8 @@ static void rt2x00link_watchdog(struct work_struct *work)
+ 					     WATCHDOG_INTERVAL);
+ }
+ 
+-void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev)
+-{
+-	struct link *link = &rt2x00dev->link;
+-
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+-	    rt2x00dev->ops->lib->gain_calibration)
+-		ieee80211_queue_delayed_work(rt2x00dev->hw,
+-					     &link->agc_work,
+-					     AGC_INTERVAL);
+-}
+-
+-void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev)
+-{
+-	struct link *link = &rt2x00dev->link;
+-
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+-	    rt2x00dev->ops->lib->vco_calibration)
+-		ieee80211_queue_delayed_work(rt2x00dev->hw,
+-					     &link->vco_work,
+-					     VCO_INTERVAL);
+-}
+-
+-void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev)
+-{
+-	cancel_delayed_work_sync(&rt2x00dev->link.agc_work);
+-}
+-
+-void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev)
+-{
+-	cancel_delayed_work_sync(&rt2x00dev->link.vco_work);
+-}
+-
+-static void rt2x00link_agc(struct work_struct *work)
+-{
+-	struct rt2x00_dev *rt2x00dev =
+-	    container_of(work, struct rt2x00_dev, link.agc_work.work);
+-	struct link *link = &rt2x00dev->link;
+-
+-	/*
+-	 * When the radio is shutting down we should
+-	 * immediately cease the watchdog monitoring.
+-	 */
+-	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+-		return;
+-
+-	rt2x00dev->ops->lib->gain_calibration(rt2x00dev);
+-
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+-		ieee80211_queue_delayed_work(rt2x00dev->hw,
+-					     &link->agc_work,
+-					     AGC_INTERVAL);
+-}
+-
+-static void rt2x00link_vcocal(struct work_struct *work)
+-{
+-	struct rt2x00_dev *rt2x00dev =
+-	    container_of(work, struct rt2x00_dev, link.vco_work.work);
+-	struct link *link = &rt2x00dev->link;
+-
+-	/*
+-	 * When the radio is shutting down we should
+-	 * immediately cease the VCO calibration.
+-	 */
+-	if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+-		return;
+-
+-	rt2x00dev->ops->lib->vco_calibration(rt2x00dev);
+-
+-	if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+-		ieee80211_queue_delayed_work(rt2x00dev->hw,
+-					     &link->vco_work,
+-					     VCO_INTERVAL);
+-}
+-
+ void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
+ {
+-	INIT_DELAYED_WORK(&rt2x00dev->link.agc_work, rt2x00link_agc);
+-	if (rt2x00_has_cap_vco_recalibration(rt2x00dev))
+-		INIT_DELAYED_WORK(&rt2x00dev->link.vco_work, rt2x00link_vcocal);
+ 	INIT_DELAYED_WORK(&rt2x00dev->link.watchdog_work, rt2x00link_watchdog);
+ 	INIT_DELAYED_WORK(&rt2x00dev->link.work, rt2x00link_tuner);
+ }
 -- 
-1.9.1
+1.7.1
