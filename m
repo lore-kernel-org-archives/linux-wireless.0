@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37297 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750999AbcLMXyu (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17088 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763069AbcLSMCJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 18:54:50 -0500
-From: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-To: Benjamin Morgan <bmorgan@cococorp.com>,
-        "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>,
-        Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "agreen@cococorp.com" <agreen@cococorp.com>,
-        "lede-dev@lists.infradead.org" <lede-dev@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: RE: ath10k firmware crashes in mesh mode on QCA9880
-Date: Tue, 13 Dec 2016 23:51:32 +0000
-Message-ID: <ccf17009a52748c99accdaa005ea837a@NALASEXR01H.na.qualcomm.com> (sfid-20161214_005455_470418_E1BC7218)
-References: <583DD564.8040704@cococorp.com>
- <20161201070908.GB11953@atheros-ThinkPad-T61> <58421FA2.2020004@cococorp.com>
- <20161203124358.GB31861@atheros-ThinkPad-T61>
- <20161203124600.GC31861@atheros-ThinkPad-T61> <5845B325.6060002@cococorp.com>
- <d8eb0ba5828d43dd83030247ba443b88@aphydexm01f.ap.qualcomm.com>
- <58472E7B.7090603@cococorp.com> <58504113.2080702@cococorp.com>
- <5850831D.7020206@cococorp.com>
-In-Reply-To: <5850831D.7020206@cococorp.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 19 Dec 2016 07:02:09 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+        "nbd@nbd.name" <nbd@nbd.name>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
+Date: Mon, 19 Dec 2016 12:02:00 +0000
+Message-ID: <5857CC37.80003@qti.qualcomm.com> (sfid-20161219_130308_167628_8D40F52D)
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+        <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
+        <1481794142.31776.5.camel@sipsolutions.net>
+        <58528607.7090101@qti.qualcomm.com>
+        <85c98160-3ee9-07db-cb4c-9e300f0ba798@nbd.name>
+        <1481809984.2582.5.camel@sipsolutions.net>
+        <58537DA3.1090901@qti.qualcomm.com> <878trckurn.fsf@purkki.adurom.net>
+In-Reply-To: <878trckurn.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBUZXN0ZWQgdGhlIDEwLjIuNC43MC41OS0yIGZpcm13YXJlIGFuZCB3cGFfc3VwcGxpY2FudCBy
-dW5uaW5nIFdJVEhPVVQNCj4gZW5jcnlwdGlvbiBhbmQgaXQgc3RpbGwgY3Jhc2hlcy4gSSBzdXNw
-ZWN0IHRoaXMgbWVhbnMgd3BhX3N1cHBsaWNhbnQgaXMgc2V0dGluZyB1cA0KPiB0aGUgaW50ZXJm
-YWNlIGluY29ycmVjdGx5IGFuZC9vciB0cmFuc21pdHRpbmcgYSBtYWxmb3JtZWQgcGFja2V0IHRo
-YXQgaXMgY2F1c2luZw0KPiB0aGUgZHJpdmVyIHRvIGNyYXNoLg0KPiANCkJlbiwNCg0KSUlSQyBt
-ZXNoIHN1cHBvcnQgd2FzIHZhbGlkYXRlZCBpbiBxY2E5ODh4IGluIFZIVCBtb2RlIHdoaWxlIGFn
-by4gIEVpdGhlciBpdCBjb3VsZA0KYmUgcmVncmVzc2lvbiBpbiBkcml2ZXIvZncgb3IgbGVkZSBt
-YWM4MDIxMSBwYWNrYWdlLg0KDQoxKSBDb3VsZCB5b3UgcGxlYXNlIHRyeSBwbGFpbiBiYWNrcG9y
-dHMgaW4gbGVkZSB3L28gYXBwbHlpbmcgYXRoMTBrIHBhdGNoZXMuDQogICAgIEkgZG8gc2VlIDE2
-ME1IeiBzdXBwb3J0IGluIExFREUuDQoyKSBUaGVyZSBhcmUgc29tZSBwZWVyIHN0YXRzIGR1bXAg
-ZnJvbSB5b3VyIGVhcmxpZXIgbG9nLiBEaXNhYmxlIHBlZXIgc3RhdHMgDQogICAgIGJ5ICJwZWVy
-X3N0YXRzIiBkZWJ1Z2ZzLg0KMykgUGxlYXNlIGNvbmZpcm0gdGhlIGJlaGF2aW9yIHdpdGggb2xk
-ZXIgZmlybXdhcmUgcmV2aXNpb25zLg0KNCkgdXNlIGl3IHRvIGJyaW5nIHVwIG9wZW4gbWVzaCB0
-byBydWxlIG91dCB3cGFfcyBjb25maWcNCg0KLVJhamt1bWFyDQoNCg==
+On Monday 19 December 2016 05:15 PM, Kalle Valo wrote:
+> "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com> writes:
+>
+>> On Thursday 15 December 2016 07:23 PM, Johannes Berg wrote:
+>>>
+>>>>> I agree. Dynamic switch part is buggy, we can start with not
+>>>>> allowing interfaces resulting in dynamic switch.
+>>>>
+>>>> Does this mean that when bringing up multiple interfaces, users would
+>>>> need to figure out the 'magic' order that works?
+>>>
+>>> I think we need to talk about hardware capabilities at this point.
+>>
+>> QCA988X does not have capability to configure vif specific decap mode. E=
+ncap mode
+>> is configurable per packet for all the ath10k based chips so this part s=
+hould be
+>> fine to support per vif configuration. Newer QCA chips like QCA9984, QCA=
+4019, QCA9888
+>> and QCA99X0 supports decap mode configuration per vif.
+>
+> When you say "all" are you also taking into account QCA6174 and QCA9377?
+
+Good point. I see some workarounds for QCA6174 to send data frames in ether=
+net mode,
+so QCA6174 should be fine in this regard. I assume QCA9377 also works fine =
+with
+ethernet encap configuration per htt desc, need to confirm.
+
+Vasanth=
