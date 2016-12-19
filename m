@@ -1,52 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33532 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:41912 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751790AbcLGGsJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 01:48:09 -0500
-Message-ID: <1481093287.4092.20.camel@sipsolutions.net> (sfid-20161207_074812_965924_E4D7B609)
-Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 07 Dec 2016 07:48:07 +0100
-In-Reply-To: <5847AEF9.90409@gmail.com> (sfid-20161207_074059_163818_6A66D9AB)
-References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
-         <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
-         <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
-         <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
-         <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
-         <1481091301.4092.5.camel@sipsolutions.net> <5847AEF9.90409@gmail.com>
-         (sfid-20161207_074059_163818_6A66D9AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1757915AbcLSKzD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:03 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 03/11] rt2800: set minimum MPDU and PSDU lengths to sane values
+Date: Mon, 19 Dec 2016 11:52:49 +0100
+Message-Id: <1482144777-16760-4-git-send-email-sgruszka@redhat.com> (sfid-20161219_120332_999566_BD5A7FC4)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-12-07 at 00:40 -0600, Denis Kenzior wrote:
-> 
-> > No, this is the part you didn't understand. Simply authenticating
-> > doesn't actually create anything like a "link" to the AP. The only
-> 
-> Okay, but it is then a bit misleading that iw link reports us being 
-> 'connected' during this time for example.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-It doesn't!
-
-# iw wlan0 auth <ssid> <bssid> open 2462
-
--> iw event reporting
-wlan0 (phy #0): auth <localMAC> -> <bssid> status: 0: Successful
-
-# iw wlan0 link
-Not connected.
-
-
-> Fair enough.  I think we can live with that since we're not using 
-> CMD_AUTHENTICATE unless we need to roam using FT.
-
-That seems like a very strange decision, but it's obviously up to you
-:)
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 62bb9a6..ef71722 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4708,8 +4708,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
+ 	else
+ 		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 1);
+-	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_PSDU, 0);
+-	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 0);
++	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_PSDU, 10);
++	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 10);
+ 	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
+ 
+ 	rt2800_register_read(rt2x00dev, LED_CFG, &reg);
+-- 
+1.7.1
