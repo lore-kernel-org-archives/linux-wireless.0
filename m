@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34402 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751105AbcLBBs6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53816 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753456AbcLSLpF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 20:48:58 -0500
-Received: by mail-oi0-f67.google.com with SMTP id m75so25565151oig.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 17:48:57 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 13/14] rtlwifi: rtl8723be: fix ant_sel code
-Date: Thu,  1 Dec 2016 19:48:32 -0600
-Message-Id: <20161202014833.6856-14-Larry.Finger@lwfinger.net> (sfid-20161202_024905_031886_21338EC9)
-In-Reply-To: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+        Mon, 19 Dec 2016 06:45:05 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Thiagarajan\, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "nbd\@nbd.name" <nbd@nbd.name>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/3] mac80211: Implement data xmit for 802.11 encap offload
+References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
+        <1481781608-5181-3-git-send-email-vthiagar@qti.qualcomm.com>
+        <1481794142.31776.5.camel@sipsolutions.net>
+        <58528607.7090101@qti.qualcomm.com>
+        <85c98160-3ee9-07db-cb4c-9e300f0ba798@nbd.name>
+        <1481809984.2582.5.camel@sipsolutions.net>
+        <58537DA3.1090901@qti.qualcomm.com>
+Date: Mon, 19 Dec 2016 13:45:00 +0200
+In-Reply-To: <58537DA3.1090901@qti.qualcomm.com> (Vasanthakumar Thiagarajan's
+        message of "Fri, 16 Dec 2016 05:37:39 +0000")
+Message-ID: <878trckurn.fsf@purkki.adurom.net> (sfid-20161219_124606_543289_BCC685FC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+"Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com> writes:
 
-When ant_sel is set, we need to fill single_ant_path to select correct
-antenna path.
+> On Thursday 15 December 2016 07:23 PM, Johannes Berg wrote:
+>>
+>>>> I agree. Dynamic switch part is buggy, we can start with not
+>>>> allowing interfaces resulting in dynamic switch.
+>>>
+>>> Does this mean that when bringing up multiple interfaces, users would
+>>> need to figure out the 'magic' order that works?
+>>
+>> I think we need to talk about hardware capabilities at this point.
+>
+> QCA988X does not have capability to configure vif specific decap mode. Encap mode
+> is configurable per packet for all the ath10k based chips so this part should be
+> fine to support per vif configuration. Newer QCA chips like QCA9984, QCA4019, QCA9888
+> and QCA99X0 supports decap mode configuration per vif.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+When you say "all" are you also taking into account QCA6174 and QCA9377?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index c2cd99f..00473a6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2700,9 +2700,13 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
- 	}
- 
- 	/* override ant_num / ant_path */
--	if (mod_params->ant_sel)
-+	if (mod_params->ant_sel) {
- 		rtlpriv->btcoexist.btc_info.ant_num =
- 			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
-+
-+		rtlpriv->btcoexist.btc_info.single_ant_path =
-+			(mod_params->ant_sel == 1 ? 0 : 1);
-+	}
- }
- 
- void rtl8723be_bt_reg_init(struct ieee80211_hw *hw)
+Just checking...
+
 -- 
-2.10.2
+Kalle Valo
