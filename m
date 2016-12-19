@@ -1,123 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:32919 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753890AbcLYUPn (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:45316 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753483AbcLSJJJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Dec 2016 15:15:43 -0500
-Received: by mail-wm0-f41.google.com with SMTP id m1so12738743wme.0
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Dec 2016 12:15:43 -0800 (PST)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mon, 19 Dec 2016 04:09:09 -0500
+Message-ID: <1482138490.26174.7.camel@coelho.fi> (sfid-20161219_101357_479368_E4DD7B31)
+From: Luca Coelho <luca@coelho.fi>
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+        Gustavo Padovan <gustavo@padovan.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Vince Bridgers <vbridger@opensource.altera.com>,
+        Jay Cliburn <jcliburn@gmail.com>,
+        Chris Snook <chris.snook@gmail.com>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
         Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com> (sfid-20161225_211608_516225_43D5EE4D)
-Date: Sun, 25 Dec 2016 21:15:40 +0100
-MIME-Version: 1.0
-In-Reply-To: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Maya Erez <qca_merez@qca.qualcomm.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Intel Linux Wireless <linuxwifi@intel.com>,
+        Jakub Kicinski <kubakici@wp.pl>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alexander Aring <aar@pengutronix.de>,
+        Stefan Schmidt <stefan@osg.samsung.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
+        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
+        linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Date: Mon, 19 Dec 2016 11:08:10 +0200
+In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+         <1481778865-27667-9-git-send-email-mst@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-12-2016 17:52, Pali Rohár wrote:
-> NVS calibration data for wl1251 are model specific. Every one device with
-> wl1251 chip has different and calibrated in factory.
+On Thu, 2016-12-15 at 07:15 +0200, Michael S. Tsirkin wrote:
+> That's the default now, no need for makefiles to set it.
 > 
-> Not all wl1251 chips have own EEPROM where are calibration data stored. And
-> in that case there is no "standard" place. Every device has stored them on
-> different place (some in rootfs file, some in dedicated nand partition,
-> some in another proprietary structure).
-> 
-> Kernel wl1251 driver cannot support every one different storage decided by
-> device manufacture so it will use request_firmware_prefer_user() call for
-> loading NVS calibration data and userspace helper will be responsible to
-> prepare correct data.
-
-Responding to this patch as it provides a lot of context to discuss. As
-you might have gathered from earlier discussions I am not a fan of using
-user-space helper. I can agree that the kernel driver, wl1251 in this
-case, should be agnostic to platform specific details regarding storage
-solutions and the firmware api should hide that. However, it seems your
-only solution is adding user-space to the mix and changing the api
-towards that. Can we solve it without user-space help?
-
-The firmware_class already supports a number of path prefixes it
-traverses looking for the requested firmware. So I was thinking about
-adding a hashtable in which a platform driver can add firmware which are
-stored in the hashtable using the hashed firmware name. Upon a firmware
-request from the driver we could check the hashtable before traversing
-the path prefixes on VFS. The obvious problem is that the request may
-come before the firmware is added to the hashtable. Just wanted to pitch
-the idea first and hear what others think about it and maybe someone has
-a nice solution for this problem. Fingers crossed :-p
-
-> In case userspace helper fails request_firmware_prefer_user() still try to
-> load data file directly from VFS as fallback mechanism.
-> 
-> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
-> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
-> devices.
-
-With the firmware hashtable api on N900 a platform driver could
-interpret the CAL data in the nand partition and provide it through the
-firmware_class.
-
-> With this patch it is finally possible to load correct model specific NVS
-> calibration data for Nokia N900.
-
-But on other devices that use wl1251, but for instance have no userspace
-helper the request to userspace will fail (after 60 sec?) and try VFS
-after that. Maybe not so nice. You should consider other device
-configurations. Not just N900.
-
-Regards,
-Arend
-
-> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 > ---
->  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
->  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
-> index 7142ccf..affe154 100644
-> --- a/drivers/net/wireless/ti/wl1251/Kconfig
-> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
-> @@ -2,6 +2,7 @@ config WL1251
->  	tristate "TI wl1251 driver support"
->  	depends on MAC80211
->  	select FW_LOADER
-> +	select FW_LOADER_USER_HELPER
->  	select CRC7
->  	---help---
->  	  This will enable TI wl1251 driver support. The drivers make
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-> index 208f062..24f8866 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
->  	struct device *dev = wiphy_dev(wl->hw->wiphy);
->  	int ret;
->  
-> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
-> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
->  
->  	if (ret < 0) {
->  		wl1251_error("could not get nvs file: %d", ret);
-> 
+>  drivers/bluetooth/Makefile                                | 2 --
+>  drivers/net/can/Makefile                                  | 1 -
+>  drivers/net/ethernet/altera/Makefile                      | 1 -
+>  drivers/net/ethernet/atheros/alx/Makefile                 | 1 -
+>  drivers/net/ethernet/freescale/Makefile                   | 2 --
+>  drivers/net/wireless/ath/Makefile                         | 2 --
+>  drivers/net/wireless/ath/wil6210/Makefile                 | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile | 2 --
+>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/Makefile | 1 -
+>  drivers/net/wireless/intel/iwlegacy/Makefile              | 2 --
+>  drivers/net/wireless/intel/iwlwifi/Makefile               | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/dvm/Makefile           | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/mvm/Makefile           | 2 +-
+
+For the drivers/net/wireless/intel/iwlwifi/ part:
+
+Acked-by: Luca Coelho <luciano.coelho@intel.com>
+
+--
+Luca.
