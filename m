@@ -1,169 +1,275 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36405 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752698AbcL2Jnp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53308 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755047AbcLSQuP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 04:43:45 -0500
+        Mon, 19 Dec 2016 11:50:15 -0500
+Date: Mon, 19 Dec 2016 22:19:57 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: Re: [PATCH] ath10k: merge extended peer info data with existing
+ peers info
+Message-ID: <20161219164957.GA13022@atheros-ThinkPad-T61> (sfid-20161219_175117_294962_219CC6BE)
+References: <20161216052418.GA8936@atheros-ThinkPad-T61>
+ <20161217174634.4531-1-chunkeey@googlemail.com>
 MIME-Version: 1.0
-In-Reply-To: <46007537-835c-90db-a44f-c45c8e2ecaed@broadcom.com>
-References: <20161228155955.25518-1-zajec5@gmail.com> <20161228155955.25518-2-zajec5@gmail.com>
- <491a5af2-449d-4b2a-c4ed-af0e89b2ca78@broadcom.com> <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com>
- <CACna6rzJV-UdydKrXTquEzrkCfNXXKsHBrsZGjTJ8F=BSRyUjA@mail.gmail.com> <46007537-835c-90db-a44f-c45c8e2ecaed@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 29 Dec 2016 10:43:22 +0100
-Message-ID: <CACna6rwaUWEjpBdfXS6uJSxKXH_mCP7YMGd1KaJropNQgVS7PA@mail.gmail.com> (sfid-20161229_104409_454747_42E8A2BD)
-Subject: Re: [PATCH 2/2] cfg80211: reg: support ieee80211-(min|max)-center-freq
- DT properties
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161217174634.4531-1-chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 December 2016 at 09:57, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 28-12-16 22:30, Rafa=C5=82 Mi=C5=82ecki wrote:
->> On 28 December 2016 at 22:28, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>=
- wrote:
->>> On 28 December 2016 at 22:07, Arend van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>>
->>>>> They allow specifying hardware limitations of supported channels. Thi=
-s
->>>>> may be useful for specifying single band devices or devices that supp=
-ort
->>>>> only some part of the whole band.
->>>>> E.g. some tri-band routers have separated radios for lower and higher
->>>>> part of 5 GHz band.
->>>>>
->>>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>> ---
->>>>>  net/wireless/reg.c | 34 ++++++++++++++++++++++++++++++++++
->>>>>  1 file changed, 34 insertions(+)
->>>>>
->>>>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>>>> index 5dbac37..35ba5c7 100644
->>>>> --- a/net/wireless/reg.c
->>>>> +++ b/net/wireless/reg.c
->>>>> @@ -1123,6 +1123,26 @@ const char *reg_initiator_name(enum nl80211_re=
-g_initiator initiator)
->>>>>  }
->>>>>  EXPORT_SYMBOL(reg_initiator_name);
->>>>>
->>>>> +static bool reg_center_freq_of_valid(struct wiphy *wiphy,
->>>>> +                                  struct ieee80211_channel *chan)
->>>>> +{
->>>>> +     struct device_node *np =3D wiphy_dev(wiphy)->of_node;
->>>>> +     u32 val;
->>>>> +
->>>>> +     if (!np)
->>>>> +             return true;
->>>>> +
->>>>> +     if (!of_property_read_u32(np, "ieee80211-min-center-freq", &val=
-) &&
->>>>> +         chan->center_freq < KHZ_TO_MHZ(val))
->>>>> +             return false;
->>>>> +
->>>>> +     if (!of_property_read_u32(np, "ieee80211-max-center-freq", &val=
-) &&
->>>>> +         chan->center_freq > KHZ_TO_MHZ(val))
->>>>> +             return false;
->>>>
->>>> I suspect these functions rely on CONFIG_OF. So might not build for
->>>> !CONFIG_OF.
->>>
->>> I compiled it with
->>> # CONFIG_OF is not set
->>>
->>> Can you test it and provide a non-working config if you see a
->>> compilation error, please?
->>
->> include/linux/of.h provides a lot of dummy static inline functions if
->> CONFIG_OF is not used (they also allow compiler to drop most of the
->> code).
->
-> of_propeirty_read_u32 is static inline in of.h calling
-> of_property_read_u32_array, which has a dummy variant in of.h returning
-> -ENOSYS so -38. Pretty sure that is not what you want. At least it does
-> not allow the compiler to drop any code so probably better to do:
->
-> if (!IS_ENABLED(CONFIG_OF) || !np)
->         return true;
+Hi Christian,
 
-Please verify that using a compiler. If there is a problem I'll be
-happy to work on it, but I need a proof it exists.
+On Sat, Dec 17, 2016 at 06:46:34PM +0100, Christian Lamparter wrote:
+> The 10.4 firmware adds extended peer information to the
+> firmware's statistics payload. This additional info is
+> stored as a separate data field. During review of
+> "ath10k: add accounting for the extended peer statistics" [0]
+> 
+> Mohammed Shafi Shajakhan commented that the extended peer statistics
+> lists are of little use:"... there is not much use in appending
+> the extended peer stats (which gets periodically updated) to the
+> linked list '&ar->debug.fw_stats.peers_extd)' and should we get
+> rid of the below (and the required cleanup as well)
+> 
+> list_splice_tail_init(&stats.peers_extd,
+>                 &ar->debug.fw_stats.peers_extd);
+> 
+> since rx_duration is getting updated periodically to the per sta
+> information."
 
-If compilers sees a:
-if (!-ENOSYS && chan->center_freq < KHZ_TO_MHZ(val))
-condition, it's pretty clear it can be dropped. With both conditional
-blocks dropped function always returns "true" and... can be dropped.
+[shafi] thanks !
 
-Let me see if I can convince you with the following test:
+> 
+> This patch replaces the extended peers list with a lookup and
+> puts the retrieved data (rx_duration) into the existing
+> ath10k_fw_stats_peer entry that was created earlier.
 
-$ grep -m 1 CONFIG_OF .config
-# CONFIG_OF is not set
-$ objdump --syms net/wireless/reg.o | grep -c reg_center_freq_of_valid
-0
+[shafi] Its good to maintain the extended stats variable
+and retain the two different functions to update rx_duration.
 
-$ grep -m 1 CONFIG_OF .config
-CONFIG_OF=3Dy
-$ objdump --syms net/wireless/reg.o | grep -c reg_center_freq_of_valid
-1
+a) extended peer stats supported - mainly for 10.4
+b) extender peer stats not supported - for 10.2
 
 
-> So with this patch you change the channel to DISABLED. I am not very
-> familiar with reg.c so do you know if this is done before or after
-> calling regulatory notifier in the driver. brcmfmac will enable channels
-> querying the device upon regulatory notifier call, which may undo the
-> behavior introduced by your patch.
+> 
+> [0] <https://lkml.kernel.org/r/992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+> Cc: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.h        |  2 --
+>  drivers/net/wireless/ath/ath10k/debug.c       | 17 --------------
+>  drivers/net/wireless/ath/ath10k/debugfs_sta.c | 32 ++-----------------------
+>  drivers/net/wireless/ath/ath10k/wmi.c         | 34 ++++++++++++++++++++-------
+>  4 files changed, 28 insertions(+), 57 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> index 09ff8b8a6441..3fffbbb18c25 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.h
+> +++ b/drivers/net/wireless/ath/ath10k/core.h
+> @@ -268,11 +268,9 @@ struct ath10k_fw_stats_pdev {
+>  };
+>  
+>  struct ath10k_fw_stats {
+> -	bool extended;
+>  	struct list_head pdevs;
+>  	struct list_head vdevs;
+>  	struct list_head peers;
+> -	struct list_head peers_extd;
+>  };
+>  
+>  #define ATH10K_TPC_TABLE_TYPE_FLAG	1
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> index 82a4c67f3672..89f7fde77cdf 100644
+> --- a/drivers/net/wireless/ath/ath10k/debug.c
+> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> @@ -315,25 +315,13 @@ static void ath10k_fw_stats_peers_free(struct list_head *head)
+>  	}
+>  }
+>  
+> -static void ath10k_fw_extd_stats_peers_free(struct list_head *head)
+> -{
+> -	struct ath10k_fw_extd_stats_peer *i, *tmp;
+> -
+> -	list_for_each_entry_safe(i, tmp, head, list) {
+> -		list_del(&i->list);
+> -		kfree(i);
+> -	}
+> -}
+> -
+>  static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
+>  {
+>  	spin_lock_bh(&ar->data_lock);
+>  	ar->debug.fw_stats_done = false;
+> -	ar->debug.fw_stats.extended = false;
 
-I'm not regulatory export, so I hope someone will review this patch.
-So far I can say it works for me after trying it on SR400ac with
-BCM43602.
+[shafi] this looks fine, but not removing the 'extended' variable 
+from ath10k_fw_stats structure, I see the design for 'rx_duration'
+arguably some what convoluted !
 
-ieee80211-min-center-freq =3D <2437000>;
+*We get periodic events from firmware updating 'ath10k_debug_fw_stats_process'
+*Fetch rx_duration from  'ath10k_wmi_pull_fw_stats(ar, skb, &stats)'
+{certainly 'stats' object is for this particular update only, and freed
+up later)
+*Update immediately using 'ath10k_sta_update_rx_duration'
 
-[   11.986941] cfg80211: Disabling freq 2412 MHz as it's out of OF limits
-[   12.000466] cfg80211: Disabling freq 2417 MHz as it's out of OF limits
-[   12.013984] cfg80211: Disabling freq 2422 MHz as it's out of OF limits
-[   12.027497] cfg80211: Disabling freq 2427 MHz as it's out of OF limits
-[   12.041012] cfg80211: Disabling freq 2432 MHz as it's out of OF limits
+'ath10k_wmi_pull_fw_stats' has a slightly different implementation
+for 10.2 and 10.4 (the later supporting extended peer stats)
 
-root@lede:/# iw phy phy0 channels
-Band 1:
-        * 2412 MHz [1] (disabled)
-        * 2417 MHz [2] (disabled)
-        * 2422 MHz [3] (disabled)
-        * 2427 MHz [4] (disabled)
-        * 2432 MHz [5] (disabled)
-        * 2437 MHz [6]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40- HT40+
-        * 2442 MHz [7]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40- HT40+
-        * 2447 MHz [8]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40-
-        * 2452 MHz [9]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40-
-        * 2457 MHz [10]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40-
-        * 2462 MHz [11]
-          Maximum TX power: 20.0 dBm
-          Channel widths: 20MHz HT40-
-        * 2467 MHz [12] (disabled)
-        * 2472 MHz [13] (disabled)
-        * 2484 MHz [14] (disabled)
 
---=20
-Rafa=C5=82
+
+>  	ath10k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
+>  	ath10k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
+>  	ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
+> -	ath10k_fw_extd_stats_peers_free(&ar->debug.fw_stats.peers_extd);
+>  	spin_unlock_bh(&ar->data_lock);
+>  }
+>  
+> @@ -348,7 +336,6 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>  	INIT_LIST_HEAD(&stats.pdevs);
+>  	INIT_LIST_HEAD(&stats.vdevs);
+>  	INIT_LIST_HEAD(&stats.peers);
+> -	INIT_LIST_HEAD(&stats.peers_extd);
+>  
+>  	spin_lock_bh(&ar->data_lock);
+>  	ret = ath10k_wmi_pull_fw_stats(ar, skb, &stats);
+> @@ -411,8 +398,6 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>  
+>  		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
+>  		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
+> -		list_splice_tail_init(&stats.peers_extd,
+> -				      &ar->debug.fw_stats.peers_extd);
+>  	}
+>  
+>  	complete(&ar->debug.fw_stats_complete);
+> @@ -424,7 +409,6 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>  	ath10k_fw_stats_pdevs_free(&stats.pdevs);
+>  	ath10k_fw_stats_vdevs_free(&stats.vdevs);
+>  	ath10k_fw_stats_peers_free(&stats.peers);
+> -	ath10k_fw_extd_stats_peers_free(&stats.peers_extd);
+>  
+>  	spin_unlock_bh(&ar->data_lock);
+>  }
+> @@ -2347,7 +2331,6 @@ int ath10k_debug_create(struct ath10k *ar)
+>  	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
+>  	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
+>  	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
+> -	INIT_LIST_HEAD(&ar->debug.fw_stats.peers_extd);
+>  
+>  	return 0;
+>  }
+> diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+> index fce6f8137d33..bf2d49cbb3bb 100644
+> --- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+> +++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+> @@ -18,27 +18,8 @@
+>  #include "wmi-ops.h"
+>  #include "debug.h"
+>  
+> -static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
+> -						     struct ath10k_fw_stats *stats)
+> -{
+> -	struct ath10k_fw_extd_stats_peer *peer;
+> -	struct ieee80211_sta *sta;
+> -	struct ath10k_sta *arsta;
+> -
+> -	rcu_read_lock();
+> -	list_for_each_entry(peer, &stats->peers_extd, list) {
+> -		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
+> -						   NULL);
+> -		if (!sta)
+> -			continue;
+> -		arsta = (struct ath10k_sta *)sta->drv_priv;
+> -		arsta->rx_duration += (u64)peer->rx_duration;
+> -	}
+> -	rcu_read_unlock();
+> -}
+> -
+> -static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
+> -						struct ath10k_fw_stats *stats)
+> +void ath10k_sta_update_rx_duration(struct ath10k *ar,
+> +				   struct ath10k_fw_stats *stats)
+>  {
+>  	struct ath10k_fw_stats_peer *peer;
+>  	struct ieee80211_sta *sta;
+> @@ -56,15 +37,6 @@ static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
+>  	rcu_read_unlock();
+>  }
+>  
+> -void ath10k_sta_update_rx_duration(struct ath10k *ar,
+> -				   struct ath10k_fw_stats *stats)
+> -{
+> -	if (stats->extended)
+> -		ath10k_sta_update_extd_stats_rx_duration(ar, stats);
+> -	else
+> -		ath10k_sta_update_stats_rx_duration(ar, stats);
+> -}
+> -
+>  void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+>  			   struct ieee80211_sta *sta,
+>  			   struct station_info *sinfo)
+> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> index c893314a191f..c7ec7b9e9b55 100644
+> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> @@ -3044,23 +3044,41 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+>  	if ((stats_id & WMI_10_4_STAT_PEER_EXTD) == 0)
+>  		return 0;
+>  
+> -	stats->extended = true;
+> -
+>  	for (i = 0; i < num_peer_stats; i++) {
+>  		const struct wmi_10_4_peer_extd_stats *src;
+> -		struct ath10k_fw_extd_stats_peer *dst;
+> +		struct ath10k_fw_stats_peer *dst;
+>  
+>  		src = (void *)skb->data;
+>  		if (!skb_pull(skb, sizeof(*src)))
+>  			return -EPROTO;
+>  
+> -		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
+> -		if (!dst)
+> -			continue;
+> +		/* Because the stat data may exceed htc-wmi buffer
+> +		 * limit the firmware might split the stats data
+> +		 * and delivers it in multiple update events.
+> +		 * if we can't find the entry in the current event
+> +		 * payload, we have to look in main list as well.
+> +		 */
+> +		list_for_each_entry(dst, &stats->peers, list) {
+> +			if (ether_addr_equal(dst->peer_macaddr,
+> +					     src->peer_macaddr.addr))
+> +				goto found;
+> +		}
+> +
+> +#ifdef CONFIG_ATH10K_DEBUGFS
+> +		list_for_each_entry(dst, &ar->debug.fw_stats.peers, list) {
+> +			if (ether_addr_equal(dst->peer_macaddr,
+> +					     src->peer_macaddr.addr))
+> +				goto found;
+> +		}
+> +#endif
+> +
+> +		ath10k_dbg(ar, ATH10K_DBG_WMI,
+> +			   "Orphaned extended stats entry for station %pM.\n",
+> +			   src->peer_macaddr.addr);
+> +		continue;
+>  
+> -		ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
+> +found:
+>  		dst->rx_duration = __le32_to_cpu(src->rx_duration);
+> -		list_add_tail(&dst->list, &stats->peers_extd);
+>  	}
+>  
+>  	return 0;
+
+[shafi] Yes i am bit concerned about this change making 10.4 to update
+over the existing peer_stats structure, the idea is to maintain uniformity
+between the structures shared between ath10k and its corresponding to avoid
+confusion/ bugs in the future. Kindly let me know your thoughts, feel free
+to correct me if any of my analysis is incorrect. thank you !
+
+regards,
+shafi
