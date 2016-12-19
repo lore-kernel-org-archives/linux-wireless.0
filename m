@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57572 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932236AbcLOISt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 03:18:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Sebastian Reichel <sre@kernel.org>, Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        linux-kernel@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: wl1251 & mac address & calibration data
-References: <201611111820.52072@pali> <201611241749.33681@pali>
-        <20161124181138.4i6ehkpohjxfgpbn@earth> <201611241935.32796@pali>
-Date: Thu, 15 Dec 2016 10:18:44 +0200
-In-Reply-To: <201611241935.32796@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22's\?\=
- message of "Thu, 24 Nov
-        2016 19:35:32 +0100")
-Message-ID: <87d1gtli57.fsf@purkki.adurom.net> (sfid-20161215_091913_218610_00ED7CEE)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:41996 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755464AbcLSKzC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:02 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 02/11] rt2800: don't set ht parameters for non-aggregated frames
+Date: Mon, 19 Dec 2016 11:52:48 +0100
+Message-Id: <1482144777-16760-3-git-send-email-sgruszka@redhat.com> (sfid-20161219_120429_563067_9E9F548B)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding Luis because he has been working on request_firmware() lately)
+Do not set ampdu_density and ba_size for frames without AMPDU bit i.e.
+frames that will not be aggregated to AMPDU.
 
-Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00queue.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
->> > So no, there is no argument against... request_firmware() in
->> > fallback mode with userspace helper is by design blocking and
->> > waiting for userspace. But waiting for some change in DTS in
->> > kernel is just nonsense.
->>=20
->> I would just mark the wlan device with status =3D "disabled" and
->> enable it in the overlay together with adding the NVS & MAC info.
->
-> So if you think that this solution make sense, we can wait what net=20
-> wireless maintainers say about it...
->
-> For me it looks like that solution can be:
->
-> extending request_firmware() to use only userspace helper
-
-I haven't followed the discussion very closely but this is my preference
-what drivers should do:
-
-1) First the driver should do try to get the calibration data and mac
-   address from the device tree.
-
-2) If they are not in DT the driver should retrieve the calibration data
-   with request_firmware(). BUT with an option for user space to
-   implement that with a helper script so that the data can be created
-   dynamically, which I believe openwrt does with ath10k calibration
-   data right now.
-
-> and load mac address also via request_firmware() either by appending it=20
-> into NVS data or via separate call
-
-I'm not really fan of the idea providing permanent mac address through
-request_firmware(). For example, how to handle multiple devices on the
-same host, would there be a need for some kind of bus ids encoded to the
-filename? And what about devices with multiple mac addresses?
-
-I wish there would be a better way than request_firmware() to provide
-the permanent mac addresses from user space (if device tree is not
-available), I just don't know what that could be :) But if we would
-start to use request_firmware() for this at least there should be a
-wider concensus about that and it should be properly documented, just
-like the device tree bindings.
-
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+index 68b620b..b2364d3 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00queue.c
+@@ -306,13 +306,12 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 	struct ieee80211_tx_rate *txrate = &tx_info->control.rates[0];
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct rt2x00_sta *sta_priv = NULL;
++	u8 density = 0;
+ 
+ 	if (sta) {
+-		txdesc->u.ht.mpdu_density =
+-		    sta->ht_cap.ampdu_density;
+-
+ 		sta_priv = sta_to_rt2x00_sta(sta);
+ 		txdesc->u.ht.wcid = sta_priv->wcid;
++		density = sta->ht_cap.ampdu_density;
+ 	}
+ 
+ 	/*
+@@ -345,8 +344,6 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 		return;
+ 	}
+ 
+-	txdesc->u.ht.ba_size = 7;	/* FIXME: What value is needed? */
+-
+ 	/*
+ 	 * Only one STBC stream is supported for now.
+ 	 */
+@@ -358,8 +355,11 @@ static void rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+ 	 * frames that are intended to probe a specific tx rate.
+ 	 */
+ 	if (tx_info->flags & IEEE80211_TX_CTL_AMPDU &&
+-	    !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE))
++	    !(tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)) {
+ 		__set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
++		txdesc->u.ht.mpdu_density = density;
++		txdesc->u.ht.ba_size = 7; /* FIXME: What value is needed? */
++	}
+ 
+ 	/*
+ 	 * Set 40Mhz mode if necessary (for legacy rates this will
+-- 
+1.7.1
