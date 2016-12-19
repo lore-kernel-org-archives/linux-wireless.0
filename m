@@ -1,134 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35905 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751252AbcLKFpc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 00:45:32 -0500
-Received: by mail-oi0-f68.google.com with SMTP id u15so7277093oie.3
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2016 21:45:32 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 00/14] rtlwifi: Start reworking of debug system
-Date: Sat, 10 Dec 2016 23:44:57 -0600
-Message-Id: <20161211054523.7119-1-Larry.Finger@lwfinger.net> (sfid-20161211_064547_369502_4A707E50)
+Received: from mx1.redhat.com ([209.132.183.28]:51968 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758309AbcLSKzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 05:55:06 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 05/11] rt2800: rename adjust_freq_offset function
+Date: Mon, 19 Dec 2016 11:52:51 +0100
+Message-Id: <1482144777-16760-6-git-send-email-sgruszka@redhat.com> (sfid-20161219_115822_375069_FE17362B)
+In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following the discussion regarding the patch entitled "rtlwifi: Add
-BTC_TRACE_STRING to new btcoex", we are reworking the entire debug
-system. This set of patches does the following:
+We have different modes of adjusting freq offset on different chips.
+Call current adjustment similarly like vendor driver - mode1 .
 
-1. Replaces every invocation of RT_ASSERT with WARN_ON. With this
-   change, triggering these conditions with now give a stack dump.
-   Note that the logical condition between RT_ASSERT and WARN_ON
-   is inverted. In making these changes, 6 logic errors were found.
-2. Replaces every call of RT_TRACE with the level set to DBG_EMERG
-   with the equivalent pr_err() call.
-3. Removes some redundant logged conditions. For example, when the
-   failure of firmware to start is logged, it is not necessary to
-   log that the firmware did start.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-The previous two patch sequences "[PATCH 00/14] rtlwifi: Various updates"
-and "[PATCH 0/7] rtlwifi: btcoexist: Rewrite BT coexistence routines"
-should be discarded. That material will be resubmitted later.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
-
-Larry Finger (14):
-  rtlwifi: Replace local debug macro RT_ASSERT
-  rtlwifi_new: Remove RT_TRACE messages that use DBG_EMERG
-  rtlwifi_new: rtl8821ae: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8723be: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8723ae: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192ee: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8723-common: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192se: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192de: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192cu: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192ce: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8192c-common: Remove all instances of DBG_EMERG
-  rtlwifi_new: rtl8188ee: Remove all instances of DBG_EMERG
-  rtlwifi: Remove some redundant code
-
- drivers/net/wireless/realtek/rtlwifi/base.c        | 15 +++----
- drivers/net/wireless/realtek/rtlwifi/cam.c         | 14 +++---
- drivers/net/wireless/realtek/rtlwifi/core.c        | 29 +++++-------
- drivers/net/wireless/realtek/rtlwifi/debug.c       |  9 ++--
- drivers/net/wireless/realtek/rtlwifi/debug.h       | 18 +-------
- drivers/net/wireless/realtek/rtlwifi/efuse.c       |  3 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         | 48 ++++++++------------
- drivers/net/wireless/realtek/rtlwifi/ps.c          |  3 +-
- drivers/net/wireless/realtek/rtlwifi/rc.c          |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 43 +++++-------------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 32 +++++---------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   | 32 ++++++--------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |  8 ++--
- .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 45 ++++++-------------
- .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 27 ++++++------
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 38 ++++++----------
- .../net/wireless/realtek/rtlwifi/rtl8192ce/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.c   | 13 +++---
- .../net/wireless/realtek/rtlwifi/rtl8192ce/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 35 +++++----------
- .../net/wireless/realtek/rtlwifi/rtl8192cu/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   | 12 ++---
- .../net/wireless/realtek/rtlwifi/rtl8192cu/phy.c   | 12 ++---
- .../net/wireless/realtek/rtlwifi/rtl8192cu/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 +--
- .../net/wireless/realtek/rtlwifi/rtl8192cu/trx.c   |  2 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 31 ++++---------
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 34 +++++----------
- .../net/wireless/realtek/rtlwifi/rtl8192de/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 41 ++++++++---------
- .../net/wireless/realtek/rtlwifi/rtl8192de/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    | 10 ++---
- .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 40 +++++------------
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    | 13 +++---
- .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   | 36 +++++++--------
- .../net/wireless/realtek/rtlwifi/rtl8192ee/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   | 15 ++++---
- .../net/wireless/realtek/rtlwifi/rtl8192se/fw.c    | 46 ++++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    | 42 +++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8192se/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   | 42 +++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8192se/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8192se/trx.c   |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723ae/fw.c    | 13 +++---
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 21 ++++-----
- .../net/wireless/realtek/rtlwifi/rtl8723ae/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8723ae/phy.c   | 28 +++++-------
- .../net/wireless/realtek/rtlwifi/rtl8723ae/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.c   |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    | 13 +++---
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    | 18 +++-----
- .../net/wireless/realtek/rtlwifi/rtl8723be/led.c   |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 30 ++++++-------
- .../net/wireless/realtek/rtlwifi/rtl8723be/rf.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  8 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   | 14 +++---
- .../realtek/rtlwifi/rtl8723com/fw_common.c         | 25 +++--------
- .../realtek/rtlwifi/rtl8723com/phy_common.c        |  6 +--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |  3 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 28 ++++--------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 31 ++++++-------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   | 51 +++++++++-------------
- .../net/wireless/realtek/rtlwifi/rtl8821ae/rf.c    |  5 +--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    | 14 +++---
- .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   | 20 +++++----
- drivers/net/wireless/realtek/rtlwifi/usb.c         | 48 +++++++-------------
- 74 files changed, 488 insertions(+), 816 deletions(-)
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index a6f3f78..65f20ca 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1939,7 +1939,7 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+ 
+ #define FREQ_OFFSET_BOUND	0x5f
+ 
+-static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
++static void rt2800_freq_cal_mode1(struct rt2x00_dev *rt2x00dev)
+ {
+ 	u8 freq_offset, prev_freq_offset;
+ 	u8 rfcsr, prev_rfcsr;
+@@ -2415,7 +2415,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	if (conf_is_ht40(conf)) {
+ 		txrx_agc_fc = rt2x00_get_field8(drv_data->calibration_bw40,
+@@ -2605,7 +2605,7 @@ static void rt2800_config_channel_rf3290(struct rt2x00_dev *rt2x00dev,
+ 		rt2x00_set_field8(&rfcsr, RFCSR49_TX, info->default_power1);
+ 	rt2800_rfcsr_write(rt2x00dev, 49, rfcsr);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	if (rf->channel <= 14) {
+ 		if (rf->channel == 6)
+@@ -2646,7 +2646,7 @@ static void rt2800_config_channel_rf3322(struct rt2x00_dev *rt2x00dev,
+ 	else
+ 		rt2800_rfcsr_write(rt2x00dev, 48, info->default_power2);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
+@@ -2711,7 +2711,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	if (rf->channel <= 14) {
+ 		int idx = rf->channel-1;
+@@ -3006,7 +3006,7 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	/* TODO proper frequency adjustment */
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	/* TODO merge with others */
+ 	rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
+@@ -6454,7 +6454,7 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 18, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR18_XO_TUNE_BYPASS, 1);
+@@ -6680,7 +6680,7 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
+ 	msleep(1);
+ 
+-	rt2800_adjust_freq_offset(rt2x00dev);
++	rt2800_freq_cal_mode1(rt2x00dev);
+ 
+ 	/* Enable DC filter */
+ 	if (rt2x00_rt_rev_gte(rt2x00dev, RT5592, REV_RT5592C))
 -- 
-2.10.2
+1.7.1
