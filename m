@@ -1,40 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33890 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941736AbcLVXC3 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35968 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935371AbcLTRGd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 18:02:29 -0500
-Date: Thu, 22 Dec 2016 17:02:27 -0600
-From: Rob Herring <robh@kernel.org>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com
-Subject: Re: [PATCH v3 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt
- IO voltage
-Message-ID: <20161222230227.fubwn6wjmwcf5vsr@rob-hp-laptop> (sfid-20161223_000254_017324_0DE1F291)
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
- <1482380314-16440-2-git-send-email-geoff@kuvee.com>
+        Tue, 20 Dec 2016 12:06:33 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: Re: wl1251 & mac address & calibration data
+Date: Tue, 20 Dec 2016 18:06:30 +0100
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Daniel Wagner <wagi@monom.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Ming Lei <ming.lei@canonical.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        "linux-wireless" <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Takashi Iwai <tiwai@suse.de>,
+        Josh Boyer <jwboyer@fedoraproject.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+References: <201611111820.52072@pali> <87shpiu8j8.fsf@kamboji.qca.qualcomm.com> <20161220165658.GI4920@atomide.com>
+In-Reply-To: <20161220165658.GI4920@atomide.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482380314-16440-2-git-send-email-geoff@kuvee.com>
+Content-Type: multipart/signed;
+  boundary="nextPart1556567.hMCQUv6Cce";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201612201806.30109@pali> (sfid-20161220_180705_822265_FA52FFAB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2016 at 11:18:33PM -0500, Geoff Lansberry wrote:
-> The TRF7970A has configuration options for supporting hardware designs
-> with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
-> using a fixed regulator binding, for setting the io voltage to match
-> the hardware configuration. If no option is supplied it defaults to
-> 3.3 volt configuration.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 ++
+--nextPart1556567.hMCQUv6Cce
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Acked-by: Rob Herring <robh@kernel.org>
+On Tuesday 20 December 2016 17:56:58 Tony Lindgren wrote:
+> * Kalle Valo <kvalo@codeaurora.org> [161220 03:47]:
+> > Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+> > > On 18-12-2016 13:09, Pali Roh=C3=A1r wrote:
+> > >> File wl1251-nvs.bin is provided by linux-firmware package and
+> > >> contains default data which should be overriden by model
+> > >> specific calibrated data.
+> > >=20
+> > > Ah. Someone thought it was a good idea to provide the "one ring
+> > > to rule them all". Nice.
+> >=20
+> > Yes, that was a bad idea. wl1251-nvs.bin in linux-firmware.git
+> > should be renamed to wl1251-nvs.bin.example, or something like
+> > that, as it should be only installed to a real system only if
+> > there's no real calibration data available (only for developers to
+> > use, not real users).
+>=20
+> Makes sense to me. Note that with the recent changes to wlcore, we
+> can now easily provide board specific calibration firmware simply by
+> adding a new compatible value. So for n900, we could have something
+> like compatible =3D "ti,wl1251-n900" and have it point to n900
+> specific calibration file wl1251-nvs-n900.bin. Of course this won't
+> help with the mac address, or any of the device specific data..
+>=20
+> That is assuming the calibration values are the same for each similar
+> device and don't have to be generated for each device. And naturally
+> wl1251 needs simlar changes done to make use of devices specific
+> calibration files.
+>=20
+> Regards,
+>=20
+> Tony
 
->  drivers/nfc/trf7970a.c                             | 26 +++++++++++++++++++++-
->  2 files changed, 27 insertions(+), 1 deletion(-)
+As wrote in another thread "wl1251 NVS calibration data format"=20
+calibration data for wl1251 (wl1251-nvs.bin) contains also MAC address,=20
+which kernel sends to wl1251 chip. Kernel just do not use it.
+
+So... my idea now is:
+
+1) extend request_firmware function family with ability to use userspace=20
+helper first and fallback to VFS
+
+2) teach wl1251.ko to parse MAC address from wl1251-nvs.bin and use it=20
+(in case it is not empty or 00:00:20:07:03:09 which is in that example=20
+linux-firmware package)
+
+3) write Nokia n900 specific userspace helper for providing data when=20
+kernel requests wl1251-nvs.bin. So userspace helper reads MAC address=20
+and calibration data from CAL, place MAC address into calibration data=20
+and send put it into kernel.
+
+Are you OK with this idea?
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart1556567.hMCQUv6Cce
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlhZZRYACgkQi/DJPQPkQ1I1xACfZWpxaKnyNajNikWwd4wuqPDa
+5xYAoIGSU/ZHBncjr/KprD/DQ0nIqYQw
+=e5J8
+-----END PGP SIGNATURE-----
+
+--nextPart1556567.hMCQUv6Cce--
