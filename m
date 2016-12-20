@@ -1,158 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34946 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932967AbcLHBQM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 20:16:12 -0500
-Received: by mail-pg0-f68.google.com with SMTP id p66so25071118pga.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 17:16:05 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net, me@bobcopeland.com
-Cc: linux-wireless@vger.kernel.org,
-        Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2 2/2] mac80211: Use appropriate name for functions and messages
-Date: Thu,  8 Dec 2016 10:15:51 +0900
-Message-Id: <1481159751-4097-2-git-send-email-masashi.honma@gmail.com> (sfid-20161208_021621_317014_01530350)
-In-Reply-To: <1481159751-4097-1-git-send-email-masashi.honma@gmail.com>
-References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
- <1481159751-4097-1-git-send-email-masashi.honma@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:26811 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751955AbcLTRTk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Dec 2016 12:19:40 -0500
+Message-ID: <1482254378.30160.16.camel@redhat.com> (sfid-20161220_181950_065432_B97C689B)
+Subject: Re: iwl3945 randomly crashes
+From: Dan Williams <dcbw@redhat.com>
+To: =?UTF-8?Q?=C5=81ukasz?= Walewski <ljw@icm.edu.pl>
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com,
+        sgruszka@redhat.com
+Date: Tue, 20 Dec 2016 11:19:38 -0600
+In-Reply-To: <20161220181145.f92ef40322426f7911300885@icm.edu.pl>
+References: <20161220172429.300dc743cad7b840857142a1@icm.edu.pl>
+         <1482252592.30160.8.camel@redhat.com>
+         <20161220181145.f92ef40322426f7911300885@icm.edu.pl>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions drifts TSF timers, not TBTT.
+On Tue, 2016-12-20 at 18:11 +0100, Łukasz Walewski wrote:
+> On Tue, 20 Dec 2016 10:49:52 -0600
+> Dan Williams <dcbw@redhat.com> wrote:
+> 
+> > 
+> > On Tue, 2016-12-20 at 17:24 +0100, Łukasz Walewski wrote:
+> > > 
+> > > Hi,
+> > > 
+> > > I am using the latest Lubuntu 16.10 with fairly recent kernel
+> > > 
+> > > ljw@hideo:~$ uname -a
+> > > Linux hideo 4.8.0-30-generic #32-Ubuntu SMP Fri Dec 2 03:43:33
+> > > UTC
+> > > 2016 i686 i686 i686 GNU/Linux
+> > > 
+> > > on an old Toshiba laptop (Satellite Pro U200) equipped with an
+> > > Intel
+> > > PRO/Wireless 3945ABG adapter
+> > > 
+> > > ljw@hideo:~$ lspci | grep ireless
+> > > 02:00.0 Network controller: Intel Corporation PRO/Wireless
+> > > 3945ABG
+> > > [Golan] Network Connection (rev 02)
+> > > 
+> > > The wireless network crashes once in a while with no apparent
+> > > reason
+> > > with the following log entries:
+> > > 
+> > > Dec 18 17:23:42 hideo kernel: [94900.863133] iwl3945
+> > > 0000:02:00.0:
+> > > loaded firmware version 15.32.2.9
+> > > Dec 18 17:23:42 hideo kernel: [94900.913626] iwl3945
+> > > 0000:02:00.0:
+> > > BSM uCode verification failed at addr 0x00003800+0 (of 900), is
+> > > 0xa5a5a5a2, s/b 0xf802020
+> > > Dec 18 17:23:42 hideo kernel: [94900.913633] iwl3945
+> > > 0000:02:00.0:
+> > > Unable to set up bootstrap uCode: -5
+> > > 
+> > > This problem has been reported several times on different mailing
+> > > lists and community portals all over the Internet, nevertheless I
+> > > was
+> > > not able to locate the right fix for it.
+> > > 
+> > > The workaround suggested elswhere (restarting the network-manager
+> > > when the problem occurs) works with my setup.
+> > 
+> > Instead of restarting NM, you can "pkill -TERM wpa_supplicant" or
+> > something, which will do the same thing but just bounce the wifi
+> > rather
+> > than everything.  Or 'rmmod iwl3945; modprobe iwl3945'.
+> 
+> Thanks, but that is just another workaround. I am interested in
+> fixing the problem, i.e. getting the driver not to crash at all,
+> rather than playing around with it crashing every now and then.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/ieee80211_i.h |  4 ++--
- net/mac80211/mesh.c        |  2 +-
- net/mac80211/mesh.h        |  2 +-
- net/mac80211/mesh_sync.c   | 16 ++++++++--------
- net/mac80211/tx.c          |  2 +-
- 5 files changed, 13 insertions(+), 13 deletions(-)
+Yeah, I know.  Just pointing out that people often use a huge hammer,
+when a much smaller hammer will do.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d37a577..94b2c9e 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -624,8 +624,8 @@ struct ieee80211_mesh_sync_ops {
- 			     struct ieee80211_rx_status *rx_status);
- 
- 	/* should be called with beacon_data under RCU read lock */
--	void (*adjust_tbtt)(struct ieee80211_sub_if_data *sdata,
--			    struct beacon_data *beacon);
-+	void (*adjust_tsf)(struct ieee80211_sub_if_data *sdata,
-+			   struct beacon_data *beacon);
- 	/* add other framework functions here */
- };
- 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 42120d9..a6b43e4 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1349,7 +1349,7 @@ void ieee80211_mesh_work(struct ieee80211_sub_if_data *sdata)
- 		ieee80211_mesh_rootpath(sdata);
- 
- 	if (test_and_clear_bit(MESH_WORK_DRIFT_ADJUST, &ifmsh->wrkq_flags))
--		mesh_sync_adjust_tbtt(sdata);
-+		mesh_sync_adjust_tsf(sdata);
- 
- 	if (test_and_clear_bit(MESH_WORK_MBSS_CHANGED, &ifmsh->wrkq_flags))
- 		mesh_bss_info_changed(sdata);
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 26b9ccb..7e5f271 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -341,7 +341,7 @@ static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
- }
- 
- void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata);
--void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata);
-+void mesh_sync_adjust_tsf(struct ieee80211_sub_if_data *sdata);
- void ieee80211s_stop(void);
- #else
- static inline bool mesh_path_sel_is_hwmp(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
-index 75608c0..a435f09 100644
---- a/net/mac80211/mesh_sync.c
-+++ b/net/mac80211/mesh_sync.c
-@@ -12,7 +12,7 @@
- #include "mesh.h"
- #include "driver-ops.h"
- 
--/* This is not in the standard.  It represents a tolerable tbtt drift below
-+/* This is not in the standard.  It represents a tolerable tsf drift below
-  * which we do no TSF adjustment.
-  */
- #define TOFFSET_MINIMUM_ADJUSTMENT 10
-@@ -46,7 +46,7 @@ static bool mesh_peer_tbtt_adjusting(struct ieee802_11_elems *ie)
- 			IEEE80211_MESHCONF_CAPAB_TBTT_ADJUSTING) != 0;
- }
- 
--void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
-+void mesh_sync_adjust_tsf(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-@@ -57,12 +57,12 @@ void mesh_sync_adjust_tbtt(struct ieee80211_sub_if_data *sdata)
- 
- 	spin_lock_bh(&ifmsh->sync_offset_lock);
- 	if (ifmsh->sync_offset_clockdrift_max < beacon_int_fraction) {
--		msync_dbg(sdata, "TBTT : max clockdrift=%lld; adjusting\n",
-+		msync_dbg(sdata, "TSF : max clockdrift=%lld; adjusting\n",
- 			  (long long) ifmsh->sync_offset_clockdrift_max);
- 		tsfdelta = -ifmsh->sync_offset_clockdrift_max;
- 		ifmsh->sync_offset_clockdrift_max = 0;
- 	} else {
--		msync_dbg(sdata, "TBTT : max clockdrift=%lld; adjusting by %llu\n",
-+		msync_dbg(sdata, "TSF : max clockdrift=%lld; adjusting by %llu\n",
- 			  (long long) ifmsh->sync_offset_clockdrift_max,
- 			  (unsigned long long) beacon_int_fraction);
- 		tsfdelta = -beacon_int_fraction;
-@@ -167,7 +167,7 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	rcu_read_unlock();
- }
- 
--static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata,
-+static void mesh_sync_offset_adjust_tsf(struct ieee80211_sub_if_data *sdata,
- 					 struct beacon_data *beacon)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-@@ -184,12 +184,12 @@ static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata,
- 		 * the tsf adjustment to the mesh tasklet
- 		 */
- 		msync_dbg(sdata,
--			  "TBTT : kicking off TBTT adjustment with clockdrift_max=%lld\n",
-+			  "TSF : kicking off TSF adjustment with clockdrift_max=%lld\n",
- 			  ifmsh->sync_offset_clockdrift_max);
- 		set_bit(MESH_WORK_DRIFT_ADJUST, &ifmsh->wrkq_flags);
- 	} else {
- 		msync_dbg(sdata,
--			  "TBTT : max clockdrift=%lld; too small to adjust\n",
-+			  "TSF : max clockdrift=%lld; too small to adjust\n",
- 			  (long long)ifmsh->sync_offset_clockdrift_max);
- 		ifmsh->sync_offset_clockdrift_max = 0;
- 	}
-@@ -201,7 +201,7 @@ static const struct sync_method sync_methods[] = {
- 		.method = IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET,
- 		.ops = {
- 			.rx_bcn_presp = &mesh_sync_offset_rx_bcn_presp,
--			.adjust_tbtt = &mesh_sync_offset_adjust_tbtt,
-+			.adjust_tsf = &mesh_sync_offset_adjust_tsf,
- 		}
- 	},
- };
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2c21b70..874332d 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -4076,7 +4076,7 @@ __ieee80211_beacon_get(struct ieee80211_hw *hw,
- 		}
- 
- 		if (ifmsh->sync_ops)
--			ifmsh->sync_ops->adjust_tbtt(sdata, beacon);
-+			ifmsh->sync_ops->adjust_tsf(sdata, beacon);
- 
- 		skb = dev_alloc_skb(local->tx_headroom +
- 				    beacon->head_len +
--- 
-2.7.4
+Dan
