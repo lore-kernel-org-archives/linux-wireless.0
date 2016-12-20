@@ -1,207 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:32844 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753202AbcLLBwF (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:35283 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754135AbcLTR7I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 20:52:05 -0500
-Received: by mail-wj0-f195.google.com with SMTP id kp2so9394131wjc.0
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2016 17:52:04 -0800 (PST)
-Received: from localhost.localdomain ([92.185.195.211])
-        by smtp.gmail.com with ESMTPSA id wg8sm54668007wjb.42.2016.12.11.17.52.02
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 11 Dec 2016 17:52:02 -0800 (PST)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2 1/4] mac80211: Pass new RSSI level in CQM RSSI notification
-Date: Mon, 12 Dec 2016 02:51:55 +0100
-Message-Id: <20161212015155.21272-1-andrew.zaborowski@intel.com> (sfid-20161212_025230_276150_0947C728)
+        Tue, 20 Dec 2016 12:59:08 -0500
+Received: by mail-lf0-f50.google.com with SMTP id b14so81388726lfg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 09:59:07 -0800 (PST)
+Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+To: Geoff Lansberry <geoff@kuvee.com>, linux-wireless@vger.kernel.org
+References: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com
+From: Jones Desougi <jones.desougi@27m.se>
+Message-ID: <d498d00a-8966-e282-08a0-e9c554fad66b@27m.se> (sfid-20161220_185913_366504_F65668F9)
+Date: Tue, 20 Dec 2016 18:58:58 +0100
+MIME-Version: 1.0
+In-Reply-To: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
- drivers/net/wireless/st/cw1200/sta.c        |  2 +-
- drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
- drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
- include/net/mac80211.h                      |  2 ++
- net/mac80211/mlme.c                         |  7 ++++---
- net/mac80211/trace.h                        | 11 +++++++----
- 8 files changed, 21 insertions(+), 12 deletions(-)
+On 2016-12-20 17:16, Geoff Lansberry wrote:
+> From: Geoff Lansberry <geoff@kuvee.com>
+> 
+> The TRF7970A has configuration options to support hardware designs
+> which use a 27.12MHz clock. This commit adds a device tree option
+> 'clock-frequency' to support configuring the this chip for default
+> 13.56MHz clock or the optional 27.12MHz clock.
+> ---
+>  .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++
+>  drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
+>  2 files changed, 43 insertions(+), 11 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> index 32b35a0..e262ac1 100644
+> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> @@ -21,6 +21,8 @@ Optional SoC Specific Properties:
+>  - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+>    where an extra byte is returned by Read Multiple Block commands issued
+>    to Type 5 tags.
+> +- clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
+> +
+You're adding an empty line here that is removed in the next patch.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 0e60e38..e06a2e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
-+			sig,
- 			GFP_KERNEL);
- 	} else if (sig > thold &&
- 		   (last_event == 0 || sig > last_event + hyst)) {
-@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
- 		ieee80211_cqm_rssi_notify(
- 			vif,
- 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
-+			sig,
- 			GFP_KERNEL);
- 	}
- }
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..3e260b4 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -818,7 +818,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
- 
- 	common->cqm_info.last_cqm_event_rssi = rssi;
- 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
--	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
-+	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
- 
- 	return;
- }
-diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
-index daf06a4..a522248 100644
---- a/drivers/net/wireless/st/cw1200/sta.c
-+++ b/drivers/net/wireless/st/cw1200/sta.c
-@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
- 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
--			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
-+			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
- 						  GFP_KERNEL);
- 			break;
- 		}
-diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
-index d0593bc..f5acd24 100644
---- a/drivers/net/wireless/ti/wl1251/event.c
-+++ b/drivers/net/wireless/ti/wl1251/event.c
-@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 
- 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
-@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
- 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
- 			ieee80211_cqm_rssi_notify(wl->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				0, GFP_KERNEL);
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index 4b59f67..f2e90d2 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
- 
- 		vif = wl12xx_wlvif_to_vif(wlvif);
- 		if (event != wlvif->last_rssi_event)
--			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
-+			ieee80211_cqm_rssi_notify(vif, event, metric,
-+						  GFP_KERNEL);
- 		wlvif->last_rssi_event = event;
- 	}
- }
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a810dfc..33026e1 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5244,6 +5244,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @rssi_event: the RSSI trigger event type
-+ * @rssi_level: new RSSI level value or 0 if not available
-  * @gfp: context flags
-  *
-  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
-@@ -5252,6 +5253,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
-  */
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp);
- 
- /**
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 7486f2d..a55cdd7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3405,14 +3405,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		} else if (sig > thold &&
- 			   (last_event == 0 || sig > last_event + hyst)) {
- 			ifmgd->last_cqm_event_signal = sig;
- 			ieee80211_cqm_rssi_notify(
- 				&sdata->vif,
- 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
--				GFP_KERNEL);
-+				sig, GFP_KERNEL);
- 		}
- 	}
- 
-@@ -5000,11 +5000,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
- 
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
-+			       s32 rssi_level,
- 			       gfp_t gfp)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
- 
--	trace_api_cqm_rssi_notify(sdata, rssi_event);
-+	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
- 
- 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
- }
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 92a47af..f78d9f4 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
- 
- TRACE_EVENT(api_cqm_rssi_notify,
- 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
--		 enum nl80211_cqm_rssi_threshold_event rssi_event),
-+		 enum nl80211_cqm_rssi_threshold_event rssi_event,
-+		 s32 rssi_level),
- 
--	TP_ARGS(sdata, rssi_event),
-+	TP_ARGS(sdata, rssi_event, rssi_level),
- 
- 	TP_STRUCT__entry(
- 		VIF_ENTRY
- 		__field(u32, rssi_event)
-+		__field(s32, rssi_level)
- 	),
- 
- 	TP_fast_assign(
- 		VIF_ASSIGN;
- 		__entry->rssi_event = rssi_event;
-+		__entry->rssi_level = rssi_level;
- 	),
- 
- 	TP_printk(
--		VIF_PR_FMT " event:%d",
--		VIF_PR_ARG, __entry->rssi_event
-+		VIF_PR_FMT " event:%d rssi:%d",
-+		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
- 	)
- );
- 
--- 
-2.9.3
+>  
+>  Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+>  
+> @@ -43,6 +45,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+>  		irq-status-read-quirk;
+>  		en2-rf-quirk;
+>  		t5t-rmb-extra-byte-quirk;
+> +		vdd_io_1v8;
+This does not belong here, and so no need to remove in the next patch.
+
+> +		clock-frequency = <27120000>;
+>  		status = "okay";
+>  	};
+>  };
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 26c9dbb..4e051e9 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -124,6 +124,9 @@
+>  		 NFC_PROTO_ISO15693_MASK | NFC_PROTO_NFC_DEP_MASK)
+>  
+>  #define TRF7970A_AUTOSUSPEND_DELAY		30000 /* 30 seconds */
+> +#define TRF7970A_13MHZ_CLOCK_FREQUENCY		13560000
+> +#define TRF7970A_27MHZ_CLOCK_FREQUENCY		27120000
+> +
+>  
+>  #define TRF7970A_RX_SKB_ALLOC_SIZE		256
+>  
+> @@ -1056,12 +1059,11 @@ static int trf7970a_init(struct trf7970a *trf)
+>  
+>  	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
+>  
+> -	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
+> +	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
+> +			trf->modulator_sys_clk_ctrl);
+>  	if (ret)
+>  		goto err_out;
+>  
+> -	trf->modulator_sys_clk_ctrl = 0;
+> -
+>  	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+>  			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+>  			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+> @@ -1181,27 +1183,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+>  	switch (tech) {
+>  	case NFC_DIGITAL_RF_TECH_106A:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_OOK;
+>  		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_106B:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_ASK10;
+>  		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_212F:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_ASK10;
+>  		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_424F:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_ASK10;
+>  		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_ISO15693:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_OOK;
+>  		trf->guard_time = TRF7970A_GUARD_TIME_15693;
+>  		break;
+>  	default:
+> @@ -1571,17 +1583,23 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>  			TRF7970A_ISO_CTRL_NFC_CE |
+>  			TRF7970A_ISO_CTRL_NFC_CE_14443A;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_OOK;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_212F:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>  			TRF7970A_ISO_CTRL_NFC_NFCF_212;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_ASK10;
+>  		break;
+>  	case NFC_DIGITAL_RF_TECH_424F:
+>  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>  			TRF7970A_ISO_CTRL_NFC_NFCF_424;
+> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +		trf->modulator_sys_clk_ctrl =
+> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
+> +			TRF7970A_MODULATOR_DEPTH_ASK10;
+>  		break;
+>  	default:
+>  		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+> @@ -1987,6 +2005,7 @@ static int trf7970a_probe(struct spi_device *spi)
+>  	struct device_node *np = spi->dev.of_node;
+>  	struct trf7970a *trf;
+>  	int uvolts, autosuspend_delay, ret;
+> +	u32 clk_freq = 13560000;
+Use TRF7970A_13MHZ_CLOCK_FREQUENCY here?
+
+>  
+>  	if (!np) {
+>  		dev_err(&spi->dev, "No Device Tree entry\n");
+> @@ -2043,6 +2062,15 @@ static int trf7970a_probe(struct spi_device *spi)
+>  		return ret;
+>  	}
+>  
+> +	of_property_read_u32(np, "clock-frequency", &clk_freq);
+> +	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+> +		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
+Two comparisons with 27MHz, missing 13MHz.
+
+> +		dev_err(trf->dev,
+> +			"clock-frequency (%u Hz) unsupported\n",
+> +			clk_freq);
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (of_property_read_bool(np, "en2-rf-quirk"))
+>  		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+>  
+> 
