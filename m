@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29037 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbcLGNdn (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36662 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757659AbcLTPZn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:33:43 -0500
-Date: Wed, 7 Dec 2016 16:32:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
+        Tue, 20 Dec 2016 10:25:43 -0500
+Subject: Re: [PATCH] rtlwifi: Fix kernel oops introduced with commit
+ e49656147359
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Greg KH <greg@kroah.com>, devel@driverdev.osuosl.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-Message-ID: <20161207133219.GM8176@mwanda> (sfid-20161207_143347_917270_4B1EFC55)
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
- <20161202014833.6856-11-Larry.Finger@lwfinger.net>
- <20161205213447.GJ8176@mwanda>
- <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
- <20161206071340.GB10292@kroah.com>
- <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
+References: <20161220023812.5999-1-Larry.Finger@lwfinger.net>
+ <87wpeuu9qm.fsf@kamboji.qca.qualcomm.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
+        Stable <stable@vger.kernel.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <c3779ada-0018-3ec5-cdb2-c470f9ca467e@lwfinger.net> (sfid-20161220_162547_663479_F0277727)
+Date: Tue, 20 Dec 2016 09:25:40 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wpeuu9qm.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 07, 2016 at 02:16:06PM +0200, Kalle Valo wrote:
-> We have disccused this before, but for wireless it's not really that
-> simple. AFAIK with dyndbg you can only control the messages per line
-> (painful to enable group of messages) or per file (enables too many
-> messages). In wireless we have cases when we need to enable group of
-> messages, but not all.
+On 12/20/2016 05:21 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
+>> kfree_skb"), the method used to free an skb was changed because the
+>> kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
+>> guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
+>> does not, and a test is needed to prevent kernel panics.
+>>
+>> Fixes: commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
+>
+> This should be:
+>
+> Fixes: e49656147359 ("rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
+>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org> (4.9+)
+>
+> And this:
+>
+> Cc: Stable <stable@vger.kernel.org> # 4.9+
+>
+> I can fix both of them.
+>
+>> Cc: Wei Yongjun <weiyongjun1@huawei.com>
+>> ---
+>> Kalle,
+>>
+>> This change should be sent to mainline during the 4.10 merge period,
+>> or as soon as possible.
+>
+> Ok, I'll queue this to 4.10. Most likely I'll send a pull request to
+> Dave later this week or so.
 
-You can turn them on by the function or a range of lines, then disable
-the spammy lines.  With these new debug macros you can't do that so this
-is a step backwards.
+Thanks for the suggested changes, and for the quick action.
 
-If I'm totally honest, I've never seen uglier macros than these.  I work
-in staging and I've spent a lot of time in ancient code but these ones
-really take the cake.
-
-regards,
-dan carpenter
+Larry
