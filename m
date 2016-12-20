@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34638 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751854AbcL3N5z (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:36393 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763607AbcLTQLM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 08:57:55 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rtlwifi: fix spelling mistake: "contry" -> "country"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161229160029.22117-1-colin.king@canonical.com>
-References: <20161229160029.22117-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20161230135754.9A950613E5@smtp.codeaurora.org> (sfid-20161230_145833_136119_48F57AD8)
-Date: Fri, 30 Dec 2016 13:57:54 +0000 (UTC)
+        Tue, 20 Dec 2016 11:11:12 -0500
+Received: by mail-qt0-f173.google.com with SMTP id w33so180820733qtc.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:11 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>,
+        Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 2/3] nfc: trf7970a: Prevent repeated polling from crashing the kernel
+Date: Tue, 20 Dec 2016 11:10:47 -0500
+Message-Id: <1482250250-4192-4-git-send-email-glansberry@gmail.com> (sfid-20161220_171532_476413_B87FE2F3)
+In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> trivial fix to spelling mistake in RT_TRACE message
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+From: Jaret Cantu <jaret.cantu@timesys.com>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Repeated polling attempts cause a NULL dereference error to occur.
+This is because the state of the trf7970a is currently reading but
+another request has been made to send a command before it has finished.
 
-3b1fc7680a0f rtlwifi: fix spelling mistake: "contry" -> "country"
+The solution is to properly kill the waiting reading (workqueue)
+before failing on the send.
+---
+ drivers/nfc/trf7970a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 94c31f8..e9e93ea 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1496,6 +1496,10 @@ static int trf7970a_send_cmd(struct nfc_digital_dev *ddev,
+ 			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
+ 		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
+ 				trf->state);
++		if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA ||
++		    trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
++			trf->ignore_timeout =
++				!cancel_delayed_work(&trf->timeout_work);
+ 		ret = -EIO;
+ 		goto out_err;
+ 	}
 -- 
-https://patchwork.kernel.org/patch/9491293/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
