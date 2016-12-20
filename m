@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43454 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751726AbcLEPA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 10:00:58 -0500
-Message-ID: <1480950054.31788.36.camel@sipsolutions.net> (sfid-20161205_160104_005466_DB882532)
-Subject: Re: [PATCH 1/2] mac80211: do not iterate active interfaces when in
- re-configure
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Date: Mon, 05 Dec 2016 16:00:54 +0100
-In-Reply-To: <58458058.5020008@candelatech.com>
-References: <1480645800-2148-1-git-send-email-greearb@candelatech.com>
-         <CA+BoTQkEaC-ZSbeK=JB=q+ucF1PWcEQXkJEp6JYv4pfOf35cHg@mail.gmail.com>
-         (sfid-20161205_092619_855272_0854B225) <1480945950.31788.4.camel@sipsolutions.net>
-         <58458058.5020008@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33206 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751693AbcLTCiU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Dec 2016 21:38:20 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
+        Stable <stable@vger.kernel.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Subject: [PATCH] rtlwifi: Fix kernel oops introduced with commit e49656147359
+Date: Mon, 19 Dec 2016 20:38:12 -0600
+Message-Id: <20161220023812.5999-1-Larry.Finger@lwfinger.net> (sfid-20161220_033927_493861_9A7CBAA7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-12-05 at 06:57 -0800, Ben Greear wrote:
+With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
+kfree_skb"), the method used to free an skb was changed because the
+kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
+guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
+does not, and a test is needed to prevent kernel panics.
 
-> I think clearing sdata-in-driver would fix the ath10k problem, at
-> least, but I was afraid it would break something else in mac80211 or
-> maybe in other thick firmware drivers.
+Fixes: commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> (4.9+)
+Cc: Wei Yongjun <weiyongjun1@huawei.com>
+---
+Kalle,
 
-It's pretty much an internal thing - not sure what it'd break. OTOH,
-some drivers might actually assume that iterating finds them all, if
-they never clear the data even across a restart?
+This change should be sent to mainline during the 4.10 merge period,
+or as soon as possible.
 
-> One way or another, we cannot be iterating over interfaces while
-> the interfaces are at the same time being (re)added.
+Thanks,
 
-Well, we obviously *can* be, and we do in fact do that - it's just that
-ath10k specifically has issues with the data it's putting there, no?
+Larry
+---
+ drivers/net/wireless/realtek/rtlwifi/core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> Maybe mac80211 should explicitly remove all interfaces from the
-> driver during crash recovery?  
-
-I don't think that'll work. Removing them would interact with the
-firmware, which is dead, etc. That'd just cause trouble.
-
-> And the behaviour needs to be clearly documented somewhere
-> easy to find so that we can think about and program to the correct
-> API behaviour.
-
-We assume that the driver resets all its internal state - this whole
-interface iteration is a corner case we hadn't considered, I suppose.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 955055b..df8b977 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1823,7 +1823,8 @@ bool rtl_cmd_send_packet(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	spin_lock_irqsave(&rtlpriv->locks.irq_th_lock, flags);
+ 	pskb = __skb_dequeue(&ring->queue);
+-	dev_kfree_skb_irq(pskb);
++	if (pskb)
++		dev_kfree_skb_irq(pskb);
+ 
+ 	/*this is wrong, fill_tx_cmddesc needs update*/
+ 	pdesc = &ring->desc[0];
+-- 
+2.10.2
