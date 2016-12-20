@@ -1,103 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51968 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758309AbcLSKzG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:55:06 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 05/11] rt2800: rename adjust_freq_offset function
-Date: Mon, 19 Dec 2016 11:52:51 +0100
-Message-Id: <1482144777-16760-6-git-send-email-sgruszka@redhat.com> (sfid-20161219_115822_375069_FE17362B)
-In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
-References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38091 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752499AbcLTUwd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Dec 2016 15:52:33 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "Vamsi, Krishna" <vamsin@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
+ better BSSs
+Date: Tue, 20 Dec 2016 20:52:23 +0000
+Message-ID: <20161220205221.GB9756@jouni.qca.qualcomm.com> (sfid-20161220_215237_360124_50AA752C)
+References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
+ <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
+ <1481102727.4092.34.camel@sipsolutions.net>
+ <dc960243db2b452f97721dad49f0a63b@aphydexm01b.ap.qualcomm.com>
+ <280cb669-2360-d4fc-779b-80196c944e2e@broadcom.com>
+ <20161208175236.GA6121@jouni.qca.qualcomm.com>
+ <63343007-2245-1861-94fd-bdda0de2f7dc@broadcom.com>
+ <1481644615.20412.25.camel@sipsolutions.net>
+ <20161215110635.GA11840@jouni.qca.qualcomm.com>
+ <1481882211.27953.18.camel@sipsolutions.net>
+In-Reply-To: <1481882211.27953.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We have different modes of adjusting freq offset on different chips.
-Call current adjustment similarly like vendor driver - mode1 .
+On Fri, Dec 16, 2016 at 10:56:51AM +0100, Johannes Berg wrote:
+> On Thu, 2016-12-15 at 11:06 +0000, Malinen, Jouni wrote:
+> > Maybe the nl80211.h description was not clear enough, but the
+> > comments in cfg80211.h should be quite clear on how this was designed
+> > to work at the implementation level:
+> >=20
+> > "If the current connected BSS is in the 2.4 GHz band, other BSSs in
+> > the 2.4 GHz band to be reported should have better RSSI by
+> > @relative_rssi and other BSSs in the 5 GHz band to be reported should
+> > have better RSSI by (@relative_rssi - @relative_rssi_5g_pref).
+> > If the current connected BSS is in the 5 GHz band, other BSSs in the
+> > 2.4 GHz band to be reported should have better RSSI by
+> > (@relative_rssi + @relative_rssi_5g_pref) and other BSSs in the 5 GHz
+> > band to be reported should have better RSSI by by @relative_rssi."
+>=20
+> Oh, right. Should probably be in nl80211.h too, to set expectations
+> from userspace.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+Sure, we can update that in the next revision.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index a6f3f78..65f20ca 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1939,7 +1939,7 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
- 
- #define FREQ_OFFSET_BOUND	0x5f
- 
--static void rt2800_adjust_freq_offset(struct rt2x00_dev *rt2x00dev)
-+static void rt2800_freq_cal_mode1(struct rt2x00_dev *rt2x00dev)
- {
- 	u8 freq_offset, prev_freq_offset;
- 	u8 rfcsr, prev_rfcsr;
-@@ -2415,7 +2415,7 @@ static void rt2800_config_channel_rf3053(struct rt2x00_dev *rt2x00dev,
- 	}
- 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	if (conf_is_ht40(conf)) {
- 		txrx_agc_fc = rt2x00_get_field8(drv_data->calibration_bw40,
-@@ -2605,7 +2605,7 @@ static void rt2800_config_channel_rf3290(struct rt2x00_dev *rt2x00dev,
- 		rt2x00_set_field8(&rfcsr, RFCSR49_TX, info->default_power1);
- 	rt2800_rfcsr_write(rt2x00dev, 49, rfcsr);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	if (rf->channel <= 14) {
- 		if (rf->channel == 6)
-@@ -2646,7 +2646,7 @@ static void rt2800_config_channel_rf3322(struct rt2x00_dev *rt2x00dev,
- 	else
- 		rt2800_rfcsr_write(rt2x00dev, 48, info->default_power2);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
-@@ -2711,7 +2711,7 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	if (rf->channel <= 14) {
- 		int idx = rf->channel-1;
-@@ -3006,7 +3006,7 @@ static void rt2800_config_channel_rf55xx(struct rt2x00_dev *rt2x00dev,
- 	}
- 
- 	/* TODO proper frequency adjustment */
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	/* TODO merge with others */
- 	rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
-@@ -6454,7 +6454,7 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	rt2800_rfcsr_read(rt2x00dev, 18, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR18_XO_TUNE_BYPASS, 1);
-@@ -6680,7 +6680,7 @@ static void rt2800_init_rfcsr_5592(struct rt2x00_dev *rt2x00dev)
- 	rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
- 	msleep(1);
- 
--	rt2800_adjust_freq_offset(rt2x00dev);
-+	rt2800_freq_cal_mode1(rt2x00dev);
- 
- 	/* Enable DC filter */
- 	if (rt2x00_rt_rev_gte(rt2x00dev, RT5592, REV_RT5592C))
--- 
-1.7.1
+> > At minimum, we would need to clearly document struct
+> > nl80211_bss_select_rssi_adjust, but even if we do, I'm not sure it
+> > really is ideal mechanism to move to now that I realized it is not an
+> > array, but a single band,delta pair.
+>=20
+> We can move to an array easily in the future by extending the attribute
+> length and advertising the number of array entries that are supported,
+> if that's your biggest concern? I don't see it as being very useful
+> right now since I don't think we'll see offloaded roaming between 2.4/5
+> and 60 GHz anytime soon. This may change when we add more bands later,
+> I suppose.
+
+Hmm.. So do you want us to move to using this packed struct in the new
+attribute instead of using a signed 8-bit integer as the variable value?
+
+> > If we are talking only about roaming within an ESS (a single SSID),
+> > that would sound clear, but which relative RSSI rules would apply if
+> > there are match sets for both the currently connected SSID and
+> > another SSID that the candidate BSS is for?
+>=20
+> Right, I see how this might become a problem. I generally see no issue
+> with supporting multiple matchsets with different SSIDs but all having
+> the "relative to connected BSS RSSI filter" (which would disregard the
+> SSID specified in the matchset), but this then would become a problem
+> when multiple matchsets are specified with *different* such RSSI
+> filters, e.g. one matchset would specify that you want a 5G preference
+> of 10dB, but the other would specify a preference of only 5dB.
+>=20
+> Conceptually in this approach, that would be supported, but firmware
+> likely would not be able to express this, I suppose?
+
+That's certainly not at the level we were planning on implementing.. :)
+
+> > I think I'm missing something here.. Where would the threshold value
+> > (how much better new BSS needs to be) be stored? And do we really
+> > want something like the combination of
+> > NL80211_BSS_SELECT_ATTR_BAND_PREF and
+> > NL80211_BSS_SELECT_ATTR_RSSI_ADJUST which seems to be two different
+> > ways of doing band preference (the former without specifying delta
+> > and the latter with specific delta)? Or am I still not understanding
+> > how NL80211_BSS_SELECT_ATTR_* really works?
+>=20
+> No, you're right, I missed the "better by" threshold.
+>=20
+> I think between that (unless we add that, we could technically extend
+> flag attributes to allow them being an int as well, or add a new one)
+> and the fact that the device may not support different relative RSSI
+> matches in different matchsets, I'm almost convinced that adding new
+> attributes is better.
+
+I'm not completely sure how to interpret all this and also the last
+email from Arend in this thread. Could either (or both :) of you provide
+more detailed suggestion on what exactly you would like us to change, if
+anything, in the attribute design now so that we can try to close on
+this?
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
