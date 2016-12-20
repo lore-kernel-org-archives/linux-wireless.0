@@ -1,159 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2nam01on0077.outbound.protection.outlook.com ([104.47.34.77]:38322
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932759AbcLWPMx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Dec 2016 10:12:53 -0500
-From: <igor.mitsyanko.os@quantenna.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>,
-        Igor Mitsyanko <imitsyanko@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Subject: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
-Date: Fri, 23 Dec 2016 18:12:35 +0300
-Message-ID: <1482505955-9310-1-git-send-email-igor.mitsyanko.os@quantenna.com> (sfid-20161223_161258_774310_24DE167E)
+Received: from muru.com ([72.249.23.125]:53066 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754119AbcLTRVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Dec 2016 12:21:40 -0500
+Date: Tue, 20 Dec 2016 09:21:34 -0800
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>,
+        Daniel Wagner <wagi@monom.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Tom Gundersen <teg@jklm.no>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Ming Lei <ming.lei@canonical.com>,
+        Mimi Zohar <zohar@linux.vnet.ibm.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Network Development <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Takashi Iwai <tiwai@suse.de>,
+        Josh Boyer <jwboyer@fedoraproject.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: wl1251 & mac address & calibration data
+Message-ID: <20161220172134.GJ4920@atomide.com> (sfid-20161220_182145_042974_9B37E9FB)
+References: <201611111820.52072@pali>
+ <201612181204.52928@pali>
+ <83b2e9a4-f990-68a8-241e-375e46448d47@broadcom.com>
+ <201612181309.01298@pali>
+ <fd180271-1cd4-9891-e3d5-ae9cd0fb088b@broadcom.com>
+ <87shpiu8j8.fsf@kamboji.qca.qualcomm.com>
+ <20161220165658.GI4920@atomide.com>
+ <87bmw6ttim.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <87d1hmnrqj.fsf@purkki.adurom.net>
-References: <87d1hmnrqj.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87bmw6ttim.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Igor Mitsyanko <imitsyanko@quantenna.com>
+* Kalle Valo <kvalo@codeaurora.org> [161220 09:12]:
+> Tony Lindgren <tony@atomide.com> writes:
+> 
+> > * Kalle Valo <kvalo@codeaurora.org> [161220 03:47]:
+> >> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+> >> 
+> >> > On 18-12-2016 13:09, Pali Rohár wrote:
+> >> >
+> >> >> File wl1251-nvs.bin is provided by linux-firmware package and contains 
+> >> >> default data which should be overriden by model specific calibrated 
+> >> >> data.
+> >> >
+> >> > Ah. Someone thought it was a good idea to provide the "one ring to rule
+> >> > them all". Nice.
+> >> 
+> >> Yes, that was a bad idea. wl1251-nvs.bin in linux-firmware.git should be
+> >> renamed to wl1251-nvs.bin.example, or something like that, as it should
+> >> be only installed to a real system only if there's no real calibration
+> >> data available (only for developers to use, not real users).
+> >
+> > Makes sense to me. Note that with the recent changes to wlcore, we can
+> > now easily provide board specific calibration firmware simply by adding a
+> > new compatible value. So for n900, we could have something like
+> > compatible = "ti,wl1251-n900" and have it point to n900 specific calibration
+> > file wl1251-nvs-n900.bin. Of course this won't help with the mac address,
+> > or any of the device specific data..
+> >
+> > That is assuming the calibration values are the same for each similar
+> > device and don't have to be generated for each device. And naturally wl1251
+> > needs simlar changes done to make use of devices specific calibration files.
+> 
+> No, these are unique per each sold device. Every N900 was calibrated at
+> the factory and they all have different calibration data which is stored
+> to the flash. So when N900 boots (and in _every_ boot) it has to load
+> the calibration data from the flash and provide it to the wl1251 driver
+> somehow.
 
-QSR10G is Quantenna's 8x8, 160M, 11ac WiFi card.
+Urgh, OK. So much for that idea then.
 
-Signed-off-by: Kamlesh Rath <krath@quantenna.com>
-Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
-Signed-off-by: Avinash Patil <avinashp@quantenna.com>
-Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
----
-This is an RFC patch that we sent to linux-wireless mailing list a while ago,
-and it spawned a discussion regarding whether GPL sources has to be submitted
-together with this firmware. We would like to clarify with linux-firmware maintainers
-to understnad what should be our actions to allow this to be accepted.
-- firmware contains GPL components;
-- LICENCE file states that sources for GPL components will be provided on request
-to oslegal@quantenna.com
+Thanks,
 
-There was an opinion that it is not enough: precedent case like this with carl9170
-firmware was resolved by submitting GPL sources into linux-firmware repository
-itself.
-Does the same applies to qsr10g firmware?
-The SDK that we use to build it is quite heavy (> 100MB, but with toolchain). 
-Maybe we can take another approach to place SDK separately on Quantenna website
-(as a compressed archive), and add a link in linux-firmware?
-
- LICENCE.Quantenna_fmac |  74 +++++++++++++++++++++++++++++++++++++++++++++++++
- WHENCE                 |   9 ++++++
- qtn/fmac_qsr10g.img    | Bin 0 -> 9559676 bytes
- 3 files changed, 83 insertions(+)
- create mode 100644 LICENCE.Quantenna_fmac
- create mode 100644 qtn/fmac_qsr10g.img
-
-diff --git a/LICENCE.Quantenna_fmac b/LICENCE.Quantenna_fmac
-new file mode 100644
-index 0000000..e6f9f72
---- /dev/null
-+++ b/LICENCE.Quantenna_fmac
-@@ -0,0 +1,74 @@
-+Copyright (c) 2016, Quantenna, Inc.
-+All rights reserved.
-+
-+Redistribution. Reproduction and redistribution in binary form, without
-+modification, for use solely in conjunction with a Quantenna, Inc. chipset, is
-+permitted provided that the following conditions are met:
-+
-+  - Redistributions must reproduce the above copyright notice and the
-+    following disclaimer in the documentation and/or other materials provided
-+    with the distribution.
-+
-+  - Neither the name of Quantenna, Inc. nor the names of its suppliers may be
-+    used to endorse or promote products derived from this Software without
-+    specific prior written permission.
-+
-+  - No reverse engineering, decompilation, or disassembly of this Software is
-+    permitted, except and solely to the extent that such a restriction is
-+    impermissible pursuant to applicable law or third party license.
-+
-+  - Your reproduction and distribution must comply with all applicable laws,
-+    including without limitation all applicable U.S., European, and other
-+    export laws.
-+
-+Limited Patent License. Subject to your compliance with all terms of this
-+license, Quantenna, Inc. (“Licensor”) grants you (“Licensee”) a limited,
-+worldwide, royalty-free, non-exclusive license under the Licensed Patents to
-+make, have made, use, import, offer to sell and sell the Software solely in
-+conjunction with a validly purchased Quantenna, Inc. chipset. No hardware
-+per se is licensed hereunder.
-+
-+The term “Licensed Patents” as used in this agreement means only those patents
-+or patent applications owned solely and exclusively by Licensor as of the date
-+of Licensor’s submission of the Software that would necessarily be infringed by
-+the operation of the Software, alone, or in combination with a supported
-+version of the Linux operating system. The patent license shall not apply to
-+any other combinations which include the Software. The term “Licensed Patents”
-+expressly excludes any patent or patent application owned by any current or
-+future affiliate of Quantenna, Inc. The term “Software” as used in this
-+agreement means the unmodified firmware image submitted by Licensor, under the
-+terms of this license, to
-+git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git.
-+
-+Notwithstanding anything to the contrary herein, Licensor does not grant and
-+Licensee does not receive, by virtue of this agreement or the Licensor’s
-+submission of any Software, any license or other rights under any patent or
-+patent application owned by any current or future affiliate of Licensor or any
-+other entity (other than Licensor), whether expressly, impliedly, by virtue of
-+estoppel or exhaustion, or otherwise. If Licensee has a separate agreement with
-+Licensor covering use of the Software, then that separate agreement shall
-+control.
-+
-+Open Source Software. The Software may include components that are licensed
-+pursuant to open source software (“Open Source Components”). Information
-+regarding the Open Source Components included with the Software is available
-+upon request to oslegal@quantenna.com. To the extent such Open Source
-+Components are required to be licensed to you under the terms of a separate
-+license (such as an open source license) then such other terms shall apply, and
-+nothing herein shall be deemed or interpreted to limit any rights you may have
-+under any such applicable license.
-+
-+DISCLAIMER. THIS SOFTWARE (INCLUDING ANY APPLICABLE OPEN SOURCE COMPONENTS) IS
-+PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND  ANY EXPRESS OR
-+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFREINGEMENT ARE
-+EXPRESSLY DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNERS, AUTHORS, OR
-+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-+OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-+IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-+OF SUCH DAMAGE, AND REGARDLESS OF ANY FAILURE OF ESSENTIAL PURPOSE OF ANY
-+LIMITED REMEDY PROVIDED HEREIN.
-+
-diff --git a/WHENCE b/WHENCE
-index 534c2da..78f6b73 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -3347,3 +3347,12 @@ File: rockchip/dptx.bin
- Version: 2.9
- 
- Licence: Redistributable. See LICENCE.rockchip for details.
-+
-+--------------------------------------------------------------------------
-+
-+Driver: qtnfmac - FullMAC driver for Quantenna QSR10G wireless card
-+
-+File: qtn/fmac_qsr10g.img
-+
-+Licence: Redistributable. See LICENCE.Quantenna_fmac for details.
-+
-diff --git a/qtn/fmac_qsr10g.img b/qtn/fmac_qsr10g.img
-new file mode 100644
-index 0000000..a65e6ec
-Binary files /dev/null and b/qtn/fmac_qsr10g.img differ
--- 
-2.7.4
+Tony
