@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35551 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753112AbcLGQm1 (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:34309 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764273AbcLTQLO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 11:42:27 -0500
-Received: by mail-oi0-f67.google.com with SMTP id v84so46343730oie.2
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 08:41:56 -0800 (PST)
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
- <20161202014833.6856-11-Larry.Finger@lwfinger.net>
- <20161205213447.GJ8176@mwanda>
- <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
- <20161206071340.GB10292@kroah.com> <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
- <20161207133219.GM8176@mwanda>
-Cc: Greg KH <greg@kroah.com>, devel@driverdev.osuosl.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <19d00566-0c32-0ca0-38ef-377ad85592bd@lwfinger.net> (sfid-20161207_174231_117899_DBEF64FF)
-Date: Wed, 7 Dec 2016 10:41:54 -0600
-MIME-Version: 1.0
-In-Reply-To: <20161207133219.GM8176@mwanda>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Tue, 20 Dec 2016 11:11:14 -0500
+Received: by mail-qt0-f173.google.com with SMTP id n6so181214372qtd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:14 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <glansberry@gmail.com>,
+        Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 4/4] mod of frequency
+Date: Tue, 20 Dec 2016 11:10:50 -0500
+Message-Id: <1482250250-4192-7-git-send-email-glansberry@gmail.com> (sfid-20161220_171443_592008_CF686FA8)
+In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2016 07:32 AM, Dan Carpenter wrote:
-> On Wed, Dec 07, 2016 at 02:16:06PM +0200, Kalle Valo wrote:
->> We have disccused this before, but for wireless it's not really that
->> simple. AFAIK with dyndbg you can only control the messages per line
->> (painful to enable group of messages) or per file (enables too many
->> messages). In wireless we have cases when we need to enable group of
->> messages, but not all.
->
-> You can turn them on by the function or a range of lines, then disable
-> the spammy lines.  With these new debug macros you can't do that so this
-> is a step backwards.
->
-> If I'm totally honest, I've never seen uglier macros than these.  I work
-> in staging and I've spent a lot of time in ancient code but these ones
-> really take the cake.
+---
+ drivers/nfc/trf7970a.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-They will be coming out. The Realtek engineer and I are learning more about the 
-various options to see what to use. The dynamic debugging options seem to be the 
-best at the moment.
-
-Larry
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index e9e93ea..5916737 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2076,10 +2076,10 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	of_property_read_u32(np, "clock-frequency", &clk_freq);
+ 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+ 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
+-	        dev_err(trf->dev,
+-	                "clock-frequency (%u Hz) unsupported\n",
+-	                clk_freq);
+-	        return -EINVAL;
++		dev_err(trf->dev,
++			"clock-frequency (%u Hz) unsupported\n",
++			clk_freq);
++		return -EINVAL;
+ 	}
+ 
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
+-- 
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
