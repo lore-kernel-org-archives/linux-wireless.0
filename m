@@ -1,89 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33957 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753547AbcLXQ5T (ORCPT
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:35603 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763428AbcLTQLK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 11:57:19 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
-Date: Sat, 24 Dec 2016 17:52:57 +0100
-Message-Id: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com> (sfid-20161224_175739_877566_C7948942)
-In-Reply-To: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Tue, 20 Dec 2016 11:11:10 -0500
+Received: by mail-qt0-f181.google.com with SMTP id c47so180969908qtc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:09 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 1/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
+Date: Tue, 20 Dec 2016 11:10:45 -0500
+Message-Id: <1482250250-4192-2-git-send-email-glansberry@gmail.com> (sfid-20161220_171220_280344_B20554B2)
+In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NVS calibration data for wl1251 are model specific. Every one device with
-wl1251 chip has different and calibrated in factory.
+From: Geoff Lansberry <geoff@kuvee.com>
 
-Not all wl1251 chips have own EEPROM where are calibration data stored. And
-in that case there is no "standard" place. Every device has stored them on
-different place (some in rootfs file, some in dedicated nand partition,
-some in another proprietary structure).
-
-Kernel wl1251 driver cannot support every one different storage decided by
-device manufacture so it will use request_firmware_prefer_user() call for
-loading NVS calibration data and userspace helper will be responsible to
-prepare correct data.
-
-In case userspace helper fails request_firmware_prefer_user() still try to
-load data file directly from VFS as fallback mechanism.
-
-On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
-in CAL nand partition. CAL is proprietary Nokia key/value format for nand
-devices.
-
-With this patch it is finally possible to load correct model specific NVS
-calibration data for Nokia N900.
-
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+The TRF7970A has configuration options for supporting hardware designs
+with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
+using a fixed regulator binding, for setting the io voltage to match
+the hardware configuration. If no option is supplied it defaults to
+3.3 volt configuration.
 ---
- drivers/net/wireless/ti/wl1251/Kconfig |    1 +
- drivers/net/wireless/ti/wl1251/main.c  |    2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
+ drivers/nfc/trf7970a.c                             | 28 +++++++++++++++++++++-
+ 2 files changed, 29 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
-index 7142ccf..affe154 100644
---- a/drivers/net/wireless/ti/wl1251/Kconfig
-+++ b/drivers/net/wireless/ti/wl1251/Kconfig
-@@ -2,6 +2,7 @@ config WL1251
- 	tristate "TI wl1251 driver support"
- 	depends on MAC80211
- 	select FW_LOADER
-+	select FW_LOADER_USER_HELPER
- 	select CRC7
- 	---help---
- 	  This will enable TI wl1251 driver support. The drivers make
-diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-index 208f062..24f8866 100644
---- a/drivers/net/wireless/ti/wl1251/main.c
-+++ b/drivers/net/wireless/ti/wl1251/main.c
-@@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
- 	struct device *dev = wiphy_dev(wl->hw->wiphy);
- 	int ret;
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index e262ac1..b5777d8 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -21,9 +21,9 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- vdd-io-supply: Regulator specifying voltage for vdd-io
+ - clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
  
--	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
-+	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+-
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
  
- 	if (ret < 0) {
- 		wl1251_error("could not get nvs file: %d", ret);
+ &spi1 {
+@@ -41,11 +41,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 				  <&gpio2 5 GPIO_ACTIVE_LOW>;
+ 		vin-supply = <&ldo3_reg>;
+ 		vin-voltage-override = <5000000>;
++		vdd-io-supply = <&ldo2_reg>;
+ 		autosuspend-delay = <30000>;
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
+-		vdd_io_1v8;
+ 		clock-frequency = <27120000>;
+ 		status = "okay";
+ 	};
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index c9cb278..94c31f8 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -444,6 +444,7 @@ struct trf7970a {
+ 	u8				iso_ctrl_tech;
+ 	u8				modulator_sys_clk_ctrl;
+ 	u8				special_fcn_reg1;
++	u8				io_ctrl;
+ 	unsigned int			guard_time;
+ 	int				technology;
+ 	int				framing;
+@@ -1051,6 +1052,11 @@ static int trf7970a_init(struct trf7970a *trf)
+ 	if (ret)
+ 		goto err_out;
+ 
++	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
++			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
++	if (ret)
++		goto err_out;
++
+ 	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
+ 	if (ret)
+ 		goto err_out;
+@@ -1767,7 +1773,7 @@ static int _trf7970a_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
+ 		goto out_err;
+ 
+ 	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
+-			TRF7970A_REG_IO_CTRL_VRS(0x1));
++			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
+ 	if (ret)
+ 		goto out_err;
+ 
+@@ -2062,6 +2068,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++
+ 	of_property_read_u32(np, "clock-frequency", &clk_freq);
+ 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+ 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
+@@ -2105,6 +2112,25 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	if (uvolts > 4000000)
+ 		trf->chip_status_ctrl = TRF7970A_CHIP_STATUS_VRS5_3;
+ 
++	trf->regulator = devm_regulator_get(&spi->dev, "vdd-io");
++	if (IS_ERR(trf->regulator)) {
++		ret = PTR_ERR(trf->regulator);
++		dev_err(trf->dev, "Can't get VDD_IO regulator: %d\n", ret);
++		goto err_destroy_lock;
++	}
++
++	ret = regulator_enable(trf->regulator);
++	if (ret) {
++		dev_err(trf->dev, "Can't enable VDD_IO: %d\n", ret);
++		goto err_destroy_lock;
++	}
++
++
++	if (regulator_get_voltage(trf->regulator) == 1800000) {
++		trf->io_ctrl = TRF7970A_REG_IO_CTRL_IO_LOW;
++		dev_dbg(trf->dev, "trf7970a config vdd_io to 1.8V\n");
++	}
++
+ 	trf->ddev = nfc_digital_allocate_device(&trf7970a_nfc_ops,
+ 			TRF7970A_SUPPORTED_PROTOCOLS,
+ 			NFC_DIGITAL_DRV_CAPS_IN_CRC |
 -- 
-1.7.9.5
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
