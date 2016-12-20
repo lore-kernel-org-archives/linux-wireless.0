@@ -1,73 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34187 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbcL1IST (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:34979 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756085AbcLTQQo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 03:18:19 -0500
-MIME-Version: 1.0
-In-Reply-To: <20161228081039.GA3874@pxdev.xzpeter.org>
-References: <20161227091706.GA20895@pxdev.xzpeter.org> <871swtkvdc.fsf@purkki.adurom.net>
- <20161228035959.GB3924@pxdev.xzpeter.org> <1482910035.8602.3.camel@coelho.fi> <20161228081039.GA3874@pxdev.xzpeter.org>
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Wed, 28 Dec 2016 10:17:44 +0200
-Message-ID: <CANUX_P2ivxo6K6sy9d-OK5DAkcYeGb_43XQwazj+QPGk83EG1g@mail.gmail.com> (sfid-20161228_091844_980925_75F26699)
-Subject: Re: Intel Wireless 7260 failed to work
-To: Peter Xu <peterx@redhat.com>
-Cc: Luca Coelho <luca@coelho.fi>, Kalle Valo <kvalo@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Tue, 20 Dec 2016 11:16:44 -0500
+Received: by mail-qk0-f178.google.com with SMTP id u25so42687576qki.2
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:16:43 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
+Date: Tue, 20 Dec 2016 11:16:31 -0500
+Message-Id: <1482250592-4268-2-git-send-email-glansberry@gmail.com> (sfid-20161220_171825_204268_6DC60A2D)
+In-Reply-To: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
+References: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 28, 2016 at 10:10 AM, Peter Xu <peterx@redhat.com> wrote:
-> On Wed, Dec 28, 2016 at 09:27:15AM +0200, Luca Coelho wrote:
->
-> [...]
->
->> > > > Is this a known issue? Please let me know if anyone wants more info or
->> > > > logs, since this error triggers easily (everytime I boot).
->> > >
->> > > The error message isn't really telling much to the user (hint hint) but
->> > > I suspect this is by design:
->> > >
->> > > "iwlwifi: remove support for fw older than -17 and -22
->>
->> Right, we only maintain support for a certain number of firmware
->> versions.  The FW APIs change with time and we don't want to keep all
->> legacy code supporting old firmwares in the driver forever.
->>
->> I agree that "no suitable firmware found!" is a bit scarce.  I'll see
->> if we can improve that with something: "no suitable firmware found! You
->> need iwlwifi-7260-17.ucode (<link to git>)".
->
-> That'll be great if we can have this info in the log. Maybe no need
-> for a full URL, the firmware name would suffice at least for me.
+From: Geoff Lansberry <geoff@kuvee.com>
 
-In this case, I think we should also print the range that is supported
-when we fail to find any suitable firmware.
+The TRF7970A has configuration options for supporting hardware designs
+with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
+using a fixed regulator binding, for setting the io voltage to match
+the hardware configuration. If no option is supplied it defaults to
+3.3 volt configuration.
+---
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
+ drivers/nfc/trf7970a.c                             | 28 +++++++++++++++++++++-
+ 2 files changed, 29 insertions(+), 3 deletions(-)
 
->
-> [...]
->
->> I don't think we are very aggressive, we have been supporting -17 since
->> v4.3:
->>
->> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5865f3658ba37c54e346b0fdee08a1c7a152681b
->>
->> And we have published the firmware about half a year ago:
->>
->> http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/iwlwifi-7260-17.ucode?id=f2cf4d67e8eced29c8a473d3a27057aa2df57c42
->>
->> I understand your concern, but if you want to be on the bleeding-edge
->> kernel, you should be on the bleeding-edge linux-firmware as well. ;)
->
-> Fair enough. :-)
->
->>
->> But as I said, I'll try to improve the error message, as that should
->> make it easier to figure out.
->
-> Thank you!
->
-> -- peterx
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index e262ac1..b5777d8 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -21,9 +21,9 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- vdd-io-supply: Regulator specifying voltage for vdd-io
+ - clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
+ 
+-
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 
+ &spi1 {
+@@ -41,11 +41,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 				  <&gpio2 5 GPIO_ACTIVE_LOW>;
+ 		vin-supply = <&ldo3_reg>;
+ 		vin-voltage-override = <5000000>;
++		vdd-io-supply = <&ldo2_reg>;
+ 		autosuspend-delay = <30000>;
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
+-		vdd_io_1v8;
+ 		clock-frequency = <27120000>;
+ 		status = "okay";
+ 	};
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 4e051e9..8a88195 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -444,6 +444,7 @@ struct trf7970a {
+ 	u8				iso_ctrl_tech;
+ 	u8				modulator_sys_clk_ctrl;
+ 	u8				special_fcn_reg1;
++	u8				io_ctrl;
+ 	unsigned int			guard_time;
+ 	int				technology;
+ 	int				framing;
+@@ -1051,6 +1052,11 @@ static int trf7970a_init(struct trf7970a *trf)
+ 	if (ret)
+ 		goto err_out;
+ 
++	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
++			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
++	if (ret)
++		goto err_out;
++
+ 	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
+ 	if (ret)
+ 		goto err_out;
+@@ -1767,7 +1773,7 @@ static int _trf7970a_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
+ 		goto out_err;
+ 
+ 	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
+-			TRF7970A_REG_IO_CTRL_VRS(0x1));
++			trf->io_ctrl | TRF7970A_REG_IO_CTRL_VRS(0x1));
+ 	if (ret)
+ 		goto out_err;
+ 
+@@ -2062,6 +2068,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++
+ 	of_property_read_u32(np, "clock-frequency", &clk_freq);
+ 	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+ 		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
+@@ -2105,6 +2112,25 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	if (uvolts > 4000000)
+ 		trf->chip_status_ctrl = TRF7970A_CHIP_STATUS_VRS5_3;
+ 
++	trf->regulator = devm_regulator_get(&spi->dev, "vdd-io");
++	if (IS_ERR(trf->regulator)) {
++		ret = PTR_ERR(trf->regulator);
++		dev_err(trf->dev, "Can't get VDD_IO regulator: %d\n", ret);
++		goto err_destroy_lock;
++	}
++
++	ret = regulator_enable(trf->regulator);
++	if (ret) {
++		dev_err(trf->dev, "Can't enable VDD_IO: %d\n", ret);
++		goto err_destroy_lock;
++	}
++
++
++	if (regulator_get_voltage(trf->regulator) == 1800000) {
++		trf->io_ctrl = TRF7970A_REG_IO_CTRL_IO_LOW;
++		dev_dbg(trf->dev, "trf7970a config vdd_io to 1.8V\n");
++	}
++
+ 	trf->ddev = nfc_digital_allocate_device(&trf7970a_nfc_ops,
+ 			TRF7970A_SUPPORTED_PROTOCOLS,
+ 			NFC_DIGITAL_DRV_CAPS_IN_CRC |
+-- 
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
