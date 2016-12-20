@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49072 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753820AbcL3Lex (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:41536 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758159AbcLTT4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 06:34:53 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 20 Dec 2016 14:56:33 -0500
+Date: Tue, 20 Dec 2016 12:56:21 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Justin Bronder <justin@kuvee.com>
+Cc: Geoff Lansberry <geoff@kuvee.com>, linux-wireless@vger.kernel.org,
+        lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jaret Cantu <jaret.cantu@timesys.com>
+Subject: Re: nfc: trf7970a: Prevent repeated polling from crashing the kernel
+Message-ID: <20161220195621.GA6400@animalcreek.com> (sfid-20161220_205713_932337_AF1BE4C5)
+References: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
+ <1482250592-4268-3-git-send-email-glansberry@gmail.com>
+ <20161220185905.GA5867@animalcreek.com>
+ <20161220191352.GB23496@lasswell.members.linode.com>
 MIME-Version: 1.0
-Subject: Re: orinoco: Use shash instead of ahash for MIC calculations
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
-References: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
-To: Andrew Lutomirski <luto@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Eric Biggers <ebiggers3@gmail.com>,
-        linux-crypto@vger.kernel.org,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Stephan Mueller <smueller@chronox.de>,
-        Andy Lutomirski <luto@kernel.org>
-Message-Id: <20161230113451.C10ED614E4@smtp.codeaurora.org> (sfid-20161230_123521_657078_35C1024F)
-Date: Fri, 30 Dec 2016 11:34:51 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20161220191352.GB23496@lasswell.members.linode.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andrew Lutomirski <luto@kernel.org> wrote:
-> Eric Biggers pointed out that the orinoco driver pointed scatterlists
-> at the stack.
+On Tue, Dec 20, 2016 at 02:13:52PM -0500, Justin Bronder wrote:
+> On 20/12/16 11:59 -0700, Mark Greer wrote:
+> > On Tue, Dec 20, 2016 at 11:16:32AM -0500, Geoff Lansberry wrote:
+> > > From: Jaret Cantu <jaret.cantu@timesys.com>
+> > > 
+> > > Repeated polling attempts cause a NULL dereference error to occur.
+> > > This is because the state of the trf7970a is currently reading but
+> > > another request has been made to send a command before it has finished.
+> > 
+> > How is this happening?  Was trf7970a_abort_cmd() called and it didn't
+> > work right?  Was it not called at all and there is a bug in the digital
+> > layer?  More details please.
+> > 
+> > > The solution is to properly kill the waiting reading (workqueue)
+> > > before failing on the send.
+> > 
+> > If the bug is in the calling code, then that is what should get fixed.
+> > This seems to be a hack to work-around a digital layer bug.
 > 
-> Fix it by switching from ahash to shash.  The result should be
-> simpler, faster, and more correct.
+> One of our uses of NFC is to begin polling to read a tag and then stop polling
+> (in order to save power) until we know via user interaction that we need to poll
+> again.  This is typically many minutes later so the power saving is pretty
+> significant.  However, it's possible that a user will remove the tag before
+> reading has completed.  We also detect this case and stop polling.  I can go
+> more into this if necessary but that is what exposed a panic.
 > 
-> Cc: stable@vger.kernel.org # 4.9 only
-> Reported-by: Eric Biggers <ebiggers3@gmail.com>
-> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+> You can reproduce using neard and python, in our testing it was very likely to
+> occur in 10-100 iterations of the following.:
+> 
+>     #!/usr/bin/python
+>     import time
+> 
+>     import dbus
+> 
+>     bus = dbus.SystemBus()
+>     nfc0 = bus.get_object('org.neard', '/org/neard/nfc0')
+>     props = dbus.Interface(nfc0, 'org.freedesktop.DBus.Properties')
+> 
+>     try:
+>         props.Set('org.neard.Adapter', 'Powered', dbus.Boolean(1))
+>     except:
+>         pass
+> 
+>     adapter = dbus.Interface(nfc0, 'org.neard.Adapter')
+> 
+>     for i in range(1000):
+>         adapter.StartPollLoop('Initiator')
+>         time.sleep(0.1)
+>         adapter.StopPollLoop()
+>         print(i)
+> 
+> I believe the last time we tested this was around the 4.1 release.
 
-11 patches applied to wireless-drivers-next.git, thanks.
+Thanks for the info, Justin, but I was also seeking more information
+at the kernel NFC subsystem and trf7970a driver level.  This patch
+adds code inside an 'if' in the driver whose condition should never
+be evaluate to true but apparently it did.  How?
 
-1fef293b8a98 orinoco: Use shash instead of ahash for MIC calculations
-a08b98196a36 rt2800: make rx ampdu_factor depend on number of rx chains
-e49abb19d1bf rt2800: don't set ht parameters for non-aggregated frames
-a51b89698ccc rt2800: set minimum MPDU and PSDU lengths to sane values
-8f03a7c6e7f9 rt2800: set MAX_PSDU len according to remote STAs capabilities
-8845254112ac rt2800: rename adjust_freq_offset function
-bc0077053948 rt2800: warn if doing VCO recalibration for unknow RF chip
-24d42ef3b152 rt2800: perform VCO recalibration for RF5592 chip
-d96324703ffa rt2x00: merge agc and vco works with link tuner
-eb79a8fe94c8 rt2800: replace mdelay by usleep on vco calibration.
-31369c323ba0 rt2800: replace msleep() with usleep_range() on channel switch
+Thanks,
 
--- 
-https://patchwork.kernel.org/patch/9471353/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Mark
+--
