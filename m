@@ -1,85 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35457 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754722AbcLXSit (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36683 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755384AbcLTQQn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 13:38:49 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 4/6] wl1251: Generate random MAC address only if driver does not have valid
-Date: Sat, 24 Dec 2016 19:38:44 +0100
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> <1482598381-16513-5-git-send-email-pali.rohar@gmail.com> <20161224180854.GB13590@amd>
-In-Reply-To: <20161224180854.GB13590@amd>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1531826.n4WbykfFOs";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201612241938.45077@pali> (sfid-20161224_193914_748904_A52470C1)
+        Tue, 20 Dec 2016 11:16:43 -0500
+Received: by mail-qk0-f176.google.com with SMTP id n21so48043060qka.3
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:16:43 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+Date: Tue, 20 Dec 2016 11:16:30 -0500
+Message-Id: <1482250592-4268-1-git-send-email-glansberry@gmail.com> (sfid-20161220_171736_018647_1D40A2B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1531826.n4WbykfFOs
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Geoff Lansberry <geoff@kuvee.com>
 
-On Saturday 24 December 2016 19:08:54 Pavel Machek wrote:
-> On Sat 2016-12-24 17:52:59, Pali Roh=C3=A1r wrote:
-> > Before this patch driver generated random MAC address every time
-> > when was doing initialization. And after that random MAC address
-> > could be overwritten with fixed one if provided.
->=20
-> Before this patch, driver generated random MAC address every time it
-> was initialized. After that random MAC address could be overwritten
-> with fixed one, if provided.
->=20
-> > This patch changes order. First it tries to read fixed MAC address
-> > and if it fails then driver generates random MAC address.
->=20
-> I don't quite get where the advantage is supposed to be. Is it that
-> "use_eeprom" is set, but reading fails?
+The TRF7970A has configuration options to support hardware designs
+which use a 27.12MHz clock. This commit adds a device tree option
+'clock-frequency' to support configuring the this chip for default
+13.56MHz clock or the optional 27.12MHz clock.
+---
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++
+ drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
+ 2 files changed, 43 insertions(+), 11 deletions(-)
 
-Random bytes are read from kernel only if random MAC address is needed.=20
-And in wl->mac_addr is always either invalid address or permanenent mac=20
-address which will be used. Without patch in wl->mac_addr can be random=20
-temporary address for some time...
-
-> The only case where this helps is if wl1251_read_eeprom_mac()
-> succeeds but reads invalid address.
->=20
-> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
->=20
-> Acked-by: Pavel Machek <pavel@ucw.cz>
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1531826.n4WbykfFOs
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlhewLUACgkQi/DJPQPkQ1IYugCfSB1Le1TJ5Wgbi54C0Oz6W3E8
-p14An1s1w7G+qTRZdwSAEC3jO5fBBwC+
-=oBOF
------END PGP SIGNATURE-----
-
---nextPart1531826.n4WbykfFOs--
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 32b35a0..e262ac1 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -21,6 +21,8 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
++
+ 
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 
+@@ -43,6 +45,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
++		vdd_io_1v8;
++		clock-frequency = <27120000>;
+ 		status = "okay";
+ 	};
+ };
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 26c9dbb..4e051e9 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -124,6 +124,9 @@
+ 		 NFC_PROTO_ISO15693_MASK | NFC_PROTO_NFC_DEP_MASK)
+ 
+ #define TRF7970A_AUTOSUSPEND_DELAY		30000 /* 30 seconds */
++#define TRF7970A_13MHZ_CLOCK_FREQUENCY		13560000
++#define TRF7970A_27MHZ_CLOCK_FREQUENCY		27120000
++
+ 
+ #define TRF7970A_RX_SKB_ALLOC_SIZE		256
+ 
+@@ -1056,12 +1059,11 @@ static int trf7970a_init(struct trf7970a *trf)
+ 
+ 	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
+ 
+-	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
++	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
++			trf->modulator_sys_clk_ctrl);
+ 	if (ret)
+ 		goto err_out;
+ 
+-	trf->modulator_sys_clk_ctrl = 0;
+-
+ 	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+@@ -1181,27 +1183,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+ 	switch (tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_106B:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_ISO15693:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_15693;
+ 		break;
+ 	default:
+@@ -1571,17 +1583,23 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_CE |
+ 			TRF7970A_ISO_CTRL_NFC_CE_14443A;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	default:
+ 		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+@@ -1987,6 +2005,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	struct device_node *np = spi->dev.of_node;
+ 	struct trf7970a *trf;
+ 	int uvolts, autosuspend_delay, ret;
++	u32 clk_freq = 13560000;
+ 
+ 	if (!np) {
+ 		dev_err(&spi->dev, "No Device Tree entry\n");
+@@ -2043,6 +2062,15 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++	of_property_read_u32(np, "clock-frequency", &clk_freq);
++	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
++		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
++		dev_err(trf->dev,
++			"clock-frequency (%u Hz) unsupported\n",
++			clk_freq);
++		return -EINVAL;
++	}
++
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
+ 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+ 
+-- 
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
