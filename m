@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50486 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934106AbcLMQMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 11:12:01 -0500
-Message-ID: <1481645519.20412.37.camel@sipsolutions.net> (sfid-20161213_171211_643192_18B6BF23)
-Subject: Re: [PATCH 3/3][RFC] nl80211/mac80211: Accept multiple RSSI
- thresholds for CQM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <balrogg@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 13 Dec 2016 17:11:59 +0100
-In-Reply-To: <CAOq732K88CygXBmDfGmU21AcQHurcWx081Q3SM-b0ecm+848gA@mail.gmail.com> (sfid-20161128_190608_203783_0078941B)
-References: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
-         <1478398113-14966-4-git-send-email-andrew.zaborowski@intel.com>
-         <1480344479.8107.60.camel@sipsolutions.net>
-         <CAOq732LFeKRjPdQ6xMx_d1cHmQmYp50NJ4MDsdf=mPXMs685PQ@mail.gmail.com>
-         <1480347358.8107.65.camel@sipsolutions.net>
-         <CAOq732K88CygXBmDfGmU21AcQHurcWx081Q3SM-b0ecm+848gA@mail.gmail.com>
-         (sfid-20161128_190608_203783_0078941B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:38890 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754888AbcLTLV2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 20 Dec 2016 06:21:28 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
+        Stable <stable@vger.kernel.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Subject: Re: [PATCH] rtlwifi: Fix kernel oops introduced with commit e49656147359
+References: <20161220023812.5999-1-Larry.Finger@lwfinger.net>
+Date: Tue, 20 Dec 2016 13:21:21 +0200
+In-Reply-To: <20161220023812.5999-1-Larry.Finger@lwfinger.net> (Larry Finger's
+        message of "Mon, 19 Dec 2016 20:38:12 -0600")
+Message-ID: <87wpeuu9qm.fsf@kamboji.qca.qualcomm.com> (sfid-20161220_122152_626038_39096E62)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> I wasn't clear: nl80211 sets the thresholds so that "high" is higher
-> than last known value and "low" is lower than last known value, also
-> the distance is at least 2 x hysteresis.  There's no purpose for
-> reporting "middle" rssi events because we have to set a new range as
-> soon as we receive a high or a low event.  I realize I need to
-> document better.
+> With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
+> kfree_skb"), the method used to free an skb was changed because the
+> kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
+> guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
+> does not, and a test is needed to prevent kernel panics.
+>
+> Fixes: commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
 
-But there can be a delay between reporting and reprogramming, and if
-during that time a new event could be reported? I guess it doesn't
-matter much if we assume that upon reprogramming the driver will always
-report a new event if the current value falls outside the new range
-(either high or low)... it just seemed a little bit more consistent to
-unconditionally report a new event at the beginning, even if that new
-event is "yup - falling into the middle of your range now".
+This should be:
 
-johannes
+Fixes: e49656147359 ("rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
+
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> (4.9+)
+
+And this:
+
+Cc: Stable <stable@vger.kernel.org> # 4.9+
+
+I can fix both of them.
+
+> Cc: Wei Yongjun <weiyongjun1@huawei.com>
+> ---
+> Kalle,
+>
+> This change should be sent to mainline during the 4.10 merge period,
+> or as soon as possible.
+
+Ok, I'll queue this to 4.10. Most likely I'll send a pull request to
+Dave later this week or so.
+
+-- 
+Kalle Valo
