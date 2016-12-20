@@ -1,147 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35861 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753533AbcLXQ5T (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35686 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932646AbcLTVJM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 11:57:19 -0500
-From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>
+        Tue, 20 Dec 2016 16:09:12 -0500
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>
 Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
-Subject: [PATCH 1/6] firmware: Add request_firmware_prefer_user() function
-Date: Sat, 24 Dec 2016 17:52:56 +0100
-Message-Id: <1482598381-16513-2-git-send-email-pali.rohar@gmail.com> (sfid-20161224_175740_807231_41BD912C)
-In-Reply-To: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH] nfc: fdp: fix NULL pointer dereference
+Date: Tue, 20 Dec 2016 21:09:04 +0000
+Message-Id: <1482268144-14028-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20161220_220930_227732_7D93E942)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function works pretty much like request_firmware(), but it prefer
-usermode helper. If usermode helper fails then it fallback to direct
-access. Useful for dynamic or model specific firmware data.
+We are checking phy after dereferencing it. We can print the debug
+information after checking it. If phy is NULL then we will get a good
+stack trace to tell us that we are in this irq handler.
 
-Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
 ---
- drivers/base/firmware_class.c |   45 +++++++++++++++++++++++++++++++++++++++--
- include/linux/firmware.h      |    9 +++++++++
- 2 files changed, 52 insertions(+), 2 deletions(-)
+ drivers/nfc/fdp/i2c.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/firmware_class.c b/drivers/base/firmware_class.c
-index 22d1760..6a8c261 100644
---- a/drivers/base/firmware_class.c
-+++ b/drivers/base/firmware_class.c
-@@ -119,6 +119,11 @@ static inline long firmware_loading_timeout(void)
- #endif
- #define FW_OPT_NO_WARN	(1U << 3)
- #define FW_OPT_NOCACHE	(1U << 4)
-+#ifdef CONFIG_FW_LOADER_USER_HELPER
-+#define FW_OPT_PREFER_USER	(1U << 5)
-+#else
-+#define FW_OPT_PREFER_USER	0
-+#endif
+diff --git a/drivers/nfc/fdp/i2c.c b/drivers/nfc/fdp/i2c.c
+index 5e797d5..712936f 100644
+--- a/drivers/nfc/fdp/i2c.c
++++ b/drivers/nfc/fdp/i2c.c
+@@ -210,14 +210,14 @@ static irqreturn_t fdp_nci_i2c_irq_thread_fn(int irq, void *phy_id)
+ 	struct sk_buff *skb;
+ 	int r;
  
- struct firmware_cache {
- 	/* firmware_buf instance will be added into the below list */
-@@ -1169,13 +1174,26 @@ static int assign_firmware_buf(struct firmware *fw, struct device *device,
- 		}
+-	client = phy->i2c_dev;
+-	dev_dbg(&client->dev, "%s\n", __func__);
+-
+ 	if (!phy || irq != phy->i2c_dev->irq) {
+ 		WARN_ON_ONCE(1);
+ 		return IRQ_NONE;
  	}
  
--	ret = fw_get_filesystem_firmware(device, fw->priv);
-+	if (opt_flags & FW_OPT_PREFER_USER) {
-+		ret = fw_load_from_user_helper(fw, name, device, opt_flags, timeout);
-+		if (ret && !(opt_flags & FW_OPT_NO_WARN)) {
-+			dev_warn(device,
-+				 "User helper firmware load for %s failed with error %d\n",
-+				 name, ret);
-+			dev_warn(device, "Falling back to direct firmware load\n");
-+		}
-+	} else {
-+		ret = -EINVAL;
-+	}
++	client = phy->i2c_dev;
++	dev_dbg(&client->dev, "%s\n", __func__);
 +
-+	if (ret)
-+		ret = fw_get_filesystem_firmware(device, fw->priv);
- 	if (ret) {
- 		if (!(opt_flags & FW_OPT_NO_WARN))
- 			dev_warn(device,
- 				 "Direct firmware load for %s failed with error %d\n",
- 				 name, ret);
--		if (opt_flags & FW_OPT_USERHELPER) {
-+		if ((opt_flags & FW_OPT_USERHELPER) && !(opt_flags & FW_OPT_PREFER_USER)) {
- 			dev_warn(device, "Falling back to user helper\n");
- 			ret = fw_load_from_user_helper(fw, name, device,
- 						       opt_flags, timeout);
-@@ -1287,6 +1305,29 @@ int request_firmware_direct(const struct firmware **firmware_p,
- EXPORT_SYMBOL(request_firmware_into_buf);
+ 	r = fdp_nci_i2c_read(phy, &skb);
  
- /**
-+ * request_firmware_prefer_user: - prefer usermode helper for loading firmware
-+ * @firmware_p: pointer to firmware image
-+ * @name: name of firmware file
-+ * @device: device for which firmware is being loaded
-+ *
-+ * This function works pretty much like request_firmware(), but it prefer
-+ * usermode helper. If usermode helper fails then it fallback to direct access.
-+ * Useful for dynamic or model specific firmware data.
-+ **/
-+int request_firmware_prefer_user(const struct firmware **firmware_p,
-+			    const char *name, struct device *device)
-+{
-+	int ret;
-+
-+	__module_get(THIS_MODULE);
-+	ret = _request_firmware(firmware_p, name, device, NULL, 0,
-+				FW_OPT_UEVENT | FW_OPT_PREFER_USER);
-+	module_put(THIS_MODULE);
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(request_firmware_prefer_user);
-+
-+/**
-  * release_firmware: - release the resource associated with a firmware image
-  * @fw: firmware resource to release
-  **/
-diff --git a/include/linux/firmware.h b/include/linux/firmware.h
-index b1f9f0c..01f7a85 100644
---- a/include/linux/firmware.h
-+++ b/include/linux/firmware.h
-@@ -47,6 +47,8 @@ int request_firmware_nowait(
- 	void (*cont)(const struct firmware *fw, void *context));
- int request_firmware_direct(const struct firmware **fw, const char *name,
- 			    struct device *device);
-+int request_firmware_prefer_user(const struct firmware **fw, const char *name,
-+				 struct device *device);
- int request_firmware_into_buf(const struct firmware **firmware_p,
- 	const char *name, struct device *device, void *buf, size_t size);
- 
-@@ -77,6 +79,13 @@ static inline int request_firmware_direct(const struct firmware **fw,
- 	return -EINVAL;
- }
- 
-+static inline int request_firmware_prefer_user(const struct firmware **fw,
-+					       const char *name,
-+					       struct device *device)
-+{
-+	return -EINVAL;
-+}
-+
- static inline int request_firmware_into_buf(const struct firmware **firmware_p,
- 	const char *name, struct device *device, void *buf, size_t size)
- {
+ 	if (r == -EREMOTEIO)
 -- 
-1.7.9.5
+1.9.1
