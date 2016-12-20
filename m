@@ -1,56 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45288 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758347AbcLOQ1R (ORCPT
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:33776 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762936AbcLTQLJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 11:27:17 -0500
-Date: Thu, 15 Dec 2016 21:56:59 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer
- statistics
-Message-ID: <20161215162659.GA8030@atheros-ThinkPad-T61> (sfid-20161215_172720_898289_CCBDB4FC)
-References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
- <2870294.lMmxz9iPmq@debian64>
- <20161214073337.GA4046@atheros-ThinkPad-T61>
- <1859306.unY1Rqbrx8@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1859306.unY1Rqbrx8@debian64>
+        Tue, 20 Dec 2016 11:11:09 -0500
+Received: by mail-qt0-f182.google.com with SMTP id p16so178623880qta.0
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:08 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+Date: Tue, 20 Dec 2016 11:10:44 -0500
+Message-Id: <1482250250-4192-1-git-send-email-glansberry@gmail.com> (sfid-20161220_171504_185951_23169061)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Christian,
+From: Geoff Lansberry <geoff@kuvee.com>
 
-On Wed, Dec 14, 2016 at 05:38:02PM +0100, Christian Lamparter wrote:
-> On Wednesday, December 14, 2016 1:03:38 PM CET Mohammed Shafi Shajakhan wrote:
-> > > On Wednesday, December 7, 2016 11:58:24 AM CET Mohammed Shafi Shajakhan wrote:
-> > > > On Mon, Dec 05, 2016 at 10:52:45PM +0100, Christian Lamparter wrote:
-> > > > > @@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
-> > > > >  			goto free;
-> > > > >  		}
-> > > > >  
-> > > > > +		if (!list_empty(&stats.peers))
-> > > > 
-> > > > [shafi] sorry please correct me if i am wrong, for 'extended peer stats' we are checking
-> > > > for normal 'peer stats' ? Is this the fix intended, i had started a build to
-> > > > check your change and we will keep you posted, does this fix displaying
-> > > > 'rx_duration' in ath10k fw_stats.
-> > > The idea is not to queue any "extended peer stats" when there where no "peer stats" to
-> > > begin with. Because otherwise, the function is still vulnerable to OOM since the 
-> > > extended peers stats will be queued unchecked (not that this is currently a problem).
-> > 
-> > [shafi] list_splice_tail_init should still check for non-empty 'peers_extd' list
-> > and append if required ? please let me know if i am still missing something
-> Well, you can also count the entries in peers_extd and delete the old entries
-> if they start to overflow. If you want to do it differently, please go ahead.
->
-[shafi] sorry for the delay (got stuck up with something else), I will add some prints explicitly
-and keep you posted ASAP. Since the extended peer stats gets updated periodically I
-would like to confirm the debug linked list associated to the extended peer
-stats does not overflows and potentially cause OOM.
+The TRF7970A has configuration options to support hardware designs
+which use a 27.12MHz clock. This commit adds a device tree option
+'clock-frequency' to support configuring the this chip for default
+13.56MHz clock or the optional 27.12MHz clock.
+---
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++
+ drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
+ 2 files changed, 43 insertions(+), 11 deletions(-)
 
-regards,
-shafi
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 32b35a0..e262ac1 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -21,6 +21,8 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
++
+ 
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 
+@@ -43,6 +45,8 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
++		vdd_io_1v8;
++		clock-frequency = <27120000>;
+ 		status = "okay";
+ 	};
+ };
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 26c9dbb..4e051e9 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -124,6 +124,9 @@
+ 		 NFC_PROTO_ISO15693_MASK | NFC_PROTO_NFC_DEP_MASK)
+ 
+ #define TRF7970A_AUTOSUSPEND_DELAY		30000 /* 30 seconds */
++#define TRF7970A_13MHZ_CLOCK_FREQUENCY		13560000
++#define TRF7970A_27MHZ_CLOCK_FREQUENCY		27120000
++
+ 
+ #define TRF7970A_RX_SKB_ALLOC_SIZE		256
+ 
+@@ -1056,12 +1059,11 @@ static int trf7970a_init(struct trf7970a *trf)
+ 
+ 	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
+ 
+-	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
++	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
++			trf->modulator_sys_clk_ctrl);
+ 	if (ret)
+ 		goto err_out;
+ 
+-	trf->modulator_sys_clk_ctrl = 0;
+-
+ 	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+@@ -1181,27 +1183,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+ 	switch (tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_106B:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_ISO15693:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_15693;
+ 		break;
+ 	default:
+@@ -1571,17 +1583,23 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_CE |
+ 			TRF7970A_ISO_CTRL_NFC_CE_14443A;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xF8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	default:
+ 		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+@@ -1987,6 +2005,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	struct device_node *np = spi->dev.of_node;
+ 	struct trf7970a *trf;
+ 	int uvolts, autosuspend_delay, ret;
++	u32 clk_freq = 13560000;
+ 
+ 	if (!np) {
+ 		dev_err(&spi->dev, "No Device Tree entry\n");
+@@ -2043,6 +2062,15 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++	of_property_read_u32(np, "clock-frequency", &clk_freq);
++	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
++		(clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
++		dev_err(trf->dev,
++			"clock-frequency (%u Hz) unsupported\n",
++			clk_freq);
++		return -EINVAL;
++	}
++
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
+ 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+ 
+-- 
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
