@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43153 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755290AbcLANyA (ORCPT
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:34299 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764612AbcLTQLS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 08:54:00 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: sdio: fix use after free issue for save_adapter
-Date: Thu, 1 Dec 2016 19:23:31 +0530
-Message-ID: <1480600411-3905-1-git-send-email-akarwar@marvell.com> (sfid-20161201_145404_618511_1E59E36C)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 20 Dec 2016 11:11:18 -0500
+Received: by mail-qt0-f180.google.com with SMTP id n6so181213987qtd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2016 08:11:13 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>,
+        Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 3/3] nfc: trf7970a: Prevent repeated polling from crashing the kernel
+Date: Tue, 20 Dec 2016 11:10:49 -0500
+Message-Id: <1482250250-4192-6-git-send-email-glansberry@gmail.com> (sfid-20161220_171159_961734_D0B61B25)
+In-Reply-To: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
+References: <1482250250-4192-1-git-send-email-glansberry@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we have sdio work requests received when sdio card reset is
-happening, we may end up accessing older save_adapter pointer
-later which is already freed during card reset.
-This patch solves the problem by cancelling those pending requests.
+From: Jaret Cantu <jaret.cantu@timesys.com>
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Repeated polling attempts cause a NULL dereference error to occur.
+This is because the state of the trf7970a is currently reading but
+another request has been made to send a command before it has finished.
+
+The solution is to properly kill the waiting reading (workqueue)
+before failing on the send.
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/nfc/trf7970a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index db01794..44eb65a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -2229,6 +2229,12 @@ static void mwifiex_recreate_adapter(struct sdio_mmc_card *card)
- 	mmc_hw_reset(func->card->host);
- 	sdio_release_host(func);
- 
-+	/* Previous save_adapter won't be valid after this. We will cancel
-+	 * pending work requests.
-+	 */
-+	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &iface_work_flags);
-+	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &iface_work_flags);
-+
- 	mwifiex_sdio_probe(func, device_id);
- }
- 
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 8a88195..5916737 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1496,6 +1496,10 @@ static int trf7970a_send_cmd(struct nfc_digital_dev *ddev,
+ 			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
+ 		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
+ 				trf->state);
++		if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA ||
++		    trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
++			trf->ignore_timeout =
++				!cancel_delayed_work(&trf->timeout_work);
+ 		ret = -EIO;
+ 		goto out_err;
+ 	}
 -- 
-1.9.1
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
