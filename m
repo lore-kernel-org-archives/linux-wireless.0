@@ -1,121 +1,222 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3091 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932269AbcLLQfQ (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33422 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750818AbcLUPW3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 11:35:16 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "greearb@candelatech.com" <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k:  free host-mem with DMA_BIRECTIONAL flag.
-Date: Mon, 12 Dec 2016 16:35:10 +0000
-Message-ID: <87eg1d14xt.fsf@kamboji.qca.qualcomm.com> (sfid-20161212_173528_094827_410F4C26)
-References: <1480962519-13027-1-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1480962519-13027-1-git-send-email-greearb@candelatech.com>
-        (greearb@candelatech.com's message of "Mon, 5 Dec 2016 10:28:39 -0800")
-Content-Type: text/plain; charset="us-ascii"
+        Wed, 21 Dec 2016 10:22:29 -0500
+Received: by mail-oi0-f46.google.com with SMTP id 128so17372791oig.0
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2016 07:22:29 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAHdg3xaR=KZBOisPSPtamRquce_wLPrCrXPm9Co5OWw5cOu0jw@mail.gmail.com>
+References: <CAHdg3xaR=KZBOisPSPtamRquce_wLPrCrXPm9Co5OWw5cOu0jw@mail.gmail.com>
+From: Matteo Grandi <iu5bdp@gmail.com>
+Date: Wed, 21 Dec 2016 16:21:48 +0100
+Message-ID: <CAHdg3xb2TCo6-m36zvNS_SADPM+SxE4bg_aHRc+RBo3zOaGX=Q@mail.gmail.com> (sfid-20161221_162233_464850_82D7B82C)
+Subject: Re: ath10k mesh error 80MHz channel
+To: LinuxWireless Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+Hi all again, just an update to the previous message:
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> Hopefully this fixes the problem reported by Kalle:
->
-> Noticed this in my log, but I don't have time to investigate this in
-> detail right now:
->
-> [  413.795346] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [  414.158755] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [  477.439659] ath10k_pci 0000:02:00.0: could not get mac80211 beacon
-> [  481.666630] ------------[ cut here ]------------
-> [  481.666669] WARNING: CPU: 0 PID: 1978 at lib/dma-debug.c:1155 check_un=
-map+0x320/0x8e0
-> [  481.666688] ath10k_pci 0000:02:00.0: DMA-API: device driver frees DMA =
-memory with different direction [device address=3D0x000000002d130000] [size=
-=3D63800 bytes] [mapped with DMA_BIDIRECTIONAL] [unmapped with DMA_TO_DEVIC=
-E]
-> [  481.666703] Modules linked in: ctr ccm ath10k_pci(E-) ath10k_core(E) a=
-th(E) mac80211(E) cfg80211(E) snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_=
-codec_generic snd_hda_intel snd_hda_codec snd_hda_core snd_hwdep snd_pcm sn=
-d_seq_midi arc4 snd_rawmidi snd_seq_midi_event snd_seq btusb btintel snd_se=
-q_device joydev coret
-> [  481.671468] CPU: 0 PID: 1978 Comm: rmmod Tainted: G            E   4.9=
-.0-rc7-wt+ #54
-> [  481.671478] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS=
- 68CDD Ver. F.04 01/27/2010
-> [  481.671489]  ef49dcec c842ee92 c8b5830e ef49dd34 ef49dd20 c80850f5 c8b=
-5a13c ef49dd50
-> [  481.671560]  000007ba c8b5830e 00000483 c8461830 c8461830 00000483 ef4=
-9ddcc f34e64b8
-> [  481.671641]  c8b58360 ef49dd3c c80851bb 00000009 00000000 ef49dd34 c8b=
-5a13c ef49dd50
-> [  481.671716] Call Trace:
-> [  481.671731]  [<c842ee92>] dump_stack+0x76/0xb4
-> [  481.671745]  [<c80850f5>] __warn+0xe5/0x100
-> [  481.671757]  [<c8461830>] ? check_unmap+0x320/0x8e0
-> [  481.671769]  [<c8461830>] ? check_unmap+0x320/0x8e0
-> [  481.671780]  [<c80851bb>] warn_slowpath_fmt+0x3b/0x40
-> [  481.671791]  [<c8461830>] check_unmap+0x320/0x8e0
-> [  481.671804]  [<c8462054>] debug_dma_unmap_page+0x84/0xa0
-> [  481.671835]  [<f937cd7a>] ath10k_wmi_free_host_mem+0x9a/0xe0 [ath10k_c=
-ore]
-> [  481.671861]  [<f9363400>] ath10k_core_destroy+0x50/0x60 [ath10k_core]
-> [  481.671875]  [<f8e13969>] ath10k_pci_remove+0x79/0xa0 [ath10k_pci]
-> [  481.671889]  [<c848d8d8>] pci_device_remove+0x38/0xb0
-> [  481.671901]  [<c859fe4b>] __device_release_driver+0x7b/0x110
-> [  481.671913]  [<c85a00e7>] driver_detach+0x97/0xa0
-> [  481.671923]  [<c859ef8b>] bus_remove_driver+0x4b/0xb0
-> [  481.671934]  [<c85a0cda>] driver_unregister+0x2a/0x60
-> [  481.671949]  [<c848c888>] pci_unregister_driver+0x18/0x70
-> [  481.671965]  [<f8e14dae>] ath10k_pci_exit+0xd/0x25f [ath10k_pci]
-> [  481.671979]  [<c812bb84>] SyS_delete_module+0xf4/0x180
-> [  481.671995]  [<c81f801b>] ? __might_fault+0x8b/0xa0
-> [  481.672009]  [<c80037d0>] do_fast_syscall_32+0xa0/0x1e0
-> [  481.672025]  [<c88d4c88>] sysenter_past_esp+0x45/0x74
-> [  481.672037] ---[ end trace 3fd23759e17e1622 ]---
-> [  481.672049] Mapped at:
-> [  481.672060]  [  481.672072] [<c846062c>] debug_dma_map_page.part.25+0x=
-1c/0xf0
-> [  481.672083]  [  481.672095] [<c8460799>] debug_dma_map_page+0x99/0xc0
-> [  481.672106]  [  481.672132] [<f93745ec>] ath10k_wmi_alloc_chunk+0x12c/=
-0x1f0 [ath10k_core]
-> [  481.672142]  [  481.672168] [<f937d0c4>] ath10k_wmi_event_service_read=
-y_work+0x304/0x540 [ath10k_core]
-> [  481.672178]  [  481.672190] [<c80a3643>] process_one_work+0x1c3/0x670
-> [  482.137134] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_m=
-ode 0 reset_mode 0
-> [  482.313144] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/p=
-re-cal-pci-0000:02:00.0.bin failed with error -2
-> [  482.313274] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/c=
-al-pci-0000:02:00.0.bin failed with error -2
-> [  482.313768] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c c=
-hip_id 0x043202ff sub 0000:0000
-> [  482.313777] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing=
- 1 dfs 0 testmode 1
-> [  482.313974] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api 5=
- features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
-> [  482.369858] ath10k_pci 0000:02:00.0: Direct firmware load for ath10k/Q=
-CA988X/hw2.0/board-2.bin failed with error -2
-> [  482.370011] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32=
- bebc7c08
-> [  483.596770] ath10k_pci 0000:02:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal=
- otp max-sta 128 raw 0 hwcrypto 1
-> [  483.701686] ath: EEPROM regdomain: 0x0
-> [  483.701706] ath: EEPROM indicates default country code should be used
-> [  483.701713] ath: doing EEPROM country->regdmn map search
-> [  483.701721] ath: country maps to regdmn code: 0x3a
-> [  483.701730] ath: Country alpha2 being used: US
-> [  483.701737] ath: Regpair used: 0x3a
->
-> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+looking at iw list I found this situation:
 
-Thanks, I don't see the warning anymore so this seems to be fixed. I'll
-push this to 4.10.
+        Frequencies:
+            * 5180 MHz [36] (20.0 dBm)
+            * 5200 MHz [40] (20.0 dBm)
+            * 5220 MHz [44] (20.0 dBm)
+            * 5240 MHz [48] (20.0 dBm)
+            * 5260 MHz [52] (20.0 dBm) (no IR, radar detection)
+            * 5280 MHz [56] (20.0 dBm) (no IR, radar detection)
+            * 5300 MHz [60] (20.0 dBm) (no IR, radar detection)
+            * 5320 MHz [64] (20.0 dBm) (no IR, radar detection)
+            * 5500 MHz [100] (23.0 dBm) (no IR, radar detection)
+            * 5520 MHz [104] (23.0 dBm) (no IR, radar detection)
+            * 5540 MHz [108] (23.0 dBm) (no IR, radar detection)
+            * 5560 MHz [112] (23.0 dBm) (no IR, radar detection)
+            * 5580 MHz [116] (23.0 dBm) (no IR, radar detection)
+            * 5600 MHz [120] (23.0 dBm) (no IR, radar detection)
+            * 5620 MHz [124] (23.0 dBm) (no IR, radar detection)
+            * 5640 MHz [128] (23.0 dBm) (no IR, radar detection)
+            * 5660 MHz [132] (23.0 dBm) (no IR, radar detection)
+            * 5680 MHz [136] (23.0 dBm) (no IR, radar detection)
+            * 5700 MHz [140] (23.0 dBm) (no IR, radar detection)
+            * 5745 MHz [149] (disabled)
+            * 5765 MHz [153] (disabled)
+            * 5785 MHz [157] (disabled)
+            * 5805 MHz [161] (disabled)
+            * 5825 MHz [165] (disabled)
+    Supported commands:
+         * new_interface
+         * set_interface
+         * new_key
 
---=20
-Kalle Valo=
+The no Initial Radiation prevent the interface to start transmitting.
+I'm almost sure that it's a regulatory domain issue, but i already
+tried to reinstall the CRD Agent, and even changing the regulatory
+domain it change only the global (i.e. CH) while the iw list provide
+the same results.
+root@MrProper:~# iw reg get
+global
+country CH: DFS-ETSI
+    (2402 - 2482 @ 40), (N/A, 20), (N/A)
+    (5170 - 5250 @ 80), (N/A, 20), (N/A), AUTO-BW
+    (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, AUTO-BW
+    (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+    (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+
+phy#1
+country US: DFS-FCC
+    (2402 - 2472 @ 40), (N/A, 30), (N/A)
+    (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+    (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+    (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+    (5735 - 5835 @ 80), (N/A, 30), (N/A)
+    (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+
+phy#0
+country US: DFS-FCC
+    (2402 - 2472 @ 40), (N/A, 30), (N/A)
+    (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+    (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+    (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+    (5735 - 5835 @ 80), (N/A, 30), (N/A)
+    (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+
+phy#2
+country US: DFS-FCC
+    (2402 - 2472 @ 40), (N/A, 30), (N/A)
+    (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+    (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+    (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+    (5735 - 5835 @ 80), (N/A, 30), (N/A)
+    (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+
+Is there a way to remove the no IR flags in the allowed channels?
+
+Thanks a lot again
+
+Matteo
+
+2016-12-21 15:19 GMT+01:00 Matteo Grandi <iu5bdp@gmail.com>:
+> Dear all,
+>
+> I'm configuring a simple mesh network using four miniPCIe adapters
+> (Compex WLE900VX) on two Gateworks Ventana 5410 boards.
+> Actually, based on the guide
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/mesh
+> I don't have any problem setting up the mesh network on channels 36,
+> 149, 153, respectively 5180 80 5210, 5745 80 5775, and 5765 80 5795
+> (even if MIMO is not working).
+>
+> But while configuring the interfaces to work in 80MHz channel
+> bandwidth (802.11ac using ath10k driver) on a different channel  I
+> bump into the error:
+>
+> command failed: Invalid argument (-22)
+>
+> immediately after launching the command  for joining the mesh: iw dev
+> <if_name> mesh join <mesh_name>.
+>
+> The syslog provide only this:
+>
+> Dec 21 13:52:03 MrProper kernel: [ 7257.058617] util.c |
+> ieee80211_set_wmm_default: ac=0, enable_qos=true, vif.type=7,
+> NL80211_IFTYPE_STATION=2
+> Dec 21 13:52:03 MrProper kernel: [ 7257.059654] IPv6:
+> ADDRCONF(NETDEV_UP): mpp1: link is not ready
+> Dec 21 13:52:03 MrProper kernel: [ 7257.205911] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:03 MrProper kernel: [ 7257.581898] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:03 MrProper kernel: [ 7257.613627] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:04 MrProper kernel: [ 7258.084733] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:04 MrProper kernel: [ 7258.180963] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:04 MrProper kernel: [ 7258.325382] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:04 MrProper kernel: [ 7258.661534] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:05 MrProper kernel: [ 7259.029525] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:05 MrProper kernel: [ 7259.392563] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:08 MrProper kernel: [ 7262.386101] ath10k_warn: 18
+> callbacks suppressed
+> Dec 21 13:52:08 MrProper kernel: [ 7262.386154] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7262.737520] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7262.785597] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7262.971144] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7262.981414] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7263.091578] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7263.445603] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7263.458727] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7263.582180] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:09 MrProper kernel: [ 7263.589649] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:14 MrProper kernel: [ 7267.742838] ath10k_warn: 44
+> callbacks suppressed
+> Dec 21 13:52:14 MrProper kernel: [ 7267.742887] ath10k_pci
+> 0000:07:00.0: no channel configured; ignoring frame(s)!
+> Dec 21 13:52:14 MrProper kernel: [ 7267.744466] ath10k_pci
+> 0000:07:00.0: no channel
+>
+> Did someone have a similar issue?
+> Are there, maybe, some channels that even present in the regulatory
+> domain with the @80 flags are not configurable in this way? (36, 52,
+> 100, 116, 132, 149 should be ok, but only 36 and 149 work)
+> Or maybe it's my reg-domain issue (see below)?
+>
+> root@MrProper:~# iw reg get
+> global
+> country US: DFS-FCC
+>     (2402 - 2472 @ 40), (N/A, 30), (N/A)
+>     (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>     (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+>     (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+>     (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#1
+> country US: DFS-FCC
+>     (2402 - 2472 @ 40), (N/A, 30), (N/A)
+>     (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>     (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+>     (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+>     (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#0
+> country US: DFS-FCC
+>     (2402 - 2472 @ 40), (N/A, 30), (N/A)
+>     (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>     (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+>     (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+>     (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+> phy#2
+> country US: DFS-FCC
+>     (2402 - 2472 @ 40), (N/A, 30), (N/A)
+>     (5170 - 5250 @ 80), (N/A, 23), (N/A), AUTO-BW
+>     (5250 - 5330 @ 80), (N/A, 23), (0 ms), DFS, AUTO-BW
+>     (5490 - 5730 @ 160), (N/A, 23), (0 ms), DFS
+>     (5735 - 5835 @ 80), (N/A, 30), (N/A)
+>     (57240 - 63720 @ 2160), (N/A, 40), (N/A)
+>
+>
+> Thanks a lot for every hint!
+>
+> Matteo
