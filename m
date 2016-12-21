@@ -1,176 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:54818 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750696AbcLLMAU (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36627 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755928AbcLURTx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Dec 2016 07:00:20 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V3 07/11] brcmfmac: add firmware feature detection for gscan feature
-Date: Mon, 12 Dec 2016 11:59:53 +0000
-Message-Id: <1481543997-24624-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161212_130028_730626_DCD043CD)
-In-Reply-To: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
+        Wed, 21 Dec 2016 12:19:53 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl_usb: Fix missing entry in USB driver's private data
+Date: Wed, 21 Dec 2016 11:18:55 -0600
+Message-Id: <20161221171855.5056-1-Larry.Finger@lwfinger.net> (sfid-20161221_182018_027455_498980BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+These drivers need to be able to reference "struct ieee80211_hw" from
+the driver's private data, and vice versa. The USB driver failed to
+store the address of ieee80211_hw in the private data. Although this
+bug has been present for a long time, it was not exposed until
+commit ba9f93f82aba ("rtlwifi: Fix enter/exit power_save").
 
-Detect gscan support in firmware by doing pfn_gscan_cfg iovar with
-invalid version.
-
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Fixes: ba9f93f82aba ("rtlwifi: Fix enter/exit power_save")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 22 +++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  4 +-
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 59 ++++++++++++++++++++++
- 3 files changed, 83 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-index 62985f2..8c7ef59 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-@@ -27,6 +27,7 @@
- #include "feature.h"
- #include "common.h"
+Kalle,
 
-+#define BRCMF_FW_UNSUPPORTED	23
+This patch needs to be included in 4.10.
 
- /*
-  * expand feature list to array of feature strings.
-@@ -113,6 +114,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
+Larry
+---
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 40160c7..bf00399 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -1047,6 +1047,7 @@ int rtl_usb_probe(struct usb_interface *intf,
+ 		return -ENOMEM;
  	}
- }
-
-+static void brcmf_feat_iovar_data_set(struct brcmf_if *ifp,
-+				      enum brcmf_feat_id id, char *name,
-+				      const void *data, size_t len)
-+{
-+	int err;
-+
-+	err = brcmf_fil_iovar_data_set(ifp, name, data, len);
-+	if (err != -BRCMF_FW_UNSUPPORTED) {
-+		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
-+		ifp->drvr->feat_flags |= BIT(id);
-+	} else {
-+		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
-+			  brcmf_feat_names[id], err);
-+	}
-+}
-+
- static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
- {
- 	char caps[256];
-@@ -136,11 +153,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
- {
- 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
- 	struct brcmf_pno_macaddr_le pfn_mac;
-+	struct brcmf_gscan_config gscan_cfg;
- 	u32 wowl_cap;
- 	s32 err;
-
- 	brcmf_feat_firmware_capabilities(ifp);
--
-+	memset(&gscan_cfg, 0, sizeof(gscan_cfg));
-+	brcmf_feat_iovar_data_set(ifp, BRCMF_FEAT_GSCAN, "pfn_gscan_cfg",
-+				  &gscan_cfg, sizeof(gscan_cfg));
- 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
- 	if (drvr->bus_if->wowl_supported)
- 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-index db4733a..c1dbd17 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
-@@ -31,6 +31,7 @@
-  * WOWL_GTK: (WOWL) GTK rekeying offload
-  * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
-  * MFP: 802.11w Management Frame Protection.
-+ * GSCAN: enhanced scan offload feature.
-  */
- #define BRCMF_FEAT_LIST \
- 	BRCMF_FEAT_DEF(MBSS) \
-@@ -44,7 +45,8 @@
- 	BRCMF_FEAT_DEF(WOWL_ND) \
- 	BRCMF_FEAT_DEF(WOWL_GTK) \
- 	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
--	BRCMF_FEAT_DEF(MFP)
-+	BRCMF_FEAT_DEF(MFP) \
-+	BRCMF_FEAT_DEF(GSCAN)
-
- /*
-  * Quirks:
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 9a1eb5a..8c18fad 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -835,4 +835,63 @@ struct brcmf_gtk_keyinfo_le {
- 	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
- };
-
-+/**
-+ * struct brcmf_gscan_bucket_config - configuration data for channel bucket.
-+ *
-+ * @bucket_end_index: !unknown!
-+ * @bucket_freq_multiple: !unknown!
-+ * @flag: !unknown!
-+ * @reserved: !unknown!
-+ * @repeat: !unknown!
-+ * @max_freq_multiple: !unknown!
-+ */
-+struct brcmf_gscan_bucket_config {
-+	u8 bucket_end_index;
-+	u8 bucket_freq_multiple;
-+	u8 flag;
-+	u8 reserved;
-+	__le16 repeat;
-+	__le16 max_freq_multiple;
-+};
-+
-+/* version supported which must match firmware */
-+#define BRCMF_GSCAN_CFG_VERSION                     1
-+
-+/**
-+ * enum brcmf_gscan_cfg_flags - bit values for gscan flags.
-+ *
-+ * @BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS: send probe responses/beacons to host.
-+ * @BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY: indicated only flags member is changed.
-+ */
-+enum brcmf_gscan_cfg_flags {
-+	BRCMF_GSCAN_CFG_FLAGS_ALL_RESULTS = BIT(0),
-+	BRCMF_GSCAN_CFG_FLAGS_CHANGE_ONLY = BIT(7),
-+};
-+
-+/**
-+ * struct brcmf_gscan_config - configuration data for gscan.
-+ *
-+ * @version: version of the api to match firmware.
-+ * @flags: flags according %enum brcmf_gscan_cfg_flags.
-+ * @buffer_threshold: percentage threshold of buffer to generate an event.
-+ * @swc_nbssid_threshold: number of BSSIDs with significant change that
-+ *	will generate an event.
-+ * @swc_rssi_window_size: size of rssi cache buffer (max=8).
-+ * @count_of_channel_buckets: number of array members in @bucket.
-+ * @retry_threshold: !unknown!
-+ * @lost_ap_window: !unknown!
-+ * @bucket: array of channel buckets.
-+ */
-+struct brcmf_gscan_config {
-+	__le16 version;
-+	u8  flags;
-+	u8   buffer_threshold;
-+	u8   swc_nbssid_threshold;
-+	u8  swc_rssi_window_size;
-+	u8  count_of_channel_buckets;
-+	u8  retry_threshold;
-+	__le16  lost_ap_window;
-+	struct brcmf_gscan_bucket_config bucket[1];
-+};
-+
- #endif /* FWIL_TYPES_H_ */
---
-1.9.1
+ 	rtlpriv = hw->priv;
++	rtlpriv->hw = hw;
+ 	rtlpriv->usb_data = kzalloc(RTL_USB_MAX_RX_COUNT * sizeof(u32),
+ 				    GFP_KERNEL);
+ 	if (!rtlpriv->usb_data)
+-- 
+2.10.2
