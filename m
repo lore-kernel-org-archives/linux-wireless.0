@@ -1,65 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36634 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753341AbcLPH1p (ORCPT
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:36631 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751012AbcLULrj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 02:27:45 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBG7K65M003841
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 23:26:52 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 27bnjfdxk9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 23:26:52 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/2] mwifiex: Enable dynamic bandwidth signalling
-Date: Fri, 16 Dec 2016 12:55:45 +0530
-Message-ID: <1481873145-5381-2-git-send-email-akarwar@marvell.com> (sfid-20161216_082750_531503_1097DAAF)
-In-Reply-To: <1481873145-5381-1-git-send-email-akarwar@marvell.com>
-References: <1481873145-5381-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Wed, 21 Dec 2016 06:47:39 -0500
+Received: by mail-qk0-f180.google.com with SMTP id n21so73320212qka.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2016 03:47:39 -0800 (PST)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
+From: Geoff Lansberry <geoff@kuvee.com>
+In-Reply-To: <20161221022347.GB5444@animalcreek.com>
+Date: Wed, 21 Dec 2016 06:47:36 -0500
+Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
+        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        justin@kuvee.com
+Message-Id: <32FAB08E-BE8E-4127-80A6-013300B43BD0@kuvee.com> (sfid-20161221_124805_990387_EA83474F)
+References: <1482250592-4268-1-git-send-email-glansberry@gmail.com> <1482250592-4268-2-git-send-email-glansberry@gmail.com> <20161221022347.GB5444@animalcreek.com>
+To: Mark Greer <mgreer@animalcreek.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable dynamic bandwidth signalling by setting the corresponding
-bit in MAC control register.
+Thanks Mark.   Should I resubmit patches with the requested edits today, or w=
+ait a bit for more comments?  What is the desired etiquette?
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/fw.h   | 1 +
- drivers/net/wireless/marvell/mwifiex/init.c | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index f48247c..55db158f 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -441,6 +441,7 @@ enum mwifiex_channel_flags {
- #define HostCmd_ACT_MAC_PROMISCUOUS_ENABLE    BIT(7)
- #define HostCmd_ACT_MAC_ALL_MULTICAST_ENABLE  BIT(8)
- #define HostCmd_ACT_MAC_ADHOC_G_PROTECTION_ON BIT(13)
-+#define HostCmd_ACT_MAC_DYNAMIC_BW_ENABLE     BIT(16)
- 
- #define HostCmd_BSS_MODE_IBSS               0x0002
- #define HostCmd_BSS_MODE_ANY                0x0003
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 87cda4f..7569483 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -92,7 +92,8 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
- 	for (i = 0; i < ARRAY_SIZE(priv->wep_key); i++)
- 		memset(&priv->wep_key[i], 0, sizeof(struct mwifiex_wep_key));
- 	priv->wep_key_curr_index = 0;
--	priv->curr_pkt_filter = HostCmd_ACT_MAC_RX_ON | HostCmd_ACT_MAC_TX_ON |
-+	priv->curr_pkt_filter = HostCmd_ACT_MAC_DYNAMIC_BW_ENABLE |
-+				HostCmd_ACT_MAC_RX_ON | HostCmd_ACT_MAC_TX_ON |
- 				HostCmd_ACT_MAC_ETHERNETII_ENABLE;
- 
- 	priv->beacon_period = 100; /* beacon interval */
--- 
-1.9.1
+> On Dec 20, 2016, at 9:23 PM, Mark Greer <mgreer@animalcreek.com> wrote:
+>=20
+>> On Tue, Dec 20, 2016 at 11:16:31AM -0500, Geoff Lansberry wrote:
+>> From: Geoff Lansberry <geoff@kuvee.com>
+>>=20
+>> The TRF7970A has configuration options for supporting hardware designs
+>> with 1.8 Volt or 3.3 Volt IO.   This commit adds a device tree option,
+>> using a fixed regulator binding, for setting the io voltage to match
+>> the hardware configuration. If no option is supplied it defaults to
+>> 3.3 volt configuration.
+>=20
+> Sign-off ??  Same comment for you other patches.
+>=20
+> <time passes>
+>=20
+> Okay I see you have it at the end of the patch.  It should be here.
+> 'git commit -s' is your friend.
+>=20
+>> ---
+>> .../devicetree/bindings/net/nfc/trf7970a.txt       |  4 ++--
+>> drivers/nfc/trf7970a.c                             | 28 +++++++++++++++++=
+++++-
+>> 2 files changed, 29 insertions(+), 3 deletions(-)
+>>=20
+>> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Doc=
+umentation/devicetree/bindings/net/nfc/trf7970a.txt
+>> index e262ac1..b5777d8 100644
+>> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+>> @@ -21,9 +21,9 @@ Optional SoC Specific Properties:
+>> - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+>>   where an extra byte is returned by Read Multiple Block commands issued
+>>   to Type 5 tags.
+>> +- vdd-io-supply: Regulator specifying voltage for vdd-io
+>> - clock-frequency: Set to specify that the input frequency to the trf7970=
+a is 13560000Hz or 27120000Hz
+>>=20
+>> -
+>> Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+>>=20
+>> &spi1 {
+>> @@ -41,11 +41,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SP=
+I1):
+>>                  <&gpio2 5 GPIO_ACTIVE_LOW>;
+>>        vin-supply =3D <&ldo3_reg>;
+>>        vin-voltage-override =3D <5000000>;
+>> +        vdd-io-supply =3D <&ldo2_reg>;
+>>        autosuspend-delay =3D <30000>;
+>>        irq-status-read-quirk;
+>>        en2-rf-quirk;
+>>        t5t-rmb-extra-byte-quirk;
+>> -        vdd_io_1v8;
+>=20
+> It was already mentioned but this shouldn't have been added in the
+> previous patch so it shouldn't be here now.
+>=20
+>>        clock-frequency =3D <27120000>;
+>>        status =3D "okay";
+>>    };
+>> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+>> index 4e051e9..8a88195 100644
+>> --- a/drivers/nfc/trf7970a.c
+>> +++ b/drivers/nfc/trf7970a.c
+>=20
+>> @@ -2062,6 +2068,7 @@ static int trf7970a_probe(struct spi_device *spi)
+>>        return ret;
+>>    }
+>>=20
+>> +
+>=20
+> Please don't add an extra blank line.
+>=20
+>>    of_property_read_u32(np, "clock-frequency", &clk_freq);
+>>    if ((clk_freq !=3D TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
+>>        (clk_freq !=3D TRF7970A_27MHZ_CLOCK_FREQUENCY)) {
+>> @@ -2105,6 +2112,25 @@ static int trf7970a_probe(struct spi_device *spi)
+>>    if (uvolts > 4000000)
+>>        trf->chip_status_ctrl =3D TRF7970A_CHIP_STATUS_VRS5_3;
+>>=20
+>> +    trf->regulator =3D devm_regulator_get(&spi->dev, "vdd-io");
+>> +    if (IS_ERR(trf->regulator)) {
+>> +        ret =3D PTR_ERR(trf->regulator);
+>> +        dev_err(trf->dev, "Can't get VDD_IO regulator: %d\n", ret);
+>> +        goto err_destroy_lock;
+>> +    }
+>> +
+>> +    ret =3D regulator_enable(trf->regulator);
+>> +    if (ret) {
+>> +        dev_err(trf->dev, "Can't enable VDD_IO: %d\n", ret);
+>> +        goto err_destroy_lock;
+>> +    }
+>> +
+>> +
+>=20
+> Please don't add an extra blank line.
+>=20
+>> +    if (regulator_get_voltage(trf->regulator) =3D=3D 1800000) {
+>> +        trf->io_ctrl =3D TRF7970A_REG_IO_CTRL_IO_LOW;
+>> +        dev_dbg(trf->dev, "trf7970a config vdd_io to 1.8V\n");
+>> +    }
+>> +
+>>    trf->ddev =3D nfc_digital_allocate_device(&trf7970a_nfc_ops,
+>>            TRF7970A_SUPPORTED_PROTOCOLS,
+>>            NFC_DIGITAL_DRV_CAPS_IN_CRC |
+>> --=20
+>> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+>=20
+> Your 'Signed-off-by:' goes at the end of the commit description not here.
+>=20
+> Overall, I think you did the right thing (unless someone disagrees).
+> Just some minor issues.
+>=20
+> Mark
+> --
