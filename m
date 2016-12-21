@@ -1,58 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44752 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756487AbcLWAoL (ORCPT
+Received: from forward1p.cmail.yandex.net ([77.88.31.16]:50326 "EHLO
+        forward1p.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1757779AbcLUXQT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 19:44:11 -0500
-From: Colin King <colin.king@canonical.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: fix spelling mistakes on "Ivalid"
-Date: Fri, 23 Dec 2016 00:43:22 +0000
-Message-Id: <20161223004322.7300-1-colin.king@canonical.com> (sfid-20161223_014443_026766_CCFB52C9)
+        Wed, 21 Dec 2016 18:16:19 -0500
+From: Ozgur Karatas <okaratas@member.fsf.org>
+To: Paul Bolle <pebolle@tiscali.nl>,
+        johannes <johannes@sipsolutions.net>,
+        David Miller <davem@davemloft.net>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <1482361572.28171.8.camel@tiscali.nl>
+References: <608881482358981@web17g.yandex.ru>
+         <1482359625.28171.2.camel@tiscali.nl> <601101482360611@web25o.yandex.ru> <1482361572.28171.8.camel@tiscali.nl>
+Subject: Re: [PATCH 2/2] net: wireless: fix to uses struct
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Message-Id: <489331482362176@web18m.yandex.ru> (sfid-20161222_001732_878167_1527F9DE)
+Date: Thu, 22 Dec 2016 01:16:16 +0200
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
 
-Trivial fixes to spelling mistake "Ivalid" to "Invalid" in
-brcmf_err error messages.
+22.12.2016, 01:06, "Paul Bolle" <pebolle@tiscali.nl>:
+> On Thu, 2016-12-22 at 01:50 +0300, Ozgur Karatas wrote:
+>>  I don't have a problem with C programming
+>
+> I'm sorry, but you do need to learn C, at a basic level, first.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Hmm, I don't like to discussion but I'm an assertive on C/C++.
+So, I'm not into the Linux kernel, I writing code with C/C++ for many years. 
+I'm having trouble using Linux tools and trying to learn git/diff/format-patch/etc. 
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 7ffc4ab..15eaf72 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3971,7 +3971,7 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
- 			pval |= AES_ENABLED;
- 			break;
- 		default:
--			brcmf_err("Ivalid unicast security info\n");
-+			brcmf_err("Invalid unicast security info\n");
- 		}
- 		offset++;
- 	}
-@@ -4015,7 +4015,7 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
- 			wpa_auth |= WPA2_AUTH_1X_SHA256;
- 			break;
- 		default:
--			brcmf_err("Ivalid key mgmt info\n");
-+			brcmf_err("Invalid key mgmt info\n");
- 		}
- 		offset++;
- 	}
--- 
-2.10.2
+Also, I'm reading over 600 e-mails per day and I'm reading to Documentation (kernel). I learn :)
+
+I don't have to problem with C, you can see my early codes and software (github).
+
+I need to get a good sense of the coding style and Documentation.
+
+And thank you.
+
+Regards
+
+> Paul Bolle
+
+~Ozgur
