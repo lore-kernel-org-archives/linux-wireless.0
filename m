@@ -1,103 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34163 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754035AbcLXSCO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42040 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbcLUOfV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 13:02:14 -0500
-Date: Sat, 24 Dec 2016 19:02:11 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 3/6] wl1251: Update wl->nvs_len after wl->nvs is valid
-Message-ID: <20161224180211.GA13590@amd> (sfid-20161224_190238_822154_A512458B)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-4-git-send-email-pali.rohar@gmail.com>
+        Wed, 21 Dec 2016 09:35:21 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
-In-Reply-To: <1482598381-16513-4-git-send-email-pali.rohar@gmail.com>
+Subject: Re: rtlwifi: Fix kernel oops introduced with commit e49656147359
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161220023812.5999-1-Larry.Finger@lwfinger.net>
+References: <20161220023812.5999-1-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-kernel@vger.kernel.org, driver-devel@vger.kernel.org,
+        Stable <stable@vger.kernel.org>,
+        Wei Yongjun <weiyongjun1@huawei.com>
+Message-Id: <20161221143520.5873D61662@smtp.codeaurora.org> (sfid-20161221_153524_657506_BB391A5A)
+Date: Wed, 21 Dec 2016 14:35:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> With commit e49656147359 {"rtlwifi: Use dev_kfree_skb_irq instead of
+> kfree_skb"), the method used to free an skb was changed because the
+> kfree_skb() was inside a spinlock. What was forgotten is that kfree_skb()
+> guards against a NULL value for the argument. Routine dev_kfree_skb_irq()
+> does not, and a test is needed to prevent kernel panics.
+> 
+> Fixes: e49656147359 ("rtlwifi: Use dev_kfree_skb_irq instead of kfree_skb")
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> # 4.9+
+> Cc: Wei Yongjun <weiyongjun1@huawei.com>
 
---EVF5PPMfhYS0aIcm
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Patch applied to wireless-drivers.git, thanks.
 
-On Sat 2016-12-24 17:52:58, Pali Roh=E1r wrote:
-> In case kmemdup fails thne wl->nvs_len will contains invalid non-zero siz=
-e.
-> This patch fixes it.
+22b68b93ae25 rtlwifi: Fix kernel oops introduced with commit e49656147359
 
-If kmemdup fails, then wl->nvs_len will contain invalid non-zero size.
+-- 
+https://patchwork.kernel.org/patch/9481055/
 
-?
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-This probably should go as first in series, as it is bugfix?
-
-									Pavel
-Acked-by: Pavel Machek <pavel@ucw.cz>
-
-
-> Signed-off-by: Pali Roh=E1r <pali.rohar@gmail.com>
-> ---
->  drivers/net/wireless/ti/wl1251/main.c |    5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
-/ti/wl1251/main.c
-> index 24f8866..8971b64 100644
-> --- a/drivers/net/wireless/ti/wl1251/main.c
-> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> @@ -124,8 +124,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
->  		goto out;
->  	}
-> =20
-> -	wl->nvs_len =3D fw->size;
-> -	wl->nvs =3D kmemdup(fw->data, wl->nvs_len, GFP_KERNEL);
-> +	wl->nvs =3D kmemdup(fw->data, fw->size, GFP_KERNEL);
-> =20
->  	if (!wl->nvs) {
->  		wl1251_error("could not allocate memory for the nvs file");
-> @@ -133,6 +132,8 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
->  		goto out;
->  	}
-> =20
-> +	wl->nvs_len =3D fw->size;
-> +
->  	ret =3D 0;
-> =20
->  out:
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---EVF5PPMfhYS0aIcm
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlheuCMACgkQMOfwapXb+vJiTgCfaj9HPfGWc0/SEbego9rsuAGE
-I18AnjPiY3ZPyBEdyM0Il07BoZ3schcn
-=Hnrh
------END PGP SIGNATURE-----
-
---EVF5PPMfhYS0aIcm--
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
