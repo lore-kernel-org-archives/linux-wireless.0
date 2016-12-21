@@ -1,68 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:36614 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752278AbcLGNew (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5197 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752092AbcLUO3s (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 08:34:52 -0500
-Received: by mail-io0-f176.google.com with SMTP id l140so95960110iol.3
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 05:34:52 -0800 (PST)
-Date: Wed, 7 Dec 2016 08:33:15 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Thomas Pedersen <thomas@eero.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Remove invalid flag operations in mesh TSF
- synchronization
-Message-ID: <20161207133315.GD7524@localhost> (sfid-20161207_143455_690873_7AC3658E)
-References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
- <CADjYELx0ts7B8A2cAtpCjuH7b-AFFm_fqC=hnyhQBmVtu7ewzA@mail.gmail.com>
- <20161202211351.GA5571@localhost>
- <59d30c75-4eb5-cdc8-c762-b62b22664b51@gmail.com>
- <CADjYELw=-LEqDra0pM+3FjtJDve+NiNYEMz5=F0i5Ge-5k3LaA@mail.gmail.com>
- <1481102652.4092.33.camel@sipsolutions.net>
- <9197b711-3d48-071a-57d8-53e2a11c26de@gmail.com>
+        Wed, 21 Dec 2016 09:29:48 -0500
+Cc: <kvalo@codeaurora.org>, <helgaas@kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <marc.zyngier@arm.com>, <janusz.dziedzic@tieto.com>,
+        <ath9k-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+        <rmanohar@qca.qualcomm.com>, <bharat.kumar.gogada@xilinx.com>,
+        "Tobias Klausmann" <tobias.johannes.klausmann@mni.thm.de>,
+        "# v4 . 9" <stable@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9197b711-3d48-071a-57d8-53e2a11c26de@gmail.com>
+Subject: Re: [v2] ath9k: do not return early to fix rcu unlocking
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
+References: <20161213170807.4853-1-tobias.johannes.klausmann@mni.thm.de>
+To: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+Message-ID: <f3c186fc7a374be98b725170b57ec1e3@euamsexm01a.eu.qualcomm.com> (sfid-20161221_153008_811446_0E9D165D)
+Date: Wed, 21 Dec 2016 15:29:20 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 07, 2016 at 09:55:41PM +0900, Masashi Honma wrote:
-> >It's called mesh_sync_offset_adjust_tbtt() which matches more closely
-> >"TBTT adjustment" than "neighbor offset synchronization"?
+Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de> wrote:
+> Starting with commit d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb
+> where possible") the driver uses rcu_read_lock() && rcu_read_unlock(), yet on
+> returning early in ath_tx_edma_tasklet() the unlock is missing leading to stalls
+> and suspicious RCU usage:
 > 
-> I think so. Because there is not any code creating "TBTT Adjustment Request
-> frame" even though the frame is required by "TBTT adjustment".
-
-This mesh_sync_offset_adjust_tbtt is definitely doing offset
-synchronization, so probably "tbtt" should be renamed "tsf" here.
-
-> >The code
-> >looks more like offset synchronization though. Perhaps there's some
-> >confusing and it's kinda doing both?
+>  ===============================
+>  [ INFO: suspicious RCU usage. ]
+>  4.9.0-rc8 #11 Not tainted
+>  -------------------------------
+>  kernel/rcu/tree.c:705 Illegal idle entry in RCU read-side critical section.!
 > 
-> In theory, updating the flag with 1) looks not correct because it is not
-> clearly defined in spec.
+>  other info that might help us debug this:
 > 
-> In practice, I could consider extending the meaning of the flag over the
-> spec to use it to avoid referring the updating TSF value by peer as Thomas
-> said. I have took the statistics how many TSF drift
-> (ifmsh->sync_offset_clockdrift_max) happens. The attached file shows the
-> stats. The horizontal axis shows TSF drift time(usec) and vertical axis
-> shows how many time the drift occurred. The graph shows almost drifts are
-> under 20usec. In contrast, 2) could causes more than 1000usec drift. So 1)
-> looks not so large enough to protect with the flag.
+>  RCU used illegally from idle CPU!
+>  rcu_scheduler_active = 1, debug_locks = 0
+>  RCU used illegally from extended quiescent state!
+>  1 lock held by swapper/7/0:
+>  #0:
+>   (
+>  rcu_read_lock
+>  ){......}
+>  , at:
+>  [<ffffffffa06ed110>] ath_tx_edma_tasklet+0x0/0x450 [ath9k]
+> 
+>  stack backtrace:
+>  CPU: 7 PID: 0 Comm: swapper/7 Not tainted 4.9.0-rc8 #11
+>  Hardware name: Acer Aspire V3-571G/VA50_HC_CR, BIOS V2.21 12/16/2013
+>   ffff88025efc3f38 ffffffff8132b1e5 ffff88017ede4540 0000000000000001
+>   ffff88025efc3f68 ffffffff810a25f7 ffff88025efcee60 ffff88017edebdd8
+>   ffff88025eeb5400 0000000000000091 ffff88025efc3f88 ffffffff810c3cd4
+>  Call Trace:
+>   <IRQ>
+>   [<ffffffff8132b1e5>] dump_stack+0x68/0x93
+>   [<ffffffff810a25f7>] lockdep_rcu_suspicious+0xd7/0x110
+>   [<ffffffff810c3cd4>] rcu_eqs_enter_common.constprop.85+0x154/0x200
+>   [<ffffffff810c5a54>] rcu_irq_exit+0x44/0xa0
+>   [<ffffffff81058631>] irq_exit+0x61/0xd0
+>   [<ffffffff81018d25>] do_IRQ+0x65/0x110
+>   [<ffffffff81672189>] common_interrupt+0x89/0x89
+>   <EOI>
+>   [<ffffffff814ffe11>] ? cpuidle_enter_state+0x151/0x200
+>   [<ffffffff814ffee2>] cpuidle_enter+0x12/0x20
+>   [<ffffffff8109a6ae>] call_cpuidle+0x1e/0x40
+>   [<ffffffff8109a8f6>] cpu_startup_entry+0x146/0x220
+>   [<ffffffff810336f8>] start_secondary+0x148/0x170
+> 
+> Signed-off-by: Tobias Klausmann <tobias.johannes.klausmann@mni.thm.de>
+> Fixes: d94a461d7a7d ("ath9k: use ieee80211_tx_status_noskb where possible")
+> Cc: <stable@vger.kernel.org> # v4.9
+> Acked-by: Felix Fietkau <nbd@nbd.name>
 
-Yes, offset synchronization is (given decent clocks) supposed to be only
-for small tweaks.  We will do it up to .8 ms drift though -- above .8 ms, we
-just reset drift to zero and adopt the new timing offset.  You can see this
-kind of large "drift" by restarting a station.
+Patch applied to ath-current branch of ath.git, thanks.
 
-Actually, looking at the code now it doesn't make a lot of sense to set
-this flag for offset sync because TOFFSET_KNOWN flag is completely cleared
-whenever that is set, so we have to be forgetting the current t_offset all
-the time?
+d1f1c0e289e1 ath9k: do not return early to fix rcu unlocking
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+https://patchwork.kernel.org/patch/9472709/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
