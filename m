@@ -1,63 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0103.hostedemail.com ([216.40.44.103]:60802 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1761232AbcLPTbZ (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:48890 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932778AbcLUCHT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 14:31:25 -0500
-Message-ID: <1481916679.20419.1.camel@perches.com> (sfid-20161216_203129_042378_6037CAA4)
-Subject: Re: [PATCH 02/14 V2] rtlwifi: Remove RT_TRACE messages that use
- DBG_EMERG
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>
-Date: Fri, 16 Dec 2016 11:31:19 -0800
-In-Reply-To: <20161215182310.13713-3-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-         <20161215182310.13713-3-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 20 Dec 2016 21:07:19 -0500
+Date: Tue, 20 Dec 2016 19:07:17 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: Rob Herring <robh@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Justin Bronder <justin@kuvee.com>
+Subject: Re: [PATCH 2/3] NFC: trf7970a: Add device tree option of 1.8 Volt IO
+ voltage
+Message-ID: <20161221020717.GA5444@animalcreek.com> (sfid-20161221_030749_262638_795081DE)
+References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+ <1481841044-4314-2-git-send-email-glansberry@gmail.com>
+ <20161219223504.ttwayzpfvdumgouu@rob-hp-laptop>
+ <CAO7Z3WLC7J+JzmtArOc-ZUNoLGeMX6s=1XQbzwB1zx1U3yTX2Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO7Z3WLC7J+JzmtArOc-ZUNoLGeMX6s=1XQbzwB1zx1U3yTX2Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-12-15 at 12:22 -0600, Larry Finger wrote:
-> These messages are always logged and represent error conditions, thus
-> we can use pr_err().
+On Tue, Dec 20, 2016 at 11:13:23AM -0500, Geoff Lansberry wrote:
+> On Mon, Dec 19, 2016 at 5:35 PM, Rob Herring <robh@kernel.org> wrote:
+> > On Thu, Dec 15, 2016 at 05:30:43PM -0500, Geoff Lansberry wrote:
+> >> From: Geoff Lansberry <geoff@kuvee.com>
+> >>
+> >> ---
+> >>  Documentation/devicetree/bindings/net/nfc/trf7970a.txt |  2 ++
+> >>  drivers/nfc/trf7970a.c                                 | 13 ++++++++++++-
+> >>  2 files changed, 14 insertions(+), 1 deletion(-)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> >> index 9dda879..208f045 100644
+> >> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> >> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> >> @@ -21,6 +21,7 @@ Optional SoC Specific Properties:
+> >>  - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+> >>    where an extra byte is returned by Read Multiple Block commands issued
+> >>    to Type 5 tags.
+> >> +- vdd_io_1v8: Set to specify that the trf7970a io voltage should be set to 1.8V
+> >
+> > Use the regulator binding and provide a fixed 1.8V supply.
+> >
+> >>  - crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
+> >>
+> >>
+> >> @@ -45,6 +46,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+> >>               irq-status-read-quirk;
+> >>               en2-rf-quirk;
+> >>               t5t-rmb-extra-byte-quirk;
+> >> +             vdd_io_1v8;
+> >>               crystal_27mhz;
+> >>               status = "okay";
+> >>       };
+> 
+> Rob - using the regulator binding is new to me, but I've given it a
+> shot and just sent you another set of patches for your inspection.
+> Please let me know if this is what you had in mind.
 
-OK and some trivialities:
+This is my bad.  Geoff followed my example and did something similar to
+'vin-voltage-override' which shouldn't have been there in the first place.
+I have this fixed (I think) locally and will submit once it I'm back from
+my holiday travels.
 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-[]
-> @@ -389,8 +388,8 @@ static void _rtl_init_mac80211(struct ieee80211_hw *hw)
->  			/* <4> set mac->sband to wiphy->sband */
->  			hw->wiphy->bands[NL80211_BAND_5GHZ] = sband;
->  		} else {
-> -			RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG, "Err BAND %d\n",
-> -				 rtlhal->current_bandtype);
-> +			pr_err("Err BAND %d\n",
-> +			       rtlhal->current_bandtype);
-
-It's nice to rewrap lines to 80 columns where possible.
-
-> @@ -1886,8 +1883,7 @@ void rtl_phy_scan_operation_backup(struct ieee80211_hw *hw, u8 operation)
->  						      (u8 *)&iotype);
->  			break;
->  		default:
-> -			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-> -				 "Unknown Scan Backup operation.\n");
-> +			pr_err("Unknown Scan Backup operation.\n");
-
-And it's also nice to remove unnecessary periods for
-output message consistency.  Most don't use it.
-
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/cam.c b/drivers/net/wireless/realtek/rtlwifi/cam.c
-[]
-> @@ -285,8 +285,7 @@ u8 rtl_cam_get_free_entry(struct ieee80211_hw *hw, u8 *sta_addr)
->  	u8 i, *addr;
->  
->  	if (NULL == sta_addr) {
-> -		RT_TRACE(rtlpriv, COMP_SEC, DBG_EMERG,
-> -			 "sta_addr is NULL.\n");
-> +		pr_err("sta_addr is NULL.\n");
-
-etc...
+Mark
+--
