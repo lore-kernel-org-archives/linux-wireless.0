@@ -1,174 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34489 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755972AbcLOSYD (ORCPT
+Received: from mail-wj0-f195.google.com ([209.85.210.195]:33494 "EHLO
+        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941834AbcLVR6p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 13:24:03 -0500
-Received: by mail-oi0-f67.google.com with SMTP id m75so7099971oig.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 10:23:40 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 12/14 V2] rtlwifi: rtl8192c-common: Remove all instances of DBG_EMERG
-Date: Thu, 15 Dec 2016 12:23:08 -0600
-Message-Id: <20161215182310.13713-13-Larry.Finger@lwfinger.net> (sfid-20161215_192418_707049_ED9D9362)
-In-Reply-To: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-1-Larry.Finger@lwfinger.net>
+        Thu, 22 Dec 2016 12:58:45 -0500
+Received: by mail-wj0-f195.google.com with SMTP id kp2so37266256wjc.0
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2016 09:58:44 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        Kalle Valo <kvalo@qca.qualcomm.com>, michal.kazior@tieto.com
+Subject: Re: [PATCH] ath10k: merge extended peer info data with existing peers info
+Date: Thu, 22 Dec 2016 18:58:41 +0100
+Message-ID: <1563376.k5ulprKP3Z@debian64> (sfid-20161222_185849_688649_25E22529)
+In-Reply-To: <20161222154801.GA16241@atheros-ThinkPad-T61>
+References: <20161216052418.GA8936@atheros-ThinkPad-T61> <2696316.Ugl5Pim1oL@debian64> <20161222154801.GA16241@atheros-ThinkPad-T61>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a step toward eliminating the RT_TRACE macros. Those calls that
-have DBG_EMERG as the level are always logged, and they represent error
-conditions, thus they are replaced with pr_err().
+Hello Shafi,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
-V2 - eliminate some files that should not have been sent.
----
- .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 33 ++++++----------------
- .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 13 ++++-----
- 2 files changed, 15 insertions(+), 31 deletions(-)
+On Thursday, December 22, 2016 9:18:01 PM CET Mohammed Shafi Shajakhan wrote:
+> > On Monday, December 19, 2016 10:19:57 PM CET Mohammed Shafi Shajakhan wrote:
+> > > On Sat, Dec 17, 2016 at 06:46:34PM +0100, Christian Lamparter wrote:
+> > > > The 10.4 firmware adds extended peer information to the
+> > > > firmware's statistics payload. This additional info is
+> > > > stored as a separate data field. During review of
+> > > > "ath10k: add accounting for the extended peer statistics" [0]
+> > > > 
+> > > > Mohammed Shafi Shajakhan commented that the extended peer statistics
+> > > > lists are of little use:"... there is not much use in appending
+> > > > the extended peer stats (which gets periodically updated) to the
+> > > > linked list '&ar->debug.fw_stats.peers_extd)' and should we get
+> > > > rid of the below (and the required cleanup as well)
+> > > > 
+> > > > list_splice_tail_init(&stats.peers_extd,
+> > > >                 &ar->debug.fw_stats.peers_extd);
+> > > > 
+> > > > since rx_duration is getting updated periodically to the per sta
+> > > > information."
+> > > > 
+> > > > This patch replaces the extended peers list with a lookup and
+> > > > puts the retrieved data (rx_duration) into the existing
+> > > > ath10k_fw_stats_peer entry that was created earlier.
+> > > 
+> > > [shafi] Its good to maintain the extended stats variable
+> > > and retain the two different functions to update rx_duration.
+> > > 
+> > > a) extended peer stats supported - mainly for 10.4
+> > > b) extender peer stats not supported - for 10.2
+> > Well, I have to ask why you want to retain the two different
+> > functions to update the same arsta->rx_duration? I think a
+> > little bit of code that helps to explain what's on your mind
+> > (or how you would do it) would help immensely in this case.
+> > Since I have the feeling that this is the problem here. 
+> > So please explain it in C(lang).
+> 
+> [shafi] I see you prefer to stuff the 'rx_duration' from
+> the extended stats to the existing global 'ath10k_peer_stats'
+> The idea of extended stats is, ideally its not going to stop
+> for 'rx_duration' . Extended stats is maintained as a seperate
+> list / entry for addition of new fields as well
+I'm guessing you are trying to say here:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-index 4a49e66..e739e56 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -145,10 +145,8 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
- 		pageNums = size / FW_8192C_PAGE_SIZE;
- 		remainsize = size % FW_8192C_PAGE_SIZE;
+replace:
+
+dst->rx_duration = __le32_to_cpu(src->rx_duration); 
+
+with
+
+dst->rx_duration += __le32_to_cpu(src->rx_duration);
+
+in ath10k_wmi_10_4_op_pull_fw_stats()?
+
+Is this correct? If so then can you tell me why ath10k_wmi_10_4_op_pull_fw_stats()
+is using for (i = 0; i < num_peer_stats; i++) to iterate over the extended peer
+stats instead of looking up the number of extended peer items. Because this does
+imply that there are the "same" (and every peer stat has a matching extended 
+peer stat)... (This will be important for the comment below - so ***).
+Of course, if this isn't true then this is a bug and should be fixed because
+otherwise the ath10k_wmi_10_4_op_pull_fw_stats functions might return -EPROTO
+at some point which causes a "failed to pull fw stats: -71" and unprocessed/lost
+stats.
+> > 
+> > > > [0] <https://lkml.kernel.org/r/992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+> > > > Cc: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+> > > > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> > > > ---
+> > > >  drivers/net/wireless/ath/ath10k/core.h        |  2 --
+> > > >  drivers/net/wireless/ath/ath10k/debug.c       | 17 --------------
+> > > >  drivers/net/wireless/ath/ath10k/debugfs_sta.c | 32 ++-----------------------
+> > > >  drivers/net/wireless/ath/ath10k/wmi.c         | 34 ++++++++++++++++++++-------
+> > > >  4 files changed, 28 insertions(+), 57 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+> > > > index 09ff8b8a6441..3fffbbb18c25 100644
+> > > > --- a/drivers/net/wireless/ath/ath10k/core.h
+> > > > +++ b/drivers/net/wireless/ath/ath10k/core.h
+> > > > @@ -268,11 +268,9 @@ struct ath10k_fw_stats_pdev {
+> > > >  };
+> > > >  
+> > > >  struct ath10k_fw_stats {
+> > > > -	bool extended;
+> > > >  	struct list_head pdevs;
+> > > >  	struct list_head vdevs;
+> > > >  	struct list_head peers;
+> > > > -	struct list_head peers_extd;
+> > > >  };
+> > > >  
+> > > >  #define ATH10K_TPC_TABLE_TYPE_FLAG	1
+> > > > diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+> > > > index 82a4c67f3672..89f7fde77cdf 100644
+> > > > --- a/drivers/net/wireless/ath/ath10k/debug.c
+> > > > +++ b/drivers/net/wireless/ath/ath10k/debug.c
+> > > > @@ -315,25 +315,13 @@ static void ath10k_fw_stats_peers_free(struct list_head *head)
+> > > >  	}
+> > > >  }
+> > > >  
+> > > > -static void ath10k_fw_extd_stats_peers_free(struct list_head *head)
+> > > > -{
+> > > > -	struct ath10k_fw_extd_stats_peer *i, *tmp;
+> > > > -
+> > > > -	list_for_each_entry_safe(i, tmp, head, list) {
+> > > > -		list_del(&i->list);
+> > > > -		kfree(i);
+> > > > -	}
+> > > > -}
+> > > > -
+> > > >  static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
+> > > >  {
+> > > >  	spin_lock_bh(&ar->data_lock);
+> > > >  	ar->debug.fw_stats_done = false;
+> > > > -	ar->debug.fw_stats.extended = false;
+> > > 
+> > > [shafi] this looks fine, but not removing the 'extended' variable 
+> > > from ath10k_fw_stats structure, I see the design for 'rx_duration'
+> > > arguably some what convoluted !
+> > I removed extended because it is now a write-only variable.
+> > So I figured, there's no point in keeping it around? I don't have
+> > access to the firmware interface documentation, so I don't know
+> > if there's a reason why it would be good to have it later.
+> > So please tell me, what information do we gain from it?
+> 
+> [shafi] while parsing the stats from 'wmi' we clearly mark there whether
+> the extended stats is available (or) not and if its there parse it and
+> deal with it seperately
+No, there's no difference between stats or extended stats (10.2.4 vs 10.4):
+both ath10k_sta_update_extd_stats_rx_duration() [0]
+and ath10k_sta_update_stats_rx_duration() [1] are adding the
+ath10k_fw_stats_peer(_extd)->rx_duration to ath10k_sta->rx_duration.
+
+With the merge of the peer stats and extended peer stats, this also
+removed the only usage of stats->extended. And hence it becomes a
+write-only variable. So there's no point in keeping it around ATM (as
+all other extended peer stats entries aren't used).
+
+> > > *We get periodic events from firmware updating 'ath10k_debug_fw_stats_process'
+> > > *Fetch rx_duration from  'ath10k_wmi_pull_fw_stats(ar, skb, &stats)'
+> > > {certainly 'stats' object is for this particular update only, and freed
+> > > up later)
+> > > *Update immediately using 'ath10k_sta_update_rx_duration'
+> > > 
+> > > 'ath10k_wmi_pull_fw_stats' has a slightly different implementation
+> > > for 10.2 and 10.4 (the later supporting extended peer stats)
+> > 
+> > I see that 10.2.4's ath10k_wmi_10_2_4_op_pull_fw_stats()
+> > passes the rx_duration as part of the wmi_10_2_4_ext_peer_stats
+> > element which is basically a carbon-copy of wmi_10_2_4_peer_stats
+> > (but with one extra __le32 for the rx_duration at the end.)
+> > This rx_duration is then used to set the rx_duration field in the
+> > generated ath10k_fw_stats_peer struct.
+> > 
+> > 10.4's ath10k_wmi_10_4_op_pull_fw_stats() has a "fixed" wmi_10_4_peer_stats
+> > element and uses an separate "fixed" wmi_10_4_peer_extd_stats element for
+> > the communicating the rx_duration to the driver.
+> > 
+> > Thing is, both function have the same signature. They produce the same
+> > struct ath10k_fw_stats_peer for the given data in the sk_buff input. So
+> > why does 10.4 need to have it's peer_extd infrastructure, when it can use
+> > the existing rx_duration field in the *universal* ath10k_fw_stats_peer?
+> 
+> [shafi] agreed we need to fix that, it would have been easier if 10.2.4
+> and 10.4 had the same definitions.
+Ok, I don't know the internals of the firmware to know what's the difference
+between 10.2.4 and 10.4's rx_duration (how both firmwares define them 
+differently in this context) ? From what I can tell, it's just that
+the entry has moved from the peer stats to extended peer stats.
+Of course, this is based on the logic that both 10.2.4 and 10.4 rx_durations
+end up being added to arsta->rx_duration in the same way. There's no scaling
+or a comment that would indicate a difference.
+
+> > 
+> > What's with the extra layers / HAL here? Because it looks like it's merged
+> > back together in the same manner into the same arsta->rx_duration?
+> > [ath10k_sta_update_stats_rx_duration() vs. 
+> >  ath10k_sta_update_extd_stats_rx_duration() - they are almost carbon copies too]
+> > 
+> > > > diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+> > > > index c893314a191f..c7ec7b9e9b55 100644
+> > > > --- a/drivers/net/wireless/ath/ath10k/wmi.c
+> > > > +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+> > > > @@ -3044,23 +3044,41 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+> > > >  	if ((stats_id & WMI_10_4_STAT_PEER_EXTD) == 0)
+> > > >  		return 0;
+> > > >  
+> > > > -	stats->extended = true;
+> > > > -
+> > > >  	for (i = 0; i < num_peer_stats; i++) {
+> > > >  		const struct wmi_10_4_peer_extd_stats *src;
+> > > > -		struct ath10k_fw_extd_stats_peer *dst;
+> > > > +		struct ath10k_fw_stats_peer *dst;
+> > > >  
+> > > >  		src = (void *)skb->data;
+> > > >  		if (!skb_pull(skb, sizeof(*src)))
+> > > >  			return -EPROTO;
+> > > >  
+> > > > -		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
+> > > > -		if (!dst)
+> > > > -			continue;
+> > > > +		/* Because the stat data may exceed htc-wmi buffer
+> > > > +		 * limit the firmware might split the stats data
+> > > > +		 * and delivers it in multiple update events.
+> > > > +		 * if we can't find the entry in the current event
+> > > > +		 * payload, we have to look in main list as well.
+> > > > +		 */
+> 
+> [shafi] thanks ! sorry i might have missed this bug, did you happen
+> to see this condition being hit ?
+This was copied from ath10k_debug_fw_stats_process() [2]. I've added Michal
+Kazior to the discussion since his patch "ath10k: fix fw stats processing"
+added this in debug.c. I think he knows the firmware internals well enough
+to tell if this is a problem or not. As it stands now, it is and will be
+in the future.
  
--		if (pageNums > 4) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Page numbers should not greater then 4\n");
--		}
-+		if (pageNums > 4)
-+			pr_err("Page numbers should not greater then 4\n");
- 
- 		for (page = 0; page < pageNums; page++) {
- 			offset = page * FW_8192C_PAGE_SIZE;
-@@ -180,15 +178,10 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
- 		 (!(value32 & FWDL_ChkSum_rpt)));
- 
- 	if (counter >= FW_8192C_POLLING_TIMEOUT_COUNT) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "chksum report faill ! REG_MCUFWDL:0x%08x .\n",
--			  value32);
-+		pr_err("chksum report fail! REG_MCUFWDL:0x%08x .\n",
-+		       value32);
- 		goto exit;
- 	}
--
--	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
--		 "Checksum report OK ! REG_MCUFWDL:0x%08x .\n", value32);
--
- 	value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
- 	value32 |= MCUFWDL_RDY;
- 	value32 &= ~WINTINI_RDY;
-@@ -198,20 +191,15 @@ static int _rtl92c_fw_free_to_go(struct ieee80211_hw *hw)
- 
- 	do {
- 		value32 = rtl_read_dword(rtlpriv, REG_MCUFWDL);
--		if (value32 & WINTINI_RDY) {
--			RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
--				 "Polling FW ready success!! REG_MCUFWDL:0x%08x .\n",
--					value32);
--			err = 0;
--			goto exit;
--		}
-+		if (value32 & WINTINI_RDY)
-+			return 0;
- 
- 		mdelay(FW_8192C_POLLING_DELAY);
- 
- 	} while (counter++ < FW_8192C_POLLING_TIMEOUT_COUNT);
- 
--	RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--		 "Polling FW ready fail!! REG_MCUFWDL:0x%08x .\n", value32);
-+	pr_err("Polling FW ready fail! REG_MCUFWDL:0x%08x.\n",
-+	       value32);
- 
- exit:
- 	return err;
-@@ -251,8 +238,7 @@ int rtl92c_download_fw(struct ieee80211_hw *hw)
- 
- 	err = _rtl92c_fw_free_to_go(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "Firmware is not ready to run!\n");
-+		pr_err("Firmware is not ready to run!\n");
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE,
- 			 "Firmware is ready to run!\n");
-@@ -327,8 +313,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
- 	while (!bwrite_sucess) {
- 		wait_writeh2c_limmit--;
- 		if (wait_writeh2c_limmit == 0) {
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Write H2C fail because no trigger for FW INT!\n");
-+			pr_err("Write H2C fail because no trigger for FW INT!\n");
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-index 30c2d12..5f8fa4a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-@@ -104,7 +104,7 @@ u32 _rtl92c_phy_rf_serial_read(struct ieee80211_hw *hw,
- 	offset &= 0x3f;
- 	newoffset = offset;
- 	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "return all one\n");
-+		pr_err("return all one\n");
- 		return 0xFFFFFFFF;
- 	}
- 	tmplong = rtl_get_bbreg(hw, RFPGA0_XA_HSSIPARAMETER2, MASKDWORD);
-@@ -152,7 +152,7 @@ void _rtl92c_phy_rf_serial_write(struct ieee80211_hw *hw,
- 	struct bb_reg_def *pphyreg = &rtlphy->phyreg_def[rfpath];
- 
- 	if (RT_CANNOT_IO(hw)) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "stop\n");
-+		pr_err("stop\n");
- 		return;
- 	}
- 	offset &= 0x3f;
-@@ -209,7 +209,7 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
- 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
- 						 BASEBAND_CONFIG_PHY_REG);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Write BB Reg Fail!!\n");
-+		pr_err("Write BB Reg Fail!!\n");
- 		return false;
- 	}
- 	if (rtlphy->rf_type == RF_1T2R) {
-@@ -222,13 +222,13 @@ bool _rtl92c_phy_bb8192c_config_parafile(struct ieee80211_hw *hw)
- 						   BASEBAND_CONFIG_PHY_REG);
- 	}
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "BB_PG Reg Fail!!\n");
-+		pr_err("BB_PG Reg Fail!!\n");
- 		return false;
- 	}
- 	rtstatus = rtlpriv->cfg->ops->config_bb_with_headerfile(hw,
- 						 BASEBAND_CONFIG_AGC_TAB);
- 	if (!rtstatus) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "AGC Table Fail\n");
-+		pr_err("AGC Table Fail\n");
- 		return false;
- 	}
- 	rtlphy->cck_high_power =
-@@ -860,8 +860,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			currentcmd = &postcommoncmd[*step];
- 			break;
- 		default:
--			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "Invalid 'stage' = %d, Check it!\n", *stage);
-+			pr_err("Invalid 'stage' = %d, Check it!\n",
-+			       *stage);
- 			return true;
- 		}
- 
--- 
-2.10.2
+> > > > +		list_for_each_entry(dst, &stats->peers, list) {
+> > > > +			if (ether_addr_equal(dst->peer_macaddr,
+> > > > +					     src->peer_macaddr.addr))
+> > > > +				goto found;
+> > > > +		}
+> > > > +
+> 
+> [shafi] Again, we can simply cache the macaddress and rx_duration
+> and deal with it later, rather than doing the whole lookup here ?
+> Will it be an overhead for large number of clients ?
+Well, show me how you would do it more efficiently otherwise? I don't
+see how you can cache the macaddress and rx_duration since you are
+basically forced to process all the peer stats first and later all
+the extended peer stats. They don't mix.
+
+As for how expensive it is: From what I can tell, the 10.4 firmware
+sends the stat events every few seconds. So they are not part of any
+rx or tx hot-paths. The list_for_each within the for
+(i = 0; i < num_peers;i++)  is actually in the O(1) class as far
+as both loops go. This might sound funny at first, but the number of
+extended peer list is limited by TARGET_10_4_MAX_PEER_EXT_STATS to 16.
+And thanks to (***) the limit of num_peers is also 16. Furthermore
+we can add a if (ath10k_peer_stats_enabled(ar)) guard to skip it
+entirely if the stats are disabled.
+
+
+> > > > +#ifdef CONFIG_ATH10K_DEBUGFS
+> > > > +		list_for_each_entry(dst, &ar->debug.fw_stats.peers, list) {
+> > > > +			if (ether_addr_equal(dst->peer_macaddr,
+> > > > +					     src->peer_macaddr.addr))
+> > > > +				goto found;
+> > > > +		}
+> > > > +#endif
+> 
+> [shafi] again, this could be handled seperately.
+This is more expensive. As fw_stats.peers can contain more entries than 16.
+However, this might be unnecessary if both peers and extended peers stats
+entries in the wmi event are always for the same stations.
+
+Note: There's an alternative way too. Instead of writing rx_duration into
+ath10k_fw_stats, we could skip the middle man write it directly into
+arsta->rx_duration. This would also mean that we can get rid of
+ath10k_sta_update_extd_stats_rx_duration(), ath10k_sta_update_stats_rx_duration()
+and ath10k_sta_update_rx_duration(). This has the benifit that we can
+remove even more.
+
+> > > > +
+> > > > +		ath10k_dbg(ar, ATH10K_DBG_WMI,
+> > > > +			   "Orphaned extended stats entry for station %pM.\n",
+> > > > +			   src->peer_macaddr.addr);
+> > > > +		continue;
+> > > >  
+> > > > -		ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
+> > > > +found:
+> > > >  		dst->rx_duration = __le32_to_cpu(src->rx_duration);
+> > > > -		list_add_tail(&dst->list, &stats->peers_extd);
+> > > >  	}
+> > > >  
+> > > >  	return 0;
+> > > 
+> > > [shafi] Yes i am bit concerned about this change making 10.4 to update
+> > > over the existing peer_stats structure, the idea is to maintain uniformity
+> > > between the structures shared between ath10k and its corresponding to avoid
+> > > confusion/ bugs in the future. Kindly let me know your thoughts, feel free
+> > > to correct me if any of my analysis is incorrect. thank you !
+> > Isn't the point of the ath10k_wmi_10_*_op_pull_fw_stats() functions to make 
+> > a "universal" statistic (in your case a unified ath10k_fw_stats_peer structure)
+> > that other functions can use, without caring about if the FW was 10.4 
+> > or 10.2.4?
+> > 
+> > There's no indication that the rx_duration field in wmi_10_2_4_ext_peer_stats
+> > conveys any different information than the rx_duration in 
+> > wmi_10_4_peer_extd_stats. So, what's going on here? Can't you just make
+> > wmi_10_4_peer_extd_stats's rx_duration use the existing field in
+> > ath10k_fw_stats_peer? And if not: why exactly?
+> >
+> [shafi] I will soon test your change and keep you posted. We will also
+> get Kalle's take/view on this. 
+Ok. That said, I added him to the CC from the beginning and so far
+he silently agreed.
+
+Regards,
+Christian
+
+[0] <http://lxr.free-electrons.com/source/drivers/net/wireless/ath/ath10k/debugfs_sta.c#L21>
+[1] <http://lxr.free-electrons.com/source/drivers/net/wireless/ath/ath10k/debugfs_sta.c#L40>
+[2] <http://lxr.free-electrons.com/source/drivers/net/wireless/ath/ath10k/debug.c#L360>
