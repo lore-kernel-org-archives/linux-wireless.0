@@ -1,59 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36677 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752312AbcLHKa5 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46446 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755625AbcLVJKI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2016 05:30:57 -0500
-Received: by mail-wm0-f47.google.com with SMTP id g23so210544262wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2016 02:30:56 -0800 (PST)
-Subject: Re: [PATCH 1/1] orinoco: fix improper return value
-To: Pan Bian <bianpan2016@163.com>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-References: <1481157602-4011-1-git-send-email-bianpan2016@163.com>
-Cc: linux-kernel@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <ba836a62-d200-e1b0-f046-5604ef8b97dc@broadcom.com> (sfid-20161208_113155_017833_227A0ABF)
-Date: Thu, 8 Dec 2016 11:30:53 +0100
+        Thu, 22 Dec 2016 04:10:08 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Ulf Hansson" <ulf.hansson@linaro.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+        Wei-Ning Huang <wnhuang@chromium.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v4 1/2] mmc: API for accessing host supported maximum
+ segment count and size
+Date: Thu, 22 Dec 2016 09:09:50 +0000
+Message-ID: <1fa11bbfaf554dc2961893efbf135710@SC-EXCH04.marvell.com> (sfid-20161222_101055_080647_0A25078F)
+References: <1466069006-10757-1-git-send-email-akarwar@marvell.com>
+In-Reply-To: <1466069006-10757-1-git-send-email-akarwar@marvell.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1481157602-4011-1-git-send-email-bianpan2016@163.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8-12-2016 1:40, Pan Bian wrote:
-> Function orinoco_ioctl_commit() returns 0 (indicates success) when the
-> call to orinoco_lock() fails. Thus, the return value is inconsistent with
-> the execution status. It may be better to return "-EBUSY" when the call 
-> to orinoco_lock() fails.
+Hi Ulf,
+
+> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+> Sent: Thursday, June 16, 2016 2:53 PM
+> To: linux-wireless@vger.kernel.org
+> Cc: Nishant Sarmukadam; Wei-Ning Huang; linux-mmc@vger.kernel.org;
+> Cathy Luo; Xinming Hu; Amitkumar Karwar
+> Subject: [PATCH v4 1/2] mmc: API for accessing host supported maximum
+> segment count and size
 > 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188671
+> From: Xinming Hu <huxm@marvell.com>
 > 
-> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> sdio device drivers need be able to get the host supported max_segs and
+> max_seg_size, so that they know the buffer size to allocate while
+> utilizing the scatter/gather DMA buffer list.
+> 
+> This patch provides API for this purpose.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 > ---
->  drivers/net/wireless/intersil/orinoco/wext.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> v2: v2 was submitted with minor improvement like replacing BUG_ON()
+> with WARN_ON()
+> v3: Addressed below review comments from Ulf Hansson
+>     a) In v3, patch has been split into two separate patches.
+>     b) Patch 1/2 introduces an API to fetch max_seg_size and max_segs
+>     c) Replaced WARN_ON() with proper error code when sg_ptr->length is
+> invalid
+>     d) Instead of duplicating the code in mmc_io_rw_extended(), extra
+> bool parameter
+>        has been added to this function and used it in new APIs for SG.
+> v4: Removed WARN_ON() calls in newly added APIs. It's gets called in
+> probe handler.
+>     Caller already takes care of it(Shawn Lin).
+> ---
+>  drivers/mmc/core/sdio_io.c                          | 21
+> +++++++++++++++++++++
+>  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   |  6 +++---
+>  include/linux/mmc/sdio_func.h                       |  3 +++
+>  3 files changed, 27 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/intersil/orinoco/wext.c b/drivers/net/wireless/intersil/orinoco/wext.c
-> index 1d4dae4..fee57ea 100644
-> --- a/drivers/net/wireless/intersil/orinoco/wext.c
-> +++ b/drivers/net/wireless/intersil/orinoco/wext.c
-> @@ -1314,7 +1314,7 @@ static int orinoco_ioctl_commit(struct net_device *dev,
->  		return 0;
->  
->  	if (orinoco_lock(priv, &flags) != 0)
-> -		return err;
-> +		return -EBUSY;
+> diff --git a/drivers/mmc/core/sdio_io.c b/drivers/mmc/core/sdio_io.c
+> index 78cb4d5..b1ecacc 100644
+> --- a/drivers/mmc/core/sdio_io.c
+> +++ b/drivers/mmc/core/sdio_io.c
+> @@ -720,3 +720,24 @@ int sdio_set_host_pm_flags(struct sdio_func *func,
+> mmc_pm_flag_t flags)
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(sdio_set_host_pm_flags);
+> +
+> +/**
+> + *	sdio_get_host_max_seg_size - get host maximum segment size
+> + *	@func: SDIO function attached to host
+> + */
+> +unsigned int sdio_get_host_max_seg_size(struct sdio_func *func) {
+> +	return func->card->host->max_seg_size; }
+> +EXPORT_SYMBOL_GPL(sdio_get_host_max_seg_size);
+> +
+> +/**
+> + *	sdio_get_host_max_seg_count - get host maximum segment count
+> + *	@func: SDIO function attached to host
+> + */
+> +unsigned short sdio_get_host_max_seg_count(struct sdio_func *func) {
+> +	return func->card->host->max_segs;
+> +}
+> +EXPORT_SYMBOL_GPL(sdio_get_host_max_seg_count);
+> +
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index c4b89d2..ba579f4 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -896,9 +896,9 @@ void brcmf_sdiod_sgtable_alloc(struct
+> brcmf_sdio_dev *sdiodev)
+>  	max_blocks = min_t(uint, host->max_blk_count, 511u);
+>  	sdiodev->max_request_size = min_t(uint, host->max_req_size,
+>  					  max_blocks * func->cur_blksize);
+> -	sdiodev->max_segment_count = min_t(uint, host->max_segs,
+> -					   SG_MAX_SINGLE_ALLOC);
+> -	sdiodev->max_segment_size = host->max_seg_size;
+> +	sdiodev->max_segment_count = min_t(uint, SG_MAX_SINGLE_ALLOC,
+> +					   sdio_get_host_max_seg_count(func));
+> +	sdiodev->max_segment_size = sdio_get_host_max_seg_size(func);
+> 
+>  	if (!sdiodev->sg_support)
+>  		return;
+> diff --git a/include/linux/mmc/sdio_func.h
+> b/include/linux/mmc/sdio_func.h index aab032a..b2b91df 100644
+> --- a/include/linux/mmc/sdio_func.h
+> +++ b/include/linux/mmc/sdio_func.h
+> @@ -159,4 +159,7 @@ extern void sdio_f0_writeb(struct sdio_func *func,
+> unsigned char b,  extern mmc_pm_flag_t sdio_get_host_pm_caps(struct
+> sdio_func *func);  extern int sdio_set_host_pm_flags(struct sdio_func
+> *func, mmc_pm_flag_t flags);
+> 
+> +unsigned short sdio_get_host_max_seg_count(struct sdio_func *func);
+> +unsigned int sdio_get_host_max_seg_size(struct sdio_func *func);
+> +
+>  #endif /* LINUX_MMC_SDIO_FUNC_H */
 
-Actually, orinoco_lock will return either -EBUSY or 0 so maybe better to
-just do:
-
-	err = orinoco_lock(priv, &flags);
-	if (err < 0)
-		return err;
+This has been pending for a while.
+Any further review comments on this v4 patch series?
 
 Regards,
-Arend
-
->  	err = orinoco_commit(priv);
->  
-> 
+Amitkumar Karwar
