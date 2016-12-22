@@ -1,127 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38776 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751388AbcLAWxB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52536 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755329AbcLVWcd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 17:53:01 -0500
-Subject: Re: [PATCH 1/3] ath10k: Ensure there are no stale ar->txqs entries.
-To: Michal Kazior <michal.kazior@tieto.com>
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
- <CA+BoTQn0d1bEB662r-Yivmdk_21LhjCQjJP_GoPaj-WT2wA=1g@mail.gmail.com>
- <57B70AED.2010200@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <ba1cc818-6194-11d6-7cc3-1db28036a519@candelatech.com> (sfid-20161201_235305_229095_02D79383)
-Date: Thu, 1 Dec 2016 14:52:59 -0800
+        Thu, 22 Dec 2016 17:32:33 -0500
+From: <ryanhsu@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <ryanhsu@qca.qualcomm.com>
+Subject: [PATCH] ath10k: recal the txpower when removing interface
+Date: Thu, 22 Dec 2016 14:31:46 -0800
+Message-ID: <1482445906-20421-1-git-send-email-ryanhsu@qca.qualcomm.com> (sfid-20161222_233236_394147_F0E3FA4B)
 MIME-Version: 1.0
-In-Reply-To: <57B70AED.2010200@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/19/2016 06:34 AM, Ben Greear wrote:
->
->
-> On 08/18/2016 11:59 PM, Michal Kazior wrote:
->> On 19 August 2016 at 03:26,  <greearb@candelatech.com> wrote:
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> I was seeing kernel crashes due to accessing freed memory
->>> while debugging a 9984 firmware that was crashing often.
->>>
->>> This patch fixes the crashes.  I am not certain if there
->>> is a better way or not.
+From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
+The txpower is being recalculated when adding interface to make sure
+txpower won't overshoot the spec, and when removing the interface,
+the txpower should again to be recalculated to restore the correct value
+from the active interface list.
 
-I did some more hacking on this today.  I think I found some better clue on this.
+Following is one of the scenario
+	vdev0 is created as STA and connected: txpower:23
+	vdev1 is created as P2P_DEVICE for control interface: txpower:0
+	vdev2 is created as p2p go/gc interface: txpower is 21
 
-I added this code:
+So the vdev2@txpower:21 will be set to firmware when vdev2 is created.
+When we tear down the vdev2, the txpower needs to be recalculated to
+re-set it to vdev0@txpower:23 as vdev0/vdev1 are the active interface.
 
-static void ath10k_mac_txq_init(struct ath10k *ar, struct ieee80211_txq *txq)
-{
-	struct ath10k_txq *artxq = (void *)txq->drv_priv;
-	struct ath10k_txq *tmp, *walker;
-	struct ieee80211_txq *txq_tmp;
-	int i = 0;
+	ath10k_pci mac vdev 0 peer create 8c:fd:f0:01:62:98
+	ath10k_pci mac vdev_id 0 txpower 23
+	... (adding interface)
+	ath10k_pci mac vdev create 2 (add interface) type 1 subtype 3
+	ath10k_pci mac vdev_id 2 txpower 21
+	ath10k_pci mac txpower 21
+	... (removing interface)
+	ath10k_pci mac vdev 2 delete (remove interface)
+	ath10k_pci vdev 1 txpower 0
+	ath10k_pci vdev 0 txpower 23
+	ath10k_pci mac txpower 23
 
-	if (!txq)
-		return;
+Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-	spin_lock_bh(&ar->txqs_lock);
-	ar->txqs_lock.rlock.dbg1 = 104;
-
-	/* Remove from ar->txqs in case it still exists there. */
-	list_for_each_entry_safe(walker, tmp, &ar->txqs, list) {
-		txq_tmp = container_of((void *)walker, struct ieee80211_txq,
-				       drv_priv);
-		if ((++i % 10000) == 0) {
-			ath10k_err(ar, "txq-init: Checking txq_tmp: %p i: %d\n", txq_tmp, i);
-			ath10k_err(ar, "txq-init: txqs: %p walker->list: %p w->next: %p  w->prev: %p ar->txqs: %p\n",
-				   &ar->txqs, &(walker->list), walker->list.next, walker->list.prev, &ar->txqs);
-		}
-
-		if (txq_tmp == txq) {
-			WARN_ON_ONCE(1);
-			ath10k_err(ar, "txq-init: Found txq when it should be deleted, txq_tmp: %p  txq: %p\n",
-				   txq_tmp, txq);
-			list_del(&walker->list);
-		}
-	}
-	spin_unlock_bh(&ar->txqs_lock);
-
-	INIT_LIST_HEAD(&artxq->list);
-}
-
-
-[firmware has just crashed]
-
-Dec 01 14:43:06 wave2 kernel: ------------[ cut here ]------------
-Dec 01 14:43:06 wave2 kernel: WARNING: CPU: 0 PID: 193 at /home/greearb/git/linux-4.7.dev.y/drivers/net/wireless/ath/ath10k/mac.c:4217 
-ath10k_mac_txq_init+0x1a7/0x1b0 [ath10k_core]
-Dec 01 14:43:06 wave2 kernel: Modules linked in: nf_conntrack_netlink nf_conntrack nfnetlink nf_defrag_ipv4 bridge 8021q garp mrp stp llc bnep bluetooth fuse 
-macvlan pktgen rpcsec_gss_krb5 nfsv4 nfs fscache coretemp hwmon intel_rapl x86_pkg_temp_thermal intel_powerclamp snd_hda_codec_hdmi snd_hda_codec_realtek 
-snd_hda_codec_generic kvm iTCO_wdt irqbypass iTCO_vendor_support ath10k_pci ath10k_core joydev ath snd_hda_intel mac80211 snd_hda_codec snd_hda_core snd_hwdep 
-snd_seq snd_seq_device pcspkr cfg80211 snd_pcm snd_timer snd i2c_i801 lpc_ich shpchp soundcore tpm_tis tpm nfsd auth_rpcgss nfs_acl lockd grace sunrpc serio_raw 
-i915 i2c_algo_bit ata_generic drm_kms_helper pata_acpi e1000e ptp drm pps_core i2c_core fjes video ipv6 [last unloaded: nf_conntrack]
-Dec 01 14:43:06 wave2 kernel: CPU: 0 PID: 193 Comm: kworker/0:1 Not tainted 4.7.10+ #14
-Dec 01 14:43:06 wave2 kernel: Hardware name: To be filled by O.E.M. To be filled by O.E.M./ChiefRiver, BIOS 4.6.5 06/07/2013
-Dec 01 14:43:06 wave2 kernel: Workqueue: events_freezable ieee80211_restart_work [mac80211]
-Dec 01 14:43:06 wave2 kernel:  ffffffffa0e29507 ffff8801d14f7920 ffffffff8169ed08 0000000000000000
-Dec 01 14:43:06 wave2 kernel:  0000000000000000 ffff8801d14f7968 ffffffff811569bc ffff8801d14e4f00
-Dec 01 14:43:06 wave2 kernel:  0000107900000001 ffff8800c43ec9a0 0000000000000027 ffff8800c43ec988
-Dec 01 14:43:06 wave2 kernel: Call Trace:
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0e29507>] ? ath10k_mac_txq_init+0x1a7/0x1b0 [ath10k_core]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff8169ed08>] dump_stack+0x85/0xcd
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff811569bc>] __warn+0x10c/0x130
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81156b58>] warn_slowpath_null+0x18/0x20
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0e29507>] ath10k_mac_txq_init+0x1a7/0x1b0 [ath10k_core]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0e3766f>] ath10k_sta_state+0x4ef/0x1350 [ath10k_core]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff811e10ed>] ? mark_lock+0x6d/0x8a0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0e37180>] ? ath10k_station_assoc+0x920/0x920 [ath10k_core]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff811ddd14>] ? __lock_is_held+0x84/0xc0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0c0095f>] drv_sta_state+0xef/0xc50 [mac80211]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0c6b1b0>] ieee80211_reconfig+0x10a0/0x2890 [mac80211]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffffa0bf8361>] ieee80211_restart_work+0xb1/0xf0 [mac80211]
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81184dad>] process_one_work+0x42d/0xac0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81184cf4>] ? process_one_work+0x374/0xac0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81184980>] ? pwq_dec_nr_in_flight+0x110/0x110
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff811854c6>] worker_thread+0x86/0x730
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81df25aa>] ? _raw_spin_unlock_irqrestore+0x5a/0x70
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81185440>] ? process_one_work+0xac0/0xac0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff8118f381>] kthread+0x191/0x1b0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff8118f1f0>] ? kthread_create_on_node+0x320/0x320
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff8119baa3>] ? preempt_count_sub+0x13/0xd0
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff81df2f8f>] ret_from_fork+0x1f/0x40
-Dec 01 14:43:06 wave2 kernel:  [<ffffffff8118f1f0>] ? kthread_create_on_node+0x320/0x320
-Dec 01 14:43:06 wave2 kernel: ---[ end trace e64bc8f0c1a2531b ]---
-Dec 01 14:43:06 wave2 kernel: ath10k_pci 0000:05:00.0: txq-init: Found txq when it should be deleted, txq_tmp: ffff8800c43ec988  txq: ffff8800c43ec988
-Dec 01 14:43:07 wave2 kernel: ath10k_pci 0000:05:00.0: dropping dbg buffer due to crash since read
-
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index aa545a1..6475dc8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -5194,6 +5194,10 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 			ath10k_warn(ar, "failed to recalc monitor: %d\n", ret);
+ 	}
+ 
++	ret = ath10k_mac_txpower_recalc(ar);
++	if (ret)
++		ath10k_warn(ar, "failed to recalc tx power: %d\n", ret);
++
+ 	spin_lock_bh(&ar->htt.tx_lock);
+ 	ath10k_mac_vif_tx_unlock_all(arvif);
+ 	spin_unlock_bh(&ar->htt.tx_lock);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
