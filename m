@@ -1,212 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54227 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756530AbcLNTrR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:47:17 -0500
-From: Felix Fietkau <nbd@nbd.name>
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:36248 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754367AbcLVES5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 21 Dec 2016 23:18:57 -0500
+Received: by mail-qk0-f182.google.com with SMTP id n21so97337648qka.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2016 20:18:56 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
-Subject: [PATCH 07/10] mac80211: minstrel: store probability variance instead of standard deviation
-Date: Wed, 14 Dec 2016 20:47:00 +0100
-Message-Id: <20161214194703.33429-7-nbd@nbd.name> (sfid-20161214_204725_135213_259EB5FC)
-In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
-References: <20161214194703.33429-1-nbd@nbd.name>
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH v3 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+Date: Wed, 21 Dec 2016 23:18:32 -0500
+Message-Id: <1482380314-16440-1-git-send-email-geoff@kuvee.com> (sfid-20161222_051920_309584_365E0C5F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This avoids the costly int_sqrt calls in the statistics update and moves
-it to the debugfs code instead.
-This also fixes an overflow in the previous standard deviation
-calculation.
+The TRF7970A has configuration options to support hardware designs
+which use a 27.12MHz clock. This commit adds a device tree option
+'clock-frequency' to support configuring the this chip for default
+13.56MHz clock or the optional 27.12MHz clock.
 
-Signed-off-by: Thomas Huehn <thomas.huehn@evernet-eg.de>
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
 ---
- net/mac80211/rc80211_minstrel.c            |  8 ++++----
- net/mac80211/rc80211_minstrel.h            | 25 ++++++++++++++-----------
- net/mac80211/rc80211_minstrel_debugfs.c    |  8 ++++++--
- net/mac80211/rc80211_minstrel_ht_debugfs.c |  8 ++++++--
- 4 files changed, 30 insertions(+), 19 deletions(-)
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 +
+ drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
+ 2 files changed, 41 insertions(+), 11 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index a284ea0..11a4cc3 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -168,10 +168,10 @@ minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
- 			mrs->prob_ewma = cur_prob;
- 		} else {
- 			/* update exponential weighted moving variance */
--			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
--							 cur_prob,
--							 mrs->prob_ewma,
--							 EWMA_LEVEL);
-+			mrs->prob_ewmv = minstrel_ewmv(mrs->prob_ewmv,
-+							cur_prob,
-+							mrs->prob_ewma,
-+							EWMA_LEVEL);
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 32b35a0..8b01fc81 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -21,6 +21,7 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- clock-frequency: Set to specify that the input frequency to the trf7970a is 13560000Hz or 27120000Hz
  
- 			/*update exponential weighted moving avarage */
- 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 03716fd..ea86e67 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -36,21 +36,16 @@ minstrel_ewma(int old, int new, int weight)
- }
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
  
- /*
-- * Perform EWMSD (Exponentially Weighted Moving Standard Deviation) calculation
-+ * Perform EWMV (Exponentially Weighted Moving Variance) calculation
-  */
- static inline int
--minstrel_ewmsd(int old_ewmsd, int cur_prob, int prob_ewma, int weight)
-+minstrel_ewmv(int old_ewmv, int cur_prob, int prob_ewma, int weight)
- {
--	int diff, incr, tmp_var;
-+	int diff, incr;
- 
--	/* calculate exponential weighted moving variance */
--	diff = MINSTREL_TRUNC((cur_prob - prob_ewma) * 1000000);
-+	diff = cur_prob - prob_ewma;
- 	incr = (EWMA_DIV - weight) * diff / EWMA_DIV;
--	tmp_var = old_ewmsd * old_ewmsd;
--	tmp_var = weight * (tmp_var + diff * incr / 1000000) / EWMA_DIV;
--
--	/* return standard deviation */
--	return (u16) int_sqrt(tmp_var);
-+	return weight * (old_ewmv + MINSTREL_TRUNC(diff * incr)) / EWMA_DIV;
- }
- 
- struct minstrel_rate_stats {
-@@ -65,7 +60,7 @@ struct minstrel_rate_stats {
- 	 *  prob_ewma - exponential weighted moving average of prob
- 	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
- 	unsigned int prob_ewma;
--	u16 prob_ewmsd;
-+	u16 prob_ewmv;
- 
- 	/* maximum retry counts */
- 	u8 retry_count;
-@@ -151,6 +146,14 @@ struct minstrel_debugfs_info {
- 	char buf[];
+@@ -43,6 +44,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
++		clock-frequency = <27120000>;
+ 		status = "okay";
+ 	};
  };
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 26c9dbb..b1cd4ef 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -124,6 +124,9 @@
+ 		 NFC_PROTO_ISO15693_MASK | NFC_PROTO_NFC_DEP_MASK)
  
-+/* Get EWMSD (Exponentially Weighted Moving Standard Deviation) * 10 */
-+static inline int
-+minstrel_get_ewmsd10(struct minstrel_rate_stats *mrs)
-+{
-+	unsigned int ewmv = mrs->prob_ewmv;
-+	return int_sqrt(MINSTREL_TRUNC(ewmv * 1000 * 1000));
-+}
+ #define TRF7970A_AUTOSUSPEND_DELAY		30000 /* 30 seconds */
++#define TRF7970A_13MHZ_CLOCK_FREQUENCY		13560000
++#define TRF7970A_27MHZ_CLOCK_FREQUENCY		27120000
 +
- extern const struct rate_control_ops mac80211_minstrel;
- void minstrel_add_sta_debugfs(void *priv, void *priv_sta, struct dentry *dir);
- void minstrel_remove_sta_debugfs(void *priv, void *priv_sta);
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index ca0bafd..36fc971 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -93,6 +93,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
- 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
-+		unsigned int prob_ewmsd;
  
- 		*(p++) = (i == mi->max_tp_rate[0]) ? 'A' : ' ';
- 		*(p++) = (i == mi->max_tp_rate[1]) ? 'B' : ' ';
-@@ -108,6 +109,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
- 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
-+		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ #define TRF7970A_RX_SKB_ALLOC_SIZE		256
  
- 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
- 				"     %3u   %3u %-3u   "
-@@ -115,7 +117,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
--				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
-+				prob_ewmsd / 10, prob_ewmsd % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-@@ -159,6 +161,7 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
- 		struct minstrel_rate_stats *mrs = &mi->r[i].stats;
-+		unsigned int prob_ewmsd;
+@@ -1056,12 +1059,11 @@ static int trf7970a_init(struct trf7970a *trf)
  
- 		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[0]) ? "A" : ""));
- 		p += sprintf(p, "%s" ,((i == mi->max_tp_rate[1]) ? "B" : ""));
-@@ -174,13 +177,14 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
- 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
-+		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+ 	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
  
- 		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
- 				"%llu,%llu,%d,%d\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
--				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
-+				prob_ewmsd / 10, prob_ewmsd % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 0cecd23..7d969e3 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -41,6 +41,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
- 		static const int bitrates[4] = { 10, 20, 55, 110 };
- 		int idx = i * MCS_GROUP_RATES + j;
-+		unsigned int prob_ewmsd;
+-	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
++	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
++			trf->modulator_sys_clk_ctrl);
+ 	if (ret)
+ 		goto err_out;
  
- 		if (!(mi->supported[i] & BIT(j)))
- 			continue;
-@@ -84,6 +85,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
-+		prob_ewmsd = minstrel_get_ewmsd10(mrs);
+-	trf->modulator_sys_clk_ctrl = 0;
+-
+ 	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+@@ -1181,27 +1183,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+ 	switch (tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_106B:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_ISO15693:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_15693;
+ 		break;
+ 	default:
+@@ -1571,17 +1583,23 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_CE |
+ 			TRF7970A_ISO_CTRL_NFC_CE_14443A;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_OOK;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl =
++			(trf->modulator_sys_clk_ctrl & 0xf8) |
++			TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	default:
+ 		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+@@ -1987,6 +2005,7 @@ static int trf7970a_probe(struct spi_device *spi)
+ 	struct device_node *np = spi->dev.of_node;
+ 	struct trf7970a *trf;
+ 	int uvolts, autosuspend_delay, ret;
++	u32 clk_freq = TRF7970A_13MHZ_CLOCK_FREQUENCY;
  
- 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
- 				"     %3u   %3u %-3u   "
-@@ -91,7 +93,7 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
--				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
-+				prob_ewmsd / 10, prob_ewmsd % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-@@ -185,6 +187,7 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		struct minstrel_rate_stats *mrs = &mi->groups[i].rates[j];
- 		static const int bitrates[4] = { 10, 20, 55, 110 };
- 		int idx = i * MCS_GROUP_RATES + j;
-+		unsigned int prob_ewmsd;
+ 	if (!np) {
+ 		dev_err(&spi->dev, "No Device Tree entry\n");
+@@ -2043,6 +2062,15 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
  
- 		if (!(mi->supported[i] & BIT(j)))
- 			continue;
-@@ -225,13 +228,14 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
-+		prob_ewmsd = minstrel_get_ewmsd10(mrs);
++	of_property_read_u32(np, "clock-frequency", &clk_freq);
++	if ((clk_freq != TRF7970A_27MHZ_CLOCK_FREQUENCY) ||
++		(clk_freq != TRF7970A_13MHZ_CLOCK_FREQUENCY)) {
++		dev_err(trf->dev,
++			"clock-frequency (%u Hz) unsupported\n",
++			clk_freq);
++		return -EINVAL;
++	}
++
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
+ 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
  
- 		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
- 				"%u,%llu,%llu,",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
--				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
-+				prob_ewmsd / 10, prob_ewmsd % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
 -- 
-2.10.1
+2.7.4
