@@ -1,71 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22267 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754273AbcL3OrQ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 09:47:16 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
-Date: Fri, 30 Dec 2016 14:47:09 +0000
-Message-ID: <87inq1jwyc.fsf@kamboji.qca.qualcomm.com> (sfid-20161230_154755_670321_89B32308)
-References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
-        <c3f99e7634384475b475b97ff46bec76@euamsexm01a.eu.qualcomm.com>
-        <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com>
-In-Reply-To: <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com>
-        (Christian Lamparter's message of "Fri, 30 Dec 2016 15:35:10 +0100")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:33522 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754350AbcLVSsw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 22 Dec 2016 13:48:52 -0500
 MIME-Version: 1.0
+In-Reply-To: <CAO7Z3WKmEbJCN_=srxTVKXvtz84vHGi41RS+9T7fmkmhRB6nEw@mail.gmail.com>
+References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+ <20161219223111.itu77g7wsqtj6cvs@rob-hp-laptop> <CAO7Z3WKmEbJCN_=srxTVKXvtz84vHGi41RS+9T7fmkmhRB6nEw@mail.gmail.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 22 Dec 2016 12:48:27 -0600
+Message-ID: <CAL_JsqL4TMDaMQZM3h5gRBEiAa7-ApUWj4GgS_BPG6qpoLxv6g@mail.gmail.com> (sfid-20161222_194917_372078_81B91103)
+Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        netdev <netdev@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Mark Greer <mgreer@animalcreek.com>,
+        Justin Bronder <justin@kuvee.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+On Mon, Dec 19, 2016 at 5:23 PM, Geoff Lansberry <geoff@kuvee.com> wrote:
+> I can make that change, however, I worry that it may be a bit
+> misleading, since there are only two supported clock frequencies, but
+> a number like that to me implies that it could be set to any number
+> you want.   I'm new at this, and so I'll go ahead and change it as you
+> request, but I'd like to hear your thoughts on my concern.
 
-> On Thu, Dec 29, 2016 at 3:11 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrot=
-e:
->> Christian Lamparter <chunkeey@googlemail.com> wrote:
->>> The 10.4 firmware adds extended peer information to the
->>> firmware's statistics payload. This additional info is
->>> stored as a separate data field and the elements are
->>> stored in their own "peers_extd" list.
->>>
->>> These elements can pile up in the same way as the peer
->>> information elements. This is because the
->>> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
->>> pull the same amount (num_peer_stats) for every statistic
->>> data unit.
->>>
->>> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
->>> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
->>
->> My understanding is that I should skip this patch 1. Please let me know =
-if
->> I misunderstood. But I'm still plannning to apply patch 2.
->
-> I added Mohammed (I hope, he can reply to the open question when he
-> returns), Since I'm not sure what he wants or not.
->
-> As far as I'm aware, the "extended" boolean serves no purpose
-> because it was only used in once place in debugfs_sta which was
-> removed in the patch. ( "ath10k_sta_update_stats_rx_duration"
-> and "ath10k_sta_update_extd_stats_rx_duration" have been unified).
+Then the binding doc just needs to state what are the 2 valid frequencies.
 
-I had problems following the discussion so the conclusion was not clear
-for me.
-
->> Patch set to Changes Requested.
->
-> Isn't there a: "Waiting for Maintainer" state as well?
-> Otherwise, if nobody has any complains or question:
-> can you please queue it for the next merge window?
-
-There is a state called "Deferred" which I use whenever I need to
-revisit a patch later time. I moved this patch to that state now:
-
-https://patchwork.kernel.org/patch/9461631/
-
---=20
-Kalle Valo=
+Rob
