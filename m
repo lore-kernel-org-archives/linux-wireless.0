@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:32780 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751262AbcL1KPD (ORCPT
+Received: from mail-qt0-f172.google.com ([209.85.216.172]:36311 "EHLO
+        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935553AbcLVETZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 05:15:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <87vax9r26s.fsf@kamboji.qca.qualcomm.com>
-References: <20160905095128.80560-1-nbd@nbd.name> <201609301636.43363.arnd@arndb.de>
- <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> <201609301658.35039.arnd@arndb.de>
- <87vax9r26s.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 28 Dec 2016 11:08:11 +0100
-Message-ID: <CACna6ryikdd0Yt2FWB_JT27N5uuh9XU+JUWNRjs4H5YcD5PVpw@mail.gmail.com> (sfid-20161228_111510_794775_53258400)
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Felix Fietkau <nbd@nbd.name>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Content-Type: text/plain; charset=UTF-8
+        Wed, 21 Dec 2016 23:19:25 -0500
+Received: by mail-qt0-f172.google.com with SMTP id w33so224660039qtc.3
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2016 20:19:24 -0800 (PST)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+        sameo@linux.intel.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        netdev@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, mgreer@animalcreek.com,
+        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>,
+        Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from crashing the kernel
+Date: Wed, 21 Dec 2016 23:18:34 -0500
+Message-Id: <1482380314-16440-3-git-send-email-geoff@kuvee.com> (sfid-20161222_052004_724616_86F73361)
+In-Reply-To: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 October 2016 at 15:29, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
->
->> On Friday 30 September 2016, Felix Fietkau wrote:
->>> >> >> >> +                 device_type =3D "pci";
->>> >> >> >> +                 mediatek,mtd-eeprom =3D <&factory 0x8000>;
->>> >> >> >> +                 mediatek,2ghz =3D <0>;
->>> >> >
->>> >> > It's not clear what the possible values for the 2ghz property are,
->>> >> > can you be more verbose in the description? How is <0> different
->>> >> > from no property?
->>> >> 0 means disabled, no property means unchanged (compared to EEPROM).
->>> >
->>> > Maybe have a boolean property instead then to say "mediatek,2ghz-disa=
-bled" ?
->>> >
->>> > If zero is the only possible value, there is no need to put a number =
-in there.
->>> 1 is also possible, which will force-enable the capability.
->>
->> Ok, then both those values should be documented in the binding.
->
-> Related to this, Martin sent patches which add generic bindings for
-> enabling 2 Ghz and 5 Ghz bands.
->
-> [RFC,1/3] Documentation: dt-bindings: add IEEE 802.11 binding documentati=
-on
-> https://patchwork.kernel.org/patch/9359833/
->
-> [RFC,2/3] of: add IEEE 802.11 device configuration support code
-> https://patchwork.kernel.org/patch/9359837/
+From: Jaret Cantu <jaret.cantu@timesys.com>
 
-I would prefer something more generic. Many tri-band routers split 5
-GHz band into 2 sets of channels and they have separated radios for
-them.
+Repeated polling attempts cause a NULL dereference error to occur.
+This is because the state of the trf7970a is currently reading but
+another request has been made to send a command before it has finished.
 
-E.g. Netgear R8000 has phy0 which should be used for higher part of 5
-GHz band (channels 149+) and phy2 which should be used for lower part
-of 5 GHz band (channels from 36 to 48 or 64).
+The solution is to properly kill the waiting reading (workqueue)
+before failing on the send.
 
-What do you think about some more flexible properties like:
-ieee80211-min-center-freq
-ieee80211-max-center-freq
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+---
+ drivers/nfc/trf7970a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
---=20
-Rafa=C5=82
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index e3c72c6..ba5f9b8 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1496,6 +1496,10 @@ static int trf7970a_send_cmd(struct nfc_digital_dev *ddev,
+ 			(trf->state != TRF7970A_ST_IDLE_RX_BLOCKED)) {
+ 		dev_err(trf->dev, "%s - Bogus state: %d\n", __func__,
+ 				trf->state);
++		if (trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA ||
++		    trf->state == TRF7970A_ST_WAIT_FOR_RX_DATA_CONT)
++			trf->ignore_timeout =
++				!cancel_delayed_work(&trf->timeout_work);
+ 		ret = -EIO;
+ 		goto out_err;
+ 	}
+-- 
+2.7.4
