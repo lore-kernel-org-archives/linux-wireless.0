@@ -1,46 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50458 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752311AbcL2PSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 10:18:10 -0500
-Message-ID: <1483024688.13037.1.camel@sipsolutions.net> (sfid-20161229_161814_314791_7BE8EA12)
-Subject: Re: gpio outputs that disable wireless to PCI Express Mini Card and
- RFKILL
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tim Harvey <tharvey@gateworks.com>, linux-wireless@vger.kernel.org
-Date: Thu, 29 Dec 2016 16:18:08 +0100
-In-Reply-To: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com> (sfid-20161229_160911_547687_7AB8BEF3)
-References: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com>
-         (sfid-20161229_160911_547687_7AB8BEF3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:32813 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765105AbcLWRr0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 23 Dec 2016 12:47:26 -0500
+Received: by mail-wm0-f68.google.com with SMTP id u144so42716592wmu.0
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2016 09:47:25 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: igor.mitsyanko.os@quantenna.com
+Cc: linux-firmware@kernel.org, linux-wireless@vger.kernel.org,
+        Igor Mitsyanko <imitsyanko@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Avinash Patil <avinashp@quantenna.com>
+Subject: Re: [RFC] qtn: add FullMAC firmware for Quantenna QSR10G wifi device
+Date: Fri, 23 Dec 2016 18:47:22 +0100
+Message-ID: <1796267.ZQn77y5fxL@debian64> (sfid-20161223_184825_069858_8DEC9A11)
+In-Reply-To: <1482505955-9310-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+References: <87d1hmnrqj.fsf@purkki.adurom.net> <1482505955-9310-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-12-29 at 07:07 -0800, Tim Harvey wrote:
-> Greetings,
+On Friday, December 23, 2016 6:12:35 PM CET igor.mitsyanko.os@quantenna.com wrote:
+> From: Igor Mitsyanko <imitsyanko@quantenna.com>
 > 
-> The PCI Express Mini Card (aka Mini PCIe) spec calls out pin 20 as
-> W_DISABLE# to allow a PCIe host to disable the add-in card's radio
-> operation and we have run this to a GPIO on our boards for some time.
-> The M.2 specs also provide such signals. Is there any support in the
-> Linux RFKILL subsystem to define this?
+> QSR10G is Quantenna's 8x8, 160M, 11ac WiFi card.
+> 
+> Signed-off-by: Kamlesh Rath <krath@quantenna.com>
+> Signed-off-by: Sergey Matyukevich <smatyukevich@quantenna.com>
+> Signed-off-by: Avinash Patil <avinashp@quantenna.com>
+> Signed-off-by: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+> ---
+> This is an RFC patch that we sent to linux-wireless mailing list a while ago,
+> and it spawned a discussion regarding whether GPL sources has to be submitted
+> together with this firmware. We would like to clarify with linux-firmware maintainers
+> to understnad what should be our actions to allow this to be accepted.
+> - firmware contains GPL components;
+> - LICENCE file states that sources for GPL components will be provided on request
+> to oslegal@quantenna.com
+> 
+> There was an opinion that it is not enough: precedent case like this with carl9170
+> firmware was resolved by submitting GPL sources into linux-firmware repository
+> itself.
+The ar9170-usb firmware was released as GPL v2.0 from the get-go.
+<http://git.sipsolutions.net/ar9170-fw.git/commit/GPL?id=2e3574ce10c74a82047a06b046855de14d969948>
 
-Not directly, but that depends on what you mean by "support". This
-whole thing is relatively simple - it's an input signal to the wireless
-NIC, so that any reaction to the input originates there.
+And this was never a problem. What is THE PROBLEM though:
+"if all the patches from ar9170fw to carl9170fw and beyond (i.e new versions)
+have to be added to linux-firmware.git." Or not.
 
-Typically (I know about Intel and ath9k devices) changes in this input
-either trigger an interrupt (Intel) or are polled for (ath9k), and then
-the already existing rfkill instance for the wireless NIC will reflect
-a "hard block" when the driver notifies upper layers of the new state.
+That's why there was never a update to the carl9170fw.
+So be prepared for this scenario too.
 
-Or did you mean you want to use the CPU to *control* this GPIO? In this
-case, I'm not sure that the rfkill subsystem is appropriate, but there
-apparently are some such cases already where the platform rfkill's
-software state essentially toggles the wireless NIC's hardware state.
+> Does the same applies to qsr10g firmware?
+>
+> The SDK that we use to build it is quite heavy (> 100MB, but with toolchain). 
+> Maybe we can take another approach to place SDK separately on Quantenna website
+> (as a compressed archive), and add a link in linux-firmware?
+Yes, I would like to know this as well.
 
-I'd argue this is useless though since if you toggle the thing from
-software then you might as well rely entirely on software rfkill.
-
-johannes
+Regards,
+Christian
