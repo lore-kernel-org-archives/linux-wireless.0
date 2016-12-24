@@ -1,82 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34263 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932966AbcLHBQM (ORCPT
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:32877 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751995AbcLXRYm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 20:16:12 -0500
-Received: by mail-pf0-f195.google.com with SMTP id y68so21305149pfb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 17:16:03 -0800 (PST)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net, me@bobcopeland.com
-Cc: linux-wireless@vger.kernel.org,
-        Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2 1/2] mac80211: Remove invalid flag operations in mesh TSF synchronization
-Date: Thu,  8 Dec 2016 10:15:50 +0900
-Message-Id: <1481159751-4097-1-git-send-email-masashi.honma@gmail.com> (sfid-20161208_021616_178371_DA2E20E5)
-In-Reply-To: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
-References: <1480545889-3690-1-git-send-email-masashi.honma@gmail.com>
+        Sat, 24 Dec 2016 12:24:42 -0500
+Date: Sat, 24 Dec 2016 10:24:39 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Justin Bronder <justin@kuvee.com>,
+        Jaret Cantu <jaret.cantu@timesys.com>
+Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
+ crashing the kernel
+Message-ID: <20161224172439.GA15103@animalcreek.com> (sfid-20161224_182514_037082_8A5C4CE1)
+References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+ <1482380314-16440-3-git-send-email-geoff@kuvee.com>
+ <20161224060141.GA9069@animalcreek.com>
+ <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mesh_sync_offset_adjust_tbtt() implements Extensible synchronization
-framework ([1] 13.13.2 Extensible synchronization framework). It shall
-not operate the flag "TBTT Adjusting subfield" ([1] 8.4.2.100.8 Mesh
-Capability), since it is used only for MBCA ([1] 13.13.4 Mesh beacon
-collision avoidance, see 13.13.4.4.3 TBTT scanning and adjustment
-procedures for detail). So this patch remove the flag operations.
+On Sat, Dec 24, 2016 at 11:17:18AM -0500, Geoff Lansberry wrote:
+> Mark - I'm sorry, but I did not write this code, and therefore was not
+> able to accurately describe it.   It is fixing a different issue, not
+> the neard segfault that we are still chasing. Last week Jaret Cantu
+> sent a separate email explaining the purpose of the code, which had
+> you copied, did you see that?
 
-[1] IEEE Std 802.11 2012
+Hm, no, I didn't.  I received an email from Justin Bronder but not from
+Jaret Cantu.  Justin's email did help but is still pretty high-level.
+We need a clear understanding as to what is happening in the digital
+layer and the driver to know how execution is getting into a block of
+error handling code that should never be executed.  Once we understand
+that we can start thinking about what the best fix is.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/mesh_sync.c | 11 -----------
- 1 file changed, 11 deletions(-)
+> Does it explain why it was done to
+> your satisfaction?   I've asked him to join in on the effort to push
+> the change upstream, however he will not be available until the new
+> year.
 
-diff --git a/net/mac80211/mesh_sync.c b/net/mac80211/mesh_sync.c
-index faca22c..75608c0 100644
---- a/net/mac80211/mesh_sync.c
-+++ b/net/mac80211/mesh_sync.c
-@@ -123,7 +123,6 @@ static void mesh_sync_offset_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	 */
- 
- 	if (elems->mesh_config && mesh_peer_tbtt_adjusting(elems)) {
--		clear_sta_flag(sta, WLAN_STA_TOFFSET_KNOWN);
- 		msync_dbg(sdata, "STA %pM : is adjusting TBTT\n",
- 			  sta->sta.addr);
- 		goto no_sync;
-@@ -172,11 +171,9 @@ static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata,
- 					 struct beacon_data *beacon)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
--	u8 cap;
- 
- 	WARN_ON(ifmsh->mesh_sp_id != IEEE80211_SYNC_METHOD_NEIGHBOR_OFFSET);
- 	WARN_ON(!rcu_read_lock_held());
--	cap = beacon->meshconf->meshconf_cap;
- 
- 	spin_lock_bh(&ifmsh->sync_offset_lock);
- 
-@@ -190,21 +187,13 @@ static void mesh_sync_offset_adjust_tbtt(struct ieee80211_sub_if_data *sdata,
- 			  "TBTT : kicking off TBTT adjustment with clockdrift_max=%lld\n",
- 			  ifmsh->sync_offset_clockdrift_max);
- 		set_bit(MESH_WORK_DRIFT_ADJUST, &ifmsh->wrkq_flags);
--
--		ifmsh->adjusting_tbtt = true;
- 	} else {
- 		msync_dbg(sdata,
- 			  "TBTT : max clockdrift=%lld; too small to adjust\n",
- 			  (long long)ifmsh->sync_offset_clockdrift_max);
- 		ifmsh->sync_offset_clockdrift_max = 0;
--
--		ifmsh->adjusting_tbtt = false;
- 	}
- 	spin_unlock_bh(&ifmsh->sync_offset_lock);
--
--	beacon->meshconf->meshconf_cap = ifmsh->adjusting_tbtt ?
--			IEEE80211_MESHCONF_CAPAB_TBTT_ADJUSTING | cap :
--			~IEEE80211_MESHCONF_CAPAB_TBTT_ADJUSTING & cap;
- }
- 
- static const struct sync_method sync_methods[] = {
--- 
-2.7.4
+I expect that it would help if he joins.  After the holidays is fine -
+I think many people are taking it easy for the next week or so, anyway.
+
+> I know you did suggest that we split off that change from the others,
+> and if now is the time to do that, let me know.   If you don't have
+> the email from Jaret, also please let me know and I will forward it to
+> you.
+
+I think it would help you if you split it off because the first two patches
+have a good chance of being accepted but this one doesn't (yet).  If you
+separate the them, it will make it easier for Samuel to take the first two
+(or he may take the first two anyway but its always good to make it as
+easy maintainers as you can).
+
+Mark
+--
