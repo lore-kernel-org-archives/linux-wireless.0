@@ -1,53 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758363AbcLSKzO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:55:14 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 10/11] rt2800: replace msleep() with usleep_range() on channel switch
-Date: Mon, 19 Dec 2016 11:52:56 +0100
-Message-Id: <1482144777-16760-11-git-send-email-sgruszka@redhat.com> (sfid-20161219_120239_378724_FC90D445)
-In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
-References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:35433 "EHLO
+        mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752680AbcLXQSA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Dec 2016 11:18:00 -0500
+Received: by mail-yw0-f177.google.com with SMTP id v81so39458594ywb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 24 Dec 2016 08:17:59 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20161224060141.GA9069@animalcreek.com>
+References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+ <1482380314-16440-3-git-send-email-geoff@kuvee.com> <20161224060141.GA9069@animalcreek.com>
+From: Geoff Lansberry <geoff@kuvee.com>
+Date: Sat, 24 Dec 2016 11:17:18 -0500
+Message-ID: <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com> (sfid-20161224_171832_748465_5256D547)
+Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
+ crashing the kernel
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Justin Bronder <justin@kuvee.com>,
+        Jaret Cantu <jaret.cantu@timesys.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-msleep(1) can sleep much more time then requested 1ms, this is not good
-on channel switch, which we want to be performed fast (i.e. to make scan
-faster). Replace msleep() with usleep_range(), which has much smaller
-maximum sleeping time boundary.
+Mark - I'm sorry, but I did not write this code, and therefore was not
+able to accurately describe it.   It is fixing a different issue, not
+the neard segfault that we are still chasing. Last week Jaret Cantu
+sent a separate email explaining the purpose of the code, which had
+you copied, did you see that?   Does it explain why it was done to
+your satisfaction?   I've asked him to join in on the effort to push
+the change upstream, however he will not be available until the new
+year.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+I know you did suggest that we split off that change from the others,
+and if now is the time to do that, let me know.   If you don't have
+the email from Jaret, also please let me know and I will forward it to
+you.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 29d98e4..0220184 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -2110,7 +2110,9 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
- 	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
- 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
--	msleep(1);
-+
-+	usleep_range(1000, 1500);
-+
- 	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
- 	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
- }
-@@ -3442,7 +3444,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		}
- 	}
- 
--	msleep(1);
-+	usleep_range(1000, 1500);
- 
- 	/*
- 	 * Clear channel statistic counters
--- 
-1.7.1
+Geoff
+Geoff Lansberry
+
+
+Engineering Guy
+Kuv=C3=A9e, Inc
+125 Kingston St., 3rd Floor
+Boston, MA 02111
+1-617-290-1118 (m)
+geoff.lansberry (skype)
+http://www.kuvee.com
+
+
+
+On Sat, Dec 24, 2016 at 1:01 AM, Mark Greer <mgreer@animalcreek.com> wrote:
+> On Wed, Dec 21, 2016 at 11:18:34PM -0500, Geoff Lansberry wrote:
+>> From: Jaret Cantu <jaret.cantu@timesys.com>
+>>
+>> Repeated polling attempts cause a NULL dereference error to occur.
+>> This is because the state of the trf7970a is currently reading but
+>> another request has been made to send a command before it has finished.
+>>
+>> The solution is to properly kill the waiting reading (workqueue)
+>> before failing on the send.
+>>
+>> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
+>> ---
+>
+> You've still provided virtually no information on the actual problem(s)
+> nor justified why you think this is the best solution.  You're adding
+> code to a section of code that should _never_ be executed so the only
+> reasonable things I can infer is that there are, at least, two problems:
+>
+> 1) There is a bug causing execution to get into this block of code.
+>
+> 2) Once in this block of code, there is another bug.
+>
+> You seem to be attempting to fix 2) and completely ignoring 1).
+> 1) is the first bug that needs to be root-caused and fixed.
+>
+> Also, what exactly is the "NULL dereference error" you mention?
+> Is this the neard crash you talked about in another thread or is
+> this a kernel crash?  If it is the kernel crash, please post the
+> relevant information.  If this is the neard crash - which seems
+> unlikely - then how can changing a section of kernel code that
+> shouldn't be executed in the first place fix that?
+>
+> Mark
+> --
