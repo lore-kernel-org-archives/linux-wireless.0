@@ -1,130 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48986 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753437AbcLGR7L (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33353 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753178AbcLXM54 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 12:59:11 -0500
+        Sat, 24 Dec 2016 07:57:56 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Sebastian Reichel <sre@kernel.org>
+Subject: Re: wl1251 NVS calibration data format
+Date: Sat, 24 Dec 2016 13:57:52 +0100
+Cc: Gery Kahn <gery.kahn@gmail.com>, Shahar Lev <shahar@wizery.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+References: <201612161201.48356@pali> <20161217093705.p64yzumqlu3u5aq7@earth> <201612171214.50820@pali>
+In-Reply-To: <201612171214.50820@pali>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 07 Dec 2016 23:29:08 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
- support BTCOEX
-In-Reply-To: <1480949353.31788.27.camel@sipsolutions.net>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
- <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
- <1480949353.31788.27.camel@sipsolutions.net>
-Message-ID: <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org> (sfid-20161207_185927_111454_E99B78D9)
+Content-Type: multipart/signed;
+  boundary="nextPart5172311.J332cXn8yN";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201612241357.52086@pali> (sfid-20161224_135818_628061_AA93E801)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+--nextPart5172311.J332cXn8yN
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the comments.
+On Saturday 17 December 2016 12:14:50 Pali Roh=C3=A1r wrote:
+> I will try to play with driver if it is really truth!
+>=20
+> I already looked into original TI's multiplatform HAL driver for
+> wl1251 chip (big mess) and found there that there is wl1251 command
+> to read mac address from chip. It could be done by this wl1251
+> function:
+>=20
+> wl1251_cmd_interrogate(wl, DOT11_STATION_ID, mac, sizeof(*mac))
+>=20
+> (same id as for setting permanent mac address, but opposite to read
+> it)
 
-On 2016-12-05 20:19, Johannes Berg wrote:
-> On Tue, 2016-11-08 at 18:45 +0530, c_traja@qti.qualcomm.com wrote:
->>  
->> + * struct cfg80211_btcoex_priority - BTCOEX support frame type
->> + *
->> + * This structure defines the driver supporting frame types for
->> BTCOEX
->> + *
->> + * @wlan_be_preferred: best effort frames preferred over bt traffic
->> + * @wlan_bk_preferred: background frames preferred over bt traffic
->> + * @wlan_vi_preferred: video frames preferred over bt traffic
->> + * @wlan_vo_preferred: voice frames preferred over bt traffic
->> + * @wlan_beacon_preferred: beacon preferred over bt traffic
->> + * @wlan_mgmt_preferred: management frames preferred ovet bt traffic
-> 
-> typo: over
-> 
-Okay
->>  
->>  /**
->> + * wiphy_btcoex_support_flags
->> + *	This enum has the driver supported frame types for BTCOEX.
->> + * @WIPHY_WLAN_BE_PREFERRED - Supports Best Effort frame for BTCOEX
->> + * @WIPHY_WLAN_BK_PREFERRED - supports Background frame for BTCOEX
->> + * @WIPHY_WLAN_VI_PREFERRED - supports Video frame for BTCOEX
->> + * @WIPHY_WLAN_VO_PREFERRED - supports Voice frame for BTCOEX
->> + * @WIPHY_WLAN_BEACON_PREFERRED - supports Beacon frame for BTCOEX
->> + * @WIPHY_WLAN_MGMT_PREFERRED - supports Management frames for
->> BTCOEX.
->> + */
-> 
-> That's not making much sense to me?
-> 
+Confirmed! Calling that function (before setting real linux mac address)=20
+returns MAC address 00:00:20:07:03:09.
 
-is it fine to have as WIPHY_BTCOEX_BE_PREFERRED ?
+Changing NVS data at position 0x1c-0x21 changes also what above function=20
+returns.
 
->> +/**
->> + * enum wiphy_btcoex_priority - BTCOEX priority level
->> + *	This enum defines priority level for BTCOEX
->> + * WIPHY_WLAN_PREFERRED_LOW - low priority frames over BT traffic
->> + * WIPHY_WLAN_PREFERRED_HIGH - high priority frames over BT traffic
->> + */
->> +
->> +enum wiphy_btcoex_priority {
->> +	WIPHY_WLAN_PREFERRED_LOW = false,
->> +	WIPHY_WLAN_PREFERRED_HIGH = true,
->> +};
-> 
-> That false/true seems just strange.
-> 
+So really at position 0x1c-0x21 in NVS data is stored MAC address (in=20
+reverse order). Just default is some unknown 00:00:20:07:03:09.
 
-I will just use as a enum without assigning false/true.
+So MAC address is really part of NVS data.
 
->> + * @btcoex_support_flags: This will have the driver supported
->> + *	frame types for BTCOEX. This value filled by using
->> + *	%enum wiphy_btcoex_support_flags while driver
->> + *	initialization.
-> 
-> The whole "will have" isn't really clear.
-> 
->> + * @NL80211_ATTR_SET_BTCOEX_PRIORITY: nested attribute for driver
->> supporting
->> + *	the BTCOEX. When used with
->> %NL80211_CMD_SET_BTCOEX_PRIORITY it contains
->> + *	attributes according &enum nl80211_btcoex_priority to
->> indicate
->> + *	which frame has high priority over BT.
-> 
-> There should be no "SET" in there.
-> 
-Okay sure.
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
 
->>  /**
->> + * enum nl80211_btcoex_priority - BTCOEX parameter attributes
->> + *	This strcuture has enum values for driver supported wlan
->> + *	frame type for BTCOEX.
->> + * @NL80211_WLAN_BE_PREFERRED - Best Effort frame
->> + * @NL80211_WLAN_BK_PREFERRED - Background frame
->> + * @NL80211_WLAN_VI_PREFERRED - Video frame
->> + * @NL80211_WLAN_VO_PREFERRED - Voice frame
->> + * @NL80211_WLAN_BEACON_PREFERRED - BEACON frame
->> + * @NL80211_WLAN_MGMT_PREFERRED - MGMT frame
->> + */
->> +
->> +enum nl80211_btcoex_priority {
->> +	__NL80211_WLAN_PREFERRED_INVALID,
->> +	NL80211_WLAN_BE_PREFERRED,
->> +	NL80211_WLAN_BK_PREFERRED,
->> +	NL80211_WLAN_VI_PREFERRED,
->> +	NL80211_WLAN_VO_PREFERRED,
->> +	NL80211_WLAN_BEACON_PREFERRED,
->> +	NL80211_WLAN_MGMT_PREFERRED,
->> +	__NL80211_WLAN_PREFERRED_LAST,
->> +	NL80211_WLAN_PREFERRED_MAX =
->> +			__NL80211_WLAN_PREFERRED_LAST - 1,
->> +};
-> 
-> Wouldn't a bitmap be easier?
-> 
-since this is to distinguish between different btcoex priorities and we 
-are not going to do any manipulations on these parameters.
-It is just used as flag attribute.
+--nextPart5172311.J332cXn8yN
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlhecNAACgkQi/DJPQPkQ1LjxgCgyZbNDK+5tEZW8PZ4eUrnrovy
+PSkAn0/Dv5ELzOyyEK3/VEkLczciIOj0
+=4mKK
+-----END PGP SIGNATURE-----
+
+--nextPart5172311.J332cXn8yN--
