@@ -1,14 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:51933 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753177AbcLZQhE (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33274 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752418AbcLXQ5T (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Dec 2016 11:37:04 -0500
-Date: Mon, 26 Dec 2016 17:35:59 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-        Ming Lei <ming.lei@canonical.com>,
+        Sat, 24 Dec 2016 11:57:19 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
         "Luis R. Rodriguez" <mcgrof@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
@@ -17,90 +14,38 @@ Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
         Daniel Wagner <wagi@monom.org>,
         Tony Lindgren <tony@atomide.com>,
         Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
         Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
         Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20161226163559.GB27087@amd> (sfid-20161226_173719_692009_04A60DF7)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
+        Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH 0/6] wl1251: Fix MAC address for Nokia N900
+Date: Sat, 24 Dec 2016 17:52:55 +0100
+Message-Id: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> (sfid-20161224_175739_468925_0446FDAA)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="H1spWtNR+x+ondvy"
-In-Reply-To: <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch series fix processing MAC address for wl1251 chip found in Nokia N900.
 
---H1spWtNR+x+ondvy
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Pali Rohár (6):
+  firmware: Add request_firmware_prefer_user() function
+  wl1251: Use request_firmware_prefer_user() for loading NVS
+    calibration data
+  wl1251: Update wl->nvs_len after wl->nvs is valid
+  wl1251: Generate random MAC address only if driver does not have
+    valid
+  wl1251: Parse and use MAC address from supplied NVS data
+  wl1251: Set generated MAC address back to NVS data
 
-On Sun 2016-12-25 21:15:40, Arend Van Spriel wrote:
-> On 24-12-2016 17:52, Pali Roh=E1r wrote:
-> > NVS calibration data for wl1251 are model specific. Every one device wi=
-th
-> > wl1251 chip has different and calibrated in factory.
-> >=20
-> > Not all wl1251 chips have own EEPROM where are calibration data stored.=
- And
-> > in that case there is no "standard" place. Every device has stored them=
- on
-> > different place (some in rootfs file, some in dedicated nand partition,
-> > some in another proprietary structure).
-> >=20
-> > Kernel wl1251 driver cannot support every one different storage decided=
- by
-> > device manufacture so it will use request_firmware_prefer_user() call f=
-or
-> > loading NVS calibration data and userspace helper will be responsible to
-> > prepare correct data.
->=20
-> Responding to this patch as it provides a lot of context to discuss. As
-> you might have gathered from earlier discussions I am not a fan of using
-> user-space helper. I can agree that the kernel driver, wl1251 in this
-> case, should be agnostic to platform specific details regarding storage
-> solutions and the firmware api should hide that. However, it seems your
-> only solution is adding user-space to the mix and changing the api
-> towards that. Can we solve it without user-space help?
+ drivers/base/firmware_class.c          |   45 +++++++++++++++-
+ drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+ drivers/net/wireless/ti/wl1251/main.c  |   91 +++++++++++++++++++++++++-------
+ include/linux/firmware.h               |    9 ++++
+ 4 files changed, 125 insertions(+), 21 deletions(-)
 
-Answer is no, due to licensing. But that's wrong question to ask.
-
-Right question is "should we solve it without user-space help"?
-
-Answer is no, too. Way too complex. Yes, it would be nice if hardware
-was designed in such a way that getting calibration data from kernel
-is easy, and if you design hardware, please design it like that. But
-N900 is not designed like that and getting the calibration through
-userspace looks like only reasonable solution.
-
-Now... how exactly to do that is other question. (But this is looks
-very reasonable. Maybe I'd add request_firmware_with_flags(, ...int
-flags), but.. that's a tiny detail.). But userspace needs to be
-involved.
-
-Thanks,
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---H1spWtNR+x+ondvy
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlhhRu8ACgkQMOfwapXb+vIgUwCfXm4W4fWCMN8HUGClm4S7Dq0c
-PeUAmQGyC3PyPSWR97APVbBCQxpQnIhf
-=OLJ0
------END PGP SIGNATURE-----
-
---H1spWtNR+x+ondvy--
+-- 
+1.7.9.5
