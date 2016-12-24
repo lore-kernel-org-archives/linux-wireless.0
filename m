@@ -1,43 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:33908 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932453AbcLGRIN (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34390 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753536AbcLXSRd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 12:08:13 -0500
-Received: by mail-wm0-f49.google.com with SMTP id u144so36517560wmu.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2016 09:08:13 -0800 (PST)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 3/5] ath10k: decrease num of peers support
-Date: Wed,  7 Dec 2016 18:07:32 +0100
-Message-Id: <1481130454-27244-3-git-send-email-bartosz.markowski@tieto.com> (sfid-20161207_180820_779682_BE8CA838)
-In-Reply-To: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1481130454-27244-1-git-send-email-bartosz.markowski@tieto.com>
+        Sat, 24 Dec 2016 13:17:33 -0500
+Date: Sat, 24 Dec 2016 19:17:30 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
+Message-ID: <20161224181730.GD13590@amd> (sfid-20161224_191755_493648_19AFC471)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="RYJh/3oyKhIjGcML"
+In-Reply-To: <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The correct number for QCA9377 chip is 33 VDEVs.
-This impacts also QCA6174 chip and it's max VDEV number.
 
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/ath10k/hw.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--RYJh/3oyKhIjGcML
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 883547f3347c..7feffec531cc 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -512,7 +512,7 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- /* Target specific defines for WMI-TLV firmware */
- #define TARGET_TLV_NUM_VDEVS			4
- #define TARGET_TLV_NUM_STATIONS			32
--#define TARGET_TLV_NUM_PEERS			35
-+#define TARGET_TLV_NUM_PEERS			33
- #define TARGET_TLV_NUM_TDLS_VDEVS		1
- #define TARGET_TLV_NUM_TIDS			((TARGET_TLV_NUM_PEERS) * 2)
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
--- 
-2.1.2
+Hi!
+
+> In case there is no valid MAC address kernel generates random one. This
+> patch propagate this generated MAC address back to NVS data which will be
+> uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
+> uses.
+
+>  	return 0;
+>  }
+> =20
+> +static int wl1251_write_nvs_mac(struct wl1251 *wl)
+> +{
+
+The name is quite confusing, this sounds like writing into
+non-volatile storage.
+
+> +	int i;
+> +
+> +	if (wl->nvs_len < 0x24)
+> +		return -ENODATA;
+> +
+> +	/* length is 2 and data address is 0x546c (mask is 0xfffe) */
+
+You don't actually check for the mask.
+
+> +	if (wl->nvs[0x19] !=3D 2 || wl->nvs[0x1a] !=3D 0x6d || wl->nvs[0x1b] !=
+=3D 0x54)
+> +		return -EINVAL;
+
+You have two copies of these. Does it make sense to move it to helper
+function?
+
+Thanks,
+									Pavel
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--RYJh/3oyKhIjGcML
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlheu7oACgkQMOfwapXb+vJfSwCgrwQYFkfPI2CSIlLo2J07YCoK
+afwAniXEYCwILW244Gn3kA1bPezLPNCO
+=FNYC
+-----END PGP SIGNATURE-----
+
+--RYJh/3oyKhIjGcML--
