@@ -1,94 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55772 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757360AbcLPKjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 05:39:41 -0500
-Message-ID: <1481882578.27953.20.camel@sipsolutions.net> (sfid-20161216_114046_131366_455EB8BE)
-Subject: Re: [RFC V3 04/11] nl80211: add driver api for gscan notifications
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 16 Dec 2016 11:02:58 +0100
-In-Reply-To: <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com> (sfid-20161214_110729_469384_D509A875)
-References: <1481543997-24624-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1481543997-24624-5-git-send-email-arend.vanspriel@broadcom.com>
-         <1481646049.20412.43.camel@sipsolutions.net>
-         <69ec7e9f-cd46-c46d-140c-0b30343cc0f7@broadcom.com>
-         (sfid-20161214_110729_469384_D509A875)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33957 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753547AbcLXQ5T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Dec 2016 11:57:19 -0500
+From: =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>
+Subject: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+Date: Sat, 24 Dec 2016 17:52:57 +0100
+Message-Id: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com> (sfid-20161224_175739_877566_C7948942)
+In-Reply-To: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+NVS calibration data for wl1251 are model specific. Every one device with
+wl1251 chip has different and calibrated in factory.
 
-> Not sure what is meant by "through the buckets".
+Not all wl1251 chips have own EEPROM where are calibration data stored. And
+in that case there is no "standard" place. Every device has stored them on
+different place (some in rootfs file, some in dedicated nand partition,
+some in another proprietary structure).
 
-TBH, I was handwaving because I don't understand this part of gscan
-well :-)
+Kernel wl1251 driver cannot support every one different storage decided by
+device manufacture so it will use request_firmware_prefer_user() call for
+loading NVS calibration data and userspace helper will be responsible to
+prepare correct data.
 
-> Referring to your
-> remark/question in the "Unversal scan proposal" thread:
-> 
-> """
-> I'm much more worried about the "bucket reporting" since that doesn't
-> fit into the current full BSS reporting model at all. What's your
-> suggestion for this?
-> """
-> 
-> So this is exactly the dilemma I considered so I decided to stick
-> with the full BSS reporting model for gscan as well merely to get it
-> discussed so glad you brought it up ;-).
+In case userspace helper fails request_firmware_prefer_user() still try to
+load data file directly from VFS as fallback mechanism.
 
-Heh.
+On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
+in CAL nand partition. CAL is proprietary Nokia key/value format for nand
+devices.
 
-Ok, so I missed that. Somehow I thought hidden in the buckets was a
-partial reporting :-)
+With this patch it is finally possible to load correct model specific NVS
+calibration data for Nokia N900.
 
-> The problem here is that gscan is a vehicle that serves a number of
-> use-cases. So ignoring hotlists, ePNO, etc. the gscan configuration
-> still hold several notification types:
-> 
-> - report after completing M scans capturing N best APs or a
->   percentage of (M * N).
-> - report after completing a scan include a specific bucket.
-> - report full scan results.
-> 
-> The first two notification trigger retrieval of gscan results which
-> are historic, ie. partial scan results for max M scans.
-> 
-> As said earlier the universal scan proposal has some similarities to
-> gscan. Guess you share that as you are using the term "bucket
-> reporting" in that discussion ;-). The historic results are needed
-> for location (if I am not mistaken) so the full BSS reporting model
-> does not fit that. Question is what particular attribute in the
-> historic results is needed for location (suspecting only rssi and
-> possibly the timestamp, but would like to see that confirmed). I was
-> thinking about have historic storage in cfg80211 so we do not need a
-> per-driver solution.
+Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+ drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-Ok, now I'm starting to understand this better, I guess.
-
-As far as I can tell from our code, for cached results we're reporting
-the following data:
-
- * some flags
- * a scan ID
- * and for each AP:
-   * RSSI
-   * timestamp
-   * channel
-   * BSSID
-   * SSID (which internally we even have a separate table for and each
-           AP just has an index to it, to save memory I guess)
-   * beacon period
-   * capability field
-
-No IEs and similar things like differentiating probe response/beacon,
-so we can't use the full reporting for this.
-
-I have no problem introducing a common storage for this, if necessary
-with some fields/nl attributes being optional, but I suspect this is
-actually a necessary part of gscan, otherwise you're not able to report
-all the necessary data?
-
-johannes
+diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+index 7142ccf..affe154 100644
+--- a/drivers/net/wireless/ti/wl1251/Kconfig
++++ b/drivers/net/wireless/ti/wl1251/Kconfig
+@@ -2,6 +2,7 @@ config WL1251
+ 	tristate "TI wl1251 driver support"
+ 	depends on MAC80211
+ 	select FW_LOADER
++	select FW_LOADER_USER_HELPER
+ 	select CRC7
+ 	---help---
+ 	  This will enable TI wl1251 driver support. The drivers make
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 208f062..24f8866 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+ 	struct device *dev = wiphy_dev(wl->hw->wiphy);
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
++	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+ 
+ 	if (ret < 0) {
+ 		wl1251_error("could not get nvs file: %d", ret);
+-- 
+1.7.9.5
