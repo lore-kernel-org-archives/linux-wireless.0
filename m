@@ -1,30 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34910 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751704AbcLGJZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 04:25:30 -0500
-Message-ID: <1481102727.4092.34.camel@sipsolutions.net> (sfid-20161207_102533_102224_A613ED54)
-Subject: Re: [PATCH v2 2/2] cfg80211: Add support to sched scan to report
- better BSSs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        vamsi krishna <vamsin@qti.qualcomm.com>
-Date: Wed, 07 Dec 2016 10:25:27 +0100
-In-Reply-To: <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
-References: <1480715949-20169-1-git-send-email-jouni@qca.qualcomm.com>
-         <1480715949-20169-2-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34163 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754035AbcLXSCO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 24 Dec 2016 13:02:14 -0500
+Date: Sat, 24 Dec 2016 19:02:11 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 3/6] wl1251: Update wl->nvs_len after wl->nvs is valid
+Message-ID: <20161224180211.GA13590@amd> (sfid-20161224_190238_822154_A512458B)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-4-git-send-email-pali.rohar@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="EVF5PPMfhYS0aIcm"
+In-Reply-To: <1482598381-16513-4-git-send-email-pali.rohar@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> v2: address comments from Luca, Arend, and Johannes
+--EVF5PPMfhYS0aIcm
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-What about Arend's comment regarding this functionality overlapping
-with the BSS selection offload configuration?
+On Sat 2016-12-24 17:52:58, Pali Roh=E1r wrote:
+> In case kmemdup fails thne wl->nvs_len will contains invalid non-zero siz=
+e.
+> This patch fixes it.
 
-Do you think there's any ability to share attributes/functionality?
+If kmemdup fails, then wl->nvs_len will contain invalid non-zero size.
 
-johannes
+?
+
+This probably should go as first in series, as it is bugfix?
+
+									Pavel
+Acked-by: Pavel Machek <pavel@ucw.cz>
+
+
+> Signed-off-by: Pali Roh=E1r <pali.rohar@gmail.com>
+> ---
+>  drivers/net/wireless/ti/wl1251/main.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
+/ti/wl1251/main.c
+> index 24f8866..8971b64 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -124,8 +124,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+>  		goto out;
+>  	}
+> =20
+> -	wl->nvs_len =3D fw->size;
+> -	wl->nvs =3D kmemdup(fw->data, wl->nvs_len, GFP_KERNEL);
+> +	wl->nvs =3D kmemdup(fw->data, fw->size, GFP_KERNEL);
+> =20
+>  	if (!wl->nvs) {
+>  		wl1251_error("could not allocate memory for the nvs file");
+> @@ -133,6 +132,8 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+>  		goto out;
+>  	}
+> =20
+> +	wl->nvs_len =3D fw->size;
+> +
+>  	ret =3D 0;
+> =20
+>  out:
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--EVF5PPMfhYS0aIcm
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlheuCMACgkQMOfwapXb+vJiTgCfaj9HPfGWc0/SEbego9rsuAGE
+I18AnjPiY3ZPyBEdyM0Il07BoZ3schcn
+=Hnrh
+-----END PGP SIGNATURE-----
+
+--EVF5PPMfhYS0aIcm--
