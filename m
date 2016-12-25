@@ -1,130 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46446 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755625AbcLVJKI (ORCPT
+Received: from mail-wj0-f195.google.com ([209.85.210.195]:34779 "EHLO
+        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbcLYUqt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 04:10:08 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Ulf Hansson" <ulf.hansson@linaro.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-        Wei-Ning Huang <wnhuang@chromium.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v4 1/2] mmc: API for accessing host supported maximum
- segment count and size
-Date: Thu, 22 Dec 2016 09:09:50 +0000
-Message-ID: <1fa11bbfaf554dc2961893efbf135710@SC-EXCH04.marvell.com> (sfid-20161222_101055_080647_0A25078F)
-References: <1466069006-10757-1-git-send-email-akarwar@marvell.com>
-In-Reply-To: <1466069006-10757-1-git-send-email-akarwar@marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+        Sun, 25 Dec 2016 15:46:49 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+Date: Sun, 25 Dec 2016 21:46:44 +0100
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> <1482598381-16513-3-git-send-email-pali.rohar@gmail.com> <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
+In-Reply-To: <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart41192482.HPLGM5dO2y";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201612252146.44496@pali> (sfid-20161225_214719_120123_AE82B0F1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ulf,
+--nextPart41192482.HPLGM5dO2y
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
-> Sent: Thursday, June 16, 2016 2:53 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Nishant Sarmukadam; Wei-Ning Huang; linux-mmc@vger.kernel.org;
-> Cathy Luo; Xinming Hu; Amitkumar Karwar
-> Subject: [PATCH v4 1/2] mmc: API for accessing host supported maximum
-> segment count and size
-> 
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> sdio device drivers need be able to get the host supported max_segs and
-> max_seg_size, so that they know the buffer size to allocate while
-> utilizing the scatter/gather DMA buffer list.
-> 
-> This patch provides API for this purpose.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v2: v2 was submitted with minor improvement like replacing BUG_ON()
-> with WARN_ON()
-> v3: Addressed below review comments from Ulf Hansson
->     a) In v3, patch has been split into two separate patches.
->     b) Patch 1/2 introduces an API to fetch max_seg_size and max_segs
->     c) Replaced WARN_ON() with proper error code when sg_ptr->length is
-> invalid
->     d) Instead of duplicating the code in mmc_io_rw_extended(), extra
-> bool parameter
->        has been added to this function and used it in new APIs for SG.
-> v4: Removed WARN_ON() calls in newly added APIs. It's gets called in
-> probe handler.
->     Caller already takes care of it(Shawn Lin).
-> ---
->  drivers/mmc/core/sdio_io.c                          | 21
-> +++++++++++++++++++++
->  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   |  6 +++---
->  include/linux/mmc/sdio_func.h                       |  3 +++
->  3 files changed, 27 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/mmc/core/sdio_io.c b/drivers/mmc/core/sdio_io.c
-> index 78cb4d5..b1ecacc 100644
-> --- a/drivers/mmc/core/sdio_io.c
-> +++ b/drivers/mmc/core/sdio_io.c
-> @@ -720,3 +720,24 @@ int sdio_set_host_pm_flags(struct sdio_func *func,
-> mmc_pm_flag_t flags)
->  	return 0;
->  }
->  EXPORT_SYMBOL_GPL(sdio_set_host_pm_flags);
-> +
-> +/**
-> + *	sdio_get_host_max_seg_size - get host maximum segment size
-> + *	@func: SDIO function attached to host
-> + */
-> +unsigned int sdio_get_host_max_seg_size(struct sdio_func *func) {
-> +	return func->card->host->max_seg_size; }
-> +EXPORT_SYMBOL_GPL(sdio_get_host_max_seg_size);
-> +
-> +/**
-> + *	sdio_get_host_max_seg_count - get host maximum segment count
-> + *	@func: SDIO function attached to host
-> + */
-> +unsigned short sdio_get_host_max_seg_count(struct sdio_func *func) {
-> +	return func->card->host->max_segs;
-> +}
-> +EXPORT_SYMBOL_GPL(sdio_get_host_max_seg_count);
-> +
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index c4b89d2..ba579f4 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -896,9 +896,9 @@ void brcmf_sdiod_sgtable_alloc(struct
-> brcmf_sdio_dev *sdiodev)
->  	max_blocks = min_t(uint, host->max_blk_count, 511u);
->  	sdiodev->max_request_size = min_t(uint, host->max_req_size,
->  					  max_blocks * func->cur_blksize);
-> -	sdiodev->max_segment_count = min_t(uint, host->max_segs,
-> -					   SG_MAX_SINGLE_ALLOC);
-> -	sdiodev->max_segment_size = host->max_seg_size;
-> +	sdiodev->max_segment_count = min_t(uint, SG_MAX_SINGLE_ALLOC,
-> +					   sdio_get_host_max_seg_count(func));
-> +	sdiodev->max_segment_size = sdio_get_host_max_seg_size(func);
-> 
->  	if (!sdiodev->sg_support)
->  		return;
-> diff --git a/include/linux/mmc/sdio_func.h
-> b/include/linux/mmc/sdio_func.h index aab032a..b2b91df 100644
-> --- a/include/linux/mmc/sdio_func.h
-> +++ b/include/linux/mmc/sdio_func.h
-> @@ -159,4 +159,7 @@ extern void sdio_f0_writeb(struct sdio_func *func,
-> unsigned char b,  extern mmc_pm_flag_t sdio_get_host_pm_caps(struct
-> sdio_func *func);  extern int sdio_set_host_pm_flags(struct sdio_func
-> *func, mmc_pm_flag_t flags);
-> 
-> +unsigned short sdio_get_host_max_seg_count(struct sdio_func *func);
-> +unsigned int sdio_get_host_max_seg_size(struct sdio_func *func);
-> +
->  #endif /* LINUX_MMC_SDIO_FUNC_H */
+On Sunday 25 December 2016 21:15:40 Arend Van Spriel wrote:
+> On 24-12-2016 17:52, Pali Roh=C3=A1r wrote:
+> > NVS calibration data for wl1251 are model specific. Every one
+> > device with wl1251 chip has different and calibrated in factory.
+> >=20
+> > Not all wl1251 chips have own EEPROM where are calibration data
+> > stored. And in that case there is no "standard" place. Every
+> > device has stored them on different place (some in rootfs file,
+> > some in dedicated nand partition, some in another proprietary
+> > structure).
+> >=20
+> > Kernel wl1251 driver cannot support every one different storage
+> > decided by device manufacture so it will use
+> > request_firmware_prefer_user() call for loading NVS calibration
+> > data and userspace helper will be responsible to prepare correct
+> > data.
+>=20
+> Responding to this patch as it provides a lot of context to discuss.
+> As you might have gathered from earlier discussions I am not a fan
+> of using user-space helper. I can agree that the kernel driver,
+> wl1251 in this case, should be agnostic to platform specific details
+> regarding storage solutions and the firmware api should hide that.
+> However, it seems your only solution is adding user-space to the mix
+> and changing the api towards that. Can we solve it without
+> user-space help?
 
-This has been pending for a while.
-Any further review comments on this v4 patch series?
+Without userspace helper it means that userspace helper code must be=20
+integrated into kernel.
 
-Regards,
-Amitkumar Karwar
+So what is userspace helper doing?
+
+1) Read MAC address from CAL
+2) Read NVS data from CAL
+3) Modify MAC address in memory NVS data (new for this patch series)
+4) Modify in memory NVS data if we in FCC country
+
+Checking for country is done via dbus call to either Maemo cellular=20
+daemon or alternatively via REGDOMAIN in /etc/default/crda. I have plan=20
+to use ofono (instead Maemo cellular daemon) too...
+
+Currently we are using closed Nokia proprietary CAL library.
+
+Steps 1) and 2) needs closed library, step 4) needs dbus call.
+
+In current state I do not see way to integrate it into kernel. And=20
+because wl1251 currently uses request_firmware() to load those nvs data=20
+I think it is still the best way how to handle it...
+
+And IIRC there was already discussion about Nokia CAL parser in kernel=20
+and it was declined.
+
+> The firmware_class already supports a number of path prefixes it
+> traverses looking for the requested firmware. So I was thinking about
+> adding a hashtable in which a platform driver can add firmware which
+> are stored in the hashtable using the hashed firmware name. Upon a
+> firmware request from the driver we could check the hashtable before
+> traversing the path prefixes on VFS. The obvious problem is that the
+> request may come before the firmware is added to the hashtable. Just
+> wanted to pitch the idea first and hear what others think about it
+> and maybe someone has a nice solution for this problem. Fingers
+> crossed :-p
+>=20
+> > In case userspace helper fails request_firmware_prefer_user() still
+> > try to load data file directly from VFS as fallback mechanism.
+> >=20
+> > On Nokia N900 device which has wl1251 chip, NVS calibration data
+> > are stored in CAL nand partition. CAL is proprietary Nokia
+> > key/value format for nand devices.
+>=20
+> With the firmware hashtable api on N900 a platform driver could
+> interpret the CAL data in the nand partition and provide it through
+> the firmware_class.
+>=20
+> > With this patch it is finally possible to load correct model
+> > specific NVS calibration data for Nokia N900.
+>=20
+> But on other devices that use wl1251, but for instance have no
+> userspace helper the request to userspace will fail (after 60 sec?)
+> and try VFS after that. Maybe not so nice.
+
+Currently support for those devices is broken (like for N900) as without=20
+proper NVS data they do not work correctly...
+
+> You should consider other device configurations. Not just N900.
+
+I do not have any other wl1251 devices. I know that pandora has wl1251=20
+too, but it has wl1251 with eeprom where is stored NVS. And in this case=20
+request_firmware() is not used there.
+
+> Regards,
+> Arend
+>=20
+> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+> > ---
+> >=20
+> >  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+> >  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> >=20
+> > diff --git a/drivers/net/wireless/ti/wl1251/Kconfig
+> > b/drivers/net/wireless/ti/wl1251/Kconfig index 7142ccf..affe154
+> > 100644
+> > --- a/drivers/net/wireless/ti/wl1251/Kconfig
+> > +++ b/drivers/net/wireless/ti/wl1251/Kconfig
+> > @@ -2,6 +2,7 @@ config WL1251
+> >=20
+> >  	tristate "TI wl1251 driver support"
+> >  	depends on MAC80211
+> >  	select FW_LOADER
+> >=20
+> > +	select FW_LOADER_USER_HELPER
+> >=20
+> >  	select CRC7
+> >  	---help---
+> >  =09
+> >  	  This will enable TI wl1251 driver support. The drivers make
+> >=20
+> > diff --git a/drivers/net/wireless/ti/wl1251/main.c
+> > b/drivers/net/wireless/ti/wl1251/main.c index 208f062..24f8866
+> > 100644
+> > --- a/drivers/net/wireless/ti/wl1251/main.c
+> > +++ b/drivers/net/wireless/ti/wl1251/main.c
+> > @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+> >=20
+> >  	struct device *dev =3D wiphy_dev(wl->hw->wiphy);
+> >  	int ret;
+> >=20
+> > -	ret =3D request_firmware(&fw, WL1251_NVS_NAME, dev);
+> > +	ret =3D request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+> >=20
+> >  	if (ret < 0) {
+> >  =09
+> >  		wl1251_error("could not get nvs file: %d", ret);
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart41192482.HPLGM5dO2y
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlhgMDQACgkQi/DJPQPkQ1LnSQCfZy/Ao8PFnbEcFYRiqCO0Q2sf
+TfIAn0gtHSBt4iOIqlSpnZeZFI1mDvuL
+=U0uD
+-----END PGP SIGNATURE-----
+
+--nextPart41192482.HPLGM5dO2y--
