@@ -1,48 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50254 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933385AbcLMPdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 10:33:46 -0500
-Message-ID: <1481643200.20412.9.camel@sipsolutions.net> (sfid-20161213_163352_624423_62A8C3DA)
-Subject: Re: [PATCH v3] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 13 Dec 2016 16:33:20 +0100
-In-Reply-To: <20161212164500.691-1-andrew.zaborowski@intel.com> (sfid-20161212_174513_083117_405C8DC6)
-References: <20161212164500.691-1-andrew.zaborowski@intel.com>
-         (sfid-20161212_174513_083117_405C8DC6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:51019 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753827AbcLZPoW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 26 Dec 2016 10:44:22 -0500
+Date: Mon, 26 Dec 2016 16:43:53 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20161226154353.GA27087@amd> (sfid-20161226_164458_737182_B665B568)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
+ <201612252146.44496@pali>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="y0ulUmNC+osPPQO6"
+In-Reply-To: <201612252146.44496@pali>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[snip]
 
-Please fix coding style, particularly indentation.
+--y0ulUmNC+osPPQO6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> +static void cfg80211_disconnect_wk(struct work_struct *work)
-> +{
-> +       struct cfg80211_registered_device *rdev;
-> +       struct wireless_dev *wdev;
-> +
-> +       wdev = container_of(work, struct wireless_dev, disconnect_wk);
-> +       rdev = wiphy_to_rdev(wdev->wiphy);
+Hi!
 
+> > > NVS calibration data for wl1251 are model specific. Every one
+> > > device with wl1251 chip has different and calibrated in factory.
+> > >=20
+> > > Not all wl1251 chips have own EEPROM where are calibration data
+> > > stored. And in that case there is no "standard" place. Every
+> > > device has stored them on different place (some in rootfs file,
+> > > some in dedicated nand partition, some in another proprietary
+> > > structure).
+> > >=20
+> > > Kernel wl1251 driver cannot support every one different storage
+> > > decided by device manufacture so it will use
+> > > request_firmware_prefer_user() call for loading NVS calibration
+> > > data and userspace helper will be responsible to prepare correct
+> > > data.
+> >=20
+> > Responding to this patch as it provides a lot of context to discuss.
+> > As you might have gathered from earlier discussions I am not a fan
+> > of using user-space helper. I can agree that the kernel driver,
+> > wl1251 in this case, should be agnostic to platform specific details
+> > regarding storage solutions and the firmware api should hide that.
+> > However, it seems your only solution is adding user-space to the mix
+> > and changing the api towards that. Can we solve it without
+> > user-space help?
+>=20
+> Without userspace helper it means that userspace helper code must be=20
+> integrated into kernel.
+>=20
+> So what is userspace helper doing?
+>=20
+> 1) Read MAC address from CAL
+> 2) Read NVS data from CAL
+> 3) Modify MAC address in memory NVS data (new for this patch series)
+> 4) Modify in memory NVS data if we in FCC country
+>=20
+> Checking for country is done via dbus call to either Maemo cellular=20
+> daemon or alternatively via REGDOMAIN in /etc/default/crda. I have plan=
+=20
+> to use ofono (instead Maemo cellular daemon) too...
+>=20
+> Currently we are using closed Nokia proprietary CAL library.
+>=20
+> Steps 1) and 2) needs closed library, step 4) needs dbus call.
 
-Those should also be possible as initializers on the same line, I
-guess?
+I guess pointer to the source code implementing this would be welcome.
 
-It might also be worthwhile moving this function into a better file,
-even if then it needs a prototype in core.h (it can't be inlined anyway
-since it's called through a function pointer in the work struct)
+> > But on other devices that use wl1251, but for instance have no
+> > userspace helper the request to userspace will fail (after 60 sec?)
+> > and try VFS after that. Maybe not so nice.
+>=20
+> Currently support for those devices is broken (like for N900) as without=
+=20
+> proper NVS data they do not work correctly...
 
-> +       if (!wdev->netdev)
-> +               return;
+Is it expected to work at all, perhaps with degraded performance /
+range? Because it seems to work for me.
 
-This obviously cannot happen.
+Thanks,
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-All the code you added to nl80211.c is racy.
+--y0ulUmNC+osPPQO6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
-johannes
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlhhOrkACgkQMOfwapXb+vIJqgCgw0tnfrODGbsPnBpMzA4rxgtr
+99sAn0v9SsNhaOQAYNu3EQECGsCdYzOk
+=pwaf
+-----END PGP SIGNATURE-----
+
+--y0ulUmNC+osPPQO6--
