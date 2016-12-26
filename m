@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41510 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754069AbcL3Of5 (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:36601 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751448AbcLZVt7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 09:35:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH][V2] [media] gp8psk: fix spelling mistake: "firmare" -> "firmware"
-References: <20161229213815.27890-1-colin.king@canonical.com>
-Date: Fri, 30 Dec 2016 16:35:47 +0200
-In-Reply-To: <20161229213815.27890-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 29 Dec 2016 21:38:15 +0000")
-Message-ID: <87bmvtjxh8.fsf@purkki.adurom.net> (sfid-20161230_153631_453294_B27B201C)
+        Mon, 26 Dec 2016 16:49:59 -0500
+Received: by mail-pg0-f43.google.com with SMTP id f188so137789223pgc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 26 Dec 2016 13:49:58 -0800 (PST)
+Subject: Re: [PATCH] mac80211: Fix addition of mesh configuration element
+To: Ilan Peer <ilan.peer@intel.com>, johannes@sipsolutions.net
+References: <1482769056-28577-1-git-send-email-ilan.peer@intel.com>
+Cc: linux-wireless@vger.kernel.org
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <66eceab9-7192-72a6-8512-9329d0d92479@gmail.com> (sfid-20161226_225003_080863_DCE7B42F)
+Date: Tue, 27 Dec 2016 06:49:55 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1482769056-28577-1-git-send-email-ilan.peer@intel.com>
+Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin King <colin.king@canonical.com> writes:
-
-> From: Colin Ian King <colin.king@canonical.com>
+On 2016年12月27日 01:17, Ilan Peer wrote:
+> The code was setting the capabilities byte to zero,
+> after it was already properly set previously. Fix it.
 >
-> Trivial fix to spelling mistake in err message. Also change "don't" to
-> "does not".
->
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/media/usb/dvb-usb/gp8psk.c          | 2 +-
->  drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+> The bug was found while debugging hwsim mesh tests failures
+> that happened in commit 76f43b4 (mac80211: Remove invalid flag
+> operations in mesh TSF synchronization).
 
-Could you split the rtlwifi part to it's own patch? I can't apply
-patches touching media drivers.
+Thanks!
 
--- 
-Kalle Valo
+Reviewed-by: Masashi Honma <masashi.honma@gmail.com>
