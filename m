@@ -1,57 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43924 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751654AbcLHLnt (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34662 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754016AbcLZQFB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Dec 2016 06:43:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Greg KH <greg@kroah.com>, devel@driverdev.osuosl.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 10/14] rtlwifi: Add BTC_TRACE_STRING to new btcoex
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
-        <20161202014833.6856-11-Larry.Finger@lwfinger.net>
-        <20161205213447.GJ8176@mwanda>
-        <6442d5c7-f083-0e98-490b-dd18a5a4d316@lwfinger.net>
-        <20161206071340.GB10292@kroah.com>
-        <871sxkdjeh.fsf@kamboji.qca.qualcomm.com>
-        <20161207133219.GM8176@mwanda>
-Date: Thu, 08 Dec 2016 13:43:42 +0200
-In-Reply-To: <20161207133219.GM8176@mwanda> (Dan Carpenter's message of "Wed,
-        7 Dec 2016 16:32:19 +0300")
-Message-ID: <87y3zqbq8h.fsf@kamboji.qca.qualcomm.com> (sfid-20161208_124352_742570_9CB9559A)
+        Mon, 26 Dec 2016 11:05:01 -0500
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+Date: Mon, 26 Dec 2016 17:04:56 +0100
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com> <201612252146.44496@pali> <20161226154353.GA27087@amd>
+In-Reply-To: <20161226154353.GA27087@amd>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed;
+  boundary="nextPart52962415.0az8tMa0k5";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201612261704.56567@pali> (sfid-20161226_170523_658335_D01D434A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+--nextPart52962415.0az8tMa0k5
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-> On Wed, Dec 07, 2016 at 02:16:06PM +0200, Kalle Valo wrote:
->> We have disccused this before, but for wireless it's not really that
->> simple. AFAIK with dyndbg you can only control the messages per line
->> (painful to enable group of messages) or per file (enables too many
->> messages). In wireless we have cases when we need to enable group of
->> messages, but not all.
->
-> You can turn them on by the function or a range of lines, then disable
-> the spammy lines.  With these new debug macros you can't do that so this
-> is a step backwards.
+On Monday 26 December 2016 16:43:53 Pavel Machek wrote:
+> Hi!
+>=20
+> > > > NVS calibration data for wl1251 are model specific. Every one
+> > > > device with wl1251 chip has different and calibrated in
+> > > > factory.
+> > > >=20
+> > > > Not all wl1251 chips have own EEPROM where are calibration data
+> > > > stored. And in that case there is no "standard" place. Every
+> > > > device has stored them on different place (some in rootfs file,
+> > > > some in dedicated nand partition, some in another proprietary
+> > > > structure).
+> > > >=20
+> > > > Kernel wl1251 driver cannot support every one different storage
+> > > > decided by device manufacture so it will use
+> > > > request_firmware_prefer_user() call for loading NVS calibration
+> > > > data and userspace helper will be responsible to prepare
+> > > > correct data.
+> > >=20
+> > > Responding to this patch as it provides a lot of context to
+> > > discuss. As you might have gathered from earlier discussions I
+> > > am not a fan of using user-space helper. I can agree that the
+> > > kernel driver, wl1251 in this case, should be agnostic to
+> > > platform specific details regarding storage solutions and the
+> > > firmware api should hide that. However, it seems your only
+> > > solution is adding user-space to the mix and changing the api
+> > > towards that. Can we solve it without user-space help?
+> >=20
+> > Without userspace helper it means that userspace helper code must
+> > be integrated into kernel.
+> >=20
+> > So what is userspace helper doing?
+> >=20
+> > 1) Read MAC address from CAL
+> > 2) Read NVS data from CAL
+> > 3) Modify MAC address in memory NVS data (new for this patch
+> > series) 4) Modify in memory NVS data if we in FCC country
+> >=20
+> > Checking for country is done via dbus call to either Maemo cellular
+> > daemon or alternatively via REGDOMAIN in /etc/default/crda. I have
+> > plan to use ofono (instead Maemo cellular daemon) too...
+> >=20
+> > Currently we are using closed Nokia proprietary CAL library.
+> >=20
+> > Steps 1) and 2) needs closed library, step 4) needs dbus call.
+>=20
+> I guess pointer to the source code implementing this would be
+> welcome.
 
->From my point of view dyndbg is step backwards. Line numbers change all
-the time and you can't have simple instructions like this for users and
-developers working with the driver:
+Here is current code: https://github.com/community-ssu/wl1251-cal
 
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/debug#debug_log_messages
+(there is implemented also Maemo netlink interface)
 
-I don't want waste time with this anymore as we seem to just disagree.
-My point here was that in wireless we have used log wrappers before and
-will continue to use them in certain drivers as dyndbg is not enough.
-But it would make me very happy if someone would add a similar grouping
-functionality to dyndbg to make it easy to enable a set of debug
-messages in a driver.
+> > > But on other devices that use wl1251, but for instance have no
+> > > userspace helper the request to userspace will fail (after 60
+> > > sec?) and try VFS after that. Maybe not so nice.
+> >=20
+> > Currently support for those devices is broken (like for N900) as
+> > without proper NVS data they do not work correctly...
+>=20
+> Is it expected to work at all, perhaps with degraded performance /
+> range? Because it seems to work for me.
 
--- 
-Kalle Valo
+Yes, some degraded performance or problems with connecting is expected.=20
+And random MAC address at every boot. Plus some regulatory problems in=20
+=46CC countries.
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart52962415.0az8tMa0k5
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlhhP6gACgkQi/DJPQPkQ1IURwCeKUzk1tpo8L9a13wVQ6nqCx7s
+9uoAoL257XYa8PrTwc3qnCasAmqtMd4c
+=9psR
+-----END PGP SIGNATURE-----
+
+--nextPart52962415.0az8tMa0k5--
