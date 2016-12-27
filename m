@@ -1,88 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33039 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbcL1VaE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 16:30:04 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com>
-References: <20161228155955.25518-1-zajec5@gmail.com> <20161228155955.25518-2-zajec5@gmail.com>
- <491a5af2-449d-4b2a-c4ed-af0e89b2ca78@broadcom.com> <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 28 Dec 2016 22:30:03 +0100
-Message-ID: <CACna6rzJV-UdydKrXTquEzrkCfNXXKsHBrsZGjTJ8F=BSRyUjA@mail.gmail.com> (sfid-20161228_223007_978871_DBB4226B)
-Subject: Re: [PATCH 2/2] cfg80211: reg: support ieee80211-(min|max)-center-freq
- DT properties
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from foss.arm.com ([217.140.101.70]:54186 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754973AbcL0Sww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Dec 2016 13:52:52 -0500
+From: Mark Rutland <mark.rutland@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH 0/2] ath9k: kill of ACCESS_ONCE() in MAC drivers
+Date: Tue, 27 Dec 2016 18:49:57 +0000
+Message-Id: <1482864599-19995-1-git-send-email-mark.rutland@arm.com> (sfid-20161227_195310_848261_CA2F8FF0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 December 2016 at 22:28, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
-ote:
-> On 28 December 2016 at 22:07, Arend van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
->>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>
->>> They allow specifying hardware limitations of supported channels. This
->>> may be useful for specifying single band devices or devices that suppor=
-t
->>> only some part of the whole band.
->>> E.g. some tri-band routers have separated radios for lower and higher
->>> part of 5 GHz band.
->>>
->>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>> ---
->>>  net/wireless/reg.c | 34 ++++++++++++++++++++++++++++++++++
->>>  1 file changed, 34 insertions(+)
->>>
->>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
->>> index 5dbac37..35ba5c7 100644
->>> --- a/net/wireless/reg.c
->>> +++ b/net/wireless/reg.c
->>> @@ -1123,6 +1123,26 @@ const char *reg_initiator_name(enum nl80211_reg_=
-initiator initiator)
->>>  }
->>>  EXPORT_SYMBOL(reg_initiator_name);
->>>
->>> +static bool reg_center_freq_of_valid(struct wiphy *wiphy,
->>> +                                  struct ieee80211_channel *chan)
->>> +{
->>> +     struct device_node *np =3D wiphy_dev(wiphy)->of_node;
->>> +     u32 val;
->>> +
->>> +     if (!np)
->>> +             return true;
->>> +
->>> +     if (!of_property_read_u32(np, "ieee80211-min-center-freq", &val) =
-&&
->>> +         chan->center_freq < KHZ_TO_MHZ(val))
->>> +             return false;
->>> +
->>> +     if (!of_property_read_u32(np, "ieee80211-max-center-freq", &val) =
-&&
->>> +         chan->center_freq > KHZ_TO_MHZ(val))
->>> +             return false;
->>
->> I suspect these functions rely on CONFIG_OF. So might not build for
->> !CONFIG_OF.
->
-> I compiled it with
-> # CONFIG_OF is not set
->
-> Can you test it and provide a non-working config if you see a
-> compilation error, please?
+For several reasons, it would be beneficial to kill off ACCESS_ONCE()
+tree-wide, in favour of {READ,WRITE}_ONCE(). These work with aggregate
+types, more obviously document their intended behaviour, and are
+necessary for tools like KTSAN to work correctly (as otherwise reads and
+writes cannot be instrumented separately).
 
-include/linux/of.h provides a lot of dummy static inline functions if
-CONFIG_OF is not used (they also allow compiler to drop most of the
-code).
+While it's possible to script a tree-wide conversion using Coccinelle,
+some cases such as the ath9k MAC drivers require some manual
+intervention to ensure that the resulting code remains legible. This
+series moves the ath9k MAC drivers over to {READ,WRITE}_ONCE(). In both
+cases this is functionally equivalent to the below Coccinelle script
+being applied, though the existing formatting is retained.
 
---=20
-Rafa=C5=82
+----
+virtual patch
+
+@ depends on patch @
+expression E1, E2;
+@@
+
+- ACCESS_ONCE(E1) = E2
++ WRITE_ONCE(E1, E2)
+
+@ depends on patch @
+expression E;
+@@
+
+- ACCESS_ONCE(E)
++ READ_ONCE(E)
+----
+
+Thanks,
+Mark.
+
+Mark Rutland (2):
+  ath9k: ar9002_mac: kill off ACCESS_ONCE()
+  ath9k: ar9003_mac: kill off ACCESS_ONCE()
+
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c | 64 ++++++++++----------
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c | 92 ++++++++++++++---------------
+ 2 files changed, 78 insertions(+), 78 deletions(-)
+
+-- 
+2.7.4
