@@ -1,99 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35002 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754722AbcLNH6s (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 02:58:48 -0500
-Date: Wed, 14 Dec 2016 13:03:38 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath10k: add accounting for the extended peer
- statistics
-Message-ID: <20161214073337.GA4046@atheros-ThinkPad-T61> (sfid-20161214_085855_424930_0BF27052)
-References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
- <20161207062824.GA3404@atheros-ThinkPad-T61>
- <2870294.lMmxz9iPmq@debian64>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2870294.lMmxz9iPmq@debian64>
+Received: from foss.arm.com ([217.140.101.70]:54198 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755165AbcL0Sww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Dec 2016 13:52:52 -0500
+From: Mark Rutland <mark.rutland@arm.com>
+To: linux-kernel@vger.kernel.org
+Cc: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
+Subject: [PATCH 1/2] ath9k: ar9002_mac: kill off ACCESS_ONCE()
+Date: Tue, 27 Dec 2016 18:49:58 +0000
+Message-Id: <1482864599-19995-2-git-send-email-mark.rutland@arm.com> (sfid-20161227_195311_505212_712484CE)
+In-Reply-To: <1482864599-19995-1-git-send-email-mark.rutland@arm.com>
+References: <1482864599-19995-1-git-send-email-mark.rutland@arm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 01:41:33PM +0100, Christian Lamparter wrote:
-> Hello,
-> 
-> It looks like google put your mail into the spam-can. 
-> I'm sorry for not answering sooner.
+For several reasons, it is desirable to use {READ,WRITE}_ONCE() in
+preference to ACCESS_ONCE(), and new code is expected to use one of the
+former. So far, there's been no reason to change most existing uses of
+ACCESS_ONCE(), as these aren't currently harmful.
 
-[shafi] np, thanks for your reply !
+However, for some new features (e.g. KTSAN / Kernel Thread Sanitizer),
+it is necessary to instrument reads and writes separately, which is not
+possible with ACCESS_ONCE(). This distinction is critical to correct
+operation.
 
-> 
-> On Wednesday, December 7, 2016 11:58:24 AM CET Mohammed Shafi Shajakhan wrote:
-> > On Mon, Dec 05, 2016 at 10:52:45PM +0100, Christian Lamparter wrote:
-> > > The 10.4 firmware adds extended peer information to the
-> > > firmware's statistics payload. This additional info is
-> > > stored as a separate data field and the elements are
-> > > stored in their own "peers_extd" list.
-> > > 
-> > > These elements can pile up in the same way as the peer
-> > > information elements. This is because the
-> > > ath10k_wmi_10_4_op_pull_fw_stats() function tries to
-> > > pull the same amount (num_peer_stats) for every statistic
-> > > data unit.
-> > > 
-> > > Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
-> > > Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> > > ---
-> > >  drivers/net/wireless/ath/ath10k/debug.c | 7 +++++--
-> > >  1 file changed, 5 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> > > index 82a4c67f3672..4acd9eb65910 100644
-> > > --- a/drivers/net/wireless/ath/ath10k/debug.c
-> > > +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> > > @@ -399,6 +399,7 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
-> > >  			 * prevent firmware from DoS-ing the host.
-> > >  			 */
-> > >  			ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
-> > > +			ath10k_fw_extd_stats_peers_free(&ar->debug.fw_stats.peers_extd);
-> > 
-> > [shafi] thanks for fixing this !
-> > 
-> > >  			ath10k_warn(ar, "dropping fw peer stats\n");
-> > >  			goto free;
-> > >  		}
-> > > @@ -409,10 +410,12 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
-> > >  			goto free;
-> > >  		}
-> > >  
-> > > +		if (!list_empty(&stats.peers))
-> > 
-> > [shafi] sorry please correct me if i am wrong, for 'extended peer stats' we are checking
-> > for normal 'peer stats' ? Is this the fix intended, i had started a build to
-> > check your change and we will keep you posted, does this fix displaying
-> > 'rx_duration' in ath10k fw_stats.
-> The idea is not to queue any "extended peer stats" when there where no "peer stats" to
-> begin with. Because otherwise, the function is still vulnerable to OOM since the 
-> extended peers stats will be queued unchecked (not that this is currently a problem).
+It's possible to transform the bulk of kernel code using the Coccinelle
+script below. However, for some files (including the ath9k ar9002 mac
+driver), this mangles the formatting. As a preparatory step, this patch
+converts the driver to use {READ,WRITE}_ONCE() without said mangling.
 
-[shafi] list_splice_tail_init should still check for non-empty 'peers_extd' list
-and append if required ? please let me know if i am still missing something
+----
+virtual patch
 
->  
-> > > +			list_splice_tail_init(&stats.peers_extd,
-> > > +					      &ar->debug.fw_stats.peers_extd);
-> > > +
-> > >  		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
-> > >  		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
-> > > -		list_splice_tail_init(&stats.peers_extd,
-> > > -				      &ar->debug.fw_stats.peers_extd);
-> > >  	}
-> > >  
-> > >  	complete(&ar->debug.fw_stats_complete);
-> 
-> Regards,
-> Christian
-> 
-> 
+@ depends on patch @
+expression E1, E2;
+@@
+
+- ACCESS_ONCE(E1) = E2
++ WRITE_ONCE(E1, E2)
+
+@ depends on patch @
+expression E;
+@@
+
+- ACCESS_ONCE(E)
++ READ_ONCE(E)
+----
+
+Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+Cc: ath9k-devel@qca.qualcomm.com
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: ath9k-devel@lists.ath9k.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/net/wireless/ath/ath9k/ar9002_mac.c | 64 ++++++++++++++---------------
+ 1 file changed, 32 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_mac.c b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+index f816909..4b3c9b1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_mac.c
+@@ -220,8 +220,8 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	ads->ds_txstatus6 = ads->ds_txstatus7 = 0;
+ 	ads->ds_txstatus8 = ads->ds_txstatus9 = 0;
+ 
+-	ACCESS_ONCE(ads->ds_link) = i->link;
+-	ACCESS_ONCE(ads->ds_data) = i->buf_addr[0];
++	WRITE_ONCE(ads->ds_link, i->link);
++	WRITE_ONCE(ads->ds_data, i->buf_addr[0]);
+ 
+ 	ctl1 = i->buf_len[0] | (i->is_last ? 0 : AR_TxMore);
+ 	ctl6 = SM(i->keytype, AR_EncrType);
+@@ -235,26 +235,26 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 
+ 	if ((i->is_first || i->is_last) &&
+ 	    i->aggr != AGGR_BUF_MIDDLE && i->aggr != AGGR_BUF_LAST) {
+-		ACCESS_ONCE(ads->ds_ctl2) = set11nTries(i->rates, 0)
++		WRITE_ONCE(ads->ds_ctl2, set11nTries(i->rates, 0)
+ 			| set11nTries(i->rates, 1)
+ 			| set11nTries(i->rates, 2)
+ 			| set11nTries(i->rates, 3)
+ 			| (i->dur_update ? AR_DurUpdateEna : 0)
+-			| SM(0, AR_BurstDur);
++			| SM(0, AR_BurstDur));
+ 
+-		ACCESS_ONCE(ads->ds_ctl3) = set11nRate(i->rates, 0)
++		WRITE_ONCE(ads->ds_ctl3, set11nRate(i->rates, 0)
+ 			| set11nRate(i->rates, 1)
+ 			| set11nRate(i->rates, 2)
+-			| set11nRate(i->rates, 3);
++			| set11nRate(i->rates, 3));
+ 	} else {
+-		ACCESS_ONCE(ads->ds_ctl2) = 0;
+-		ACCESS_ONCE(ads->ds_ctl3) = 0;
++		WRITE_ONCE(ads->ds_ctl2, 0);
++		WRITE_ONCE(ads->ds_ctl3, 0);
+ 	}
+ 
+ 	if (!i->is_first) {
+-		ACCESS_ONCE(ads->ds_ctl0) = 0;
+-		ACCESS_ONCE(ads->ds_ctl1) = ctl1;
+-		ACCESS_ONCE(ads->ds_ctl6) = ctl6;
++		WRITE_ONCE(ads->ds_ctl0, 0);
++		WRITE_ONCE(ads->ds_ctl1, ctl1);
++		WRITE_ONCE(ads->ds_ctl6, ctl6);
+ 		return;
+ 	}
+ 
+@@ -279,7 +279,7 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 		break;
+ 	}
+ 
+-	ACCESS_ONCE(ads->ds_ctl0) = (i->pkt_len & AR_FrameLen)
++	WRITE_ONCE(ads->ds_ctl0, (i->pkt_len & AR_FrameLen)
+ 		| (i->flags & ATH9K_TXDESC_VMF ? AR_VirtMoreFrag : 0)
+ 		| SM(i->txpower[0], AR_XmitPower0)
+ 		| (i->flags & ATH9K_TXDESC_VEOL ? AR_VEOL : 0)
+@@ -287,29 +287,29 @@ ar9002_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 		| (i->keyix != ATH9K_TXKEYIX_INVALID ? AR_DestIdxValid : 0)
+ 		| (i->flags & ATH9K_TXDESC_CLRDMASK ? AR_ClrDestMask : 0)
+ 		| (i->flags & ATH9K_TXDESC_RTSENA ? AR_RTSEnable :
+-		   (i->flags & ATH9K_TXDESC_CTSENA ? AR_CTSEnable : 0));
++		   (i->flags & ATH9K_TXDESC_CTSENA ? AR_CTSEnable : 0)));
+ 
+-	ACCESS_ONCE(ads->ds_ctl1) = ctl1;
+-	ACCESS_ONCE(ads->ds_ctl6) = ctl6;
++	WRITE_ONCE(ads->ds_ctl1, ctl1);
++	WRITE_ONCE(ads->ds_ctl6, ctl6);
+ 
+ 	if (i->aggr == AGGR_BUF_MIDDLE || i->aggr == AGGR_BUF_LAST)
+ 		return;
+ 
+-	ACCESS_ONCE(ads->ds_ctl4) = set11nPktDurRTSCTS(i->rates, 0)
+-		| set11nPktDurRTSCTS(i->rates, 1);
++	WRITE_ONCE(ads->ds_ctl4, set11nPktDurRTSCTS(i->rates, 0)
++		| set11nPktDurRTSCTS(i->rates, 1));
+ 
+-	ACCESS_ONCE(ads->ds_ctl5) = set11nPktDurRTSCTS(i->rates, 2)
+-		| set11nPktDurRTSCTS(i->rates, 3);
++	WRITE_ONCE(ads->ds_ctl5, set11nPktDurRTSCTS(i->rates, 2)
++		| set11nPktDurRTSCTS(i->rates, 3));
+ 
+-	ACCESS_ONCE(ads->ds_ctl7) = set11nRateFlags(i->rates, 0)
++	WRITE_ONCE(ads->ds_ctl7, set11nRateFlags(i->rates, 0)
+ 		| set11nRateFlags(i->rates, 1)
+ 		| set11nRateFlags(i->rates, 2)
+ 		| set11nRateFlags(i->rates, 3)
+-		| SM(i->rtscts_rate, AR_RTSCTSRate);
++		| SM(i->rtscts_rate, AR_RTSCTSRate));
+ 
+-	ACCESS_ONCE(ads->ds_ctl9) = SM(i->txpower[1], AR_XmitPower1);
+-	ACCESS_ONCE(ads->ds_ctl10) = SM(i->txpower[2], AR_XmitPower2);
+-	ACCESS_ONCE(ads->ds_ctl11) = SM(i->txpower[3], AR_XmitPower3);
++	WRITE_ONCE(ads->ds_ctl9, SM(i->txpower[1], AR_XmitPower1));
++	WRITE_ONCE(ads->ds_ctl10, SM(i->txpower[2], AR_XmitPower2));
++	WRITE_ONCE(ads->ds_ctl11, SM(i->txpower[3], AR_XmitPower3));
+ }
+ 
+ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+@@ -318,7 +318,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	struct ar5416_desc *ads = AR5416DESC(ds);
+ 	u32 status;
+ 
+-	status = ACCESS_ONCE(ads->ds_txstatus9);
++	status = READ_ONCE(ads->ds_txstatus9);
+ 	if ((status & AR_TxDone) == 0)
+ 		return -EINPROGRESS;
+ 
+@@ -332,7 +332,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->ts_rateindex = MS(status, AR_FinalTxIdx);
+ 	ts->ts_seqnum = MS(status, AR_SeqNum);
+ 
+-	status = ACCESS_ONCE(ads->ds_txstatus0);
++	status = READ_ONCE(ads->ds_txstatus0);
+ 	ts->ts_rssi_ctl0 = MS(status, AR_TxRSSIAnt00);
+ 	ts->ts_rssi_ctl1 = MS(status, AR_TxRSSIAnt01);
+ 	ts->ts_rssi_ctl2 = MS(status, AR_TxRSSIAnt02);
+@@ -342,7 +342,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 		ts->ba_high = ads->AR_BaBitmapHigh;
+ 	}
+ 
+-	status = ACCESS_ONCE(ads->ds_txstatus1);
++	status = READ_ONCE(ads->ds_txstatus1);
+ 	if (status & AR_FrmXmitOK)
+ 		ts->ts_status |= ATH9K_TX_ACKED;
+ 	else {
+@@ -371,7 +371,7 @@ static int ar9002_hw_proc_txdesc(struct ath_hw *ah, void *ds,
+ 	ts->ts_longretry = MS(status, AR_DataFailCnt);
+ 	ts->ts_virtcol = MS(status, AR_VirtRetryCnt);
+ 
+-	status = ACCESS_ONCE(ads->ds_txstatus5);
++	status = READ_ONCE(ads->ds_txstatus5);
+ 	ts->ts_rssi = MS(status, AR_TxRSSICombined);
+ 	ts->ts_rssi_ext0 = MS(status, AR_TxRSSIAnt10);
+ 	ts->ts_rssi_ext1 = MS(status, AR_TxRSSIAnt11);
+@@ -390,13 +390,13 @@ static int ar9002_hw_get_duration(struct ath_hw *ah, const void *ds, int index)
+ 
+ 	switch (index) {
+ 	case 0:
+-		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur0);
++		return MS(READ_ONCE(ads->ds_ctl4), AR_PacketDur0);
+ 	case 1:
+-		return MS(ACCESS_ONCE(ads->ds_ctl4), AR_PacketDur1);
++		return MS(READ_ONCE(ads->ds_ctl4), AR_PacketDur1);
+ 	case 2:
+-		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur2);
++		return MS(READ_ONCE(ads->ds_ctl5), AR_PacketDur2);
+ 	case 3:
+-		return MS(ACCESS_ONCE(ads->ds_ctl5), AR_PacketDur3);
++		return MS(READ_ONCE(ads->ds_ctl5), AR_PacketDur3);
+ 	default:
+ 		return -1;
+ 	}
+-- 
+2.7.4
