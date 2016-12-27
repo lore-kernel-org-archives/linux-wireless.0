@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43410 "EHLO sipsolutions.net"
+Received: from nbd.name ([46.4.11.11]:47822 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751697AbcLEOxX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 09:53:23 -0500
-Message-ID: <1480949600.31788.29.camel@sipsolutions.net> (sfid-20161205_155332_133729_A6E4CF6D)
-Subject: Re: [PATCH] mac80211:  Return avg sig, rx, tx values in ethtool
- stats.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-        linux-wireless@vger.kernel.org
-Date: Mon, 05 Dec 2016 15:53:20 +0100
-In-Reply-To: <58457D63.2010605@candelatech.com>
-References: <1480442872-7358-1-git-send-email-greearb@candelatech.com>
-                 (sfid-20161129_190824_045626_457405E8) <1480946891.31788.10.camel@sipsolutions.net>
-         <58457D63.2010605@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752694AbcL0MC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Dec 2016 07:02:27 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH] ath5k: drop bogus warning on drv_set_key with unsupported cipher
+Date: Tue, 27 Dec 2016 12:16:09 +0100
+Message-Id: <20161227111609.11113-1-nbd@nbd.name> (sfid-20161227_130230_536455_5E694BE9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Simply return -EOPNOTSUPP instead.
 
-> Unless I screwed up, this patch also returns an average.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath5k/mac80211-ops.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Oops, sorry. I missed the whole mac_div() indirection thing.
-
-I'm not super convinced anyway though - all of this data already is
-available in a much more reliable fashion, even trackable when stations
-are removed (all data gets sent in the DEL_STATION notification), so
-adding a crippled way to get the same data seems a bit strange?
-
-In any case I'd want you to resend with the /* pr_..*/ stuff removed.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+index dc44cfef7517..16e052d02c94 100644
+--- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
++++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
+@@ -502,8 +502,7 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 			break;
+ 		return -EOPNOTSUPP;
+ 	default:
+-		WARN_ON(1);
+-		return -EINVAL;
++		return -EOPNOTSUPP;
+ 	}
+ 
+ 	mutex_lock(&ah->lock);
+-- 
+2.11.0
