@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:41906 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751085AbcLXGBo (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35911 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751641AbcL1QAT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Dec 2016 01:01:44 -0500
-Date: Fri, 23 Dec 2016 23:01:41 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        justin@kuvee.com, Jaret Cantu <jaret.cantu@timesys.com>
-Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
- crashing the kernel
-Message-ID: <20161224060141.GA9069@animalcreek.com> (sfid-20161224_070219_509304_6C5079C4)
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
- <1482380314-16440-3-git-send-email-geoff@kuvee.com>
+        Wed, 28 Dec 2016 11:00:19 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
+        devicetree@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency properties
+Date: Wed, 28 Dec 2016 16:59:54 +0100
+Message-Id: <20161228155955.25518-1-zajec5@gmail.com> (sfid-20161228_170035_307634_F074CA2B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482380314-16440-3-git-send-email-geoff@kuvee.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2016 at 11:18:34PM -0500, Geoff Lansberry wrote:
-> From: Jaret Cantu <jaret.cantu@timesys.com>
-> 
-> Repeated polling attempts cause a NULL dereference error to occur.
-> This is because the state of the trf7970a is currently reading but
-> another request has been made to send a command before it has finished.
-> 
-> The solution is to properly kill the waiting reading (workqueue)
-> before failing on the send.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
+From: Rafał Miłecki <rafal@milecki.pl>
 
-You've still provided virtually no information on the actual problem(s)
-nor justified why you think this is the best solution.  You're adding
-code to a section of code that should _never_ be executed so the only
-reasonable things I can infer is that there are, at least, two problems:
+This new file should be used for properties handled at higher level and
+so usable with all drivers.
 
-1) There is a bug causing execution to get into this block of code.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../devicetree/bindings/net/wireless/ieee80211.txt       | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
-2) Once in this block of code, there is another bug.
-
-You seem to be attempting to fix 2) and completely ignoring 1).
-1) is the first bug that needs to be root-caused and fixed.
-
-Also, what exactly is the "NULL dereference error" you mention?
-Is this the neard crash you talked about in another thread or is
-this a kernel crash?  If it is the kernel crash, please post the
-relevant information.  If this is the neard crash - which seems
-unlikely - then how can changing a section of kernel code that
-shouldn't be executed in the first place fix that?
-
-Mark
---
+diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+new file mode 100644
+index 0000000..c762769
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+@@ -0,0 +1,16 @@
++Common IEEE 802.11 properties
++
++This provides documentation of common properties that are handled by a proper
++net layer and don't require extra driver code.
++
++Optional properties:
++ - ieee80211-min-center-freq : minimal supported frequency in KHz
++ - ieee80211-max-center-freq : maximal supported frequency in KHz
++
++Example:
++
++pcie@0,0 {
++	reg = <0x0000 0 0 0 0>;
++	ieee80211-min-center-freq = <2437000>;
++	ieee80211-max-center-freq = <2457000>;
++};
+-- 
+2.10.1
