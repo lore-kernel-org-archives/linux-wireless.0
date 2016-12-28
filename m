@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34361 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750976AbcL1UdJ (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:32780 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751262AbcL1KPD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 15:33:09 -0500
+        Wed, 28 Dec 2016 05:15:03 -0500
 MIME-Version: 1.0
-In-Reply-To: <f387d897-a1e9-c932-8317-41246be245b0@broadcom.com>
-References: <20161228155955.25518-1-zajec5@gmail.com> <f387d897-a1e9-c932-8317-41246be245b0@broadcom.com>
+In-Reply-To: <87vax9r26s.fsf@kamboji.qca.qualcomm.com>
+References: <20160905095128.80560-1-nbd@nbd.name> <201609301636.43363.arnd@arndb.de>
+ <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> <201609301658.35039.arnd@arndb.de>
+ <87vax9r26s.fsf@kamboji.qca.qualcomm.com>
 From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 28 Dec 2016 21:32:16 +0100
-Message-ID: <CACna6rwhC=28fCHDzXok8Ka08g3yhcD2VNgQrfUZUCQRGqksOg@mail.gmail.com> (sfid-20161228_213313_503358_D26611A2)
-Subject: Re: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency properties
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
+Date: Wed, 28 Dec 2016 11:08:11 +0100
+Message-ID: <CACna6ryikdd0Yt2FWB_JT27N5uuh9XU+JUWNRjs4H5YcD5PVpw@mail.gmail.com> (sfid-20161228_111510_794775_53258400)
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Felix Fietkau <nbd@nbd.name>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
         "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 December 2016 at 21:05, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> This new file should be used for properties handled at higher level and
->> so usable with all drivers.
->>
->> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->> ---
->>  .../devicetree/bindings/net/wireless/ieee80211.txt       | 16 +++++++++=
-+++++++
->>  1 file changed, 16 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee8=
-0211.txt
->>
->> diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.tx=
-t b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->> new file mode 100644
->> index 0000000..c762769
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->> @@ -0,0 +1,16 @@
->> +Common IEEE 802.11 properties
->> +
->> +This provides documentation of common properties that are handled by a =
-proper
->> +net layer and don't require extra driver code.
+On 3 October 2016 at 15:29, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
 >
-> Please do not make any assumptions on how DT properties are handled nor
-> by what. Just state that these properties apply to all wireless devices
-> and are applicable to device specific bindings.
-
-OK, I'll try to improve this description.
-
-
->> +Optional properties:
->> + - ieee80211-min-center-freq : minimal supported frequency in KHz
->> + - ieee80211-max-center-freq : maximal supported frequency in KHz
->> +
->> +Example:
->> +
->> +pcie@0,0 {
->> +     reg =3D <0x0000 0 0 0 0>;
->> +     ieee80211-min-center-freq =3D <2437000>;
->> +     ieee80211-max-center-freq =3D <2457000>;
->> +};
+>> On Friday 30 September 2016, Felix Fietkau wrote:
+>>> >> >> >> +                 device_type =3D "pci";
+>>> >> >> >> +                 mediatek,mtd-eeprom =3D <&factory 0x8000>;
+>>> >> >> >> +                 mediatek,2ghz =3D <0>;
+>>> >> >
+>>> >> > It's not clear what the possible values for the 2ghz property are,
+>>> >> > can you be more verbose in the description? How is <0> different
+>>> >> > from no property?
+>>> >> 0 means disabled, no property means unchanged (compared to EEPROM).
+>>> >
+>>> > Maybe have a boolean property instead then to say "mediatek,2ghz-disa=
+bled" ?
+>>> >
+>>> > If zero is the only possible value, there is no need to put a number =
+in there.
+>>> 1 is also possible, which will force-enable the capability.
+>>
+>> Ok, then both those values should be documented in the binding.
 >
-> Is this the proper level to define it. I was expecting a child node of
-> the pci(e) controller. Maybe I am misreading the example.
+> Related to this, Martin sent patches which add generic bindings for
+> enabling 2 Ghz and 5 Ghz bands.
+>
+> [RFC,1/3] Documentation: dt-bindings: add IEEE 802.11 binding documentati=
+on
+> https://patchwork.kernel.org/patch/9359833/
+>
+> [RFC,2/3] of: add IEEE 802.11 device configuration support code
+> https://patchwork.kernel.org/patch/9359837/
 
-This is device node, not a controller node (and yes, it's complete
-node). You just need to add such a node inside the controller one.
+I would prefer something more generic. Many tri-band routers split 5
+GHz band into 2 sets of channels and they have separated radios for
+them.
 
-It doesn't seem to be clearly documented, but you can see it in examples in=
-:
-Documentation/devicetree/bindings/pci/mvebu-pci.txt
-Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+E.g. Netgear R8000 has phy0 which should be used for higher part of 5
+GHz band (channels 149+) and phy2 which should be used for lower part
+of 5 GHz band (channels from 36 to 48 or 64).
 
-The assignment is done in
-pci_scan_device -> pci_set_of_node -> of_pci_find_child_device
-(so this isn't controller specific thing).
-
+What do you think about some more flexible properties like:
+ieee80211-min-center-freq
+ieee80211-max-center-freq
 
 --=20
 Rafa=C5=82
