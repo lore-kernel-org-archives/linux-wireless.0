@@ -1,38 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:33239 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754590AbcLVXBg (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:34187 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751013AbcL1IST (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Dec 2016 18:01:36 -0500
-Date: Thu, 22 Dec 2016 17:01:33 -0600
-From: Rob Herring <robh@kernel.org>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        mgreer@animalcreek.com, justin@kuvee.com
-Subject: Re: [PATCH v3 1/3] NFC: trf7970a: add device tree option for 27MHz
- clock
-Message-ID: <20161222230133.jmqgtpyqg4bic7tq@rob-hp-laptop> (sfid-20161223_000201_924016_D11E20FC)
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+        Wed, 28 Dec 2016 03:18:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+In-Reply-To: <20161228081039.GA3874@pxdev.xzpeter.org>
+References: <20161227091706.GA20895@pxdev.xzpeter.org> <871swtkvdc.fsf@purkki.adurom.net>
+ <20161228035959.GB3924@pxdev.xzpeter.org> <1482910035.8602.3.camel@coelho.fi> <20161228081039.GA3874@pxdev.xzpeter.org>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Wed, 28 Dec 2016 10:17:44 +0200
+Message-ID: <CANUX_P2ivxo6K6sy9d-OK5DAkcYeGb_43XQwazj+QPGk83EG1g@mail.gmail.com> (sfid-20161228_091844_980925_75F26699)
+Subject: Re: Intel Wireless 7260 failed to work
+To: Peter Xu <peterx@redhat.com>
+Cc: Luca Coelho <luca@coelho.fi>, Kalle Valo <kvalo@codeaurora.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2016 at 11:18:32PM -0500, Geoff Lansberry wrote:
-> The TRF7970A has configuration options to support hardware designs
-> which use a 27.12MHz clock. This commit adds a device tree option
-> 'clock-frequency' to support configuring the this chip for default
-> 13.56MHz clock or the optional 27.12MHz clock.
-> 
-> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
-> ---
->  .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 +
+On Wed, Dec 28, 2016 at 10:10 AM, Peter Xu <peterx@redhat.com> wrote:
+> On Wed, Dec 28, 2016 at 09:27:15AM +0200, Luca Coelho wrote:
+>
+> [...]
+>
+>> > > > Is this a known issue? Please let me know if anyone wants more info or
+>> > > > logs, since this error triggers easily (everytime I boot).
+>> > >
+>> > > The error message isn't really telling much to the user (hint hint) but
+>> > > I suspect this is by design:
+>> > >
+>> > > "iwlwifi: remove support for fw older than -17 and -22
+>>
+>> Right, we only maintain support for a certain number of firmware
+>> versions.  The FW APIs change with time and we don't want to keep all
+>> legacy code supporting old firmwares in the driver forever.
+>>
+>> I agree that "no suitable firmware found!" is a bit scarce.  I'll see
+>> if we can improve that with something: "no suitable firmware found! You
+>> need iwlwifi-7260-17.ucode (<link to git>)".
+>
+> That'll be great if we can have this info in the log. Maybe no need
+> for a full URL, the firmware name would suffice at least for me.
 
-Acked-by: Rob Herring <robh@kernel.org>
+In this case, I think we should also print the range that is supported
+when we fail to find any suitable firmware.
 
->  drivers/nfc/trf7970a.c                             | 50 +++++++++++++++++-----
->  2 files changed, 41 insertions(+), 11 deletions(-)
+>
+> [...]
+>
+>> I don't think we are very aggressive, we have been supporting -17 since
+>> v4.3:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5865f3658ba37c54e346b0fdee08a1c7a152681b
+>>
+>> And we have published the firmware about half a year ago:
+>>
+>> http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/iwlwifi-7260-17.ucode?id=f2cf4d67e8eced29c8a473d3a27057aa2df57c42
+>>
+>> I understand your concern, but if you want to be on the bleeding-edge
+>> kernel, you should be on the bleeding-edge linux-firmware as well. ;)
+>
+> Fair enough. :-)
+>
+>>
+>> But as I said, I'll try to improve the error message, as that should
+>> make it easier to figure out.
+>
+> Thank you!
+>
+> -- peterx
