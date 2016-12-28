@@ -1,98 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:47473 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755142AbcLOH7D (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35460 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751426AbcL1N3N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 02:59:03 -0500
-Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
-To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-References: <1481778865-27667-1-git-send-email-mst@redhat.com>
- <1481778865-27667-9-git-send-email-mst@redhat.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Alexander Aring <aar@pengutronix.de>,
-        Stefan Schmidt <stefan@osg.samsung.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
-        netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
-        linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-Message-ID: <4b0172bd-2779-35b2-96af-407087db844e@pengutronix.de> (sfid-20161215_085908_201966_D783FC0A)
-Date: Thu, 15 Dec 2016 08:57:57 +0100
+        Wed, 28 Dec 2016 08:29:13 -0500
 MIME-Version: 1.0
-In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="20OdsOHopTjIkLdocWTx6rgi2767kTTSI"
+In-Reply-To: <CAFBinCBzz0Jvk_jcWAJ1jEz17r-NYEE87xLUACTybRSHGE7uGA@mail.gmail.com>
+References: <20160905095128.80560-1-nbd@nbd.name> <201609301636.43363.arnd@arndb.de>
+ <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> <201609301658.35039.arnd@arndb.de>
+ <87vax9r26s.fsf@kamboji.qca.qualcomm.com> <CACna6ryikdd0Yt2FWB_JT27N5uuh9XU+JUWNRjs4H5YcD5PVpw@mail.gmail.com>
+ <CAFBinCBzz0Jvk_jcWAJ1jEz17r-NYEE87xLUACTybRSHGE7uGA@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 28 Dec 2016 14:28:22 +0100
+Message-ID: <CACna6rzKc8kAnc2_Ca8pXtuu9Rw2mjqfV8VNumoF_E7GdvJx-g@mail.gmail.com> (sfid-20161228_142923_569950_AC220226)
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>,
+        Felix Fietkau <nbd@nbd.name>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---20OdsOHopTjIkLdocWTx6rgi2767kTTSI
-Content-Type: multipart/mixed; boundary="sdkl0Xxt0KtFM41xEtdan2EW1NXVMs5c1";
- protected-headers="v1"
-From: Marc Kleine-Budde <mkl@pengutronix.de>
-To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
- Alexander Aring <aar@pengutronix.de>, Stefan Schmidt
- <stefan@osg.samsung.com>, Matthias Brugger <matthias.bgg@gmail.com>,
- linux-bluetooth@vger.kernel.org, linux-can@vger.kernel.org,
- netdev@vger.kernel.org, nios2-dev@lists.rocketboards.org,
- linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
- brcm80211-dev-list.pdl@broadcom.com, devel@driverdev.osuosl.org,
- linux-wpan@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org
-Message-ID: <4b0172bd-2779-35b2-96af-407087db844e@pengutronix.de>
-Subject: Re: [PATCH 8/8] Makefile: drop -D__CHECK_ENDIAN__ from cflags
-References: <1481778865-27667-1-git-send-email-mst@redhat.com>
- <1481778865-27667-9-git-send-email-mst@redhat.com>
-In-Reply-To: <1481778865-27667-9-git-send-email-mst@redhat.com>
+On 28 December 2016 at 11:43, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> On Wed, Dec 28, 2016 at 11:08 AM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.c=
+om> wrote:
+>> On 3 October 2016 at 15:29, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Arnd Bergmann <arnd@arndb.de> writes:
+>>>
+>>>> On Friday 30 September 2016, Felix Fietkau wrote:
+>>>>> >> >> >> +                 device_type =3D "pci";
+>>>>> >> >> >> +                 mediatek,mtd-eeprom =3D <&factory 0x8000>;
+>>>>> >> >> >> +                 mediatek,2ghz =3D <0>;
+>>>>> >> >
+>>>>> >> > It's not clear what the possible values for the 2ghz property ar=
+e,
+>>>>> >> > can you be more verbose in the description? How is <0> different
+>>>>> >> > from no property?
+>>>>> >> 0 means disabled, no property means unchanged (compared to EEPROM)=
+.
+>>>>> >
+>>>>> > Maybe have a boolean property instead then to say "mediatek,2ghz-di=
+sabled" ?
+>>>>> >
+>>>>> > If zero is the only possible value, there is no need to put a numbe=
+r in there.
+>>>>> 1 is also possible, which will force-enable the capability.
+>>>>
+>>>> Ok, then both those values should be documented in the binding.
+>>>
+>>> Related to this, Martin sent patches which add generic bindings for
+>>> enabling 2 Ghz and 5 Ghz bands.
+>>>
+>>> [RFC,1/3] Documentation: dt-bindings: add IEEE 802.11 binding documenta=
+tion
+>>> https://patchwork.kernel.org/patch/9359833/
+>>>
+>>> [RFC,2/3] of: add IEEE 802.11 device configuration support code
+>>> https://patchwork.kernel.org/patch/9359837/
+>>
+>> I would prefer something more generic. Many tri-band routers split 5
+>> GHz band into 2 sets of channels and they have separated radios for
+>> them.
+>>
+>> E.g. Netgear R8000 has phy0 which should be used for higher part of 5
+>> GHz band (channels 149+) and phy2 which should be used for lower part
+>> of 5 GHz band (channels from 36 to 48 or 64).
+>>
+>> What do you think about some more flexible properties like:
+>> ieee80211-min-center-freq
+>> ieee80211-max-center-freq
+> what would happen if only one of these properties was given or would
+> we forbid that (because the .dts should always describe the hardware,
+> and if we describe a lower bound then we should also describe the
+> upper bound)?
 
---sdkl0Xxt0KtFM41xEtdan2EW1NXVMs5c1
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-On 12/15/2016 06:15 AM, Michael S. Tsirkin wrote:
-> That's the default now, no need for makefiles to set it.
->=20
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
-[...]
->  drivers/net/can/Makefile                                  | 1 -
-
-For drivers/net/can/Makefile:
-
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
-
-regards,
-Marc
-
---=20
-Pengutronix e.K.                  | Marc Kleine-Budde           |
-Industrial Linux Solutions        | Phone: +49-231-2826-924     |
-Vertretung West/Dortmund          | Fax:   +49-5121-206917-5555 |
-Amtsgericht Hildesheim, HRA 2686  | http://www.pengutronix.de   |
+I didn't think about requiring both properties to be set, but if this
+is more correct from DT point of view, we can always require that.
+Let's see if we get DT guys opinion.
 
 
---sdkl0Xxt0KtFM41xEtdan2EW1NXVMs5c1--
+> the benefits of your solution are:
+> - this would allow *enabling* bands as well (my proposal allows this
+> as well, but the .dts is indeed a bit hard to read - unlike your
+> solution which looks nice to me)
+> - we could handle this within generic cfg80211/mac80211 code instead
+> of "duplicating" it per driver
 
---20OdsOHopTjIkLdocWTx6rgi2767kTTSI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+i'm happy to hear that :)
 
------BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCgAdFiEES2FAuYbJvAGobdVQPTuqJaypJWoFAlhSTQUACgkQPTuqJayp
-JWrYQwgAgF2pgtnOHFbQf8oOT0jYDqhXKpceBGDqy6nW6Dfs66GUNSM4nq3EHz99
-s4Slq4IQjzACZjHbO0s/lALFRfK/BKYCmuRhBQ/iE2wjBTBw3Ej4keoXl9OiKvN+
-VteIS+Y5REHxYDLfNRl15oCrn5s8oiImp93dl3rVHjIbMYq4mnWqapXK3Utj6GZf
-l6FOT/t1I1i62GTeCwjwlTUC0MId3PYCQRax1JnjZsEWx/hHbaJUN26JGISns2uL
-r1as5wh3Y1ey0l0+NdVpkAX1v9/BlqS56H1CdgCw2ucNo0GA3F5/Y9CGHjUcT47X
-2l3UqTcMhQdEoPBTKauMUmq7YcACQw==
-=NRSu
------END PGP SIGNATURE-----
+> should we describe the center freq in Hz or MHz (cfg80211's
+> ieee80211_channel uses the latter)?
 
---20OdsOHopTjIkLdocWTx6rgi2767kTTSI--
+Is there any case that may require HZ accuracy? I was thinking about using =
+MHz.
