@@ -1,88 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35142 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751512AbcLFWAy (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35618 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751277AbcL1Knn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Dec 2016 17:00:54 -0500
-Received: by mail-oi0-f65.google.com with SMTP id v84so43004232oie.2
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2016 14:00:06 -0800 (PST)
-Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
- <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
- <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
- <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
- <1481008560.6610.3.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <584730D7.2020708@gmail.com> (sfid-20161206_230114_406465_164B0092)
-Date: Tue, 6 Dec 2016 15:42:47 -0600
+        Wed, 28 Dec 2016 05:43:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <1481008560.6610.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CACna6ryikdd0Yt2FWB_JT27N5uuh9XU+JUWNRjs4H5YcD5PVpw@mail.gmail.com>
+References: <20160905095128.80560-1-nbd@nbd.name> <201609301636.43363.arnd@arndb.de>
+ <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name> <201609301658.35039.arnd@arndb.de>
+ <87vax9r26s.fsf@kamboji.qca.qualcomm.com> <CACna6ryikdd0Yt2FWB_JT27N5uuh9XU+JUWNRjs4H5YcD5PVpw@mail.gmail.com>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Wed, 28 Dec 2016 11:43:21 +0100
+Message-ID: <CAFBinCBzz0Jvk_jcWAJ1jEz17r-NYEE87xLUACTybRSHGE7uGA@mail.gmail.com> (sfid-20161228_114347_174778_E36069BA)
+Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>,
+        Felix Fietkau <nbd@nbd.name>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-On 12/06/2016 01:16 AM, Johannes Berg wrote:
-> On Mon, 2016-12-05 at 09:32 -0600, Denis Kenzior wrote:
+On Wed, Dec 28, 2016 at 11:08 AM, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
+> wrote:
+> On 3 October 2016 at 15:29, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Arnd Bergmann <arnd@arndb.de> writes:
+>>
+>>> On Friday 30 September 2016, Felix Fietkau wrote:
+>>>> >> >> >> +                 device_type =3D "pci";
+>>>> >> >> >> +                 mediatek,mtd-eeprom =3D <&factory 0x8000>;
+>>>> >> >> >> +                 mediatek,2ghz =3D <0>;
+>>>> >> >
+>>>> >> > It's not clear what the possible values for the 2ghz property are=
+,
+>>>> >> > can you be more verbose in the description? How is <0> different
+>>>> >> > from no property?
+>>>> >> 0 means disabled, no property means unchanged (compared to EEPROM).
+>>>> >
+>>>> > Maybe have a boolean property instead then to say "mediatek,2ghz-dis=
+abled" ?
+>>>> >
+>>>> > If zero is the only possible value, there is no need to put a number=
+ in there.
+>>>> 1 is also possible, which will force-enable the capability.
+>>>
+>>> Ok, then both those values should be documented in the binding.
+>>
+>> Related to this, Martin sent patches which add generic bindings for
+>> enabling 2 Ghz and 5 Ghz bands.
+>>
+>> [RFC,1/3] Documentation: dt-bindings: add IEEE 802.11 binding documentat=
+ion
+>> https://patchwork.kernel.org/patch/9359833/
+>>
+>> [RFC,2/3] of: add IEEE 802.11 device configuration support code
+>> https://patchwork.kernel.org/patch/9359837/
 >
->> To what purpose?  That's like saying that maybe a socket should be
->> kept open in case an application crashes.
+> I would prefer something more generic. Many tri-band routers split 5
+> GHz band into 2 sets of channels and they have separated radios for
+> them.
 >
-> That socket would be useless, so no, that's not comparable at all. It's
-> more like saying the disk should be unmounted once 'mount' exits ;-)
+> E.g. Netgear R8000 has phy0 which should be used for higher part of 5
+> GHz band (channels 149+) and phy2 which should be used for lower part
+> of 5 GHz band (channels from 36 to 48 or 64).
 >
+> What do you think about some more flexible properties like:
+> ieee80211-min-center-freq
+> ieee80211-max-center-freq
+what would happen if only one of these properties was given or would
+we forbid that (because the .dts should always describe the hardware,
+and if we describe a lower bound then we should also describe the
+upper bound)?
+the benefits of your solution are:
+- this would allow *enabling* bands as well (my proposal allows this
+as well, but the .dts is indeed a bit hard to read - unlike your
+solution which looks nice to me)
+- we could handle this within generic cfg80211/mac80211 code instead
+of "duplicating" it per driver
 
-Except the kernel doesn't want to reconfigure mount parameters every 
-15-30 minutes.  So no, its not like 'mount' at all ;)  But I digress, I 
-can see that we won't agree here.  But we still would like the kernel to 
-clean up nicely if stuff hits the fan.
+should we describe the center freq in Hz or MHz (cfg80211's
+ieee80211_channel uses the latter)?
 
-> Anyway ... I'm not even super against this patch, but you need to fix
+@Arnd: what do you think from devicetree perspective?
 
-I'm afraid to consider what you're like when you _are_ 'super' against 
-something :)
-
-> things:
->   * this is actually wrong for authenticate - I'll let you figure out
->     why by yourself
-
-So here's a quick test, with the client triggering authenticate, then 
-crashing:
-
-< Request: Authenticate (0x25) len 52 [ack]                  362.339712
-     Interface Index: 3 (0x00000003)
-     Wiphy Frequency: 2417 (0x00000971)
-     MAC Address <snip>
-     SSID: len 9
-         <snip>
-     Auth Type: 0 (0x00000000)
- > Event: New Station (0x13) len 32                           362.341337
-     Interface Index: 3 (0x00000003)
- > Response: Authenticate (0x25) len 4                        362.341860
-     Status: Success (0)
- > Event: Authenticate (0x25) len 64                          362.343640
-     Wiphy: 0 (0x00000000)
-     Interface Index: 3 (0x00000003)
- > Event: Del Station (0x14) len 1144                         367.442024
-     Interface Index: 3 (0x00000003)
-     MAC Address <snip>
-
-Pay attention to the time stamps.  The del station event comes in 5 
-seconds or so after our client has aborted.  So for 5 seconds we have an 
-unmanaged link to some AP.  It would be nice if the authentication was 
-aborted as soon as we crash.
-
-So again, why do you say that SOCKET_OWNER is 'wrong' for authenticate? 
-  Or do you mean something else?
-
->   * you need to teach people to write useful commit messages
-
-The commit description in this patch was lacking.  We both agree here.
 
 Regards,
--Denis
+Martin
+
+[0] http://lxr.free-electrons.com/source/include/net/cfg80211.h#L130
