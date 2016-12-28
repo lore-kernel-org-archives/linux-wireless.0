@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35168 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752553AbcLRASS (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33039 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750735AbcL1VaE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Dec 2016 19:18:18 -0500
-Received: by mail-io0-f194.google.com with SMTP id f73so15683311ioe.2
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2016 16:18:18 -0800 (PST)
+        Wed, 28 Dec 2016 16:30:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <1481645519.20412.37.camel@sipsolutions.net>
-References: <1478398113-14966-1-git-send-email-andrew.zaborowski@intel.com>
- <1478398113-14966-4-git-send-email-andrew.zaborowski@intel.com>
- <1480344479.8107.60.camel@sipsolutions.net> <CAOq732LFeKRjPdQ6xMx_d1cHmQmYp50NJ4MDsdf=mPXMs685PQ@mail.gmail.com>
- <1480347358.8107.65.camel@sipsolutions.net> <CAOq732K88CygXBmDfGmU21AcQHurcWx081Q3SM-b0ecm+848gA@mail.gmail.com>
- <1481645519.20412.37.camel@sipsolutions.net>
-From: Andrew Zaborowski <balrogg@googlemail.com>
-Date: Sat, 17 Dec 2016 19:18:17 -0500
-Message-ID: <CAOq732Jpst37ESQu_81RNrYOJEnLg=L2W-aPM-u3rYUsSofETA@mail.gmail.com> (sfid-20161218_011821_398952_06C264EF)
-Subject: Re: [PATCH 3/3][RFC] nl80211/mac80211: Accept multiple RSSI
- thresholds for CQM
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com>
+References: <20161228155955.25518-1-zajec5@gmail.com> <20161228155955.25518-2-zajec5@gmail.com>
+ <491a5af2-449d-4b2a-c4ed-af0e89b2ca78@broadcom.com> <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 28 Dec 2016 22:30:03 +0100
+Message-ID: <CACna6rzJV-UdydKrXTquEzrkCfNXXKsHBrsZGjTJ8F=BSRyUjA@mail.gmail.com> (sfid-20161228_223007_978871_DBB4226B)
+Subject: Re: [PATCH 2/2] cfg80211: reg: support ieee80211-(min|max)-center-freq
+ DT properties
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 December 2016 at 11:11, Johannes Berg <johannes@sipsolutions.net> wrote:
+On 28 December 2016 at 22:28, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+> On 28 December 2016 at 22:07, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>
+>>> They allow specifying hardware limitations of supported channels. This
+>>> may be useful for specifying single band devices or devices that suppor=
+t
+>>> only some part of the whole band.
+>>> E.g. some tri-band routers have separated radios for lower and higher
+>>> part of 5 GHz band.
+>>>
+>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>> ---
+>>>  net/wireless/reg.c | 34 ++++++++++++++++++++++++++++++++++
+>>>  1 file changed, 34 insertions(+)
+>>>
+>>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>>> index 5dbac37..35ba5c7 100644
+>>> --- a/net/wireless/reg.c
+>>> +++ b/net/wireless/reg.c
+>>> @@ -1123,6 +1123,26 @@ const char *reg_initiator_name(enum nl80211_reg_=
+initiator initiator)
+>>>  }
+>>>  EXPORT_SYMBOL(reg_initiator_name);
+>>>
+>>> +static bool reg_center_freq_of_valid(struct wiphy *wiphy,
+>>> +                                  struct ieee80211_channel *chan)
+>>> +{
+>>> +     struct device_node *np =3D wiphy_dev(wiphy)->of_node;
+>>> +     u32 val;
+>>> +
+>>> +     if (!np)
+>>> +             return true;
+>>> +
+>>> +     if (!of_property_read_u32(np, "ieee80211-min-center-freq", &val) =
+&&
+>>> +         chan->center_freq < KHZ_TO_MHZ(val))
+>>> +             return false;
+>>> +
+>>> +     if (!of_property_read_u32(np, "ieee80211-max-center-freq", &val) =
+&&
+>>> +         chan->center_freq > KHZ_TO_MHZ(val))
+>>> +             return false;
+>>
+>> I suspect these functions rely on CONFIG_OF. So might not build for
+>> !CONFIG_OF.
 >
->> I wasn't clear: nl80211 sets the thresholds so that "high" is higher
->> than last known value and "low" is lower than last known value, also
->> the distance is at least 2 x hysteresis.  There's no purpose for
->> reporting "middle" rssi events because we have to set a new range as
->> soon as we receive a high or a low event.  I realize I need to
->> document better.
+> I compiled it with
+> # CONFIG_OF is not set
 >
-> But there can be a delay between reporting and reprogramming, and if
-> during that time a new event could be reported? I guess it doesn't
-> matter much if we assume that upon reprogramming the driver will always
-> report a new event if the current value falls outside the new range
+> Can you test it and provide a non-working config if you see a
+> compilation error, please?
 
-That's the intention, I'm not sure if the comments in the code are
-enough to make it clear.
+include/linux/of.h provides a lot of dummy static inline functions if
+CONFIG_OF is not used (they also allow compiler to drop most of the
+code).
 
-> (either high or low)... it just seemed a little bit more consistent to
-> unconditionally report a new event at the beginning, even if that new
-> event is "yup - falling into the middle of your range now".
-
-I can add a new value to the enum for "middle".  I think we'd
-definitely want it if it was a userspace API but this is the internal
-api with just this one use.  Also some drivers will have to query the
-firmware for the new value and may need an additional wake-up for
-every RSSI wake-up, doubling the amount of work.
-
-Best regards
+--=20
+Rafa=C5=82
