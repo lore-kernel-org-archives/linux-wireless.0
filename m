@@ -1,60 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56726 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750817AbcL2VjG (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34361 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750976AbcL1UdJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 16:39:06 -0500
-From: Colin King <colin.king@canonical.com>
-To: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH][V2] [media] gp8psk: fix spelling mistake: "firmare" -> "firmware"
-Date: Thu, 29 Dec 2016 21:38:15 +0000
-Message-Id: <20161229213815.27890-1-colin.king@canonical.com> (sfid-20161229_223931_644675_456C4193)
+        Wed, 28 Dec 2016 15:33:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <f387d897-a1e9-c932-8317-41246be245b0@broadcom.com>
+References: <20161228155955.25518-1-zajec5@gmail.com> <f387d897-a1e9-c932-8317-41246be245b0@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 28 Dec 2016 21:32:16 +0100
+Message-ID: <CACna6rwhC=28fCHDzXok8Ka08g3yhcD2VNgQrfUZUCQRGqksOg@mail.gmail.com> (sfid-20161228_213313_503358_D26611A2)
+Subject: Re: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency properties
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On 28 December 2016 at 21:05, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> This new file should be used for properties handled at higher level and
+>> so usable with all drivers.
+>>
+>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>> ---
+>>  .../devicetree/bindings/net/wireless/ieee80211.txt       | 16 +++++++++=
++++++++
+>>  1 file changed, 16 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee8=
+0211.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.tx=
+t b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+>> new file mode 100644
+>> index 0000000..c762769
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+>> @@ -0,0 +1,16 @@
+>> +Common IEEE 802.11 properties
+>> +
+>> +This provides documentation of common properties that are handled by a =
+proper
+>> +net layer and don't require extra driver code.
+>
+> Please do not make any assumptions on how DT properties are handled nor
+> by what. Just state that these properties apply to all wireless devices
+> and are applicable to device specific bindings.
 
-Trivial fix to spelling mistake in err message. Also change "don't" to
-"does not".
+OK, I'll try to improve this description.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/media/usb/dvb-usb/gp8psk.c          | 2 +-
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/media/usb/dvb-usb/gp8psk.c b/drivers/media/usb/dvb-usb/gp8psk.c
-index 2360e7e..26461f2 100644
---- a/drivers/media/usb/dvb-usb/gp8psk.c
-+++ b/drivers/media/usb/dvb-usb/gp8psk.c
-@@ -161,7 +161,7 @@ static int gp8psk_load_bcm4500fw(struct dvb_usb_device *d)
- 			goto out_free;
- 		}
- 		if (buflen > 64) {
--			err("firmare chunk size bigger than 64 bytes.");
-+			err("firmware chunk size bigger than 64 bytes.");
- 			goto out_free;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index ded1493..732de0a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1532,7 +1532,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key_type = AESCMAC_ENCRYPTION;
- 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "alg:CMAC\n");
- 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
--			 "HW don't support CMAC encrypiton, use software CMAC encrypiton\n");
-+			 "HW does not support CMAC encryption, use software CMAC encryption\n");
- 		err = -EOPNOTSUPP;
- 		goto out_unlock;
- 	default:
--- 
-2.10.2
+>> +Optional properties:
+>> + - ieee80211-min-center-freq : minimal supported frequency in KHz
+>> + - ieee80211-max-center-freq : maximal supported frequency in KHz
+>> +
+>> +Example:
+>> +
+>> +pcie@0,0 {
+>> +     reg =3D <0x0000 0 0 0 0>;
+>> +     ieee80211-min-center-freq =3D <2437000>;
+>> +     ieee80211-max-center-freq =3D <2457000>;
+>> +};
+>
+> Is this the proper level to define it. I was expecting a child node of
+> the pci(e) controller. Maybe I am misreading the example.
+
+This is device node, not a controller node (and yes, it's complete
+node). You just need to add such a node inside the controller one.
+
+It doesn't seem to be clearly documented, but you can see it in examples in=
+:
+Documentation/devicetree/bindings/pci/mvebu-pci.txt
+Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
+
+The assignment is done in
+pci_scan_device -> pci_set_of_node -> of_pci_find_child_device
+(so this isn't controller specific thing).
+
+
+--=20
+Rafa=C5=82
