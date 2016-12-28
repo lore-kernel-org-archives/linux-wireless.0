@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35970 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751266AbcLCRcX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:32898 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750969AbcL1IhL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2016 12:32:23 -0500
-Received: by mail-oi0-f67.google.com with SMTP id u15so31484356oie.3
-        for <linux-wireless@vger.kernel.org>; Sat, 03 Dec 2016 09:32:23 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 0/7] rtlwifi: btcoexist: Rewrite BT coexistence routines
-Date: Sat,  3 Dec 2016 11:32:00 -0600
-Message-Id: <20161203173207.17774-1-Larry.Finger@lwfinger.net> (sfid-20161203_183227_426871_4B241361)
+        Wed, 28 Dec 2016 03:37:11 -0500
+Message-ID: <1482914225.8602.5.camel@coelho.fi> (sfid-20161228_093735_549670_9CE81A03)
+From: Luca Coelho <luca@coelho.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+        Peter Xu <peterx@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 28 Dec 2016 10:37:05 +0200
+In-Reply-To: <CANUX_P2ivxo6K6sy9d-OK5DAkcYeGb_43XQwazj+QPGk83EG1g@mail.gmail.com>
+References: <20161227091706.GA20895@pxdev.xzpeter.org>
+         <871swtkvdc.fsf@purkki.adurom.net>
+         <20161228035959.GB3924@pxdev.xzpeter.org>
+         <1482910035.8602.3.camel@coelho.fi>
+         <20161228081039.GA3874@pxdev.xzpeter.org>
+         <CANUX_P2ivxo6K6sy9d-OK5DAkcYeGb_43XQwazj+QPGk83EG1g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Intel Wireless 7260 failed to work
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches implement a major rewrite of the BT coexistence
-routines.
 
-These patches must follow [PATCH 14/14] rtlwifi: Add work queue for c2h cmd.
+On Wed, 2016-12-28 at 10:17 +0200, Emmanuel Grumbach wrote:
+> On Wed, Dec 28, 2016 at 10:10 AM, Peter Xu <peterx@redhat.com> wrote:
+> > On Wed, Dec 28, 2016 at 09:27:15AM +0200, Luca Coelho wrote:
+> > 
+> > [...]
+> > 
+> > > > > > Is this a known issue? Please let me know if anyone wants more info or
+> > > > > > logs, since this error triggers easily (everytime I boot).
+> > > > > 
+> > > > > The error message isn't really telling much to the user (hint hint) but
+> > > > > I suspect this is by design:
+> > > > > 
+> > > > > "iwlwifi: remove support for fw older than -17 and -22
+> > > 
+> > > Right, we only maintain support for a certain number of firmware
+> > > versions.  The FW APIs change with time and we don't want to keep all
+> > > legacy code supporting old firmwares in the driver forever.
+> > > 
+> > > I agree that "no suitable firmware found!" is a bit scarce.  I'll see
+> > > if we can improve that with something: "no suitable firmware found! You
+> > > need iwlwifi-7260-17.ucode (<link to git>)".
+> > 
+> > That'll be great if we can have this info in the log. Maybe no need
+> > for a full URL, the firmware name would suffice at least for me.
+> 
+> In this case, I think we should also print the range that is supported
+> when we fail to find any suitable firmware.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Sure, I'll do that.  I just wanted to keep it simple in this thread. ;)
 
-Ping-Ke Shih (7)
-  rtlwifi: btcoexist: Update routines for RTL8192EE
-  rtlwifi: btcoexist: Rewrite halbtc8723b1ant code
-  rtlwifi: btcoexist: Rewrite of halbtc8723b2ant
-  rtlwifi: btcoexist: Rewrite routine halbtc8821a1ant
-  rtlwifi: btcoexist: Rewrite routine halbtc8821a2ant
-  rtlwifi: Add btcoex record_pwr_mode
-  rtlwifi: btcoexist control to enter/leave LPS
-
- drivers/net/wireless/realtek/rtlwifi/base.c        |    8 +
- .../wireless/realtek/rtlwifi/btcoexist/Makefile    |    7 +-
- .../realtek/rtlwifi/btcoexist/halbt_precomp.h      |   22 +
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.c    | 4598 ++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8192e2ant.h    |  243 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.c    | 5165 +++++++++++------
- .../realtek/rtlwifi/btcoexist/halbtc8723b1ant.h    |  342 +-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    | 5495 +++++++++++-------
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.h    |  287 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.c    | 3233 ++++++-----
- .../realtek/rtlwifi/btcoexist/halbtc8821a1ant.h    |  148 +-
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.c    | 6122 +++++++++++---------
- .../realtek/rtlwifi/btcoexist/halbtc8821a2ant.h    |  273 +-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 1018 +++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  364 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |   74 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.h   |    5 +
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    |   67 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.h    |    4 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.c    |   68 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/fw.h    |   23 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |    2 +
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    |   68 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.h    |   33 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |    5 +
- 25 files changed, 16246 insertions(+), 11428 deletions(-)
-
--- 
-2.10.2
+--
+Luca.
