@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0059.hostedemail.com ([216.40.44.59]:51874 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751986AbcLKKuz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Dec 2016 05:50:55 -0500
-Message-ID: <1481453445.1764.11.camel@perches.com> (sfid-20161211_115059_165656_E137018C)
-Subject: Re: [PATCH 02/14] rtlwifi_new: Remove RT_TRACE messages that use
- DBG_EMERG
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>
-Date: Sun, 11 Dec 2016 02:50:45 -0800
-In-Reply-To: <20161211054523.7119-3-Larry.Finger@lwfinger.net>
-References: <20161211054523.7119-1-Larry.Finger@lwfinger.net>
-         <20161211054523.7119-3-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:44220 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750733AbcL1EB4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 27 Dec 2016 23:01:56 -0500
+Date: Wed, 28 Dec 2016 11:59:59 +0800
+From: Peter Xu <peterx@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: Intel Wireless 7260 failed to work
+Message-ID: <20161228035959.GB3924@pxdev.xzpeter.org> (sfid-20161228_050239_180744_1AEB5088)
+References: <20161227091706.GA20895@pxdev.xzpeter.org>
+ <871swtkvdc.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <871swtkvdc.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-12-10 at 23:44 -0600, Larry Finger wrote:
-> These messages are always logged and reprresent error conditions, thus
-> we can use pr_err().
+On Tue, Dec 27, 2016 at 09:46:55PM +0200, Kalle Valo wrote:
+> Peter Xu <peterx@redhat.com> writes:
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/base.c  | 15 ++++-----
->  drivers/net/wireless/realtek/rtlwifi/cam.c   | 14 +++------
->  drivers/net/wireless/realtek/rtlwifi/core.c  | 21 +++++--------
->  drivers/net/wireless/realtek/rtlwifi/debug.c |  9 ++----
->  drivers/net/wireless/realtek/rtlwifi/debug.h |  2 +-
->  drivers/net/wireless/realtek/rtlwifi/efuse.c |  3 +-
->  drivers/net/wireless/realtek/rtlwifi/pci.c   | 36 ++++++++--------------
->  drivers/net/wireless/realtek/rtlwifi/ps.c    |  3 +-
->  drivers/net/wireless/realtek/rtlwifi/rc.c    |  3 +-
->  drivers/net/wireless/realtek/rtlwifi/usb.c   | 46 +++++++++-------------------
->  10 files changed, 53 insertions(+), 99 deletions(-)
+> > Looks like latest Linux master (4.10-rc1, 7ce7d89f) cannot work well
+> > with my wireless card, which is:
+> >
+> >   Intel Corporation Wireless 7260 (rev bb)
+> >
+> > Boot message shows that no suitable firmware found:
+> >
+> >     # journalctl -kp3
+> >     Dec 27 16:38:00 kernel: Error parsing PCC subspaces from PCCT
+> >     Dec 27 16:38:00 kernel: mmc0: Unknown controller version (3). You may experience problems.
+> >     Dec 27 16:38:02 kernel: DMAR: DRHD: handling fault status reg 2
+> >     Dec 27 16:38:02 kernel: DMAR: [DMA Write] Request device [00:02.0] fault addr 7200000000 [fault reason 05] PTE Write a
+> >     Dec 27 16:38:03 kernel: tpm tpm0: A TPM error (6) occurred attempting to read a pcr value
+> >     Dec 27 16:38:04 kernel: iwlwifi 0000:03:00.0: no suitable firmware found!
+> >
+> > Linux stable/master (Linux 4.8-rc8, 08895a8b6b) works for me. And no
+> > further tests have been done yet.
+> >
+> > Is this a known issue? Please let me know if anyone wants more info or
+> > logs, since this error triggers easily (everytime I boot).
 > 
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-[]
-> @@ -207,8 +207,7 @@ static void _rtl_init_hw_ht_capab(struct ieee80211_hw *hw,
->  	 *highest supported RX rate
->  	 */
->  	if (rtlpriv->dm.supp_phymode_switch) {
-> -		RT_TRACE(rtlpriv, COMP_INIT, DBG_EMERG,
-> -			 "Support phy mode switch\n");
-> +		pr_err("rtlwifi: Support phy mode switch\n");
+> The error message isn't really telling much to the user (hint hint) but
+> I suspect this is by design:
+> 
+> "iwlwifi: remove support for fw older than -17 and -22
+> 
+> FW versions older than -17 for 3160 and 7260 and older than -22 for
+> newer NICs are not supported anymore.  Don't load these versions
+> and remove code that handles them."
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=4b87e5af638b6056bd6c20b0954d09a5a58633be
+> 
+> Adding luca.
 
-I believe most all of these are already prefixed
-by the wifi.h that has a #define pr_fmt 
+Thanks for the triage.
+
+Larry's link for -17 firmware solved my issue. Though I still don't
+know whether it is too aggresive if we just remove the support for -16
+(which is the one I was using with the old 4.6 kernel, btw I am using
+Fedora 24, which is relatively new as well).
+
+Regards,
+
+-- peterx
