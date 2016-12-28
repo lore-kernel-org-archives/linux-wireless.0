@@ -1,69 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59846 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751031AbcL1IKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 03:10:46 -0500
-Date: Wed, 28 Dec 2016 16:10:39 +0800
-From: Peter Xu <peterx@redhat.com>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: Intel Wireless 7260 failed to work
-Message-ID: <20161228081039.GA3874@pxdev.xzpeter.org> (sfid-20161228_091114_247738_845D216C)
-References: <20161227091706.GA20895@pxdev.xzpeter.org>
- <871swtkvdc.fsf@purkki.adurom.net>
- <20161228035959.GB3924@pxdev.xzpeter.org>
- <1482910035.8602.3.camel@coelho.fi>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35960 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751890AbcL1VhQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 28 Dec 2016 16:37:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1482910035.8602.3.camel@coelho.fi>
+In-Reply-To: <491a5af2-449d-4b2a-c4ed-af0e89b2ca78@broadcom.com>
+References: <20161228155955.25518-1-zajec5@gmail.com> <20161228155955.25518-2-zajec5@gmail.com>
+ <491a5af2-449d-4b2a-c4ed-af0e89b2ca78@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 28 Dec 2016 22:28:13 +0100
+Message-ID: <CACna6rwKLr-makRauYQf51330p96QrSNEhtNqu927yHT_Xm7Wg@mail.gmail.com> (sfid-20161228_223719_760591_05ED351F)
+Subject: Re: [PATCH 2/2] cfg80211: reg: support ieee80211-(min|max)-center-freq
+ DT properties
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 28, 2016 at 09:27:15AM +0200, Luca Coelho wrote:
+On 28 December 2016 at 22:07, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 28-12-16 16:59, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> They allow specifying hardware limitations of supported channels. This
+>> may be useful for specifying single band devices or devices that support
+>> only some part of the whole band.
+>> E.g. some tri-band routers have separated radios for lower and higher
+>> part of 5 GHz band.
+>>
+>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>> ---
+>>  net/wireless/reg.c | 34 ++++++++++++++++++++++++++++++++++
+>>  1 file changed, 34 insertions(+)
+>>
+>> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+>> index 5dbac37..35ba5c7 100644
+>> --- a/net/wireless/reg.c
+>> +++ b/net/wireless/reg.c
+>> @@ -1123,6 +1123,26 @@ const char *reg_initiator_name(enum nl80211_reg_i=
+nitiator initiator)
+>>  }
+>>  EXPORT_SYMBOL(reg_initiator_name);
+>>
+>> +static bool reg_center_freq_of_valid(struct wiphy *wiphy,
+>> +                                  struct ieee80211_channel *chan)
+>> +{
+>> +     struct device_node *np =3D wiphy_dev(wiphy)->of_node;
+>> +     u32 val;
+>> +
+>> +     if (!np)
+>> +             return true;
+>> +
+>> +     if (!of_property_read_u32(np, "ieee80211-min-center-freq", &val) &=
+&
+>> +         chan->center_freq < KHZ_TO_MHZ(val))
+>> +             return false;
+>> +
+>> +     if (!of_property_read_u32(np, "ieee80211-max-center-freq", &val) &=
+&
+>> +         chan->center_freq > KHZ_TO_MHZ(val))
+>> +             return false;
+>
+> I suspect these functions rely on CONFIG_OF. So might not build for
+> !CONFIG_OF.
 
-[...]
+I compiled it with
+# CONFIG_OF is not set
 
-> > > > Is this a known issue? Please let me know if anyone wants more info or
-> > > > logs, since this error triggers easily (everytime I boot).
-> > > 
-> > > The error message isn't really telling much to the user (hint hint) but
-> > > I suspect this is by design:
-> > > 
-> > > "iwlwifi: remove support for fw older than -17 and -22
-> 
-> Right, we only maintain support for a certain number of firmware
-> versions.  The FW APIs change with time and we don't want to keep all
-> legacy code supporting old firmwares in the driver forever.
-> 
-> I agree that "no suitable firmware found!" is a bit scarce.  I'll see
-> if we can improve that with something: "no suitable firmware found! You
-> need iwlwifi-7260-17.ucode (<link to git>)".
+Can you test it and provide a non-working config if you see a
+compilation error, please?
 
-That'll be great if we can have this info in the log. Maybe no need
-for a full URL, the firmware name would suffice at least for me.
-
-[...]
-
-> I don't think we are very aggressive, we have been supporting -17 since
-> v4.3:
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=5865f3658ba37c54e346b0fdee08a1c7a152681b
-> 
-> And we have published the firmware about half a year ago:
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/iwlwifi-7260-17.ucode?id=f2cf4d67e8eced29c8a473d3a27057aa2df57c42
-> 
-> I understand your concern, but if you want to be on the bleeding-edge
-> kernel, you should be on the bleeding-edge linux-firmware as well. ;)
-
-Fair enough. :-)
-
-> 
-> But as I said, I'll try to improve the error message, as that should
-> make it easier to figure out.
-
-Thank you!
-
--- peterx
+--=20
+Rafa=C5=82
