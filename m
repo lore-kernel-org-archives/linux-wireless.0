@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35088 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752242AbcLOUxm (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32779 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750768AbcL2U6i (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 15:53:42 -0500
-Received: by mail-wm0-f67.google.com with SMTP id a20so493200wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2016 12:52:18 -0800 (PST)
-Subject: Re: [RFC v2 11/11] ath10k: Added sdio support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1479496971-19174-1-git-send-email-erik.stromdahl@gmail.com>
- <1479496971-19174-12-git-send-email-erik.stromdahl@gmail.com>
- <87oa0duow8.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-Message-ID: <4d9b8000-47c1-3537-1e76-12c0dfa7d382@gmail.com> (sfid-20161215_215404_459357_38EEEAB3)
-Date: Thu, 15 Dec 2016 21:52:16 +0100
+        Thu, 29 Dec 2016 15:58:38 -0500
+Subject: Re: [PATCH] rtlwifi: fix spelling mistake: "contry" -> "country"
+To: Colin King <colin.king@canonical.com>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+References: <20161229160029.22117-1-colin.king@canonical.com>
+Cc: linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <c2eb46b3-5f4c-bbe6-0adb-b78ca50cfb4c@lwfinger.net> (sfid-20161229_215905_089001_DF08D529)
+Date: Thu, 29 Dec 2016 14:58:34 -0600
 MIME-Version: 1.0
-In-Reply-To: <87oa0duow8.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20161229160029.22117-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/29/2016 10:00 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> trivial fix to spelling mistake in RT_TRACE message
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-On 12/15/2016 05:40 PM, Valo, Kalle wrote:
-> Erik Stromdahl <erik.stromdahl@gmail.com> writes:
-> 
->> Initial HIF sdio/mailbox implementation.
->>
->> Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/Kconfig  |    6 +
->>  drivers/net/wireless/ath/ath10k/Makefile |    3 +
->>  drivers/net/wireless/ath/ath10k/sdio.c   | 1860 ++++++++++++++++++++++++++++++
->>  drivers/net/wireless/ath/ath10k/sdio.h   |  276 +++++
->>  4 files changed, 2145 insertions(+)
->>  create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
->>  create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
-> 
-> AFAIK the sdio firmware binary is different from pci and usb. And as all
-> the firmware images need to coexist in the same repository I suspect we
-> can't continue to use firmware-N.bin for both pcie and sdio (and in
-> future usb). So should we somehow rename the sdio firmware filename to
-> something else, like firmware-sdio-N.bin?
-> 
-I suppose you are right. I would be surprised if the firmware images
-were the same for sdio, usb and pci. Hopefully all sdio chipsets sharing
-the same device id and BMI version will use the same firmware image.
-Currently, these two params are the only two that are used when
-selecting firmware.
+Larry
 
-struct bmi_target_info also has a type parameter, but I can't see it
-being used anywhere in the code.
-
-If it turns out that several sdio chipsets uses the same BMI version and
-device id, this parameter might be used (together with the other two) to
-select hw params.
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/regd.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
+> index 6ee6bf8..558c31b 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/regd.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
+> @@ -440,7 +440,7 @@ int rtl_regd_init(struct ieee80211_hw *hw,
+>
+>  	if (rtlpriv->regd.country_code >= COUNTRY_CODE_MAX) {
+>  		RT_TRACE(rtlpriv, COMP_REGD, DBG_DMESG,
+> -			 "rtl: EEPROM indicates invalid contry code, world wide 13 should be used\n");
+> +			 "rtl: EEPROM indicates invalid country code, world wide 13 should be used\n");
+>
+>  		rtlpriv->regd.country_code = COUNTRY_CODE_WORLD_WIDE_13;
+>  	}
+>
