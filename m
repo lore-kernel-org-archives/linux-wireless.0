@@ -1,326 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42312 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751290AbcLCMqM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21226 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752311AbcL2OLg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2016 07:46:12 -0500
-Date: Sat, 3 Dec 2016 18:16:00 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Benjamin Morgan <bmorgan@cococorp.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        lede-dev@lists.infradead.org, agreen@cococorp.com
-Subject: Re: ath10k firmware crashes in mesh mode on QCA9880
-Message-ID: <20161203124600.GC31861@atheros-ThinkPad-T61> (sfid-20161203_134615_994989_FFBA06DE)
-References: <583DD564.8040704@cococorp.com>
- <20161201070908.GB11953@atheros-ThinkPad-T61>
- <58421FA2.2020004@cococorp.com>
- <20161203124358.GB31861@atheros-ThinkPad-T61>
+        Thu, 29 Dec 2016 09:11:36 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20161203124358.GB31861@atheros-ThinkPad-T61>
+Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Message-ID: <c3f99e7634384475b475b97ff46bec76@euamsexm01a.eu.qualcomm.com> (sfid-20161229_151140_122604_6DACDDEA)
+Date: Thu, 29 Dec 2016 15:11:21 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-https://patchwork.kernel.org/patch/9437519/
-(sorry missed this in the previous thread)
+Christian Lamparter <chunkeey@googlemail.com> wrote:
+> The 10.4 firmware adds extended peer information to the
+> firmware's statistics payload. This additional info is
+> stored as a separate data field and the elements are
+> stored in their own "peers_extd" list.
+> 
+> These elements can pile up in the same way as the peer
+> information elements. This is because the
+> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+> pull the same amount (num_peer_stats) for every statistic
+> data unit.
+> 
+> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 
-On Sat, Dec 03, 2016 at 06:13:58PM +0530, Mohammed Shafi Shajakhan wrote:
-> Hi Benjamin,
-> 
-> On Fri, Dec 02, 2016 at 05:28:02PM -0800, Benjamin Morgan wrote:
-> > Just tried 10.2.4.70.58 firmware that you linked to and it still crashes:
-> > 
-> > [  131.568989] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> > 1838347e-9380-4a26-ac9d-2963ee95968b)
-> > [  131.578124] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> > 0x4100016c chip_id 0x043202ff sub 0000:0000
-> > [  131.587491] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> > tracing 0 dfs 1 testmode 1
-> > [  131.600521] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.58
-> > api 5 features no-p2p,raw-mode,mfp crc32 e1af076f
-> > [  131.610899] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> > crc32 bebc7c08
-> > [  131.618325] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
-> > 2 cal file max-sta 128 raw 0 hwcrypto 1
-> > [  131.629965] ath10k_pci 0000:01:00.0: firmware register dump:
-> > [  131.635728] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> > 0x009A45AF 0x00955B31
-> > [  131.643761] ath10k_pci 0000:01:00.0: [04]: 0x009A45AF 0x00060130
-> > 0x00000002 0x00439E98
-> > [  131.651806] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
-> > 0x00407120 0x004436CC
-> > [  131.659852] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
-> > 0x009A3550 0x009A355E
-> > [  131.667892] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x009A31D6
-> > 0x00000000 0x00000000
-> > [  131.675936] ath10k_pci 0000:01:00.0: [20]: 0x409A45AF 0x0040AAC4
-> > 0x0040AC60 0x0040AC09
-> > [  131.683968] ath10k_pci 0000:01:00.0: [24]: 0x809A44F2 0x0040AB24
-> > 0x00400000 0xC09A45AF
-> > [  131.692013] ath10k_pci 0000:01:00.0: [28]: 0x809A3A16 0x0040AB84
-> > 0x0044110C 0x00442074
-> > [  131.700056] ath10k_pci 0000:01:00.0: [32]: 0x809A601A 0x0040ABB4
-> > 0x0044110C 0x00407120
-> > [  131.708100] ath10k_pci 0000:01:00.0: [36]: 0x809A2EA4 0x0040ABF4
-> > 0x0040AC14 0x00001580
-> > [  131.716143] ath10k_pci 0000:01:00.0: [40]: 0x80990F63 0x0040AD04
-> > 0x009C6458 0x004436CC
-> > [  131.724175] ath10k_pci 0000:01:00.0: [44]: 0x80998520 0x0040AD64
-> > 0x004208FC 0x00439E4C
-> > [  131.732220] ath10k_pci 0000:01:00.0: [48]: 0x8099AEA5 0x0040AD84
-> > 0x004208FC 0x00425874
-> > [  131.740263] ath10k_pci 0000:01:00.0: [52]: 0x809BFC39 0x0040AEE4
-> > 0x00424FE8 0x00000002
-> > [  131.748306] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
-> > 0x00000004 0x004039D0
-> > [  131.857076] ieee80211 phy0: Hardware restart was requested
-> > [  131.862705] ath10k_pci 0000:01:00.0: failed to synchronize
-> > monitor vdev 1 stop: -143
-> > [  131.870594] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
-> 
-> [shafi] request to try with the latest backports and ath.git
-> Also worth trying this fix in ath10k (once the next firmware version)
-> is available. I will keep you posted. thank you !
-> 
-> > 
-> > ~Benjamin
-> > 
-> > On 11/30/2016 11:09 PM, Mohammed Shafi Shajakhan wrote:
-> > >Hi,
-> > >
-> > >On Tue, Nov 29, 2016 at 11:22:12AM -0800, Benjamin Morgan wrote:
-> > >>When we try to transmit traffic (ping) between two meshed ath10k
-> > >>devices running latest lede we keep experiencing ath10k firmware
-> > >>crashes. This seems to only happen when running in 802.11n/ac mode
-> > >>but not in 802.11a/g mode. Also, from the station dumps it appears
-> > >>that management traffic is flowing between the devices, however when
-> > >>we try to send unicast data traffic the firmware crashes
-> > >>immediately.
-> > >[shafi] Did you get a chance to try with the below firmware as well
-> > >https://github.com/kvalo/ath10k-firmware/blob/master/QCA988X/hw2.0/10.2.4.70/firmware-5.bin_10.2.4.70.58
-> > >
-> > >>Platform: Archer C7 AC1750 v2
-> > >>Software Image: LEDE (HEAD, r2299) Commit: https://github.com/lede-project/source/commit/d596c21ebd5a3e6ce933eff3e51989031e4b1d58
-> > >>
-> > >>Crypto: wpa_supplicant
-> > >>wpa_supplicant-wlan0.conf
-> > >>network={
-> > >>ssid="bmorgan_lede_mesh"
-> > >>key_mgmt=SAE
-> > >>mode=5
-> > >>frequency=5180
-> > >>psk="meshpassword"
-> > >>}
-> > >>
-> > >>Backports Verstion:
-> > >>[    9.818007] Loading modules backported from Linux version
-> > >>wt-2016-10-03-1-g6fcb1a6
-> > >>[    9.825736] Backport generated by backports.git
-> > >>backports-20160324-9-g0e38f5c
-> > >>
-> > >>​​Ath10k Initialization on Station A (dmesg)
-> > >>[    9.896715] PCI: Enabling device 0000:01:00.0 (0000 -> 0002)
-> > >>[    9.902622] ath10k_pci 0000:01:00.0: pci irq legacy oper_irq_mode
-> > >>1 irq_mode 0 reset_mode 0
-> > >>[   10.123734] ath10k_pci 0000:01:00.0: Direct firmware load for
-> > >>ath10k/pre-cal-pci-0000:01:00.0.bin failed with error -2
-> > >>[   10.134620] ath10k_pci 0000:01:00.0: Falling back to user helper
-> > >>[   10.287680] firmware ath10k!pre-cal-pci-0000:01:00.0.bin:
-> > >>firmware_loading_store: map pages failed
-> > >>[   10.622789] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> > >>0x4100016c chip_id 0x043202ff sub 0000:0000
-> > >>[   10.632184] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> > >>tracing 0 dfs 1 testmode 1
-> > >>[   10.645231] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54
-> > >>api 5 features no-p2p,raw-mode,mfp crc32 9d340dd9
-> > >>[   10.655660] ath10k_pci 0000:01:00.0: Direct firmware load for
-> > >>ath10k/QCA988X/hw2.0/board-2.bin failed with error -2
-> > >>[   10.666264] ath10k_pci 0000:01:00.0: Falling back to user helper
-> > >>[   10.747925] firmware ath10k!QCA988X!hw2.0!board-2.bin:
-> > >>firmware_loading_store: map pages failed
-> > >>[   11.011123] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> > >>crc32 bebc7c08
-> > >>[   12.155224] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
-> > >>2 cal file max-sta 128 raw 0 hwcrypto 1
-> > >>
-> > >>Station A (wlan0):
-> > >>18:A6:F7:23:6E:66
-> > >>10.230.5.41
-> > >>
-> > >>Station B (wlan0):
-> > >>18:a6:f7:26:0f:21
-> > >>10.230.5.42
-> > >>
-> > >>Station Dump on Station A before ping:
-> > >>Station 18:a6:f7:26:0f:21 (on wlan0)
-> > >>inactive time:340 ms
-> > >>rx bytes:2472
-> > >>rx packets:28
-> > >>tx bytes:1204
-> > >>tx packets:9
-> > >>tx retries:0
-> > >>tx failed:0
-> > >>rx drop misc:1
-> > >>signal: -14 dBm
-> > >>signal avg:-14 dBm
-> > >>Toffset:18142530 us
-> > >>tx bitrate:6.0 MBit/s
-> > >>rx bitrate:6.0 MBit/s
-> > >>rx duration:1524 us
-> > >>mesh llid:0
-> > >>mesh plid:0
-> > >>mesh plink:ESTAB
-> > >>mesh local PS mode:ACTIVE
-> > >>mesh peer PS mode:UNKNOWN
-> > >>mesh non-peer PS mode:ACTIVE
-> > >>authorized:yes
-> > >>authenticated:yes
-> > >>associated:yes
-> > >>preamble:long
-> > >>WMM/WME:yes
-> > >>MFP:yes
-> > >>TDLS peer:no
-> > >>DTIM period:2
-> > >>beacon interval:1000
-> > >>connected time:10 seconds
-> > >>
-> > >>​Crash Log on Station B (10.230.5.42)
-> > >>[245.483888] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> > >>2bab5ee9-08ff-4a17-95b1-636d212acebc)
-> > >>[245.493020] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> > >>0x4100016c chip_id 0x043202ff sub 0000:0000
-> > >>[245.502384] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> > >>tracing 0 dfs 1 testmode 1
-> > >>[245.515436] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54 api
-> > >>5 features no-p2p,raw-mode,mfp crc32 9d340dd9
-> > >>[245.525812] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> > >>crc32 bebc7c08
-> > >>[245.533232] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2
-> > >>cal file max-sta 128 raw 0 hwcrypto 1
-> > >>[245.544876] ath10k_pci 0000:01:00.0: firmware register dump:
-> > >>[245.550633] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> > >>0x009A4577 0x00955B31
-> > >>[245.558676] ath10k_pci 0000:01:00.0: [04]: 0x009A4577 0x00060130
-> > >>0x00000002 0x00439E98
-> > >>[245.566715] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
-> > >>0x00407120 0x004436CC
-> > >>[245.574749] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
-> > >>0x009A3518 0x009A3526
-> > >>[245.582793] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> > >>0x00000000 0x00000000
-> > >>[245.590836] ath10k_pci 0000:01:00.0: [20]: 0x409A4577 0x0040AAC4
-> > >>0x0040AC60 0x0040AC09
-> > >>[245.598882] ath10k_pci 0000:01:00.0: [24]: 0x809A44BA 0x0040AB24
-> > >>0x00400000 0xC09A4577
-> > >>[245.606923] ath10k_pci 0000:01:00.0: [28]: 0x809A39DE 0x0040AB84
-> > >>0x0044110C 0x00442074
-> > >>[245.614955] ath10k_pci 0000:01:00.0: [32]: 0x809A5FE2 0x0040ABB4
-> > >>0x0044110C 0x00407120
-> > >>[245.623000] ath10k_pci 0000:01:00.0: [36]: 0x809A2E6C 0x0040ABF4
-> > >>0x0040AC14 0x00001580
-> > >>[245.631043] ath10k_pci 0000:01:00.0: [40]: 0x80990F6F 0x0040AD04
-> > >>0x009C643C 0x004436CC
-> > >>[245.639086] ath10k_pci 0000:01:00.0: [44]: 0x80998510 0x0040AD64
-> > >>0x004208FC 0x00439E4C
-> > >>[245.647129] ath10k_pci 0000:01:00.0: [48]: 0x8099AE95 0x0040AD84
-> > >>0x004208FC 0x00425404
-> > >>[245.655170] ath10k_pci 0000:01:00.0: [52]: 0x809BFC55 0x0040AEE4
-> > >>0x00424FE8 0x00000002
-> > >>[245.663198] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
-> > >>0x00000004 0x004039D0
-> > >>[245.767023] ieee80211 phy0: Hardware restart was requested
-> > >>[245.772655] ath10k_pci 0000:01:00.0: failed to synchronize monitor
-> > >>vdev 1 stop: -143
-> > >>[245.780542] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
-> > >>​
-> > >>With wpa_supplicant turned off:
-> > >>
-> > >>Station Dump on Station A before ping:
-> > >>Station 18:a6:f7:26:0f:21 (on wlan0)
-> > >>inactive time:60 ms
-> > >>rx bytes:3874
-> > >>rx packets:67
-> > >>tx bytes:707
-> > >>tx packets:7
-> > >>tx retries:0
-> > >>tx failed:1
-> > >>rx drop misc:3
-> > >>signal: -14 dBm
-> > >>signal avg:-14 dBm
-> > >>Toffset:18446744073684250999 us
-> > >>tx bitrate:6.0 MBit/s
-> > >>rx bitrate:6.0 MBit/s
-> > >>rx duration:1312 us
-> > >>mesh llid:24953
-> > >>mesh plid:59412
-> > >>mesh plink:ESTAB
-> > >>mesh local PS mode:ACTIVE
-> > >>mesh peer PS mode:UNKNOWN
-> > >>mesh non-peer PS mode:ACTIVE
-> > >>authorized:yes
-> > >>authenticated:yes
-> > >>associated:yes
-> > >>preamble:long
-> > >>WMM/WME:yes
-> > >>MFP:no
-> > >>TDLS peer:no
-> > >>DTIM period:2
-> > >>beacon interval:1000
-> > >>short slot time:yes
-> > >>connected time:33 seconds
-> > >>
-> > >>Firmware crash on Station A (10.230.5.41)
-> > >>[ 1040.984599] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> > >>42d4f6dc-0e89-4505-aefb-58cbb70d0dce)
-> > >>[ 1040.993732] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> > >>0x4100016c chip_id 0x043202ff sub 0000:0000
-> > >>[ 1041.003100] ath10k_pci 0000:01:00.0: kconfig debug 0 debugfs 1
-> > >>tracing 0 dfs 1 testmode 1
-> > >>[ 1041.016144] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.54
-> > >>api 5 features no-p2p,raw-mode,mfp crc32 9d340dd9
-> > >>[ 1041.026523] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> > >>crc32 bebc7c08
-> > >>[ 1041.033940] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op
-> > >>2 cal file max-sta 128 raw 0 hwcrypto 1
-> > >>[ 1041.045593] ath10k_pci 0000:01:00.0: firmware register dump:
-> > >>[ 1041.051336] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> > >>0x009A4577 0x00955B31
-> > >>[ 1041.059383] ath10k_pci 0000:01:00.0: [04]: 0x009A4577 0x00060130
-> > >>0x00000001 0x00435354
-> > >>[ 1041.067424] ath10k_pci 0000:01:00.0: [08]: 0x0044110C 0x00442074
-> > >>0x00407120 0x004436CC
-> > >>[ 1041.075463] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
-> > >>0x009A43A0 0x009A43DE
-> > >>[ 1041.083490] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> > >>0x00000000 0x00000000
-> > >>[ 1041.091535] ath10k_pci 0000:01:00.0: [20]: 0x409A4577 0x0040AAC4
-> > >>0x0040AC60 0x0040AC09
-> > >>[ 1041.099579] ath10k_pci 0000:01:00.0: [24]: 0x809A44BA 0x0040AB24
-> > >>0x00955A00 0xC09A4577
-> > >>[ 1041.107622] ath10k_pci 0000:01:00.0: [28]: 0x809A39DE 0x0040AB84
-> > >>0x0044110C 0x00442074
-> > >>[ 1041.115661] ath10k_pci 0000:01:00.0: [32]: 0x809A5FE2 0x0040ABB4
-> > >>0x0044110C 0x00407120
-> > >>[ 1041.123689] ath10k_pci 0000:01:00.0: [36]: 0x809A2E6C 0x0040ABF4
-> > >>0x0040AC10 0x00001580
-> > >>[ 1041.131733] ath10k_pci 0000:01:00.0: [40]: 0x80990F6F 0x0040AD04
-> > >>0x009C643C 0x004436CC
-> > >>[ 1041.139777] ath10k_pci 0000:01:00.0: [44]: 0x80998510 0x0040AD64
-> > >>0x004208FC 0x00439E4C
-> > >>[ 1041.147820] ath10k_pci 0000:01:00.0: [48]: 0x8099AE95 0x0040AD84
-> > >>0x004208FC 0x00425758
-> > >>[ 1041.155860] ath10k_pci 0000:01:00.0: [52]: 0x809BFC55 0x0040AEE4
-> > >>0x00424FE8 0x00000002
-> > >>[ 1041.163888] ath10k_pci 0000:01:00.0: [56]: 0x80940F18 0x0040AF14
-> > >>0x00000004 0x004039D0
-> > >>[ 1041.267025] ieee80211 phy0: Hardware restart was requested
-> > >>[ 1041.272656] ath10k_pci 0000:01:00.0: failed to synchronize
-> > >>monitor vdev 1 stop: -143
-> > >>[ 1041.280545] ath10k_pci 0000:01:00.0: failed to stop monitor vdev: -143
-> > >>
-> > >>​
-> > >>Thanks in advance for your time and help,
-> > >>
-> > >>~Benjamin
-> > >>
-> > 
+My understanding is that I should skip this patch 1. Please let me know if
+I misunderstood. But I'm still plannning to apply patch 2.
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/patch/9461631/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
