@@ -1,114 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:35143 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757469AbcLPKlM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 05:41:12 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Daniel Wagner <wagi@monom.org>
-Subject: Re: wl1251 & mac address & calibration data
-Date: Fri, 16 Dec 2016 11:40:27 +0100
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Tom Gundersen <teg@jklm.no>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Ming Lei <ming.lei@canonical.com>,
-        Mimi Zohar <zohar@linux.vnet.ibm.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Tony Lindgren <tony@atomide.com>,
-        "linux-wireless" <linux-wireless@vger.kernel.org>,
-        Network Development <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Takashi Iwai <tiwai@suse.de>,
-        Josh Boyer <jwboyer@fedoraproject.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>
-References: <201611111820.52072@pali> <CAB=NE6VHF+U7DzapENvLMKtN4Dgi9J0qMoeUJ8o4vSwc2-rRFQ@mail.gmail.com> <07be7fc8-6c7f-6e03-379d-fa781b248259@monom.org>
-In-Reply-To: <07be7fc8-6c7f-6e03-379d-fa781b248259@monom.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1686547.gFzIhqOYHO";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201612161140.27241@pali> (sfid-20161216_114145_922211_477B1888)
+Received: from s3.sipsolutions.net ([5.9.151.49]:50458 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752311AbcL2PSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Dec 2016 10:18:10 -0500
+Message-ID: <1483024688.13037.1.camel@sipsolutions.net> (sfid-20161229_161814_314791_7BE8EA12)
+Subject: Re: gpio outputs that disable wireless to PCI Express Mini Card and
+ RFKILL
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tim Harvey <tharvey@gateworks.com>, linux-wireless@vger.kernel.org
+Date: Thu, 29 Dec 2016 16:18:08 +0100
+In-Reply-To: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com> (sfid-20161229_160911_547687_7AB8BEF3)
+References: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com>
+         (sfid-20161229_160911_547687_7AB8BEF3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1686547.gFzIhqOYHO
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Thu, 2016-12-29 at 07:07 -0800, Tim Harvey wrote:
+> Greetings,
+> 
+> The PCI Express Mini Card (aka Mini PCIe) spec calls out pin 20 as
+> W_DISABLE# to allow a PCIe host to disable the add-in card's radio
+> operation and we have run this to a GPIO on our boards for some time.
+> The M.2 specs also provide such signals. Is there any support in the
+> Linux RFKILL subsystem to define this?
 
-On Friday 16 December 2016 08:25:44 Daniel Wagner wrote:
-> On 12/16/2016 03:03 AM, Luis R. Rodriguez wrote:
-> > For the new API a solution for "fallback mechanisms" should be
-> > clean though and I am looking to stay as far as possible from the
-> > existing mess. A solution to help both the old API and new API is
-> > possible for the "fallback mechanism" though -- but for that I can
-> > only refer you at this point to some of Daniel Wagner and Tom
-> > Gunderson's firmwared deamon prospect. It should help pave the way
-> > for a clean solution and help address other stupid issues.
->=20
-> The firmwared project is hosted here
->=20
-> https://github.com/teg/firmwared
->=20
-> As Luis pointed out, firmwared relies on
-> FW_LOADER_USER_HELPER_FALLBACK, which is not enabled by default.
+Not directly, but that depends on what you mean by "support". This
+whole thing is relatively simple - it's an input signal to the wireless
+NIC, so that any reaction to the input originates there.
 
-I know. But it does not mean that I cannot enable this option at kernel=20
-compile time.
+Typically (I know about Intel and ath9k devices) changes in this input
+either trigger an interrupt (Intel) or are polled for (ath9k), and then
+the already existing rfkill instance for the wireless NIC will reflect
+a "hard block" when the driver notifies upper layers of the new state.
 
-Bigger problem is that currently request_firmware() first try to load=20
-firmware directly from VFS and after that (if fails) fallback to user=20
-helper.
+Or did you mean you want to use the CPU to *control* this GPIO? In this
+case, I'm not sure that the rfkill subsystem is appropriate, but there
+apparently are some such cases already where the platform rfkill's
+software state essentially toggles the wireless NIC's hardware state.
 
-So I would need to extend kernel firmware code with new function (or=20
-flag) to not use VFS and try only user mode helper.
+I'd argue this is useless though since if you toggle the thing from
+software then you might as well rely entirely on software rfkill.
 
-> I
-> don't see any reason why firmwared should not also support loading
-> calibration data. If we find a sound way to do this.
-
-It can, but why should I use another daemon for firmware loading as=20
-non-systemd version of udev (and eudev fork) support firmware loading?=20
-I think I stay with udev/eudev.
-
-> As you can see from the commit history it is a pretty young project
-> and more ore less reanimation of the old udev firmware loader
-> feature.  We are getting int into shape, adding integration tests
-> etc.
->=20
-> The main motivation for this project is the get movement back in
-> stuck discussion on the firmware loader API. Luis was very busy
-> writing up all the details on the current situation and purely from
-> the amount of documentation need to describe the API you can tell
-> something is awry.
->=20
-> Thanks,
-> Daniel
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart1686547.gFzIhqOYHO
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlhTxJsACgkQi/DJPQPkQ1K83wCghtlPpIAMTLQGTVn1imQwMFPW
-3REAn3wCgF+Bxt3PryYCQZnDKCBkE39F
-=B8/V
------END PGP SIGNATURE-----
-
---nextPart1686547.gFzIhqOYHO--
+johannes
