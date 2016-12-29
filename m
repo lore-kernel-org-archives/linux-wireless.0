@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:34913 "EHLO
-        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752694AbcL2PHJ (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56061 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751120AbcL2UOu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 10:07:09 -0500
-Received: by mail-io0-f180.google.com with SMTP id n85so120493108ioi.2
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2016 07:07:08 -0800 (PST)
+        Thu, 29 Dec 2016 15:14:50 -0500
+From: Colin King <colin.king@canonical.com>
+To: Kalle Valo <kvalo@codeaurora.org>, Shahar Patury <shaharp@ti.com>,
+        Guy Mishol <guym@ti.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: fix spelling mistake in wl1271_warning
+Date: Thu, 29 Dec 2016 20:14:00 +0000
+Message-Id: <20161229201400.26830-1-colin.king@canonical.com> (sfid-20161229_211703_537612_CD48519A)
 MIME-Version: 1.0
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Thu, 29 Dec 2016 07:07:07 -0800
-Message-ID: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com> (sfid-20161229_160911_547687_7AB8BEF3)
-Subject: gpio outputs that disable wireless to PCI Express Mini Card and RFKILL
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greetings,
+From: Colin Ian King <colin.king@canonical.com>
 
-The PCI Express Mini Card (aka Mini PCIe) spec calls out pin 20 as
-W_DISABLE# to allow a PCIe host to disable the add-in card's radio
-operation and we have run this to a GPIO on our boards for some time.
-The M.2 specs also provide such signals. Is there any support in the
-Linux RFKILL subsystem to define this?
+trivial fix to spelling mistake of function name in wl1271_warning,
+should be dynamic_ps_timeout instead of dyanmic_ps_timeout.
 
-Looking over the RFKILL subsystem I see support for wireless drivers
-to register with rfkill to support on/off/state hooks and support for
-gpio based rfkill 'input' switches but I haven't seen anything that
-deals with GPIO 'outputs' to add-in card slots. Perhaps support for
-this hasn't been deemed necessary because instead software
-controllable methods are always used to control rfkill states for the
-wireless devices on add-in cards?
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/ti/wlcore/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Best regards,
-
-Tim
-
-Tim Harvey - Principal Software Engineer
-Gateworks Corporation - http://www.gateworks.com/
-3026 S. Higuera St. San Luis Obispo CA 93401
-805-781-2000
+diff --git a/drivers/net/wireless/ti/wlcore/debugfs.c b/drivers/net/wireless/ti/wlcore/debugfs.c
+index 7f672f6..58e148d 100644
+--- a/drivers/net/wireless/ti/wlcore/debugfs.c
++++ b/drivers/net/wireless/ti/wlcore/debugfs.c
+@@ -281,7 +281,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
+ 	}
+ 
+ 	if (value < 1 || value > 65535) {
+-		wl1271_warning("dyanmic_ps_timeout is not in valid range");
++		wl1271_warning("dynamic_ps_timeout is not in valid range");
+ 		return -ERANGE;
+ 	}
+ 
+-- 
+2.10.2
