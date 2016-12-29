@@ -1,219 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54204 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756511AbcLNTrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:47:12 -0500
-From: Felix Fietkau <nbd@nbd.name>
+Received: from mail-io0-f180.google.com ([209.85.223.180]:34913 "EHLO
+        mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752694AbcL2PHJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 29 Dec 2016 10:07:09 -0500
+Received: by mail-io0-f180.google.com with SMTP id n85so120493108ioi.2
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2016 07:07:08 -0800 (PST)
+MIME-Version: 1.0
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Thu, 29 Dec 2016 07:07:07 -0800
+Message-ID: <CAJ+vNU33Z05DaQGER8KJoPX5g1w=HWjKFDbNs0S0gxKDcFV7bg@mail.gmail.com> (sfid-20161229_160911_547687_7AB8BEF3)
+Subject: gpio outputs that disable wireless to PCI Express Mini Card and RFKILL
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
-Subject: [PATCH 05/10] mac80211: minstrel: remove cur_prob from debugfs
-Date: Wed, 14 Dec 2016 20:46:58 +0100
-Message-Id: <20161214194703.33429-5-nbd@nbd.name> (sfid-20161214_204724_455890_F41147E4)
-In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
-References: <20161214194703.33429-1-nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This field is redundant, because it is simply last success divided by
-last attempt count. Removing it from the rate stats struct saves about
-1.2 KiB per HT station.
+Greetings,
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rc80211_minstrel.c            | 10 ++++++----
- net/mac80211/rc80211_minstrel.h            |  2 --
- net/mac80211/rc80211_minstrel_debugfs.c    | 16 ++++++----------
- net/mac80211/rc80211_minstrel_ht_debugfs.c | 16 ++++++----------
- 4 files changed, 18 insertions(+), 26 deletions(-)
+The PCI Express Mini Card (aka Mini PCIe) spec calls out pin 20 as
+W_DISABLE# to allow a PCIe host to disable the add-in card's radio
+operation and we have run this to a GPIO on our boards for some time.
+The M.2 specs also provide such signals. Is there any support in the
+Linux RFKILL subsystem to define this?
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 14c5ba3..a284ea0 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -159,21 +159,23 @@ minstrel_update_rates(struct minstrel_priv *mp, struct minstrel_sta_info *mi)
- void
- minstrel_calc_rate_stats(struct minstrel_rate_stats *mrs)
- {
-+	unsigned int cur_prob;
-+
- 	if (unlikely(mrs->attempts > 0)) {
- 		mrs->sample_skipped = 0;
--		mrs->cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
-+		cur_prob = MINSTREL_FRAC(mrs->success, mrs->attempts);
- 		if (unlikely(!mrs->att_hist)) {
--			mrs->prob_ewma = mrs->cur_prob;
-+			mrs->prob_ewma = cur_prob;
- 		} else {
- 			/* update exponential weighted moving variance */
- 			mrs->prob_ewmsd = minstrel_ewmsd(mrs->prob_ewmsd,
--							 mrs->cur_prob,
-+							 cur_prob,
- 							 mrs->prob_ewma,
- 							 EWMA_LEVEL);
- 
- 			/*update exponential weighted moving avarage */
- 			mrs->prob_ewma = minstrel_ewma(mrs->prob_ewma,
--						       mrs->cur_prob,
-+						       cur_prob,
- 						       EWMA_LEVEL);
- 		}
- 		mrs->att_hist += mrs->attempts;
-diff --git a/net/mac80211/rc80211_minstrel.h b/net/mac80211/rc80211_minstrel.h
-index 209961c..94b89b1 100644
---- a/net/mac80211/rc80211_minstrel.h
-+++ b/net/mac80211/rc80211_minstrel.h
-@@ -62,10 +62,8 @@ struct minstrel_rate_stats {
- 	u32 att_hist, succ_hist;
- 
- 	/* statistis of packet delivery probability
--	 *  cur_prob  - current prob within last update intervall
- 	 *  prob_ewma - exponential weighted moving average of prob
- 	 *  prob_ewmsd - exp. weighted moving standard deviation of prob */
--	unsigned int cur_prob;
- 	unsigned int prob_ewma;
- 	u16 prob_ewmsd;
- 
-diff --git a/net/mac80211/rc80211_minstrel_debugfs.c b/net/mac80211/rc80211_minstrel_debugfs.c
-index 820b0ab..ca0bafd 100644
---- a/net/mac80211/rc80211_minstrel_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_debugfs.c
-@@ -75,7 +75,7 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- {
- 	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
--	unsigned int i, tp_max, tp_avg, prob, eprob;
-+	unsigned int i, tp_max, tp_avg, eprob;
- 	char *p;
- 
- 	ms = kmalloc(2048, GFP_KERNEL);
-@@ -86,9 +86,9 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 	p = ms->buf;
- 	p += sprintf(p, "\n");
- 	p += sprintf(p,
--		     "best   __________rate_________    ________statistics________    ________last_______    ______sum-of________\n");
-+		     "best   __________rate_________    ________statistics________    ____last_____    ______sum-of________\n");
- 	p += sprintf(p,
--		     "rate  [name idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
-+		     "rate  [name idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [retry|suc|att]  [#success | #attempts]\n");
- 
- 	for (i = 0; i < mi->n_rates; i++) {
- 		struct minstrel_rate *mr = &mi->r[i];
-@@ -107,17 +107,15 @@ minstrel_stats_open(struct inode *inode, struct file *file)
- 
- 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
- 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
--		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
- 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
--				"     %3u.%1u %3u   %3u %-3u   "
-+				"     %3u   %3u %-3u   "
- 				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
--				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-@@ -148,7 +146,7 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- {
- 	struct minstrel_sta_info *mi = inode->i_private;
- 	struct minstrel_debugfs_info *ms;
--	unsigned int i, tp_max, tp_avg, prob, eprob;
-+	unsigned int i, tp_max, tp_avg, eprob;
- 	char *p;
- 
- 	ms = kmalloc(2048, GFP_KERNEL);
-@@ -175,16 +173,14 @@ minstrel_stats_csv_open(struct inode *inode, struct file *file)
- 
- 		tp_max = minstrel_get_tp_avg(mr, MINSTREL_FRAC(100,100));
- 		tp_avg = minstrel_get_tp_avg(mr, mrs->prob_ewma);
--		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,%u,"
- 				"%llu,%llu,%d,%d\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
--				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-diff --git a/net/mac80211/rc80211_minstrel_ht_debugfs.c b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-index 1942d4b..0cecd23 100644
---- a/net/mac80211/rc80211_minstrel_ht_debugfs.c
-+++ b/net/mac80211/rc80211_minstrel_ht_debugfs.c
-@@ -19,7 +19,7 @@ static char *
- minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
- 	const struct mcs_group *mg;
--	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
-+	unsigned int j, tp_max, tp_avg, eprob, tx_time;
- 	char htmode = '2';
- 	char gimode = 'L';
- 	u32 gflags;
-@@ -83,17 +83,15 @@ minstrel_ht_stats_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
--		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
- 		p += sprintf(p, "%4u.%1u    %4u.%1u     %3u.%1u    %3u.%1u"
--				"     %3u.%1u %3u   %3u %-3u   "
-+				"     %3u   %3u %-3u   "
- 				"%9llu   %-9llu\n",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
--				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
-@@ -130,9 +128,9 @@ minstrel_ht_stats_open(struct inode *inode, struct file *file)
- 
- 	p += sprintf(p, "\n");
- 	p += sprintf(p,
--		     "              best   ____________rate__________    ________statistics________    ________last_______    ______sum-of________\n");
-+		     "              best   ____________rate__________    ________statistics________    _____last____    ______sum-of________\n");
- 	p += sprintf(p,
--		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n");
-+		     "mode guard #  rate  [name   idx airtime  max_tp]  [avg(tp) avg(prob) sd(prob)]  [retry|suc|att]  [#success | #attempts]\n");
- 
- 	p = minstrel_ht_stats_dump(mi, MINSTREL_CCK_GROUP, p);
- 	for (i = 0; i < MINSTREL_CCK_GROUP; i++)
-@@ -165,7 +163,7 @@ static char *
- minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- {
- 	const struct mcs_group *mg;
--	unsigned int j, tp_max, tp_avg, prob, eprob, tx_time;
-+	unsigned int j, tp_max, tp_avg, eprob, tx_time;
- 	char htmode = '2';
- 	char gimode = 'L';
- 	u32 gflags;
-@@ -226,16 +224,14 @@ minstrel_ht_stats_csv_dump(struct minstrel_ht_sta *mi, int i, char *p)
- 
- 		tp_max = minstrel_ht_get_tp_avg(mi, i, j, MINSTREL_FRAC(100, 100));
- 		tp_avg = minstrel_ht_get_tp_avg(mi, i, j, mrs->prob_ewma);
--		prob = MINSTREL_TRUNC(mrs->cur_prob * 1000);
- 		eprob = MINSTREL_TRUNC(mrs->prob_ewma * 1000);
- 
--		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
-+		p += sprintf(p, "%u.%u,%u.%u,%u.%u,%u.%u,%u,%u,"
- 				"%u,%llu,%llu,",
- 				tp_max / 10, tp_max % 10,
- 				tp_avg / 10, tp_avg % 10,
- 				eprob / 10, eprob % 10,
- 				mrs->prob_ewmsd / 10, mrs->prob_ewmsd % 10,
--				prob / 10, prob % 10,
- 				mrs->retry_count,
- 				mrs->last_success,
- 				mrs->last_attempts,
--- 
-2.10.1
+Looking over the RFKILL subsystem I see support for wireless drivers
+to register with rfkill to support on/off/state hooks and support for
+gpio based rfkill 'input' switches but I haven't seen anything that
+deals with GPIO 'outputs' to add-in card slots. Perhaps support for
+this hasn't been deemed necessary because instead software
+controllable methods are always used to control rfkill states for the
+wireless devices on add-in cards?
+
+Best regards,
+
+Tim
+
+Tim Harvey - Principal Software Engineer
+Gateworks Corporation - http://www.gateworks.com/
+3026 S. Higuera St. San Luis Obispo CA 93401
+805-781-2000
