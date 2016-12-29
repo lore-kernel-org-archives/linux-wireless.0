@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57581 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754661AbcLALRB (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56137 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751188AbcL2Uap (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 06:17:01 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 29 Dec 2016 15:30:45 -0500
+From: Colin King <colin.king@canonical.com>
+To: Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>, linux-media@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] [media] gp8psk: fix spelling mistake: "firmare" -> "firmware"
+Date: Thu, 29 Dec 2016 20:29:52 +0000
+Message-Id: <20161229202952.27448-1-colin.king@canonical.com> (sfid-20161229_213112_092452_E581F038)
 MIME-Version: 1.0
-Subject: Re: ath10k: wmi-alloc-chunk should use DMA_BIDIRECTIONAL.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1480456828-13735-1-git-send-email-greearb@candelatech.com>
-References: <1480456828-13735-1-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <4391889d7b9f4329a2edfdc29ae42ecc@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121710_354558_29172B88)
-Date: Thu, 1 Dec 2016 12:16:49 +0100
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> These memory chunks are often used as 'swap' by the NIC,
-> so it will be both reading and writing to these areas.
-> 
-> This seems to fix errors like this on my x86-64 machine:
-> 
-> kernel: DMAR: DMAR:[DMA Write] Request device [05:00.0] fault addr ff5de000
->         DMAR:[fault reason 05] PTE Write access is not set
-> 
-> Tested-by: Marek Behun <kabel@blackhole.sk>
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 9fcb249..c68278a 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -4558,7 +4558,7 @@ static int ath10k_wmi_alloc_chunk(struct ath10k *ar, u32 req_id,
->  	if (!num_units)
->  		return -ENOMEM;
->  
-> -	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_TO_DEVICE);
-> +	paddr = dma_map_single(ar->dev, vaddr, pool_size, DMA_BIDIRECTIONAL);
->  	if (dma_mapping_error(ar->dev, paddr)) {
->  		kfree(vaddr);
->  		return -ENOMEM;
+From: Colin Ian King <colin.king@canonical.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+trivial fix to spelling mistake in err message
 
-43ca92d380a8 ath10k: wmi-alloc-chunk should use DMA_BIDIRECTIONAL
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/media/usb/dvb-usb/gp8psk.c          | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/media/usb/dvb-usb/gp8psk.c b/drivers/media/usb/dvb-usb/gp8psk.c
+index 2360e7e..26461f2 100644
+--- a/drivers/media/usb/dvb-usb/gp8psk.c
++++ b/drivers/media/usb/dvb-usb/gp8psk.c
+@@ -161,7 +161,7 @@ static int gp8psk_load_bcm4500fw(struct dvb_usb_device *d)
+ 			goto out_free;
+ 		}
+ 		if (buflen > 64) {
+-			err("firmare chunk size bigger than 64 bytes.");
++			err("firmware chunk size bigger than 64 bytes.");
+ 			goto out_free;
+ 		}
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index ded1493..732de0a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1532,7 +1532,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		key_type = AESCMAC_ENCRYPTION;
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "alg:CMAC\n");
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+-			 "HW don't support CMAC encrypiton, use software CMAC encrypiton\n");
++			 "HW don't support CMAC encryption, use software CMAC encryption\n");
+ 		err = -EOPNOTSUPP;
+ 		goto out_unlock;
+ 	default:
 -- 
-https://patchwork.kernel.org/patch/9453173/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.10.2
