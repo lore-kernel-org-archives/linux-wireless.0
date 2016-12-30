@@ -1,82 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward2h.cmail.yandex.net ([87.250.230.17]:53213 "EHLO
-        forward2h.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1761479AbcLUWap (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45024 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753774AbcL3L02 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Dec 2016 17:30:45 -0500
-From: Ozgur Karatas <okaratas@member.fsf.org>
-To: johannes <johannes@sipsolutions.net>,
-        David Miller <davem@davemloft.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/2] net: wireless: fix to uses struct
+        Fri, 30 Dec 2016 06:26:28 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Message-Id: <608881482358981@web17g.yandex.ru> (sfid-20161221_233047_790286_95D0AC67)
-Date: Thu, 22 Dec 2016 00:23:01 +0200
-Content-Type: text/plain
+Subject: Re: [1/2] mwifiex: change width of MAC control variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1481873145-5381-1-git-send-email-akarwar@marvell.com>
+References: <1481873145-5381-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161230112628.3D2DE6145C@smtp.codeaurora.org> (sfid-20161230_122632_414975_29578FF7)
+Date: Fri, 30 Dec 2016 11:26:28 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Firmware has started making use of reserved field.
+> Accordingly change curr_pkt_filter from u16 to u32.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-The patch fixed to struct uses in reg.c, I think doesn't need to be use to "struct". 
-There is dataype not have to logical link and each is different definitons.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-I'm undecided on this patch. I compiled and didn't to errors.
- 
-Signed-off-by: Ozgur Karatas <okaratas@member.fsf.org>
----
- net/wireless/reg.c  | 10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+b82dd3bdf1a1 mwifiex: change width of MAC control variable
+d7864cf21235 mwifiex: Enable dynamic bandwidth signalling
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 5dbac37..5b70970 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -490,7 +490,7 @@ static int reg_query_builtin(const char *alpha2)
- 	if (!regdom)
- 		return -ENODATA;
- 
--	request = kzalloc(sizeof(struct reg_regdb_apply_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*reg_regdb_apply_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2291,7 +2291,7 @@ static int regulatory_hint_core(const char *alpha2)
- {
- 	struct regulatory_request *request;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2313,7 +2313,7 @@ int regulatory_hint_user(const char *alpha2,
- 	if (WARN_ON(!alpha2))
- 		return -EINVAL;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2385,7 +2385,7 @@ int regulatory_hint(struct wiphy *wiphy, const char *alpha2)
- 
- 	wiphy->regulatory_flags &= ~REGULATORY_CUSTOM_REG;
- 
--	request = kzalloc(sizeof(struct regulatory_request), GFP_KERNEL);
-+	request = kzalloc(sizeof(*regulatory_request), GFP_KERNEL);
- 	if (!request)
- 		return -ENOMEM;
- 
-@@ -2661,7 +2661,7 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
- 	if (processing)
- 		return 0;
- 
--	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
-+	reg_beacon = kzalloc(sizeof(*reg_beacon), gfp);
- 	if (!reg_beacon)
- 		return -ENOMEM;
- 
 -- 
-2.1.4
+https://patchwork.kernel.org/patch/9477347/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
