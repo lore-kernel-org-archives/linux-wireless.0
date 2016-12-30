@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:54162 "EHLO
-        mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751940AbcL1RmI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34638 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751854AbcL3N5z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Dec 2016 12:42:08 -0500
-From: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-        sameo@linux.intel.com, michael.thalmeier@hale.at,
-        linux-wireless@vger.kernel.org, linux-nfc@lists.01.org
-Cc: Andrey Rusalin <arusalin@dev.rtsoft.ru>
-Subject: [PATCH 1/3] NFC: pn533: change order of free_irq and dev unregistration
-Date: Wed, 28 Dec 2016 20:10:57 +0300
-Message-Id: <1482945059-12249-2-git-send-email-arusalin@dev.rtsoft.ru> (sfid-20161228_184214_853630_6876AA71)
-In-Reply-To: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
-References: <1482945059-12249-1-git-send-email-arusalin@dev.rtsoft.ru>
+        Fri, 30 Dec 2016 08:57:55 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rtlwifi: fix spelling mistake: "contry" -> "country"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161229160029.22117-1-colin.king@canonical.com>
+References: <20161229160029.22117-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20161230135754.9A950613E5@smtp.codeaurora.org> (sfid-20161230_145833_136119_48F57AD8)
+Date: Fri, 30 Dec 2016 13:57:54 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change order of free_irq and dev unregistration.
-It fixes situation when device already unregistered and
-an interrupt happens and nobody can handle it.
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> trivial fix to spelling mistake in RT_TRACE message
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Andrey Rusalin <arusalin@dev.rtsoft.ru>
----
- drivers/nfc/pn533/i2c.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/nfc/pn533/i2c.c b/drivers/nfc/pn533/i2c.c
-index 5de5a49..e2848e4 100644
---- a/drivers/nfc/pn533/i2c.c
-+++ b/drivers/nfc/pn533/i2c.c
-@@ -242,10 +242,10 @@ static int pn533_i2c_remove(struct i2c_client *client)
- 
- 	dev_dbg(&client->dev, "%s\n", __func__);
- 
--	pn533_unregister_device(phy->priv);
--
- 	free_irq(client->irq, phy);
- 
-+	pn533_unregister_device(phy->priv);
-+
- 	return 0;
- }
- 
+3b1fc7680a0f rtlwifi: fix spelling mistake: "contry" -> "country"
+
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9491293/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
