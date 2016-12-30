@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:36577 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756078AbcLTSfV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47110 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753851AbcL3Lck (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Dec 2016 13:35:21 -0500
-Date: Tue, 20 Dec 2016 11:35:20 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Justin Bronder <justin@kuvee.com>
-Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
-Message-ID: <20161220183520.GA5372@animalcreek.com> (sfid-20161220_193603_376071_3DB7729C)
-References: <1482250592-4268-1-git-send-email-glansberry@gmail.com>
- <20161220181157.GB30273@animalcreek.com>
- <CAO7Z3WLYMZ3rRGKpksYnRksbC=A1WNog913UJFiPsAT7ymOnaw@mail.gmail.com>
+        Fri, 30 Dec 2016 06:32:40 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAO7Z3WLYMZ3rRGKpksYnRksbC=A1WNog913UJFiPsAT7ymOnaw@mail.gmail.com>
+Subject: Re: adm80211: return an error if adm8211_alloc_rings() fails
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161207112122.GA5686@elgon.mountain>
+References: <20161207112122.GA5686@elgon.mountain>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Michael Wu <flamingice@sourmilk.net>,
+        Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        Johannes Berg <johannes.berg@intel.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20161230113239.94B11614C2@smtp.codeaurora.org> (sfid-20161230_123305_350273_B4059264)
+Date: Fri, 30 Dec 2016 11:32:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2016 at 01:29:13PM -0500, Geoff Lansberry wrote:
-> On Tue, Dec 20, 2016 at 1:11 PM, Mark Greer <mgreer@animalcreek.com> wrote:
-> > Hi Geoff.
-> >
-> > Please put the version in your subjects when submitting anything but the
-> > initial version of a patch (e.g., [PATCH v2 1/3]).
-> >
-> > Which series do you want reviewed?
-> >
-> > Mark
-> > --
-> Sorry about the double posting, I had forgotten to erase the patches I
-> generated while rebasing and checking, and I'll have to figure out how
-> to add that v2 line to the automatically generated subject line if I
-> end up submitting another round.
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> We accidentally return success when adm8211_alloc_rings() fails but we
+> should preserve the error code.
+> 
+> Fixes: cc0b88cf5ecf ("[PATCH] Add adm8211 802.11b wireless driver")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
+> index 2b4a3eb38dfa..098c814e22c8 100644
+> --- a/drivers/net/wireless/admtek/adm8211.c
+> +++ b/drivers/net/wireless/admtek/adm8211.c
+> @@ -1863,7 +1863,8 @@ static int adm8211_probe(struct pci_dev *pdev,
+>  	priv->rx_ring_size = rx_ring_size;
+>  	priv->tx_ring_size = tx_ring_size;
+>  
+> -	if (adm8211_alloc_rings(dev)) {
+> +	err = adm8211_alloc_rings(dev);
+> +	if (err) {
+>  		printk(KERN_ERR "%s (adm8211): Cannot allocate TX/RX ring\n",
+>  		       pci_name(pdev));
+>  		goto err_iounmap;
 
-Hint: -v <n> option of 'git format-patch'
+Patch applied to wireless-drivers-next.git, thanks.
 
-> Please review the three most recent patches, which have the send time
-> of 17:16.
+c705a6b3aa78 adm80211: return an error if adm8211_alloc_rings() fails
 
-Okay, thank.
+-- 
+https://patchwork.kernel.org/patch/9464449/
 
-Mark
---
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
