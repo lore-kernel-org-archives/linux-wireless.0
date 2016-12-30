@@ -1,72 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:36692 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755182AbcLNONH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44420 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751691AbcL3LWU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 09:13:07 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
+        Fri, 30 Dec 2016 06:22:20 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: use module_*_driver helper macros
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1480597700-2456-1-git-send-email-akarwar@marvell.com>
+References: <1480597700-2456-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
         <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/5] mwifiex: get rid of __mwifiex_sdio_remove helper
-Date: Wed, 14 Dec 2016 19:40:50 +0530
-Message-ID: <1481724651-30397-4-git-send-email-akarwar@marvell.com> (sfid-20161214_151311_977178_EDEF5711)
-In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
-References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161230112219.B630C612C1@smtp.codeaurora.org> (sfid-20161230_122224_399962_4991BE32)
+Date: Fri, 30 Dec 2016 11:22:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> After user_rmmod global flag removal, *_init_module() and
+> *_cleanup_module() have become just a wrapper functions.
+> We will get rid of them with the help of module_*_driver() macros.
+> 
+> For pcie, existing ".init_if" handler has same name as what
+> module_pcie_driver() macro will create. Let's rename it to
+> avoid conflict.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-__mwifiex_sdio_remove helper is not needed after
-our enhancements in SDIO card reset.
+Doesn't apply.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/pcie.c).
+Applying: mwifiex: use module_*_driver helper macros
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 mwifiex: use module_*_driver helper macros
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index b3aca10..0fda87a 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -370,7 +370,7 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
-  * This function removes the interface and frees up the card structure.
-  */
- static void
--__mwifiex_sdio_remove(struct sdio_func *func)
-+mwifiex_sdio_remove(struct sdio_func *func)
- {
- 	struct sdio_mmc_card *card;
- 	struct mwifiex_adapter *adapter;
-@@ -388,6 +388,8 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- 	if (!adapter || !adapter->priv_num)
- 		return;
- 
-+	cancel_work_sync(&sdio_work);
-+
- 	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
- 
- 	ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
-@@ -402,13 +404,6 @@ static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- 	mwifiex_remove_card(adapter);
- }
- 
--static void
--mwifiex_sdio_remove(struct sdio_func *func)
--{
--	cancel_work_sync(&sdio_work);
--	__mwifiex_sdio_remove(func);
--}
--
- /*
-  * SDIO suspend.
-  *
+Patch set to Changes Requested.
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9456135/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
