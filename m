@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:24897 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751779AbcLEVKo (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35858 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754015AbcL3OfM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Dec 2016 16:10:44 -0500
-Date: Tue, 6 Dec 2016 00:10:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 05/14] rtlwifi: Add TX report and disable key will wait
- until report acked.
-Message-ID: <20161205211019.GI8176@mwanda> (sfid-20161205_221047_174230_FA09DD25)
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
- <20161202014833.6856-6-Larry.Finger@lwfinger.net>
+        Fri, 30 Dec 2016 09:35:12 -0500
+Received: by mail-io0-f195.google.com with SMTP id m204so15938367ioe.3
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2016 06:35:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161202014833.6856-6-Larry.Finger@lwfinger.net>
+In-Reply-To: <c3f99e7634384475b475b97ff46bec76@euamsexm01a.eu.qualcomm.com>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+ <c3f99e7634384475b475b97ff46bec76@euamsexm01a.eu.qualcomm.com>
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Fri, 30 Dec 2016 15:35:10 +0100
+Message-ID: <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com> (sfid-20161230_153515_284929_CDAFDEF3)
+Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
+To: Kalle Valo <kvalo@qca.qualcomm.com>,
+        Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 07:48:24PM -0600, Larry Finger wrote:
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-> index 2d48ccd..0f9d9f0 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
-> @@ -731,6 +731,14 @@ void rtl92ee_tx_fill_desc(struct ieee80211_hw *hw,
->  			SET_TX_DESC_OFFSET(pdesc, USB_HWDESC_HEADER_LEN);
->  		}
->  
-> +		/* tx report */
-> +		if (ptcb_desc->use_spe_rpt) {
-> +			u16 sn = rtl_get_tx_report_sn(hw);
-> +
-> +			SET_TX_DESC_SPE_RPT(pdesc, 1);
-> +			SET_TX_DESC_SW_DEFINE(pdesc, sn);
-> +		}
-> +
+On Thu, Dec 29, 2016 at 3:11 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Christian Lamparter <chunkeey@googlemail.com> wrote:
+>> The 10.4 firmware adds extended peer information to the
+>> firmware's statistics payload. This additional info is
+>> stored as a separate data field and the elements are
+>> stored in their own "peers_extd" list.
+>>
+>> These elements can pile up in the same way as the peer
+>> information elements. This is because the
+>> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+>> pull the same amount (num_peer_stats) for every statistic
+>> data unit.
+>>
+>> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+>> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+>
+> My understanding is that I should skip this patch 1. Please let me know if
+> I misunderstood. But I'm still plannning to apply patch 2.
 
-All the callers of rtl_get_tx_report_sn() use this same 5 line block.
-Let's move it to a separate function.
+I added Mohammed (I hope, he can reply to the open question when he
+returns), Since I'm not sure what he wants or not.
 
-regards,
-dan carpenter
+As far as I'm aware, the "extended" boolean serves no purpose
+because it was only used in once place in debugfs_sta which was
+removed in the patch. ( "ath10k_sta_update_stats_rx_duration"
+and "ath10k_sta_update_extd_stats_rx_duration" have been unified).
+
+
+> Patch set to Changes Requested.
+Isn't there a: "Waiting for Maintainer" state as well?
+Otherwise, if nobody has any complains or question:
+can you please queue it for the next merge window?
+
+Regards,
+Christian
+> --
+> https://patchwork.kernel.org/patch/9461631/
+>
+> Documentation about submitting wireless patches and checking status
+> from patchwork:
+>
+> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+>
