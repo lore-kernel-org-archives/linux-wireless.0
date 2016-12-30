@@ -1,87 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54208 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756515AbcLNTrM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Dec 2016 14:47:12 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, thomas.huehn@evernet-eg.de
-Subject: [PATCH 02/10] mac80211: minstrel_ht: move short preamble check out of get_rate
-Date: Wed, 14 Dec 2016 20:46:55 +0100
-Message-Id: <20161214194703.33429-2-nbd@nbd.name> (sfid-20161214_204754_204270_6B14F7E1)
-In-Reply-To: <20161214194703.33429-1-nbd@nbd.name>
-References: <20161214194703.33429-1-nbd@nbd.name>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34270 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751854AbcL3N41 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 08:56:27 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: libertas: constify cfg80211_ops structures
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
+References: <1482015444-28899-1-git-send-email-bhumirks@gmail.com>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, libertas-dev@lists.infradead.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
+Message-Id: <20161230135627.06A91613B1@smtp.codeaurora.org> (sfid-20161230_145702_893239_E34B94A2)
+Date: Fri, 30 Dec 2016 13:56:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Test short preamble support in minstrel_ht_update_caps instead of
-looking at the per-packet flag. Makes the code more efficient.
+Bhumika Goyal <bhumirks@gmail.com> wrote:
+> cfg80211_ops structures are only passed as an argument to the function
+> wiphy_new. This argument is of type const, so cfg80211_ops strutures
+> having this property can be declared as const.
+> Done using Coccinelle
+> 
+> @r1 disable optional_qualifier @
+> identifier i;
+> position p;
+> @@
+> static struct cfg80211_ops i@p = {...};
+> 
+> @ok1@
+> identifier r1.i;
+> position p;
+> @@
+> wiphy_new(&i@p,...)
+> 
+> @bad@
+> position p!={r1.p,ok1.p};
+> identifier r1.i;
+> @@
+> i@p
+> 
+> @depends on !bad disable optional_qualifier@
+> identifier r1.i;
+> @@
+> +const
+> struct cfg80211_ops i;
+> 
+> File size before:
+>    text	   data	    bss	    dec	    hex	filename
+>   21225	   1954	     16	  23195	   5a9b	wireless/marvell/libertas/cfg.o
+> 
+> File size after:
+>    text	   data	    bss	    dec	    hex	filename
+>   22041	   1154	     16	  23211	   5aab	wireless/marvell/libertas/cfg.o
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/rc80211_minstrel_ht.c | 22 +++++-----------------
- 1 file changed, 5 insertions(+), 17 deletions(-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ed8a34d..ae45dcb 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -14,6 +14,7 @@
- #include <linux/ieee80211.h>
- #include <net/mac80211.h>
- #include "rate.h"
-+#include "sta_info.h"
- #include "rc80211_minstrel.h"
- #include "rc80211_minstrel_ht.h"
- 
-@@ -1049,22 +1050,6 @@ minstrel_get_sample_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- }
- 
- static void
--minstrel_ht_check_cck_shortpreamble(struct minstrel_priv *mp,
--				    struct minstrel_ht_sta *mi, bool val)
--{
--	u8 supported = mi->supported[MINSTREL_CCK_GROUP];
--
--	if (!supported || !mi->cck_supported_short)
--		return;
--
--	if (supported & (mi->cck_supported_short << (val * 4)))
--		return;
--
--	supported ^= mi->cck_supported_short | (mi->cck_supported_short << 4);
--	mi->supported[MINSTREL_CCK_GROUP] = supported;
--}
--
--static void
- minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
-                      struct ieee80211_tx_rate_control *txrc)
- {
-@@ -1087,7 +1072,6 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
- 		minstrel_aggr_check(sta, txrc->skb);
- 
- 	info->flags |= mi->tx_flags;
--	minstrel_ht_check_cck_shortpreamble(mp, mi, txrc->short_preamble);
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
- 	if (mp->fixed_rate_idx != -1)
-@@ -1168,6 +1152,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
- 	u16 sta_cap = sta->ht_cap.cap;
- 	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
-+	struct sta_info *sinfo = container_of(sta, struct sta_info, sta);
- 	int use_vht;
- 	int n_supported = 0;
- 	int ack_dur;
-@@ -1293,6 +1278,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	if (!n_supported)
- 		goto use_legacy;
- 
-+	if (test_sta_flag(sinfo, WLAN_STA_SHORT_PREAMBLE))
-+		mi->cck_supported_short |= mi->cck_supported_short << 4;
-+
- 	/* create an initial rate table with the lowest supported rates */
- 	minstrel_ht_update_stats(mp, mi);
- 	minstrel_ht_update_rates(mp, mi);
+26eb994d5239 libertas: constify cfg80211_ops structures
+
 -- 
-2.10.1
+https://patchwork.kernel.org/patch/9479131/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
