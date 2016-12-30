@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:56137 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751188AbcL2Uap (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34050 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751854AbcL3NzU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Dec 2016 15:30:45 -0500
-From: Colin King <colin.king@canonical.com>
-To: Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>, linux-media@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] [media] gp8psk: fix spelling mistake: "firmare" -> "firmware"
-Date: Thu, 29 Dec 2016 20:29:52 +0000
-Message-Id: <20161229202952.27448-1-colin.king@canonical.com> (sfid-20161229_213112_092452_E581F038)
-MIME-Version: 1.0
+        Fri, 30 Dec 2016 08:55:20 -0500
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [01/14,V2] rtlwifi: Replace local debug macro RT_ASSERT
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161215182310.13713-2-Larry.Finger@lwfinger.net>
+References: <20161215182310.13713-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20161230135520.4E3CC61482@smtp.codeaurora.org> (sfid-20161230_145529_565973_503A6756)
+Date: Fri, 30 Dec 2016 13:55:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> This macro can be replaced with WARN_ONCE. In addition to using a
+> standard debugging macro for these critical errors, we also get
+> a stack dump.
+> 
+> In rtl8821ae/hw.c, a senseless comment was removed, and an incorrect
+> indentation was fixed.
+> 
+> This patch also fixes two places in each of rtl8192ee, rtl8723be,
+> and rtl8821ae where the logical condition was incorrect.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-trivial fix to spelling mistake in err message
+14 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/media/usb/dvb-usb/gp8psk.c          | 2 +-
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+531940f9644d rtlwifi: Replace local debug macro RT_ASSERT
+b03d968b6644 rtlwifi: Remove RT_TRACE messages that use DBG_EMERG
+004a1e167905 rtlwifi: rtl8821ae: Remove all instances of DBG_EMERG
+4e2b4378f9d7 rtlwifi: rtl8723be: Remove all instances of DBG_EMERG
+a67005bc46d9 rtlwifi: rtl8723ae: Remove all instances of DBG_EMERG
+a44f59d60365 rtlwifi: rtl8192ee: Remove all instances of DBG_EMERG
+c7532b87653b rtlwifi: rtl8723-common: Remove all instances of DBG_EMERG
+2d15acac2354 rtlwifi: rtl8192se: Remove all instances of DBG_EMERG
+b8c79f454880 rtlwifi: rtl8192de: Remove all instances of DBG_EMERG
+c38af3f06af4 rtlwifi: rtl8192cu: Remove all instances of DBG_EMERG
+e40a005652ad rtlwifi: rtl8192ce: Remove all instances of DBG_EMERG
+0fc30e9350be rtlwifi: rtl8192c-common: Remove all instances of DBG_EMERG
+02527a73beb3 rtlwifi: rtl8188ee: Remove all instances of DBG_EMERG
+c93ac39da006 rtlwifi: Remove some redundant code
 
-diff --git a/drivers/media/usb/dvb-usb/gp8psk.c b/drivers/media/usb/dvb-usb/gp8psk.c
-index 2360e7e..26461f2 100644
---- a/drivers/media/usb/dvb-usb/gp8psk.c
-+++ b/drivers/media/usb/dvb-usb/gp8psk.c
-@@ -161,7 +161,7 @@ static int gp8psk_load_bcm4500fw(struct dvb_usb_device *d)
- 			goto out_free;
- 		}
- 		if (buflen > 64) {
--			err("firmare chunk size bigger than 64 bytes.");
-+			err("firmware chunk size bigger than 64 bytes.");
- 			goto out_free;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index ded1493..732de0a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1532,7 +1532,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		key_type = AESCMAC_ENCRYPTION;
- 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "alg:CMAC\n");
- 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
--			 "HW don't support CMAC encrypiton, use software CMAC encrypiton\n");
-+			 "HW don't support CMAC encryption, use software CMAC encryption\n");
- 		err = -EOPNOTSUPP;
- 		goto out_unlock;
- 	default:
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9476703/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
