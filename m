@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36148 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755886AbcLBBs5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21341 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751771AbcL3JOl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 20:48:57 -0500
-Received: by mail-oi0-f65.google.com with SMTP id u15so25526068oie.3
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2016 17:48:56 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 12/14] rtlwifi: btcoexist: Add vendor definition for new btcoexist
-Date: Thu,  1 Dec 2016 19:48:31 -0600
-Message-Id: <20161202014833.6856-13-Larry.Finger@lwfinger.net> (sfid-20161202_024904_605890_E8C26B52)
-In-Reply-To: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
-References: <20161202014833.6856-1-Larry.Finger@lwfinger.net>
+        Fri, 30 Dec 2016 04:14:41 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: support dev_coredump for crash dump
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161221121921.25119.93932.stgit@potku.adurom.net>
+References: <20161221121921.25119.93932.stgit@potku.adurom.net>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <ea5cf07e249847d5a4f5078c8f31889e@euamsexm01a.eu.qualcomm.com> (sfid-20161230_101445_031176_1186916B)
+Date: Fri, 30 Dec 2016 10:14:34 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> From: Arun Khandavalli <akhandav@qti.qualcomm.com>
+> 
+> Whenever firmware crashes, and both CONFIG_ATH10K_DEBUGFS and
+> CONFIG_ALLOW_DEV_COREDUMP are enabled, dump information about the crash via a
+> devcoredump device. Dump can be read from userspace for further analysis from:
+> 
+> /sys/class/devcoredump/devcd*/data
+> 
+> As until now we have provided the firmware crash dump file via fw_crash_dump
+> debugfs keep it still available but deprecate and a warning print that the user
+> should switch to using dev_coredump.
+> 
+> Future improvement would be not to depend on CONFIG_ATH10K_DEBUGFS, as there
+> might be systems which want to get the firmware crash dump but not enable
+> debugfs. How to handle memory consumption is also something which needs to be
+> taken into account.
+> 
+> Signed-off-by: Arun Khandavalli <akhandav@qti.qualcomm.com>
+> [kvalo@qca.qualcomm.com: rebase, fixes, improve commit log]
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Routine halbtc_get() will need to be able to get the vendor ID.
+Patch applied to ath-next branch of ath.git, thanks.
 
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 3 +++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 7 +++++++
- 2 files changed, 10 insertions(+)
+727000e6af34 ath10k: support dev_coredump for crash dump
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index be451473..9a89ae0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -364,6 +364,9 @@ static bool halbtc_get(void *void_btcoexist, u8 get_type, void *out_buf)
- 	case BTC_GET_U4_BT_PATCH_VER:
- 		*u32_tmp = halbtc_get_bt_patch_version(btcoexist);
- 		break;
-+	case BTC_GET_U4_VENDOR:
-+		*u32_tmp = BTC_VENDOR_OTHER;
-+		break;
- 	case BTC_GET_U1_WIFI_DOT11_CHNL:
- 		*u8_tmp = rtlphy->current_channel;
- 		break;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index d4da3a1..103abd8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -251,6 +251,7 @@ enum btc_get_type {
- 	BTC_GET_U4_WIFI_FW_VER,
- 	BTC_GET_U4_WIFI_LINK_STATUS,
- 	BTC_GET_U4_BT_PATCH_VER,
-+	BTC_GET_U4_VENDOR,
- 
- 	/* type u1Byte */
- 	BTC_GET_U1_WIFI_DOT11_CHNL,
-@@ -268,6 +269,12 @@ enum btc_get_type {
- 	BTC_GET_MAX
- };
- 
-+enum btc_vendor {
-+	BTC_VENDOR_LENOVO,
-+	BTC_VENDOR_ASUS,
-+	BTC_VENDOR_OTHER
-+};
-+
- enum btc_set_type {
- 	/* type bool */
- 	BTC_SET_BL_BT_DISABLE,
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9482989/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
