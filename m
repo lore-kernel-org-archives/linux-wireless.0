@@ -1,88 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61616 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755429AbcLALOn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59994 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753401AbcL3MCu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Dec 2016 06:14:43 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 30 Dec 2016 07:02:50 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andrew Lutomirski <luto@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Eric Biggers <ebiggers3@gmail.com>,
+        linux-crypto@vger.kernel.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Stephan Mueller <smueller@chronox.de>
+Subject: Re: orinoco: Use shash instead of ahash for MIC calculations
+References: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
+        <20161230113451.C10ED614E4@smtp.codeaurora.org>
+Date: Fri, 30 Dec 2016 14:02:45 +0200
+In-Reply-To: <20161230113451.C10ED614E4@smtp.codeaurora.org> (Kalle Valo's
+        message of "Fri, 30 Dec 2016 11:34:51 +0000 (UTC)")
+Message-ID: <87vau1k4ka.fsf@purkki.adurom.net> (sfid-20161230_130315_271920_B2B1EA98)
 MIME-Version: 1.0
-Subject: Re: ath10k: Fix Tx DMA alloc failure during continuous wifi down/up
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1480499414-19543-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1480499414-19543-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <f867487151bf4e82a210dd1755cf4e43@euamsexm01a.eu.qualcomm.com> (sfid-20161201_121447_904390_38179CB3)
-Date: Thu, 1 Dec 2016 12:14:23 +0100
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> With maximum number of vap's configured in a two radio supported
-> systems of ~256 Mb RAM, doing a continuous wifi down/up and
-> intermittent traffic streaming from the connected stations results
-> in failure to allocate contiguous memory for tx buffers. This results
-> in the disappearance of all VAP's and a manual reboot is needed as
-> this is not a crash (or) OOM(for OOM killer to be invoked). To address
-> this allocate contiguous memory for tx buffers one time and re-use them
-> until the modules are unloaded but this results in a slight increase in
-> memory footprint of ath10k when the wifi is down, but the modules are
-> still loaded. Also as of now we use a separate bool 'tx_mem_allocated'
-> to keep track of the one time memory allocation, as we cannot come up
-> with something like 'ath10k_tx_{register,unregister}' before
-> 'ath10k_probe_fw' is called as 'ath10k_htt_tx_alloc_cont_frag_desc'
-> memory allocation is dependent on the hw_param 'continuous_frag_desc'
-> 
-> a) memory footprint of ath10k without the change
-> 
-> lsmod | grep ath10k
-> ath10k_core           414498  1 ath10k_pci
-> ath10k_pci             38236  0
-> 
-> b) memory footprint of ath10k with the change
-> 
-> ath10k_core           414980  1 ath10k_pci
-> ath10k_pci             38236  0
-> 
-> Memory Failure Call trace:
-> 
-> hostapd: page allocation failure: order:6, mode:0xd0
->  [<c021f150>] (__dma_alloc_buffer.isra.23) from
-> [<c021f23c>] (__alloc_remap_buffer.isra.26+0x14/0xb8)
-> [<c021f23c>] (__alloc_remap_buffer.isra.26) from
-> [<c021f664>] (__dma_alloc+0x224/0x2b8)
-> [<c021f664>] (__dma_alloc) from [<c021f810>]
-> (arm_dma_alloc+0x84/0x90)
-> [<c021f810>] (arm_dma_alloc) from [<bf954764>]
-> (ath10k_htt_tx_alloc+0xe0/0x2e4 [ath10k_core])
-> [<bf954764>] (ath10k_htt_tx_alloc [ath10k_core]) from
-> [<bf94e6ac>] (ath10k_core_start+0x538/0xcf8 [ath10k_core])
-> [<bf94e6ac>] (ath10k_core_start [ath10k_core]) from
-> [<bf947eec>] (ath10k_start+0xbc/0x56c [ath10k_core])
-> [<bf947eec>] (ath10k_start [ath10k_core]) from
-> [<bf8a7a04>] (drv_start+0x40/0x5c [mac80211])
-> [<bf8a7a04>] (drv_start [mac80211]) from [<bf8b7cf8>]
-> (ieee80211_do_open+0x170/0x82c [mac80211])
-> [<bf8b7cf8>] (ieee80211_do_open [mac80211]) from
-> [<c056afc8>] (__dev_open+0xa0/0xf4)
-> [21053.491752] Normal: 641*4kB (UEMR) 505*8kB (UEMR) 330*16kB (UEMR)
-> 126*32kB (UEMR) 762*64kB (UEMR) 237*128kB (UEMR) 1*256kB (M) 0*512kB
-> 0*1024kB 0*2048kB 0*4096kB = 95276kB
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> Andrew Lutomirski <luto@kernel.org> wrote:
+>> Eric Biggers pointed out that the orinoco driver pointed scatterlists
+>> at the stack.
+>> 
+>> Fix it by switching from ahash to shash.  The result should be
+>> simpler, faster, and more correct.
+>> 
+>> Cc: stable@vger.kernel.org # 4.9 only
+>> Reported-by: Eric Biggers <ebiggers3@gmail.com>
+>> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+>
+> 11 patches applied to wireless-drivers-next.git, thanks.
+>
+> 1fef293b8a98 orinoco: Use shash instead of ahash for MIC calculations
+> a08b98196a36 rt2800: make rx ampdu_factor depend on number of rx chains
+> e49abb19d1bf rt2800: don't set ht parameters for non-aggregated frames
+> a51b89698ccc rt2800: set minimum MPDU and PSDU lengths to sane values
+> 8f03a7c6e7f9 rt2800: set MAX_PSDU len according to remote STAs capabilities
+> 8845254112ac rt2800: rename adjust_freq_offset function
+> bc0077053948 rt2800: warn if doing VCO recalibration for unknow RF chip
+> 24d42ef3b152 rt2800: perform VCO recalibration for RF5592 chip
+> d96324703ffa rt2x00: merge agc and vco works with link tuner
+> eb79a8fe94c8 rt2800: replace mdelay by usleep on vco calibration.
+> 31369c323ba0 rt2800: replace msleep() with usleep_range() on channel switch
 
-9ec34a86195a ath10k: fix Tx DMA alloc failure during continuous wifi down/up
+Oh man, when I was applying rt2800 patches I did an off by one error
+with my patchwork script ('commit 2-12' vs 'commit 1-11') and
+accidentally applied this orinoco patch to wireless-drivers-next along
+with the 10 rt2800 patches above. And failed to spot that before pushing
+the tree :(
+
+As this orinoco patch is pretty important I'll cherry pick it manually
+to wireless-drivers also so that it goes to 4.10. This means that the
+patch is in both trees, but just with a different commit id.
+
+Sorry for the mess.
 
 -- 
-https://patchwork.kernel.org/patch/9453947/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
