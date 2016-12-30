@@ -1,58 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63185 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752614AbcL0PXs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45854 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751691AbcL3L3E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Dec 2016 10:23:48 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Enable advertising support for channel 169, 5Ghz
-Date: Tue, 27 Dec 2016 20:53:35 +0530
-Message-ID: <1482852215-6438-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20161227_162352_421420_08E371A0)
+        Fri, 30 Dec 2016 06:29:04 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: iwlegacy: make il3945_mac_ops __ro_after_init
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161207063646.30969-1-johannes@sipsolutions.net>
+References: <20161207063646.30969-1-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Message-Id: <20161230112903.97C1161469@smtp.codeaurora.org> (sfid-20161230_122906_948897_89BE08D4)
+Date: Fri, 30 Dec 2016 11:29:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There's no need for this to be only __read_mostly, since
+> it's only written in a single way depending on the module
+> parameter, so that can be moved into the module's __init
+> function, and the ops can be __ro_after_init.
+> 
+> This is a little bit safer since it means the ops can't
+> be overwritten (accidentally or otherwise), which would
+> otherwise cause an arbitrary function or bad pointer to
+> be called.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Enable advertising support for channel 169, 5Ghz so that
-based on the regulatory domain(country code) this channel
-shall be active for use. For example in countries like India
-this channel shall be available for use with latest regulatory updates
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 2 +-
- drivers/net/wireless/ath/ath10k/mac.c  | 1 +
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ae3cf4764506 iwlegacy: make il3945_mac_ops __ro_after_init
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 756e876..a19cef2 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -46,7 +46,7 @@
- #define WMI_READY_TIMEOUT (5 * HZ)
- #define ATH10K_FLUSH_TIMEOUT_HZ (5 * HZ)
- #define ATH10K_CONNECTION_LOSS_HZ (3 * HZ)
--#define ATH10K_NUM_CHANS 39
-+#define ATH10K_NUM_CHANS 40
- 
- /* Antenna noise floor */
- #define ATH10K_DEFAULT_NOISE_FLOOR -95
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 481842b..7d2f0ae 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7559,6 +7559,7 @@ struct ath10k_mac_change_chanctx_arg {
- 	CHAN5G(157, 5785, 0),
- 	CHAN5G(161, 5805, 0),
- 	CHAN5G(165, 5825, 0),
-+	CHAN5G(169, 5845, 0),
- };
- 
- struct ath10k *ath10k_mac_create(size_t priv_size)
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9463999/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
