@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42356 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758331AbcLSKzJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Dec 2016 05:55:09 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 07/11] rt2800: perform VCO recalibration for RF5592 chip
-Date: Mon, 19 Dec 2016 11:52:53 +0100
-Message-Id: <1482144777-16760-8-git-send-email-sgruszka@redhat.com> (sfid-20161219_120034_317423_8E0824BD)
-In-Reply-To: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
-References: <1482144777-16760-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34926 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751854AbcL3N7m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 08:59:42 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: fix spelling mistakes on "Ivalid"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20161223004322.7300-1-colin.king@canonical.com>
+References: <20161223004322.7300-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20161230135942.192896114D@smtp.codeaurora.org> (sfid-20161230_150030_868288_E12ECE41)
+Date: Fri, 30 Dec 2016 13:59:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fixes to spelling mistake "Ivalid" to "Invalid" in
+> brcmf_err error messages.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 5ceb006..615eaf8 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4341,6 +4341,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 	case RF5372:
- 	case RF5390:
- 	case RF5392:
-+	case RF5592:
- 		rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR3_VCOCAL_EN, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 3, rfcsr);
-@@ -7719,6 +7720,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF5372:
- 	case RF5390:
- 	case RF5392:
-+	case RF5592:
- 		__set_bit(CAPABILITY_VCO_RECALIBRATION, &rt2x00dev->cap_flags);
- 		break;
- 	}
+Patch applied to wireless-drivers-next.git, thanks.
+
+ad334bbb07b0 brcmfmac: fix spelling mistakes on "Ivalid"
+
 -- 
-1.7.1
+https://patchwork.kernel.org/patch/9487009/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
