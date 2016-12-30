@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:34016 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932705AbcLMWLV (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40911 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753953AbcL3OvX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Dec 2016 17:11:21 -0500
-Date: Tue, 13 Dec 2016 15:05:45 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        justin@kuvee.com
-Subject: Re: [Patch] NFC: trf7970a:
-Message-ID: <20161213220545.GA29317@animalcreek.com> (sfid-20161213_231138_955682_937DED62)
-References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
- <20160422000119.GA21754@animalcreek.com>
+        Fri, 30 Dec 2016 09:51:23 -0500
+From: Colin King <colin.king@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH][V3] rtlwifi: fix spelling mistake: "encrypiton" -> "encryption"
+Date: Fri, 30 Dec 2016 14:50:27 +0000
+Message-Id: <20161230145027.14090-1-colin.king@canonical.com> (sfid-20161230_155206_882632_0C3B69E1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160422000119.GA21754@animalcreek.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 21, 2016 at 05:01:19PM -0700, Mark Greer wrote:
-> On Mon, Apr 18, 2016 at 03:48:37PM -0400, Geoff Lansberry wrote:
-> 
-> Hi Geoff.
-> 
-> > The current version of the trf7970a driver is missing support for several features that we needed to operate a custom board. 
-> > We feel that these features will be useful to others as well, and we want to share them.
-> > 
-> > 1: Support for using a gpio as Slave-Select. Our processor has several devices on the spi bus, and we ran out of ss lines.  This patch gives TRF7970A the ability to
-> >  drive the ss line of the chip from a gpio that is defined in the device tree.
-> > 
-> > 2. When reviewing problems we were having in our implementation with TI support staff, they recommended that during initialization, address 0x18 should be written to zero.  This patch adds that change
-> > 
-> > 3. This existing version of the driver assumes that the crystal driving the trf7970a is 13.56 MHz, because there are several places in the driver code where the rel
-> > ated register is re-written, there is clean way to change to 27.12 MHz.  This patch adds a device tree option for 27 MHz and properly or's in changes in locations w
-> > here the register is changed.
-> > 
-> > 4. the existing version of the driver assumes that 3.3 volt io is used. The trf7970a has a special register where you can configure it for 1.8 volt io.  This patch
-> > adds a device tree option to select that this setting should be made.
-> > 
-> >  [PATCH 1/4] NFC: trf7970a: Add support for gpio as SS
-> >  [PATCH 2/4] NFC: trf7970a: add TI recommended write of zero to
-> >  [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
-> >  [PATCH 4/4] NFC: trf7970a: Add device tree option of 1.8 Volt IO
-> 
-> I'm on vacation this week but will be back next week.  I'll take a
-> look once I'm back.
-> 
-> In the meantime, for emails sent to public (techie) list always keep
-> the lines less than 80 characters and always bottom-post (i.e., put
-> your text *underneath* the text that you are responding to).  Also,
-> when you change one or more patches in a series, re-submit the entire
-> series with the version number incremented (.e.g., v2, v3, ...) even
-> when you change only one of them.  It is a easier for others to know
-> what the latest versions are that way.
+From: Colin Ian King <colin.king@canonical.com>
 
-Hi Geoff.
+trivial fix to spelling mistake in RT_TRACE message
 
-I know its been a ridiculously long time since I said I would look at
-your patches but I have time now.  Do you have an updated version of
-your patch series?
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Mark
---
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index ded1493..732de0a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1532,7 +1532,7 @@ static int rtl_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		key_type = AESCMAC_ENCRYPTION;
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG, "alg:CMAC\n");
+ 		RT_TRACE(rtlpriv, COMP_SEC, DBG_DMESG,
+-			 "HW don't support CMAC encrypiton, use software CMAC encrypiton\n");
++			 "HW don't support CMAC encryption, use software CMAC encryption\n");
+ 		err = -EOPNOTSUPP;
+ 		goto out_unlock;
+ 	default:
+-- 
+2.10.2
