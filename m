@@ -1,82 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51058 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752577AbcLPGrf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Dec 2016 01:47:35 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 3/3] mac80211: Add receive path for ethernet frame format
-Date: Fri, 16 Dec 2016 06:47:25 +0000
-Message-ID: <58538DFA.1090808@qti.qualcomm.com> (sfid-20161216_074739_156121_52A9037B)
-References: <1481781608-5181-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1481781608-5181-4-git-send-email-vthiagar@qti.qualcomm.com>
- <1481794695.31776.7.camel@sipsolutions.net>
-In-Reply-To: <1481794695.31776.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from purkki.adurom.net ([80.68.90.206]:45297 "EHLO purkki.adurom.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753687AbcL3Mo3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 07:44:29 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Andrew Lutomirski <luto@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Eric Biggers <ebiggers3@gmail.com>,
+        linux-crypto@vger.kernel.org,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Stephan Mueller <smueller@chronox.de>
+Subject: Re: orinoco: Use shash instead of ahash for MIC calculations
+References: <8818c45b9ec6a04d85fabf9bb437cf119fd23659.1481575835.git.luto@kernel.org>
+        <20161230113451.C10ED614E4@smtp.codeaurora.org>
+        <87vau1k4ka.fsf@purkki.adurom.net>
+Date: Fri, 30 Dec 2016 14:15:53 +0200
+In-Reply-To: <87vau1k4ka.fsf@purkki.adurom.net> (Kalle Valo's message of "Fri,
+        30 Dec 2016 14:02:45 +0200")
+Message-ID: <87mvfdk3ye.fsf@purkki.adurom.net> (sfid-20161230_134508_284102_BE38587E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMTUgRGVjZW1iZXIgMjAxNiAwMzowOCBQTSwgSm9oYW5uZXMgQmVyZyB3cm90
-ZToNCj4NCj4+IFRoaXMgcnggcGF0aCBvbmx5IGNoZWNrcyBpZiB0aGUgZHJpdmVyIGhhcyBhZHZl
-cnRpc2VkDQo+PiBpdCdzIHN1cHBvcnQgb2YgODAyLjExIGhlYWRlciBlbmNhcC9kZWNhcCBvZmZs
-b2FkIGZvcg0KPj4gZGF0YSBmcmFtZXMuDQo+DQo+IEknbSBub3QgZXZlbiBzdXJlIEkgc2VlIHRo
-ZSBwb2ludCBpbiB0aGF0PyBPdGhlciB0aGFuIHRoYXQgKGFuZCB0aGUNCj4gdmFyaW91cyBvdGhl
-ciBvZmZsb2FkIHJlcXVpcmVtZW50cyksIGl0IHNlZW1zIHRoYXQgZW5jYXAvZGVjYXAgY291bGQg
-YmUNCj4gY29uc2lkZXJlZCBvcnRob2dvbmFsLg0KDQpPay4gU28gaXQgaXMgbWFpbmx5IGZvciBl
-bmNhcCB0aGVyZSBuZWVkcyB0byBiZSBzb21lIGNhcGFiaWxpdHkgYWR2ZXJ0aXNlbWVudA0KZnJv
-bSBkcml2ZXIgYmVjYXVzZSBmb3IgZGVjYXAgZHJpdmVyIHdvdWxkIHVzZSBhcHByb3ByaWF0ZSBt
-YWM4MDIxMSBSeCBmdW5jdGlvbg0KdG8gaW5kaWNhdGU/DQoNCj4NCj4+ICsJICogQWRob2MgaW50
-ZXJmYWNlIGRlcGVuZHMgb24gYnNzaWQgdG8gdWRwYXRlIGxhc3RfcnguDQo+DQo+IHR5cGUgLSB1
-cGRhdGUNCj4NCj4+ICsJaWYgKCEoc3RhdHVzLT5mbGFnICYgUlhfRkxBR19NQ0FTVCkpIHsNCj4+
-ICsJCXN0YS0+cnhfc3RhdHMubGFzdF9yeCA9IGppZmZpZXM7DQo+PiArCQlzdGEtPnJ4X3N0YXRz
-Lmxhc3RfcmF0ZSA9DQo+PiBzdGFfc3RhdHNfZW5jb2RlX3JhdGUoc3RhdHVzKTsNCj4+ICsJfQ0K
-Pg0KPiBZb3Ugc2hvdWxkIHByb2JhYmx5IHJlbmFtZSB0aGF0IGZsYWcgdG8gc29tZXRoaW5nIGxp
-a2UNCj4gUlhfRkxBR184MDIxMV9NQ0FTVCBzaW5jZSBvdGhlcndpc2UgaXQncyBjb25mdXNpbmcg
-d2l0aCB0aGUgbmV4dA0KPiBtdWx0aWNhc3QgZXRoZXIgYWRkciBjaGVjazoNCg0KU3VyZS4NCg0K
-Pg0KPj4gKwlpZiAoc2RhdGEtPnZpZi50eXBlID09IE5MODAyMTFfSUZUWVBFX1NUQVRJT04gJiYN
-Cj4+ICsJICAgICFpc19tdWx0aWNhc3RfZXRoZXJfYWRkcihlaGRyLT5oX2Rlc3QpKQ0KPj4gKwkJ
-aWVlZTgwMjExX3N0YV9yZXNldF9jb25uX21vbml0b3Ioc2RhdGEpOw0KPg0KPiBCdXQgdGhpcyBj
-b3VsZCBqdXN0IGFsc28gdXNlIHRoZSBmbGFnLCBzaW5jZSBpbiBzdGF0aW9uIG1vZGUgdGhlIHR3
-bw0KPiBhcmUgZXF1aXZhbGVudCwgYW5kIGl0J2QgYmUgZWFzaWVyIHRvIGZpZ3VyZSBvdXQgaWYg
-dGhpcyB3YXMgImVsc2UgaWYNCj4gKHN0YXRpb24gbW9kZSkiPw0KDQpBaCwgY29ycmVjdC4NCg0K
-Pg0KPj4gKwltZW1zZXQoJnJ4LCAwLCBzaXplb2YocngpKTsNCj4NCj4gVGhhdCBzZWVtcyBhIGJp
-dCBwb2ludGxlc3M/DQoNCkhtbW0sIGlzIGl0IG5vdCB0aGF0IGFsbCBtZW1iZXIgb3RoZXIgdGhh
-biB0aGUgb25lcyBpbml0aWFsaXplZCB3aWxsIGJlIGp1bmsgYW5kIG1pZ2h0DQpyZXN1bHQgaW4g
-Y3Jhc2ggd2hlbiBhY2Nlc3NpbmcgdW5pbml0aWFsaXplZCBwb2ludGVyIG1lbWJlciBsaWtlIG5h
-cGk/DQoNCj4NCj4+ICsJcnguc2tiID0gc2tiOw0KPj4gKwlyeC5zZGF0YSA9IHNkYXRhOw0KPj4g
-KwlyeC5sb2NhbCA9IGxvY2FsOw0KPj4gKwlyeC5zdGEgPSBzdGE7DQo+PiArDQo+PiArCWlmICh2
-aWYtPnR5cGUgPT0gTkw4MDIxMV9JRlRZUEVfQVBfVkxBTiAmJiBzZGF0YS0+YnNzICYmDQo+PiAr
-CSAgICB1bmxpa2VseShlaGRyLT5oX3Byb3RvID09IHNkYXRhLT5jb250cm9sX3BvcnRfcHJvdG9j
-b2wpKQ0KPj4gew0KPj4gKwkJc2RhdGEgPSBjb250YWluZXJfb2Yoc2RhdGEtPmJzcywgc3RydWN0
-DQo+PiBpZWVlODAyMTFfc3ViX2lmX2RhdGEsDQo+PiArCQkJCSAgICAgdS5hcCk7DQo+PiArCQlk
-ZXYgPSBzZGF0YS0+ZGV2Ow0KPj4gKwkJcnguc2RhdGEgPSBzZGF0YTsNCj4+ICsJfQ0KPj4gKw0K
-Pj4gKwlyeC5za2ItPmRldiA9IGRldjsNCj4+ICsNCj4+ICsJLyogWFhYOiBTaW5jZSByeC5zZXFu
-b19pZHggaXMgbm90IGF2YWlsYWJsZSBmb3IgZGVjYXANCj4+IG9mZmxvYWRlZCBmcmFtZXMNCj4+
-ICsJICogcnggbXNkdSBzdGF0cyB1cGRhdGUgYXQgdGhlIHNlcW5vX2lkeCBpbg0KPj4gaWVlZTgw
-MjExX2RlbGl2ZXJfc2tiKCkNCj4+ICsJICogd2lsbCBhbHdheXMgYmUgdXBkYXRlZCBhdCBpbmRl
-eCAwIGFuZCB3aWxsIG5vdCBiZSB2ZXJ5DQo+PiB1c2VmdWwuDQo+PiArCSAqLw0KPj4gKwlpZWVl
-ODAyMTFfZGVsaXZlcl9za2IoJnJ4KTsNCj4NCj4gWWVhaCwgdGhhdCdzIG5vdCBuaWNlIC0gcGVy
-aGFwcyB3ZSBjYW4gcHJvdmlkZSB0aGUgVElEIG91dCBvZiBiYW5kPw0KDQpSaWdodC4gVGhpcyBp
-cyBwb3NzaWJsZSB3aXRoIGF0aDEwayB3aGVyZSA4MDIuMTEgaGVhZGVyIGlzIGFsc28gYXZhaWxh
-YmxlIGluIFJ4DQpkZXNjIG9mIHRoZSBmcmFtZSBpcnJlc3BlY3RpdmUgb2YgdGhlIGZvcm1hdCBv
-ZiB0aGUgUnggcGF5bG9hZA0KDQogIElmDQo+IG5vdCwgd2UnbGwgaGF2ZSB0byBkaXNhYmxlIHRo
-b3NlIHN0YXRpc3RpY3MgKmFsbCB0aGUgd2F5KiwgaS5lLiBub3QNCj4gZXZlbiByZXBvcnQgdGhl
-bSB0byB1c2Vyc3BhY2Ugd2hlbiBmaWxsaW5nIHNpbmZvLg0KDQpZZXMsIHRoaXMgbWF5IGJlIHRo
-ZSBvcHRpb24gd2hlbiBkcml2ZXIgaXMgdW5hd2FyZSBvZiByeCBwYWNrZXQgdGlkLg0KDQo+DQo+
-PiArCXJldHVybjsNCj4+ICsNCj4+ICttaWNfZmFpbDoNCj4+ICsJY2ZnODAyMTFfbWljaGFlbF9t
-aWNfZmFpbHVyZShzZGF0YS0+ZGV2LCBzdGEtPmFkZHIsDQo+PiArCQkJCSAgICAgKHN0YXR1cy0+
-ZmxhZyAmIFJYX0ZMQUdfTUNBU1QpDQo+PiA/DQo+PiArCQkJCSAgICAgTkw4MDIxMV9LRVlUWVBF
-X0dST1VQIDoNCj4+ICsJCQkJICAgICBOTDgwMjExX0tFWVRZUEVfUEFJUldJU0UsDQo+PiArCQkJ
-CSAgICAga2V5ID8ga2V5LT5jb25mLmtleWlkeCA6IC0xLA0KPj4gKwkJCQkgICAgIE5VTEwsIEdG
-UF9BVE9NSUMpOw0KPg0KPiBEbyB3ZSByZWFsbHkgd2FudCB0byBoYW5kbGUgdGhhdCBpbmxpbmUg
-aGVyZT8gVGhlIGRyaXZlciBwcm9iYWJseSBoYXMgYQ0KPiBkaWZmZXJlbnQgY2hlY2sgdG8gZXZl
-biBzZXQgUlhfRkxBR19NTUlDX0VSUk9SLCBzbyB3ZSBjb3VsZCBqdXN0IGFzayBpdA0KPiB0byBj
-YWxsIGNmZzgwMjExX21pY2hhZWxfbWljX2ZhaWx1cmUoKSBbb3IgYSB3cmFwcGVyIHRvIGdldCBz
-ZGF0YS0+ZGV2XQ0KPiBpbnN0ZWFkPyBJIGd1ZXNzIHRoaXMgd29ya3MgdG9vIHRob3VnaCwgYW5k
-IG1pZ2h0IGJlIGVhc2llciB0bw0KPiB1bmRlcnN0YW5kLg0KDQpZZWFoLCBkcml2ZXIgZGlyZWN0
-bHkgcmVwb3J0aW5nIE1JQyBmYWlsdXJlIHdpbGwgYmUgZmluZS4gSSB0aGluayBhIHdyYXBwZXIN
-Cm1heSBiZSByZXF1aXJlZCByYXRoZXIgdGhhbiBtYWM4MDIxMSBiYXNlZCBkcml2ZXIgZGlyZWN0
-bHkgY2FsbGluZyBjZmc4MDIxMQ0KZnVuY3Rpb24/DQoNClZhc2FudGg=
+Kalle Valo <kvalo@codeaurora.org> writes:
+
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>
+>> Andrew Lutomirski <luto@kernel.org> wrote:
+>>> Eric Biggers pointed out that the orinoco driver pointed scatterlists
+>>> at the stack.
+>>> 
+>>> Fix it by switching from ahash to shash.  The result should be
+>>> simpler, faster, and more correct.
+>>> 
+>>> Cc: stable@vger.kernel.org # 4.9 only
+>>> Reported-by: Eric Biggers <ebiggers3@gmail.com>
+>>> Signed-off-by: Andy Lutomirski <luto@kernel.org>
+>>
+>> 11 patches applied to wireless-drivers-next.git, thanks.
+>>
+>> 1fef293b8a98 orinoco: Use shash instead of ahash for MIC calculations
+>> a08b98196a36 rt2800: make rx ampdu_factor depend on number of rx chains
+>> e49abb19d1bf rt2800: don't set ht parameters for non-aggregated frames
+>> a51b89698ccc rt2800: set minimum MPDU and PSDU lengths to sane values
+>> 8f03a7c6e7f9 rt2800: set MAX_PSDU len according to remote STAs capabilities
+>> 8845254112ac rt2800: rename adjust_freq_offset function
+>> bc0077053948 rt2800: warn if doing VCO recalibration for unknow RF chip
+>> 24d42ef3b152 rt2800: perform VCO recalibration for RF5592 chip
+>> d96324703ffa rt2x00: merge agc and vco works with link tuner
+>> eb79a8fe94c8 rt2800: replace mdelay by usleep on vco calibration.
+>> 31369c323ba0 rt2800: replace msleep() with usleep_range() on channel switch
+>
+> Oh man, when I was applying rt2800 patches I did an off by one error
+> with my patchwork script ('commit 2-12' vs 'commit 1-11') and
+> accidentally applied this orinoco patch to wireless-drivers-next along
+> with the 10 rt2800 patches above. And failed to spot that before pushing
+> the tree :(
+>
+> As this orinoco patch is pretty important I'll cherry pick it manually
+> to wireless-drivers also so that it goes to 4.10. This means that the
+> patch is in both trees, but just with a different commit id.
+
+This is the commit in wireless-drivers:
+
+commit 570b90fa230b8021f51a67fab2245fe8df6fe37d
+Author: Andrew Lutomirski <luto@kernel.org>
+Date:   Mon Dec 12 12:55:55 2016 -0800
+
+    orinoco: Use shash instead of ahash for MIC calculations
+    
+    Eric Biggers pointed out that the orinoco driver pointed
+    scatterlists
+    at the stack.
+    
+    Fix it by switching from ahash to shash.  The result should be
+    simpler, faster, and more correct.
+    
+    kvalo: cherry picked from commit
+    1fef293b8a9850cfa124a53c1d8878d355010403 as I
+    accidentally applied this patch to wireless-drivers-next when I was
+    supposed to
+    apply this wireless-drivers
+    
+    Cc: stable@vger.kernel.org # 4.9 only
+    Reported-by: Eric Biggers <ebiggers3@gmail.com>
+    Signed-off-by: Andy Lutomirski <luto@kernel.org>
+    Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+
+-- 
+Kalle Valo
