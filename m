@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-138.163.com ([123.125.50.138]:57597 "EHLO m50-138.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752160AbcLCKtN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Dec 2016 05:49:13 -0500
-From: Pan Bian <bianpan2016@163.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Andreas Kemnade <andreas@kemnade.info>,
-        Johannes Berg <johannes.berg@intel.com>,
-        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
-Subject: [PATCH 1/1] net: wireless: marvell: fix improper return value
-Date: Sat,  3 Dec 2016 18:27:37 +0800
-Message-Id: <1480760857-4549-1-git-send-email-bianpan2016@163.com> (sfid-20161203_114942_304612_7550ADC7)
+Received: from smtp.codeaurora.org ([198.145.29.96]:44630 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751691AbcL3LYK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 06:24:10 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20161230112409.DD2796147D@smtp.codeaurora.org> (sfid-20161230_122413_740771_DF61EAFC)
+Date: Fri, 30 Dec 2016 11:24:09 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Function lbs_cmd_802_11_sleep_params() always return 0, even if the call
-to lbs_cmd_with_response() fails. In this case, the parameter @sp will
-keep uninitialized. Because the return value is 0, its caller (say
-lbs_sleepparams_read()) will not detect the error, and will copy the
-uninitialized stack memory to user sapce, resulting in stack information
-leak. To avoid the bug, this patch returns variable ret (which takes
-the return value of lbs_cmd_with_response()) instead of 0.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Next patch in this series is going to use mwifiex_read_reg() in remove
+> handlers. The changes here are prerequisites to avoid forward
+> declarations.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188451
+Patch 2 doesn't apply.
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/net/wireless/marvell/libertas/cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/pcie.c).
+Applying: mwifiex: get rid of global user_rmmod flag
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 mwifiex: get rid of global user_rmmod flag
 
-diff --git a/drivers/net/wireless/marvell/libertas/cmd.c b/drivers/net/wireless/marvell/libertas/cmd.c
-index 301170c..033ff88 100644
---- a/drivers/net/wireless/marvell/libertas/cmd.c
-+++ b/drivers/net/wireless/marvell/libertas/cmd.c
-@@ -305,7 +305,7 @@ int lbs_cmd_802_11_sleep_params(struct lbs_private *priv, uint16_t cmd_action,
- 	}
- 
- 	lbs_deb_leave_args(LBS_DEB_CMD, "ret %d", ret);
--	return 0;
-+	return ret;
- }
- 
- static int lbs_wait_for_ds_awake(struct lbs_private *priv)
+2 patches set to Changes Requested.
+
+9454491 [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+9454493 [2/2] mwifiex: get rid of global user_rmmod flag
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9454491/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
