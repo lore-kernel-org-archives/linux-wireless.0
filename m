@@ -1,79 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33320 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752009AbcLGGgt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 01:36:49 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-        Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] iwlegacy: make il3945_mac_ops __ro_after_init
-Date: Wed,  7 Dec 2016 07:36:46 +0100
-Message-Id: <20161207063646.30969-1-johannes@sipsolutions.net> (sfid-20161207_073653_595076_2AB3237E)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22267 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754273AbcL3OrQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 09:47:16 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
+Date: Fri, 30 Dec 2016 14:47:09 +0000
+Message-ID: <87inq1jwyc.fsf@kamboji.qca.qualcomm.com> (sfid-20161230_154755_670321_89B32308)
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+        <c3f99e7634384475b475b97ff46bec76@euamsexm01a.eu.qualcomm.com>
+        <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com>
+In-Reply-To: <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com>
+        (Christian Lamparter's message of "Fri, 30 Dec 2016 15:35:10 +0100")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Christian Lamparter <chunkeey@googlemail.com> writes:
 
-There's no need for this to be only __read_mostly, since
-it's only written in a single way depending on the module
-parameter, so that can be moved into the module's __init
-function, and the ops can be __ro_after_init.
+> On Thu, Dec 29, 2016 at 3:11 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrot=
+e:
+>> Christian Lamparter <chunkeey@googlemail.com> wrote:
+>>> The 10.4 firmware adds extended peer information to the
+>>> firmware's statistics payload. This additional info is
+>>> stored as a separate data field and the elements are
+>>> stored in their own "peers_extd" list.
+>>>
+>>> These elements can pile up in the same way as the peer
+>>> information elements. This is because the
+>>> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+>>> pull the same amount (num_peer_stats) for every statistic
+>>> data unit.
+>>>
+>>> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+>>> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+>>
+>> My understanding is that I should skip this patch 1. Please let me know =
+if
+>> I misunderstood. But I'm still plannning to apply patch 2.
+>
+> I added Mohammed (I hope, he can reply to the open question when he
+> returns), Since I'm not sure what he wants or not.
+>
+> As far as I'm aware, the "extended" boolean serves no purpose
+> because it was only used in once place in debugfs_sta which was
+> removed in the patch. ( "ath10k_sta_update_stats_rx_duration"
+> and "ath10k_sta_update_extd_stats_rx_duration" have been unified).
 
-This is a little bit safer since it means the ops can't
-be overwritten (accidentally or otherwise), which would
-otherwise cause an arbitrary function or bad pointer to
-be called.
+I had problems following the discussion so the conclusion was not clear
+for me.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/intel/iwlegacy/3945-mac.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+>> Patch set to Changes Requested.
+>
+> Isn't there a: "Waiting for Maintainer" state as well?
+> Otherwise, if nobody has any complains or question:
+> can you please queue it for the next merge window?
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 466912eb2d87..e8e65115feba 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -3469,7 +3469,7 @@ static struct attribute_group il3945_attribute_group = {
- 	.attrs = il3945_sysfs_entries,
- };
- 
--static struct ieee80211_ops il3945_mac_ops __read_mostly = {
-+static struct ieee80211_ops il3945_mac_ops __ro_after_init = {
- 	.tx = il3945_mac_tx,
- 	.start = il3945_mac_start,
- 	.stop = il3945_mac_stop,
-@@ -3627,15 +3627,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
- 
--	/*
--	 * Disabling hardware scan means that mac80211 will perform scans
--	 * "the hard way", rather than using device's scan.
--	 */
--	if (il3945_mod_params.disable_hw_scan) {
--		D_INFO("Disabling hw_scan\n");
--		il3945_mac_ops.hw_scan = NULL;
--	}
--
- 	D_INFO("*** LOAD DRIVER ***\n");
- 	il->cfg = cfg;
- 	il->ops = &il3945_ops;
-@@ -3913,6 +3904,15 @@ il3945_init(void)
- 	pr_info(DRV_DESCRIPTION ", " DRV_VERSION "\n");
- 	pr_info(DRV_COPYRIGHT "\n");
- 
-+	/*
-+	 * Disabling hardware scan means that mac80211 will perform scans
-+	 * "the hard way", rather than using device's scan.
-+	 */
-+	if (il3945_mod_params.disable_hw_scan) {
-+		pr_info("hw_scan is disabled\n");
-+		il3945_mac_ops.hw_scan = NULL;
-+	}
-+
- 	ret = il3945_rate_control_register();
- 	if (ret) {
- 		pr_err("Unable to register rate control algorithm: %d\n", ret);
--- 
-2.9.3
+There is a state called "Deferred" which I use whenever I need to
+revisit a patch later time. I moved this patch to that state now:
+
+https://patchwork.kernel.org/patch/9461631/
+
+--=20
+Kalle Valo=
