@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33122 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751225AbcLGGPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Dec 2016 01:15:08 -0500
-Message-ID: <1481091301.4092.5.camel@sipsolutions.net> (sfid-20161207_071511_159183_3DA83861)
-Subject: Re: [PATCH][RFC] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
- CMD_CONNECT
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>,
-        Andrew Zaborowski <andrew.zaborowski@intel.com>,
-        linux-wireless@vger.kernel.org
-Date: Wed, 07 Dec 2016 07:15:01 +0100
-In-Reply-To: <584730D7.2020708@gmail.com> (sfid-20161206_224249_092743_E8D41EDB)
-References: <20161202205611.14141-1-andrew.zaborowski@intel.com>
-         <1480945883.31788.3.camel@sipsolutions.net> <58457FEA.4030305@gmail.com>
-         <1480949899.31788.34.camel@sipsolutions.net> <5845824B.4090304@gmail.com>
-         <1480950886.31788.44.camel@sipsolutions.net> <584588A2.9090006@gmail.com>
-         <1481008560.6610.3.camel@sipsolutions.net> <584730D7.2020708@gmail.com>
-         (sfid-20161206_224249_092743_E8D41EDB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58291 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751675AbcL3JPU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 30 Dec 2016 04:15:20 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: recal the txpower when removing interface
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1482445906-20421-1-git-send-email-ryanhsu@qca.qualcomm.com>
+References: <1482445906-20421-1-git-send-email-ryanhsu@qca.qualcomm.com>
+To: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <ryanhsu@qca.qualcomm.com>
+Message-ID: <9db0c0c5b7294f3fa73d25bf70eebad6@euamsexm01a.eu.qualcomm.com> (sfid-20161230_101524_442778_8E1DE1A2)
+Date: Fri, 30 Dec 2016 10:15:13 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Ryan Hsu <ryanhsu@qca.qualcomm.com> wrote:
+> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+> 
+> The txpower is being recalculated when adding interface to make sure
+> txpower won't overshoot the spec, and when removing the interface,
+> the txpower should again to be recalculated to restore the correct value
+> from the active interface list.
+> 
+> Following is one of the scenario
+> 	vdev0 is created as STA and connected: txpower:23
+> 	vdev1 is created as P2P_DEVICE for control interface: txpower:0
+> 	vdev2 is created as p2p go/gc interface: txpower is 21
+> 
+> So the vdev2@txpower:21 will be set to firmware when vdev2 is created.
+> When we tear down the vdev2, the txpower needs to be recalculated to
+> re-set it to vdev0@txpower:23 as vdev0/vdev1 are the active interface.
+> 
+> 	ath10k_pci mac vdev 0 peer create 8c:fd:f0:01:62:98
+> 	ath10k_pci mac vdev_id 0 txpower 23
+> 	... (adding interface)
+> 	ath10k_pci mac vdev create 2 (add interface) type 1 subtype 3
+> 	ath10k_pci mac vdev_id 2 txpower 21
+> 	ath10k_pci mac txpower 21
+> 	... (removing interface)
+> 	ath10k_pci mac vdev 2 delete (remove interface)
+> 	ath10k_pci vdev 1 txpower 0
+> 	ath10k_pci vdev 0 txpower 23
+> 	ath10k_pci mac txpower 23
+> 
+> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
 
-> I'm afraid to consider what you're like when you _are_ 'super'
-> against something :)
+Patch applied to ath-next branch of ath.git, thanks.
 
-Why, that's easy, there wouldn't be a long discussion like that ;-)
+d679fa1b3c89 ath10k: recal the txpower when removing interface
 
-> So here's a quick test, with the client triggering authenticate, then
-> crashing:
+-- 
+https://patchwork.kernel.org/patch/9486925/
 
-> < Request: Authenticate (0x25) len 52
-> [ack]                  362.339712
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-> [...]
-
->  > Event: Del Station (0x14) len
-> 1144                         367.442024
-
-> Pay attention to the time stamps.  The del station event comes in 5 
-> seconds or so after our client has aborted.  So for 5 seconds we have
-> an unmanaged link to some AP.
-
-No, this is the part you didn't understand. Simply authenticating
-doesn't actually create anything like a "link" to the AP. The only
-reason we keep the station entry around for a few seconds is that it
-*probably* will be used next to associate. But if you don't do that, or
-authenticate to some other AP, or do whatever else - nothing stops you
-from doing that. There's no connection, nothing really stays active
-except for this 5 second grace period to associate.
-
-So even if you crash here like in the example, there's nothing to clean
-up, a subsequent authentication attempt to the same or another AP will
-go through anyway.
-
-Therefore, there's nothing to "own" with an authentication attempt,
-since it doesn't actually keep any (permanent) state in the kernel, and
-keeping the station entry around is just an optimisation.
-
-I don't think it's worth trying to clean that up.
-
-Also, consider that authentication doesn't block anything, so another
-socket might immediately do another authentication/association, and you
-don't want to kill that even when the first one dies. Corner case,
-sure, but at least with association the second one would get "-EBUSY"
-or so, whereas authentication keeps no state in the kernel.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
