@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56977 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752503AbcL3JLp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41510 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754069AbcL3Of5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Dec 2016 04:11:45 -0500
-Content-Type: text/plain; charset="utf-8"
+        Fri, 30 Dec 2016 09:35:57 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Colin King <colin.king@canonical.com>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH][V2] [media] gp8psk: fix spelling mistake: "firmare" -> "firmware"
+References: <20161229213815.27890-1-colin.king@canonical.com>
+Date: Fri, 30 Dec 2016 16:35:47 +0200
+In-Reply-To: <20161229213815.27890-1-colin.king@canonical.com> (Colin King's
+        message of "Thu, 29 Dec 2016 21:38:15 +0000")
+Message-ID: <87bmvtjxh8.fsf@purkki.adurom.net> (sfid-20161230_153631_453294_B27B201C)
 MIME-Version: 1.0
-Subject: Re: [2/2] ath10k: fix potential memory leak in
- ath10k_wmi_tlv_op_pull_fw_stats()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <e0909741dfae742197d5f5d60709d225cc179b42.1480974623.git.chunkeey@googlemail.com>
-References: <e0909741dfae742197d5f5d60709d225cc179b42.1480974623.git.chunkeey@googlemail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Message-ID: <afc9362500004eab995c4f1d5d16fcd9@euamsexm01a.eu.qualcomm.com> (sfid-20161230_101150_120946_CB66740A)
-Date: Fri, 30 Dec 2016 10:11:38 +0100
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> wrote:
-> ath10k_wmi_tlv_op_pull_fw_stats() uses tb = ath10k_wmi_tlv_parse_alloc(...)
-> function, which allocates memory. If any of the three error-paths are
-> taken, this tb needs to be freed.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Colin King <colin.king@canonical.com> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Trivial fix to spelling mistake in err message. Also change "don't" to
+> "does not".
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/media/usb/dvb-usb/gp8psk.c          | 2 +-
+>  drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 
-097e46d2ae90 ath10k: fix potential memory leak in ath10k_wmi_tlv_op_pull_fw_stats()
+Could you split the rtlwifi part to it's own patch? I can't apply
+patches touching media drivers.
 
 -- 
-https://patchwork.kernel.org/patch/9461627/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
