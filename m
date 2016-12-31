@@ -1,44 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:56362 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932989AbcLILeb (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45440 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753202AbcLaLlt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Dec 2016 06:34:31 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH for-4.10 2/2] brcmfmac: fix uninitialized field in scheduled scan ssid configuration
-Date: Fri,  9 Dec 2016 11:34:14 +0000
-Message-Id: <1481283254-17883-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20161209_123448_039494_CAB56296)
-In-Reply-To: <1481283254-17883-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481283254-17883-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 31 Dec 2016 06:41:49 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH resend 2/3] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
+References: <8737h4nx6b.fsf@mail.parknet.co.jp>
+Date: Sat, 31 Dec 2016 20:41:42 +0900
+In-Reply-To: <8737h4nx6b.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Sat, 31 Dec 2016 20:41:00 +0900")
+Message-ID: <87y3ywmikp.fsf@mail.parknet.co.jp> (sfid-20161231_124442_813359_FC6A8269)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The scheduled scan ssid configuration in firmware has a flags field that
-was not initialized resulting in unexpected behaviour.
 
-Fixes: e3bdb7cc0300 ("brcmfmac: fix handling ssids in .sched_scan_start() callback")
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
+NFC_CMD_GET_DEVICE send.
+
+To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
+NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
+
+This fixes those inconsistent.
+
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-index f273cab..9a25e79 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pno.c
-@@ -137,6 +137,7 @@ static int brcmf_pno_add_ssid(struct brcmf_if *ifp, struct cfg80211_ssid *ssid,
- 	pfn.wpa_auth = cpu_to_le32(BRCMF_PNO_WPA_AUTH_ANY);
- 	pfn.wsec = cpu_to_le32(0);
- 	pfn.infra = cpu_to_le32(1);
-+	pfn.flags = 0;
- 	if (active)
- 		pfn.flags = cpu_to_le32(1 << BRCMF_PNO_HIDDEN_BIT);
- 	pfn.ssid.SSID_len = cpu_to_le32(ssid->ssid_len);
---
-1.9.1
+ net/nfc/netlink.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
+--- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
++++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
+@@ -311,6 +311,17 @@ free_msg:
+ 	return -EMSGSIZE;
+ }
+ 
++static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
++{
++	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
++	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
++	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
++	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
++	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++		return -1;
++	return 0;
++}
++
+ int nfc_genl_device_added(struct nfc_dev *dev)
+ {
+ 	struct sk_buff *msg;
+@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
+ 	if (!hdr)
+ 		goto free_msg;
+ 
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
+ 	if (cb)
+ 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
+ 
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
+-	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+_
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
