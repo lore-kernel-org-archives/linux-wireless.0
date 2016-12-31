@@ -1,52 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:46718 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754042AbcLPBGP (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45443 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753202AbcLaLmj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Dec 2016 20:06:15 -0500
-Date: Thu, 15 Dec 2016 18:06:13 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-        aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        justin@kuvee.com
-Subject: Re: [PATCH 1/3] NFC: trf7970a: add device tree option for 27MHz clock
-Message-ID: <20161216010613.GA25227@animalcreek.com> (sfid-20161216_020643_790325_5D47DE31)
-References: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+        Sat, 31 Dec 2016 06:42:39 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH 3/3] nfc: Fix RC-S380* needs zero-length packet
+References: <8737h4nx6b.fsf@mail.parknet.co.jp>
+        <87y3ywmikp.fsf@mail.parknet.co.jp>
+Date: Sat, 31 Dec 2016 20:42:37 +0900
+In-Reply-To: <87y3ywmikp.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Sat, 31 Dec 2016 20:41:42 +0900")
+Message-ID: <87tw9kmij6.fsf_-_@mail.parknet.co.jp> (sfid-20161231_124443_085967_503D2DB6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1481841044-4314-1-git-send-email-glansberry@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geoff.
 
-On Thu, Dec 15, 2016 at 05:30:42PM -0500, Geoff Lansberry wrote:
-> From: Geoff Lansberry <geoff@kuvee.com>
+If sent packet size is wMaxPacketSize boundary, this device doesn't
+answer. To fix this, we have to send zero-length packet in usb spec.
 
-Please add an informative commit description to all of your commits.
-No matter how trivial this patch may seem to you now, it may not be
-to others (or to you in a few years).
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+---
 
-> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-> index 26c9dbb..2d2a077 100644
-> --- a/drivers/nfc/trf7970a.c
-> +++ b/drivers/nfc/trf7970a.c
+ drivers/nfc/port100.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-> @@ -1181,27 +1180,37 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
->  	switch (tech) {
->  	case NFC_DIGITAL_RF_TECH_106A:
->  		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
-> -		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
-> +		trf->modulator_sys_clk_ctrl =
-> +			(trf->modulator_sys_clk_ctrl & 0xF8) |
-
-nit: s/0xF8/0xf8/ please (for consistency with the rest of the file.).
-
-Otherwise, it looks good.
-
-Thanks,
-
-Mark
+diff -puN drivers/nfc/port100.c~nfc-need-zero-packet drivers/nfc/port100.c
+--- linux/drivers/nfc/port100.c~nfc-need-zero-packet	2016-12-31 19:11:03.893974993 +0900
++++ linux-hirofumi/drivers/nfc/port100.c	2016-12-31 19:11:03.895975004 +0900
+@@ -1540,6 +1540,7 @@ static int port100_probe(struct usb_inte
+ 	usb_fill_bulk_urb(dev->out_urb, dev->udev,
+ 			  usb_sndbulkpipe(dev->udev, out_endpoint),
+ 			  NULL, 0, port100_send_complete, dev);
++	dev->out_urb->transfer_flags = URB_ZERO_PACKET;
+ 
+ 	dev->skb_headroom = PORT100_FRAME_HEADER_LEN +
+ 			    PORT100_COMM_RF_HEAD_MAX_LEN;
+_
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
