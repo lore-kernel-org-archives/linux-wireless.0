@@ -1,103 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36112 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751269AbdAWWED (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33670 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754861AbdAABHQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:04:03 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
-Date: Tue, 24 Jan 2017 00:03:25 +0200
-Message-Id: <20170123220350.25305-1-luca@coelho.fi> (sfid-20170123_230414_132169_93D9210C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 00/25] iwlwifi: updates intended for v4.11 2017-01-23
+        Sat, 31 Dec 2016 20:07:16 -0500
+Received: by mail-oi0-f65.google.com with SMTP id f201so62677901oib.0
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2016 17:07:16 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 1/3] rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA
+Date: Sat, 31 Dec 2016 19:07:04 -0600
+Message-Id: <20170101010706.13234-2-Larry.Finger@lwfinger.net> (sfid-20170101_020728_995547_E2F4759D)
+In-Reply-To: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
+References: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+These two debugging formss implement debugging using rather complicated
+macro constructions. These are replaced with compiled code that is easier
+to understand.
 
-Hi,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/debug.c | 42 ++++++++++++++++++++++++----
+ drivers/net/wireless/realtek/rtlwifi/debug.h | 33 ++++++++++------------
+ 2 files changed, 51 insertions(+), 24 deletions(-)
 
-Here's my first series for v4.11.  These are the changes:
-
-* A bunch of cleanups here and there;
-* A few simple bugfixes;
-* Some more work in preparation for A000 family support;
-* Add support for radiotap timestamps;
-* Some work on our firmware debugging capabilities;
-
-As usual, I'm pushing this to a pending branch, for kbuild bot, and
-will send a pull-request later.
-
-Please review.
-
-Cheers,
-Luca.
-
-Johannes Berg (5):
-  iwlwifi: mvm: expose device timestamp in radiotap
-  iwlwifi: mvm: accept arbitrary memory dump TLVs
-  iwlwifi: mvm: make iwl_dump_prph() void
-  iwlwifi: allow memory debug TLV to specify the memory type
-  iwlwifi: mvm: properly check for transport data in dump
-
-Jürg Billeter (1):
-  iwlwifi: fix MODULE_FIRMWARE for 6030
-
-Kirtika Ruchandani (3):
-  iwlwifi: mvm: rs: Remove unused 'mvmvif'/'mvmsta' variables
-  iwlwifi: mvm: rs: Remove unused 'mcs' variable
-  iwlwifi: pcie: trans: Remove unused 'shift_param'
-
-Luca Coelho (7):
-  iwlwifi: mvm: don't restart HW if suspend fails with unified image
-  iwlwifi: mvm: bump max API to 28
-  iwlwifi: mvm: remove unused variable in iwl_mvm_handle_statistics()
-  iwlwifi: dvm: make rs_tl_get_load() return void
-  iwlwifi: mvm: remove unused sta_id variable in
-    iwl_mvm_change_queue_owner()
-  iwlwifi: dvm: remove unused variable compiler warning in debugfs.c
-  iwlwifi: mvm: mark ret as maybe_unused in iwl_dbgfs_fw_restart_write()
-
-Sara Sharon (9):
-  iwlwifi: mvm: simplify paging allocation code
-  iwlwifi: mvm: replace the number of blocks calculation
-  iwlwifi: enlarge number of ucode sections
-  iwlwifi: mvm: change iwl_mvm_tx_csum to return value
-  iwlwifi: mvm: separate rate calculation to a new function
-  iwlwifi: mvm: support version 2 of stored beacon notification
-  iwlwifi: pcie: cleanup rfkill checks
-  iwlwifi: mvm: use mvm_disable_queue instead of sharing logic
-  iwlwifi: mvm: cleanup redundant assignment
-
- drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c |   2 +-
- drivers/net/wireless/intel/iwlwifi/dvm/rs.c       |  11 +-
- drivers/net/wireless/intel/iwlwifi/dvm/ucode.c    |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-6000.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c     |   4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c     |   4 +-
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-a000.c     |   2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c      |  98 +++++++++--------
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  |  24 ++---
- drivers/net/wireless/intel/iwlwifi/iwl-fw.h       |   7 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c       |  13 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   |   6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c   | 123 ++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  69 ++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |   4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c       |  10 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c       |   2 -
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  24 ++---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 107 ++++++++++---------
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c    |  14 ++-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  51 ++++-----
- 26 files changed, 299 insertions(+), 297 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
+index 33905bb..cd2efac 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.c
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
+@@ -51,7 +51,7 @@ EXPORT_SYMBOL_GPL(rtl_dbgp_flag_init);
+ 
+ #ifdef CONFIG_RTLWIFI_DEBUG
+ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
+-		    const char *modname, const char *fmt, ...)
++		    const char *fmt, ...)
+ {
+ 	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
+ 		     (level <= rtlpriv->dbg.global_debuglevel))) {
+@@ -63,13 +63,45 @@ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
+ 		vaf.fmt = fmt;
+ 		vaf.va = &args;
+ 
+-		printk(KERN_DEBUG "%s:%ps:<%lx-%x> %pV",
+-		       modname, __builtin_return_address(0),
+-		       in_interrupt(), in_atomic(),
+-		       &vaf);
++		pr_debug(":<%lx> %pV", in_interrupt(), &vaf);
+ 
+ 		va_end(args);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(_rtl_dbg_trace);
++
++void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
++		    const char *fmt, ...)
++{
++	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
++		     (level <= rtlpriv->dbg.global_debuglevel))) {
++		struct va_format vaf;
++		va_list args;
++
++		va_start(args, fmt);
++
++		vaf.fmt = fmt;
++		vaf.va = &args;
++
++		pr_debug("%pV", &vaf);
++
++		va_end(args);
++	}
++}
++EXPORT_SYMBOL_GPL(_rtl_dbg_print);
++
++void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
++			 const char *titlestring,
++			 const void *hexdata, int hexdatalen)
++{
++	if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) &&
++		     ((level) <= rtlpriv->dbg.global_debuglevel))) {
++		pr_debug("In process \"%s\" (pid %i): %s\n",
++			 current->comm, current->pid, titlestring);
++		print_hex_dump_bytes("", DUMP_PREFIX_NONE,
++				     hexdata, hexdatalen);
++	}
++}
++EXPORT_SYMBOL_GPL(_rtl_dbg_print_data);
++
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
+index a6cc3ca..90c670b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/debug.h
++++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
+@@ -168,34 +168,29 @@ enum dbgp_flag_e {
+ 
+ struct rtl_priv;
+ 
+-__printf(5, 6)
++__printf(4, 5)
+ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
+-		    const char *modname, const char *fmt, ...);
++		    const char *fmt, ...);
++
++__printf(4, 5)
++void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
++		    const char *fmt, ...);
++
++void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
++			 const char *titlestring,
++			 const void *hexdata, int hexdatalen);
+ 
+ #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
+ 	_rtl_dbg_trace(rtlpriv, comp, level,				\
+-		       KBUILD_MODNAME, fmt, ##__VA_ARGS__)
++		       fmt, ##__VA_ARGS__)
+ 
+ #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
+-do {									\
+-	if (unlikely(rtlpriv->dbg.dbgp_type[dbgtype] & dbgflag)) {	\
+-		printk(KERN_DEBUG KBUILD_MODNAME ": " fmt,		\
+-		       ##__VA_ARGS__);					\
+-	}								\
+-} while (0)
++	_rtl_dbg_print(rtlpriv, dbgtype, dbgflag, fmt, ##__VA_ARGS__)
+ 
+ #define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata,	\
+ 		      _hexdatalen)					\
+-do {									\
+-	if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&	\
+-		     (_level <= rtlpriv->dbg.global_debuglevel))) {	\
+-		printk(KERN_DEBUG "%s: In process \"%s\" (pid %i): %s\n", \
+-		       KBUILD_MODNAME, current->comm, current->pid,	\
+-		       _titlestring);					\
+-		print_hex_dump_bytes("", DUMP_PREFIX_NONE,		\
+-				     _hexdata, _hexdatalen);		\
+-	}								\
+-} while (0)
++	_rtl_dbg_print_data(rtlpriv, _comp, _level,			\
++			    _titlestring, _hexdata, _hexdatalen)
+ 
+ #else
+ 
 -- 
-2.11.0
+2.10.2
