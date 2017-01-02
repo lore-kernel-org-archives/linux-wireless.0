@@ -1,72 +1,288 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51287 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40382 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161874AbdAJRXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 12:23:36 -0500
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: Dave Taht <dave.taht@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net>
- <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
- <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
- <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
- <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
-Cc: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        "M. Braun" <michael-dev@fami-braun.de>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        bridge@lists.linux-foundation.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name> (sfid-20170110_182358_607613_2550111D)
-Date: Tue, 10 Jan 2017 18:23:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        id S932959AbdABPCB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 10:02:01 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Guiming Zhuo <gmzhuo@gmail.com>,
+        Antonio Ospite <ospite@studenti.unina.it>,
+        Paul Cercueil <paul@crapouillou.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Maarten ter Huurne <maarten@treewalker.org>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] rfkill: remove rfkill-regulator
+Date: Mon,  2 Jan 2017 16:01:57 +0100
+Message-Id: <20170102150157.26745-1-johannes@sipsolutions.net> (sfid-20170102_160217_157310_15217E5D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-10 18:17, Dave Taht wrote:
-> In the case of wifi I have 3 issues with this line of thought.
-> 
-> multicast in wifi has generally supposed to be unreliable. This makes
-> it reliable. reliability comes at a cost -
-> 
-> multicast is typically set at a fixed low rate today. unicast is
-> retried at different rates until it succeeds - for every station
-> listening. If one station is already at the lowest rate, the total
-> cost of the transmit increases, rather than decreases.
-> 
-> unicast gets block acks until it succeeds. Again, more delay.
-> 
-> I think there is something like 31 soft-retries in the ath9k driver....
-If I remember correctly, hardware retries are counted here as well.
+From: Johannes Berg <johannes.berg@intel.com>
 
-> what happens to diffserv markings here? for unicast CS1 goes into the
-> BE queue, CS6, the VO queue. Do we go from one flat queue for all of
-> multicast to punching it through one of the hardware queues based on
-> the diffserv mark now with this patch?
-> 
-> I would like it if there was a way to preserve the unreliability
-> (which multiple mesh protocols depend on), send stuff with QoSNoack,
-> etc - or dynamically choose (based on the rates of the stations)
-> between conventional multicast and unicast.
-> 
-> Or - better, IMHO, keep sending multicast as is but pick the best of
-> the rates available to all the listening stations for it.
-The advantage of the multicast-to-unicast conversion goes beyond simply
-selecting a better rate - aggregation matters a lot as well, and that is
-simply incompatible with normal multicast.
+There are no users of this ("vrfkill") in the tree, so it's just
+dead code - remove it.
 
-Some multicast streams use lots of small-ish packets, the airtime impact
-of those is vastly reduced, even if the transmission has to be
-duplicated for a few stations.
+This also isn't really how rfkill is supposed to be used - it's
+intended as a signalling mechanism to/from the device, which the
+driver (and partially cfg80211) will handle - having a separate
+rfkill instance for a regulator is confusing, the driver should
+use the regulator instead to turn off the device when requested.
 
-- Felix
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/rfkill-regulator.h |  48 ------------
+ net/rfkill/Kconfig               |  11 ---
+ net/rfkill/Makefile              |   1 -
+ net/rfkill/rfkill-regulator.c    | 154 ---------------------------------------
+ 4 files changed, 214 deletions(-)
+ delete mode 100644 include/linux/rfkill-regulator.h
+ delete mode 100644 net/rfkill/rfkill-regulator.c
+
+diff --git a/include/linux/rfkill-regulator.h b/include/linux/rfkill-regulator.h
+deleted file mode 100644
+index aca36bc83315..000000000000
+--- a/include/linux/rfkill-regulator.h
++++ /dev/null
+@@ -1,48 +0,0 @@
+-/*
+- * rfkill-regulator.c - Regulator consumer driver for rfkill
+- *
+- * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
+- * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- */
+-
+-#ifndef __LINUX_RFKILL_REGULATOR_H
+-#define __LINUX_RFKILL_REGULATOR_H
+-
+-/*
+- * Use "vrfkill" as supply id when declaring the regulator consumer:
+- *
+- * static struct regulator_consumer_supply pcap_regulator_V6_consumers [] = {
+- * 	{ .dev_name = "rfkill-regulator.0", .supply = "vrfkill" },
+- * };
+- *
+- * If you have several regulator driven rfkill, you can append a numerical id to
+- * .dev_name as done above, and use the same id when declaring the platform
+- * device:
+- *
+- * static struct rfkill_regulator_platform_data ezx_rfkill_bt_data = {
+- * 	.name  = "ezx-bluetooth",
+- * 	.type  = RFKILL_TYPE_BLUETOOTH,
+- * };
+- *
+- * static struct platform_device a910_rfkill = {
+- * 	.name  = "rfkill-regulator",
+- * 	.id    = 0,
+- * 	.dev   = {
+- * 		.platform_data = &ezx_rfkill_bt_data,
+- * 	},
+- * };
+- */
+-
+-#include <linux/rfkill.h>
+-
+-struct rfkill_regulator_platform_data {
+-	char *name;             /* the name for the rfkill switch */
+-	enum rfkill_type type;  /* the type as specified in rfkill.h */
+-};
+-
+-#endif /* __LINUX_RFKILL_REGULATOR_H */
+diff --git a/net/rfkill/Kconfig b/net/rfkill/Kconfig
+index 868f1ad0415a..060600b03fad 100644
+--- a/net/rfkill/Kconfig
++++ b/net/rfkill/Kconfig
+@@ -23,17 +23,6 @@ config RFKILL_INPUT
+ 	depends on INPUT = y || RFKILL = INPUT
+ 	default y if !EXPERT
+ 
+-config RFKILL_REGULATOR
+-	tristate "Generic rfkill regulator driver"
+-	depends on RFKILL || !RFKILL
+-	depends on REGULATOR
+-	help
+-          This options enable controlling radio transmitters connected to
+-          voltage regulator using the regulator framework.
+-
+-          To compile this driver as a module, choose M here: the module will
+-          be called rfkill-regulator.
+-
+ config RFKILL_GPIO
+ 	tristate "GPIO RFKILL driver"
+ 	depends on RFKILL
+diff --git a/net/rfkill/Makefile b/net/rfkill/Makefile
+index 311768783f4a..87a80aded0b3 100644
+--- a/net/rfkill/Makefile
++++ b/net/rfkill/Makefile
+@@ -5,5 +5,4 @@
+ rfkill-y			+= core.o
+ rfkill-$(CONFIG_RFKILL_INPUT)	+= input.o
+ obj-$(CONFIG_RFKILL)		+= rfkill.o
+-obj-$(CONFIG_RFKILL_REGULATOR)	+= rfkill-regulator.o
+ obj-$(CONFIG_RFKILL_GPIO)	+= rfkill-gpio.o
+diff --git a/net/rfkill/rfkill-regulator.c b/net/rfkill/rfkill-regulator.c
+deleted file mode 100644
+index 50cd26a48e87..000000000000
+--- a/net/rfkill/rfkill-regulator.c
++++ /dev/null
+@@ -1,154 +0,0 @@
+-/*
+- * rfkill-regulator.c - Regulator consumer driver for rfkill
+- *
+- * Copyright (C) 2009  Guiming Zhuo <gmzhuo@gmail.com>
+- * Copyright (C) 2011  Antonio Ospite <ospite@studenti.unina.it>
+- *
+- * Implementation inspired by leds-regulator driver.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- */
+-
+-#include <linux/module.h>
+-#include <linux/err.h>
+-#include <linux/slab.h>
+-#include <linux/platform_device.h>
+-#include <linux/regulator/consumer.h>
+-#include <linux/rfkill.h>
+-#include <linux/rfkill-regulator.h>
+-
+-struct rfkill_regulator_data {
+-	struct rfkill *rf_kill;
+-	bool reg_enabled;
+-
+-	struct regulator *vcc;
+-};
+-
+-static int rfkill_regulator_set_block(void *data, bool blocked)
+-{
+-	struct rfkill_regulator_data *rfkill_data = data;
+-	int ret = 0;
+-
+-	pr_debug("%s: blocked: %d\n", __func__, blocked);
+-
+-	if (blocked) {
+-		if (rfkill_data->reg_enabled) {
+-			regulator_disable(rfkill_data->vcc);
+-			rfkill_data->reg_enabled = false;
+-		}
+-	} else {
+-		if (!rfkill_data->reg_enabled) {
+-			ret = regulator_enable(rfkill_data->vcc);
+-			if (!ret)
+-				rfkill_data->reg_enabled = true;
+-		}
+-	}
+-
+-	pr_debug("%s: regulator_is_enabled after set_block: %d\n", __func__,
+-		regulator_is_enabled(rfkill_data->vcc));
+-
+-	return ret;
+-}
+-
+-static struct rfkill_ops rfkill_regulator_ops = {
+-	.set_block = rfkill_regulator_set_block,
+-};
+-
+-static int rfkill_regulator_probe(struct platform_device *pdev)
+-{
+-	struct rfkill_regulator_platform_data *pdata = pdev->dev.platform_data;
+-	struct rfkill_regulator_data *rfkill_data;
+-	struct regulator *vcc;
+-	struct rfkill *rf_kill;
+-	int ret = 0;
+-
+-	if (pdata == NULL) {
+-		dev_err(&pdev->dev, "no platform data\n");
+-		return -ENODEV;
+-	}
+-
+-	if (pdata->name == NULL || pdata->type == 0) {
+-		dev_err(&pdev->dev, "invalid name or type in platform data\n");
+-		return -EINVAL;
+-	}
+-
+-	vcc = regulator_get_exclusive(&pdev->dev, "vrfkill");
+-	if (IS_ERR(vcc)) {
+-		dev_err(&pdev->dev, "Cannot get vcc for %s\n", pdata->name);
+-		ret = PTR_ERR(vcc);
+-		goto out;
+-	}
+-
+-	rfkill_data = kzalloc(sizeof(*rfkill_data), GFP_KERNEL);
+-	if (rfkill_data == NULL) {
+-		ret = -ENOMEM;
+-		goto err_data_alloc;
+-	}
+-
+-	rf_kill = rfkill_alloc(pdata->name, &pdev->dev,
+-				pdata->type,
+-				&rfkill_regulator_ops, rfkill_data);
+-	if (rf_kill == NULL) {
+-		ret = -ENOMEM;
+-		goto err_rfkill_alloc;
+-	}
+-
+-	if (regulator_is_enabled(vcc)) {
+-		dev_dbg(&pdev->dev, "Regulator already enabled\n");
+-		rfkill_data->reg_enabled = true;
+-	}
+-	rfkill_data->vcc = vcc;
+-	rfkill_data->rf_kill = rf_kill;
+-
+-	ret = rfkill_register(rf_kill);
+-	if (ret) {
+-		dev_err(&pdev->dev, "Cannot register rfkill device\n");
+-		goto err_rfkill_register;
+-	}
+-
+-	platform_set_drvdata(pdev, rfkill_data);
+-	dev_info(&pdev->dev, "%s initialized\n", pdata->name);
+-
+-	return 0;
+-
+-err_rfkill_register:
+-	rfkill_destroy(rf_kill);
+-err_rfkill_alloc:
+-	kfree(rfkill_data);
+-err_data_alloc:
+-	regulator_put(vcc);
+-out:
+-	return ret;
+-}
+-
+-static int rfkill_regulator_remove(struct platform_device *pdev)
+-{
+-	struct rfkill_regulator_data *rfkill_data = platform_get_drvdata(pdev);
+-	struct rfkill *rf_kill = rfkill_data->rf_kill;
+-
+-	rfkill_unregister(rf_kill);
+-	rfkill_destroy(rf_kill);
+-	regulator_put(rfkill_data->vcc);
+-	kfree(rfkill_data);
+-
+-	return 0;
+-}
+-
+-static struct platform_driver rfkill_regulator_driver = {
+-	.probe = rfkill_regulator_probe,
+-	.remove = rfkill_regulator_remove,
+-	.driver = {
+-		.name = "rfkill-regulator",
+-	},
+-};
+-
+-module_platform_driver(rfkill_regulator_driver);
+-
+-MODULE_AUTHOR("Guiming Zhuo <gmzhuo@gmail.com>");
+-MODULE_AUTHOR("Antonio Ospite <ospite@studenti.unina.it>");
+-MODULE_DESCRIPTION("Regulator consumer driver for rfkill");
+-MODULE_LICENSE("GPL");
+-MODULE_ALIAS("platform:rfkill-regulator");
+-- 
+2.9.3
