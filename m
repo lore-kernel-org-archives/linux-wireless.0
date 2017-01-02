@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:60078 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751705AbdAMMr4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:47:56 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC 0/5] cfg80211: support multiple scheduled scans
-Date: Fri, 13 Jan 2017 12:47:39 +0000
-Message-Id: <1484311664-4840-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170113_134859_314820_1470F0A6)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37422 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751307AbdABLMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 06:12:18 -0500
+Message-ID: <1483355533.4596.11.camel@sipsolutions.net> (sfid-20170102_121239_821112_5D7AEC4A)
+Subject: Re: [PATCH v3] rfkill: Add rfkill-any LED trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
+         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
+        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 02 Jan 2017 12:12:13 +0100
+In-Reply-To: <20161221084533.27006-1-kernel@kempniu.pl> (sfid-20161221_094622_545524_B00A9AE7)
+References: <20161221084533.27006-1-kernel@kempniu.pl>
+         (sfid-20161221_094622_545524_B00A9AE7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-After sending out the initial RFC for multiple scheduled scan support [1]
-here a series that deal with it all (I hope) so including events and the
-driver function call apis.
 
-It is applies to the master branch of the mac80211-next repository.
+>   - Handle the global mutex properly when rfkill_set_{hw,sw}_state()
+> or
+>     rfkill_set_states() is called from within an rfkill callback.  v2
+>     always tried to lock the global mutex in such a case, which led
+> to a
+>     deadlock when an rfkill driver called one of the above functions
+>     from its query or set_block callback.  This is solved by defining
+> a
+>     new bitfield, RFKILL_BLOCK_SW_HASLOCK, which is set before the
+> above
+>     callbacks are invoked and cleared afterwards; the functions
+> listed
+>     above use this bitfield to tell rfkill_any_led_trigger_event()
+>     whether the global mutex is currently held or not.
+>     RFKILL_BLOCK_SW_SETCALL cannot be reused for this purpose as
+> setting
+>     it before invoking the query callback would cause any calls to
+>     rfkill_set_sw_state() made from within that callback to work on
+>     RFKILL_BLOCK_SW_PREV instead of RFKILL_BLOCK_SW and thus change
+> the
+>     way rfkill_set_block() behaves.
 
-Arend van Spriel (5):
-  nl80211: allow multiple active scheduled scan requests
-  nl80211: include request id in scheduled scan event messages
-  cfg80211: add request id parameter to .sched_scan_stop() signature
-  cfg80211: add request id to cfg80211_sched_scan_results() api
-  cfg80211: add request id in cfg80211_sched_scan_stopped{,_rtnl}() api
+I'm not super happy with this conditional locking - can't we instead
+defer the necessary work to a workqueue, or so, for purposes of the
+LED?
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c         |   4 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |   2 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  10 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |   8 +-
- drivers/net/wireless/marvell/mwifiex/main.c        |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   2 +-
- include/net/cfg80211.h                             |  32 +++--
- include/uapi/linux/nl80211.h                       |  12 +-
- net/mac80211/cfg.c                                 |   3 +-
- net/mac80211/pm.c                                  |   2 +-
- net/mac80211/scan.c                                |   4 +-
- net/mac80211/util.c                                |   2 +-
- net/wireless/core.c                                |  31 +++--
- net/wireless/core.h                                |  11 +-
- net/wireless/nl80211.c                             |  62 +++++++---
- net/wireless/nl80211.h                             |   3 +-
- net/wireless/rdev-ops.h                            |   8 +-
- net/wireless/scan.c                                | 135 +++++++++++++++------
- net/wireless/trace.h                               |  54 ++++++---
- 21 files changed, 271 insertions(+), 120 deletions(-)
-
---
-1.9.1
+johannes
