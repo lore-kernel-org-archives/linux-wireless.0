@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44400 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751363AbdAMKaN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 05:30:13 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix per station tx bit rate reporting
-Date: Fri, 13 Jan 2017 16:00:03 +0530
-Message-ID: <1484303403-8908-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170113_113016_801495_1B4BF94D)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:40084 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933271AbdABOdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 09:33:33 -0500
+Message-ID: <1483367607.21014.9.camel@sipsolutions.net> (sfid-20170102_153340_754932_2E2A853E)
+Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
+ exchange
+From: Johannes Berg <johannes@sipsolutions.net>
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
+        jouni@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, vamsin@qti.qualcomm.com
+Date: Mon, 02 Jan 2017 15:33:27 +0100
+In-Reply-To: <c7eaea82-a5be-d047-c67a-ce9e58b4b65f@quantenna.com>
+References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
+         <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
+         <1483356523.4596.12.camel@sipsolutions.net>
+         <c7eaea82-a5be-d047-c67a-ce9e58b4b65f@quantenna.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Not clearing the previous tx bit rate status
-results in a ambigous tx bit rate reporting to
-mac80211/cfg80211, for example the previous bit
-rate status would have been marked as legacy rate
-, while the current rate would have been an HT/VHT
-rate with the tx bit rate flags set and this results
-in exporting tx bitrate as legacy rate but with HT/VHT
-rate flags set, fix this by clearing the tx bitrate
-status for each event. This also fixes the below
-warning when we do:
+> Acknowledgment is done for transmitter<->receiver addresses,
+> not for source<->destination?
 
-iw dev wlan#N station dump
+Well, these are management frames, there either are no SA/DA or they're
+identical to RA/TA, depending on how you want to look at it. Typically
+it does get called SA/DA too then.
 
-WARNING: net/wireless/util.c:1222 cfg80211
+> Patch talks about source address randomization, but I guess it
+> actually
+>   meant transmitter address (basically dynamic BSSID config?). Maybe
+> naming should be changed in the patch.
 
-[<c022f104>] (warn_slowpath_null) from [<bf3b9adc>]
-(cfg80211_calculate_bitrate+0x110/0x1f4 [cfg80211])
-[<bf3b9adc>] (cfg80211_calculate_bitrate [cfg80211]) from
-[<bf3dcd54>] (nl80211_put_sta_rate+0x44/0x1dc [cfg80211])
-[<bf3dcd54>] (nl80211_put_sta_rate [cfg80211]) from
-[<bf3cbc34>] (nl80211_set_interface+0x724/0xd70 [cfg80211])
-[<bf3cbc34>] (nl80211_set_interface [cfg80211]) from
-[<bf3d0a18>] (nl80211_dump_station+0xdc/0x100 [cfg80211])
-[<bf3d0a18>] (nl80211_dump_station [cfg80211])
+Yes, I suppose TA might be a tad more accurate.
 
-Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 2 ++
- 1 file changed, 2 insertions(+)
+BSSID is another (unrelated) address.
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 0bc7fe8..74b66e5 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2231,6 +2231,8 @@ static inline bool is_valid_legacy_rate(u8 rate)
- 		return;
- 	}
- 
-+	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
-+
- 	if (txrate.flags == WMI_RATE_PREAMBLE_CCK ||
- 	    txrate.flags == WMI_RATE_PREAMBLE_OFDM) {
- 		rate = ATH10K_HW_LEGACY_RATE(peer_stats->ratecode);
--- 
-1.9.1
+> For NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED case,
+> I wonder if HW can be configured to not filter-out multiple BSSIDs
+> or 
+> the idea
+> is that while random_sa frame is pending for ACK, HW will drop all 
+> frames destined
+> for initially configured BSSID?
+
+Again, BSSID is unrelated (unless you're restricting yourself to the AP
+STA case where BSSID == local MAC address).
+
+And no, traffic would not be permitted to be dropped in this case, IMO
+
+johannes
