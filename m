@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32798 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966471AbdAKNOz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:14:55 -0500
-Message-ID: <1484140490.29931.3.camel@sipsolutions.net> (sfid-20170111_141717_185072_C86DEBF8)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Dmitry Shmidt <dimitrysh@google.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 11 Jan 2017 14:14:50 +0100
-In-Reply-To: <eb6a9c5e-0817-3b63-1e2f-d6bbff867b05@broadcom.com> (sfid-20170109_130750_105699_82BBA235)
-References: <94eb2c110db85c2379054172dad0@google.com>
-         <1480948100.31788.15.camel@sipsolutions.net>
-         <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
-         <1481093061.4092.17.camel@sipsolutions.net>
-         <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
-         <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
-         <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
-         <1481645205.20412.32.camel@sipsolutions.net>
-         <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
-         <1483536510.7312.5.camel@sipsolutions.net>
-         <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
-         <1483616763.4394.8.camel@sipsolutions.net>
-         <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com>
-         <1483623882.4394.20.camel@sipsolutions.net>
-         <ac6c15d8-5d4f-722c-7d7e-c43f6a118b53@broadcom.com>
-         <1483958921.17582.20.camel@sipsolutions.net>
-         <eb6a9c5e-0817-3b63-1e2f-d6bbff867b05@broadcom.com>
-         (sfid-20170109_130750_105699_82BBA235)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35992 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933373AbdABQcZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 11:32:25 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 1/2] dt-bindings: document common IEEE 802.11 frequency limit property
+Date: Mon,  2 Jan 2017 17:32:07 +0100
+Message-Id: <20170102163209.2445-1-zajec5@gmail.com> (sfid-20170102_173243_174518_8AB82DF0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Well, we might not even need different commands. We need different
-> > storage internally, but if you request the results for a given scan
-> > ID then you might get a totally different result format? Though
-> > that wouldn't lend itself well to query "everything you have" which
-> > is also useful. But even then, it could be done by passing the
-> > appropriate "report type" attribute to the dump command - we need
-> > that anyway for trigger.
-> 
-> True. With "report type" attribute you do not mean the actual
-> report_type thing, right. Hopefully you mean the parameter attribute
-> that implicitly relates to a "report type". 
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Right, I wasn't really thinking in terms of attributes while writing
-this. OTOH, something like an attribute *would* be needed, no?
+This new file should be used for properties that apply to all wireless
+devices.
 
-> The risk here is that it
-> requires careful description of what user-space needs to look for if
-> it gets a notification. I think having separate
-> notification/retrieval commands lowers the risk of misinterpretation.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V2: Switch to a single ieee80211-freq-limit property that allows specifying
+    *multiple* ranges. This resolves problem with more complex rules as pointed
+    by Felx.
+    Make description implementation agnostic as pointed by Arend.
+    Rename node to wifi as suggested by Martin.
+V3: Use more real-life frequencies in the example.
+---
+ .../devicetree/bindings/net/wireless/ieee80211.txt     | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
-Yeah, fair point.
-
-> Not sure if we're getting ahead of ourselves. Yes, we have to
-> determine attributes for each scan "report type", but it is not a
-> prerequisite for the other topic. 
-
-We'll also have to figure out which report types we need at all :)
-
-> I guess to answer the question about the partial results attributes
-> we need to know what the possible higher-level use-cases are. Other
-> source of information would be to look what is done for g-scan in
-> Android "M" or "N", but not sure if that is best approach as we may
-> not consider all use-cases.
-
-Right.
-
-johannes
+diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+new file mode 100644
+index 0000000..0cd1219
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+@@ -0,0 +1,18 @@
++Common IEEE 802.11 properties
++
++This provides documentation of common properties that are valid for all wireless
++devices.
++
++Optional properties:
++ - ieee80211-freq-limit : list of supported frequency ranges in KHz
++
++Example:
++
++pcie@0,0 {
++	reg = <0x0000 0 0 0 0>;
++	wifi@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		ieee80211-freq-limit = <2402000 2482000>,
++				       <5170000 5250000>;
++	};
++};
+-- 
+2.10.1
