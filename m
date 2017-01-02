@@ -1,105 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:34872 "EHLO
-        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751260AbdASJyi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 04:54:38 -0500
-Received: by mail-lf0-f49.google.com with SMTP id n124so31836167lfd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 01:54:00 -0800 (PST)
-Subject: Re: [PATCH net-next v4] bridge: multicast to unicast
-To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        netdev@vger.kernel.org
-References: <20170119024510.3284-1-linus.luessing@c0d3.blue>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        Felix Fietkau <nbd@nbd.name>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-From: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
-Message-ID: <253b73f3-0db0-4515-8787-2ff87d1e8256@cumulusnetworks.com> (sfid-20170119_105451_834855_04D5988A)
-Date: Thu, 19 Jan 2017 10:53:56 +0100
+Received: from mail-sn1nam02on0079.outbound.protection.outlook.com ([104.47.36.79]:64455
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750815AbdABO3W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 09:29:22 -0500
+Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
+ exchange
+To: Johannes Berg <johannes@sipsolutions.net>, <jouni@qca.qualcomm.com>
+References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
+ <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
+ <1483356523.4596.12.camel@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <vamsin@qti.qualcomm.com>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <c7eaea82-a5be-d047-c67a-ce9e58b4b65f@quantenna.com> (sfid-20170102_152926_988710_A1823079)
+Date: Mon, 2 Jan 2017 17:29:12 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170119024510.3284-1-linus.luessing@c0d3.blue>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1483356523.4596.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19/01/17 03:45, Linus Lüssing wrote:
-> From: Felix Fietkau <nbd@nbd.name>
-> 
-> Implements an optional, per bridge port flag and feature to deliver
-> multicast packets to any host on the according port via unicast
-> individually. This is done by copying the packet per host and
-> changing the multicast destination MAC to a unicast one accordingly.
-> 
-> multicast-to-unicast works on top of the multicast snooping feature of
-> the bridge. Which means unicast copies are only delivered to hosts which
-> are interested in it and signalized this via IGMP/MLD reports
-> previously.
-> 
-> This feature is intended for interface types which have a more reliable
-> and/or efficient way to deliver unicast packets than broadcast ones
-> (e.g. wifi).
-> 
-> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
-> report suppression takes place. This feature is disabled by default.
-> 
-> The initial patch and idea is from Felix Fietkau.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> [linus.luessing@c0d3.blue: various bug + style fixes, commit message]
-> Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
-> 
-> ---
-> 
-> This feature is used and enabled by default in OpenWRT and LEDE for AP
-> interfaces for more than a year now to allow both a more robust multicast
-> delivery and multicast at higher rates (e.g. multicast streaming).
-> 
-> In OpenWRT/LEDE the IGMP/MLD report suppression issue is overcome by
-> the network daemon enabling AP isolation and by that separating all STAs.
-> Delivery of STA-to-STA IP mulitcast is made possible again by
-> enabling and utilizing the bridge hairpin mode, which considers the
-> incoming port as a potential outgoing port, too.
-> 
-> Hairpin-mode is performed after multicast snooping, therefore leading to
-> only deliver reports to STAs running a multicast router.
-> 
-> Changes in v4:
-> * readd "From: Felix Fietkau [...]" (missed it again in v3)
-> 
-> Changes in v3:
-> * fix an uninitialized variable bug introduced in br_multicast_flood()
->   in v2, found by kbuild test bot
-> 
-> Changes in v2:
-> * netlink support (thanks Nik!)
-> * fixed switching between multicast_to_unicast on/off
->   -> even after toggling an already existing entry would
->      stale in its mode and would never be replaced
->   -> new extra check in br_port_group_equal)
-> * reduced checks in br_multicast_flood() from two to one
->   to address fast-path concerns (thanks Nik!)
-> * rev-christmas tree ordering (thanks Nik!)
-> * removed "net_bridge_port_group::unicast", using
->   ::flags instead (thanks Nik!)
-> * BR_MULTICAST_TO_UCAST -> BR_MULTICAST_TO_UNICAST
->   (BR_MULTICAST_FLAST_LEAVE has the same length anyway)
-> * simplified maybe_deliver_addr()
->   (no return, no "prev" paramater -> was a NOP anyway)
-> * added "From: Felix Fietkau [...]"
-> * added "Signed-off-by: Felix Fietkau [...]"
-> ---
->  include/linux/if_bridge.h    |  1 +
->  include/uapi/linux/if_link.h |  1 +
->  net/bridge/br_forward.c      | 37 ++++++++++++++++-
->  net/bridge/br_mdb.c          |  2 +-
->  net/bridge/br_multicast.c    | 96 ++++++++++++++++++++++++++++++++------------
->  net/bridge/br_netlink.c      |  5 +++
->  net/bridge/br_private.h      |  8 ++--
->  net/bridge/br_sysfs_if.c     |  2 +
->  8 files changed, 121 insertions(+), 31 deletions(-)
-> 
+On 01/02/2017 02:28 PM, Johannes Berg wrote:
+> On Fri, 2016-12-30 at 22:55 +0300, IgorMitsyanko wrote:
+>>> The driver needs to configure receive behavior to accept frames to
+>>> the
+>>> specified random address during the time the frame exchange is
+>>> pending
+>>> and such frames need to be acknowledged similarly to frames sent to
+>>> the
+>>> local permanent address when this random address functionality is
+>>> not
+>>> used.
+>> A (probably) silly question: how wireless drivers are supposed to use
+>> SA
+>> in a frame? I think drivers are not concerned about source address,
+>> they
+>> simply pass whatever there is already set by userspace in
+>> cfg80211_mgmt_tx_params::buf into air on Tx.
+>> And on Rx, they filter frames based on receiver address/BSSID, pass
+>> it
+>> to upper layers and do not care what address is in DA (it is handled
+>> by
+>> upper layers).
+> They do care about the DA in RX, since - as the commit message states -
+> "such frames need to be acknowledged [...]"
 
-Looks good to me,
-Reviewed-by: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
+Acknowledgment is done for transmitter<->receiver addresses,
+not for source<->destination?
+Patch talks about source address randomization, but I guess it actually
+  meant transmitter address (basically dynamic BSSID config?). Maybe naming
+should be changed in the patch.
+
+For  NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED case,
+I wonder if HW can be configured to not filter-out multiple BSSIDs or 
+the idea
+is that while random_sa frame is pending for ACK, HW will drop all 
+frames destined
+for initially configured BSSID?
+
+>
+> johannes
+>
