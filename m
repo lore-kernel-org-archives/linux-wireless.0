@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:35216 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdAMV3q (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33603 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933378AbdABQca (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:29:46 -0500
-Date: Fri, 13 Jan 2017 22:29:37 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 27/40] rt2x00: rt2800lib: fix antenna configuration for RT3883
-Message-ID: <20170113212932.GA3570@makrotopia.org> (sfid-20170113_222948_347066_2689F249)
+        Mon, 2 Jan 2017 11:32:30 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3 3/2] brcmfmac: use wiphy_read_of_freq_limits to get extra limits
+Date: Mon,  2 Jan 2017 17:32:09 +0100
+Message-Id: <20170102163209.2445-3-zajec5@gmail.com> (sfid-20170102_173243_900024_62837930)
+In-Reply-To: <20170102163209.2445-1-zajec5@gmail.com>
+References: <20170102163209.2445-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+There are some devices (e.g. Netgear R8000 home router) with one chipset
+model used for different radios, some of them limited to subbands. NVRAM
+entries don't contain any extra info on such limitations and firmware
+reports full list of channels to us. We need to store extra limitation
+info on DT to support such devices properly.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+This patch should probably go through wireless-driver-next, I'm sending
+it just as a proof of concept. It was succesfully tested on SmartRG
+SR400ac with BCM43602.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index ba73be7101b7..bde8177c30c4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1971,7 +1971,8 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
- 	rt2800_bbp_write(rt2x00dev, 3, r3);
- 	rt2800_bbp_write(rt2x00dev, 1, r1);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ccae3bb..dab4082 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6825,6 +6825,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		goto priv_out;
  
--	if (rt2x00_rt(rt2x00dev, RT3593)) {
-+	if (rt2x00_rt(rt2x00dev, RT3593) ||
-+	    rt2x00_rt(rt2x00dev, RT3883)) {
- 		if (ant->rx_chain_num == 1)
- 			rt2800_bbp_write(rt2x00dev, 86, 0x00);
- 		else
+ 	brcmf_dbg(INFO, "Registering custom regulatory\n");
++	wiphy_read_of_freq_limits(wiphy);
+ 	wiphy->reg_notifier = brcmf_cfg80211_reg_notifier;
+ 	wiphy->regulatory_flags |= REGULATORY_CUSTOM_REG;
+ 	wiphy_apply_custom_regulatory(wiphy, &brcmf_regdom);
 -- 
-2.11.0
+2.10.1
