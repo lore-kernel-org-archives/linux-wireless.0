@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57398 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37536 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752681AbdAJV1c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 16:27:32 -0500
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Stephen Hemminger <stephen@networkplumber.org>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net>
- <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
- <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
- <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
-Cc: "M. Braun" <michael-dev@fami-braun.de>, netdev@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name> (sfid-20170110_222756_452302_57539330)
-Date: Tue, 10 Jan 2017 22:27:25 +0100
-MIME-Version: 1.0
-In-Reply-To: <1484045763.1014.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        id S1751279AbdABLeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 06:34:17 -0500
+Message-ID: <1483356854.4596.14.camel@sipsolutions.net> (sfid-20170102_123420_172460_2B63D726)
+Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
+ exchange
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+        vamsi krishna <vamsin@qti.qualcomm.com>
+Date: Mon, 02 Jan 2017 12:34:14 +0100
+In-Reply-To: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-10 11:56, Johannes Berg wrote:
-> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
->> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
->> > I wonder if MAC80211 should be doing IGMP snooping and not bridge
->> > in this environment.
->> 
->> In the long term, yes. For now, not quite sure.
+
+> + * @random_sa: indicates whether the source address is randomized.
+> When this is
+> + *	true, the driver needs to transmit the management frame
+> using the
+> + *	address specified in the SA field (Address 2) in the
+> buffer and the
+> + *	driver needs to receive and acknowledge the response frame
+> to this
+> + *	address instead of its permanent MAC address.
+>   */
+>  struct cfg80211_mgmt_tx_params {
+>  	struct ieee80211_channel *chan;
 > 
-> There's no "for now" in the kernel. Code added now will have to be
-> maintained essentially forever.
-I'm not sure that putting the IGMP snooping code in mac80211 is a good
-idea, that would be quite a bit of code duplication.
-This implementation works, it's very simple, and it's quite flexible for
-a number of use cases.
 
-Is there any remaining objection to merging this in principle (aside
-from potential issues with the code)?
+Is this really of much value to the driver - rather than comparing the
+addresses?
 
-- Felix
+> + * @NL80211_ATTR_MGMT_TX_RANDOM_SA: A flag attribute indicating
+> whether the
+> + *	source address is randomized in frames sent using
+> %NL80211_CMD_FRAME.
+> + *	If this flag is not set, the source address field is
+> verified to match
+> + *	local MAC address. Random SA can be used only with Public
+> Action frames
+> + *	(e.g., GAS/ANQP).
+
+Likewise here, is this really of much value?
+
+Or is the intent to make sure that userspace *really* intended things
+to be randomized, and didn't just have a bug?
+
+What I mean is more like this: if the driver supports "random SA", that
+basically means it supports "arbitrary SA". The driver could thus
+(unconditionally even, or after comparing to the iface address)
+configure the RX filters appropriately.
+
+Therefore, the only thing that would really be needed is the nl80211
+extended feature flag to bypass the address check in
+cfg80211_mlme_mgmt_tx().
+
+What extra value do we get from having the "yes I really did intend it
+to be random" attribute?
+
+johannes
