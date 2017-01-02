@@ -1,129 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35788 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751928AbdARKt0 (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:44074 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755556AbdABUqe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 05:49:26 -0500
-Received: by mail-lf0-f66.google.com with SMTP id v186so1176817lfa.2
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 02:49:25 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 4/4] brcmfmac: rename brcmf_bus_start function to brcmf_bus_started
-Date: Wed, 18 Jan 2017 11:48:54 +0100
-Message-Id: <20170118104854.32231-4-zajec5@gmail.com> (sfid-20170118_114928_855448_9C0D1688)
-In-Reply-To: <20170118104854.32231-1-zajec5@gmail.com>
-References: <20170118104854.32231-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Mon, 2 Jan 2017 15:46:34 -0500
+Date: Mon, 02 Jan 2017 15:46:30 -0500 (EST)
+Message-Id: <20170102.154630.299589129937596100.davem@davemloft.net> (sfid-20170102_214749_215625_9B6CBDAE)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2017-01-02
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <8760lxk37o.fsf@kamboji.qca.qualcomm.com>
+References: <8760lxk37o.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Mon, 02 Jan 2017 15:20:59 +0200
 
-This intends to make init/attach process slightly easier to follow.
+> first pull request for 4.11. The tree is based on 4.9 but that shouldn't
+> be a problem, at least my test pull to net-next worked ok. I'll fast
+> forward my trees after you have pulled this.
+> 
+> Please let me know if you have any problems.
 
-What driver was doing in brcmf_bus_start wasn't bus specific at all and
-function brcmf_bus_stop wasn't undoing things done there. This function
-is supposed to be called by bus specific code when the bus is ready.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Use "brcmf_bus_started" name instead of "brcmf_attach_phase2", don't rename
-    brcmf_attach.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h    | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c    | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index b5bb971..76693df 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -238,7 +238,7 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
- /* Configure the "global" bus state used by upper layers */
- void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
- 
--int brcmf_bus_start(struct device *dev);
-+int brcmf_bus_started(struct device *dev);
- s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
- void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 3e15d64..5fb4a14 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -74,7 +74,7 @@ module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
- MODULE_PARM_DESC(roamoff, "Do not use internal roaming engine");
- 
- #ifdef DEBUG
--/* always succeed brcmf_bus_start() */
-+/* always succeed brcmf_bus_started() */
- static int brcmf_ignore_probe_fail;
- module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
- MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 372d2c4..b73a55b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -966,7 +966,7 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
- 	return 0;
- }
- 
--int brcmf_bus_start(struct device *dev)
-+int brcmf_bus_started(struct device *dev)
- {
- 	int ret = -1;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 048027f..19db8f2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -1572,7 +1572,7 @@ static int brcmf_pcie_attach_bus(struct brcmf_pciedev_info *devinfo)
- 	if (ret) {
- 		brcmf_err("brcmf_attach failed\n");
- 	} else {
--		ret = brcmf_bus_start(&devinfo->pdev->dev);
-+		ret = brcmf_bus_started(&devinfo->pdev->dev);
- 		if (ret)
- 			brcmf_err("dongle is not responding\n");
- 	}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index dfb0658..5298582 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4065,7 +4065,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
- 
- 	sdio_release_host(sdiodev->func[1]);
- 
--	err = brcmf_bus_start(dev);
-+	err = brcmf_bus_started(dev);
- 	if (err != 0) {
- 		brcmf_err("dongle is not responding\n");
- 		goto fail;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 2f978a3..d93ebbd 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1148,7 +1148,7 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
- 	if (ret)
- 		goto fail;
- 
--	ret = brcmf_bus_start(devinfo->dev);
-+	ret = brcmf_bus_started(devinfo->dev);
- 	if (ret)
- 		goto fail;
- 
--- 
-2.10.1
+Happy new year, pulled, thanks!
