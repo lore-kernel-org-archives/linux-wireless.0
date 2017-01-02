@@ -1,105 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50891 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932504AbdA0MD3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:03:29 -0500
-Date: Fri, 27 Jan 2017 13:03:22 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170127120321.GB8512@amd> (sfid-20170127_130351_051664_0B16C1D1)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org>
- <20170127094342.GC24223@pali>
- <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
- <20170127101043.GD24223@pali>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="qcHopEYAB45HaUaB"
-In-Reply-To: <20170127101043.GD24223@pali>
+Received: from s3.sipsolutions.net ([5.9.151.49]:39684 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755604AbdABNiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 08:38:22 -0500
+Message-ID: <1483364298.21014.3.camel@sipsolutions.net> (sfid-20170102_143825_771855_F82FDA2E)
+Subject: Re: [PATCH V2 1/3] cfg80211: allow passing struct device in the
+ wiphy_new call
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Mon, 02 Jan 2017 14:38:18 +0100
+In-Reply-To: <20170102132747.3491-1-zajec5@gmail.com> (sfid-20170102_142831_033140_A7AF3467)
+References: <20170102132747.3491-1-zajec5@gmail.com>
+         (sfid-20170102_142831_033140_A7AF3467)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---qcHopEYAB45HaUaB
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -3730,8 +3730,8 @@ static inline const char *wiphy_name(const
+> struct wiphy *wiphy)
+>   * Return: A pointer to the new wiphy. This pointer must be
+>   * assigned to each netdev's ieee80211_ptr for proper operation.
+>   */
+> -struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int
+> sizeof_priv,
+> -			   const char *requested_name);
+> +struct wiphy *wiphy_new_nm(struct device *dev, const struct
+> cfg80211_ops *ops,
+> +			   int sizeof_priv, const char
+> *requested_name);
 
-Hi!
+This is obviously missing documentation updates.
 
-> > You are probably saying that on your platform you can not remove
-> > anything from /lib/firmware, right? I don't see how you come from "it is
-> > part of firmware package" to "removing is not possible". Trying to
-> > understand this and it makes no sense.
->=20
-> It is already in linux distribution packages. If I remove that file from
-> file system it will be placed there again by package management or it it
-> will throw error message about system integrity (missing file, etc...).
->=20
-> Also that file is already in linux-firmware git and so is propagated to
-> /lib/firmware by anybody who is using linux-firmware.
->=20
-> > >> Like we discussed earlier, the default nvs file should not be used by
-> > >> normal users.
-> > >=20
-> > > But already is and we need to deal with this fact.
-> >=20
-> > Why?
->=20
-> Because everybody has already installed it.
->=20
-> > Are there other platforms that use the default nvs file and have a
-> > working wifi.
->=20
-> I do not know.
->=20
-> > So your "removing is not possible" would be about
-> > regression for those?
->=20
-> Yes, that is possible.
->=20
-> Also you can use wifi on Nokia N900 with this default file. Yes it is
-> not recommended and probably has performance problems... but more people
-> use it for SSH and it is working. Pavel could confirm this.
+>   */
+> -static inline struct wiphy *wiphy_new(const struct cfg80211_ops
+> *ops,
+> +static inline struct wiphy *wiphy_new(struct device *dev,
+> +				      const struct cfg80211_ops
+> *ops,
 
-Yes, wifi somehow works on N900. .. depending on userspace and kernel
-versions.
+Ditto.
 
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+It looks like you practically removed all users of set_wiphy_dev(), why
+not do that completely and remove that entirely?
 
---qcHopEYAB45HaUaB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAliLNwkACgkQMOfwapXb+vKH8gCgkdSnJsJtKo2pPK6bph+wEtf4
-YxMAmgKrAQFt6KQ9BwDPB23NkWOGZpcV
-=Wc/q
------END PGP SIGNATURE-----
-
---qcHopEYAB45HaUaB--
+johannes
