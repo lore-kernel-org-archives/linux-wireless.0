@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53612 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750708AbdAXPfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 10:35:00 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-01-24
-Date: Tue, 24 Jan 2017 16:34:52 +0100
-Message-Id: <20170124153453.15776-1-johannes@sipsolutions.net> (sfid-20170124_163512_028244_E6072745)
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:33172 "EHLO
+        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750805AbdABEdI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 1 Jan 2017 23:33:08 -0500
+Received: by mail-oi0-f51.google.com with SMTP id 128so277498907oig.0
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jan 2017 20:33:07 -0800 (PST)
+MIME-Version: 1.0
+From: Daniel Palmer <daniel@0x0f.com>
+Date: Mon, 2 Jan 2017 13:33:06 +0900
+Message-ID: <CAFr9PXmUJoQRSvvKnCANArt_oneviAyKOcR4oUpqmvBOefqgCA@mail.gmail.com> (sfid-20170102_053355_707381_6EEE5B70)
+Subject: cw1200: Looking to add support for a new chip.
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hi all,
 
-LTP found a problem last week, but I couldn't fix it since I
-was travelling, so here's the fix now.
+While hacking away[1] on the vendor sources for the Allwinner XR819
+WiFi chip found on the OrangePi Zero board[2] I've worked out that the
+driver is basically the existing cw1200 driver that is in the kernel
+with support for the two stage firmware loading (alluded to for the
+probably unreleased CW1X60 chips but not implemented in the kernel
+driver) and some hacks for WiFi compliance tests and P2P support.
 
-Please pull and let me know if there's any problem.
+Does anyone use the cw1200 driver that could test that any changes
+needed to make the XR819 work don't break it?
 
-Thanks,
-johannes
+Please CC me as I'm not subscribed.
 
+Cheers,
 
+Daniel
 
-The following changes since commit 4078b76cac68e50ccf1f76a74e7d3d5788aec3fe:
-
-  net: dsa: Check return value of phy_connect_direct() (2017-01-23 15:43:35 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-01-24
-
-for you to fetch changes up to 115865fa0826ed18ca04717cf72d0fe874c0fe7f:
-
-  mac80211: don't try to sleep in rate_control_rate_init() (2017-01-24 16:31:54 +0100)
-
-----------------------------------------------------------------
-A single fix, for a sleeping context problem found by LTP.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: don't try to sleep in rate_control_rate_init()
-
- net/mac80211/rate.c | 2 --
- 1 file changed, 2 deletions(-)
+[1] https://github.com/fifteenhex/xradio/tree/original
+[2] http://linux-sunxi.org/Xunlong_Orange_Pi_Zero
