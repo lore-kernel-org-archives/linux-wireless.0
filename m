@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33162 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933013AbdA0LtR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 06:49:17 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-        <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
-        <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
-        <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
-        <20170127101043.GD24223@pali>
-        <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
-        <20170127103408.GG24223@pali>
-Date: Fri, 27 Jan 2017 13:49:03 +0200
-In-Reply-To: <20170127103408.GG24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
- \=\?utf-8\?Q\?s\?\= message of "Fri, 27
-        Jan 2017 11:34:08 +0100")
-Message-ID: <87bmus7mfk.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_124938_432518_B15225BA)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37108 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750996AbdABKpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 05:45:33 -0500
+Message-ID: <1483353931.4596.3.camel@sipsolutions.net> (sfid-20170102_114536_764601_58DDDC32)
+Subject: Re: cfg80211: add set/get link loss profile
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Mon, 02 Jan 2017 11:45:31 +0100
+In-Reply-To: <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org>
+References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
+         <1480344742.8107.63.camel@sipsolutions.net>
+         <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+On Mon, 2016-12-19 at 12:58 +0200, Lazar, Alexei Avshalom wrote:
 
->> So
->> for those other platforms there will be a delay waiting for user-mode
->> helper to fail, before trying to get nvs file from /lib/firmware.
->
-> Yes, there will be. But there is no easy way to fix this problem that
-> kernel is trying to use default/example NVS data...
+> > What you're doing here is *extremely* vague. No definitions of what
+> > this means, no description of how it's intended to be implemented,
+> > no note even on whether or not this is for full-MAC chips or not,
+> > etc.
+> > 
+> 
+> The patch is intended for full-MAC chips and I will update the commit
+> message to include more details.
+> 
+> > At least for mac80211, we can define signals to userspace regarding
+> > "link quality" and make decisions in wpa_s then?
+> > 
+> 
+> The policy is offloaded today to the FW and the decision being made
+> by the FW.
+> We are only modifying the behavior and not making the decision.
 
-Kernel is doing correctly and requesting NVS data as expected, the
-problem here is that linux-firmware claims that the example NVS data is
-real calibration data (which it is not). Distros should not use that,
-only developers for testing purposes. We should not courage users using
-example calibration data.
+Fair enough, but I stand by saying that it's extremely vague - how
+could userspace possibly know what "level" to pick, if you don't give
+it any information about what the levels really mean?
 
-The simple fix is to rename the NVS file in linux-firmware to something
-like wl1251-nvs.bin.example, no need to workaround this in kernel. If
-you send a patch to linux-firmware I'm happy to ack that.
-
---=20
-Kalle Valo
+johannes
