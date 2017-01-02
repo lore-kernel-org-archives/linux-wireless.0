@@ -1,77 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34101 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932111AbdA3PKO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 10:10:14 -0500
-Received: by mail-lf0-f67.google.com with SMTP id q89so31607388lfi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 07:10:03 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 1/2] brcmfmac: check brcmf_bus_get_memdump result for error
-Date: Mon, 30 Jan 2017 16:09:51 +0100
-Message-Id: <20170130150952.7133-1-zajec5@gmail.com> (sfid-20170130_161021_805865_A00299A7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37096 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932118AbdABKoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 05:44:04 -0500
+Message-ID: <1483353841.4596.2.camel@sipsolutions.net> (sfid-20170102_114407_825287_A207398F)
+Subject: Re: [RFC] nl80211: allow multiple active scheduled scan requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Dmitry Shmidt <dimitrysh@google.com>
+Date: Mon, 02 Jan 2017 11:44:01 +0100
+In-Reply-To: <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1481645071.20412.30.camel@sipsolutions.net>
+         <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-This method may be unsupported (see: USB bus) or may just fail (see:
-SDIO bus).
-While at it rework logic in brcmf_sdio_bus_get_memdump function to avoid
-too many conditional code nesting levels.
+> +	/*
+> +	 * allow only one legacy scheduled scan if user-space
+> +	 * does not indicate multiple scheduled scan support.
+> +	 */
+> +	if (!info->attrs[NL80211_ATTR_SCHED_SCAN_MULTI] &&
+> +	    cfg80211_legacy_sched_scan_active(rdev))
+>  		return -EINPROGRESS;
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- .../wireless/broadcom/brcm80211/brcmfmac/debug.c   | 23 +++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+That probably doesn't go far enough - if legacy one is active then we
+probably shouldn't allow a new MULTI one either (or abandon the legacy
+one) so that older userspace doesn't get confused with multiple
+notifications from sched scans it didn't start.
+ 
+> +	if (rdev->sched_scan_req_count == rdev->wiphy.max_sched_scan_reqs)
+> +		return -ENOSPC;
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-index e64557c35553..6f8a4b074c31 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-@@ -32,16 +32,25 @@ static int brcmf_debug_create_memdump(struct brcmf_bus *bus, const void *data,
- {
- 	void *dump;
- 	size_t ramsize;
-+	int err;
- 
- 	ramsize = brcmf_bus_get_ramsize(bus);
--	if (ramsize) {
--		dump = vzalloc(len + ramsize);
--		if (!dump)
--			return -ENOMEM;
--		memcpy(dump, data, len);
--		brcmf_bus_get_memdump(bus, dump + len, ramsize);
--		dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
-+	if (!ramsize)
-+		return -ENOTSUPP;
-+
-+	dump = vzalloc(len + ramsize);
-+	if (!dump)
-+		return -ENOMEM;
-+
-+	memcpy(dump, data, len);
-+	err = brcmf_bus_get_memdump(bus, dump + len, ramsize);
-+	if (err) {
-+		vfree(dump);
-+		return err;
- 	}
-+
-+	dev_coredumpv(bus->dev, dump, len + ramsize, GFP_KERNEL);
-+
- 	return 0;
- }
- 
--- 
-2.11.0
+Do we really want to do the double-accounting, just to avoid counting
+the list length here?
+
+> +	/* leave request id zero for legacy request */
+
+why? The ID would be ignored, so why special-case it?
+
+> +static void cfg80211_del_sched_scan_req(struct
+> cfg80211_registered_device *rdev,
+> +					struct
+> cfg80211_sched_scan_request *req)
+> +{
+> +	list_del_rcu(&req->list);
+> +	kfree_rcu(req, rcu_head);
+> +	synchronize_rcu();
+> +	rdev->sched_scan_req_count--;
+> +}
+
+That's bogus - either you use kfree_rcu() or synchronize_rcu() (the
+former is much better); combining both makes no sense.
+
+> +bool cfg80211_legacy_sched_scan_active(struct
+> cfg80211_registered_device *rdev)
+> +{
+> +	struct cfg80211_sched_scan_request *req;
+> +
+> +	req = list_first_or_null_rcu(&rdev->sched_scan_req_list,
+> +				     struct
+> cfg80211_sched_scan_request, list);
+> +	/* request id 0 indicates legacy request in progress */
+> +	return req && !req->reqid;
+> +}
+
+Ok, fair enough.
+
+johannes
