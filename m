@@ -1,66 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f43.google.com ([74.125.83.43]:36292 "EHLO
-        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754266AbdASTMh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 14:12:37 -0500
-Received: by mail-pg0-f43.google.com with SMTP id t6so16368588pgt.3
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 11:12:36 -0800 (PST)
-Date: Thu, 19 Jan 2017 11:05:20 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Linus =?UTF-8?B?TMO8c3Npbmc=?= <linus.luessing@c0d3.blue>
-Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
-        Felix Fietkau <nbd@nbd.name>,
-        Nikolay Aleksandrov <nikolay@cumulusnetworks.com>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next v4] bridge: multicast to unicast
-Message-ID: <20170119110520.24dfd34d@xeon-e3> (sfid-20170119_201243_138529_A6DB3C3D)
-In-Reply-To: <20170119024510.3284-1-linus.luessing@c0d3.blue>
-References: <20170119024510.3284-1-linus.luessing@c0d3.blue>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:40404 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933053AbdABPD7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 10:03:59 -0500
+Message-ID: <1483369436.21014.12.camel@sipsolutions.net> (sfid-20170102_160414_006373_3DC505AE)
+Subject: Re: [PATCH] rfkill: remove rfkill-regulator
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, Guiming Zhuo <gmzhuo@gmail.com>,
+        Antonio Ospite <ospite@studenti.unina.it>,
+        Paul Cercueil <paul@crapouillou.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Maarten ter Huurne <maarten@treewalker.org>
+Date: Mon, 02 Jan 2017 16:03:56 +0100
+In-Reply-To: <20170102150157.26745-1-johannes@sipsolutions.net> (sfid-20170102_160217_157310_15217E5D)
+References: <20170102150157.26745-1-johannes@sipsolutions.net>
+         (sfid-20170102_160217_157310_15217E5D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 19 Jan 2017 03:45:10 +0100
-Linus L=C3=BCssing <linus.luessing@c0d3.blue> wrote:
+On Mon, 2017-01-02 at 16:01 +0100, Johannes Berg wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> There are no users of this ("vrfkill") in the tree, so it's just
+> dead code - remove it.
+> 
+> This also isn't really how rfkill is supposed to be used - it's
+> intended as a signalling mechanism to/from the device, which the
+> driver (and partially cfg80211) will handle - having a separate
+> rfkill instance for a regulator is confusing, the driver should
+> use the regulator instead to turn off the device when requested.
 
-> From: Felix Fietkau <nbd@nbd.name>
->=20
-> Implements an optional, per bridge port flag and feature to deliver
-> multicast packets to any host on the according port via unicast
-> individually. This is done by copying the packet per host and
-> changing the multicast destination MAC to a unicast one accordingly.
->=20
-> multicast-to-unicast works on top of the multicast snooping feature of
-> the bridge. Which means unicast copies are only delivered to hosts which
-> are interested in it and signalized this via IGMP/MLD reports
-> previously.
->=20
-> This feature is intended for interface types which have a more reliable
-> and/or efficient way to deliver unicast packets than broadcast ones
-> (e.g. wifi).
->=20
-> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
-> report suppression takes place. This feature is disabled by default.
->=20
-> The initial patch and idea is from Felix Fietkau.
->=20
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> [linus.luessing@c0d3.blue: various bug + style fixes, commit message]
-> Signed-off-by: Linus L=C3=BCssing <linus.luessing@c0d3.blue>
->=20
+OTOH, the rfkill-gpio is essentially the same thing, and it *does* get
+used - by ACPI even, to control a GPS chip. And I'm not even sure that
+there's a clear place to put this since there probably aren't any GPS
+drivers?
 
-In general this looks good.
-
-One issue I see is how existing entries are handled when the bridge port fl=
-ags
-are changed dynamically. It might be better to always record the necessary =
-data
-in the bridge_port_group and not have a per-entry flag bit. In your current
-patch the API changes the response to future IGMP but does not take instant
-effect. Code would be simpler if there was less logic to handle per-entry f=
-lags.
-
-Also, you might want to add sysfs interface for the attribute as well.
+johannes
