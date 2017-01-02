@@ -1,50 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59698 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761888AbdAFMW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 07:22:28 -0500
-Message-ID: <1483705333.4089.6.camel@sipsolutions.net> (sfid-20170106_132343_946950_7F3479B3)
-Subject: Re: [PATCH v4] rfkill: Add rfkill-any LED trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
-         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
-        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 06 Jan 2017 13:22:13 +0100
-In-Reply-To: <20170106060747.6162-1-kernel@kempniu.pl> (sfid-20170106_070815_740015_7BAF878D)
-References: <20170106060747.6162-1-kernel@kempniu.pl>
-         (sfid-20170106_070815_740015_7BAF878D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35838 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755547AbdABOF3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 09:05:29 -0500
+MIME-Version: 1.0
+In-Reply-To: <1483364298.21014.3.camel@sipsolutions.net>
+References: <20170102132747.3491-1-zajec5@gmail.com> <1483364298.21014.3.camel@sipsolutions.net>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 2 Jan 2017 15:05:28 +0100
+Message-ID: <CACna6rzc2hk2xosd54eZVSUCtqgtT5E2vii24rgWBV96PR1W7A@mail.gmail.com> (sfid-20170102_150533_492620_30391C32)
+Subject: Re: [PATCH V2 1/3] cfg80211: allow passing struct device in the
+ wiphy_new call
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-01-06 at 07:07 +0100, Michał Kępień wrote:
-> Add a new "global" (i.e. not per-rfkill device) LED trigger, rfkill-
-> any,
-> which may be useful on laptops with a single "radio LED" and multiple
-> radio transmitters.  The trigger is meant to turn a LED on whenever
-> there is at least one radio transmitter active and turn it off
-> otherwise.
-> 
-> Signed-off-by: Michał Kępień <kernel@kempniu.pl>
-> ---
-> Changes from v3:
-> 
->   - Revert introducing a new bitfield and instead defer LED event
-> firing
->     to a work queue to prevent conditional locking and ensure the
->     trigger can really be used from any context.  This also voids the
->     need to take rfkill_global_mutex before calling
-> rfkill_set_block()
->     in rfkill_resume().
+On 2 January 2017 at 14:38, Johannes Berg <johannes@sipsolutions.net> wrote=
+:
+>
+>> --- a/include/net/cfg80211.h
+>> +++ b/include/net/cfg80211.h
+>> @@ -3730,8 +3730,8 @@ static inline const char *wiphy_name(const
+>> struct wiphy *wiphy)
+>>   * Return: A pointer to the new wiphy. This pointer must be
+>>   * assigned to each netdev's ieee80211_ptr for proper operation.
+>>   */
+>> -struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int
+>> sizeof_priv,
+>> -                        const char *requested_name);
+>> +struct wiphy *wiphy_new_nm(struct device *dev, const struct
+>> cfg80211_ops *ops,
+>> +                        int sizeof_priv, const char
+>> *requested_name);
+>
+> This is obviously missing documentation updates.
+>
+>>   */
+>> -static inline struct wiphy *wiphy_new(const struct cfg80211_ops
+>> *ops,
+>> +static inline struct wiphy *wiphy_new(struct device *dev,
+>> +                                   const struct cfg80211_ops
+>> *ops,
+>
+> Ditto.
+>
+> It looks like you practically removed all users of set_wiphy_dev(), why
+> not do that completely and remove that entirely?
 
-Looks better, but
+There are 2 users left:
+1) ipw2x00 - I missed that one
+2) mac80211 - it's a big one as it's used in SET_IEEE80211_DEV
 
-> +static struct work_struct rfkill_any_work;
+I was planning to work on mac80211 drivers later. This will require
+similar modification of ieee80211_alloc_hw.
 
-At least on module exit you need to cancel this work.
-
-johannes
+--=20
+Rafa=C5=82
