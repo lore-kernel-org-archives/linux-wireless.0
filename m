@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36662 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754352AbdAIXBK (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35139 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933434AbdABWQN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 18:01:10 -0500
-Received: by mail-oi0-f68.google.com with SMTP id u143so18619469oif.3
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 15:01:10 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 2/3] rtlwifi: rtl8192cu: Calculate descriptor checksum correctly for BE
-Date: Mon,  9 Jan 2017 17:00:57 -0600
-Message-Id: <20170109230058.22758-3-Larry.Finger@lwfinger.net> (sfid-20170110_000115_916045_CF954608)
-In-Reply-To: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
-References: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
+        Mon, 2 Jan 2017 17:16:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <e194b980-1048-8da6-624b-26f824ff655d@broadcom.com>
+References: <20170102163209.2445-1-zajec5@gmail.com> <20170102163209.2445-2-zajec5@gmail.com>
+ <1483379548.15591.1.camel@sipsolutions.net> <e194b980-1048-8da6-624b-26f824ff655d@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 2 Jan 2017 23:16:12 +0100
+Message-ID: <CACna6rx5fMFVyjB=4=ZeXhfXWGPQmKiEQuJRY+mz2OFMLYx_HA@mail.gmail.com> (sfid-20170102_231658_135030_9C3C5B0C)
+Subject: Re: [PATCH V3 2/2] cfg80211: support ieee80211-freq-limit DT property
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver requires a checksum for the descriptors so that the wifi
-chip is assured that the USB transmission was correct. These entries
-are little-endian, but the driver was always using cpu order in the
-calculation. As a result, the driver failed on BE hardware.
+On 2 January 2017 at 21:12, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 02-01-17 18:52, Johannes Berg wrote:
+>>> +static void wiphy_freq_limits_apply(struct wiphy *wiphy)
+>> [...]
+>>> +                    if (!wiphy_freq_limits_valid_chan(wiphy,
+>>> chan)) {
+>>> +                            pr_debug("Disabling freq %d MHz as
+>>> it's out of OF limits\n",
+>>> +                                     chan->center_freq);
+>>> +                            chan->flags |=3D
+>>> IEEE80211_CHAN_DISABLED;
+>>
+>> I think you didn't address the problem in the best way now.
+>>
+>> The problem with the channel sharing was the way you're applying the
+>> limits - at runtime. This is now OK since the new function shouldn't be
+>> called when the channel structs are shared, but hooking it all into thes
+>> regulatory code is now no longer needed.
+>>
+>> What you can do now, when reading the OF data, is actually apply it to
+>> the channel flags immediately. If done *before* wiphy_register(), these
+>> flags will be preserved forever, so you no longer need any hooks in
+>> regulatory code at all - you can just set the original channel flags
+>> according to the OF data.
+>
+> I suppose this then can also be done early in the wiphy_register()
+> function itself, right?
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+When driver calls wiphy_apply_custom_regulatory I need to already have
+limits read from the DT (at least in my current implementation, it may
+change, but I need help understanding flow first). As
+wiphy_apply_custom_regulatory has to be called before wiphy_register,
+I can't read DT so late (in wiphy_register).
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-index 6da6e2a..1611e42 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
-@@ -477,14 +477,14 @@ static void _rtl_fill_usb_tx_desc(u8 *txdesc)
-  */
- static void _rtl_tx_desc_checksum(u8 *txdesc)
- {
--	u16 *ptr = (u16 *)txdesc;
-+	__le16 *ptr = (__le16 *)txdesc;
- 	u16	checksum = 0;
- 	u32 index;
- 
- 	/* Clear first */
- 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, 0);
- 	for (index = 0; index < 16; index++)
--		checksum = checksum ^ (*(ptr + index));
-+		checksum = checksum ^ le16_to_cpu(*(ptr + index));
- 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, checksum);
- }
- 
--- 
-2.10.2
+--=20
+Rafa=C5=82
