@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55268 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39000 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750916AbdATNn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 08:43:28 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>,
-        John Crispin <blogic@openwrt.org>
-Subject: [PATCH v4 1/3] rt2x00: add copy of clk for soc devices
-Date: Fri, 20 Jan 2017 14:28:24 +0100
-Message-Id: <1484918906-21856-2-git-send-email-sgruszka@redhat.com> (sfid-20170120_144333_551529_12B54804)
-In-Reply-To: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
-References: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
+        id S1755468AbdABMwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 07:52:08 -0500
+Message-ID: <1483361523.21014.1.camel@sipsolutions.net> (sfid-20170102_135236_313216_5EAFE79F)
+Subject: Re: [PATCH v3] rfkill: Add rfkill-any LED trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
+         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
+        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Mon, 02 Jan 2017 13:52:03 +0100
+In-Reply-To: <1483359705.21014.0.camel@sipsolutions.net> (sfid-20170102_132212_994207_4FFA7191)
+References: <20161221084533.27006-1-kernel@kempniu.pl>
+         (sfid-20161221_094622_545524_B00A9AE7) <1483355533.4596.11.camel@sipsolutions.net>
+         (sfid-20170102_121239_821112_5D7AEC4A) <1483359705.21014.0.camel@sipsolutions.net>
+         (sfid-20170102_132212_994207_4FFA7191)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since clk_get() is not trivial add copy of clk pointer to rt2x00dev
-for System On Chip devices and initialize it on probe routine.
+On Mon, 2017-01-02 at 13:21 +0100, Johannes Berg wrote:
+> > I'm not super happy with this conditional locking - can't we
+> > instead
+> > defer the necessary work to a workqueue, or so, for purposes of the
+> > LED?
+> 
+> Actually, since you can sleep in here, and do various other things
+> like scheduling etc. this can't even be correct as is - one thread
+> might be in the probe and another might also attempt to do some
+> operations that require the lock but now don't take it.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    | 4 ++++
- drivers/net/wireless/ralink/rt2x00/rt2x00soc.c | 1 +
- 2 files changed, 5 insertions(+)
+Additionally, this doesn't address the "can be called in any context"
+part, only the "even from within rfkill callbacks" part. It's clearly
+still not safe to call this from any context that is not allowed to
+sleep, for example.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index bea7ac3..b59e721 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -39,6 +39,7 @@
- #include <linux/hrtimer.h>
- #include <linux/average.h>
- #include <linux/usb.h>
-+#include <linux/clk.h>
- 
- #include <net/mac80211.h>
- 
-@@ -1011,6 +1012,9 @@ struct rt2x00_dev {
- 	unsigned int extra_tx_headroom;
- 
- 	struct usb_anchor *anchor;
-+
-+	/* Clock for System On Chip devices. */
-+	struct clk *clk;
- };
- 
- struct rt2x00_bar_list_entry {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-index 69a0cda..362f9d3 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
-@@ -92,6 +92,7 @@ int rt2x00soc_probe(struct platform_device *pdev, const struct rt2x00_ops *ops)
- 	rt2x00dev->hw = hw;
- 	rt2x00dev->irq = platform_get_irq(pdev, 0);
- 	rt2x00dev->name = pdev->dev.driver->name;
-+	rt2x00dev->clk = clk_get(&pdev->dev);
- 
- 	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_SOC);
- 
--- 
-1.8.3.1
+johannes
