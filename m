@@ -1,128 +1,419 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:34597 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751899AbdARCRy (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37038 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932208AbdABKNA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 21:17:54 -0500
-Received: by mail-pg0-f51.google.com with SMTP id 14so29392163pgg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 18:17:13 -0800 (PST)
-Date: Tue, 17 Jan 2017 18:09:43 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH v2 2/3] mwifiex: pcie: don't loop/retry interrupt status
- checks
-Message-ID: <20170118020942.GA37198@google.com> (sfid-20170118_031820_927043_E9FFCD6E)
-References: <20170113233538.36196-1-briannorris@chromium.org>
- <20170113233538.36196-2-briannorris@chromium.org>
- <20170116005452.GI23285@dtor-ws>
- <20170117194822.GA29749@google.com>
- <20170117204455.GA6888@dtor-ws>
+        Mon, 2 Jan 2017 05:13:00 -0500
+From: Fabio Coatti <fabio.coatti@gmail.com>
+To: LKML <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: kernel 4.9 iwlwifi startup error
+Date: Mon, 02 Jan 2017 11:12:55 +0100
+Message-ID: <2029482.jt8IarKZJs@calvin> (sfid-20170102_111323_431432_1C5A1F30)
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="u3/rZRmxL6MmkK24"
-In-Reply-To: <20170117204455.GA6888@dtor-ws>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi all, 
+I'm using kernel 4.9 and maybe half of the times I boot my laptop I get the 
+error reported below, and the wifi does not work. I have to remove iwlwifi (like 
+modprobe -r iwldvm iwlwifi) and insert it again to get things workig again.
+This seems a bit random, it does not happens all the times so it could be a 
+timing issue or even a flaky hardware (unlikely, as I see only this issue with 
+wifi, once it starts it works just fine)
+I'm pretty sure to have seen the same behaviour at some point in 4.8.X 
+release, but right now I lost the related notes.
+Environment:
+Distro: gentoo
+gcc 5.4.0
+HW: Hewlett-Packard HP EliteBook Folio 9470m/18DF, BIOS 68IBD Ver. F.63 
+04/26/2016
+Intel(R) Core(TM) i5-3427U CPU @ 1.80GHz
+Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 24)
 
---u3/rZRmxL6MmkK24
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Of course if more info is needed, just drop me a note.
 
-On Tue, Jan 17, 2017 at 12:44:55PM -0800, Dmitry Torokhov wrote:
-> On Tue, Jan 17, 2017 at 11:48:22AM -0800, Brian Norris wrote:
-> > Also, FWIW, I did some fairly non-scientific tests of this on my
-> > systems, and I didn't see much difference. I can run better tests, and
-> > even collect data on how often we loop here vs. see new interrupts.
-> 
-> That would be great. Maybe packet aggregation takes care of interrupts
-> arriving "too closely" together most of the time, I dunno.
+I'm not subscribed to mailing lists, so please keep me in CC: for any 
+information request.
 
-OK, so I did some basic accounting of how many times this while loop
-runs in a row. I don't know if they're highly illuminating, but here
-goes. They're listed as a histogram, where the first column is number of
-samples that exhibited the behavior and second column is number of times
-going through the loop before exiting (i.e., seeing no more INT_STATUS):
+Many thanks.
 
-Idle (just scanning for networks occasionally, and loading a web page or
-two) for a minute or two:
-      1 
-    265 1
-      2 2
+Dmesg relevant output:
 
-Downloading a Chrome .deb package via wget, in a loop:
-    857 0
-  36406 1
-  32386 2
-   2230 3
-    153 4
-     11 5
+[lun gen  2 10:41:48 2017] IPv6: ADDRCONF(NETDEV_UP): wlo1: link is not ready
+[lun gen  2 10:41:48 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:48 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:48 2017] iwlwifi 0000:03:00.0: Radio type=0x2-0x1-0x0
+[lun gen  2 10:41:49 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:49 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:49 2017] iwlwifi 0000:03:00.0: Radio type=0x2-0x1-0x0
+[lun gen  2 10:41:49 2017] IPv6: ADDRCONF(NETDEV_UP): wlo1: link is not ready
+[lun gen  2 10:41:49 2017] IPv6: ADDRCONF(NETDEV_UP): wlo1: link is not ready
+ [lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Error sending 
+REPLY_SCAN_ABORT_CMD: time out after 2000ms.
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Current CMD queue read_ptr 34 
+write_ptr 35                                                                                                        
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Loaded firmware version: 
+18.168.6.1                                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Start IWL Error Log Dump:                                                                                                                         
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Status: 0x000003CC, count: 6                                                                                                                      
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000084 | 
+NMI_INTERRUPT_UNKNOWN                                                                                                                
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00010564 | uPc                                                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0001054E | branchlink1                                                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00010580 | branchlink2                                                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0000DBEA | interruptlink1                                                                                                                       
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Microcode SW error detected.  
+Restarting 0x2000000.                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: CSR values:                                                                                                                                       
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x000005A0 | interruptlink2                                                                                                                       
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000081 | data1                                                                                                                                
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x07030000 | data2                                                                                                                                
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x000260A4 | line                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: (2nd byte of 
+CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0D000A41 | beacon time                                                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0052C5BF | tsf low                                                                                                                              
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000000 | tsf hi                                                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000000 | time gp1                                                                                                                             
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x005B69CC | time gp2                                                                                                                             
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000000 | time gp3                                                                                                                             
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x754312A8 | uCode version                                                                                                                        
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x000000B0 | hw version                                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00484B00 | board version                                                                                                                        
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0000001C | hcmd                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x27863040 | isr0                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0181E000 | isr1                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000E02 | isr2                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0147FC43 | isr3                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000000 | isr4                                                                                                                                 
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000000 | isr_pref                                                                                                                             
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x000260A4 | wait_event                                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000050 | l2p_control                                                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000032 | l2p_duration                                                                                                                         
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x0000003F | l2p_mhvalid                                                                                                                          
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 
+0X00484b00                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00101040 | l2p_addr_match                                                                                                                       
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000005 | lmpm_pmg_sel                                                                                                                         
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x13011136 | timestamp                                                                                                                            
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: 0x00000818 | flow_handler                                                                                                                         
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:          CSR_INT_COALESCING: 
+0X00000040                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                     CSR_INT: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                CSR_INT_MASK: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:           CSR_FH_INT_STATUS: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                 CSR_GPIO_IN: 
+0X00000030                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                   CSR_RESET: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                CSR_GP_CNTRL: 
+0X080403cd                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                  CSR_HW_REV: 
+0X000000b0                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:              CSR_EEPROM_REG: 
+0X60f10ffd                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:               CSR_EEPROM_GP: 
+0X90000801                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:              CSR_OTP_GP_REG: 
+0X00030001                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                 CSR_GIO_REG: 
+0X00080042                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:            CSR_GP_UCODE_REG: 
+0X000004bf                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:           CSR_GP_DRIVER_REG: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP1: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:           CSR_UCODE_DRV_GP2: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Start IWL Event Log Dump: 
+display last 1 entries                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                 CSR_LED_REG: 
+0X00000040                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 
+0X880fffff                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 
+0X27800200                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:             CSR_ANA_PLL_CFG: 
+0X00000000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:      CSR_MONITOR_STATUS_REG: 
+0X43f7f757                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: EVT_LOGT:
+0005990856:0x0000010c:0123                                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:           CSR_HW_REV_WA_REG: 
+0X0001001a                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Command REPLY_RXON failed: FW 
+Error                                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Error clearing ASSOC_MSK on 
+BSS (-5)                                                                                                              
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 
+0Xffff0000                                                                                                           
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: FH register values:                                                                                                                               
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:         
+FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X0ffffd00                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:        
+FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X00ffffe0                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                  
+FH_RSCSR_CHNL0_WPTR: 0X00000008                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:         
+FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00000000                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:          
+FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:            
+FH_MEM_RSSR_RX_STATUS_REG: 0X07030000                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:    
+FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000                                                                                                  
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                
+FH_TSSR_TX_STATUS_REG: 0X07ff0001                                                                                                  
+[lun gen  2 10:41:55 2017] ------------[ cut here ]------------
+[lun gen  2 10:41:55 2017] WARNING: CPU: 3 PID: 2275 at drivers/net/wireless/
+intel/iwlwifi/pcie/trans.c:1864 iwl_trans_pcie_grab_nic_access+0xe6/0xf0 
+[iwlwifi]
+[lun gen  2 10:41:55 2017] Timeout waiting for hardware access (CSR_GP_CNTRL 
+0x080003d8)
+[lun gen  2 10:41:55 2017] Modules linked in: bnep btusb btintel bluetooth 
+uvcvideo videobuf2_vmalloc videobuf2_memops joydev videobuf2_v4l2 hp_wmi 
+sparse_keymap videodev cdc_wdm cdc_acm videobuf2_core snd_usb_audio 
+snd_usbmidi_lib snd_rawmidi snd_seq_device uas intel_rapl x86_pkg_temp_thermal 
+algif_skcipher intel_powerclamp coretemp kvm_intel kvm irqbypass 
+crct10dif_pclmul crc32_pclmul snd_hda_codec_hdmi snd_hda_codec_generic 
+snd_hda_intel snd_hda_codec psmouse snd_hwdep iwldvm snd_hda_core iwlwifi 
+snd_pcm snd_timer snd soundcore mei_me mei hp_accel wmi hp_wireless lis3lv02d 
+sch_fq_codel vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv(OE) dm_zero 
+dm_thin_pool dm_persistent_data dm_bio_prison dm_service_time dm_round_robin 
+dm_queue_length dm_multipath dm_delay virtio_pci virtio_blk virtio_balloon 
+vxlan ip6_udp_tunnel
+[lun gen  2 10:41:55 2017]  udp_tunnel macvlan virtio_net virtio_ring virtio 
+fuse overlay linear raid0 dm_raid dm_snapshot dm_bufio dm_mirror dm_region_hash 
+dm_log hid_apple ohci_pci ohci_hcd uhci_hcd
+[lun gen  2 10:41:55 2017] CPU: 3 PID: 2275 Comm: irq/34-iwlwifi Tainted: G           
+OE   4.9.0-cova #2
+[lun gen  2 10:41:55 2017] Hardware name: Hewlett-Packard HP EliteBook Folio 
+9470m/18DF, BIOS 68IBD Ver. F.63 04/26/2016
+[lun gen  2 10:41:55 2017]  0000000000000000 ffffffffa84cd5fd ffffba42002bfcf8 
+0000000000000000
+[lun gen  2 10:41:55 2017]  ffffffffa80d2ee4 ffff9ac674138018 ffffba42002bfd50 
+ffff9ac67413fe80
+[lun gen  2 10:41:55 2017]  ffffba42002bfd88 0000000002000000 ffff9ac66fd26600 
+ffffffffa80d2f5a
+[lun gen  2 10:41:55 2017] Call Trace:
+[lun gen  2 10:41:55 2017]  [<ffffffffa84cd5fd>] ? dump_stack+0x46/0x59
+[lun gen  2 10:41:55 2017]  [<ffffffffa80d2ee4>] ? __warn+0xb4/0xd0
+[lun gen  2 10:41:55 2017]  [<ffffffffa80d2f5a>] ? warn_slowpath_fmt+0x5a/0x80
+[lun gen  2 10:41:55 2017]  [<ffffffffc045f0fa>] ? iwl_poll_bit+0x2a/0x70 
+[iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffc046d4a6>] ? 
+iwl_trans_pcie_grab_nic_access+0xe6/0xf0 [iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffc045f167>] ? iwl_read_direct32+0x27/0x70 
+[iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffc045f7a7>] ? iwl_dump_fh+0xa7/0x220 
+[iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffc0464cdf>] ? iwl_pcie_irq_handle_error
++0x2f/0x130 [iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffc0466fa9>] ? iwl_pcie_irq_handler
++0x539/0x730 [iwlwifi]
+[lun gen  2 10:41:55 2017]  [<ffffffffa8117af0>] ? irq_forced_thread_fn
++0x60/0x60
+[lun gen  2 10:41:55 2017]  [<ffffffffa8117b06>] ? irq_thread_fn+0x16/0x40
+[lun gen  2 10:41:55 2017]  [<ffffffffa8117db9>] ? irq_thread+0x139/0x1c0
+[lun gen  2 10:41:55 2017]  [<ffffffffa8117be0>] ? wake_threads_waitq
++0x30/0x30
+[lun gen  2 10:41:55 2017]  [<ffffffffa8117c80>] ? irq_thread_dtor+0xa0/0xa0
+[lun gen  2 10:41:55 2017]  [<ffffffffa80ee2f9>] ? kthread+0xc9/0xe0
+[lun gen  2 10:41:55 2017]  [<ffffffffa80ee230>] ? kthread_park+0x50/0x50
+[lun gen  2 10:41:55 2017]  [<ffffffffa8a20ac2>] ? ret_from_fork+0x22/0x30
+[lun gen  2 10:41:55 2017] ---[ end trace f47879f89784c9ca ]---
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0:                 
+FH_TSSR_TX_ERROR_REG: 0X5a5a5a5a
+[lun gen  2 10:41:55 2017] ieee80211 phy0: Hardware restart was requested
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Radio type=0x2-0x1-0x0
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Radio type=0x2-0x1-0x0
+[lun gen  2 10:41:55 2017] IPv6: ADDRCONF(NETDEV_UP): wlo1: link is not ready
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: L1 Enabled - LTR Disabled
+[lun gen  2 10:41:55 2017] iwlwifi 0000:03:00.0: Radio type=0x2-0x1-0x0
+[lun gen  2 10:42:00 2017] iwlwifi 0000:03:00.0: Failed to load firmware chunk!
+[lun gen  2 10:42:00 2017] iwlwifi 0000:03:00.0: Could not load the [0] uCode 
+section                                                                                                              
+[lun gen  2 10:42:00 2017] iwlwifi 0000:03:00.0: Failed to run INIT ucode: -110                                                                                                                    
+[lun gen  2 10:42:00 2017] iwlwifi 0000:03:00.0: Unable to initialize device.                                                                                                                      
+[lun gen  2 10:42:00 2017] ------------[ cut here ]------------
+[lun gen  2 10:42:00 2017] WARNING: CPU: 2 PID: 307 at net/mac80211/util.c:
+1863 ieee80211_reconfig+0x231/0xc30
+[lun gen  2 10:42:00 2017] Hardware became unavailable during restart.
+[lun gen  2 10:42:00 2017] Modules linked in: bnep btusb btintel bluetooth 
+uvcvideo videobuf2_vmalloc videobuf2_memops joydev videobuf2_v4l2 hp_wmi 
+sparse_keymap videodev cdc_wdm cdc_acm videobuf2_core snd_usb_audio 
+snd_usbmidi_lib snd_rawmidi snd_seq_device uas intel_rapl x86_pkg_temp_thermal 
+algif_skcipher intel_powerclamp coretemp kvm_intel kvm irqbypass 
+crct10dif_pclmul crc32_pclmul snd_hda_codec_hdmi snd_hda_codec_generic 
+snd_hda_intel snd_hda_codec psmouse snd_hwdep iwldvm snd_hda_core iwlwifi 
+snd_pcm snd_timer snd soundcore mei_me mei hp_accel wmi hp_wireless lis3lv02d 
+sch_fq_codel vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv(OE) dm_zero 
+dm_thin_pool dm_persistent_data dm_bio_prison dm_service_time dm_round_robin 
+dm_queue_length dm_multipath dm_delay virtio_pci virtio_blk virtio_balloon 
+vxlan ip6_udp_tunnel
+[lun gen  2 10:42:00 2017]  udp_tunnel macvlan virtio_net virtio_ring virtio 
+fuse overlay linear raid0 dm_raid dm_snapshot dm_bufio dm_mirror dm_region_hash 
+dm_log hid_apple ohci_pci ohci_hcd uhci_hcd
+[lun gen  2 10:42:00 2017] CPU: 2 PID: 307 Comm: kworker/2:3 Tainted: G        
+W  OE   4.9.0-cova #2
+[lun gen  2 10:42:00 2017] Hardware name: Hewlett-Packard HP EliteBook Folio 
+9470m/18DF, BIOS 68IBD Ver. F.63 04/26/2016
+[lun gen  2 10:42:00 2017] Workqueue: events_freezable ieee80211_restart_work
+[lun gen  2 10:42:00 2017]  0000000000000000 ffffffffa84cd5fd ffffba4200f0fd38 
+0000000000000000
+[lun gen  2 10:42:00 2017]  ffffffffa80d2ee4 ffff9ac674198700 ffffba4200f0fd90 
+ffff9ac6741993f0
+[lun gen  2 10:42:00 2017]  ffff9ac674198700 0000000000000000 0000000000000000 
+ffffffffa80d2f5a
+[lun gen  2 10:42:00 2017] Call Trace:
+[lun gen  2 10:42:00 2017]  [<ffffffffa84cd5fd>] ? dump_stack+0x46/0x59
+[lun gen  2 10:42:00 2017]  [<ffffffffa80d2ee4>] ? __warn+0xb4/0xd0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80d2f5a>] ? warn_slowpath_fmt+0x5a/0x80
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a02ee1>] ? ieee80211_reconfig
++0x231/0xc30
+[lun gen  2 10:42:00 2017]  [<ffffffffa8124fbf>] ? try_to_del_timer_sync+0x4f/
+0x80
+[lun gen  2 10:42:00 2017]  [<ffffffffa89d3638>] ? ieee80211_restart_work
++0x88/0xc0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8d4f>] ? process_one_work+0x11f/
+0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e9012>] ? worker_thread+0x42/0x4c0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8fd0>] ? process_one_work
++0x3a0/0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee2f9>] ? kthread+0xc9/0xe0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee230>] ? kthread_park+0x50/0x50
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a20ac2>] ? ret_from_fork+0x22/0x30
+[lun gen  2 10:42:00 2017] ---[ end trace f47879f89784c9cb ]---
+[lun gen  2 10:42:00 2017] ------------[ cut here ]------------
+[lun gen  2 10:42:00 2017] WARNING: CPU: 2 PID: 307 at net/mac80211/driver-
+ops.h:17 ieee80211_do_stop+0x577/0x880
+[lun gen  2 10:42:00 2017] wlo1:  Failed check-sdata-in-driver check, flags: 
+0x0
+[lun gen  2 10:42:00 2017] Modules linked in: bnep btusb btintel bluetooth 
+uvcvideo videobuf2_vmalloc videobuf2_memops joydev videobuf2_v4l2 hp_wmi 
+sparse_keymap videodev cdc_wdm cdc_acm videobuf2_core snd_usb_audio 
+snd_usbmidi_lib snd_rawmidi snd_seq_device uas intel_rapl x86_pkg_temp_thermal 
+algif_skcipher intel_powerclamp coretemp kvm_intel kvm irqbypass 
+crct10dif_pclmul crc32_pclmul snd_hda_codec_hdmi snd_hda_codec_generic 
+snd_hda_intel snd_hda_codec psmouse snd_hwdep iwldvm snd_hda_core iwlwifi 
+snd_pcm snd_timer snd soundcore mei_me mei hp_accel wmi hp_wireless lis3lv02d 
+sch_fq_codel vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv(OE) dm_zero 
+dm_thin_pool dm_persistent_data dm_bio_prison dm_service_time dm_round_robin 
+dm_queue_length dm_multipath dm_delay virtio_pci virtio_blk virtio_balloon 
+vxlan ip6_udp_tunnel
+[lun gen  2 10:42:00 2017]  udp_tunnel macvlan virtio_net virtio_ring virtio 
+fuse overlay linear raid0 dm_raid dm_snapshot dm_bufio dm_mirror dm_region_hash 
+dm_log hid_apple ohci_pci ohci_hcd uhci_hcd
+[lun gen  2 10:42:00 2017] CPU: 2 PID: 307 Comm: kworker/2:3 Tainted: G        
+W  OE   4.9.0-cova #2
+[lun gen  2 10:42:00 2017] Hardware name: Hewlett-Packard HP EliteBook Folio 
+9470m/18DF, BIOS 68IBD Ver. F.63 04/26/2016
+[lun gen  2 10:42:00 2017] Workqueue: events_freezable ieee80211_restart_work
+[lun gen  2 10:42:00 2017]  0000000000000000 ffffffffa84cd5fd ffffba4200f0fc00 
+0000000000000000
+[lun gen  2 10:42:00 2017]  ffffffffa80d2ee4 ffff9ac6742128c0 ffffba4200f0fc58 
+0000000000000000
+[lun gen  2 10:42:00 2017]  ffff9ac674198700 ffff9ac674198ee8 ffff9ac674213218 
+ffffffffa80d2f5a
+[lun gen  2 10:42:00 2017] Call Trace:
+[lun gen  2 10:42:00 2017]  [<ffffffffa84cd5fd>] ? dump_stack+0x46/0x59
+[lun gen  2 10:42:00 2017]  [<ffffffffa80d2ee4>] ? __warn+0xb4/0xd0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80d2f5a>] ? warn_slowpath_fmt+0x5a/0x80
+[lun gen  2 10:42:00 2017]  [<ffffffffa89e8177>] ? ieee80211_do_stop
++0x577/0x880
+[lun gen  2 10:42:00 2017]  [<ffffffffa88b00c5>] ? dev_deactivate_many
++0x1f5/0x230
+[lun gen  2 10:42:00 2017]  [<ffffffffa89e8491>] ? ieee80211_stop+0x11/0x20
+[lun gen  2 10:42:00 2017]  [<ffffffffa8886502>] ? __dev_close_many+0x82/0xe0
+[lun gen  2 10:42:00 2017]  [<ffffffffa88865e8>] ? dev_close_many+0x88/0x130
+[lun gen  2 10:42:00 2017]  [<ffffffffa888b29f>] ? dev_close.part.17+0x3f/0x70
+[lun gen  2 10:42:00 2017]  [<ffffffffa888b2de>] ? dev_close+0xe/0x20
+[lun gen  2 10:42:00 2017]  [<ffffffffa89acbae>] ? 
+cfg80211_shutdown_all_interfaces+0x3e/0xb0
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a02d54>] ? ieee80211_reconfig
++0xa4/0xc30
+[lun gen  2 10:42:00 2017]  [<ffffffffa8124fbf>] ? try_to_del_timer_sync+0x4f/
+0x80
+[lun gen  2 10:42:00 2017]  [<ffffffffa89d3638>] ? ieee80211_restart_work
++0x88/0xc0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8d4f>] ? process_one_work+0x11f/
+0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e9012>] ? worker_thread+0x42/0x4c0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8fd0>] ? process_one_work
++0x3a0/0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee2f9>] ? kthread+0xc9/0xe0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee230>] ? kthread_park+0x50/0x50
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a20ac2>] ? ret_from_fork+0x22/0x30
+[lun gen  2 10:42:00 2017] ---[ end trace f47879f89784c9cc ]---
+[lun gen  2 10:42:00 2017] ------------[ cut here ]------------
+[lun gen  2 10:42:00 2017] WARNING: CPU: 2 PID: 307 at net/mac80211/driver-
+ops.c:39 ieee80211_do_stop+0x560/0x880
+[lun gen  2 10:42:00 2017] Modules linked in: bnep btusb btintel bluetooth 
+uvcvideo videobuf2_vmalloc videobuf2_memops joydev videobuf2_v4l2 hp_wmi 
+sparse_keymap videodev cdc_wdm cdc_acm videobuf2_core snd_usb_audio 
+snd_usbmidi_lib snd_rawmidi snd_seq_device uas intel_rapl x86_pkg_temp_thermal 
+algif_skcipher intel_powerclamp coretemp kvm_intel kvm irqbypass 
+crct10dif_pclmul crc32_pclmul snd_hda_codec_hdmi snd_hda_codec_generic 
+snd_hda_intel snd_hda_codec psmouse snd_hwdep iwldvm snd_hda_core iwlwifi 
+snd_pcm snd_timer snd soundcore mei_me mei hp_accel wmi hp_wireless lis3lv02d 
+sch_fq_codel vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv(OE) dm_zero 
+dm_thin_pool dm_persistent_data dm_bio_prison dm_service_time dm_round_robin 
+dm_queue_length dm_multipath dm_delay virtio_pci virtio_blk virtio_balloon 
+vxlan ip6_udp_tunnel
+[lun gen  2 10:42:00 2017]  udp_tunnel macvlan virtio_net virtio_ring virtio 
+fuse overlay linear raid0 dm_raid dm_snapshot dm_bufio dm_mirror dm_region_hash 
+dm_log hid_apple ohci_pci ohci_hcd uhci_hcd
+[lun gen  2 10:42:00 2017] CPU: 2 PID: 307 Comm: kworker/2:3 Tainted: G        
+W  OE   4.9.0-cova #2
+[lun gen  2 10:42:00 2017] Hardware name: Hewlett-Packard HP EliteBook Folio 
+9470m/18DF, BIOS 68IBD Ver. F.63 04/26/2016
+[lun gen  2 10:42:00 2017] Workqueue: events_freezable ieee80211_restart_work
+[lun gen  2 10:42:00 2017]  0000000000000000 ffffffffa84cd5fd 0000000000000000 
+0000000000000000
+[lun gen  2 10:42:00 2017]  ffffffffa80d2ee4 ffff9ac6742128c0 ffff9ac674198ff0 
+0000000000000000
+[lun gen  2 10:42:00 2017]  ffff9ac674198700 ffff9ac674198ee8 ffff9ac674213218 
+ffffffffa89e8160
+[lun gen  2 10:42:00 2017] Call Trace:
+[lun gen  2 10:42:00 2017]  [<ffffffffa84cd5fd>] ? dump_stack+0x46/0x59
+[lun gen  2 10:42:00 2017]  [<ffffffffa80d2ee4>] ? __warn+0xb4/0xd0
+[lun gen  2 10:42:00 2017]  [<ffffffffa89e8160>] ? ieee80211_do_stop
++0x560/0x880
+[lun gen  2 10:42:00 2017]  [<ffffffffa88b00c5>] ? dev_deactivate_many
++0x1f5/0x230
+[lun gen  2 10:42:00 2017]  [<ffffffffa89e8491>] ? ieee80211_stop+0x11/0x20
+[lun gen  2 10:42:00 2017]  [<ffffffffa8886502>] ? __dev_close_many+0x82/0xe0
+[lun gen  2 10:42:00 2017]  [<ffffffffa88865e8>] ? dev_close_many+0x88/0x130
+[lun gen  2 10:42:00 2017]  [<ffffffffa888b29f>] ? dev_close.part.17+0x3f/0x70
+[lun gen  2 10:42:00 2017]  [<ffffffffa888b2de>] ? dev_close+0xe/0x20
+[lun gen  2 10:42:00 2017]  [<ffffffffa89acbae>] ? 
+cfg80211_shutdown_all_interfaces+0x3e/0xb0
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a02d54>] ? ieee80211_reconfig
++0xa4/0xc30
+[lun gen  2 10:42:00 2017]  [<ffffffffa8124fbf>] ? try_to_del_timer_sync+0x4f/
+0x80
+[lun gen  2 10:42:00 2017]  [<ffffffffa89d3638>] ? ieee80211_restart_work
++0x88/0xc0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8d4f>] ? process_one_work+0x11f/
+0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e9012>] ? worker_thread+0x42/0x4c0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80e8fd0>] ? process_one_work
++0x3a0/0x3a0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee2f9>] ? kthread+0xc9/0xe0
+[lun gen  2 10:42:00 2017]  [<ffffffffa80ee230>] ? kthread_park+0x50/0x50
+[lun gen  2 10:42:00 2017]  [<ffffffffa8a20ac2>] ? ret_from_fork+0x22/0x30
+[lun gen  2 10:42:00 2017] ---[ end trace f47879f89784c9cd ]---
 
-Running a perf client test (i.e., TX traffic) in a loop:
-   1694 0
- 247897 1
-  25530 2
-    441 3
-     18 4
-
-So it seems like in some cases, it's at least *possible* to have a little bit
-of potential savings on 10-50% of interrupts when under load. (i.e., see
-that ~50% of interrupt checks take 2, 3, 4, or 5 loops in the second
-example.)
-
-Now, I also did some perf numbers with iperf between a Raspberry Pi iperf
-server and an ARM64 system running mwifiex. On the whole, the TX side was
-probably bottlenecked by the RPi, but the RX side was pretty good.
-
-I'll attach full numbers, but the percentage delta is as follows:
-
-                               Mean     Median
-                               ------   ------
-% change, bi-direction (RX):   -0.3     -4.5
-% change, bi-direction (TX):    1.034    4.45
-% change, TX only:             12.96    13.35
-% change, RX only:             -6.5     -3
-
-I'm not sure I have a good explanation for the gain in TX performance.
-Perhaps partly the reduction in complexity (e.g., unnecessary register
-reads). Perhaps also because I had IEEE power-save enabled, so without
-this patch, performance could (theoretically) be harmed by the issue
-mentioned in the commit description (i.e., occasional slow PCIe reads)
--- though I guess we probably don't enter power-save often during iperf
-tests.
-
-So, there could definitely be some methodology mistakes or other
-variables involved, but these don't seem to show any particularly bad
-performance loss, and if we did, we might consider other approaches like
-NAPI for tuning them.
-
-Brian
-
---u3/rZRmxL6MmkK24
-Content-Type: text/csv; charset=us-ascii
-Content-Disposition: attachment; filename="summary.csv"
-
-,Mbit/s,,,,,,,,,,Min,Max,Mean,Median,Stddev
-Before: Bidirectional RX,193,163,198,147,194,195,129,167,198,174,129,198,175.8,183.5,24.142171494
-Before: Bidirectional TX,15.2,21.4,15.8,26.2,13.8,12.6,22.9,14.3,14.7,35.1,12.6,35.1,19.2,15.5,7.1870253466
-Before: TX only,60.6,52.4,70,66,60.9,64.9,58.3,59.8,53.3,58.3,52.4,70,60.45,60.2,5.4530827163
-Before: RX only,151,186,209,201,180,208,210,189,176,196,151,210,190.6,192.5,18.476411388
-After: Bidirectional RX,171,194,187,165,167,197,163,199,192,120,120,199,175.5,179,24.0381641007
-After: Bidirectional TX,30.4,19,19.8,20.2,20.7,20.1,27.3,18.8,19.3,6.74,6.74,30.4,20.234,19.95,6.1485322548
-After: TX only,73.9,78.1,73.3,73.2,74.5,82.1,73.8,69.6,68.7,66.9,66.9,82.1,73.41,73.55,4.4500811478
-After: RX only,160,163,179,195,203,187,192,202,207,153,153,207,184.1,189.5,19.4676369621
-,,,,,,,,,,,,,,,
-Delta: Bidirectional RX,,,,,,,,,,,,,-0.3,-4.5,
-Delta: Bidirectional TX,,,,,,,,,,,,,1.034,4.45,
-Delta: TX only,,,,,,,,,,,,,12.96,13.35,
-Delta: RX only,,,,,,,,,,,,,-6.5,-3,
-,,,,,,,,,,,,,,,
-,,,,,,,,,,,,,-0.17%,-2.45%,
-,,,,,,,,,,,,,5.39%,28.71%,
-,,,,,,,,,,,,,21.44%,22.18%,
-,,,,,,,,,,,,,-3.41%,-1.56%,
-
---u3/rZRmxL6MmkK24--
+-- 
+Fabio
