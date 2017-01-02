@@ -1,101 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55266 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37520 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751022AbdATNn2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 08:43:28 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>,
-        John Crispin <blogic@openwrt.org>
-Subject: [PATCH v4 2/3] rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
-Date: Fri, 20 Jan 2017 14:28:25 +0100
-Message-Id: <1484918906-21856-3-git-send-email-sgruszka@redhat.com> (sfid-20170120_144332_949581_D1F7E0FD)
-In-Reply-To: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
-References: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
+        id S932236AbdABL2v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 2 Jan 2017 06:28:51 -0500
+Message-ID: <1483356523.4596.12.camel@sipsolutions.net> (sfid-20170102_122853_587864_689C3D56)
+Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
+ exchange
+From: Johannes Berg <johannes@sipsolutions.net>
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
+        jouni@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, vamsin@qti.qualcomm.com
+Date: Mon, 02 Jan 2017 12:28:43 +0100
+In-Reply-To: <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
+References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
+         <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Golle <daniel@makrotopia.org>
+On Fri, 2016-12-30 at 22:55 +0300, IgorMitsyanko wrote:
+> 
+> > The driver needs to configure receive behavior to accept frames to
+> > the
+> > specified random address during the time the frame exchange is
+> > pending
+> > and such frames need to be acknowledged similarly to frames sent to
+> > the
+> > local permanent address when this random address functionality is
+> > not
+> > used.
+> 
+> A (probably) silly question: how wireless drivers are supposed to use
+> SA 
+> in a frame? I think drivers are not concerned about source address,
+> they 
+> simply pass whatever there is already set by userspace in 
+> cfg80211_mgmt_tx_params::buf into air on Tx.
+> And on Rx, they filter frames based on receiver address/BSSID, pass
+> it 
+> to upper layers and do not care what address is in DA (it is handled
+> by 
+> upper layers).
 
-On Rt3352 the driver needs to know the frequency of an external
-crystal which can be either 40 MHz (as on all other WiSoCs until now)
-or 20 MHz.
-Get the clock attached by ramips WiSoC platform code which probes
-SYSC_REG_SYSCFG (added by John Crispin in commit 6ac8579b96e3b) and
-introduce a new flag clk_is_20mhz in struct hw_mode_spec to make the
-driver aware and use either 40 MHz or 20 MHz specific rf_vals on those
-WiSoC platforms.
-The introduced support for boards with a 20 MHz crystal is also needed
-for RT5350.
+They do care about the DA in RX, since - as the commit message states -
+"such frames need to be acknowledged [...]"
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Mathias Kresin <dev@kresin.me>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 31 +++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 8ea844d..5ae2950 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -1935,6 +1935,11 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
- 	rt2x00dev->lna_gain = lna_gain;
- }
- 
-+static inline bool rt2800_clk_is_20mhz(struct rt2x00_dev *rt2x00dev)
-+{
-+	return clk_get_rate(rt2x00dev->clk) == 20000000;
-+}
-+
- #define FREQ_OFFSET_BOUND	0x5f
- 
- static void rt2800_freq_cal_mode1(struct rt2x00_dev *rt2x00dev)
-@@ -7426,6 +7431,27 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	{173, 0x61, 0, 9},
- };
- 
-+/*
-+ * RF value list for rt3xxx with Xtal20MHz
-+ * Supports: 2.4 GHz (all) (RF3322)
-+ */
-+static const struct rf_channel rf_vals_3x_xtal20[] = {
-+	{1,    0xE2,	 2,  0x14},
-+	{2,    0xE3,	 2,  0x14},
-+	{3,    0xE4,	 2,  0x14},
-+	{4,    0xE5,	 2,  0x14},
-+	{5,    0xE6,	 2,  0x14},
-+	{6,    0xE7,	 2,  0x14},
-+	{7,    0xE8,	 2,  0x14},
-+	{8,    0xE9,	 2,  0x14},
-+	{9,    0xEA,	 2,  0x14},
-+	{10,   0xEB,	 2,  0x14},
-+	{11,   0xEC,	 2,  0x14},
-+	{12,   0xED,	 2,  0x14},
-+	{13,   0xEE,	 2,  0x14},
-+	{14,   0xF0,	 2,  0x18},
-+};
-+
- static const struct rf_channel rf_vals_5592_xtal20[] = {
- 	/* Channel, N, K, mod, R */
- 	{1, 482, 4, 10, 3},
-@@ -7654,7 +7680,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF5390:
- 	case RF5392:
- 		spec->num_channels = 14;
--		spec->channels = rf_vals_3x;
-+		if (rt2800_clk_is_20mhz(rt2x00dev))
-+			spec->channels = rf_vals_3x_xtal20;
-+		else
-+			spec->channels = rf_vals_3x;
- 		break;
- 
- 	case RF3052:
--- 
-1.8.3.1
+johannes
