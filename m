@@ -1,146 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36250 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751786AbdAWWSN (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:18:13 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 24 Jan 2017 00:03:37 +0200
-Message-Id: <20170123220350.25305-13-luca@coelho.fi> (sfid-20170123_231815_797682_49FC90F4)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 12/25] iwlwifi: mvm: separate rate calculation to a new function
+Received: from nbd.name ([46.4.11.11]:39051 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756878AbdACNPf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jan 2017 08:15:35 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        netdev@vger.kernel.org
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <8db3f67d-a767-d61e-b101-9b78c1f59569@nbd.name> (sfid-20170103_141855_620349_A019F9A6)
+Date: Tue, 3 Jan 2017 14:15:29 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 2017-01-02 20:32, Linus Lüssing wrote:
+> Implements an optional, per bridge port flag and feature to deliver
+> multicast packets to any host on the according port via unicast
+> individually. This is done by copying the packet per host and
+> changing the multicast destination MAC to a unicast one accordingly.
+> 
+> multicast-to-unicast works on top of the multicast snooping feature of
+> the bridge. Which means unicast copies are only delivered to hosts which
+> are interested in it and signalized this via IGMP/MLD reports
+> previously.
+> 
+> This feature is intended for interface types which have a more reliable
+> and/or efficient way to deliver unicast packets than broadcast ones
+> (e.g. wifi).
+> 
+> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
+> report suppression takes place. This feature is disabled by default.
+> 
+> The initial patch and idea is from Felix Fietkau.
+> 
+> Cc: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+Please add Signed-off-by: Felix Fietkau <nbd@nbd.name>
+in the next version, and maybe also From:
 
-In preparation for the new TX cmd - move the rate calculation
-to a diffrent function, and make it independent of the TX
-command.
+Thanks,
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 84 +++++++++++++++--------------
- 1 file changed, 45 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 7f2fe3ffe547..af828eda3330 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -299,6 +299,50 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		cpu_to_le16(iwl_mvm_tx_csum(mvm, skb, hdr, info));
- }
- 
-+static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
-+			       struct ieee80211_tx_info *info,
-+			       struct ieee80211_sta *sta)
-+{
-+	int rate_idx;
-+	u8 rate_plcp;
-+	u32 rate_flags;
-+
-+	/* HT rate doesn't make sense for a non data frame */
-+	WARN_ONCE(info->control.rates[0].flags & IEEE80211_TX_RC_MCS,
-+		  "Got an HT rate (flags:0x%x/mcs:%d) for a non data frame\n",
-+		  info->control.rates[0].flags,
-+		  info->control.rates[0].idx);
-+
-+	rate_idx = info->control.rates[0].idx;
-+	/* if the rate isn't a well known legacy rate, take the lowest one */
-+	if (rate_idx < 0 || rate_idx >= IWL_RATE_COUNT_LEGACY)
-+		rate_idx = rate_lowest_index(
-+				&mvm->nvm_data->bands[info->band], sta);
-+
-+	/* For 5 GHZ band, remap mac80211 rate indices into driver indices */
-+	if (info->band == NL80211_BAND_5GHZ)
-+		rate_idx += IWL_FIRST_OFDM_RATE;
-+
-+	/* For 2.4 GHZ band, check that there is no need to remap */
-+	BUILD_BUG_ON(IWL_FIRST_CCK_RATE != 0);
-+
-+	/* Get PLCP rate for tx_cmd->rate_n_flags */
-+	rate_plcp = iwl_mvm_mac80211_idx_to_hwrate(rate_idx);
-+
-+	if (info->band == NL80211_BAND_2GHZ &&
-+	    !iwl_mvm_bt_coex_is_shared_ant_avail(mvm))
-+		rate_flags = mvm->cfg->non_shared_ant << RATE_MCS_ANT_POS;
-+	else
-+		rate_flags =
-+			BIT(mvm->mgmt_last_antenna_idx) << RATE_MCS_ANT_POS;
-+
-+	/* Set CCK flag as needed */
-+	if ((rate_idx >= IWL_FIRST_CCK_RATE) && (rate_idx <= IWL_LAST_CCK_RATE))
-+		rate_flags |= RATE_MCS_CCK_MSK;
-+
-+	return (u32)rate_plcp | rate_flags;
-+}
-+
- /*
-  * Sets the fields in the Tx cmd that are rate related
-  */
-@@ -306,10 +350,6 @@ void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm, struct iwl_tx_cmd *tx_cmd,
- 			    struct ieee80211_tx_info *info,
- 			    struct ieee80211_sta *sta, __le16 fc)
- {
--	u32 rate_flags;
--	int rate_idx;
--	u8 rate_plcp;
--
- 	/* Set retry limit on RTS packets */
- 	tx_cmd->rts_retry_limit = IWL_RTS_DFAULT_RETRY_LIMIT;
- 
-@@ -338,46 +378,12 @@ void iwl_mvm_set_tx_cmd_rate(struct iwl_mvm *mvm, struct iwl_tx_cmd *tx_cmd,
- 			cpu_to_le32(TX_CMD_FLG_ACK | TX_CMD_FLG_BAR);
- 	}
- 
--	/* HT rate doesn't make sense for a non data frame */
--	WARN_ONCE(info->control.rates[0].flags & IEEE80211_TX_RC_MCS,
--		  "Got an HT rate (flags:0x%x/mcs:%d) for a non data frame (fc:0x%x)\n",
--		  info->control.rates[0].flags,
--		  info->control.rates[0].idx,
--		  le16_to_cpu(fc));
--
--	rate_idx = info->control.rates[0].idx;
--	/* if the rate isn't a well known legacy rate, take the lowest one */
--	if (rate_idx < 0 || rate_idx >= IWL_RATE_COUNT_LEGACY)
--		rate_idx = rate_lowest_index(
--				&mvm->nvm_data->bands[info->band], sta);
--
--	/* For 5 GHZ band, remap mac80211 rate indices into driver indices */
--	if (info->band == NL80211_BAND_5GHZ)
--		rate_idx += IWL_FIRST_OFDM_RATE;
--
--	/* For 2.4 GHZ band, check that there is no need to remap */
--	BUILD_BUG_ON(IWL_FIRST_CCK_RATE != 0);
--
--	/* Get PLCP rate for tx_cmd->rate_n_flags */
--	rate_plcp = iwl_mvm_mac80211_idx_to_hwrate(rate_idx);
--
- 	mvm->mgmt_last_antenna_idx =
- 		iwl_mvm_next_antenna(mvm, iwl_mvm_get_valid_tx_ant(mvm),
- 				     mvm->mgmt_last_antenna_idx);
- 
--	if (info->band == NL80211_BAND_2GHZ &&
--	    !iwl_mvm_bt_coex_is_shared_ant_avail(mvm))
--		rate_flags = mvm->cfg->non_shared_ant << RATE_MCS_ANT_POS;
--	else
--		rate_flags =
--			BIT(mvm->mgmt_last_antenna_idx) << RATE_MCS_ANT_POS;
--
--	/* Set CCK flag as needed */
--	if ((rate_idx >= IWL_FIRST_CCK_RATE) && (rate_idx <= IWL_LAST_CCK_RATE))
--		rate_flags |= RATE_MCS_CCK_MSK;
--
- 	/* Set the rate in the TX cmd */
--	tx_cmd->rate_n_flags = cpu_to_le32((u32)rate_plcp | rate_flags);
-+	tx_cmd->rate_n_flags = cpu_to_le32(iwl_mvm_get_tx_rate(mvm, info, sta));
- }
- 
- static inline void iwl_mvm_set_tx_cmd_pn(struct ieee80211_tx_info *info,
--- 
-2.11.0
+- Felix
