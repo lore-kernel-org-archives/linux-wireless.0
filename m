@@ -1,43 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59784 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932802AbdAKLCE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 06:02:04 -0500
-Message-ID: <1484132519.23671.12.camel@sipsolutions.net> (sfid-20170111_120208_497654_055C974A)
-Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>,
-        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
-Date: Wed, 11 Jan 2017 12:01:59 +0100
-In-Reply-To: <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com> (sfid-20170111_113614_374251_1EB7EC8D)
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
-         <1484121737.23671.0.camel@sipsolutions.net>
-         <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
-         <1484125220.23671.1.camel@sipsolutions.net>
-         <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
-         <1484128809.23671.11.camel@sipsolutions.net>
-         <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com>
-         (sfid-20170111_113614_374251_1EB7EC8D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:50437 "EHLO
+        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1759681AbdACQlb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jan 2017 11:41:31 -0500
+Date: Tue, 3 Jan 2017 09:33:24 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Justin Bronder <justin@kuvee.com>,
+        Jaret Cantu <jaret.cantu@timesys.com>
+Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
+ crashing the kernel
+Message-ID: <20170103163324.GA3184@animalcreek.com> (sfid-20170103_174434_797565_1990C425)
+References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+ <1482380314-16440-3-git-send-email-geoff@kuvee.com>
+ <20161224060141.GA9069@animalcreek.com>
+ <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com>
+ <20161224172439.GA15103@animalcreek.com>
+ <CAO7Z3WJa0goJ-VXc7dvyz8imZtqby6QsC0QNH+uRAE8LhxqU2w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO7Z3WJa0goJ-VXc7dvyz8imZtqby6QsC0QNH+uRAE8LhxqU2w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-01-11 at 19:36 +0900, Masashi Honma wrote:
-> On 2017年01月11日 19:00, Johannes Berg wrote:
-> > Nevertheless, I don't have hardware to try to reproduce it, and I
-> > can't
-> > see any such issues (even with real forwarding, I even just wrote a
-> > wpa_s test for that) in hwsim.
-> > 
-> > Even a photo of the crash on the VT would help. Or maybe you can
-> > set up
-> > netconsole on the wired interface?
+[Please stop top-posting.  Bottom-post only to these lists.]
+
+Hi Geoff & happy new year.
+
+On Tue, Dec 27, 2016 at 09:18:32AM -0500, Geoff Lansberry wrote:
+> Mark - I will split this off soon.
+
+OK
+
+> In the meantime - here is some more info about how we use it.
 > 
-> Thanks but SSH console via wired interface and laptop display does
-> not show any log...
+> We do use NFC structures.    I did find an interesting clue in that
+> there are certain bottles that cause neard to segfault,  I'm not sure
+> what is different about them.  We write a string, like
+> "coppola_chardonnay_2015" to the bottles.
 
-Sure, ssh won't - I was thinking of netconsole:
-https://www.kernel.org/doc/Documentation/networking/netconsole.txt
+Off the top of my head, it could be the length of the text.
+It would be useful to compare the data that works to the data
+that doesn't work.  Can you install NXP's 'TagInfo' app on a
+smartphone and scan tags with working & non-working data?
+You can email the data from the app to yourself, edit out
+the cruft, and share here.
 
-johannes
+> Come to think of it, I
+> haven't done anything special to make that an ndef record, just
+> assumed that it would happen by default, I'll look into this further.
+
+If you wrote the data using neard, it will be NDEF formatted.
+Since it is working this well, it is virtually guaranteed that
+the data is NDEF formatted.
+
+>   Also, I've been running neard with --plugin nfctype2. Just in case
+> the problem was happening due to cycling through other tag types.   It
+> didn't seem to make any difference, but I have not gone back to
+> default.
+
+Good to know, thanks.
+
+Mark
+--
