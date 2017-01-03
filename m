@@ -1,49 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51743 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751332AbdAYLb2 (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45953 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756379AbdACFsq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jan 2017 06:31:28 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [RFC 0/3] Pre-CAC and sharing DFS state across multiple radios
-Date: Wed, 25 Jan 2017 17:01:07 +0530
-Message-ID: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170125_123132_354784_9BDB9180)
+        Tue, 3 Jan 2017 00:48:46 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] nfc: Fix hangup of RC-S380* in port100_send_ack()
+References: <87ful0lmop.fsf@mail.parknet.co.jp>
+        <87bmvolmnt.fsf@mail.parknet.co.jp>
+        <877f6clmn2.fsf_-_@mail.parknet.co.jp>
+Date: Tue, 03 Jan 2017 14:48:44 +0900
+In-Reply-To: <877f6clmn2.fsf_-_@mail.parknet.co.jp> (OGAWA Hirofumi's message
+        of "Tue, 03 Jan 2017 14:48:17 +0900")
+Message-ID: <8737h0lmmb.fsf_-_@mail.parknet.co.jp> (sfid-20170103_064850_073251_D6FBAC9F)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently irrespective of dfs domain and radar detection activity
-pre-CAC results for a wiphy are retained till the wiphy is detroyed.
-This may not be preferred in non-ETSI dfs domain where pre-CAC is not
-explicitly mentioned in the respective DFS requirement spec. This patch
-set modifies the current behaviour of pre-CAC for non-ETSI domain by
-giving 2 seconds grace period for dfs master interface to start operating
-on the CAC completed channel.
 
-This patch set also adds support to share dfs channel state across
-multiple radios of the same regulatory configuration.
+If port100_send_ack() was called twice or more, it has race to hangup.
 
-Vasanthakumar Thiagarajan (3):
-  cfg80211: Make pre-CAC results valid only for ETSI domain
-  cfg80211: Disallow moving out of operating DFS channel in non-ETSI
-  cfg80211: Share Channel DFS state across wiphys of same DFS domain
+  port100_send_ack()          port100_send_ack()
+    init_completion()
+    [...]
+    dev->cmd_cancel = true
+                                /* this removes previous from completion */
+                                init_completion()
+				[...]
+                                dev->cmd_cancel = true
+                                wait_for_completion()
+    /* never be waked up */
+    wait_for_completion()
 
- include/uapi/linux/nl80211.h |   5 ++
- net/wireless/ap.c            |   5 ++
- net/wireless/chan.c          | 112 ++++++++++++++++++++++++++++++
- net/wireless/core.c          |  37 ++++++++++
- net/wireless/core.h          |  13 ++++
- net/wireless/ibss.c          |   1 +
- net/wireless/mesh.c          |   1 +
- net/wireless/mlme.c          |  52 +++++++++++---
- net/wireless/nl80211.c       |  38 +++++++++++
- net/wireless/reg.c           | 159 +++++++++++++++++++++++++++++++++++++++++++
- net/wireless/reg.h           |  36 ++++++++++
- 11 files changed, 449 insertions(+), 10 deletions(-)
+Like above race, this code is not assuming port100_send_ack() is
+called twice or more.
+
+To fix, this checks dev->cmd_cancel to know if prior cancel is
+in-flight or not. And never be remove prior task from completion by
+using reinit_completion(), so this guarantees to be waked up properly
+soon or later.
+
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+---
+
+ drivers/nfc/port100.c |   37 ++++++++++++++++++++++++-------------
+ 1 file changed, 24 insertions(+), 13 deletions(-)
+
+diff -puN drivers/nfc/port100.c~nfc-port100-hang-fix drivers/nfc/port100.c
+--- linux-ibmpc/drivers/nfc/port100.c~nfc-port100-hang-fix	2017-01-03 12:32:13.261785257 +0900
++++ linux-ibmpc-hirofumi/drivers/nfc/port100.c	2017-01-03 12:33:51.965364300 +0900
+@@ -726,23 +726,33 @@ static int port100_submit_urb_for_ack(st
+ 
+ static int port100_send_ack(struct port100 *dev)
+ {
+-	int rc;
++	int rc = 0;
+ 
+ 	mutex_lock(&dev->out_urb_lock);
+ 
+-	init_completion(&dev->cmd_cancel_done);
+-
+-	usb_kill_urb(dev->out_urb);
++	/*
++	 * If prior cancel is in-flight (dev->cmd_cancel == true), we
++	 * can skip to send cancel. Then this will wait the prior
++	 * cancel, or merged into the next cancel rarely if next
++	 * cancel was started before waiting done. In any case, this
++	 * will be waked up soon or later.
++	 */
++	if (!dev->cmd_cancel) {
++		reinit_completion(&dev->cmd_cancel_done);
+ 
+-	dev->out_urb->transfer_buffer = ack_frame;
+-	dev->out_urb->transfer_buffer_length = sizeof(ack_frame);
+-	rc = usb_submit_urb(dev->out_urb, GFP_KERNEL);
++		usb_kill_urb(dev->out_urb);
+ 
+-	/* Set the cmd_cancel flag only if the URB has been successfully
+-	 * submitted. It will be reset by the out URB completion callback
+-	 * port100_send_complete().
+-	 */
+-	dev->cmd_cancel = !rc;
++		dev->out_urb->transfer_buffer = ack_frame;
++		dev->out_urb->transfer_buffer_length = sizeof(ack_frame);
++		rc = usb_submit_urb(dev->out_urb, GFP_KERNEL);
++
++		/*
++		 * Set the cmd_cancel flag only if the URB has been
++		 * successfully submitted. It will be reset by the out
++		 * URB completion callback port100_send_complete().
++		 */
++		dev->cmd_cancel = !rc;
++	}
+ 
+ 	mutex_unlock(&dev->out_urb_lock);
+ 
+@@ -929,8 +939,8 @@ static void port100_send_complete(struct
+ 	struct port100 *dev = urb->context;
+ 
+ 	if (dev->cmd_cancel) {
++		complete_all(&dev->cmd_cancel_done);
+ 		dev->cmd_cancel = false;
+-		complete(&dev->cmd_cancel_done);
+ 	}
+ 
+ 	switch (urb->status) {
+@@ -1546,6 +1556,7 @@ static int port100_probe(struct usb_inte
+ 			    PORT100_COMM_RF_HEAD_MAX_LEN;
+ 	dev->skb_tailroom = PORT100_FRAME_TAIL_LEN;
+ 
++	init_completion(&dev->cmd_cancel_done);
+ 	INIT_WORK(&dev->cmd_complete_work, port100_wq_cmd_complete);
+ 
+ 	/* The first thing to do with the Port-100 is to set the command type
+_
 
 -- 
-1.9.1
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
