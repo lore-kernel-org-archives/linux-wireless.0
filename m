@@ -1,56 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:35152 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753667AbdASRuk (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36175 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752625AbdACLDz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 12:50:40 -0500
-Received: by mail-ot0-f193.google.com with SMTP id 65so5012099otq.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 09:50:11 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH v2 0/3] rtlwifi: Rework debug system
-Date: Thu, 19 Jan 2017 11:25:18 -0600
-Message-Id: <20170119172521.32643-1-Larry.Finger@lwfinger.net> (sfid-20170119_185043_982977_927113EE)
+        Tue, 3 Jan 2017 06:03:55 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V4 1/2] dt-bindings: document common IEEE 802.11 frequency limit property
+Date: Tue,  3 Jan 2017 12:03:38 +0100
+Message-Id: <20170103110340.23249-1-zajec5@gmail.com> (sfid-20170103_120358_897969_8773E312)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches modifies the debug system by replacing some
-complicated macros with the equivalent operations in C. Then, the
-COMP_XX component debugging is converted into a debug mask. Finally,
-code that allows the dynamic setting of the debug level is removed.
-All that functionality is already provided by
-/sys/module/<driver>/parameters/.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+This new file should be used for properties that apply to all wireless
+devices.
 
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
-V2 - Remove sysfs private interface rather than adding a new one
+V2: Switch to a single ieee80211-freq-limit property that allows specifying
+    *multiple* ranges. This resolves problem with more complex rules as pointed
+    by Felx.
+    Make description implementation agnostic as pointed by Arend.
+    Rename node to wifi as suggested by Martin.
+V3: Use more real-life frequencies in the example.
+---
+ .../devicetree/bindings/net/wireless/ieee80211.txt     | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
-Larry Finger (3):
-  rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA
-  rtlwifi: Convert COMP_XX entries into a proper debugging mask
-  rtlwifi: Remove debugging entry in sysfs
-
- drivers/net/wireless/realtek/rtlwifi/base.c        | 59 ----------------------
- drivers/net/wireless/realtek/rtlwifi/base.h        |  1 -
- drivers/net/wireless/realtek/rtlwifi/debug.c       | 55 +++++++++++++-------
- drivers/net/wireless/realtek/rtlwifi/debug.h       | 33 +++++-------
- drivers/net/wireless/realtek/rtlwifi/pci.c         |  8 ---
- .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8723ae/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |  5 ++
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  4 +-
- 15 files changed, 100 insertions(+), 105 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+new file mode 100644
+index 0000000..0cd1219
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+@@ -0,0 +1,18 @@
++Common IEEE 802.11 properties
++
++This provides documentation of common properties that are valid for all wireless
++devices.
++
++Optional properties:
++ - ieee80211-freq-limit : list of supported frequency ranges in KHz
++
++Example:
++
++pcie@0,0 {
++	reg = <0x0000 0 0 0 0>;
++	wifi@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		ieee80211-freq-limit = <2402000 2482000>,
++				       <5170000 5250000>;
++	};
++};
 -- 
-2.10.2
+2.10.1
