@@ -1,87 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:17817 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751136AbdAWWEH (ORCPT
+Received: from mail-wj0-f182.google.com ([209.85.210.182]:32815 "EHLO
+        mail-wj0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756113AbdACLCi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:04:07 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
-Date: Tue, 24 Jan 2017 00:03:32 +0200
-Message-Id: <20170123220350.25305-8-luca@coelho.fi> (sfid-20170123_230424_278037_5A58B36D)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 07/25] iwlwifi: mvm: bump max API to 28
+        Tue, 3 Jan 2017 06:02:38 -0500
+Received: by mail-wj0-f182.google.com with SMTP id tq7so205125934wjb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 03:02:37 -0800 (PST)
+Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170103083858.6981-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com> (sfid-20170103_120358_472918_7BBC0E94)
+Date: Tue, 3 Jan 2017 12:02:31 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170103083858.6981-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 3-1-2017 9:38, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Our code was assigning number of channels to the index variable by
+> default. If firmware reported channel we didn't predict this would
+> result in using that initial index value and writing out of array.
+> 
+> Fix this by detecting unexpected channel and ignoring it.
+> 
+> Fixes: 58de92d2f95e ("brcmfmac: use static superset of channels for wiphy bands")
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> I'm not sure what kind of material it is. It fixes possible memory corruption
+> (serious thing?) but this bug was there since Apr 2015, so is it worth fixing
+> in 4.10? Or maybe I should even cc stable?
+> I don't think any released firmware reports any unexpected channel, so I guess
+> noone ever hit this problem. I just noticed this possible problem when working
+> on another feature.
 
-We skipped one release, so bump twice, to 28.
+Looking at the change I was going to ask if you actually hit the issue
+you are addressing here. The channels in __wl_2ghz_channels and
+__wl_5ghz_channels are complete list of channels for the particular band
+so it would mean firmware behaves out-of-spec or firmware api was
+changed. For robustness a change is acceptable I guess.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
+My general policy is to submit fixes to wireless-drivers (and stable)
+only if it resolves a critical issue found during testing or a reported
+issue.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-index d4b73dedf89b..a72e58623d3a 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-@@ -73,8 +73,8 @@
- /* Highest firmware API version supported */
- #define IWL7260_UCODE_API_MAX	17
- #define IWL7265_UCODE_API_MAX	17
--#define IWL7265D_UCODE_API_MAX	26
--#define IWL3168_UCODE_API_MAX	26
-+#define IWL7265D_UCODE_API_MAX	28
-+#define IWL3168_UCODE_API_MAX	28
- 
- /* Lowest firmware API version supported */
- #define IWL7260_UCODE_API_MIN	17
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index d02ca1491d16..df0fc24e99e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -70,8 +70,8 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL8000_UCODE_API_MAX	26
--#define IWL8265_UCODE_API_MAX	26
-+#define IWL8000_UCODE_API_MAX	28
-+#define IWL8265_UCODE_API_MAX	28
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	17
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index ff850410d897..a5f0c0bf85ec 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL9000_UCODE_API_MAX	26
-+#define IWL9000_UCODE_API_MAX	28
- 
- /* Lowest firmware API version supported */
- #define IWL9000_UCODE_API_MIN	17
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-index ea1618525878..82f18d967c40 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
-@@ -55,7 +55,7 @@
- #include "iwl-agn-hw.h"
- 
- /* Highest firmware API version supported */
--#define IWL_A000_UCODE_API_MAX	26
-+#define IWL_A000_UCODE_API_MAX	28
- 
- /* Lowest firmware API version supported */
- #define IWL_A000_UCODE_API_MIN	24
--- 
-2.11.0
+> ---
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 29 +++++++++++-----------
+>  1 file changed, 14 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 13ca3eb..0babfc7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -5825,7 +5825,6 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+>  	u32 i, j;
+>  	u32 total;
+>  	u32 chaninfo;
+> -	u32 index;
+>  
+>  	pbuf = kzalloc(BRCMF_DCMD_MEDLEN, GFP_KERNEL);
+>  
+> @@ -5873,33 +5872,33 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+>  		    ch.bw == BRCMU_CHAN_BW_80)
+>  			continue;
+>  
+> -		channel = band->channels;
+> -		index = band->n_channels;
+> +		channel = NULL;
+>  		for (j = 0; j < band->n_channels; j++) {
+> -			if (channel[j].hw_value == ch.control_ch_num) {
+> -				index = j;
+> +			if (band->channels[j].hw_value == ch.control_ch_num) {
+> +				channel = &band->channels[j];
+>  				break;
+>  			}
+>  		}
+
+You could have kept the index construct and simply check if j ==
+band->n_channels here to determine something is wrong.
+
+> -		channel[index].center_freq =
+> -			ieee80211_channel_to_frequency(ch.control_ch_num,
+> -						       band->band);
+> -		channel[index].hw_value = ch.control_ch_num;
+
+So you are also removing these assignments which indeed seem redundant.
+Maybe make note of that in the commit message?
+
+> +		if (!channel) {
+> +			brcmf_err("Firmware reported unexpected channel %d\n",
+> +				  ch.control_ch_num);
+> +			continue;
+> +		}
+
+As stated above something is really off when this happens so should we
+continue and try to make sense of what firmware provides or simply fail.
+
+Regards,
+Arend
