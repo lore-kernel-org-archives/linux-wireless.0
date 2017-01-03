@@ -1,60 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:33406 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751232AbdAMWRQ (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33220 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932930AbdACIjl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 17:17:16 -0500
-Date: Fri, 13 Jan 2017 23:17:01 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        lede-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com,
-        openwrt-devel@lists.openwrt.org, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [OpenWrt-Devel] [RFC] [PULL REQUEST] rt2x00 patches from
- OpenWrt.org
-Message-ID: <20170113221700.GB32160@makrotopia.org> (sfid-20170113_231719_676713_F4FE27B1)
-References: <20170113035020.GA9063@makrotopia.org>
- <87tw93i6e7.fsf@purkki.adurom.net>
- <20170113154629.GG2332@makrotopia.org>
- <1484323199.8670.5.camel@sipsolutions.net>
- <20170113161722.GH2332@makrotopia.org>
+        Tue, 3 Jan 2017 03:39:41 -0500
+Received: by mail-lf0-f65.google.com with SMTP id y21so41851923lfa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 00:39:40 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: avoid writing channel out of allocated array
+Date: Tue,  3 Jan 2017 09:38:58 +0100
+Message-Id: <20170103083858.6981-1-zajec5@gmail.com> (sfid-20170103_093944_870602_17E1193B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170113161722.GH2332@makrotopia.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 13, 2017 at 05:17:23PM +0100, Daniel Golle wrote:
-> On Fri, Jan 13, 2017 at 04:59:59PM +0100, Johannes Berg wrote:
-> > 
-> > > The advantage of pull requests is that author information can be
-> > > preserved more easily. Running git format-patch results in most
-> > > patches
-> > > having wrong SMTP sender information due to the assumption that the
-> > > patch author is the same person also submitting the patch.
-> > > So in practise, this would either require changing the From: (and
-> > > thus
-> > > Author) to myself or having most mails eaten by anti-spam measures
-> > > due
-> > > to non-matching SPF which prohibits my SMTP to send mail on behalf of
-> > > the original authors of the patches.
-> > > 
-> > 
-> > This is completely untrue. If the first line of the *body* of the email
-> > is "From: ..." then this is preserved as the author information by git
-> > am, and doing so is also the default in git format-patch/send-email
-> > when the author doesn't match the email configuration.
-> 
-> Thanks for the clarification, I'll then submit the patches via
-> git format-patch.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-I posted all patches on the mailing list and bundled them up on
-patchwork.
-https://patchwork.kernel.org/bundle/dangole/rt2x00-from-openwrt/
+Our code was assigning number of channels to the index variable by
+default. If firmware reported channel we didn't predict this would
+result in using that initial index value and writing out of array.
 
-Cheers
+Fix this by detecting unexpected channel and ignoring it.
 
+Fixes: 58de92d2f95e ("brcmfmac: use static superset of channels for wiphy bands")
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+I'm not sure what kind of material it is. It fixes possible memory corruption
+(serious thing?) but this bug was there since Apr 2015, so is it worth fixing
+in 4.10? Or maybe I should even cc stable?
+I don't think any released firmware reports any unexpected channel, so I guess
+noone ever hit this problem. I just noticed this possible problem when working
+on another feature.
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 29 +++++++++++-----------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
 
-Daniel
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 13ca3eb..0babfc7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5825,7 +5825,6 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 	u32 i, j;
+ 	u32 total;
+ 	u32 chaninfo;
+-	u32 index;
+ 
+ 	pbuf = kzalloc(BRCMF_DCMD_MEDLEN, GFP_KERNEL);
+ 
+@@ -5873,33 +5872,33 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 		    ch.bw == BRCMU_CHAN_BW_80)
+ 			continue;
+ 
+-		channel = band->channels;
+-		index = band->n_channels;
++		channel = NULL;
+ 		for (j = 0; j < band->n_channels; j++) {
+-			if (channel[j].hw_value == ch.control_ch_num) {
+-				index = j;
++			if (band->channels[j].hw_value == ch.control_ch_num) {
++				channel = &band->channels[j];
+ 				break;
+ 			}
+ 		}
+-		channel[index].center_freq =
+-			ieee80211_channel_to_frequency(ch.control_ch_num,
+-						       band->band);
+-		channel[index].hw_value = ch.control_ch_num;
++		if (!channel) {
++			brcmf_err("Firmware reported unexpected channel %d\n",
++				  ch.control_ch_num);
++			continue;
++		}
+ 
+ 		/* assuming the chanspecs order is HT20,
+ 		 * HT40 upper, HT40 lower, and VHT80.
+ 		 */
+ 		if (ch.bw == BRCMU_CHAN_BW_80) {
+-			channel[index].flags &= ~IEEE80211_CHAN_NO_80MHZ;
++			channel->flags &= ~IEEE80211_CHAN_NO_80MHZ;
+ 		} else if (ch.bw == BRCMU_CHAN_BW_40) {
+-			brcmf_update_bw40_channel_flag(&channel[index], &ch);
++			brcmf_update_bw40_channel_flag(channel, &ch);
+ 		} else {
+ 			/* enable the channel and disable other bandwidths
+ 			 * for now as mentioned order assure they are enabled
+ 			 * for subsequent chanspecs.
+ 			 */
+-			channel[index].flags = IEEE80211_CHAN_NO_HT40 |
+-					       IEEE80211_CHAN_NO_80MHZ;
++			channel->flags = IEEE80211_CHAN_NO_HT40 |
++					 IEEE80211_CHAN_NO_80MHZ;
+ 			ch.bw = BRCMU_CHAN_BW_20;
+ 			cfg->d11inf.encchspec(&ch);
+ 			chaninfo = ch.chspec;
+@@ -5907,11 +5906,11 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 						       &chaninfo);
+ 			if (!err) {
+ 				if (chaninfo & WL_CHAN_RADAR)
+-					channel[index].flags |=
++					channel->flags |=
+ 						(IEEE80211_CHAN_RADAR |
+ 						 IEEE80211_CHAN_NO_IR);
+ 				if (chaninfo & WL_CHAN_PASSIVE)
+-					channel[index].flags |=
++					channel->flags |=
+ 						IEEE80211_CHAN_NO_IR;
+ 			}
+ 		}
+-- 
+2.10.1
