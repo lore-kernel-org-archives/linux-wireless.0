@@ -1,150 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10671 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750937AbdAaJSp (ORCPT
+Received: from mail-wj0-f175.google.com ([209.85.210.175]:35449 "EHLO
+        mail-wj0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757943AbdACNaE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 04:18:45 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 3/3] cfg80211: Share Channel DFS state across wiphys of same
- DFS domain
-Date: Tue, 31 Jan 2017 09:18:37 +0000
-Message-ID: <5890557C.6040408@qti.qualcomm.com> (sfid-20170131_102030_975305_8DD5699F)
-References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1485343870-23601-4-git-send-email-vthiagar@qti.qualcomm.com>
- <1485423682.11038.8.camel@sipsolutions.net>
-In-Reply-To: <1485423682.11038.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Tue, 3 Jan 2017 08:30:04 -0500
+Received: by mail-wj0-f175.google.com with SMTP id v7so445191976wjy.2
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 05:30:03 -0800 (PST)
+Subject: Re: [PATCH V4 3/2] brcmfmac: use wiphy_read_of_freq_limits to respect
+ extra limits
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170103110340.23249-1-zajec5@gmail.com>
+ <20170103110340.23249-3-zajec5@gmail.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d306c928-3725-f9d3-e3c5-e75a1849bd8b@broadcom.com> (sfid-20170103_150148_699650_EB81DDC9)
+Date: Tue, 3 Jan 2017 14:29:59 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170103110340.23249-3-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMjYgSmFudWFyeSAyMDE3IDAzOjExIFBNLCBKb2hhbm5lcyBCZXJnIHdyb3Rl
-Og0KPiBPbiBXZWQsIDIwMTctMDEtMjUgYXQgMTc6MDEgKzA1MzAsIFZhc2FudGhha3VtYXIgVGhp
-YWdhcmFqYW4gd3JvdGU6DQo+PiBTaGFyaW5nIERGUyBjaGFubmVsIHN0YXRlIGFjcm9zcyBtdWx0
-aXBsZSB3aXBoeXMgKHJhZGlvcykgY291bGQNCj4+IGJlIHVzZWZ1bCB3aXRoIG11bHRpcGxlIHJh
-ZGlvcyBvbiB0aGUgc3lzdGVtLiBXaGVuIG9uZSByYWRpbw0KPj4gY29tcGxldGVzIENBQyBhbmQg
-bWFya3MgdGhlIGNoYW5uZWwgYXZhaWxhYmxlIGFub3RoZXIgcmFkaW8NCj4+IGNhbiB1c2UgdGhp
-cyBpbmZvcm1hdGlvbiBhbmQgc3RhcnQgYmVhY29uaW5nIHdpdGhvdXQgcmVhbGx5IGRvaW5nDQo+
-PiBDQUMuDQo+Pg0KPj4gV2hlbmV2ZXIgdGhlcmUgaXMgYSBzdGF0ZSBjaGFuZ2UgaW4gREZTIGNo
-YW5uZWwgYXNzb2NpYXRlZCB0bw0KPj4gYSBwYXJ0aWN1bGFyIHdpcGh5IHRoZSB0aGUgc2FtZSBz
-dGF0ZSBjaGFuZ2UgaXMgcHJvcGFnYXRlZCB0bw0KPj4gb3RoZXIgd2lwaHlzIGhhdmluZyB0aGUg
-c2FtZSBERlMgcmVnIGRvbWFpbiBjb25maWd1cmF0aW9uLg0KPj4gQWxzbyB3aGVuIGEgbmV3IHdp
-cGh5IGlzIGNyZWF0ZWQgdGhlIERGUyBjaGFubmVsIHN0YXRlIG9mDQo+PiBvdGhlciBleGlzdGlu
-ZyB3aXBoeXMgb2Ygc2FtZSBERlMgZG9tYWluIGlzIGNvcGllZC4NCj4+DQo+PiBTaWduZWQtb2Zm
-LWJ5OiBWYXNhbnRoYWt1bWFyIFRoaWFnYXJhamFuIDx2dGhpYWdhckBxdGkucXVhbGNvbW0uY29t
-Pg0KPj4gLS0tDQo+PiAgIG5ldC93aXJlbGVzcy9jaGFuLmMgfCAgMjQgKysrKysrKysrLS0NCj4+
-ICAgbmV0L3dpcmVsZXNzL2NvcmUuYyB8ICAzNyArKysrKysrKysrKysrKysrKw0KPj4gICBuZXQv
-d2lyZWxlc3MvY29yZS5oIHwgICA2ICsrKw0KPj4gICBuZXQvd2lyZWxlc3MvbWxtZS5jIHwgIDEx
-ICsrKysrLQ0KPj4gICBuZXQvd2lyZWxlc3MvcmVnLmMgIHwgMTEyDQo+PiArKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+PiAgIG5ldC93aXJlbGVz
-cy9yZWcuaCAgfCAgMjIgKysrKysrKysrKysNCj4+ICAgNiBmaWxlcyBjaGFuZ2VkLCAyMDcgaW5z
-ZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvbmV0L3dpcmVs
-ZXNzL2NoYW4uYyBiL25ldC93aXJlbGVzcy9jaGFuLmMNCj4+IGluZGV4IDA5MDMwOWEuLjQwZjEw
-OTcgMTAwNjQ0DQo+PiAtLS0gYS9uZXQvd2lyZWxlc3MvY2hhbi5jDQo+PiArKysgYi9uZXQvd2ly
-ZWxlc3MvY2hhbi5jDQo+PiBAQCAtNTMyLDIxICs1MzIsMzcgQEAgYm9vbCBjZmc4MDIxMV9iZWFj
-b25pbmdfaWZhY2VfYWN0aXZlKHN0cnVjdA0KPj4gd2lyZWxlc3NfZGV2ICp3ZGV2KQ0KPj4gICAJ
-cmV0dXJuIGFjdGl2ZTsNCj4+ICAgfQ0KPj4NCj4+ICtzdGF0aWMgYm9vbCBjZmc4MDIxMV81Z2h6
-X2lzX3dpcGh5X29wZXJfY2hhbihzdHJ1Y3Qgd2lwaHkgKndpcGh5LA0KPj4gKwkJCQkJICAgICBz
-dHJ1Y3QNCj4+IGllZWU4MDIxMV9jaGFubmVsICpjaGFuKQ0KPg0KPiBhZ2Fpbiwgbm90aGluZyBy
-ZWFsbHkgNSBHSHogc3BlY2lmaWMgaGVyZSwgYWZhaWN0Pw0KDQpTdXJlLg0KDQo+DQo+PiArCXN0
-cnVjdCB3aXJlbGVzc19kZXYgKndkZXY7DQo+PiArDQo+PiArCWxpc3RfZm9yX2VhY2hfZW50cnko
-d2RldiwgJndpcGh5LT53ZGV2X2xpc3QsIGxpc3QpIHsNCj4+ICsJCWlmICghY2ZnODAyMTFfYmVh
-Y29uaW5nX2lmYWNlX2FjdGl2ZSh3ZGV2KSkNCj4+ICsJCQljb250aW51ZTsNCj4+ICsNCj4+ICsJ
-CWlmIChjZmc4MDIxMV81Z2h6X3N1Yl9jaGFuKCZ3ZGV2LT5jaGFuZGVmLCBjaGFuKSkNCj4+ICsJ
-CQlyZXR1cm4gdHJ1ZTsNCj4+ICsJfQ0KPj4gKw0KPj4gKwlyZXR1cm4gZmFsc2U7DQo+PiArfQ0K
-Pj4gKw0KPj4gICBib29sIGNmZzgwMjExXzVnaHpfYW55X3dpcGh5X29wZXJfY2hhbihzdHJ1Y3Qg
-d2lwaHkgKndpcGh5LA0KPj4gICAJCQkJICAgICAgIHN0cnVjdCBpZWVlODAyMTFfY2hhbm5lbA0K
-Pj4gKmNoYW4pDQo+PiAgIHsNCj4+IC0Jc3RydWN0IHdpcmVsZXNzX2RldiAqd2RldjsNCj4+ICsJ
-c3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlICpyZGV2Ow0KPj4NCj4+ICAgCUFTU0VS
-VF9SVE5MKCk7DQo+Pg0KPj4gICAJaWYgKCEoY2hhbi0+ZmxhZ3MgJiBJRUVFODAyMTFfQ0hBTl9S
-QURBUikpDQo+PiAgIAkJcmV0dXJuIGZhbHNlOw0KPj4NCj4+IC0JbGlzdF9mb3JfZWFjaF9lbnRy
-eSh3ZGV2LCAmd2lwaHktPndkZXZfbGlzdCwgbGlzdCkgew0KPj4gLQkJaWYgKCFjZmc4MDIxMV9i
-ZWFjb25pbmdfaWZhY2VfYWN0aXZlKHdkZXYpKQ0KPj4gKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KHJk
-ZXYsICZjZmc4MDIxMV9yZGV2X2xpc3QsIGxpc3QpIHsNCj4+ICsJCWlmICghcmVnX2Rmc19kb21h
-aW5fc2FtZSh3aXBoeSwgJnJkZXYtPndpcGh5KSkNCj4+ICAgCQkJY29udGludWU7DQo+Pg0KPj4g
-LQkJaWYgKGNmZzgwMjExXzVnaHpfc3ViX2NoYW4oJndkZXYtPmNoYW5kZWYsIGNoYW4pKQ0KPj4g
-KwkJaWYgKGNmZzgwMjExXzVnaHpfaXNfd2lwaHlfb3Blcl9jaGFuKCZyZGV2LT53aXBoeSwNCj4+
-IGNoYW4pKQ0KPj4gICAJCQlyZXR1cm4gdHJ1ZTsNCj4+ICAgCX0NCj4+DQo+PiBkaWZmIC0tZ2l0
-IGEvbmV0L3dpcmVsZXNzL2NvcmUuYyBiL25ldC93aXJlbGVzcy9jb3JlLmMNCj4+IGluZGV4IDkw
-M2ZjNDE5Li5jM2ZlNDRiIDEwMDY0NA0KPj4gLS0tIGEvbmV0L3dpcmVsZXNzL2NvcmUuYw0KPj4g
-KysrIGIvbmV0L3dpcmVsZXNzL2NvcmUuYw0KPj4gQEAgLTM1Nyw2ICszNTcsMzggQEAgc3RhdGlj
-IHZvaWQgY2ZnODAyMTFfc2NoZWRfc2Nhbl9zdG9wX3drKHN0cnVjdA0KPj4gd29ya19zdHJ1Y3Qg
-KndvcmspDQo+PiAgIAlydG5sX3VubG9jaygpOw0KPj4gICB9DQo+Pg0KPj4gK3N0YXRpYyB2b2lk
-IGNmZzgwMjExX3Byb3BhZ2F0ZV9yYWRhcl9kZXRlY3Rfd2soc3RydWN0IHdvcmtfc3RydWN0DQo+
-PiAqd29yaykNCj4+ICt7DQo+PiArCXN0cnVjdCBjZmc4MDIxMV9yZWdpc3RlcmVkX2RldmljZSAq
-cmRldjsNCj4+ICsNCj4+ICsJcmRldiA9IGNvbnRhaW5lcl9vZih3b3JrLCBzdHJ1Y3QgY2ZnODAy
-MTFfcmVnaXN0ZXJlZF9kZXZpY2UsDQo+PiArCQkJICAgIHBvcnBhZ2F0ZV9yYWRhcl9kZXRlY3Rf
-d2spOw0KPj4gKw0KPj4gKwlydG5sX2xvY2soKTsNCj4+ICsNCj4+ICsJcmVndWxhdG9yeV9wcm9w
-YWdhdGVfZGZzX3N0YXRlKCZyZGV2LT53aXBoeSwgJnJkZXYtDQo+Pj4gcmFkYXJfY2hhbmRlZiwN
-Cj4+ICsJCQkJICAgICAgIE5MODAyMTFfREZTX1VOQVZBSUxBQkxFLA0KPj4gKwkJCQkgICAgICAg
-Tkw4MDIxMV9SQURBUl9ERVRFQ1RFRCk7DQo+PiArDQo+PiArCXJ0bmxfdW5sb2NrKCk7DQo+PiAr
-fQ0KPj4gKw0KPj4gK3N0YXRpYyB2b2lkIGNmZzgwMjExX3Byb3BhZ2F0ZV9jYWNfZG9uZV93ayhz
-dHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQo+PiArew0KPj4gKwlzdHJ1Y3QgY2ZnODAyMTFfcmVn
-aXN0ZXJlZF9kZXZpY2UgKnJkZXY7DQo+PiArDQo+PiArCXJkZXYgPSBjb250YWluZXJfb2Yod29y
-aywgc3RydWN0IGNmZzgwMjExX3JlZ2lzdGVyZWRfZGV2aWNlLA0KPj4gKwkJCSAgICBwcm9wYWdh
-dGVfY2FjX2RvbmVfd2spOw0KPj4gKw0KPj4gKwlydG5sX2xvY2soKTsNCj4+ICsNCj4+ICsJcmVn
-dWxhdG9yeV9wcm9wYWdhdGVfZGZzX3N0YXRlKCZyZGV2LT53aXBoeSwgJnJkZXYtDQo+Pj4gY2Fj
-X2RvbmVfY2hhbmRlZiwNCj4+ICsJCQkJICAgICAgIE5MODAyMTFfREZTX0FWQUlMQUJMRSwNCj4+
-ICsJCQkJICAgICAgIE5MODAyMTFfUkFEQVJfQ0FDX0ZJTklTSEVEKTsNCj4+ICsNCj4+ICsJcnRu
-bF91bmxvY2soKTsNCj4+ICt9DQo+PiArDQo+PiAgIC8qIGV4cG9ydGVkIGZ1bmN0aW9ucyAqLw0K
-Pj4NCj4+ICAgc3RydWN0IHdpcGh5ICp3aXBoeV9uZXdfbm0oY29uc3Qgc3RydWN0IGNmZzgwMjEx
-X29wcyAqb3BzLCBpbnQNCj4+IHNpemVvZl9wcml2LA0KPj4gQEAgLTQ1Niw2ICs0ODgsOSBAQCBz
-dHJ1Y3Qgd2lwaHkgKndpcGh5X25ld19ubShjb25zdCBzdHJ1Y3QNCj4+IGNmZzgwMjExX29wcyAq
-b3BzLCBpbnQgc2l6ZW9mX3ByaXYsDQo+PiAgIAlzcGluX2xvY2tfaW5pdCgmcmRldi0+ZGVzdHJv
-eV9saXN0X2xvY2spOw0KPj4gICAJSU5JVF9XT1JLKCZyZGV2LT5kZXN0cm95X3dvcmssIGNmZzgw
-MjExX2Rlc3Ryb3lfaWZhY2Vfd2spOw0KPj4gICAJSU5JVF9XT1JLKCZyZGV2LT5zY2hlZF9zY2Fu
-X3N0b3Bfd2ssDQo+PiBjZmc4MDIxMV9zY2hlZF9zY2FuX3N0b3Bfd2spOw0KPj4gKwlJTklUX1dP
-UksoJnJkZXYtPnBvcnBhZ2F0ZV9yYWRhcl9kZXRlY3Rfd2ssDQo+PiArCQkgIGNmZzgwMjExX3By
-b3BhZ2F0ZV9yYWRhcl9kZXRlY3Rfd2spOw0KPj4gKwlJTklUX1dPUksoJnJkZXYtPnByb3BhZ2F0
-ZV9jYWNfZG9uZV93aywNCj4+IGNmZzgwMjExX3Byb3BhZ2F0ZV9jYWNfZG9uZV93ayk7DQo+Pg0K
-Pj4gICAjaWZkZWYgQ09ORklHX0NGRzgwMjExX0RFRkFVTFRfUFMNCj4+ICAgCXJkZXYtPndpcGh5
-LmZsYWdzIHw9IFdJUEhZX0ZMQUdfUFNfT05fQllfREVGQVVMVDsNCj4+IEBAIC05MTQsNiArOTQ5
-LDggQEAgdm9pZCB3aXBoeV91bnJlZ2lzdGVyKHN0cnVjdCB3aXBoeSAqd2lwaHkpDQo+PiAgIAlm
-bHVzaF93b3JrKCZyZGV2LT5kZXN0cm95X3dvcmspOw0KPj4gICAJZmx1c2hfd29yaygmcmRldi0+
-c2NoZWRfc2Nhbl9zdG9wX3drKTsNCj4+ICAgCWZsdXNoX3dvcmsoJnJkZXYtPm1sbWVfdW5yZWdf
-d2spOw0KPj4gKwlmbHVzaF93b3JrKCZyZGV2LT5wb3JwYWdhdGVfcmFkYXJfZGV0ZWN0X3drKTsN
-Cj4NCj4gdHlwbzogcHJvcGFnYXRlLg0KPg0KPj4gKwlmbHVzaF93b3JrKCZyZGV2LT5wcm9wYWdh
-dGVfY2FjX2RvbmVfd2spOw0KPg0KPiBZb3UgZ290IGl0IHJpZ2h0IGhlcmUgOikNCg0KVGhhbmtz
-LCBzb21lIHNlYXJjaCByZXBsYWNlIGlzc3VlLg0KDQo+DQo+PiAgICNpZmRlZiBDT05GSUdfUE0N
-Cj4+ICAgCWlmIChyZGV2LT53aXBoeS53b3dsYW5fY29uZmlnICYmIHJkZXYtPm9wcy0+c2V0X3dh
-a2V1cCkNCj4+IGRpZmYgLS1naXQgYS9uZXQvd2lyZWxlc3MvY29yZS5oIGIvbmV0L3dpcmVsZXNz
-L2NvcmUuaA0KPj4gaW5kZXggMzI3ZmU5NS4uNjA3YzhiZSAxMDA2NDQNCj4+IC0tLSBhL25ldC93
-aXJlbGVzcy9jb3JlLmgNCj4+ICsrKyBiL25ldC93aXJlbGVzcy9jb3JlLmgNCj4+IEBAIC05Nyw2
-ICs5NywxMiBAQCBzdHJ1Y3QgY2ZnODAyMTFfcmVnaXN0ZXJlZF9kZXZpY2Ugew0KPj4NCj4+ICAg
-CXN0cnVjdCB3b3JrX3N0cnVjdCBzY2hlZF9zY2FuX3N0b3Bfd2s7DQo+Pg0KPj4gKwlzdHJ1Y3Qg
-Y2ZnODAyMTFfY2hhbl9kZWYgcmFkYXJfY2hhbmRlZjsNCj4+ICsJc3RydWN0IHdvcmtfc3RydWN0
-IHBvcnBhZ2F0ZV9yYWRhcl9kZXRlY3Rfd2s7DQo+DQo+IFNpbmNlIGl0IGNvbXBpbGVkLCB0aGUg
-dHlwbyBleGlzdHMgZXZlcnl3aGVyZSB0aGlzIGlzIHJlZmVyZW5jZWQuDQo+DQo+PiArKysgYi9u
-ZXQvd2lyZWxlc3MvbWxtZS5jDQo+PiBAQCAtMTgsNyArMTgsNiBAQA0KPj4gICAjaW5jbHVkZSAi
-bmw4MDIxMS5oIg0KPj4gICAjaW5jbHVkZSAicmRldi1vcHMuaCINCj4+DQo+PiAtDQo+PiAgIHZv
-aWQgY2ZnODAyMTFfcnhfYXNzb2NfcmVzcChzdHJ1Y3QgbmV0X2RldmljZSAqZGV2LCBzdHJ1Y3QN
-Cj4+IGNmZzgwMjExX2JzcyAqYnNzLA0KPg0KPiBwbGVhc2UgZG9uJ3QgbWFrZSB1bnJlbGF0ZWQg
-ImNsZWFudXBzIi4NCg0KT29wcywgc29ycnkuDQoNCj4NCj4+ICtib29sIHJlZ19kZnNfZG9tYWlu
-X3NhbWUoc3RydWN0IHdpcGh5ICp3aXBoeTEsIHN0cnVjdCB3aXBoeSAqd2lwaHkyKQ0KPj4gK3sN
-Cj4+ICsJY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdkb21haW4gKndpcGh5MV9yZWdkID0gTlVM
-TDsNCj4+ICsJY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdkb21haW4gKndpcGh5Ml9yZWdkID0g
-TlVMTDsNCj4+ICsJY29uc3Qgc3RydWN0IGllZWU4MDIxMV9yZWdkb21haW4gKmNmZzgwMjExX3Jl
-Z2QgPSBOVUxMOw0KPj4gKwlib29sIGRmc19kb21haW5fc2FtZSA9IGZhbHNlOw0KPg0KPiBZb3Ug
-Y2FuIHJlbW92ZSB0aGF0IGluaXRpYWxpemVyLA0KPg0KPj4gKwlyY3VfcmVhZF9sb2NrKCk7DQo+
-PiArDQo+PiArCWNmZzgwMjExX3JlZ2QgPSByY3VfZGVyZWZlcmVuY2UoY2ZnODAyMTFfcmVnZG9t
-YWluKTsNCj4+ICsJd2lwaHkxX3JlZ2QgPSByY3VfZGVyZWZlcmVuY2Uod2lwaHkxLT5yZWdkKTsN
-Cj4+ICsJaWYgKCF3aXBoeTFfcmVnZCkNCj4+ICsJCXdpcGh5MV9yZWdkID0gY2ZnODAyMTFfcmVn
-ZDsNCj4+ICsNCj4+ICsJd2lwaHkyX3JlZ2QgPSByY3VfZGVyZWZlcmVuY2Uod2lwaHkyLT5yZWdk
-KTsNCj4+ICsJaWYgKCF3aXBoeTJfcmVnZCkNCj4+ICsJCXdpcGh5Ml9yZWdkID0gY2ZnODAyMTFf
-cmVnZDsNCj4+ICsNCj4+ICsJaWYgKHdpcGh5MV9yZWdkLT5kZnNfcmVnaW9uID09IHdpcGh5Ml9y
-ZWdkLT5kZnNfcmVnaW9uKQ0KPj4gKwkJZGZzX2RvbWFpbl9zYW1lID0gdHJ1ZTsNCj4NCj4gYW5k
-IGp1c3QgYXNzaWduDQo+IAlkZnNfZG9tYWluX3NhbWUgPSB3aXBoeTEuLi4gPT0gd2lwaHkyLi4u
-Ow0KDQpPay4NCg0KPg0KPj4gK3N0YXRpYyB2b2lkIHdpcGh5X3NoYXJlX2Rmc19jaGFuX3N0YXRl
-KHN0cnVjdCB3aXBoeSAqZHN0X3dpcGh5LA0KPj4gKwkJCQkgICAgICAgc3RydWN0IHdpcGh5ICpz
-cmNfd2lwaHkpDQo+PiArew0KPj4gKwlzdHJ1Y3QgaWVlZTgwMjExX3N1cHBvcnRlZF9iYW5kICpz
-cmNfc2JhbmQsICpkc3Rfc2JhbmQ7DQo+PiArCWludCBpLCBqOw0KPj4gKw0KPj4gKwlkc3Rfc2Jh
-bmQgPSBkc3Rfd2lwaHktPmJhbmRzW05MODAyMTFfQkFORF81R0haXTsNCj4+ICsJc3JjX3NiYW5k
-ID0gc3JjX3dpcGh5LT5iYW5kc1tOTDgwMjExX0JBTkRfNUdIWl07DQo+PiArCWlmICghZHN0X3Ni
-YW5kIHx8ICFzcmNfc2JhbmQpDQo+PiArCQlyZXR1cm47DQo+DQo+IFdoeSBtYWtlIHRoaXMgNSBH
-SHogc3BlY2lmaWM/IFBlcmhhcHMgc29tZSBraW5kIG9mIHJhZGFyIHN0dWZmIHdpbGwNCj4gZXhp
-c3QgaW4gZnV0dXJlIGJhbmRzIHRvby4gSXQgc2hvdWxkbid0IHJlYWxseSBjb3N0IG11Y2ggdG8g
-aXRlcmF0ZSBhbGwNCj4gdGhlIGJhbmRzLCBJIHRoaW5rPw0KDQpHb2luZyBvdmVyIGFsbCB0aGUg
-YmFuZHMgc2hvdWxkIG5vdCBiZSBhbiBpc3N1ZSwgaSdsbCBtYWtlIHRoZSBjaGFuZ2UuDQoNClRo
-YW5rcywNCg0KVmFzYW50aA0K
+What is with the patch numbering, ie. 3/2?
+
+On 3-1-2017 12:03, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> There are some devices (e.g. Netgear R8000 home router) with one chipset
+> model used for different radios, some of them limited to subbands. NVRAM
+> entries don't contain any extra info on such limitations and firmware
+> reports full list of channels to us. We need to store extra limitation
+> info on DT to support such devices properly.
+> 
+> This patch adds check for channel being disabled with orig_flags which
+> is how this wiphy helper works.
+
+this is the first mention about the wiphy helper. Probably need
+statement here that call to wiphy_read_of_freq_limits() was added in
+this patch which applies the extra limitation info read from DT.
+
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> This patch should probably go through wireless-driver-next, I'm sending
+> it just as a proof of concept. It was succesfully tested on SmartRG
+> SR400ac with BCM43602.
+> 
+> V4: Respect IEEE80211_CHAN_DISABLED in orig_flags
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index ccae3bb..f95e316 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+>  						       band->band);
+>  		channel[index].hw_value = ch.control_ch_num;
+>  
+> +		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
+> +			continue;
+> +
+>  		/* assuming the chanspecs order is HT20,
+>  		 * HT40 upper, HT40 lower, and VHT80.
+>  		 */
+> @@ -6477,6 +6480,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+>  			wiphy->bands[NL80211_BAND_5GHZ] = band;
+>  		}
+>  	}
+> +	wiphy_read_of_freq_limits(wiphy);
+
+The return value is ignored, which I suppose is fine. So does the
+function need a return value at all? Is there a scenario where the DT
+info *must* be supplied?
+
+Regards,
+Arend
