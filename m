@@ -1,95 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42662 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932655AbdA0M1v (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37536 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752340AbdACMKc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:27:51 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
-        <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
-        <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
-        <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
-        <20170127101043.GD24223@pali>
-        <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
-        <20170127103408.GG24223@pali>
-        <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
-        <20170127115706.GH24223@pali>
-Date: Fri, 27 Jan 2017 14:26:22 +0200
-In-Reply-To: <20170127115706.GH24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
- \=\?utf-8\?Q\?s\?\= message of "Fri, 27
-        Jan 2017 12:57:06 +0100")
-Message-ID: <8737g47kpd.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_133052_629836_03B4CC4A)
+        Tue, 3 Jan 2017 07:10:32 -0500
+Received: by mail-wm0-f48.google.com with SMTP id t79so427548019wmt.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 04:10:31 -0800 (PST)
+Subject: Re: [PATCH V4 2/2] cfg80211: support ieee80211-freq-limit DT property
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170103110340.23249-1-zajec5@gmail.com>
+ <20170103110340.23249-2-zajec5@gmail.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a67789ba-3346-6e10-89c2-2df419a80910@broadcom.com> (sfid-20170103_131036_588483_89347855)
+Date: Tue, 3 Jan 2017 13:10:27 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170103110340.23249-2-zajec5@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+On 3-1-2017 12:03, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> This patch adds a helper for reading that new property and applying
+> limitations or supported channels specified this way.
+> It may be useful for specifying single band devices or devices that
+> support only some part of the whole band. It's common that tri-band
+> routers have separated radios for lower and higher part of 5 GHz band.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Put main code in core.c as it isn't strictly part of regulatory - pointed
+>     by Arend.
+>     Update to support ieee80211-freq-limit (new property).
+> V3: Introduce separated wiphy_read_of_freq_limits function.
+>     Add extra sanity checks for DT data.
+>     Move code back to reg.c as suggested by Johannes.
+> V4: Move code to of.c
+>     Use one helper called at init time (no runtime hooks)
+>     Modify orig_flags
+> ---
+>  include/net/cfg80211.h |  26 ++++++++++
+>  net/wireless/Makefile  |   1 +
+>  net/wireless/of.c      | 137 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  net/wireless/reg.c     |   4 +-
+>  net/wireless/reg.h     |   2 +
+>  5 files changed, 168 insertions(+), 2 deletions(-)
+>  create mode 100644 net/wireless/of.c
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index ca2ac1c..d7723a8 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -311,6 +311,32 @@ struct ieee80211_supported_band {
+>  	struct ieee80211_sta_vht_cap vht_cap;
+>  };
+>  
+> +/**
+> + * wiphy_read_of_freq_limits - read frequency limits from device tree
+> + *
+> + * @wiphy: the wireless device to get extra limits for
+> + *
+> + * Some devices may have extra limitations specified in DT. This may be useful
+> + * for chipsets that normally support more bands but are limited due to board
+> + * design (e.g. by antennas or extermal power amplifier).
+> + *
+> + * This function reads info from DT and uses it to *modify* channels (disable
+> + * unavailable ones). It's usually a *bad* idea to use it in drivers with
+> + * shared channel data as DT limitations are device specific.
+> + *
+> + * As this function access device node it has to be called after set_wiphy_dev.
 
-> On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
->> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
->>=20
->> >> So
->> >> for those other platforms there will be a delay waiting for user-mode
->> >> helper to fail, before trying to get nvs file from /lib/firmware.
->> >
->> > Yes, there will be. But there is no easy way to fix this problem that
->> > kernel is trying to use default/example NVS data...
->>=20
->> Kernel is doing correctly and requesting NVS data as expected, the
->> problem here is that linux-firmware claims that the example NVS data is
->> real calibration data (which it is not). Distros should not use that,
->> only developers for testing purposes. We should not courage users using
->> example calibration data.
->>=20
->> The simple fix is to rename the NVS file in linux-firmware to something
->> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
->> you send a patch to linux-firmware I'm happy to ack that.
->
-> I agree with rename and fact that default/example data should not be
-> used.
->
-> But...
->
-> 1) Kernel should not read device/model specific data from VFS where
-> are stored not-device-specific files preinstalled by linux
-> distributions.
->
-> And linux distributions are already putting files into VFS and kernel
-> cannot enforce userspace to not do that (as they are already doing it).
+You are aware that you need to modify this description with earlier
+patch "cfg80211: allow passing struct device in the wiphy_new call",
+right? :-p
 
-I'm having problems to understand what you are saying here.
+> + * It also modifies channels so they have to be set first.
+> + */
+> +#ifdef CONFIG_OF
+> +int wiphy_read_of_freq_limits(struct wiphy *wiphy);
+> +#else /* CONFIG_OF */
+> +static inline int wiphy_read_of_freq_limits(struct wiphy *wiphy)
+> +{
+> +	return 0;
+> +}
+> +#endif /* !CONFIG_OF */
+> +
+> +
 
-> 2) It was already tested that example NVS data can be used for N900 e.g.
-> for SSH connection. If real correct data are not available it is better
-> to use at least those example (and probably log warning message) so user
-> can connect via SSH and start investigating where is problem.
+[...]
 
-I disagree. Allowing default calibration data to be used can be
-unnoticed by user and left her wondering why wifi works so badly.
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index 5dbac37..bda0e9e 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -748,8 +748,8 @@ static bool is_valid_rd(const struct ieee80211_regdomain *rd)
+>  	return true;
+>  }
+>  
+> -static bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
+> -			    u32 center_freq_khz, u32 bw_khz)
+> +bool reg_does_bw_fit(const struct ieee80211_freq_range *freq_range,
+> +		     u32 center_freq_khz, u32 bw_khz)
+>  {
+>  	u32 start_freq_khz, end_freq_khz;
 
-> 3) If we do rename *now* we will totally break wifi support on Nokia
-> N900.
+would it be more appropriate to move this function to util.c?
 
-Then the distro should fix that when updating the linux-firmware
-packages. Can you provide details about the setup, what distro etc?
-
---=20
-Kalle Valo
+Regards,
+Arend
