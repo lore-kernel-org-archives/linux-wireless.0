@@ -1,61 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33523 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751677AbdA1Ncw (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45943 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756379AbdACFrw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Jan 2017 08:32:52 -0500
-Received: by mail-lf0-f65.google.com with SMTP id x1so28035588lff.0
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2017 05:31:33 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH fix?] bcma: use (get|put)_device when probing/removing device driver
-Date: Sat, 28 Jan 2017 14:31:22 +0100
-Message-Id: <20170128133122.12360-1-zajec5@gmail.com> (sfid-20170128_143257_708476_487FC950)
+        Tue, 3 Jan 2017 00:47:52 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH resend 2/4] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
+References: <87ful0lmop.fsf@mail.parknet.co.jp>
+Date: Tue, 03 Jan 2017 14:47:50 +0900
+In-Reply-To: <87ful0lmop.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Tue, 03 Jan 2017 14:47:18 +0900")
+Message-ID: <87bmvolmnt.fsf@mail.parknet.co.jp> (sfid-20170103_064820_434667_0BE3DB2C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
 
-This allows tracking device state and e.g. makes devm work as expected.
+Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
+NFC_CMD_GET_DEVICE send.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-Cc: Stable <stable@vger.kernel.org>
+To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
+NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
+
+This fixes those inconsistent.
+
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
 ---
-Kalle: this issue is in bcma since /ever/, so I'm Cc-ing stable without
-pointing any version.
 
-If someone reviewes (you or anyone) you may consider taking it as 3.10 fix.
-Can someone confirm this patch is OK?
----
- drivers/bcma/main.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ net/nfc/netlink.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 2c1798e38abd..38688236b3cd 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -633,8 +633,11 @@ static int bcma_device_probe(struct device *dev)
- 					       drv);
- 	int err = 0;
- 
-+	get_device(dev);
- 	if (adrv->probe)
- 		err = adrv->probe(core);
-+	if (err)
-+		put_device(dev);
- 
- 	return err;
+diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
+--- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
++++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
+@@ -311,6 +311,17 @@ free_msg:
+ 	return -EMSGSIZE;
  }
-@@ -647,6 +650,7 @@ static int bcma_device_remove(struct device *dev)
  
- 	if (adrv->remove)
- 		adrv->remove(core);
-+	put_device(dev);
++static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
++{
++	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
++	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
++	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
++	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
++	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++		return -1;
++	return 0;
++}
++
+ int nfc_genl_device_added(struct nfc_dev *dev)
+ {
+ 	struct sk_buff *msg;
+@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
+ 	if (!hdr)
+ 		goto free_msg;
  
- 	return 0;
- }
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
+ 	if (cb)
+ 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
+ 
+-	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
+-	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
+-	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
+-	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
+-	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
++	if (nfc_genl_setup_device_added(dev, msg))
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+_
+
 -- 
-2.11.0
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
