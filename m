@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:34200 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751907AbdANLxX (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45947 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756379AbdACFsU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jan 2017 06:53:23 -0500
-Received: by mail-wm0-f50.google.com with SMTP id f73so18218533wmf.1
-        for <linux-wireless@vger.kernel.org>; Sat, 14 Jan 2017 03:53:22 -0800 (PST)
-Subject: Re: linux driver bcm4311 failure
-To: message <letter@openmailbox.org>,
-        brcm80211-dev-list.pdl@broadcom.com, arch-general@archlinux.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-References: <257e6d7f8b199e444164fae07dd569e1@openmailbox.org>
- <fe03ef16-998d-3819-2092-45f30f7b4555@broadcom.com>
- <b9128b3f27d585ff2da2ff83e02c3f11@openmailbox.org>
- <79259801571260a330b01a8d092d9d48@openmailbox.org>
- <c7893ec092e40d89a3f001bd2fd4f54c@openmailbox.org>
- <a7c6682e-2515-b0e9-c4a9-743e8780257a@broadcom.com>
- <851aa49795494ec407c4783f8579437e@openmailbox.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <da82a20d-fad4-69e4-c2bc-6cee1374253d@broadcom.com> (sfid-20170114_125335_161412_CD1AADE6)
-Date: Sat, 14 Jan 2017 12:53:18 +0100
+        Tue, 3 Jan 2017 00:48:20 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH resend 3/4] nfc: Fix RC-S380* needs zero-length packet
+References: <87ful0lmop.fsf@mail.parknet.co.jp>
+        <87bmvolmnt.fsf@mail.parknet.co.jp>
+Date: Tue, 03 Jan 2017 14:48:17 +0900
+In-Reply-To: <87bmvolmnt.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
+        "Tue, 03 Jan 2017 14:47:50 +0900")
+Message-ID: <877f6clmn2.fsf_-_@mail.parknet.co.jp> (sfid-20170103_064845_558418_3D64F1E2)
 MIME-Version: 1.0
-In-Reply-To: <851aa49795494ec407c4783f8579437e@openmailbox.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-1-2017 11:15, message wrote:
-> On 2017-01-02 20:04, Arend van Spriel wrote:
->> On 02-01-17 15:33, message wrote:
->>> On 2016-12-30 19:46, message wrote:
->>>> On 2016-09-17 08:11, message wrote:
->>>>> On 2016-09-09 07:57, Arend Van Spriel wrote:
->>>>>>
->>>>>> The device is claimed by b43-pci-bridge so I would suggest:
->>>>>>
->>>>>> blacklist b43-pci-bridge
->>>>>>
->>>
->>> The wifi card indicator now appears to start after computer switch on
->>> (twice in a row now!)
->>>
->>> Neither networkmanager or wicd are accepting the password.
->>>
->>> Even:
->>>
->>> wicd-cli --wireless -c [wifihotspotname]
->>> done!
->>>
->>> is false and internet access not found.
->>>
->>> wpa_supplicant continues to report 'conn_failed' error.
->>>
->>> Connection to same network is successful using debian on chromebook
->>> (crouton)
->>
->> I am confused by all your messages. In the previous one you did a
->> 'modprobe b43'. So what driver do you intend to use here. b43 is not a
->> driver maintained by broadcom. You should ask for help on the b43
->> mailing list [1] if you want to use that driver.
->>
->> Regards,
->> Arend
->>
->> [1] http://lists.infradead.org/mailman/listinfo/b43-dev
-> 
-> After system upgrade, wifi card fails to be recognised.
-> 
-> For the benefit of other users: save your time and avoid broadcom
-> products; they are terrible.
 
-Why sending these types of messages hiding in anonymity without
-responding to any of the questions in my email responses. Again what
-driver are you using. If it is b43 you want you should not blacklist
-b43-pci-bridge. Whether or not b43 supports your device can be found
-here [2]. Supposedly it is. If not you might try your luck at the b43
-mailing list I gave you in earlier email.
+If sent packet size is wMaxPacketSize boundary, this device doesn't
+answer. To fix this, we have to send zero-length packet in usb spec.
 
-Regards,
-Arend
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+---
 
-[2] https://wireless.wiki.kernel.org/en/users/drivers/b43#list_of_hardware
+ drivers/nfc/port100.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+diff -puN drivers/nfc/port100.c~nfc-need-zero-packet drivers/nfc/port100.c
+--- linux-ibmpc/drivers/nfc/port100.c~nfc-need-zero-packet	2016-12-31 18:27:14.814753508 +0900
++++ linux-ibmpc-hirofumi/drivers/nfc/port100.c	2016-12-31 18:32:12.928334607 +0900
+@@ -1540,6 +1540,7 @@ static int port100_probe(struct usb_inte
+ 	usb_fill_bulk_urb(dev->out_urb, dev->udev,
+ 			  usb_sndbulkpipe(dev->udev, out_endpoint),
+ 			  NULL, 0, port100_send_complete, dev);
++	dev->out_urb->transfer_flags = URB_ZERO_PACKET;
+ 
+ 	dev->skb_headroom = PORT100_FRAME_HEADER_LEN +
+ 			    PORT100_COMM_RF_HEAD_MAX_LEN;
+_
+
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
