@@ -1,34 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44496 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758474AbdAJLwf (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:32804 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761670AbdACW5e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 06:52:35 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
-Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
-        linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, xypron.glpk@gmx.de
-Subject: Re: [PATCH 1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
-References: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com>
-        <eeeaa63e-b179-be38-afbb-03c3bf9a0158@redpinesignals.com>
-Date: Tue, 10 Jan 2017 13:52:24 +0200
-In-Reply-To: <eeeaa63e-b179-be38-afbb-03c3bf9a0158@redpinesignals.com>
-        (Prameela Rani Garnepudi's message of "Tue, 10 Jan 2017 16:46:47
-        +0530")
-Message-ID: <87eg0brv2f.fsf@kamboji.qca.qualcomm.com> (sfid-20170110_125243_809415_021E9BE4)
+        Tue, 3 Jan 2017 17:57:34 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V5 1/3] dt-bindings: document common IEEE 802.11 frequency limit property
+Date: Tue,  3 Jan 2017 23:57:12 +0100
+Message-Id: <20170103225715.14072-1-zajec5@gmail.com> (sfid-20170103_235740_908954_84D464E4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com> writes:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> Can you please review these patches. You slipped through these patches  
-> and reviewing resent patches. Is there a specific reason? 
+This new file should be used for properties that apply to all wireless
+devices.
 
-As you are new, your patches just take more time to review than others
-and haven't had a good slot to look at those yet.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V2: Switch to a single ieee80211-freq-limit property that allows specifying
+    *multiple* ranges. This resolves problem with more complex rules as pointed
+    by Felx.
+    Make description implementation agnostic as pointed by Arend.
+    Rename node to wifi as suggested by Martin.
+V3: Use more real-life frequencies in the example.
+V5: Describe hardware design as possible use for this property
+---
+ .../devicetree/bindings/net/wireless/ieee80211.txt   | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
+diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+new file mode 100644
+index 0000000..1c82c16
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+@@ -0,0 +1,20 @@
++Common IEEE 802.11 properties
++
++This provides documentation of common properties that are valid for all wireless
++devices.
++
++Optional properties:
++ - ieee80211-freq-limit : list of supported frequency ranges in KHz. This can be
++	used to specify extra hardware limitations caused by e.g. used antennas
++	or power amplifiers.
++
++Example:
++
++pcie@0,0 {
++	reg = <0x0000 0 0 0 0>;
++	wifi@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		ieee80211-freq-limit = <2402000 2482000>,
++				       <5170000 5250000>;
++	};
++};
 -- 
-Kalle Valo
+2.10.1
