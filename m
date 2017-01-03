@@ -1,106 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34316 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752570AbdARWCK (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:36652 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757698AbdACOOQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 17:02:10 -0500
-Date: Wed, 18 Jan 2017 16:02:07 -0600
-From: Rob Herring <robh@kernel.org>
-To: Matt Ranostay <matt@ranostay.consulting>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
-        tony@atomide.com
-Subject: Re: [PATCH v3 1/2] devicetree: document new marvell-8xxx and
- pwrseq-sd8787 options
-Message-ID: <20170118220207.3zhbavk2uo4xui34@rob-hp-laptop> (sfid-20170118_230233_375082_4D0A2DFF)
-References: <20170113052937.12538-1-matt@ranostay.consulting>
- <20170113052937.12538-2-matt@ranostay.consulting>
+        Tue, 3 Jan 2017 09:14:16 -0500
+Received: by mail-oi0-f43.google.com with SMTP id v84so508187433oie.3
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 06:14:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170113052937.12538-2-matt@ranostay.consulting>
+In-Reply-To: <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com>
+References: <20170103083858.6981-1-zajec5@gmail.com> <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com>
+ <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com> <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 3 Jan 2017 15:14:15 +0100
+Message-ID: <CACna6rzBr0Co2o4Ym-7coVk1v5g1nvgDv6099oJVFr9drgU_Rw@mail.gmail.com> (sfid-20170103_151454_987730_025BC282)
+Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 09:29:36PM -0800, Matt Ranostay wrote:
+On 3 January 2017 at 14:19, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 3-1-2017 12:31, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>>> +             if (!channel) {
+>>>> +                     brcmf_err("Firmware reported unexpected channel =
+%d\n",
+>>>> +                               ch.control_ch_num);
+>>>> +                     continue;
+>>>> +             }
+>>> As stated above something is really off when this happens so should we
+>>> continue and try to make sense of what firmware provides or simply fail=
+.
+>> Well, I could image something like this happening and not being critical=
+.
+>> The simplest case: Broadcom team releases a new firmware which
+>> supports extra 5 GHz channels (e.g. due to the IEEE standard change).
+>> Why should we refuse to run & support all "old" channel just because of =
+that?
+>
+> Fair enough. I was assuming we keep __wl_{2,5}ghz_channels up to date
+> with IEEE standard.
+>
+>> What do you mean by "make sense of what firmware provides"? Would kind
+>> of solution would you suggest?
+>
+> When the above assumption can be assured (by us) the only other scenario
+> would be a change in the firmware API where we wrongly interpret the
+> information retrieved. In this case all subsequent channels will likely
+> result in bogus or accidental matches hence it seems better to bail out
+> early.
 
-Changelog?
+Good point, this actually gave me an idea for a small nice
+improvement. I remember I saw something like WL_VER in wl ioctl
+protocol, it was already bumped at some point by Broadcom, when
+chanspec format has changed. We should probably read this number from
+firmware and maybe refuse to run if version is newer than the one we
+know.
 
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
-> ---
->  .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt          | 14 ++++++++++++++
->  .../devicetree/bindings/net/wireless/marvell-8xxx.txt      |  7 ++++++-
->  2 files changed, 20 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-> new file mode 100644
-> index 000000000000..1b658351629b
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-> @@ -0,0 +1,14 @@
-> +* Marvell SD8787 power sequence provider
-> +
-> +Required properties:
-> +- compatible: must be "mmc-pwrseq-sd8787".
-> +- pwndn-gpio: contains a power down GPIO specifier.
-
-powerdown-gpios
-
-> +- reset-gpio: contains a reset GPIO specifier.
-
-reset-gpios
-
-And state the active state for both.
-
-> +
-> +Example:
-> +
-> +	wifi_pwrseq: wifi_pwrseq {
-> +		compatible = "mmc-pwrseq-sd8787";
-> +		pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
-> +		reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
-> +	}
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> index 980b16df74c3..0854451ff91d 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-> @@ -1,4 +1,4 @@
-> -Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
-> +Marvell 8787/8897/8997 (sd8787/sd8897/sd8997/pcie8997) SDIO/PCIE devices
->  ------
->  
->  This node provides properties for controlling the Marvell SDIO/PCIE wireless device.
-> @@ -8,6 +8,7 @@ connects the device to the system.
->  Required properties:
->  
->    - compatible : should be one of the following:
-> +	* "marvell,sd8787"
->  	* "marvell,sd8897"
->  	* "marvell,sd8997"
->  	* "pci11ab,2b42"
-> @@ -34,6 +35,9 @@ Optional properties:
->  		 so that the wifi chip can wakeup host platform under certain condition.
->  		 during system resume, the irq will be disabled to make sure
->  		 unnecessary interrupt is not received.
-> +  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
-> +  - mmc-pwrseq:  phandle to the MMC power sequence node. See "mmc-pwrseq-*"
-> +		 for documentation of MMC power sequence bindings.
->  
->  Example:
->  
-> @@ -46,6 +50,7 @@ so that firmware can wakeup host using this device side pin.
->  &mmc3 {
->  	status = "okay";
->  	vmmc-supply = <&wlan_en_reg>;
-> +	mmc-pwrseq = <&wifi_pwrseq>;
->  	bus-width = <4>;
->  	cap-power-off-card;
->  	keep-power-in-suspend;
-> -- 
-> 2.10.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Rafa=C5=82
