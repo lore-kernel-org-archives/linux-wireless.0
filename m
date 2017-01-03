@@ -1,90 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:35535 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754817AbdA0Mxf (ORCPT
+Received: from mail.parknet.co.jp ([210.171.160.6]:45941 "EHLO
+        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756379AbdACFrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:53:35 -0500
-Received: by mail-pg0-f42.google.com with SMTP id 194so81236799pgd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 04:53:35 -0800 (PST)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: Kalle Valo <kvalo@codeaurora.org>,
-        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
- <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
- <20170127101043.GD24223@pali>
- <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
- <20170127103408.GG24223@pali> <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
- <20170127115706.GH24223@pali> <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <bc26f6a5-2865-356f-7f19-f3a316257759@broadcom.com> (sfid-20170127_135441_933030_D80C0E5C)
-Date: Fri, 27 Jan 2017 13:53:28 +0100
+        Tue, 3 Jan 2017 00:47:22 -0500
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        linux-wireless@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH resend 1/4] nfc: Add support RC-S380P to port100
+Date: Tue, 03 Jan 2017 14:47:18 +0900
+Message-ID: <87ful0lmop.fsf@mail.parknet.co.jp> (sfid-20170103_064750_583099_E8F56568)
 MIME-Version: 1.0
-In-Reply-To: <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-1-2017 13:26, Kalle Valo wrote:
-> Pali Rohár <pali.rohar@gmail.com> writes:
-> 
->> On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
->>> Pali Rohár <pali.rohar@gmail.com> writes:
->>>
->>>>> So
->>>>> for those other platforms there will be a delay waiting for user-mode
->>>>> helper to fail, before trying to get nvs file from /lib/firmware.
->>>>
->>>> Yes, there will be. But there is no easy way to fix this problem that
->>>> kernel is trying to use default/example NVS data...
->>>
->>> Kernel is doing correctly and requesting NVS data as expected, the
->>> problem here is that linux-firmware claims that the example NVS data is
->>> real calibration data (which it is not). Distros should not use that,
->>> only developers for testing purposes. We should not courage users using
->>> example calibration data.
->>>
->>> The simple fix is to rename the NVS file in linux-firmware to something
->>> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
->>> you send a patch to linux-firmware I'm happy to ack that.
->>
->> I agree with rename and fact that default/example data should not be
->> used.
->>
->> But...
->>
->> 1) Kernel should not read device/model specific data from VFS where
->> are stored not-device-specific files preinstalled by linux
->> distributions.
->>
->> And linux distributions are already putting files into VFS and kernel
->> cannot enforce userspace to not do that (as they are already doing it).
-> 
-> I'm having problems to understand what you are saying here.
 
-This is a personal opinion. I read it as: /lib/firmware can only contain
-files for from linux-firmware.
+Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+---
 
-At least the device-specific vs. non-device-specific does not seem to
-hold. The firmware files that we have in the linux-firmware repository
-are very device-specific. Unless you mean the 'platform' when talking
-about 'device'.
+ drivers/nfc/port100.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Regards,
-Arend
+diff -puN drivers/nfc/port100.c~nfc-add-rcs380p drivers/nfc/port100.c
+--- linux/drivers/nfc/port100.c~nfc-add-rcs380p	2016-12-18 22:16:53.503673411 +0900
++++ linux-hirofumi/drivers/nfc/port100.c	2016-12-18 22:16:53.504673416 +0900
+@@ -21,8 +21,9 @@
+ 
+ #define VERSION "0.1"
+ 
+-#define SONY_VENDOR_ID    0x054c
+-#define RCS380_PRODUCT_ID 0x06c1
++#define SONY_VENDOR_ID		0x054c
++#define RCS380S_PRODUCT_ID	0x06c1
++#define RCS380P_PRODUCT_ID	0x06c3
+ 
+ #define PORT100_PROTOCOLS (NFC_PROTO_JEWEL_MASK    | \
+ 			   NFC_PROTO_MIFARE_MASK   | \
+@@ -1477,7 +1478,8 @@ static struct nfc_digital_ops port100_di
+ };
+ 
+ static const struct usb_device_id port100_table[] = {
+-	{ USB_DEVICE(SONY_VENDOR_ID, RCS380_PRODUCT_ID), },
++	{ USB_DEVICE(SONY_VENDOR_ID, RCS380S_PRODUCT_ID), },
++	{ USB_DEVICE(SONY_VENDOR_ID, RCS380P_PRODUCT_ID), },
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(usb, port100_table);
+_
+
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
