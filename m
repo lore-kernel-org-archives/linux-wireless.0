@@ -1,144 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:56317 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751410AbdAPDQO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 22:16:14 -0500
-Date: Mon, 16 Jan 2017 04:15:56 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+Received: from mx2.suse.de ([195.135.220.15]:45075 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752882AbdACR73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jan 2017 12:59:29 -0500
+Date: Tue, 3 Jan 2017 18:59:24 +0100
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Pavel Machek <pavel@ucw.cz>, Daniel Wagner <wagi@monom.org>,
+        Tom Gundersen <teg@jklm.no>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 13/14] rt2x00: rt2800lib: add support for RT3352 with
- 20MHz crystal
-Message-ID: <20170116031541.GA32313@makrotopia.org> (sfid-20170116_041617_092446_3D22A060)
-References: <874m114lwq.fsf@codeaurora.org>
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Takashi Iwai <tiwai@suse.de>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170103175924.GC13946@wotan.suse.de> (sfid-20170103_185956_876268_6C95C05D)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <e728586e-80bf-c9e0-0063-71da4c4aba85@broadcom.com>
+ <20161226163559.GB27087@amd>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+In-Reply-To: <20161226163559.GB27087@amd>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Mathias Kresin <dev@kresin.me>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 50 +++++++++++++++++++++++++-
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  2 ++
- 2 files changed, 51 insertions(+), 1 deletion(-)
+On Mon, Dec 26, 2016 at 05:35:59PM +0100, Pavel Machek wrote:
+> 
+> Right question is "should we solve it without user-space help"?
+> 
+> Answer is no, too. Way too complex. Yes, it would be nice if hardware
+> was designed in such a way that getting calibration data from kernel
+> is easy, and if you design hardware, please design it like that. But
+> N900 is not designed like that and getting the calibration through
+> userspace looks like only reasonable solution.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 93c97eade334..cb1457595f05 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -36,6 +36,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/slab.h>
-+#include <linux/clk.h>
- 
- #include "rt2x00.h"
- #include "rt2800lib.h"
-@@ -7675,6 +7676,27 @@ static const struct rf_channel rf_vals_5592_xtal40[] = {
- 	{196, 83, 0, 12, 1},
- };
- 
-+/*
-+ * RF value list for rt3xxx with Xtal20MHz
-+ * Supports: 2.4 GHz (all) (RF3322)
-+ */
-+static const struct rf_channel rf_vals_xtal20mhz_3x[] = {
-+	{1,    0xE2,	 2,  0x14},
-+	{2,    0xE3,	 2,  0x14},
-+	{3,    0xE4,	 2,  0x14},
-+	{4,    0xE5,	 2,  0x14},
-+	{5,    0xE6,	 2,  0x14},
-+	{6,    0xE7,	 2,  0x14},
-+	{7,    0xE8,	 2,  0x14},
-+	{8,    0xE9,	 2,  0x14},
-+	{9,    0xEA,	 2,  0x14},
-+	{10,   0xEB,	 2,  0x14},
-+	{11,   0xEC,	 2,  0x14},
-+	{12,   0xED,	 2,  0x14},
-+	{13,   0xEE,	 2,  0x14},
-+	{14,   0xF0,	 2,  0x18},
-+};
-+
- static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- {
- 	struct hw_mode_spec *spec = &rt2x00dev->spec;
-@@ -7764,7 +7786,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF5390:
- 	case RF5392:
- 		spec->num_channels = 14;
--		spec->channels = rf_vals_3x;
-+		if (spec->clk_is_20mhz)
-+			spec->channels = rf_vals_xtal20mhz_3x;
-+		else
-+			spec->channels = rf_vals_3x;
- 		break;
- 
- 	case RF3052:
-@@ -7945,6 +7970,20 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
- 	return 0;
- }
- 
-+int rt2800_probe_clk(struct rt2x00_dev *rt2x00dev)
-+{
-+	struct hw_mode_spec *spec = &rt2x00dev->spec;
-+	struct clk *clk = clk_get(rt2x00dev->dev, NULL);
-+
-+	if (IS_ERR(clk))
-+		return PTR_ERR(clk);
-+
-+	if (clk_get_rate(clk) == 20000000)
-+		spec->clk_is_20mhz = 1;
-+
-+	return 0;
-+}
-+
- int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- {
- 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
-@@ -7985,6 +8024,15 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
- 
- 	/*
-+	 * Probe SoC clock.
-+	 */
-+	if (rt2x00_is_soc(rt2x00dev)) {
-+		retval = rt2800_probe_clk(rt2x00dev);
-+		if (retval)
-+			return retval;
-+	}
-+
-+	/*
- 	 * Initialize hw specifications.
- 	 */
- 	retval = rt2800_probe_hw_mode(rt2x00dev);
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index cfbf414c2627..b1eec49b0dac 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -400,6 +400,7 @@ static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
-  * @channels: Device/chipset specific channel values (See &struct rf_channel).
-  * @channels_info: Additional information for channels (See &struct channel_info).
-  * @ht: Driver HT Capabilities (See &ieee80211_sta_ht_cap).
-+ * @clk_is_20mhz: External crystal of WiSoC is 20MHz instead of 40MHz
-  */
- struct hw_mode_spec {
- 	unsigned int supported_bands;
-@@ -415,6 +416,7 @@ struct hw_mode_spec {
- 	const struct channel_info *channels_info;
- 
- 	struct ieee80211_sta_ht_cap ht;
-+	int clk_is_20mhz;
- };
- 
- /*
--- 
-2.11.0
+Arend seems to have a better alternative in mind possible for other
+devices which *can* probably pull of doing this easily and nicely,
+given the nasty history of the usermode helper crap we should not
+in any way discourage such efforts.
+
+Arend -- please look at the firmware cache, it not a hash but a hash
+table for an O(1) lookups would be a welcomed change, then it could
+be repurposed for what you describe, I think the only difference is
+you'd perhaps want a custom driver hook to fetch the calibration data
+so the driver does whatever it needs.
+
+> Now... how exactly to do that is other question. (But this is looks
+> very reasonable. Maybe I'd add request_firmware_with_flags(, ...int
+> flags), but.. that's a tiny detail.). But userspace needs to be
+> involved.
+
+No, no, we keep adding yet-another-exported symbol for requesting firmware,
+instead of just adding a set of parameters possible and easily extending
+functionality. Please review the patches posted on my last set which adds
+a flexible API with only 2 calls, sync and async, and lets us customize
+our requests using a parameter:
+
+https://git.kernel.org/cgit/linux/kernel/git/mcgrof/linux-next.git/log/?h=20161216-drvdata-v3-try3
+
+This also documents the "usermode helper" properly and explains some of
+the issues and limitations you will need to consider if you use it, its
+one reason I'd highly encourage to consider an alternative as what Arend
+is considering. *Iff* you insist on using the (now using the proper term,
+as per the documentation update I am providing) "custom fallback mechanism"
+I welcome such a change but I ask we *really* think this through well so
+we avoid the stupid issues which have historically made the custom fallback
+mechanism more of a nuisance for Linux distributions, users and developers.
+To this end -- I ask you check out Daniel Wagner and Tom Gundersen's firmwared
+work [0] which I referred you to in December. Although the drvdata API does
+not yet use a custom fallback mechanism, after and its merged the goal here
+would be to *only* support a clean custom fallback mechanism which aligns
+itself *well* with firmwared or solutions like it. Your patch set then could
+just become a patch set to add the custom fallback mechaism support to drvdata
+API with the new options/prefernce you are looking for to be specified in
+the new parameters, not a new exported symbol.
+
+One of the cruxes we should consider addressing before the drvdata API gets a
+custom fallback mechanism support added is that the usermode helper lock should
+be replaced with a generic solution for the races it was intended to address:
+use of the API on suspend/resume and implicitly later avoid a race on init. To
+this end we should consider the same race for *other* real kernel "user mode
+helpers", I've documented this on a wiki [1] which documents the *real*
+kernel usermode helpers users, one of which was the kobject uevent which is
+one of the fallback mechanisms.
+
+I should also note that the idea of fallback mechanism using kobject uevents
+should really suffice, in review with Johannes Berg at least, he seemed
+convinced just letting either the upstream firmwared, a custom firmwared or
+a custom userspace solution should be able to just monitor for uevents for
+drvdata and do the right thing, this whole "custom fallback mechanism"
+in retrospect seems not really needed as far as I can tell.
+
+[0] https://github.com/teg/firmwared
+[1] https://kernelnewbies.org/KernelProjects/usermode-helper-enhancements
+
+  Luis
