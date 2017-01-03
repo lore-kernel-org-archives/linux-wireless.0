@@ -1,55 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34202 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751419AbdAMK2j (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 05:28:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Michael Renzmann" <mrenzmann@madwifi-project.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-        ath9k-devel@lists.ath9k.org
-Subject: Re: Searching new home for ath[59]k-devel mailing lists
-References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
-Date: Fri, 13 Jan 2017 12:28:34 +0200
-In-Reply-To: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
-        (Michael Renzmann's message of "Sun, 8 Jan 2017 18:15:26 +0100 (CET)")
-Message-ID: <87y3yfi78t.fsf@purkki.adurom.net> (sfid-20170113_112854_508096_F066D703)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:48144 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757187AbdACHGV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 3 Jan 2017 02:06:21 -0500
+Message-ID: <1483427177.15591.5.camel@sipsolutions.net> (sfid-20170103_080624_699624_2C6703B1)
+Subject: Re: [PATCH V3 2/2] cfg80211: support ieee80211-freq-limit DT
+ property
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Tue, 03 Jan 2017 08:06:17 +0100
+In-Reply-To: <CACna6ryrYY5G=Fvmsrq_sD3iX5dWreyz7R8mGEd6ogUck=twnQ@mail.gmail.com> (sfid-20170102_231255_379430_96267468)
+References: <20170102163209.2445-1-zajec5@gmail.com>
+         <20170102163209.2445-2-zajec5@gmail.com>
+         <1483379548.15591.1.camel@sipsolutions.net>
+         <CACna6ryrYY5G=Fvmsrq_sD3iX5dWreyz7R8mGEd6ogUck=twnQ@mail.gmail.com>
+         (sfid-20170102_231255_379430_96267468)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Michael Renzmann" <mrenzmann@madwifi-project.org> writes:
 
-> Out of history, the ath5k-devel and ath9k-devel mailing lists have been
-> and still are hosted on the mailing list server of the MadWifi project. I
-> intend to shut the server down, and thus I'm searching a new loving home
-> for the lists.
->
-> Besides a new home the lists also need some attention - both would receive
-> a fair amount of spam, and thus they need someone who takes care of some
-> kind of moderating posts and/or filtering spam.
->
-> To be honest, I've not been following things at all for many months. From
-> what I can tell it seems that ath5k-devel is pretty quiet. ath9k-devel,
-> however, still sees a fair amount of communication; but I didn't look at
-> how much of that traffic actually took place here on linux-wireless, just
-> CC'ing ath9k-devel.
-> This is to say, if there is a broad agreement that one of the lists or
-> both of them are no longer required, I'm fine with just closing them in an
-> ordered fashion.
+> When driver uses custom regulatory it registers initial channels at
+> init but it can also react to regdom changes using reg_notifier. Is
+> that correct?
 
-I really don't see any need for ath5k-devel, according to git log there
-has been five patches for ath5k during the past year.
+We can treat regulatory and OF data as entirely independent, I think.
+At least that's my suggestion:
 
-ath9k is of course a lot more active, 99 patches over the last year. But
-still I get the feeling that we don't really need an ath9k specific
-mailing list, discussion via linux-wireless should work. And if there
-ever comes up a demand to have a dedicated list for ath9k we can then
-try find a new one, for example from infradead.org.
+ * use OF data to populate the original channel list, saying which
+   channels are valid (or not)
+ * use regulatory later to further restrict settings of the channels
 
-So feel free to close both of the lists and thanks for the heads up. Are
-you planning to update the MAINTAINERS file or should I?
+> So I'm looking at brcmf_cfg80211_reg_notifier which calls
+> brcmf_setup_wiphybands which calls brcmf_construct_chaninfo.
+> That last one reworks all channels on every call. It first marks all
+> existing channels as DISABLED then queries firmware for the list of
+> supported channels and updates wiphy channels one by one.
+> So if I understand this correctly, every regdom change can result in
+> rebuilding channels pretty much from the scratch. That's why I
+> believed I need to call wiphy_freq_limits_apply on runtime, not just
+> during the init.
+> 
+> Is there some flow in my understanding?
 
--- 
-Kalle Valo
+I think maybe there's a problem in my understanding :)
+
+All the regulatory code usually takes into account channel->orig_flags. 
+If this code also did, then we could have the original DISABLED flag
+taken from OF still be valid here.
+
+johannes
+
+johannes
