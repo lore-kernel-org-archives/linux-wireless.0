@@ -1,150 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:35001 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932619AbdA0K10 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 05:27:26 -0500
-Received: by mail-pf0-f171.google.com with SMTP id f144so72607612pfa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 02:27:12 -0800 (PST)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
- <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
- <20170127101043.GD24223@pali>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com> (sfid-20170127_112802_768561_D67230D2)
-Date: Fri, 27 Jan 2017 11:19:25 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:32794 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968160AbdADPHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 10:07:13 -0500
+Date: Wed, 4 Jan 2017 16:02:44 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Xavier Bestel <xavier.bestel@free.fr>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Can't authenticate to WPA network with rt2800usb driver
+Message-ID: <20170104150243.GA11582@redhat.com> (sfid-20170104_160716_383654_FD5E7F6B)
+References: <1483526270.8560.70.camel@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <20170127101043.GD24223@pali>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1483526270.8560.70.camel@free.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-1-2017 11:10, Pali Roh√°r wrote:
-> On Friday 27 January 2017 11:05:32 Arend Van Spriel wrote:
->> On 27-1-2017 10:43, Pali Roh√°r wrote:
->>> On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
->>>> Pali Roh√°r <pali.rohar@gmail.com> writes:
->>>>
->>>>> NVS calibration data for wl1251 are model specific. Every one device with
->>>>> wl1251 chip has different and calibrated in factory.
->>>>>
->>>>> Not all wl1251 chips have own EEPROM where are calibration data stored. And
->>>>> in that case there is no "standard" place. Every device has stored them on
->>>>> different place (some in rootfs file, some in dedicated nand partition,
->>>>> some in another proprietary structure).
->>>>>
->>>>> Kernel wl1251 driver cannot support every one different storage decided by
->>>>> device manufacture so it will use request_firmware_prefer_user() call for
->>>>> loading NVS calibration data and userspace helper will be responsible to
->>>>> prepare correct data.
->>>>>
->>>>> In case userspace helper fails request_firmware_prefer_user() still try to
->>>>> load data file directly from VFS as fallback mechanism.
->>>>>
->>>>> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
->>>>> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
->>>>> devices.
->>>>>
->>>>> With this patch it is finally possible to load correct model specific NVS
->>>>> calibration data for Nokia N900.
->>>>>
->>>>> Signed-off-by: Pali Roh√°r <pali.rohar@gmail.com>
->>>>> ---
->>>>>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
->>>>>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
->>>>>  2 files changed, 2 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
->>>>> index 7142ccf..affe154 100644
->>>>> --- a/drivers/net/wireless/ti/wl1251/Kconfig
->>>>> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
->>>>> @@ -2,6 +2,7 @@ config WL1251
->>>>>  	tristate "TI wl1251 driver support"
->>>>>  	depends on MAC80211
->>>>>  	select FW_LOADER
->>>>> +	select FW_LOADER_USER_HELPER
->>>>>  	select CRC7
->>>>>  	---help---
->>>>>  	  This will enable TI wl1251 driver support. The drivers make
->>>>> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
->>>>> index 208f062..24f8866 100644
->>>>> --- a/drivers/net/wireless/ti/wl1251/main.c
->>>>> +++ b/drivers/net/wireless/ti/wl1251/main.c
->>>>> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
->>>>>  	struct device *dev = wiphy_dev(wl->hw->wiphy);
->>>>>  	int ret;
->>>>>  
->>>>> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
->>>>> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
->>>>
->>>> I don't see the need for this. Just remove the default nvs file from
->>>> filesystem and the fallback user helper will be always used, right?
->>>
->>> It is part of linux-firmware repository. And already part of all
->>> previous versions of linux-firmware packages in lot of linux
->>> distributions. So removing it is not possible...
->>
->> You are probably saying that on your platform you can not remove
->> anything from /lib/firmware, right? I don't see how you come from "it is
->> part of firmware package" to "removing is not possible". Trying to
->> understand this and it makes no sense.
-> 
-> It is already in linux distribution packages. If I remove that file from
-> file system it will be placed there again by package management or it it
-> will throw error message about system integrity (missing file, etc...).
-> 
-> Also that file is already in linux-firmware git and so is propagated to
-> /lib/firmware by anybody who is using linux-firmware.
-> 
->>>> Like we discussed earlier, the default nvs file should not be used by
->>>> normal users.
->>>
->>> But already is and we need to deal with this fact.
->>
->> Why?
-> 
-> Because everybody has already installed it.
-> 
->> Are there other platforms that use the default nvs file and have a
->> working wifi.
-> 
-> I do not know.
-> 
->> So your "removing is not possible" would be about
->> regression for those?
-> 
-> Yes, that is possible.
-> 
-> Also you can use wifi on Nokia N900 with this default file. Yes it is
-> not recommended and probably has performance problems... but more people
-> use it for SSH and it is working. Pavel could confirm this.
-> 
-> So yes, if you remove that file *now* there is regression for Nokia N900
-> when you are using SSH over wifi.
+On Wed, Jan 04, 2017 at 11:37:50AM +0100, Xavier Bestel wrote:
+> Jan††4 11:22:29 pcxav wpa_supplicant[13666]: wlx7cdd90463ef8: SME: Trying to authenticate with 5c:33:8e:56:78:d3 (SSID='MySecretSSID' freq=2437 MHz)†
+> Jan††4 11:22:29 pcxav kernel: [2921135.972360] wlx7cdd90463ef8: authenticate with 5c:33:8e:56:78:d3†
+> Jan††4 11:22:29 pcxav NetworkManager[15150]: <info>††[1483525349.3774] device (wlx7cdd90463ef8): supplicant interface state: inactive -> authenticating†
+> Jan††4 11:22:29 pcxav kernel: [2921135.990588] wlx7cdd90463ef8: send auth to 5c:33:8e:56:78:d3 (try 1/3)†
+> Jan††4 11:22:29 pcxav kernel: [2921135.999983] wlx7cdd90463ef8: authenticated†
+> Jan††4 11:22:34 pcxav kernel: [2921140.991625] wlx7cdd90463ef8: aborting authentication with 5c:33:8e:56:78:d3 by local choice (Reason: 3=DEAUTH_LEAVING)†
 
-So you are changing the behavior for all platforms using wl1251, but the
-user-helper preference is (probably) only applicable for N900, right? So
-for those other platforms there will be a delay waiting for user-mode
-helper to fail, before trying to get nvs file from /lib/firmware.
+This looks like problem when wpa_supplicant do not talk to correct
+kernel socket when cfg80211 module was removed and then loaded again.
+This can happen when you remove wireless device driver using
+modprobe -r  i.e:
 
-Regards,
-Arend
+modprobe -r rt2800usb
+modprobe rt2800pci
+
+This problem is fixed in current version of wpa_supplicant or maybe
+in kernel.
+
+> Does anyone have a hint to make it work ?
+
+"systemctl restart wpa_supplicant.service" recovers from bad state.
+
+Stanislaw
