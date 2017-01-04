@@ -1,66 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:51150 "EHLO bues.ch"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932380AbdAFXbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 18:31:49 -0500
-Date: Fri, 6 Jan 2017 23:46:26 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Rahul Krishnan <mrahul.krishnan@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ssb: main.c: This patch removes unnecessary return
- statement using spatch tool
-Message-ID: <20170106234626.24f5f6ad@wiggum> (sfid-20170107_003215_690444_0C8AC423)
-In-Reply-To: <CACna6ryhvkSaHgU9igshnMjNg=wgeXd3p57VXxbr0ykoEtLH_g@mail.gmail.com>
-References: <20170106152043.GA6383@rahul>
-        <CACna6ryhvkSaHgU9igshnMjNg=wgeXd3p57VXxbr0ykoEtLH_g@mail.gmail.com>
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36066 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966180AbdADLJw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 06:09:52 -0500
+Received: by mail-lf0-f67.google.com with SMTP id j75so761014lfe.3
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 03:09:51 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V3] brcmfmac: avoid writing channel out of allocated array
+Date: Wed,  4 Jan 2017 12:09:41 +0100
+Message-Id: <20170104110941.21261-1-zajec5@gmail.com> (sfid-20170104_120956_066547_608B08C5)
+In-Reply-To: <20170103164930.29989-1-zajec5@gmail.com>
+References: <20170103164930.29989-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/eJ2l1kcRE525BF02wzCSLTD"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/eJ2l1kcRE525BF02wzCSLTD
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> > @@ -1272,9 +1272,7 @@ u32 ssb_admatch_size(u32 adm)
-> >         default:
-> >                 SSB_WARN_ON(1);
-> >         }
-> > -       size =3D (1 << (size + 1));
-> > -
-> > -       return size;
-> > +       return (1 << (size + 1));
-> >  }
-> >  EXPORT_SYMBOL(ssb_admatch_size); =20
+Our code was assigning number of channels to the index variable by
+default. If firmware reported channel we didn't predict this would
+result in using that initial index value and writing out of array. This
+never happened so far (we got a complete list of supported channels) but
+it means possible memory corruption so we should handle it anyway.
 
-I'm all for cleaning up code, but I don't really see how this
-change improves the code.
+This patch simply detects unexpected channel and ignores it.
 
---=20
-Michael
+As we don't try to create new entry now, it's also safe to drop hw_value
+and center_freq assignment. For known channels we have these set anyway.
 
---Sig_/eJ2l1kcRE525BF02wzCSLTD
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
+I decided to fix this issue by assigning NULL or a target channel to the
+channel variable. This was one of possible ways, I prefefred this one as
+it also avoids using channel[index] over and over.
 
------BEGIN PGP SIGNATURE-----
+Fixes: 58de92d2f95e ("brcmfmac: use static superset of channels for wiphy bands")
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V2: Add extra comment in code for not-found channel.
+    Make it clear this problem have never been seen so far
+    Explain why it's safe to drop extra assignments
+    Note & reason changing channel variable usage
+V3: Update error message as suggested by Arend.
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 32 ++++++++++++----------
+ 1 file changed, 17 insertions(+), 15 deletions(-)
 
-iQIzBAEBCAAdFiEEihRzkKVZOnT2ipsS9TK+HZCNiw4FAlhwHkIACgkQ9TK+HZCN
-iw74Gg//S4K+vKFUUmJjgzuZkT88SBruzzMD7J9IRXyrvX0qmJ3VpjHygjvtHEfY
-O+b4LGCqmadN1UFk6O4FYVUN5UnMXF20MptdMhN697iMPZbMMp5Bxsqypi8QcLC3
-5/XV9mC8eBiNgWCNexbWEHI9+H4d5Osjt4A1vuRspsE5HC0wT56Bs/HTnakcDpkq
-BwiyuiWbA0tYHAUOvHUvMBFUjnH6sllAsI9ZVQkI/O7572ycD2qV7SSGx4fXZMsL
-1SqmPMxbXHgA4c5YlFmmwCJlsZaeaxiedl9Sb+BPpHpN4LBc20IMM0LRWOJFrL9o
-HhrRbmJWqrXQeLmTKENLURNRbV1mMT2xHkTy4g/VIgIbsbd6tcrOUmU3TE9qx1Re
-In9Pxy2OagakZ5NcgizwMSPznnVa5JHTjv1n22tE8nkjyNcycsR303s4JBRWRUGM
-2EgwEPIQ28pk9I+tgad43HZFQTY4yG+MXz+hCKufIs5ofhmpAOM967J7gcE0GUVM
-LwqB379MHnvPrCvLqFyy+RjlQ/Fa4em4YLULklQ5ja3h16vTCW0CcjE8zObY7U7b
-e3wdZcDOObrDjMbkv060WiPn+MtAWF5E6LWeR89lDU7peOtLJo2k8HEGKJhVmU7Z
-s/MyVRQ2gNqHLw1MOyRGo2l4WAgt9VGXXLpoqO4vdYcMjolWt4o=
-=2Q7M
------END PGP SIGNATURE-----
-
---Sig_/eJ2l1kcRE525BF02wzCSLTD--
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 9c2c128..75ef23b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5825,7 +5825,6 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 	u32 i, j;
+ 	u32 total;
+ 	u32 chaninfo;
+-	u32 index;
+ 
+ 	pbuf = kzalloc(BRCMF_DCMD_MEDLEN, GFP_KERNEL);
+ 
+@@ -5873,33 +5872,36 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 		    ch.bw == BRCMU_CHAN_BW_80)
+ 			continue;
+ 
+-		channel = band->channels;
+-		index = band->n_channels;
++		channel = NULL;
+ 		for (j = 0; j < band->n_channels; j++) {
+-			if (channel[j].hw_value == ch.control_ch_num) {
+-				index = j;
++			if (band->channels[j].hw_value == ch.control_ch_num) {
++				channel = &band->channels[j];
+ 				break;
+ 			}
+ 		}
+-		channel[index].center_freq =
+-			ieee80211_channel_to_frequency(ch.control_ch_num,
+-						       band->band);
+-		channel[index].hw_value = ch.control_ch_num;
++		if (!channel) {
++			/* It seems firmware supports some channel we never
++			 * considered. Something new in IEEE standard?
++			 */
++			brcmf_err("Ignoring unexpected firmware channel %d\n",
++				  ch.control_ch_num);
++			continue;
++		}
+ 
+ 		/* assuming the chanspecs order is HT20,
+ 		 * HT40 upper, HT40 lower, and VHT80.
+ 		 */
+ 		if (ch.bw == BRCMU_CHAN_BW_80) {
+-			channel[index].flags &= ~IEEE80211_CHAN_NO_80MHZ;
++			channel->flags &= ~IEEE80211_CHAN_NO_80MHZ;
+ 		} else if (ch.bw == BRCMU_CHAN_BW_40) {
+-			brcmf_update_bw40_channel_flag(&channel[index], &ch);
++			brcmf_update_bw40_channel_flag(channel, &ch);
+ 		} else {
+ 			/* enable the channel and disable other bandwidths
+ 			 * for now as mentioned order assure they are enabled
+ 			 * for subsequent chanspecs.
+ 			 */
+-			channel[index].flags = IEEE80211_CHAN_NO_HT40 |
+-					       IEEE80211_CHAN_NO_80MHZ;
++			channel->flags = IEEE80211_CHAN_NO_HT40 |
++					 IEEE80211_CHAN_NO_80MHZ;
+ 			ch.bw = BRCMU_CHAN_BW_20;
+ 			cfg->d11inf.encchspec(&ch);
+ 			chaninfo = ch.chspec;
+@@ -5907,11 +5909,11 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 						       &chaninfo);
+ 			if (!err) {
+ 				if (chaninfo & WL_CHAN_RADAR)
+-					channel[index].flags |=
++					channel->flags |=
+ 						(IEEE80211_CHAN_RADAR |
+ 						 IEEE80211_CHAN_NO_IR);
+ 				if (chaninfo & WL_CHAN_PASSIVE)
+-					channel[index].flags |=
++					channel->flags |=
+ 						IEEE80211_CHAN_NO_IR;
+ 			}
+ 		}
+-- 
+2.10.1
