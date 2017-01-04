@@ -1,117 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:32817 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932414AbdA0KFp (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36723 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934581AbdADGVJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 05:05:45 -0500
-Received: by mail-pf0-f177.google.com with SMTP id y143so72519498pfb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 02:05:40 -0800 (PST)
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com> (sfid-20170127_111031_605868_06556B2B)
-Date: Fri, 27 Jan 2017 11:05:32 +0100
+        Wed, 4 Jan 2017 01:21:09 -0500
+Subject: Re: [PATCH V5 1/3] dt-bindings: document common IEEE 802.11 frequency
+ limit property
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Rob Herring <robh@kernel.org>
+References: <20170103225715.14072-1-zajec5@gmail.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <d90127bd-6a9e-2773-fdf9-527afdc004a6@gmail.com> (sfid-20170104_072133_587031_B8ADAD12)
+Date: Wed, 4 Jan 2017 07:20:48 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170127094342.GC24223@pali>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170103225715.14072-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-1-2017 10:43, Pali Rohár wrote:
-> On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
->> Pali Rohár <pali.rohar@gmail.com> writes:
->>
->>> NVS calibration data for wl1251 are model specific. Every one device with
->>> wl1251 chip has different and calibrated in factory.
->>>
->>> Not all wl1251 chips have own EEPROM where are calibration data stored. And
->>> in that case there is no "standard" place. Every device has stored them on
->>> different place (some in rootfs file, some in dedicated nand partition,
->>> some in another proprietary structure).
->>>
->>> Kernel wl1251 driver cannot support every one different storage decided by
->>> device manufacture so it will use request_firmware_prefer_user() call for
->>> loading NVS calibration data and userspace helper will be responsible to
->>> prepare correct data.
->>>
->>> In case userspace helper fails request_firmware_prefer_user() still try to
->>> load data file directly from VFS as fallback mechanism.
->>>
->>> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
->>> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
->>> devices.
->>>
->>> With this patch it is finally possible to load correct model specific NVS
->>> calibration data for Nokia N900.
->>>
->>> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
->>> ---
->>>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
->>>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
->>>  2 files changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
->>> index 7142ccf..affe154 100644
->>> --- a/drivers/net/wireless/ti/wl1251/Kconfig
->>> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
->>> @@ -2,6 +2,7 @@ config WL1251
->>>  	tristate "TI wl1251 driver support"
->>>  	depends on MAC80211
->>>  	select FW_LOADER
->>> +	select FW_LOADER_USER_HELPER
->>>  	select CRC7
->>>  	---help---
->>>  	  This will enable TI wl1251 driver support. The drivers make
->>> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
->>> index 208f062..24f8866 100644
->>> --- a/drivers/net/wireless/ti/wl1251/main.c
->>> +++ b/drivers/net/wireless/ti/wl1251/main.c
->>> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
->>>  	struct device *dev = wiphy_dev(wl->hw->wiphy);
->>>  	int ret;
->>>  
->>> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
->>> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
->>
->> I don't see the need for this. Just remove the default nvs file from
->> filesystem and the fallback user helper will be always used, right?
-> 
-> It is part of linux-firmware repository. And already part of all
-> previous versions of linux-firmware packages in lot of linux
-> distributions. So removing it is not possible...
+Hi Rob,
 
-You are probably saying that on your platform you can not remove
-anything from /lib/firmware, right? I don't see how you come from "it is
-part of firmware package" to "removing is not possible". Trying to
-understand this and it makes no sense.
+On 01/03/2017 11:57 PM, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> This new file should be used for properties that apply to all wireless
+> devices.
+>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Switch to a single ieee80211-freq-limit property that allows specifying
+>     *multiple* ranges. This resolves problem with more complex rules as pointed
+>     by Felx.
+>     Make description implementation agnostic as pointed by Arend.
+>     Rename node to wifi as suggested by Martin.
+> V3: Use more real-life frequencies in the example.
+> V5: Describe hardware design as possible use for this property
+> ---
+>  .../devicetree/bindings/net/wireless/ieee80211.txt   | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+> new file mode 100644
+> index 0000000..1c82c16
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+> @@ -0,0 +1,20 @@
+> +Common IEEE 802.11 properties
+> +
+> +This provides documentation of common properties that are valid for all wireless
+> +devices.
+> +
+> +Optional properties:
+> + - ieee80211-freq-limit : list of supported frequency ranges in KHz. This can be
+> +	used to specify extra hardware limitations caused by e.g. used antennas
+> +	or power amplifiers.
 
->> Like we discussed earlier, the default nvs file should not be used by
->> normal users.
-> 
-> But already is and we need to deal with this fact.
+Do you find this description sufficient now? I'm not sure how/if I could answer
+"Where would this data normally come from?" question.
 
-Why? Are there other platforms that use the default nvs file and have a
-working wifi. So your "removing is not possible" would be about
-regression for those?
+One vendor may hardcode choice of channels in their PHP web UI.
+Another one may do it in Andoid app.
+OpenWrt so far was describing this limitation on their wiki page.
 
-Regards,
-Arend
+It doesn't sound like any valuable info if I understand this correctly. We also
+don't describe where to get information about amount o RAM. One may just check
+the hardware, one may use vendor firmware, one could check product data sheet.
+
+If I missed the point, could you help me get this?
+
+
+> +Example:
+> +
+> +pcie@0,0 {
+> +	reg = <0x0000 0 0 0 0>;
+> +	wifi@0,0 {
+> +		reg = <0x0000 0 0 0 0>;
+> +		ieee80211-freq-limit = <2402000 2482000>,
+> +				       <5170000 5250000>;
+> +	};
+> +};
+>
