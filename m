@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48736 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750734AbdAXJo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 04:44:26 -0500
-Message-ID: <1485251062.7244.10.camel@sipsolutions.net> (sfid-20170124_104430_394423_B7B3CE05)
-Subject: Re: [PATCH v2 3/4] cfg80211: Accept multiple RSSI thresholds for CQM
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 24 Jan 2017 10:44:22 +0100
-In-Reply-To: <CAOq732JhLoeMQSwadM=ReBv7gAy9zb1uQ9RZAzEtvyDo7je+ww@mail.gmail.com> (sfid-20170107_104335_299116_3D4EAE6E)
-References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
-         <20161212015213.21323-3-andrew.zaborowski@intel.com>
-         <1483545210.7312.17.camel@sipsolutions.net>
-         <CAOq732JfxTx7KrPhic+2aej0ddj6igaqjcGzg+9MJ6=zDYfWAw@mail.gmail.com>
-         <1483616947.4394.10.camel@sipsolutions.net>
-         <CAOq732JhLoeMQSwadM=ReBv7gAy9zb1uQ9RZAzEtvyDo7je+ww@mail.gmail.com>
-         (sfid-20170107_104335_299116_3D4EAE6E)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:34630 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751469AbdADR7g (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 12:59:36 -0500
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency limit property
+Date: Wed,  4 Jan 2017 18:58:29 +0100
+Message-Id: <20170104175832.25996-1-zajec5@gmail.com> (sfid-20170104_190243_372568_88791726)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-01-07 at 04:43 -0500, Andrew Zaborowski wrote:
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> With the basic mac80211 implementation in my patch 4/4 this feature
-> should be set when IEEE80211_VIF_BEACON_FILTER is not set.  The
-> problem with a nl80211_ext_feature is that it's per wiphy instead of
-> per interface.  So in the case mac80211, it would need to be set if
-> all interfaces can accept lists of thresholds and that can change
-> dynamically as interfaces are added.  And nl80211 has no per-
-> interface features.
+This new file should be used for properties that apply to all wireless
+devices.
 
-Right - it doesn't even have that concept, and I'm not sure that really
-makes sense.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V2: Switch to a single ieee80211-freq-limit property that allows specifying
+    *multiple* ranges. This resolves problem with more complex rules as pointed
+    by Felx.
+    Make description implementation agnostic as pointed by Arend.
+    Rename node to wifi as suggested by Martin.
+V3: Use more real-life frequencies in the example.
+V5: Describe hardware design as possible use for this property
+V6: Even better property description, thanks Rob for your help!
+---
+ .../devicetree/bindings/net/wireless/ieee80211.txt | 24 ++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
-> I wonder if it's better to add a ieee80211_hw_flags flag to advertise
-> this feature per wiphy, or, as an approximation, set the flag based
-> on the default interface that is created in ieee80211_register_hw.
-
-I think we should just leave the new flag up to the driver then. The
-only driver using per-interface beacon filtering (iwlwifi, afaik) will
-either need to convert to actually handle it in the beacon filtering
-case (which is the normal case anyway).
-
-johannes
+diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+new file mode 100644
+index 0000000..f6442b1
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+@@ -0,0 +1,24 @@
++Common IEEE 802.11 properties
++
++This provides documentation of common properties that are valid for all wireless
++devices.
++
++Optional properties:
++ - ieee80211-freq-limit : list of supported frequency ranges in KHz. This can be
++	used for devices that in a given config support less channels than
++	normally. It may happen chipset supports a wide wireless band but it is
++	limited to some part of it due to used antennas or power amplifier.
++	An example case for this can be tri-band wireless router with two
++	identical chipsets used for two different 5 GHz subbands. Using them
++	incorrectly could not work or decrease performance noticeably.
++
++Example:
++
++pcie@0,0 {
++	reg = <0x0000 0 0 0 0>;
++	wifi@0,0 {
++		reg = <0x0000 0 0 0 0>;
++		ieee80211-freq-limit = <2402000 2482000>,
++				       <5170000 5250000>;
++	};
++};
+-- 
+2.10.1
