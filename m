@@ -1,48 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:53132 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbdAMVWD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:22:03 -0500
-Date: Fri, 13 Jan 2017 22:21:55 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 07/40] rt2x00: rt2800lib: fix max supported beacon count for
- RT3593
-Message-ID: <20170113212150.GA3399@makrotopia.org> (sfid-20170113_222205_655351_DBC00BD1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:34980 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935849AbdADN2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 08:28:33 -0500
+Message-ID: <1483536510.7312.5.camel@sipsolutions.net> (sfid-20170104_142856_669178_D2216E87)
+Subject: Re: [PATCH] RFC: Universal scan proposal
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Shmidt <dimitrysh@google.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Date: Wed, 04 Jan 2017 14:28:30 +0100
+In-Reply-To: <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com> (sfid-20170103_214601_693369_864810F8)
+References: <94eb2c110db85c2379054172dad0@google.com>
+         <1480948100.31788.15.camel@sipsolutions.net>
+         <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
+         <1481093061.4092.17.camel@sipsolutions.net>
+         <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
+         <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
+         <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
+         <1481645205.20412.32.camel@sipsolutions.net>
+         <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
+         (sfid-20170103_214601_693369_864810F8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On Tue, 2017-01-03 at 12:45 -0800, Dmitry Shmidt wrote:
+> 
+> We can either use alternative structure in kernel wireless stack,
+> or alternative structure in userspace (in wpa_supplicant), and we
+> will most likely need special command for this case at least to
+> retrieve results.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Yes, I tend to agree - we need to have some new structure (and netlink
+attributes etc.) to report the aggregated/partial results. But it seems
+to me that it'll have to be very obvious which way of obtaining results
+must be used for a given scan?
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 5058494d6c27..ff653f0d43d2 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7899,7 +7899,10 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	if (rt2x00_rt(rt2x00dev, RT3593))
- 		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
- 
--	drv_data->hw_beacon_count = 8;
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		drv_data->hw_beacon_count = 16;
-+	else
-+		drv_data->hw_beacon_count = 8;
- 
- 	/*
- 	 * Allocate eeprom data.
--- 
-2.11.0
+johannes
