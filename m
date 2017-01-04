@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38196 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932871AbdA0PXn (ORCPT
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:33415 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936193AbdADUBY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 10:23:43 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
-References: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
-        <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
-        <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
-        <20170127101043.GD24223@pali>
-        <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
-        <20170127103408.GG24223@pali>
-        <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
-        <20170127115706.GH24223@pali>
-        <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
-        <20170127131146.GI24223@pali>
-Date: Fri, 27 Jan 2017 17:23:07 +0200
-In-Reply-To: <20170127131146.GI24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
- \=\?utf-8\?Q\?s\?\= message of "Fri, 27
-        Jan 2017 14:11:46 +0100")
-Message-ID: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_162417_245384_DD4A9659)
+        Wed, 4 Jan 2017 15:01:24 -0500
+Received: by mail-qt0-f179.google.com with SMTP id v23so32360560qtb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:01:05 -0800 (PST)
+Subject: Re: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency
+ properties
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20161228155955.25518-1-zajec5@gmail.com>
+ <20170103195514.vf4psb6qw2bd2lcw@rob-hp-laptop>
+ <CACna6rxmgN2zz-Fc1-Uu02oqMQreNkMJt0jGjLOMrXM=6iujFw@mail.gmail.com>
+ <874m1ej3oz.fsf@kamboji.qca.qualcomm.com>
+ <CACna6rxx-8499ZQKekdORF0UWQQazwGu2On1aq-fwA4oCX7pgw@mail.gmail.com>
+Cc: Rob Herring <robh@kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <fec0dffd-5c9f-0d9d-a458-464d81952ce0@broadcom.com> (sfid-20170104_210215_935349_2A83B155)
+Date: Wed, 4 Jan 2017 20:53:07 +0100
 MIME-Version: 1.0
+In-Reply-To: <CACna6rxx-8499ZQKekdORF0UWQQazwGu2On1aq-fwA4oCX7pgw@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+On 4-1-2017 15:53, Rafał Miłecki wrote:
+> On 4 January 2017 at 15:32, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>
+>>> On 3 January 2017 at 20:55, Rob Herring <robh@kernel.org> wrote:
+>>>> On Wed, Dec 28, 2016 at 04:59:54PM +0100, Rafał Miłecki wrote:
+>>>>> From: Rafał Miłecki <rafal@milecki.pl>
+>>>>>
+>>>>> This new file should be used for properties handled at higher level and
+>>>>> so usable with all drivers.
+>>>>
+>>>> Why is this needed? Where would this data normally come from?
+>>>
+>>> Vendors limit choice of channels at their web user interface level. I
+>>> want to do better and report proper channels directly at kernel level
+>>> instead of masking them in every possible configuration tool.
+>>
+>> Why do vendors limit the channels? Is it because of a hardware
+>> limitation (antenna does not support, or not calibrated, for a certain
+>> band etc) or something else?
+> 
+> Please review & comment on the latest version, currently V5:
+> https://patchwork.kernel.org/patch/9495795/
+> "This can be used to specify extra hardware limitations caused by e.g.
+> used antennas or power amplifiers."
 
-> On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
->> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
->>=20
->> > 2) It was already tested that example NVS data can be used for N900 e.=
-g.
->> > for SSH connection. If real correct data are not available it is better
->> > to use at least those example (and probably log warning message) so us=
-er
->> > can connect via SSH and start investigating where is problem.
->>=20
->> I disagree. Allowing default calibration data to be used can be
->> unnoticed by user and left her wondering why wifi works so badly.
->
-> So there are only two options:
->
-> 1) Disallow it and so these users will have non-working wifi.
->
-> 2) Allow those data to be used as fallback mechanism.
->
-> And personally I'm against 1) because it will break wifi support for
-> *all* Nokia N900 devices right now.
+Just to be clear, it is does not need to be a hardware limitation, but
+simply a way to assure that multiple wlan radios are not interfering
+with each other and crank up the total bandwidth that vendors can put on
+their box.
 
-All two of them? :)
-
-But not working is exactly my point, if correct calibration data is not
-available wifi should not work. And it's not only about functionality
-problems, there's also the regulatory aspect.
-
->> > 3) If we do rename *now* we will totally break wifi support on Nokia
->> > N900.
->>=20
->> Then the distro should fix that when updating the linux-firmware
->> packages. Can you provide details about the setup, what distro etc?
->
-> Debian stable, Ubuntu LTSs 14.04, 16.04.=20
-
-You can run these out of box on N900?
-
-> And I think that other LTS distributions contains that example nvs
-> file too (I'm not going to verify others, but list will be probably
-> long). Upgrading linux-firmware is against policy of those
-> distributions. So no this is not an solution.
-
-So instead we should workaround distro policies in kernel? Come on.
-
-Seriously, just rename the file in linux-firmware and file a bug (with a
-patch) to distros. If they don't fix the bug you just have to do a
-custom hack for N900. But such is life.
-
---=20
-Kalle Valo
+Regards,
+Arend
