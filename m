@@ -1,73 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37096 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932118AbdABKoE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 05:44:04 -0500
-Message-ID: <1483353841.4596.2.camel@sipsolutions.net> (sfid-20170102_114407_825287_A207398F)
-Subject: Re: [RFC] nl80211: allow multiple active scheduled scan requests
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Shmidt <dimitrysh@google.com>
-Date: Mon, 02 Jan 2017 11:44:01 +0100
-In-Reply-To: <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1481645071.20412.30.camel@sipsolutions.net>
-         <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36604 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936941AbdADUHm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 15:07:42 -0500
+Received: by mail-wm0-f42.google.com with SMTP id c85so231179284wmi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:07:32 -0800 (PST)
+Subject: Re: [PATCH V6 4/3] brcmfmac: use wiphy_read_of_freq_limits to respect
+ extra limits
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20170104175832.25996-1-zajec5@gmail.com>
+ <20170104175832.25996-4-zajec5@gmail.com>
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        Rob Herring <robh+dt@kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3fc87224-7f08-e365-7bbb-a4b8b5746e4f@broadcom.com> (sfid-20170104_210935_942468_119A9ECD)
+Date: Wed, 4 Jan 2017 21:07:29 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170104175832.25996-4-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> +	/*
-> +	 * allow only one legacy scheduled scan if user-space
-> +	 * does not indicate multiple scheduled scan support.
-> +	 */
-> +	if (!info->attrs[NL80211_ATTR_SCHED_SCAN_MULTI] &&
-> +	    cfg80211_legacy_sched_scan_active(rdev))
->  		return -EINPROGRESS;
-
-That probably doesn't go far enough - if legacy one is active then we
-probably shouldn't allow a new MULTI one either (or abandon the legacy
-one) so that older userspace doesn't get confused with multiple
-notifications from sched scans it didn't start.
- 
-> +	if (rdev->sched_scan_req_count == rdev->wiphy.max_sched_scan_reqs)
-> +		return -ENOSPC;
-
-Do we really want to do the double-accounting, just to avoid counting
-the list length here?
-
-> +	/* leave request id zero for legacy request */
-
-why? The ID would be ignored, so why special-case it?
-
-> +static void cfg80211_del_sched_scan_req(struct
-> cfg80211_registered_device *rdev,
-> +					struct
-> cfg80211_sched_scan_request *req)
-> +{
-> +	list_del_rcu(&req->list);
-> +	kfree_rcu(req, rcu_head);
-> +	synchronize_rcu();
-> +	rdev->sched_scan_req_count--;
-> +}
-
-That's bogus - either you use kfree_rcu() or synchronize_rcu() (the
-former is much better); combining both makes no sense.
-
-> +bool cfg80211_legacy_sched_scan_active(struct
-> cfg80211_registered_device *rdev)
-> +{
-> +	struct cfg80211_sched_scan_request *req;
+On 4-1-2017 18:58, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> There are some devices (e.g. Netgear R8000 home router) with one chipset
+> model used for different radios, some of them limited to subbands. NVRAM
+> entries don't contain any extra info on such limitations and firmware
+> reports full list of channels to us. We need to store extra limitation
+> info in DT to support such devices properly.
+> 
+> Now there is a cfg80211 helper for reading such info use it in brcmfmac.
+> This patch adds check for channel being disabled with orig_flags which
+> is how this wiphy helper and wiphy_register work.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> This patch should probably go through wireless-driver-next which is why
+> it got weird number 4/3. I'm sending it just as a proof of concept.
+> It was succesfully tested on SmartRG SR400ac with BCM43602.
+> 
+> V4: Respect IEEE80211_CHAN_DISABLED in orig_flags
+> V5: Update commit message
+> V6: Call wiphy_read_of_freq_limits after brcmf_setup_wiphybands to make it work
+>     with helper setting "flags" instead of "orig_flags".
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index ccae3bb..a008ba5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+>  						       band->band);
+>  		channel[index].hw_value = ch.control_ch_num;
+>  
+> +		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
+> +			continue;
 > +
-> +	req = list_first_or_null_rcu(&rdev->sched_scan_req_list,
-> +				     struct
-> cfg80211_sched_scan_request, list);
-> +	/* request id 0 indicates legacy request in progress */
-> +	return req && !req->reqid;
-> +}
 
-Ok, fair enough.
+So to be clear this is still needed for subsequent calls to
+brcmf_setup_wiphybands(). The subsequent calls are done from the
+regulatory notifier. So I think we have an issue with this approach. Say
+the device comes up with US. That would set DISABLED flags for channels
+12 to 14. With a country update to PL we would want to enable channels
+12 and 13, right? The orig_flags are copied from the initial flags
+during wiphy_register() so it seems we will skip enabling 12 and 13. I
+think we should remove the check above and call
+wiphy_read_of_freq_limits() as a last step within
+brcmf_setup_wiphybands(). It means it is called every time, but it
+safeguards that the limits in DT are always applied.
 
-johannes
+Regards,
+Arend
+
+>  		/* assuming the chanspecs order is HT20,
+>  		 * HT40 upper, HT40 lower, and VHT80.
+>  		 */
+> @@ -6478,7 +6481,11 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+>  		}
+>  	}
+>  	err = brcmf_setup_wiphybands(wiphy);
+> -	return err;
+> +	if (err)
+> +		return err;
+> +	wiphy_read_of_freq_limits(wiphy);
+> +
+> +	return 0;
+>  }
+>  
+>  static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+> 
