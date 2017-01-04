@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35505 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753570AbdAZP17 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 10:27:59 -0500
-Message-ID: <1485444476.5145.136.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170126_162809_981029_3C220424)
-Subject: Re: IPv6-UDP 0x0000 checksum
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Jan 2017 07:27:56 -0800
-In-Reply-To: <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
-References: <1485437276.14760.3.camel@sipsolutions.net>
-         <1485438299.5145.117.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_144502_343976_16232A6D) <1485438546.14760.7.camel@sipsolutions.net>
-         <1485441942.5145.131.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_154545_190303_B1FB80BF) <1485442164.14760.11.camel@sipsolutions.net>
-         <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:34804 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1030400AbdADN0x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 08:26:53 -0500
+Message-ID: <1483536406.7312.3.camel@sipsolutions.net> (sfid-20170104_142713_017059_47EC8406)
+Subject: Re: [PATCH V5 3/3] cfg80211: support ieee80211-freq-limit DT
+ property
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        linux-wireless@vger.kernel.org
+Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Wed, 04 Jan 2017 14:26:46 +0100
+In-Reply-To: <20170103225715.14072-3-zajec5@gmail.com> (sfid-20170103_235738_606634_945A6D98)
+References: <20170103225715.14072-1-zajec5@gmail.com>
+         <20170103225715.14072-3-zajec5@gmail.com>
+         (sfid-20170103_235738_606634_945A6D98)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-26 at 07:24 -0800, Eric Dumazet wrote:
-> On Thu, 2017-01-26 at 15:49 +0100, Johannes Berg wrote:
-> 
-> > Unfortunately, I haven't been able to actually test this yet. I also
-> > didn't find the code that would drop frames with CSUM 0 either, so I'm
-> > thinking - for now - that if all the csum handling is skipped, dropping
-> > 0 csum frames would also be, and then we'd accept a frame we should
-> > actually have dropped.
-> > 
-> > I'll go test this I guess :)
-> > 
-> > Any pointers to where 0 csum frames are dropped?
-> 
-> Probably in udp6_csum_init()
 
-vi +804 net/ipv6/udp.c
+> V4: Move code to of.c
+>     Use one helper called at init time (no runtime hooks)
+>     Modify orig_flags
 
-                if (!uh->check && !udp_sk(sk)->no_check6_rx) {
-                        udp6_csum_zero_error(skb);
-                        goto csum_error;
-                }
+
+> +/**
+> + * wiphy_read_of_freq_limits - read frequency limits from device
+> tree
+> + *
+> + * @wiphy: the wireless device to get extra limits for
+> + *
+> + * Some devices may have extra limitations specified in DT. This may
+> be useful
+> + * for chipsets that normally support more bands but are limited due
+> to board
+> + * design (e.g. by antennas or extermal power amplifier).
+> + *
+> + * This function reads info from DT and uses it to *modify* channels
+> (disable
+> + * unavailable ones). It's usually a *bad* idea to use it in drivers
+> with
+> + * shared channel data as DT limitations are device specific.
+> + *
+> + * As this function access device node it has to be called after
+> set_wiphy_dev.
+> + * It also modifies channels so they have to be set first.
+> + */
+
+It should also be called before wiphy_register(), I think? And I
+suppose you should add a comment about not being able to use shared
+channels.
+
+> +				pr_debug("Disabling freq %d MHz as
+> it's out of OF limits\n",
+> +					 chan->center_freq);
+> +				chan->orig_flags |=
+> IEEE80211_CHAN_DISABLED;
+> 
+But just setting orig_flags also won't work, since it'd be overwritten
+again by wiphy_register(), no?
+
+johannes
