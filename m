@@ -1,92 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50086 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934724AbdAENqH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 08:46:07 -0500
-Message-ID: <1483623882.4394.20.camel@sipsolutions.net> (sfid-20170105_144611_242781_0D24AB73)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Dmitry Shmidt <dimitrysh@google.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 05 Jan 2017 14:44:42 +0100
-In-Reply-To: <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com> (sfid-20170105_143917_672465_FE638C05)
-References: <94eb2c110db85c2379054172dad0@google.com>
-         <1480948100.31788.15.camel@sipsolutions.net>
-         <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
-         <1481093061.4092.17.camel@sipsolutions.net>
-         <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
-         <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
-         <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
-         <1481645205.20412.32.camel@sipsolutions.net>
-         <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
-         <1483536510.7312.5.camel@sipsolutions.net>
-         <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
-         <1483616763.4394.8.camel@sipsolutions.net>
-         <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com>
-         (sfid-20170105_143917_672465_FE638C05)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34951 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936933AbdADUGY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 15:06:24 -0500
+Received: by mail-wm0-f66.google.com with SMTP id l2so67785311wml.2
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:06:23 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        ath10k@lists.infradead.org
+Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
+Date: Wed, 04 Jan 2017 21:06:20 +0100
+Message-ID: <2769662.Qa6eUCGVkY@debian64> (sfid-20170104_210721_767645_663430DA)
+In-Reply-To: <20170103052827.GA8204@atheros-ThinkPad-T61>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com> <CAAd0S9DcCM9XQOihZx1sVf_1=S3VvDye4k1gEMgWEmNWDaBk5Q@mail.gmail.com> <20170103052827.GA8204@atheros-ThinkPad-T61>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-05 at 14:39 +0100, Arend Van Spriel wrote:
+Hello Shafi and Kalle,
 
-> Today we already have roaming offload, right? 
-
-I guess - you defined the BSS selection stuff for it :)
-
-> Roaming scan would indeed
-> be the same if roaming offload is not used unless you would want
-> cfg80211 to make the decision, but then I would expect parameters for
-> making that decision in the request. Same/similar for autojoin.
-
-Right.
-
-> > Actually I think I'm just misinterpreting your wording - you mean
-> > that we can use the different final actions for the different scan
-> > types, not that we should actually say - in driver/firmware/... -
-> > "this is a history scan because the action is to report buffer
-> > full", right?
+On Tuesday, January 3, 2017 10:58:27 AM CET Mohammed Shafi Shajakhan wrote:
+> On Fri, Dec 30, 2016 at 03:35:10PM +0100, Christian Lamparter wrote:
+> > On Thu, Dec 29, 2016 at 3:11 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> > > Christian Lamparter <chunkeey@googlemail.com> wrote:
+> > >> The 10.4 firmware adds extended peer information to the
+> > >> firmware's statistics payload. This additional info is
+> > >> stored as a separate data field and the elements are
+> > >> stored in their own "peers_extd" list.
+> > >>
+> > >> These elements can pile up in the same way as the peer
+> > >> information elements. This is because the
+> > >> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+> > >> pull the same amount (num_peer_stats) for every statistic
+> > >> data unit.
+> > >>
+> > >> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+> > >> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> > >
+> > > My understanding is that I should skip this patch 1. Please let me know if
+> > > I misunderstood. But I'm still plannning to apply patch 2.
+> > 
+> > I added Mohammed (I hope, he can reply to the open question when he
+> > returns), Since I'm not sure what he wants or not.
+> > 
+> > As far as I'm aware, the "extended" boolean serves no purpose
+> > because it was only used in once place in debugfs_sta which was
+> > removed in the patch. ( "ath10k_sta_update_stats_rx_duration"
+> > and "ath10k_sta_update_extd_stats_rx_duration" have been unified).
 > 
-> Do we care? The scan engine in our firmware does have use a scan type
-> concept, but that is hidden by the firmware api. I guess your point
-> would be that if user-space would prefer scan types and
-> driver/firmware uses that as well, we might do the same in
-> cfg80211/mac80211. How can we assure the scan types we come up with
-> match those employed in any and all wireless devices/firmwares.
+> [shafi] We will wait for Kalle to review from the de-ferred stage
+> and get his opinion as well(regarding the design change).
+> I have no concerns as long this does not changes the existing behaviour.
+> thank you !
 
-To be clear: I *don't* like having scan types in the APIs. I think it
-muddies the waters and makes it less likely people will implement it
-precisely as requested, because they'll argue "this is only for roam,
-we'll implement our own magic there" etc.
+Thank you Shafi for sticking around. I just fished your response to 
+"Re: [PATCH] ath10k: merge extended peer info data with existing peers info" [0].
+out of my spam-bucket. Kalle, please look if your copy of the mail got 
+flagged/deleted as well. Judging from the reply in this thread, I think you
+overlooked it as well? 
 
-> As Johannes points out it needs to be clear to user-space what its
-> next step should be in obtaining results. Does it make sense to have
-> a separate notification for the history scan results (not calling it
-> that of course :-p ) triggered by the action "Report when buffer is
-> full / almost full" or should user-space determine what to do based
-> on request id that would be included in the (scheduled) scan results
-> notification.
+After reading it, I think the previous post and the request to put the patch
+on wait was unnecessary. As of now, it seems to me that the open questions
+between us have been settled amically (so to speak). Kalle, do you have any
+concerns or can you put this in the next round then?
 
-Yeah, that's a good question - based on the current behaviours etc. I
-was assuming it'd be a new notification/result type.
+Regards,
+Christian
 
-> > There's a bit more complication wrt. the level of detail in results
-> > though - sometimes the result may include all IEs (normal/sched
-> > scan),
-> > sometimes it may not ("history scan") - are we sure we really only
-> > need
-> > one new get_scan_results()?
-> 
-> So could the "all IEs" case not be handled by the existing BSS
-> storage? Is it still our intention to handle normal scan (no interval
-> provided?) as well in the universal scan approach.
-
-Yes, the "all IEs" (essentially "all information") case is handled by
-the existing storage/dump methods/etc. but obviously the other cases
-can't be - so my question was if there's really only one more other
-case, or if we might have more new cases - or something that's flexible
-wrt. the data we get?
-
-johannes
+[0] <https://www.mail-archive.com/ath10k@lists.infradead.org/msg06066.html>
