@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33265 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751688AbdAQXPm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 18:15:42 -0500
-Received: by mail-pf0-f194.google.com with SMTP id e4so6763481pfg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 15:15:42 -0800 (PST)
-From: gavinli@thegavinli.com
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Cc: stable@vger.kernel.org, Gavin Li <git@thegavinli.com>
-Subject: [PATCH] brcmfmac: fix incorrect event channel deduction
-Date: Tue, 17 Jan 2017 15:15:34 -0800
-Message-Id: <20170117231534.7099-1-gavinli@thegavinli.com> (sfid-20170118_001546_485228_D226111F)
+Received: from mail.kernel.org ([198.145.29.136]:53100 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1761952AbdADTrN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 4 Jan 2017 14:47:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170104175832.25996-1-zajec5@gmail.com>
+References: <20170104175832.25996-1-zajec5@gmail.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Wed, 4 Jan 2017 13:46:46 -0600
+Message-ID: <CAL_JsqLg5YkC-YUHg6mQ35nmGaG7SC33VJB++fgtZsu1fRV-7Q@mail.gmail.com> (sfid-20170104_204802_194080_5A1819D6)
+Subject: Re: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency
+ limit property
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gavin Li <git@thegavinli.com>
+On Wed, Jan 4, 2017 at 11:58 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+>
+> This new file should be used for properties that apply to all wireless
+> devices.
+>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+> V2: Switch to a single ieee80211-freq-limit property that allows specifying
+>     *multiple* ranges. This resolves problem with more complex rules as pointed
+>     by Felx.
+>     Make description implementation agnostic as pointed by Arend.
+>     Rename node to wifi as suggested by Martin.
+> V3: Use more real-life frequencies in the example.
+> V5: Describe hardware design as possible use for this property
+> V6: Even better property description, thanks Rob for your help!
+> ---
+>  .../devicetree/bindings/net/wireless/ieee80211.txt | 24 ++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
 
-brcmf_sdio_fromevntchan() was being called on the the data frame
-rather than the software header, causing some frames to be
-mischaracterized as on the event channel rather than the data channel.
-
-This fixes a major performance regression (due to dropped packets).
-
-Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
-Signed-off-by: Gavin Li <git@thegavinli.com>
-Cc: <stable@vger.kernel.org> [4.7+]
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index dfb0658713d9..d2219885071f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 					   pfirst->len, pfirst->next,
- 					   pfirst->prev);
- 			skb_unlink(pfirst, &bus->glom);
--			if (brcmf_sdio_fromevntchan(pfirst->data))
-+			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
- 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
- 			else
- 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
--- 
-2.11.0
+Acked-by: Rob Herring <robh@kernel.org>
