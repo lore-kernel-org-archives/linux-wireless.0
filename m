@@ -1,111 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:32967 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751253AbdADKJU (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:44004 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752317AbdAESTz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 05:09:20 -0500
-Received: by mail-pf0-f180.google.com with SMTP id d2so82027464pfd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 02:09:19 -0800 (PST)
-Subject: Re: [PATCH V5 1/3] dt-bindings: document common IEEE 802.11 frequency
- limit property
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Rob Herring <robh@kernel.org>
-References: <20170103225715.14072-1-zajec5@gmail.com>
- <d90127bd-6a9e-2773-fdf9-527afdc004a6@gmail.com>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <202768c7-b305-7eb0-e42e-dfecd5ec7800@broadcom.com> (sfid-20170104_110924_179384_3F15015B)
-Date: Wed, 4 Jan 2017 11:02:13 +0100
-MIME-Version: 1.0
-In-Reply-To: <d90127bd-6a9e-2773-fdf9-527afdc004a6@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Thu, 5 Jan 2017 13:19:55 -0500
+Date: Thu, 05 Jan 2017 13:18:45 -0500 (EST)
+Message-Id: <20170105.131845.1605952043383659916.davem@davemloft.net> (sfid-20170105_192140_649525_C9D20611)
+To: stephen@networkplumber.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-rdma@vger.kernel.org, oss-drivers@netronome.com,
+        devel@linuxdriverproject.org, linux-ppp@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        dev@openvswitch.org, sthemmin@microsoft.com
+Subject: Re: [PATCH net-next] net: make ndo_get_stats64 a void function
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170105173136.2817-1-sthemmin@microsoft.com>
+References: <20170105173136.2817-1-sthemmin@microsoft.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=iso-8859-7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4-1-2017 7:20, Rafał Miłecki wrote:
-> Hi Rob,
-> 
-> On 01/03/2017 11:57 PM, Rafał Miłecki wrote:
->> From: Rafał Miłecki <rafal@milecki.pl>
->>
->> This new file should be used for properties that apply to all wireless
->> devices.
->>
->> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->> ---
->> V2: Switch to a single ieee80211-freq-limit property that allows
->> specifying
->>     *multiple* ranges. This resolves problem with more complex rules
->> as pointed
->>     by Felx.
->>     Make description implementation agnostic as pointed by Arend.
->>     Rename node to wifi as suggested by Martin.
->> V3: Use more real-life frequencies in the example.
->> V5: Describe hardware design as possible use for this property
->> ---
->>  .../devicetree/bindings/net/wireless/ieee80211.txt   | 20
->> ++++++++++++++++++++
->>  1 file changed, 20 insertions(+)
->>  create mode 100644
->> Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->>
->> diff --git
->> a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->> b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->> new file mode 100644
->> index 0000000..1c82c16
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
->> @@ -0,0 +1,20 @@
->> +Common IEEE 802.11 properties
->> +
->> +This provides documentation of common properties that are valid for
->> all wireless
->> +devices.
->> +
->> +Optional properties:
->> + - ieee80211-freq-limit : list of supported frequency ranges in KHz.
->> This can be
->> +    used to specify extra hardware limitations caused by e.g. used
->> antennas
->> +    or power amplifiers.
-> 
-> Do you find this description sufficient now? I'm not sure how/if I could
-> answer
-> "Where would this data normally come from?" question.
->
-> One vendor may hardcode choice of channels in their PHP web UI.
-> Another one may do it in Andoid app.
-> OpenWrt so far was describing this limitation on their wiki page.
-> 
-> It doesn't sound like any valuable info if I understand this correctly.
-> We also
-> don't describe where to get information about amount o RAM. One may just
-> check
-> the hardware, one may use vendor firmware, one could check product data
-> sheet.
-> 
-> If I missed the point, could you help me get this?
-
-
-There is probably no easy answer. DT is used to describe device
-properties that are not otherwise discoverable (at least that is my rule
-of thumb). So what is the "device" in this context? You may consider
-just the chip, but in this case it is combination of the chip and its RF
-path that determine the frequency range that it can operate in.
-Apparently this was assured in user-space due to lack of a better
-option. Having this specified in DT seems a viable option getting rid of
-having a particular platform impose a requirement upon user-space.
-
-You could consider these properties global as they are describing the
-platform, but again this depends on what you consider the "device". If
-you want to do this global you may add a global node for wifi properties
-and use references to the device.
-
-Regards,
-Arend
+RnJvbTogU3RlcGhlbiBIZW1taW5nZXIgPHN0ZXBoZW5AbmV0d29ya3BsdW1iZXIub3JnPg0KRGF0
+ZTogVGh1LCAgNSBKYW4gMjAxNyAwOTozMTozNiAtMDgwMA0KDQo+IFRoZSBuZXR3b3JrIGRldmlj
+ZSBvcGVyYXRpb24gZm9yIHJlYWRpbmcgc3RhdGlzdGljcyBpcyBvbmx5IGNhbGxlZA0KPiBpbiBv
+bmUgcGxhY2UsIGFuZCBpdCBpZ25vcmVzIHRoZSByZXR1cm4gdmFsdWUuIEhhdmluZyBhIHN0cnVj
+dHVyZQ0KPiByZXR1cm4gdmFsdWUgaXMgcG90ZW50aWFsbHkgY29uZnVzaW5nIGJlY2F1c2Ugc29t
+ZSBmdXR1cmUgZHJpdmVyIGNvdWxkDQo+IGluY29ycmVjdGx5IGFzc3VtZSB0aGF0IHRoZSByZXR1
+cm4gdmFsdWUgd2FzIHVzZWQuDQo+IA0KPiBGaXggYWxsIGRyaXZlcnMgd2l0aCBuZG9fZ2V0X3N0
+YXRzNjQgdG8gaGF2ZSBhIHZvaWQgZnVuY3Rpb24uDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBTdGVw
+aGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT4NCg0KWW91IG1pc3NlZCBhdCBs
+ZWFzdCBvbmUgbmV3IHdhcm5pbmcsIHBsZWFzZSBkbyBhIGZyZXNoIGFsbG1vZGNvbmZpZyBidWls
+ZA0KYW5kIHdhdGNoIHRoZSBsb2dzLg0KDQpkcml2ZXJzL25ldC9ldGhlcm5ldC9icm9hZGNvbS9i
+bngyLmM6IEluIGZ1bmN0aW9uIKFibngyX2dldF9zdGF0czY0ojoNCmRyaXZlcnMvbmV0L2V0aGVy
+bmV0L2Jyb2FkY29tL2JueDIuYzo2ODMwOjEwOiB3YXJuaW5nOiChcmV0dXJuoiB3aXRoIGEgdmFs
+dWUsIGluIGZ1bmN0aW9uIHJldHVybmluZyB2b2lkDQoNClRoYW5rcy4NCg==
