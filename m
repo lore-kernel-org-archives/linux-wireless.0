@@ -1,67 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9045 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750903AbdAWLIx (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33854 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759888AbdAEOhF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 06:08:53 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [RFC v3 0/8] ath10k sdio support
-Date: Mon, 23 Jan 2017 11:08:43 +0000
-Message-ID: <87y3y2824l.fsf@kamboji.qca.qualcomm.com> (sfid-20170123_120857_372419_4AD95DAA)
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
-In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com> (Erik
-        Stromdahl's message of "Fri, 13 Jan 2017 22:26:03 +0100")
-Content-Type: text/plain; charset="iso-8859-1"
+        Thu, 5 Jan 2017 09:37:05 -0500
+Received: by mail-lf0-f67.google.com with SMTP id d16so35402864lfb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jan 2017 06:36:58 -0800 (PST)
+Date: Thu, 5 Jan 2017 15:36:54 +0100
+From: =?utf-8?B?TWljaGHFgiBLxJlwaWXFhA==?= <kernel@kempniu.pl>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        =?utf-8?B?0JzQuNGF0LDQuNC7INCa0YDQuNC90LrQuNC9?=
+        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] rfkill: Add rfkill-any LED trigger
+Message-ID: <20170105143654.GA21040@ozzy.nask.waw.pl> (sfid-20170105_153734_428731_B3452E11)
+References: <20161221084533.27006-1-kernel@kempniu.pl>
+ <1483355533.4596.11.camel@sipsolutions.net>
+ <1483359705.21014.0.camel@sipsolutions.net>
+ <1483361523.21014.1.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1483361523.21014.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Erik Stromdahl <erik.stromdahl@gmail.com> writes:
+> On Mon, 2017-01-02 at 13:21 +0100, Johannes Berg wrote:
+> > > I'm not super happy with this conditional locking - can't we
+> > > instead
+> > > defer the necessary work to a workqueue, or so, for purposes of the
+> > > LED?
+> > 
+> > Actually, since you can sleep in here, and do various other things
+> > like scheduling etc. this can't even be correct as is - one thread
+> > might be in the probe and another might also attempt to do some
+> > operations that require the lock but now don't take it.
+> 
+> Additionally, this doesn't address the "can be called in any context"
+> part, only the "even from within rfkill callbacks" part. It's clearly
+> still not safe to call this from any context that is not allowed to
+> sleep, for example.
 
-> This is the third version of the sdio RFC patch series.
-> The actual sdio code (patch 6) has been subject to a massive overhaul,
-> mainly as a result of Kalle's review comments.
-> It no longer has any strong resemblance of the original ath6kl code from
-> which it was originally based upon.
->
-> Previous pathes 6 to 10 have been merged into one single patch.
->
-> The previous series had a rework of the "HTC fake service" connect
-> (ep 0 connect) that introduced a race between the actual endpoint
-> connect and the HTC ready message. This issue has been addressed,
-> and the current patches (3 and 4) has been rewritten accordingly.
->
-> * overview of patches *
->
-> Patches 1 to 4 are more or less identical to the previous RFC, with an
-> exception for patch 3 that changes the "HTC fake service" connect
-> (mentioned above).
->
-> Patch 5 is a squashed version of previous patches 6 to 10.
->
-> Patch 6 is the actual sdio patch
->
-> Patches 7 to 8 are new and adds special sdio versions of BMI get
-> target info and HTC ready.
->
-> The new version was built and tested against:
-> tag: ath-201701121109
->
-> Erik Stromdahl (8):
->   ath10k: htc: made static function public
->   ath10k: htc: rx trailer lookahead support
->   ath10k: htc: move htc ctrl ep connect to htc_init
->   ath10k: htc: refactorization
->   ath10k: various sdio related definitions
->   ath10k: sdio support
->   ath10k: sdio get target info
->   ath10k: htc: ready_ext msg support
+Thanks for reviewing.  I will attempt a workqueue-based approach in v4.
 
-I pushed now this, and your usb series as well, to ath.git
-master-pending branch. Let's see if kbuild bot finds any problems.
-
---=20
-Kalle Valo=
+-- 
+Best regards,
+Michał Kępień
