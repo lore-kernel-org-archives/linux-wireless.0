@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40274 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755833AbdABO5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 09:57:16 -0500
-Message-ID: <1483369027.21014.11.camel@sipsolutions.net> (sfid-20170102_155745_863840_151947FF)
-Subject: Re: [PATCH 1/2] Documentation: devicetree: Add bindings info for
- rfkill-regulator
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Rob Herring <robh@kernel.org>, Paul Cercueil <paul@crapouillou.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Mark Rutland <mark.rutland@arm.com>, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Maarten ter Huurne <maarten@treewalker.org>
-Date: Mon, 02 Jan 2017 15:57:07 +0100
-In-Reply-To: <20161109182612.i4rnsdxulk5ghemz@rob-hp-laptop> (sfid-20161109_192614_527668_B4DB10FA)
-References: <20161101105840.24313-1-paul@crapouillou.net>
-         <20161109182612.i4rnsdxulk5ghemz@rob-hp-laptop>
-         (sfid-20161109_192614_527668_B4DB10FA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([217.72.192.73]:64926 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756601AbdAEXNT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 18:13:19 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: linuxppc-dev@lists.ozlabs.org,
+        Russell King <linux@armlinux.org.uk>,
+        Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Richard Purdie <rpurdie@rpsys.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org
+Subject: Re: [PATCH v2 6/6] [media] Only descend into directory when CONFIG_MEDIA_SUPPORT is set
+Date: Fri, 06 Jan 2017 00:12:13 +0100
+Message-ID: <32595176.b3HvexHCfd@wuerfel> (sfid-20170106_001325_390107_FD2A5508)
+In-Reply-To: <f29ea3de-efb1-a406-db3e-b048e677f3a8@ti.com>
+References: <20170105210158.14204-1-afd@ti.com> <4225650.R96pl5clWf@wuerfel> <f29ea3de-efb1-a406-db3e-b048e677f3a8@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thursday, January 5, 2017 4:35:33 PM CET Andrew F. Davis wrote:
+> On 01/05/2017 03:42 PM, Arnd Bergmann wrote:
+> > On Thursday, January 5, 2017 3:01:58 PM CET Andrew F. Davis wrote:
+> >> @@ -109,7 +109,8 @@ obj-$(CONFIG_SERIO)         += input/serio/
+> >>  obj-$(CONFIG_GAMEPORT)         += input/gameport/
+> >>  obj-$(CONFIG_INPUT)            += input/
+> >>  obj-$(CONFIG_RTC_LIB)          += rtc/
+> >> -obj-y                          += i2c/ media/
+> >> +obj-y                          += i2c/
+> >> +obj-$(CONFIG_MEDIA_SUPPORT)    += media/
+> >>  obj-$(CONFIG_PPS)              += pps/
+> >>  obj-y                          += ptp/
+> >>  obj-$(CONFIG_W1)               += w1/
+> >>
+> > 
+> > This one seems wrong: if CONFIG_MEDIA_SUPPORT=m, but some I2C drivers
+> > inside of drivers/media/ are built-in, we will fail to enter the directory,
+> > see drivers/media/Makefile.
+> 
+> Not sure if I see this, it looks like everything in drivers/media/
+> depends on CONFIG_MEDIA_SUPPORT (directly or indirectly). If
+> CONFIG_MEDIA_SUPPORT is =m then all dependents should be locked out of
+> being built-in.
+> 
+> Any bool symbol that controls compilation of source that depends on a
+> tristate symbol is broken and should be fixed anyway.
 
-> My understanding is it is generally felt that using the regulator
-> enable GPIO commonly found on WiFi chips for rfkill is an abuse of
-> rfkill as it is more that just an RF disable. From a DT standpoint,
-> this seems like creating a binding for what a Linux driver wants.
-> Instead, I think this should be either a GPIO or GPIO regulator and
-> the driver for the WiFi chip should decide whether or not to register
-> that as an rfkill driver.
+I don't think it's this easy, we have a couple of cases where that doesn't
+work. I have not looked at the media example in detail, but at least it
+looks intentional.
 
-Sadly, there are two ways to use rfkill right now:
+Note that drivers/media is rather creative with expressing dependencies.
 
-1) the more common, and correct, way of having rfkill be a control tied
-to a specific wireless interface (wifi, BT, FM, GPS, NFC, ...), to both
-report the hardware button state that might be tied to it, and to
-control - centrally - the software state.
-
-2) the platform way, which some ACPI based platforms do, which register
-an rfkill instance, which often allows controlling in software the
-hardware line that then toggles the hardware rfkill on the WiFi NIC.
-
-
-It's not clear to me what this patch is trying to achieve. It seems a
-bit like something else entirely, which would be using it to toggle the
-power for a wifi device? I agree that doesn't seem appropriate, and
-instead the driver could bind to the regulator and disable it when wifi
-gets disabled (by rfkill or simply by taking all interfaces down.)
-
-
-In fact, given that there are no in-tree users, I'm tempted to remove
-the rfkill-regulator entirely. Thoughts?
-
-johannes
+	Arnd
