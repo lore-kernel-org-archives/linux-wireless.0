@@ -1,161 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33675 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754878AbdAABHR (ORCPT
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:26747 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935278AbdAEWgg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Dec 2016 20:07:17 -0500
-Received: by mail-oi0-f65.google.com with SMTP id f201so62677934oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2016 17:07:17 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 3/3] rtlwifi: Enable debug mask to be set from sysfs
-Date: Sat, 31 Dec 2016 19:07:06 -0600
-Message-Id: <20170101010706.13234-4-Larry.Finger@lwfinger.net> (sfid-20170101_020727_779779_BDB223D1)
-In-Reply-To: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
-References: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
+        Thu, 5 Jan 2017 17:36:36 -0500
+Subject: Re: [PATCH v2 6/6] [media] Only descend into directory when
+ CONFIG_MEDIA_SUPPORT is set
+To: Arnd Bergmann <arnd@arndb.de>, <linuxppc-dev@lists.ozlabs.org>
+References: <20170105210158.14204-1-afd@ti.com>
+ <20170105210158.14204-7-afd@ti.com> <4225650.R96pl5clWf@wuerfel>
+CC: Russell King <linux@armlinux.org.uk>,
+        Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+        Wolfram Sang <wsa@the-dreams.de>,
+        Richard Purdie <rpurdie@rpsys.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Ingo Molnar <mingo@kernel.org>, <linux-pwm@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-media@vger.kernel.org>
+From: "Andrew F. Davis" <afd@ti.com>
+Message-ID: <f29ea3de-efb1-a406-db3e-b048e677f3a8@ti.com> (sfid-20170105_233823_501922_519F2FBD)
+Date: Thu, 5 Jan 2017 16:35:33 -0600
+MIME-Version: 1.0
+In-Reply-To: <4225650.R96pl5clWf@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous commit changes the debug system to use a mask to select
-which components are to be debugged. Now, we add the necessary code
-to change the mask from sysfs.
+On 01/05/2017 03:42 PM, Arnd Bergmann wrote:
+> On Thursday, January 5, 2017 3:01:58 PM CET Andrew F. Davis wrote:
+>> @@ -109,7 +109,8 @@ obj-$(CONFIG_SERIO)         += input/serio/
+>>  obj-$(CONFIG_GAMEPORT)         += input/gameport/
+>>  obj-$(CONFIG_INPUT)            += input/
+>>  obj-$(CONFIG_RTC_LIB)          += rtc/
+>> -obj-y                          += i2c/ media/
+>> +obj-y                          += i2c/
+>> +obj-$(CONFIG_MEDIA_SUPPORT)    += media/
+>>  obj-$(CONFIG_PPS)              += pps/
+>>  obj-y                          += ptp/
+>>  obj-$(CONFIG_W1)               += w1/
+>>
+> 
+> This one seems wrong: if CONFIG_MEDIA_SUPPORT=m, but some I2C drivers
+> inside of drivers/media/ are built-in, we will fail to enter the directory,
+> see drivers/media/Makefile.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/base.c  | 43 +++++++++++++++++++++++-----
- drivers/net/wireless/realtek/rtlwifi/debug.c |  6 ++--
- drivers/net/wireless/realtek/rtlwifi/debug.h |  6 ++--
- 3 files changed, 42 insertions(+), 13 deletions(-)
+Not sure if I see this, it looks like everything in drivers/media/
+depends on CONFIG_MEDIA_SUPPORT (directly or indirectly). If
+CONFIG_MEDIA_SUPPORT is =m then all dependents should be locked out of
+being built-in.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-index fa27d29..c275166 100644
---- a/drivers/net/wireless/realtek/rtlwifi/base.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-@@ -2107,12 +2107,40 @@ static ssize_t rtl_store_debug_level(struct device *d,
- 
- 	ret = kstrtoul(buf, 0, &val);
- 	if (ret) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--			 "%s is not in hex or decimal form.\n", buf);
-+		pr_err("%s is not in hex or decimal form.\n", buf);
- 	} else {
- 		rtlpriv->dbg.global_debuglevel = val;
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--			 "debuglevel:%x\n",
-+		pr_debug("debuglevel:%x\n",
-+			 rtlpriv->dbg.global_debuglevel);
-+	}
-+
-+	return strnlen(buf, count);
-+}
-+
-+static ssize_t rtl_show_debug_mask(struct device *d,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct ieee80211_hw *hw = dev_get_drvdata(d);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+
-+	return sprintf(buf, "0x%x\n",rtlpriv->dbg.global_debuglevel);
-+}
-+
-+static ssize_t rtl_store_debug_mask(struct device *d,
-+				    struct device_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	struct ieee80211_hw *hw = dev_get_drvdata(d);
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	u64 val;
-+	int ret;
-+
-+	ret = kstrtou64(buf, 0, &val);
-+	if (ret) {
-+		pr_err("%s is not in hex or decimal form.\n", buf);
-+	} else {
-+		rtlpriv->dbg.global_debuglevel = val;
-+		pr_debug("debuglevel:%x\n",
- 			 rtlpriv->dbg.global_debuglevel);
- 	}
- 
-@@ -2121,16 +2149,17 @@ static ssize_t rtl_store_debug_level(struct device *d,
- 
- static DEVICE_ATTR(debug_level, S_IWUSR | S_IRUGO,
- 		   rtl_show_debug_level, rtl_store_debug_level);
-+static DEVICE_ATTR(debug_mask, S_IWUSR | S_IRUGO,
-+		   rtl_show_debug_mask, rtl_store_debug_mask);
- 
- static struct attribute *rtl_sysfs_entries[] = {
--
- 	&dev_attr_debug_level.attr,
--
-+	&dev_attr_debug_mask.attr,
- 	NULL
- };
- 
- /*
-- * "name" is folder name witch will be
-+ * "name" is folder name which will be
-  * put in device directory like :
-  * sys/devices/pci0000:00/0000:00:1c.4/
-  * 0000:06:00.0/rtl_sysfs
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-index 23a54be..55c91ee 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-@@ -40,7 +40,7 @@ EXPORT_SYMBOL_GPL(rtl_dbgp_flag_init);
- 
- #ifdef CONFIG_RTLWIFI_DEBUG
- void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
--		    const char *fmt, ...)
-+		    const char *func, const char *fmt, ...)
- {
- 	if (unlikely((comp & rtlpriv->dbg.global_debug_mask) &&
- 		     (level <= rtlpriv->dbg.global_debuglevel))) {
-@@ -52,7 +52,7 @@ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
- 		vaf.fmt = fmt;
- 		vaf.va = &args;
- 
--		pr_debug(":<%lx> %pV", in_interrupt(), &vaf);
-+		pr_debug("%s %pV", func, &vaf);
- 
- 		va_end(args);
- 	}
-@@ -85,7 +85,7 @@ void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
- {
- 	if (unlikely(((comp) & rtlpriv->dbg.global_debug_mask) &&
- 		     ((level) <= rtlpriv->dbg.global_debuglevel))) {
--		pr_debug("In process \"%s\" (pid %i): %s\n",
-+		pr_info("In process \"%s\" (pid %i): %s\n",
- 			 current->comm, current->pid, titlestring);
- 		print_hex_dump_bytes("", DUMP_PREFIX_NONE,
- 				     hexdata, hexdatalen);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-index 90c670b..dc0b9c3 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -168,9 +168,9 @@ enum dbgp_flag_e {
- 
- struct rtl_priv;
- 
--__printf(4, 5)
-+__printf(5, 6)
- void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
--		    const char *fmt, ...);
-+		    const char *func, const char *fmt, ...);
- 
- __printf(4, 5)
- void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
-@@ -182,7 +182,7 @@ void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
- 
- #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
- 	_rtl_dbg_trace(rtlpriv, comp, level,				\
--		       fmt, ##__VA_ARGS__)
-+		       __func__, fmt, ##__VA_ARGS__)
- 
- #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
- 	_rtl_dbg_print(rtlpriv, dbgtype, dbgflag, fmt, ##__VA_ARGS__)
--- 
-2.10.2
+Any bool symbol that controls compilation of source that depends on a
+tristate symbol is broken and should be fixed anyway.
+
+> 
+> I checked the other five patches in the series as well, they all look
+> ok to me.
+> 
+> 	Arnd
+> 
