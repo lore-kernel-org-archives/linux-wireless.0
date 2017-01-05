@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34692 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751666AbdAMMkL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48578 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032704AbdAEWAu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:40:11 -0500
-From: Luca Coelho <luca@coelho.fi>
+        Thu, 5 Jan 2017 17:00:50 -0500
+From: greearb@candelatech.com
 To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Jan 2017 14:39:14 +0200
-Message-Id: <20170113123919.30384-2-luca@coelho.fi> (sfid-20170113_134101_323264_98B69852)
-In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
-References: <20170113123919.30384-1-luca@coelho.fi>
-Subject: [PATCH 1/6] iwlwifi: mvm: don't restart HW if suspend fails with unified image
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Initialize nbytes to 0
+Date: Thu,  5 Jan 2017 14:00:41 -0800
+Message-Id: <1483653641-8377-1-git-send-email-greearb@candelatech.com> (sfid-20170105_230105_280560_4513FB3F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-For unified images, we shouldn't restart the HW if suspend fails.  The
-only reason for restarting the HW with non-unified images is to go
-back to the D0 image.
+ath10k firmware checks nbytes == 0 as part of determining if DMA
+has completed successfully.  To help make this work more often,
+have the driver initialize nbytes to zero when freeing the descriptor
+slot.
 
-Fixes: commit 23ae61282b88 ("iwlwifi: mvm: Do not switch to D3 image on suspend")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index b88e2048ae0b..207d8ae1e116 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1262,12 +1262,15 @@ static int __iwl_mvm_suspend(struct ieee80211_hw *hw,
- 	iwl_trans_d3_suspend(mvm->trans, test, !unified_image);
-  out:
- 	if (ret < 0) {
--		iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
--		if (mvm->restart_fw > 0) {
--			mvm->restart_fw--;
--			ieee80211_restart_hw(mvm->hw);
--		}
- 		iwl_mvm_free_nd(mvm);
-+
-+		if (!unified_image) {
-+			iwl_mvm_ref(mvm, IWL_MVM_REF_UCODE_DOWN);
-+			if (mvm->restart_fw > 0) {
-+				mvm->restart_fw--;
-+				ieee80211_restart_hw(mvm->hw);
-+			}
-+		}
- 	}
-  out_noreset:
- 	mutex_unlock(&mvm->mutex);
+I am not yet sure if this actually fixes a real problem or not...curious
+if others think this is an improvement.
+
+ drivers/net/wireless/ath/ath10k/ce.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index da9998e..15bc7fb 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -595,6 +595,7 @@ int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 	unsigned int nentries_mask = src_ring->nentries_mask;
+ 	unsigned int sw_index = src_ring->sw_index;
+ 	unsigned int read_index;
++	struct ce_desc *desc;
+ 
+ 	if (src_ring->hw_index == sw_index) {
+ 		/*
+@@ -624,6 +625,9 @@ int ath10k_ce_completed_send_next_nolock(struct ath10k_ce_pipe *ce_state,
+ 
+ 	/* sanity */
+ 	src_ring->per_transfer_context[sw_index] = NULL;
++	desc = CE_SRC_RING_TO_DESC(src_ring->base_addr_owner_space,
++				   sw_index);
++	desc->nbytes = 0;
+ 
+ 	/* Update sw_index */
+ 	sw_index = CE_RING_IDX_INCR(nentries_mask, sw_index);
 -- 
-2.11.0
+2.4.11
