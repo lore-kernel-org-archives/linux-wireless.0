@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:34490 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751913AbdADUTt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 15:19:49 -0500
-Received: by mail-it0-f65.google.com with SMTP id q186so3276237itb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:19:49 -0800 (PST)
-Received: from mail-io0-f174.google.com (mail-io0-f174.google.com. [209.85.223.174])
-        by smtp.gmail.com with ESMTPSA id k130sm34809396ita.20.2017.01.04.12.19.48
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 04 Jan 2017 12:19:48 -0800 (PST)
-Received: by mail-io0-f174.google.com with SMTP id p42so463390990ioo.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:19:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1483545210.7312.17.camel@sipsolutions.net>
-References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
- <20161212015213.21323-3-andrew.zaborowski@intel.com> <1483545210.7312.17.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Wed, 4 Jan 2017 15:19:47 -0500
-Message-ID: <CAOq732JfxTx7KrPhic+2aej0ddj6igaqjcGzg+9MJ6=zDYfWAw@mail.gmail.com> (sfid-20170104_212003_357043_EE2F3248)
-Subject: Re: [PATCH v2 3/4] cfg80211: Accept multiple RSSI thresholds for CQM
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:49498 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1032048AbdAEMi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 07:38:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wireless: move IEEE80211_NUM_ACS to ieee80211.h
+Date: Thu,  5 Jan 2017 13:38:49 +0100
+Message-Id: <20170105123849.21077-1-johannes@sipsolutions.net> (sfid-20170105_133910_270809_A3B80AB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On 4 January 2017 at 10:53, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Should userspace really just get -EOPNOTSUPP back?
+This constant isn't really specific to mac80211, so move it
+"up" a level to ieee80211.h
 
-In what circumstance?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/linux/ieee80211.h | 2 ++
+ include/net/mac80211.h    | 1 -
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
->
-> Also, this whole business with using an array in the existing
-> NL80211_ATTR_CQM_RSSI_THOLD is not very backward compatible, because an
-> old kernel would interpret this as just a single value (the first one
-> in your array) - ignoring entirely the fact that you requested
-> multiple.
->
-> Thus, you either need an nl80211 protocol feature bit (enum
-> nl80211_protocol_features) or a new attribute, or so, I think.
-
-True, I'd assumed that netlink would check for exact attribute length
-with NLA_S32.
-
-I'll add the feature bit but I wonder if it's better as a
-driver/device feature (enum nl80211_ext_feature_index) so that it can
-take into account whether rdev->set_cqm_rssi_range_config is set.
-
->
->
->> +             cqm_config = kzalloc(sizeof(struct
->> cfg80211_cqm_config) +
->> +                                  n_thresholds * sizeof(s32),
->> GFP_KERNEL);
->> +             cqm_config->rssi_hyst = hysteresis;
->
-> You definitely need error checking here :)
-
-Ok.
-
-Best regards
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index fe849329511a..87d1937e4671 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -185,6 +185,8 @@ static inline u16 ieee80211_sn_sub(u16 sn1, u16 sn2)
+ 
+ /* number of user priorities 802.11 uses */
+ #define IEEE80211_NUM_UPS		8
++/* number of ACs */
++#define IEEE80211_NUM_ACS		4
+ 
+ #define IEEE80211_QOS_CTL_LEN		2
+ /* 1d tag mask */
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5345d358a510..5f5cb194cd78 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -147,7 +147,6 @@ enum ieee80211_ac_numbers {
+ 	IEEE80211_AC_BE		= 2,
+ 	IEEE80211_AC_BK		= 3,
+ };
+-#define IEEE80211_NUM_ACS	4
+ 
+ /**
+  * struct ieee80211_tx_queue_params - transmit queue configuration
+-- 
+2.9.3
