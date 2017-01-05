@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:35991 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750761AbdALVCn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 16:02:43 -0500
-Received: by mail-pf0-f172.google.com with SMTP id 189so18655229pfu.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 13:02:43 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 1/2] mwifiex: pcie: use posted write to wake up firmware
-Date: Thu, 12 Jan 2017 13:02:31 -0800
-Message-Id: <20170112210232.18554-1-briannorris@chromium.org> (sfid-20170112_220312_672441_1AAEE113)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49494 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1032002AbdAEMi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 07:38:59 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mwifiex: don't include mac80211.h
+Date: Thu,  5 Jan 2017 13:38:35 +0100
+Message-Id: <20170105123835.20995-1-johannes@sipsolutions.net> (sfid-20170105_133909_916401_BEA64E4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Depending on system factors (e.g., the PCIe link PM state), the first
-read to wake up the Wifi firmware can take a long time. There is no
-reason to use a (blocking, non-posted) read at this point, so let's just
-use a write instead. Write vs. read doesn't matter functionality-wise --
-it's just a dummy operation.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This has been shown to decrease the time spent blocking in this function
-on a Rockchip RK3399 SoC.
+This driver doesn't use mac80211, so it shouldn't include mac80211.h,
+include only the necessary cfg80211.h instead.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+This depends on the patch moving IEEE80211_NUM_ACS.
+---
+ drivers/net/wireless/marvell/mwifiex/decl.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 66226c615be0..435ba879ef29 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -458,7 +458,6 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- /* This function wakes up the card by reading fw_status register. */
- static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- {
--	u32 fw_status;
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+index bec300b9c2ea..188e4c370836 100644
+--- a/drivers/net/wireless/marvell/mwifiex/decl.h
++++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+@@ -27,7 +27,7 @@
+ #include <linux/timer.h>
+ #include <linux/ieee80211.h>
+ #include <uapi/linux/if_arp.h>
+-#include <net/mac80211.h>
++#include <net/cfg80211.h>
  
-@@ -468,10 +467,10 @@ static int mwifiex_pm_wakeup_card(struct mwifiex_adapter *adapter)
- 	if (reg->sleep_cookie)
- 		mwifiex_pcie_dev_wakeup_delay(adapter);
- 
--	/* Reading fw_status register will wakeup device */
--	if (mwifiex_read_reg(adapter, reg->fw_status, &fw_status)) {
-+	/* Accessing fw_status register will wakeup device */
-+	if (mwifiex_write_reg(adapter, reg->fw_status, 0)) {
- 		mwifiex_dbg(adapter, ERROR,
--			    "Reading fw_status register failed\n");
-+			    "Writing fw_status register failed\n");
- 		return -1;
- 	}
- 
+ #define MWIFIEX_BSS_COEX_COUNT	     2
+ #define MWIFIEX_MAX_BSS_NUM         (3)
 -- 
-2.11.0.390.gc69c2f50cf-goog
+2.9.3
