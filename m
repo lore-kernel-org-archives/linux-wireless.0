@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f196.google.com ([209.85.210.196]:36185 "EHLO
-        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752951AbdA3NDj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 08:03:39 -0500
-Received: by mail-wj0-f196.google.com with SMTP id kq3so7675774wjc.3
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 05:03:38 -0800 (PST)
-From: Iain Hunter <drhunter95@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Iain Hunter <i-hunter1@ti.com>
-Subject: [PATCH] wlcore: let AP support allmulticast for MDNS. It can be enabled by bringing up the interface with ip command with the argument allmulticast on
-Date: Mon, 30 Jan 2017 12:54:17 +0000
-Message-Id: <20170130125417.6188-1-i-hunter1@ti.com> (sfid-20170130_140631_283039_AD197125)
+Received: from s3.sipsolutions.net ([5.9.151.49]:49272 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752336AbdAEMAq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 07:00:46 -0500
+Message-ID: <1483617591.4394.14.camel@sipsolutions.net> (sfid-20170105_130050_654793_90435159)
+Subject: Re: [PATCH] cfg80211: only pass sband to set_mandatory_flags_band()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 05 Jan 2017 12:59:51 +0100
+In-Reply-To: <1483527217-11854-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1483527217-11854-1-git-send-email-arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Let AP support allmulticast for MDNS.
-It can be enabled by bringing up the interface with ip command with the argument allmulticast on
+On Wed, 2017-01-04 at 10:53 +0000, Arend van Spriel wrote:
+> The supported band structure contains the band is applies to
+> so no need to pass it separately. Also added a default case
+> to the switch for completeness. The current code base does not
+> call this function with NUM_NL80211_BANDS but kept that case
+> statement although default case would cover that.
+> 
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> ---
+> Stumbled upon this function and wanted to start the new year lightly.
+> It applies to master branch of mac80211-next repo.
 
-Signed-off-by: Iain Hunter <i-hunter1@ti.com>
----
- drivers/net/wireless/ti/wlcore/main.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Some light finger exercises to warm up for the year? :-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3241e9eba73..1ab0561ab13 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3281,6 +3281,20 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
-+
-+        /*
-+         * If interface in AP mode and created with allmulticast then disable
-+         * the firmware filters so that all multicast packets are passed
-+         * This is mandatory for MDNS based discovery protocols 
-+         */
-+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
-+ 			if (*total & FIF_ALLMULTI)
-+				ret = wl1271_acx_group_address_tbl(wl, wlvif,
-+								   false,
-+								   NULL, 0);
-+              
-+                }
-+
- 	}
- 
- 	/*
--- 
-2.11.0
+Applied, thanks
+
+johannes
