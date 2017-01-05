@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51362 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49192 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033943AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 5/9] rt2800: tune TX_RTS_CFG config
-Date: Fri,  6 Jan 2017 14:05:14 +0100
-Message-Id: <1483707918-31480-6-git-send-email-sgruszka@redhat.com> (sfid-20170106_141129_708333_CDD07453)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+        id S1762249AbdAELtt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 06:49:49 -0500
+Message-ID: <1483616947.4394.10.camel@sipsolutions.net> (sfid-20170105_125042_878434_86896C3C)
+Subject: Re: [PATCH v2 3/4] cfg80211: Accept multiple RSSI thresholds for CQM
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 05 Jan 2017 12:49:07 +0100
+In-Reply-To: <CAOq732JfxTx7KrPhic+2aej0ddj6igaqjcGzg+9MJ6=zDYfWAw@mail.gmail.com> (sfid-20170104_211949_638423_3D0195CD)
+References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
+         <20161212015213.21323-3-andrew.zaborowski@intel.com>
+         <1483545210.7312.17.camel@sipsolutions.net>
+         <CAOq732JfxTx7KrPhic+2aej0ddj6igaqjcGzg+9MJ6=zDYfWAw@mail.gmail.com>
+         (sfid-20170104_211949_638423_3D0195CD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable RTS frame retry fall-back and limit number of RTS retries to 7
-what is default number of retries for small frames. As RTS/CTS is used
-for TXOP protection, those settings prevent posting lots of RTS
-frames when remote station do not response with CTS at the moment. After
-sending 7 RTS's the HW will start back-off mechanism and after it will
-start posing RTS again to get access to the medium.
+On Wed, 2017-01-04 at 15:19 -0500, Andrew Zaborowski wrote:
+> Hi,
+> 
+> On 4 January 2017 at 10:53, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+> > Should userspace really just get -EOPNOTSUPP back?
+> 
+> In what circumstance?
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+When multiple levels aren't supported, and it's requesting them. Rather
+than, for example, being able to determine up-front (through a feature
+flag) whether it's supported or not.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 4833ec6..1f4a120 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4902,10 +4902,10 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, TXOP_HLDR_ET, reg);
- 
- 	rt2800_register_read(rt2x00dev, TX_RTS_CFG, &reg);
--	rt2x00_set_field32(&reg, TX_RTS_CFG_AUTO_RTS_RETRY_LIMIT, 32);
-+	rt2x00_set_field32(&reg, TX_RTS_CFG_AUTO_RTS_RETRY_LIMIT, 7);
- 	rt2x00_set_field32(&reg, TX_RTS_CFG_RTS_THRES,
- 			   IEEE80211_MAX_RTS_THRESHOLD);
--	rt2x00_set_field32(&reg, TX_RTS_CFG_RTS_FBK_EN, 0);
-+	rt2x00_set_field32(&reg, TX_RTS_CFG_RTS_FBK_EN, 1);
- 	rt2800_register_write(rt2x00dev, TX_RTS_CFG, reg);
- 
- 	rt2800_register_write(rt2x00dev, EXP_ACK_TIME, 0x002400ca);
--- 
-2.7.4
+> > Also, this whole business with using an array in the existing
+> > NL80211_ATTR_CQM_RSSI_THOLD is not very backward compatible,
+> > because an old kernel would interpret this as just a single value
+> > (the first one in your array) - ignoring entirely the fact that you
+> > requested multiple.
+> > 
+> > Thus, you either need an nl80211 protocol feature bit (enum
+> > nl80211_protocol_features) or a new attribute, or so, I think.
+> 
+> True, I'd assumed that netlink would check for exact attribute length
+> with NLA_S32.
+> 
+> I'll add the feature bit but I wonder if it's better as a
+> driver/device feature (enum nl80211_ext_feature_index) so that it can
+> take into account whether rdev->set_cqm_rssi_range_config is set.
+
+Well, it's even more complicated than that because mac80211 may have
+the callback but still not be able to support it, with filtering,
+perhaps? Not quite sure now.
+
+Doing an (extended) feature flag this would address both points (also
+the first, see above) in a single feature flag. Adding the protocol
+feature flag would've addressed only the basic netlink attribute length
+issue - so if we agree on the first point that a feature flag would be
+useful for userspace to predict usability of the feature then we should
+have it per device.
+
+johannes
