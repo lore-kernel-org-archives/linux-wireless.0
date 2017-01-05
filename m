@@ -1,135 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34762 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751440AbdAMVf2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:35:28 -0500
-Received: by mail-lf0-f65.google.com with SMTP id q89so7082095lfi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:27 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 04/10] ath10k: new fw fetch functionality
-Date: Fri, 13 Jan 2017 22:35:03 +0100
-Message-Id: <1484343309-6327-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223943_978264_5E5D0F26)
-In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:48454 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751058AbdAEJ45 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 04:56:57 -0500
+Message-ID: <1483610213.4394.4.camel@sipsolutions.net> (sfid-20170105_105719_151900_5D760467)
+Subject: Re: [PATCH v4] cfg80211: NL80211_ATTR_SOCKET_OWNER support for
+ CMD_CONNECT
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 05 Jan 2017 10:56:53 +0100
+In-Reply-To: <CAOq732KZrpsjK96uwwe3hna2DPkwbN3CvJz+LFxJzXxWw08wRA@mail.gmail.com> (sfid-20170104_213512_217745_81F57ADF)
+References: <20161218002554.6362-1-andrew.zaborowski@intel.com>
+         <1483544433.7312.13.camel@sipsolutions.net>
+         <CAOq732KZrpsjK96uwwe3hna2DPkwbN3CvJz+LFxJzXxWw08wRA@mail.gmail.com>
+         (sfid-20170104_213512_217745_81F57ADF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A new function for creating the fw file name dynamically.
+On Wed, 2017-01-04 at 15:35 -0500, Andrew Zaborowski wrote:
+> On 4 January 2017 at 10:40, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+> > > +++ b/net/wireless/mlme.c
+> > > @@ -340,6 +340,8 @@ int cfg80211_mlme_deauth(struct
+> > > cfg80211_registered_device *rdev,
+> > > 
+> > >       ASSERT_WDEV_LOCK(wdev);
+> > > 
+> > > +     wdev->conn_owner_nlportid = 0;
+> > 
+> > Is this really correct? The deauth might not be to the current_bss,
+> > as you can see in the following if statement:
+> > 
+> > >       if (local_state_change &&
+> > >           (!wdev->current_bss ||
+> > >            !ether_addr_equal(wdev->current_bss->pub.bssid,
+> > > bssid)))
+> > 
+> > It seems that perhaps this should go into some other place, perhaps
+> > only be reset when current_bss is also reset to NULL?
+> 
+> In this case yes, I think I should perform the same bssid comparison.
+> But elsewhere we want conn_owner_nlportid to be set earlier than
+> current_bss, and reset earlier than current_bss because (1) we want
+> to be able to interrupt an ongoing attempt, and (2) we also don't
+> want to trigger another disconnect / deauth if one is already in
+> progress.
 
-Since both SDIO and USB based chipsets will use different
-firmware from the PCIe and AHB chipsets, the fw file name
-is created dynamically.
+Right, makes sense.
 
-The new firmware names are:
+> > > @@ -14539,13 +14554,21 @@ static int
+> > > nl80211_netlink_notify(struct
+> > > notifier_block * nb,
+> > >                               spin_unlock(&rdev-
+> > > > destroy_list_lock);
+> > > 
+> > >                               schedule_work(&rdev->destroy_work);
+> > >                       }
+> > > -             } else if (schedule_scan_stop) {
+> > > +
+> > > +                     continue;
+> > > +             }
+> > 
+> > This also doesn't seem right - the same socket could possibly own
+> > both
+> > an interface and a connection? If the connection is on the same
+> > interface you might not really want to do both - though it
+> > shouldn't
+> > hurt if all the cancel_work is in the right place - but it could be
+> > a
+> > different interface?
+> 
+> This is only a syntactic change though.  The "continue" is now in the
+> "if (schedule_destroy_work)" block so the other actions will not be
+> scheduled is the interface is being destroyed.
 
-For PCIe and AHB:
-firmware-<api_version>.bin (same as before)
+Yes, this part is only syntactic, but you added something new
+afterwards, and that new thing should happen even if another interface
+is going to be scheduled for destruction.
 
-For SDIO:
-firmware-sdio-<api_version>.bin
+I actually think that the code right now is already wrong though, since
+schedule_destroy_work and schedule_scan_stop shouldn't be mutually
+exclusive, a single socket could own both a sched scan and a different
+interface.
 
-For USB:
-firmware-usb-<api_version>.bin
+I'll fix that bug, and we'll have to deal with the conflicts when
+merging this.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 56 ++++++++++++++++------------------
- drivers/net/wireless/ath/ath10k/hw.h   |  4 +++
- 2 files changed, 30 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e985316..c275a52 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1284,44 +1284,40 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- 	return ret;
- }
- 
-+static void ath10k_core_get_fw_name(struct ath10k *ar, char *fw_name,
-+				    int fw_api)
-+{
-+	if ((ar->hif.bus != ATH10K_BUS_PCI) && (ar->hif.bus != ATH10K_BUS_AHB))
-+		snprintf(fw_name, ATH10K_FW_FILE_NAME_MAX_LEN, "%s-%s-%d.bin",
-+			 ATH10K_FW_FILE_BASE, ath10k_bus_str(ar->hif.bus),
-+			 fw_api);
-+	else
-+		snprintf(fw_name, ATH10K_FW_FILE_NAME_MAX_LEN, "%s-%d.bin",
-+			 ATH10K_FW_FILE_BASE, fw_api);
-+}
-+
- static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
- {
--	int ret;
-+	int ret, i;
-+	char fw_name[ATH10K_FW_FILE_NAME_MAX_LEN];
- 
- 	/* calibration file is optional, don't check for any errors */
- 	ath10k_fetch_cal_file(ar);
- 
--	ar->fw_api = 5;
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
--
--	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API5_FILE,
--					       &ar->normal_mode_fw.fw_file);
--	if (ret == 0)
--		goto success;
--
--	ar->fw_api = 4;
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
--
--	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API4_FILE,
--					       &ar->normal_mode_fw.fw_file);
--	if (ret == 0)
--		goto success;
--
--	ar->fw_api = 3;
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
--
--	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API3_FILE,
--					       &ar->normal_mode_fw.fw_file);
--	if (ret == 0)
--		goto success;
-+	for (i = 5; i >= 2; i--) {
-+		ar->fw_api = i;
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n",
-+			   ar->fw_api);
- 
--	ar->fw_api = 2;
--	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
-+		ath10k_core_get_fw_name(ar, fw_name, ar->fw_api);
-+		ret = ath10k_core_fetch_firmware_api_n(ar, fw_name,
-+						       &ar->normal_mode_fw.fw_file);
-+		if (!ret)
-+			goto success;
-+	}
- 
--	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE,
--					       &ar->normal_mode_fw.fw_file);
--	if (ret)
--		return ret;
-+	/* We end up here if we couldn't fetch any firmware */
-+	return ret;
- 
- success:
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "using fw api %d\n", ar->fw_api);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 6bdea86..9f4cd76 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -128,6 +128,10 @@ enum qca9377_chip_id_rev {
- #define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
- #define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
- 
-+#define ATH10K_FW_FILE_NAME_MAX_LEN	100
-+
-+#define ATH10K_FW_FILE_BASE		"firmware"
-+
- #define ATH10K_FW_API2_FILE		"firmware-2.bin"
- #define ATH10K_FW_API3_FILE		"firmware-3.bin"
- 
--- 
-2.7.4
+johannes
