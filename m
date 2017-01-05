@@ -1,48 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33792 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751351AbdAMK0B (ORCPT
+Received: from exsmtp03.microchip.com ([198.175.253.49]:20935 "EHLO
+        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S967172AbdAEHhZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 05:26:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        Felix Fietkau <nbd@nbd.name>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH] Revert "bcma: init serial console directly from ChipCommon code"
-References: <20170112174451.7124-1-zajec5@gmail.com>
-Date: Fri, 13 Jan 2017 12:16:50 +0200
-In-Reply-To: <20170112174451.7124-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Thu, 12 Jan 2017 18:44:51 +0100")
-Message-ID: <87fuknl0x9.fsf@codeaurora.org> (sfid-20170113_112604_481666_A4FAB8F8)
+        Thu, 5 Jan 2017 02:37:25 -0500
+From: Aditya Shankar <aditya.shankar@microchip.com>
+To: Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
+        <linux-kernel@vger.kernel.org>,
+        Aditya Shankar <aditya.shankar@microchip.com>
+Subject: [PATCH] staging: wilc1000: Connect to highest RSSI value for required SSID
+Date: Thu, 5 Jan 2017 13:03:41 +0530
+Message-ID: <1483601621-27545-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170105_083833_883275_8C7A3D85)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+Connect to the highest rssi with the required SSID in the shadow
+table if the connection criteria is based only on the SSID.
+For the first matching SSID, an index to the table is saved.
+Later the index is updated if matching SSID has a higher
+RSSI value than the last saved index.
 
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> This reverts commit 4c81acab3816 ("bcma: init serial console directly
-> from ChipCommon code") as it broke IRQ assignment. Getting IRQ with
-> bcma_core_irq helper on SoC requires MIPS core to be set. It happens
-> *after* ChipCommon initialization so we can't do this so early.
->
-> This fixes a regression but it seems noone noticed it for about a year.
-> It could be it was because serial was still somehow working, just
-> without IRQs. It doesn't look like a critical patch / fix.
->
-> Reported-by: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+However if decision is made based on BSSID, there is only one match
+in the table and corresponding index is used.
 
-So this is for 4.11? What about CC stable?
+Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-I'll add a Fixes line:
-
-Fixes: 4c81acab3816 ("bcma: init serial console directly from ChipCommon co=
-de")
-
---=20
-Kalle Valo
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c1a24f7..32206b8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -665,6 +665,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	s32 s32Error = 0;
+ 	u32 i;
++	u32 sel_bssi_idx = last_scanned_cnt + 1;
+ 	u8 u8security = NO_ENCRYPT;
+ 	enum AUTHTYPE tenuAuth_type = ANY;
+ 
+@@ -688,18 +689,25 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		    memcmp(last_scanned_shadow[i].ssid,
+ 			   sme->ssid,
+ 			   sme->ssid_len) == 0) {
+-			if (!sme->bssid)
+-				break;
+-			else
++			if (!sme->bssid) {
++				if (sel_bssi_idx == (last_scanned_cnt + 1))
++					sel_bssi_idx = i;
++				else if (last_scanned_shadow[i].rssi >
++					 last_scanned_shadow[sel_bssi_idx].rssi)
++					sel_bssi_idx = i;
++			} else {
+ 				if (memcmp(last_scanned_shadow[i].bssid,
+ 					   sme->bssid,
+-					   ETH_ALEN) == 0)
++					   ETH_ALEN) == 0){
++					sel_bssi_idx = i;
+ 					break;
++				}
++			}
+ 		}
+ 	}
+ 
+-	if (i < last_scanned_cnt) {
+-		pstrNetworkInfo = &last_scanned_shadow[i];
++	if (sel_bssi_idx < last_scanned_cnt) {
++		pstrNetworkInfo = &last_scanned_shadow[sel_bssi_idx];
+ 	} else {
+ 		s32Error = -ENOENT;
+ 		wilc_connecting = 0;
+-- 
+2.7.4
