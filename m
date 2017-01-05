@@ -1,66 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:35607 "EHLO
-        mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751017AbdANCRK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 21:17:10 -0500
-Received: by mail-io0-f174.google.com with SMTP id j18so57305788ioe.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 18:17:10 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] mwifiex: don't complain about 'unknown event id: 0x63'
-Date: Fri, 13 Jan 2017 18:16:57 -0800
-Message-Id: <20170114021657.147016-1-briannorris@chromium.org> (sfid-20170114_031746_708511_0C2766D8)
+Received: from s3.sipsolutions.net ([5.9.151.49]:50186 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750763AbdAEN6q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 5 Jan 2017 08:58:46 -0500
+Message-ID: <1483624722.4394.21.camel@sipsolutions.net> (sfid-20170105_145850_537039_09ECB8FF)
+Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Date: Thu, 05 Jan 2017 14:58:42 +0100
+In-Reply-To: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marvell folks tell me this is a debugging event that the driver doesn't
-need to handle, but on 8997 w/ firmware 16.68.1.p97, I see several of
-these sorts of messages at (for instance) boot time:
+On Wed, 2016-12-21 at 04:11 +0000, David Lin wrote:
+> This patch provides the mwlwifi driver for Marvell 8863, 8864 and
+> 8897
+> chipsets.
+> This driver was developed as part of the openwrt.org project to
+> support
+> Linksys WRT1900AC and is maintained on https://github.com/kaloz/mwlwi
+> fi.
 
-[   13.825848] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-[   14.838561] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-[   14.850397] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-[   32.529923] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
+I found some minor things:
 
-Let's handle this "event" with a much lower verbosity.
+ * using kmalloc/memset instead of kzalloc
+ * mwl_fwcmd_get_80m_pri_chnl() could use some arithmetic or at least
+   switch case consolidation - if it shouldn't even go away entirely
+   since mac80211 doesn't really limit you to the primary channel as
+   the spec requires it - so the whole purpose of the function seems a
+   bit questionable
+ * wiphy_err(hw->wiphy, "failed execution\n"); seems like a bit too
+   generic (you have that many times - how are you going to tell which
+   happened?)
+ * rates = sta->supp_rates[NL80211_BAND_5GHZ] << 5;
+   is a bit questionable - that 5 should probably be defined (also,
+   does that mean you support 1,2, 5.5, 11 and *22MBps*? curious,
+   almost nobody does that afaict)
+ * a lot of initializations like
+   struct mwl_vif *mwl_vif;
+   [...]
+   mwl_vif = mwl_dev_get_vif(vif);
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/fw.h        | 1 +
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 4 ++++
- 2 files changed, 5 insertions(+)
+   could be rolled into a single line of code (which you sometimes do,
+   apparently always for "priv" but never for "mwl_vif" or "pcmd"?)
+ * "celcius" isn't really spelled that way - and you probably mean
+   "temperature" anyway since Celsius is a unit :)
+ * typo: firware
+ * a bunch of your IE handling structs seem duplicate with ieee80211.h
+ * and partially wrong - something with a vendor OUI can't be RSN
+   (maybe you meant WPA? though it's not quite clear to me why you need
+   this at all!)
+ * +#ifdef CONFIG_OF
+   +#include <linux/of.h>
+   +#endif
+   I don't think you have to guard that include ...
+ * +#ifdef CONFIG_DEBUG_FS
+   +#include "debugfs.h"
+   +#endif
+   likewise
+ * git am also complained about a blank line at EOF
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 55db158fd156..cb6a1a81d44e 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -550,6 +550,7 @@ enum mwifiex_channel_flags {
- #define EVENT_TX_DATA_PAUSE             0x00000055
- #define EVENT_EXT_SCAN_REPORT           0x00000058
- #define EVENT_RXBA_SYNC                 0x00000059
-+#define EVENT_UNKNOWN_DEBUG             0x00000063
- #define EVENT_BG_SCAN_STOPPED           0x00000065
- #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
- #define EVENT_MULTI_CHAN_INFO           0x0000006a
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index 9df0c4dc06ed..96503d3d053f 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -1009,6 +1009,10 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 					    adapter->event_skb->len -
- 					    sizeof(eventcause));
- 		break;
-+	/* Debugging event; not used, but let's not print an ERROR for it. */
-+	case EVENT_UNKNOWN_DEBUG:
-+		mwifiex_dbg(adapter, EVENT, "event: debug\n");
-+		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR, "event: unknown event id: %#x\n",
- 			    eventcause);
--- 
-2.11.0.483.g087da7b7c-goog
+
+The only thing that really seems questionable to me is the whole beacon
+parsing (and apparent rebuilding in firmware?). It's very odd that you
+could do that, with a softmac device where all the authentication and
+association is handled by hostapd anyway, and you can't possibly
+pretend to handle everything hostapd might throw at you - this will
+mean that you'll have features hostapd and every other mac80211
+supports that you will silently drop afaict - which is rather
+unexpected.
+
+First, you're parsing the data obtained from hostapd, in
+mwl_fwcmd_parse_beacon(), and then you send them all to the firmware in
+mwl_fwcmd_set_ies(), but only the things you actually understood. New
+higher-level features you don't understand, or vendor beacon IEs that
+aren't WMM, would be completely dropped.
+
+I'm not very happy with that behaviour.
+
+Why does the firmware require this? Why not just pack all IEs into the
+pcmd->ie_list_len_proprietary, and leave everything else 0? Or - if
+perhaps firmware for some reason requires HT/VHT to be treated
+specially, only parse out the ones that are really needed specially and
+leave everything else in the ie_list_len_proprietary?
+
+Also, this is dropping all the encryption stuff - even those are
+extensible btw, and hostapd might do so. Having the firmware rebuild
+those out of out-of-band information is very unexpected for a mac80211
+driver.
+
+johannes
