@@ -1,195 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33762 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750938AbdAYQg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jan 2017 11:36:57 -0500
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 4/4] ath9k: fix race condition in enabling/disabling IRQs
-Date: Wed, 25 Jan 2017 17:36:54 +0100
-Message-Id: <20170125163654.66431-4-nbd@nbd.name> (sfid-20170125_173708_880538_D9168E94)
-In-Reply-To: <20170125163654.66431-1-nbd@nbd.name>
-References: <20170125163654.66431-1-nbd@nbd.name>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34727 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750991AbdAFGIP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 01:08:15 -0500
+Received: by mail-lf0-f68.google.com with SMTP id d16so36917130lfb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jan 2017 22:08:14 -0800 (PST)
+From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "David S . Miller" <davem@davemloft.net>
+Cc: =?UTF-8?q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB=20=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
+        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4] rfkill: Add rfkill-any LED trigger
+Date: Fri,  6 Jan 2017 07:07:47 +0100
+Message-Id: <20170106060747.6162-1-kernel@kempniu.pl> (sfid-20170106_070828_249441_FBFE16AE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code currently relies on refcounting to disable IRQs from within the
-IRQ handler and re-enabling them again after the tasklet has run.
+Add a new "global" (i.e. not per-rfkill device) LED trigger, rfkill-any,
+which may be useful on laptops with a single "radio LED" and multiple
+radio transmitters.  The trigger is meant to turn a LED on whenever
+there is at least one radio transmitter active and turn it off
+otherwise.
 
-However, due to race conditions sometimes the IRQ handler might be
-called twice, or the tasklet may not run at all (if interrupted in the
-middle of a reset).
-
-This can cause nasty imbalances in the irq-disable refcount which will
-get the driver permanently stuck until the entire radio has been stopped
-and started again (ath_reset will not recover from this).
-
-Instead of using this fragile logic, change the code to ensure that
-running the irq handler during tasklet processing is safe, and leave the
-refcount untouched.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Signed-off-by: Michał Kępień <kernel@kempniu.pl>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
- drivers/net/wireless/ath/ath9k/init.c  |  1 +
- drivers/net/wireless/ath/ath9k/mac.c   | 44 ++++++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/mac.h   |  1 +
- drivers/net/wireless/ath/ath9k/main.c  | 15 ++++++++----
- 5 files changed, 48 insertions(+), 14 deletions(-)
+Changes from v3:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index a396c99ee84d..46dfca522be3 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -998,6 +998,7 @@ struct ath_softc {
- 	struct survey_info *cur_survey;
- 	struct survey_info survey[ATH9K_NUM_CHANNELS];
- 
-+	spinlock_t intr_lock;
- 	struct tasklet_struct intr_tq;
- 	struct tasklet_struct bcon_tasklet;
- 	struct ath_hw *sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a2f7f48bbb92..fa4b3cc1ba22 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -669,6 +669,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 		common->bt_ant_diversity = 1;
- 
- 	spin_lock_init(&common->cc_lock);
-+	spin_lock_init(&sc->intr_lock);
- 	spin_lock_init(&sc->sc_serial_rw);
- 	spin_lock_init(&sc->sc_pm_lock);
- 	spin_lock_init(&sc->chan_lock);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index f79587570af6..c059dfcaca22 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -810,21 +810,12 @@ void ath9k_hw_disable_interrupts(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
- 
--void ath9k_hw_enable_interrupts(struct ath_hw *ah)
-+static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
+  - Revert introducing a new bitfield and instead defer LED event firing
+    to a work queue to prevent conditional locking and ensure the
+    trigger can really be used from any context.  This also voids the
+    need to take rfkill_global_mutex before calling rfkill_set_block()
+    in rfkill_resume().
+
+Changes from v2:
+
+  - Handle the global mutex properly when rfkill_set_{hw,sw}_state() or
+    rfkill_set_states() is called from within an rfkill callback.  v2
+    always tried to lock the global mutex in such a case, which led to a
+    deadlock when an rfkill driver called one of the above functions
+    from its query or set_block callback.  This is solved by defining a
+    new bitfield, RFKILL_BLOCK_SW_HASLOCK, which is set before the above
+    callbacks are invoked and cleared afterwards; the functions listed
+    above use this bitfield to tell rfkill_any_led_trigger_event()
+    whether the global mutex is currently held or not.
+    RFKILL_BLOCK_SW_SETCALL cannot be reused for this purpose as setting
+    it before invoking the query callback would cause any calls to
+    rfkill_set_sw_state() made from within that callback to work on
+    RFKILL_BLOCK_SW_PREV instead of RFKILL_BLOCK_SW and thus change the
+    way rfkill_set_block() behaves.
+
+  - As rfkill_any_led_trigger_event() now takes a boolean argument which
+    tells it whether the global mutex was already taken by the caller,
+    all calls to __rfkill_any_led_trigger_event() outside
+    rfkill_any_led_trigger_event() have been replaced with calls to
+    rfkill_any_led_trigger_event(true).
+
+Changes from v1:
+
+  - take rfkill_global_mutex before calling rfkill_set_block() in
+    rfkill_resume(); the need for doing this was previously obviated by
+    908209c ("rfkill: don't impose global states on resume"), but given
+    that __rfkill_any_led_trigger_event() is called from
+    rfkill_set_block() unconditionally, each caller of the latter needs
+    to take care of locking rfkill_global_mutex,
+
+  - declare __rfkill_any_led_trigger_event() even when
+    CONFIG_RFKILL_LEDS=n to prevent implicit declaration errors,
+
+  - remove the #ifdef surrounding rfkill_any_led_trigger_{,un}register()
+    calls to prevent compilation warnings about functions and a label
+    being defined but not used,
+
+  - move the rfkill_any_led_trigger_register() call in rfkill_init()
+    before the rfkill_handler_init() call to avoid the need to call
+    rfkill_handler_exit() from rfkill_init() and thus prevent a section
+    mismatch.
+
+ net/rfkill/core.c | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 71 insertions(+), 1 deletion(-)
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index afa4f71b4c7b..2064c3a35ef8 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -176,6 +176,50 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
  {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
- 	u32 async_mask;
- 
--	if (!(ah->imask & ATH9K_INT_GLOBAL))
--		return;
--
--	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
--		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
--			atomic_read(&ah->intr_ref_cnt));
--		return;
--	}
--
- 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
- 	    AR_SREV_9561(ah))
- 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
-@@ -846,6 +837,39 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
- 	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
- 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
+ 	led_trigger_unregister(&rfkill->led_trigger);
  }
 +
-+void ath9k_hw_resume_interrupts(struct ath_hw *ah)
++static struct led_trigger rfkill_any_led_trigger;
++static struct work_struct rfkill_any_work;
++
++static void rfkill_any_led_trigger_worker(struct work_struct *work)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
++	enum led_brightness brightness = LED_OFF;
++	struct rfkill *rfkill;
 +
-+	if (!(ah->imask & ATH9K_INT_GLOBAL))
-+		return;
-+
-+	if (atomic_read(&ah->intr_ref_cnt) != 0) {
-+		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
-+			atomic_read(&ah->intr_ref_cnt));
-+		return;
++	mutex_lock(&rfkill_global_mutex);
++	list_for_each_entry(rfkill, &rfkill_list, node) {
++		if (!(rfkill->state & RFKILL_BLOCK_ANY)) {
++			brightness = LED_FULL;
++			break;
++		}
 +	}
++	mutex_unlock(&rfkill_global_mutex);
 +
-+	__ath9k_hw_enable_interrupts(ah);
++	led_trigger_event(&rfkill_any_led_trigger, brightness);
 +}
-+EXPORT_SYMBOL(ath9k_hw_resume_interrupts);
 +
-+void ath9k_hw_enable_interrupts(struct ath_hw *ah)
++static void rfkill_any_led_trigger_event(void)
 +{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+
-+	if (!(ah->imask & ATH9K_INT_GLOBAL))
-+		return;
-+
-+	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
-+		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
-+			atomic_read(&ah->intr_ref_cnt));
-+		return;
-+	}
-+
-+	__ath9k_hw_enable_interrupts(ah);
++	schedule_work(&rfkill_any_work);
 +}
- EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
- 
- void ath9k_hw_set_interrupts(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 3bab01435a86..770fc11b41d1 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -744,6 +744,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah);
- void ath9k_hw_enable_interrupts(struct ath_hw *ah);
- void ath9k_hw_disable_interrupts(struct ath_hw *ah);
- void ath9k_hw_kill_interrupts(struct ath_hw *ah);
-+void ath9k_hw_resume_interrupts(struct ath_hw *ah);
- 
- void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 985b1cade4a4..d8ea087bdd07 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -375,9 +375,14 @@ void ath9k_tasklet(unsigned long data)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	enum ath_reset_type type;
- 	unsigned long flags;
--	u32 status = sc->intrstatus;
-+	u32 status;
- 	u32 rxmask;
- 
-+	spin_lock_irqsave(&sc->intr_lock, flags);
-+	status = sc->intrstatus;
-+	sc->intrstatus = 0;
-+	spin_unlock_irqrestore(&sc->intr_lock, flags);
 +
- 	ath9k_ps_wakeup(sc);
- 	spin_lock(&sc->sc_pcu_lock);
++static void rfkill_any_led_trigger_activate(struct led_classdev *led_cdev)
++{
++	rfkill_any_led_trigger_event();
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	INIT_WORK(&rfkill_any_work, rfkill_any_led_trigger_worker);
++	rfkill_any_led_trigger.name = "rfkill-any";
++	rfkill_any_led_trigger.activate = rfkill_any_led_trigger_activate;
++	return led_trigger_register(&rfkill_any_led_trigger);
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++	led_trigger_unregister(&rfkill_any_led_trigger);
++	cancel_work_sync(&rfkill_any_work);
++}
+ #else
+ static void rfkill_led_trigger_event(struct rfkill *rfkill)
+ {
+@@ -189,6 +233,19 @@ static inline int rfkill_led_trigger_register(struct rfkill *rfkill)
+ static inline void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ {
+ }
++
++static void rfkill_any_led_trigger_event(void)
++{
++}
++
++static int rfkill_any_led_trigger_register(void)
++{
++	return 0;
++}
++
++static void rfkill_any_led_trigger_unregister(void)
++{
++}
+ #endif /* CONFIG_RFKILL_LEDS */
  
-@@ -480,7 +485,7 @@ void ath9k_tasklet(unsigned long data)
- 	ath9k_btcoex_handle_interrupt(sc, status);
+ static void rfkill_fill_event(struct rfkill_event *ev, struct rfkill *rfkill,
+@@ -297,6 +354,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
  
- 	/* re-enable hardware interrupt */
--	ath9k_hw_enable_interrupts(ah);
-+	ath9k_hw_resume_interrupts(ah);
- out:
- 	spin_unlock(&sc->sc_pcu_lock);
- 	ath9k_ps_restore(sc);
-@@ -544,7 +549,9 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		return IRQ_NONE;
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
  
- 	/* Cache the status */
--	sc->intrstatus = status;
-+	spin_lock(&sc->intr_lock);
-+	sc->intrstatus |= status;
-+	spin_unlock(&sc->intr_lock);
+ 	if (prev != curr)
+ 		rfkill_event(rfkill);
+@@ -477,6 +535,7 @@ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
+ 	spin_unlock_irqrestore(&rfkill->lock, flags);
  
- 	if (status & SCHED_INTR)
- 		sched = true;
-@@ -590,7 +597,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
  
- 	if (sched) {
- 		/* turn off every interrupt */
--		ath9k_hw_disable_interrupts(ah);
-+		ath9k_hw_kill_interrupts(ah);
- 		tasklet_schedule(&sc->intr_tq);
+ 	if (rfkill->registered && prev != blocked)
+ 		schedule_work(&rfkill->uevent_work);
+@@ -520,6 +579,7 @@ bool rfkill_set_sw_state(struct rfkill *rfkill, bool blocked)
+ 		schedule_work(&rfkill->uevent_work);
+ 
+ 	rfkill_led_trigger_event(rfkill);
++	rfkill_any_led_trigger_event();
+ 
+ 	return blocked;
+ }
+@@ -569,6 +629,7 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
+ 			schedule_work(&rfkill->uevent_work);
+ 
+ 		rfkill_led_trigger_event(rfkill);
++		rfkill_any_led_trigger_event();
+ 	}
+ }
+ EXPORT_SYMBOL(rfkill_set_states);
+@@ -985,6 +1046,7 @@ int __must_check rfkill_register(struct rfkill *rfkill)
+ #endif
  	}
  
++	rfkill_any_led_trigger_event();
+ 	rfkill_send_events(rfkill, RFKILL_OP_ADD);
+ 
+ 	mutex_unlock(&rfkill_global_mutex);
+@@ -1017,6 +1079,7 @@ void rfkill_unregister(struct rfkill *rfkill)
+ 	mutex_lock(&rfkill_global_mutex);
+ 	rfkill_send_events(rfkill, RFKILL_OP_DEL);
+ 	list_del_init(&rfkill->node);
++	rfkill_any_led_trigger_event();
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	rfkill_led_trigger_unregister(rfkill);
+@@ -1269,6 +1332,10 @@ static int __init rfkill_init(void)
+ 	if (error)
+ 		goto error_misc;
+ 
++	error = rfkill_any_led_trigger_register();
++	if (error)
++		goto error_led_trigger;
++
+ #ifdef CONFIG_RFKILL_INPUT
+ 	error = rfkill_handler_init();
+ 	if (error)
+@@ -1279,8 +1346,10 @@ static int __init rfkill_init(void)
+ 
+ #ifdef CONFIG_RFKILL_INPUT
+ error_input:
+-	misc_deregister(&rfkill_miscdev);
++	rfkill_any_led_trigger_unregister();
+ #endif
++error_led_trigger:
++	misc_deregister(&rfkill_miscdev);
+ error_misc:
+ 	class_unregister(&rfkill_class);
+ error_class:
+@@ -1293,6 +1362,7 @@ static void __exit rfkill_exit(void)
+ #ifdef CONFIG_RFKILL_INPUT
+ 	rfkill_handler_exit();
+ #endif
++	rfkill_any_led_trigger_unregister();
+ 	misc_deregister(&rfkill_miscdev);
+ 	class_unregister(&rfkill_class);
+ }
 -- 
 2.11.0
