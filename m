@@ -1,80 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39088 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934636AbdAIKJs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:09:48 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: implement multicast forwarding on fast-RX path
-Date: Mon,  9 Jan 2017 11:09:32 +0100
-Message-Id: <20170109100932.23778-1-johannes@sipsolutions.net> (sfid-20170109_111113_727752_484E7E1A)
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:36498 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760484AbdAFIqW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 03:46:22 -0500
+Received: by mail-wm0-f41.google.com with SMTP id c85so16813419wmi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2017 00:45:36 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+To: ath9k-devel@lists.ath9k.org,
+        sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: QCA Ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Adrian Chadd <adrian@freebsd.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>,
+        "freebsd-wireless@freebsd.org" <freebsd-wireless@freebsd.org>
+Subject: Re: [ath9k-devel] 802.11k, 802.11v and 802.11r support in QCA9592-AR1B
+Date: Fri, 06 Jan 2017 09:45:15 +0100
+Message-ID: <2946022.B9kIklMXmS@bentobox> (sfid-20170106_094812_178060_23E83E4A)
+In-Reply-To: <587211005.1320200.1483690502965@mail.yahoo.com>
+References: <587211005.1320200.1483690502965.ref@mail.yahoo.com> <587211005.1320200.1483690502965@mail.yahoo.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart36189806.stnyiZrjXa"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+--nextPart36189806.stnyiZrjXa
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-In AP (or VLAN) mode, when unicast 802.11 packets are received,
-they might actually be multicast after conversion. In this case
-the fast-RX path didn't handle them properly to send them back
-to the wireless medium. Implement that by copying the SKB and
-sending it back out.
+On Freitag, 6. Januar 2017 08:15:02 CET sandeep suresh wrote:
+>   Dear Experts,We are using  QCA9592-AR1B ( WPEA-252NI ) in one of our products and it supports 802.11bgn. There is a requirement to support the following standards:-802.11k802.11v and802.11r.Do we have the driver patches to support these standards? Please let me know how to go about this.Thanks & regardsSandeep Suresh.
 
-The possible alternative would be to just punt the packet back
-to the regular (slow) RX path, but since we have almost all of
-the required code here already it's not so complicated to add
-here. Punting it back would also mean acquiring the spinlock,
-which would be bad for the stated purpose of the fast-RX path,
-to enable well-performing parallel RX.
+Most of the stuff you ask here is already part of the current hostapd and has
+nearly nothing to do with ath9k.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 26 ++++++++++++++++++--------
- 1 file changed, 18 insertions(+), 8 deletions(-)
+There are some things in 802.11v which would require driver support but I am
+guessing that you are not actually requiring these parts of the kitchen sink
+802.11 amendment. Your list of amendments look more like you want to support
+some features to allow better roaming for Apple (and similar) devices.
+Spoiler: They also don't support most of WNM (regardless of what Cisco tells
+you).
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index d2a00f2a6efe..ff32050c389d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3938,21 +3938,31 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
- 	u64_stats_update_end(&stats->syncp);
- 
- 	if (fast_rx->internal_forward) {
--		struct sta_info *dsta = sta_info_get(rx->sdata, skb->data);
-+		struct sk_buff *xmit_skb = NULL;
-+		bool multicast = is_multicast_ether_addr(skb->data);
- 
--		if (dsta) {
-+		if (multicast) {
-+			xmit_skb = skb_copy(skb, GFP_ATOMIC);
-+		} else if (sta_info_get(rx->sdata, skb->data)) {
-+			xmit_skb = skb;
-+			skb = NULL;
-+		}
-+
-+		if (xmit_skb) {
- 			/*
- 			 * Send to wireless media and increase priority by 256
- 			 * to keep the received priority instead of
- 			 * reclassifying the frame (see cfg80211_classify8021d).
- 			 */
--			skb->priority += 256;
--			skb->protocol = htons(ETH_P_802_3);
--			skb_reset_network_header(skb);
--			skb_reset_mac_header(skb);
--			dev_queue_xmit(skb);
--			return true;
-+			xmit_skb->priority += 256;
-+			xmit_skb->protocol = htons(ETH_P_802_3);
-+			skb_reset_network_header(xmit_skb);
-+			skb_reset_mac_header(xmit_skb);
-+			dev_queue_xmit(xmit_skb);
- 		}
-+
-+		if (!skb)
-+			return true;
- 	}
- 
- 	/* deliver to local stack */
--- 
-2.9.3
+The other thing which comes to my mind which is driver specific in 802.11v
+would be BSS Max idle period management - but this is supported by mac80211
+since ages.
+
+I would recommend to get in contact with the hostapd people for more details.
+
+Kind regards,
+	Sven
+--nextPart36189806.stnyiZrjXa
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEF10rh2Elc9zjMuACXYcKB8Eme0YFAlhvWRsACgkQXYcKB8Em
+e0bxmRAA2ZfQ5r6E+FWdicoT6AaSP5Ay8Y9jrjHn70XcI6rYPkd+YBWrN+ksyMaa
+L27+VcvEB6guaKsuR3p83F/BclIlb4vnqkMd8PwbVzPiBOvLXf3988ux8FHRBRly
++eLtzx5cTAQIaH1atYqAemZvJWEDX6t5oaKaaA0zUy9xwKSfnLFPbjapse8Ln8JR
+P4s8O2AkqTtHBVtJjUJtTVc0ANMe3R2AbsHTLG8R0gsc8EZdioIYIeqZGqSs7wW2
+j8cNvLuAzuVRvQEWK/4VM/jxvxA7qC3ZLEGnPXM8H8mygmmIv2j8kdqQUZNMVQ0Q
+rOOJ1Od2baoFr07Ip3Uv7FeyIrCEiOwycoVqmDmxtdKWO841X/PF5qS4O2EVEVfw
+yYg+thtX/B90SAIOcoX3x4pMAOtbkI7X1cTxDDvqKQFwQVFdOmGs9fjQLSzcsLKm
+r2c+n/1Qid/smkHNielDslhO/dYSuyjK2VqyiPK1Q0gQVjg7SMY8RxYxWmAcjTVc
+9XTnYpQu/QLlHJ2lPc4ukIlfUF0pDn/xeRSQ/Ra4ef8ioJ4MAPeKBopJHoj9WsKE
+udRbuKTTD5BgxiaHF0gfFZhb6Y8Mexsxz/KuPhkuh5wbFbHxw9MqIthuX/GegGp8
+v2Y5hV/qkO6VDySu5AE7Sb0tXDXY1+Tvk2qW4wyTrirth0KyTtw=
+=AHTT
+-----END PGP SIGNATURE-----
+
+--nextPart36189806.stnyiZrjXa--
