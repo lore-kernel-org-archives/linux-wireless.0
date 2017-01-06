@@ -1,78 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36137 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750864AbdA0TfJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 14:35:09 -0500
-Date: Fri, 27 Jan 2017 22:26:06 +0300
-From: Pichugin Dmitry <smokeman85@gmail.com>
-To: johannes@sipsolutions.net, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] cfg80211 debugfs: Cleanup some checkpatch issues
-Message-ID: <20170127192603.GA13522@gmail.com> (sfid-20170127_203712_578214_221D21FF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:53302 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033945AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:10:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH 6/9] rt2800: fallback from mcs8 to mcs7
+Date: Fri,  6 Jan 2017 14:05:15 +0100
+Message-Id: <1483707918-31480-7-git-send-email-sgruszka@redhat.com> (sfid-20170106_141117_378554_98E24EE0)
+In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes the checkpatch.pl warnings:
-* Macros should not use a trailing semicolon.
-* Spaces required around that '='.
-* Symbolic permissions 'S_IRUGO' are not preferred.
-* Macro argument reuse 'buflen' - possible side-effects
+If we do not fallback to lower rate, we are unable to calculate
+correctly number of retries in TX status code.
 
-Signed-off-by: Pichugin Dmitry <smokeman85@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/wireless/debugfs.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
-index 5d45391..96e3cff 100644
---- a/net/wireless/debugfs.c
-+++ b/net/wireless/debugfs.c
-@@ -17,11 +17,12 @@
- static ssize_t name## _read(struct file *file, char __user *userbuf,	\
- 			    size_t count, loff_t *ppos)			\
- {									\
--	struct wiphy *wiphy= file->private_data;		\
--	char buf[buflen];						\
-+	struct wiphy *wiphy = file->private_data;			\
-+	int __buflen = __builtin_constant_p(buflen) ? buflen : -1;	\
-+	char buf[__buflen];						\
- 	int res;							\
- 									\
--	res = scnprintf(buf, buflen, fmt "\n", ##value);		\
-+	res = scnprintf(buf, __buflen, fmt "\n", ##value);		\
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
- }									\
- 									\
-@@ -29,14 +30,14 @@ static const struct file_operations name## _ops = {			\
- 	.read = name## _read,						\
- 	.open = simple_open,						\
- 	.llseek = generic_file_llseek,					\
--};
-+}
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 1f4a120..6cac311 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4968,7 +4968,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_write(rt2x00dev, HT_FBK_CFG0, reg);
  
- DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
--		      wiphy->rts_threshold)
-+		      wiphy->rts_threshold);
- DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
- 		      wiphy->frag_threshold);
- DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
--		      wiphy->retry_short)
-+		      wiphy->retry_short);
- DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
- 		      wiphy->retry_long);
- 
-@@ -103,7 +104,7 @@ static const struct file_operations ht40allow_map_ops = {
- };
- 
- #define DEBUGFS_ADD(name)						\
--	debugfs_create_file(#name, S_IRUGO, phyd, &rdev->wiphy, &name## _ops);
-+	debugfs_create_file(#name, 0444, phyd, &rdev->wiphy, &name## _ops)
- 
- void cfg80211_debugfs_rdev_add(struct cfg80211_registered_device *rdev)
- {
+ 	rt2800_register_read(rt2x00dev, HT_FBK_CFG1, &reg);
+-	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS8FBK, 8);
++	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS8FBK, 7);
+ 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS9FBK, 8);
+ 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS10FBK, 9);
+ 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS11FBK, 10);
 -- 
 2.7.4
