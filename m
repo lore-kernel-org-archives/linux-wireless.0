@@ -1,138 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:36280 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750933AbdAQQfy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 11:35:54 -0500
-Received: by mail-lf0-f65.google.com with SMTP id h65so16943021lfi.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 08:35:53 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 2/2] brcmfmac: move function declarations to proper headers
-Date: Tue, 17 Jan 2017 17:34:19 +0100
-Message-Id: <20170117163419.1184-2-zajec5@gmail.com> (sfid-20170117_173557_583015_2B2FFD73)
-In-Reply-To: <20170117163419.1184-1-zajec5@gmail.com>
-References: <20170117163419.1184-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:59592 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033950AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:10:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH 7/9] rt2800usb: mark tx failure on timeout
+Date: Fri,  6 Jan 2017 14:05:16 +0100
+Message-Id: <1483707918-31480-8-git-send-email-sgruszka@redhat.com> (sfid-20170106_141116_227956_6C437C65)
+In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+If we do not get TX status in reasonable time, we most likely fail to
+send frame hence mark it as so.
 
-Function brcmf_c_set_joinpref_default is in common.c, so move it to the
-related header. All other (touched) ones are in core.c so take them out
-of the bus.h.
-I just needed to include bus.h to have enum brcmf_bus_state defined.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h | 28 ----------------------
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  2 ++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    | 21 +++++++++++++++-
- 3 files changed, 22 insertions(+), 29 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-index b5bb971..58a3de6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
-@@ -214,34 +214,6 @@ int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
- 	return bus->ops->get_memdump(bus->dev, data, len);
- }
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index 400f074..205a7b8 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -602,10 +602,9 @@ static void rt2800usb_txdone_nostatus(struct rt2x00_dev *rt2x00dev)
+ 			    !test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
+ 				break;
  
--/*
-- * interface functions from common layer
-- */
--
--/* Receive frame for delivery to OS.  Callee disposes of rxp. */
--void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
--/* Receive async event packet from firmware. Callee disposes of rxp. */
--void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
--
--/* Indication from bus module regarding presence/insertion of dongle. */
--int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings);
--/* Indication from bus module regarding removal/absence of dongle */
--void brcmf_detach(struct device *dev);
--/* Indication from bus module that dongle should be reset */
--void brcmf_dev_reset(struct device *dev);
--/* Indication from bus module to change flow-control state */
--void brcmf_txflowblock(struct device *dev, bool state);
--
--/* Notify the bus has transferred the tx packet to firmware */
--void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
--
--/* Configure the "global" bus state used by upper layers */
--void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
--
--int brcmf_bus_start(struct device *dev);
--s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
--void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
--
- #ifdef CONFIG_BRCMFMAC_SDIO
- void brcmf_sdio_exit(void);
- void brcmf_sdio_register(void);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index bd095ab..a62f8e7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -65,6 +65,8 @@ struct brcmf_mp_device {
- 	} bus;
- };
- 
-+void brcmf_c_set_joinpref_default(struct brcmf_if *ifp);
-+
- struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
- 					       enum brcmf_bus_type bus_type,
- 					       u32 chip, u32 chiprev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index c94dcab..d92beca 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -22,6 +22,7 @@
- #define BRCMFMAC_CORE_H
- 
- #include <net/cfg80211.h>
-+#include "bus.h"
- #include "fweh.h"
- 
- #define TOE_TX_CSUM_OL		0x00000001
-@@ -213,10 +214,28 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- void brcmf_remove_interface(struct brcmf_if *ifp, bool rtnl_locked);
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
-+/* Indication from bus module to change flow-control state */
-+void brcmf_txflowblock(struct device *dev, bool state);
- void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
-+/* Receive frame for delivery to OS.  Callee disposes of rxp. */
-+void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
-+/* Receive async event packet from firmware. Callee disposes of rxp. */
-+void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
-+/* Notify the bus has transferred the tx packet to firmware */
-+void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
- void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
--void brcmf_c_set_joinpref_default(struct brcmf_if *ifp);
-+/* Indication from bus module regarding presence/insertion of dongle. */
-+int brcmf_attach(struct device *dev, struct brcmf_mp_device *settings);
-+int brcmf_bus_start(struct device *dev);
-+void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
-+/* Indication from bus module that dongle should be reset */
-+void brcmf_dev_reset(struct device *dev);
-+/* Indication from bus module regarding removal/absence of dongle */
-+void brcmf_detach(struct device *dev);
-+s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
-+/* Configure the "global" bus state used by upper layers */
-+void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
- int __init brcmf_core_init(void);
- void __exit brcmf_core_exit(void);
- 
+-			if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags))
++			if (test_bit(ENTRY_DATA_IO_FAILED, &entry->flags) ||
++			    rt2800usb_entry_txstatus_timeout(entry))
+ 				rt2x00lib_txdone_noinfo(entry, TXDONE_FAILURE);
+-			else if (rt2800usb_entry_txstatus_timeout(entry))
+-				rt2x00lib_txdone_noinfo(entry, TXDONE_UNKNOWN);
+ 			else
+ 				break;
+ 		}
 -- 
-2.10.1
+2.7.4
