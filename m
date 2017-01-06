@@ -1,44 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:35235 "EHLO
-        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936380AbdAKIgB (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33992 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965426AbdAFWjV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 03:36:01 -0500
-Received: by mail-yw0-f178.google.com with SMTP id l19so20438857ywc.2
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 00:36:01 -0800 (PST)
+        Fri, 6 Jan 2017 17:39:21 -0500
 MIME-Version: 1.0
-From: Belisko Marek <marek.belisko@gmail.com>
-Date: Wed, 11 Jan 2017 09:36:00 +0100
-Message-ID: <CAAfyv37ZFHkZWfq_gAB7XiqtDqVeT+SG7jfXxnCq2fyzYEKX_w@mail.gmail.com> (sfid-20170111_093605_194831_88FC8E97)
-Subject: ad-hoc in 5GHz
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20170106152043.GA6383@rahul>
+References: <20170106152043.GA6383@rahul>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 6 Jan 2017 23:39:20 +0100
+Message-ID: <CACna6ryhvkSaHgU9igshnMjNg=wgeXd3p57VXxbr0ykoEtLH_g@mail.gmail.com> (sfid-20170106_234002_718723_9C20558F)
+Subject: Re: [PATCH] ssb: main.c: This patch removes unnecessary return
+ statement using spatch tool
+To: Rahul Krishnan <mrahul.krishnan@gmail.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Rahul,
 
-this should be general question. I'm using [0] ralink driver to setup
-ad-hoc mode. It works fine in 2.4GHz band (channel 1) but when I try
-to setup ad-hoc for 5GHz (channel 50) it seems it's not working at all
-(I tried to scan with other device but I cannot ad-hoc network). So my
-question should ad-hoc mode work in 5GHz band also or there are some
-restrictions? Many thanks.
+On 6 January 2017 at 16:20, Rahul Krishnan <mrahul.krishnan@gmail.com> wrot=
+e:
+> This patch removes unnecessary return statement using spatch.
+> Signed-off-by: Rahul Krishnan <mrahul.krishnan@gmail.com>
 
-[0] - https://github.com/diederikdehaas/rtl8812AU
+Please work on simplifying & making topic more accurate.
 
-BR,
+You can drop "main.c:" and "This patch".
 
-marek
+I don't think this patch really "removes unnecessary return". It looks
+like you just dropped assignment/calculation done just before
+returning value. That "using spatch tool" part is also misleading. You
+don't really use that tool for removing it. More likely it was
+noticed/suggested that that tool you use.
 
--- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+Please use commit message for describing your change and don't just
+copy & paste topic. You can e.g. put into about "spatch" there
+(instead of the topic).
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
+
+> @@ -1,4 +1,4 @@
+> -/*
+> + patch /home/rahul/git/kernels/staging/drivers//*
+>   * Sonics Silicon Backplane
+>   * Subsystem core
+>   *
+
+Huh? Looks definitely wrong and I don't think it even compiles
+anymore! Make sure to compile code after your change, to make sure it
+does & there isn't any new warning.
+
+
+> @@ -1272,9 +1272,7 @@ u32 ssb_admatch_size(u32 adm)
+>         default:
+>                 SSB_WARN_ON(1);
+>         }
+> -       size =3D (1 << (size + 1));
+> -
+> -       return size;
+> +       return (1 << (size + 1));
+>  }
+>  EXPORT_SYMBOL(ssb_admatch_size);
+
+Please rework your patch, *test it* and resend V2.
+
+--=20
+Rafa=C5=82
