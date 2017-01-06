@@ -1,86 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpoutz26.laposte.net ([194.117.213.101]:47807 "EHLO
-        smtp.laposte.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1765331AbdAJJze (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 04:55:34 -0500
-Received: from smtp.laposte.net (localhost [127.0.0.1])
-        by lpn-prd-vrout014 (Postfix) with ESMTP id D1760121273
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 10:55:31 +0100 (CET)
-Received: from smtp.laposte.net (localhost [127.0.0.1])
-        by lpn-prd-vrout014 (Postfix) with ESMTP id C3B13121373
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 10:55:31 +0100 (CET)
-Received: from lpn-prd-vrin002 (lpn-prd-vrin002.prosodie [10.128.63.3])
-        by lpn-prd-vrout014 (Postfix) with ESMTP id BF1C8121273
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 10:55:31 +0100 (CET)
-Received: from lpn-prd-vrin002 (localhost [127.0.0.1])
-        by lpn-prd-vrin002 (Postfix) with ESMTP id AADF35BF602
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 10:55:31 +0100 (CET)
-From: =?UTF-8?q?Vincent=20Stehl=C3=A9?= <vincent.stehle@laposte.net>
-To: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Vincent=20Stehl=C3=A9?= <vincent.stehle@laposte.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Joe Perches <joe@perches.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH next] rtlwifi: rtl8192de: fix missing curly braces
-Date: Tue, 10 Jan 2017 10:55:21 +0100
-Message-Id: <20170110095521.4410-1-vincent.stehle@laposte.net> (sfid-20170110_105549_380038_7E7A6AFC)
-In-Reply-To: <20161215182310.13713-15-Larry.Finger@lwfinger.net>
-References: <20161215182310.13713-15-Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:59118 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1033933AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:10:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH 1/9] rt2800usb: remove watchdog
+Date: Fri,  6 Jan 2017 14:05:10 +0100
+Message-Id: <1483707918-31480-2-git-send-email-sgruszka@redhat.com> (sfid-20170106_141123_076829_2DC8401C)
+In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Restore some curly braces that have been removed in commit c93ac39da006457f
-("rtlwifi: Remove some redundant code") while removing redundant messages
-and extraneous braces.
+On rt2800usb, if we do not get TX status from HW, we assume frames were
+posted and after entry->last_action timeout, we forcibly provide TX
+status to mac80211. So it's not possible to detect hardware TX hung
+based on the timeout. Additionally TXRQ_PCNT tells on number of frames
+in the Packet Buffer (buffer between bus interface and chip MAC
+subsystem), which can be non zero on normal conditions. To check HW hung
+we will need provide some different mechanism, for now remove watchdog
+as current implementation is wrong and not useful.
 
-This fixes the following smatch warning:
-
-  drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:326 rtl92d_download_fw() warn: curly braces intended?
-
-...and the following coccinelle warning:
-
-  drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:325:2-38: code aligned with following code on line 326
-
-Fixes: c93ac39da006457f ("rtlwifi: Remove some redundant code")
-Signed-off-by: Vincent Stehlé <vincent.stehle@laposte.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Joe Perches <joe@perches.com>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 42 --------------------------
+ 1 file changed, 42 deletions(-)
 
-
-Hi,
-
-I saw that in Linux next-20170110.
-
-Best regards,
-
-Vincent.
-
-
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index aa1e51c871df..bcde4da4e593 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -321,9 +321,10 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
- 	value &= (~BIT(5));
- 	rtl_write_byte(rtlpriv, 0x1f, value);
- 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
--	if (err)
-+	if (err) {
- 		pr_err("fw is not ready to run!\n");
- 		goto exit;
-+	}
- exit:
- 	err = _rtl92d_fw_init(hw);
- 	return err;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+index f38c440..8ec22c0 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+@@ -436,47 +436,6 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ }
+ 
+ /*
+- * Watchdog handlers
+- */
+-static void rt2800usb_watchdog(struct rt2x00_dev *rt2x00dev)
+-{
+-	unsigned int i;
+-	u32 reg;
+-
+-	rt2x00usb_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
+-	if (rt2x00_get_field32(reg, TXRXQ_PCNT_TX0Q)) {
+-		rt2x00_warn(rt2x00dev, "TX HW queue 0 timed out, invoke forced kick\n");
+-
+-		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40012);
+-
+-		for (i = 0; i < 10; i++) {
+-			udelay(10);
+-			if (!rt2x00_get_field32(reg, TXRXQ_PCNT_TX0Q))
+-				break;
+-		}
+-
+-		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40006);
+-	}
+-
+-	rt2x00usb_register_read(rt2x00dev, TXRXQ_PCNT, &reg);
+-	if (rt2x00_get_field32(reg, TXRXQ_PCNT_TX1Q)) {
+-		rt2x00_warn(rt2x00dev, "TX HW queue 1 timed out, invoke forced kick\n");
+-
+-		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf4000a);
+-
+-		for (i = 0; i < 10; i++) {
+-			udelay(10);
+-			if (!rt2x00_get_field32(reg, TXRXQ_PCNT_TX1Q))
+-				break;
+-		}
+-
+-		rt2x00usb_register_write(rt2x00dev, PBF_CFG, 0xf40006);
+-	}
+-
+-	rt2x00usb_watchdog(rt2x00dev);
+-}
+-
+-/*
+  * TX descriptor initialization
+  */
+ static __le32 *rt2800usb_get_txwi(struct queue_entry *entry)
+@@ -877,7 +836,6 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
+ 	.link_tuner		= rt2800_link_tuner,
+ 	.gain_calibration	= rt2800_gain_calibration,
+ 	.vco_calibration	= rt2800_vco_calibration,
+-	.watchdog		= rt2800usb_watchdog,
+ 	.start_queue		= rt2800usb_start_queue,
+ 	.kick_queue		= rt2x00usb_kick_queue,
+ 	.stop_queue		= rt2800usb_stop_queue,
 -- 
-2.11.0
+2.7.4
