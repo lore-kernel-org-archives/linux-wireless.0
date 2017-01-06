@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43382 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59746 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750780AbdALOcY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:32:24 -0500
-Message-ID: <1484231540.5391.6.camel@sipsolutions.net> (sfid-20170112_153227_561736_70E309B4)
-Subject: Re: [PATCH 3/3] cfg80211: Specify the reason for connect timeout
+        id S967077AbdAFMiN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 07:38:13 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Date: Thu, 12 Jan 2017 15:32:20 +0100
-In-Reply-To: <20170112142926.GA19489@jouni.qca.qualcomm.com>
-References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
-         <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
-         <1484141491.29931.10.camel@sipsolutions.net>
-         <20170112135843.GB17983@jouni.qca.qualcomm.com>
-         <1484229979.5391.5.camel@sipsolutions.net>
-         <20170112142926.GA19489@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-01-06
+Date: Fri,  6 Jan 2017 13:37:20 +0100
+Message-Id: <20170106123721.10970-1-johannes@sipsolutions.net> (sfid-20170106_134057_966168_05F8710B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Dave,
 
-> We don't.. This discussion here is about the C API where we cannot
-> remove the argument from the call without adding yet another inline
-> wrapper, but the actual function that generates the netlink message
-> does not add the timeout reason attribute for success or explicit
-> rejection cases.
+Here's another fix for something I noticed while reviewing the code in
+a new suggested patch that added another netlink socket destroy path.
 
-Ah. But we can just say here then that it's ignored in those cases, and
-not really worry about it?
+Since the new patch would otherwise cause conflicts, it might be good
+to pull net or Linus's next RC containing it into net-next, if you can.
 
+Please pull and let me know if there's any problem.
+
+Thanks,
 johannes
+
+
+
+The following changes since commit 35f432a03e41d3bf08c51ede917f94e2288fbe8c:
+
+  mac80211: initialize fast-xmit 'info' later (2017-01-02 11:28:25 +0100)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-01-06
+
+for you to fetch changes up to 753aacfd2e95df6a0caf23c03dc309020765bea9:
+
+  nl80211: fix sched scan netlink socket owner destruction (2017-01-05 10:59:53 +0100)
+
+----------------------------------------------------------------
+Another single fix, to correctly handle destruction of a
+single netlink socket having ownership of multiple objects
+(scheduled scan requests and interfaces.)
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      nl80211: fix sched scan netlink socket owner destruction
+
+ net/wireless/nl80211.c | 16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
