@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51892 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:59548 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750947AbdAMQAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 11:00:10 -0500
-Message-ID: <1484323199.8670.5.camel@sipsolutions.net> (sfid-20170113_170012_857224_60D008B8)
-Subject: Re: [RFC] [PULL REQUEST] rt2x00 patches from OpenWrt.org
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Daniel Golle <daniel@makrotopia.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, lede-dev@lists.infradead.org,
-        openwrt-devel@lists.openwrt.org, john@phrozen.org, nbd@nbd.name,
-        roman@advem.lv, evaxige@qq.com, c.mignanti@gmail.com,
-        michel.stempin@wanadoo.fr, vasilugin@yandex.ru,
-        Stanislaw Gruszka <sgruszka@redhat.com>,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Date: Fri, 13 Jan 2017 16:59:59 +0100
-In-Reply-To: <20170113154629.GG2332@makrotopia.org> (sfid-20170113_164656_743337_630DDD13)
-References: <20170113035020.GA9063@makrotopia.org>
-         <87tw93i6e7.fsf@purkki.adurom.net> <20170113154629.GG2332@makrotopia.org>
-         (sfid-20170113_164656_743337_630DDD13)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1033923AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:10:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>
+Subject: [PATCH 0/9] rt2800 patches 06.01.2017
+Date: Fri,  6 Jan 2017 14:05:09 +0100
+Message-Id: <1483707918-31480-1-git-send-email-sgruszka@redhat.com> (sfid-20170106_141124_026657_68989747)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Random fixes for rt2800 driver.
 
-> The advantage of pull requests is that author information can be
-> preserved more easily. Running git format-patch results in most
-> patches
-> having wrong SMTP sender information due to the assumption that the
-> patch author is the same person also submitting the patch.
-> So in practise, this would either require changing the From: (and
-> thus
-> Author) to myself or having most mails eaten by anti-spam measures
-> due
-> to non-matching SPF which prohibits my SMTP to send mail on behalf of
-> the original authors of the patches.
-> 
+Stanislaw Gruszka (9):
+  rt2800usb: remove watchdog
+  rt2800: increase TX timeout
+  rt2x00: save conf settings before reset tuner
+  rt2800: change default retry settings
+  rt2800: tune TX_RTS_CFG config
+  rt2800: fallback from mcs8 to mcs7
+  rt2800usb: mark tx failure on timeout
+  rt2x00: do not flush empty queue
+  rt2800: set max_psdu to 3 on usb devices
 
-This is completely untrue. If the first line of the *body* of the email
-is "From: ..." then this is preserved as the author information by git
-am, and doing so is also the default in git format-patch/send-email
-when the author doesn't match the email configuration.
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c    | 28 ++++++++-----
+ drivers/net/wireless/ralink/rt2x00/rt2800usb.c    | 49 ++---------------------
+ drivers/net/wireless/ralink/rt2x00/rt2x00config.c | 32 +++++++--------
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c    |  3 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c   |  2 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c    |  2 +-
+ 6 files changed, 41 insertions(+), 75 deletions(-)
 
-johannes
+-- 
+2.7.4
