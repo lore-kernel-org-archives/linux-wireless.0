@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:34132 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdATV1b (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 16:27:31 -0500
-Received: by mail-ot0-f195.google.com with SMTP id 73so8838068otj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 13:27:31 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 09/11] rtlwifi: btcoex: move bt_type declaration
-Date: Fri, 20 Jan 2017 15:27:14 -0600
-Message-Id: <20170120212716.29887-10-Larry.Finger@lwfinger.net> (sfid-20170120_223052_502593_4EDF0633)
-In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
-References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:34869 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753258AbdAFOc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 09:32:26 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        netdev@vger.kernel.org
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Michael Braun <michael-dev@fami-braun.de>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <21c1c361-eef0-aa53-ecd5-b5154c51462d@nbd.name> (sfid-20170106_153424_308620_C3E95ED2)
+Date: Fri, 6 Jan 2017 14:54:55 +0100
+MIME-Version: 1.0
+In-Reply-To: <1483710841.12677.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ping-Ke Shih <pkshih@realtek.com>
+On 2017-01-06 14:54, Johannes Berg wrote:
+> 
+>> The bridge layer can use IGMP snooping to ensure that the multicast
+>> stream is only transmitted to clients that are actually a member of
+>> the group. Can the mac80211 feature do the same?
+> 
+> No, it'll convert the packet for all clients that are behind that
+> netdev. But that's an argument for dropping the mac80211 feature, which
+> hasn't been merged upstream yet, no?
+Right.
 
-Routine rtl_get_hwpg_bt_type() is better in halbtcoutsrc.c than in
-rtl_btc.c.
-
-Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c | 5 +++++
- drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c      | 5 -----
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index 1cc955e..9a89ae0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -151,6 +151,11 @@ u8 rtl_get_hwpg_single_ant_path(struct rtl_priv *rtlpriv)
- 	return rtlpriv->btcoexist.btc_info.single_ant_path;
- }
- 
-+u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
-+{
-+	return rtlpriv->btcoexist.btc_info.bt_type;
-+}
-+
- u8 rtl_get_hwpg_ant_num(struct rtl_priv *rtlpriv)
- {
- 	u8 num;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index 54e893c..46e0fa6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -198,11 +198,6 @@ u8 rtl_get_hwpg_bt_exist(struct rtl_priv *rtlpriv)
- 	return rtlpriv->btcoexist.btc_info.btcoexist;
- }
- 
--u8 rtl_get_hwpg_bt_type(struct rtl_priv *rtlpriv)
--{
--	return rtlpriv->btcoexist.btc_info.bt_type;
--}
--
- MODULE_AUTHOR("Page He	<page_he@realsil.com.cn>");
- MODULE_AUTHOR("Realtek WlanFAE	<wlanfae@realtek.com>");
- MODULE_AUTHOR("Larry Finger	<Larry.FInger@lwfinger.net>");
--- 
-2.10.2
+- Felix
