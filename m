@@ -1,49 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47736 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751053AbdA3Lkd (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:36250 "EHLO
+        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968793AbdAFWkQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 06:40:33 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: [PATCH] iwlwifi: alloc memory dynamically also for DVM
-References: <87efzmt11g.fsf@kamboji.qca.qualcomm.com>
-        <20170130103432.24613-1-luca@coelho.fi>
-Date: Mon, 30 Jan 2017 13:40:23 +0200
-In-Reply-To: <20170130103432.24613-1-luca@coelho.fi> (Luca Coelho's message of
-        "Mon, 30 Jan 2017 12:34:32 +0200")
-Message-ID: <87poj4srmg.fsf@kamboji.qca.qualcomm.com> (sfid-20170130_124306_742413_053B0A66)
+        Fri, 6 Jan 2017 17:40:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6ryhvkSaHgU9igshnMjNg=wgeXd3p57VXxbr0ykoEtLH_g@mail.gmail.com>
+References: <20170106152043.GA6383@rahul> <CACna6ryhvkSaHgU9igshnMjNg=wgeXd3p57VXxbr0ykoEtLH_g@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 6 Jan 2017 23:40:14 +0100
+Message-ID: <CACna6ryFVOQbuAV+EzAFbG4E-rJ=vxmbV0eAZFnXkdyUyTf-7Q@mail.gmail.com> (sfid-20170106_234100_933846_EFDFF014)
+Subject: Re: [PATCH] ssb: main.c: This patch removes unnecessary return
+ statement using spatch tool
+To: Rahul Krishnan <mrahul.krishnan@gmail.com>
+Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On 6 January 2017 at 23:39, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrot=
+e:
+> On 6 January 2017 at 16:20, Rahul Krishnan <mrahul.krishnan@gmail.com> wr=
+ote:
+>> This patch removes unnecessary return statement using spatch.
+>> Signed-off-by: Rahul Krishnan <mrahul.krishnan@gmail.com>
 
-> From: Sara Sharon <sara.sharon@intel.com>
->
-> For old firmwares the memory wasn't allocated, resulting in panic.
-> Make it dynamically allocated as well. Allow any order of functions
-> call.
->
-> Fixes: eef187a7b8a1 ("iwlwifi: enlarge number of ucode sections")
-> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
->
-> Kalle,
->
-> Could you test this patch to see if it solves the problem?
-
-It does, thank you for quickly fixing this.
-
-Tested-by: Kalle Valo <kvalo@codeaurora.org>
-
-As this is a serious regression can I apply this directly to
-wireless-drivers-next?
-
--- 
-Kalle Valo
+Also an extra line break above Signed-off-by is preferred. Look at
+"git log" to get am overview.
