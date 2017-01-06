@@ -1,163 +1,268 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36672 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752505AbdAZHeN (ORCPT
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:33284 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932827AbdAFVdx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 02:34:13 -0500
-From: Luca Coelho <luca@coelho.fi>
+        Fri, 6 Jan 2017 16:33:53 -0500
+Received: by mail-ua0-f196.google.com with SMTP id d5so36879311uag.0
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2017 13:33:53 -0800 (PST)
+Received: from localhost.localdomain ([190.232.43.60])
+        by smtp.gmail.com with ESMTPSA id e2sm2059901uae.6.2017.01.06.13.33.51
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 06 Jan 2017 13:33:51 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Thu, 26 Jan 2017 09:34:01 +0200
-Message-Id: <20170126073401.20600-1-luca@coelho.fi> (sfid-20170126_083418_387955_2EAC0110)
-In-Reply-To: <20170123220350.25305-25-luca@coelho.fi>
-References: <20170123220350.25305-25-luca@coelho.fi>
-Subject: [PATCH v2] iwlwifi: mvm: use mvm_disable_queue instead of sharing logic
+Subject: [PATCH v5] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
+Date: Fri,  6 Jan 2017 16:33:43 -0500
+Message-Id: <20170106213343.6598-1-andrew.zaborowski@intel.com> (sfid-20170106_223357_427320_4F3F254F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Disconnect or deauthenticate when the owning socket is closed if this
+flag is supplied to CMD_CONNECT or CMD_ASSOCIATE.  This may be used
+to ensure userspace daemon doesn't leave an unmanaged connection behind.
 
-When removing inactive queue - use the central disable queue
-function. This is needed due to a000 changes to come, but is
-a proper cleanup anyway.
+In some situations it would be possible to account for that, to some
+degree, in the deamon restart code or in the up/down scripts without
+the use of this attribute.  But there will be systems where the daemon
+can go away for varying periods without a warning due to local resource
+management.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
+changes in v2:
+ - add wdev.disconnect_bssid so we can deauthenticate from a BSS before
+   association finishes
+ - dropped CMD_AUTHENTICATE changes
+changes in v3:
+ - commit message fix
+changes in v4:
+ - move cfg80211_autodisconnect_wk to sme.c
+ - drop two "wdev->conn_owner_nlportid = 0" lines in nl80211.c found redundant
+ - use wdev_lock when setting wdev->conn_owner_nlportid
+ - drop wdev->netdev check in cfg80211_autodisconnect_wk
+changes in v5:
+ - in nl80211_netlink_notify schedule disconnect_wk even if another wdev
+   is wdev is owned by the nlportid and is being destroyed
+ - in cfg80211_mlme_deauth check the bssid is of the current bss or
+   disconnect_bssid
+ - set disconnect_bssid in nl80211_connect if bssid supplied
+---
+ include/net/cfg80211.h       |  7 +++++++
+ include/uapi/linux/nl80211.h |  2 ++
+ net/wireless/core.c          |  3 +++
+ net/wireless/core.h          |  1 +
+ net/wireless/mlme.c          |  5 +++++
+ net/wireless/nl80211.c       | 26 +++++++++++++++++++++++++-
+ net/wireless/sme.c           | 33 +++++++++++++++++++++++++++++++++
+ 7 files changed, 76 insertions(+), 1 deletion(-)
 
-In v2:
-
-iwl_mvm_disable_txq() returns early if the hw_ref_count is
-zeroed, with the result of the queue not being properly disabled.
-Avoid zeroing it and other queue information in remove_sta_marking().
-iwl_mvm_disable_txq() which is called later in the flow will zero
-it.
-
-drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 29 +++++++-------------------
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 10 +++++----
- 3 files changed, 16 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 4a9cb76b7611..a672aa71c656 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1657,8 +1657,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-  * Disable a TXQ.
-  * Note that in non-DQA mode the %mac80211_queue and %tid params are ignored.
-  */
--void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
--			 u8 tid, u8 flags);
-+int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+			u8 tid, u8 flags);
- int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 814be4b..57383a1 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3837,6 +3837,9 @@ struct cfg80211_cached_keys;
+  * @conn: (private) cfg80211 software SME connection state machine data
+  * @connect_keys: (private) keys to set after connection is established
+  * @conn_bss_type: connecting/connected BSS type
++ * @conn_owner_nlportid: (private) connection owner socket port ID
++ * @disconnect_wk: (private) auto-disconnect work
++ * @disconnect_bssid: (private) the BSSID to use for auto-disconnect
+  * @ibss_fixed: (private) IBSS is using fixed BSSID
+  * @ibss_dfs_possible: (private) IBSS may change to a DFS channel
+  * @event_list: (private) list for internal event processing
+@@ -3868,6 +3871,10 @@ struct wireless_dev {
+ 	struct cfg80211_conn *conn;
+ 	struct cfg80211_cached_keys *connect_keys;
+ 	enum ieee80211_bss_type conn_bss_type;
++	u32 conn_owner_nlportid;
++
++	struct work_struct disconnect_wk;
++	u8 disconnect_bssid[ETH_ALEN];
  
- /* Return a bitmask with all the hw supported queues, except for the
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index cf8222a8b588..40e7fc5f1f1f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -454,13 +454,6 @@ static int iwl_mvm_remove_sta_queue_marking(struct iwl_mvm *mvm, int queue)
+ 	struct list_head event_list;
+ 	spinlock_t event_lock;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6b76e3b..455ed9b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1820,6 +1820,8 @@ enum nl80211_commands {
+  *	and remove functions. NAN notifications will be sent in unicast to that
+  *	socket. Without this attribute, any socket can add functions and the
+  *	notifications will be sent to the %NL80211_MCGRP_NAN multicast group.
++ *	If set during %NL80211_CMD_ASSOCIATE or %NL80211_CMD_CONNECT the
++ *	station will deauthenticate when the socket is closed.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 158c59e..903fc41 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1142,6 +1142,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
  
- 	rcu_read_unlock();
++		INIT_WORK(&wdev->disconnect_wk, cfg80211_autodisconnect_wk);
++
+ 		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+@@ -1230,6 +1232,7 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ #ifdef CONFIG_CFG80211_WEXT
+ 			kzfree(wdev->wext.keys);
+ #endif
++			flush_work(&wdev->disconnect_wk);
+ 		}
+ 		/*
+ 		 * synchronise (so that we won't find this netdev
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index af6e023..9d1a030 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -400,6 +400,7 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
+ 		       const u8 *resp_ie, size_t resp_ie_len);
+ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev);
++void cfg80211_autodisconnect_wk(struct work_struct *work);
  
--	spin_lock_bh(&mvm->queue_info_lock);
--	/* Unmap MAC queues and TIDs from this queue */
--	mvm->queue_info[queue].hw_queue_to_mac80211 = 0;
--	mvm->queue_info[queue].hw_queue_refcount = 0;
--	mvm->queue_info[queue].tid_bitmap = 0;
--	spin_unlock_bh(&mvm->queue_info_lock);
--
- 	return disable_agg_tids;
+ /* SME implementation */
+ void cfg80211_conn_work(struct work_struct *work);
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 4646cf5..1c63a77 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -345,6 +345,11 @@ int cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 	     !ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
+ 		return 0;
+ 
++	if (ether_addr_equal(wdev->disconnect_bssid, bssid) ||
++	    (wdev->current_bss &&
++	     ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
++		wdev->conn_owner_nlportid = 0;
++
+ 	return rdev_deauth(rdev, dev, &req);
  }
  
-@@ -755,28 +748,22 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	 * first
- 	 */
- 	if (using_inactive_queue) {
--		struct iwl_scd_txq_cfg_cmd cmd = {
--			.scd_queue = queue,
--			.action = SCD_CFG_DISABLE_QUEUE,
--		};
--		u8 txq_curr_ac;
--
--		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
-+		u8 txq_curr_ac, sta_id;
- 
- 		spin_lock_bh(&mvm->queue_info_lock);
- 		txq_curr_ac = mvm->queue_info[queue].mac80211_ac;
--		cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
--		cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[txq_curr_ac];
--		cmd.tid = mvm->queue_info[queue].txq_tid;
-+		sta_id = mvm->queue_info[queue].ra_sta_id;
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
-+		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
- 		/* Disable the queue */
- 		if (disable_agg_tids)
- 			iwl_mvm_invalidate_sta_queue(mvm, queue,
- 						     disable_agg_tids, false);
--		iwl_trans_txq_disable(mvm->trans, queue, false);
--		ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd),
--					   &cmd);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ef5eff93..cc05d36 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8053,8 +8053,17 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
+ 	err = nl80211_crypto_settings(rdev, info, &req.crypto, 1);
+ 	if (!err) {
+ 		wdev_lock(dev->ieee80211_ptr);
 +
-+		ret = iwl_mvm_disable_txq(mvm, queue,
-+					  mvmsta->vif->hw_queue[txq_curr_ac],
-+					  tid, 0);
- 		if (ret) {
- 			IWL_ERR(mvm,
- 				"Failed to free inactive queue %d (ret=%d)\n",
-@@ -791,7 +778,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 		err = cfg80211_mlme_assoc(rdev, dev, chan, bssid,
+ 					  ssid, ssid_len, &req);
++
++		if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++			dev->ieee80211_ptr->conn_owner_nlportid =
++				info->snd_portid;
++			memcpy(dev->ieee80211_ptr->disconnect_bssid,
++			       bssid, ETH_ALEN);
++		}
++
+ 		wdev_unlock(dev->ieee80211_ptr);
+ 	}
+ 
+@@ -8773,11 +8782,24 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	}
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
++
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys,
+ 			       connect.prev_bssid);
+-	wdev_unlock(dev->ieee80211_ptr);
+ 	if (err)
+ 		kzfree(connkeys);
++
++	if (!err && info->attrs[NL80211_ATTR_SOCKET_OWNER]) {
++		dev->ieee80211_ptr->conn_owner_nlportid = info->snd_portid;
++		if (connect.bssid)
++			memcpy(dev->ieee80211_ptr->disconnect_bssid,
++			       connect.bssid, ETH_ALEN);
++		else
++			memset(dev->ieee80211_ptr->disconnect_bssid,
++			       0, ETH_ALEN);
++	}
++
++	wdev_unlock(dev->ieee80211_ptr);
++
+ 	return err;
+ }
+ 
+@@ -14519,6 +14541,8 @@ static int nl80211_netlink_notify(struct notifier_block * nb,
+ 
+ 			if (wdev->owner_nlportid == notify->portid)
+ 				schedule_destroy_work = true;
++			else if (wdev->conn_owner_nlportid == notify->portid)
++				schedule_work(&wdev->disconnect_wk);
  		}
  
- 		/* If TXQ is allocated to another STA, update removal in FW */
--		if (cmd.sta_id != mvmsta->sta_id)
-+		if (sta_id != mvmsta->sta_id)
- 			iwl_mvm_invalidate_sta_queue(mvm, queue, 0, true);
- 	}
+ 		spin_lock_bh(&rdev->beacon_registrations_lock);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 5e0d193..4669391 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -727,6 +727,7 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		kzfree(wdev->connect_keys);
+ 		wdev->connect_keys = NULL;
+ 		wdev->ssid_len = 0;
++		wdev->conn_owner_nlportid = 0;
+ 		if (bss) {
+ 			cfg80211_unhold_bss(bss_from_pub(bss));
+ 			cfg80211_put_bss(wdev->wiphy, bss);
+@@ -955,6 +956,7 @@ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index d04babd99b53..2beea3b98e52 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -706,8 +706,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	}
- }
+ 	wdev->current_bss = NULL;
+ 	wdev->ssid_len = 0;
++	wdev->conn_owner_nlportid = 0;
  
--void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
--			 u8 tid, u8 flags)
-+int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+			u8 tid, u8 flags)
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
-@@ -720,7 +720,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	nl80211_send_disconnected(rdev, dev, reason, ie, ie_len, from_ap);
  
- 	if (WARN_ON(mvm->queue_info[queue].hw_queue_refcount == 0)) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
--		return;
-+		return 0;
- 	}
+@@ -1098,6 +1100,8 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 	kzfree(wdev->connect_keys);
+ 	wdev->connect_keys = NULL;
  
- 	mvm->queue_info[queue].tid_bitmap &= ~BIT(tid);
-@@ -760,7 +760,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	/* If the queue is still enabled - nothing left to do in this func */
- 	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
--		return;
-+		return 0;
- 	}
- 
- 	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
-@@ -791,6 +791,8 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to disable queue %d (ret=%d)\n",
- 			queue, ret);
++	wdev->conn_owner_nlportid = 0;
 +
-+	return ret;
- }
+ 	if (wdev->conn)
+ 		err = cfg80211_sme_disconnect(wdev, reason);
+ 	else if (!rdev->ops->disconnect)
+@@ -1107,3 +1111,32 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
  
- /**
+ 	return err;
+ }
++
++/*
++ * Used to clean up after the connection / connection attempt owner socket
++ * disconnects
++ */
++void cfg80211_autodisconnect_wk(struct work_struct *work)
++{
++	struct wireless_dev *wdev =
++		container_of(work, struct wireless_dev, disconnect_wk);
++	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
++
++	wdev_lock(wdev);
++
++	if (wdev->conn_owner_nlportid) {
++		/*
++		 * Use disconnect_bssid if still connecting and ops->disconnect
++		 * not implemented.  Otherwise we can use cfg80211_disconnect.
++		 */
++		if (rdev->ops->disconnect || wdev->current_bss)
++			cfg80211_disconnect(rdev, wdev->netdev,
++					    WLAN_REASON_DEAUTH_LEAVING, true);
++		else
++			cfg80211_mlme_deauth(rdev, wdev->netdev,
++					     wdev->disconnect_bssid, NULL, 0,
++					     WLAN_REASON_DEAUTH_LEAVING, false);
++	}
++
++	wdev_unlock(wdev);
++}
 -- 
-2.11.0
+2.9.3
