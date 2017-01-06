@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40084 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60140 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933271AbdABOdd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 09:33:33 -0500
-Message-ID: <1483367607.21014.9.camel@sipsolutions.net> (sfid-20170102_153340_754932_2E2A853E)
-Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
- exchange
+        id S936843AbdAFNAF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:00:05 -0500
+Message-ID: <1483707597.12677.0.camel@sipsolutions.net> (sfid-20170106_140112_610579_481F5847)
+Subject: Re: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11
+ frequency limit property
 From: Johannes Berg <johannes@sipsolutions.net>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
-        jouni@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, vamsin@qti.qualcomm.com
-Date: Mon, 02 Jan 2017 15:33:27 +0100
-In-Reply-To: <c7eaea82-a5be-d047-c67a-ce9e58b4b65f@quantenna.com>
-References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
-         <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
-         <1483356523.4596.12.camel@sipsolutions.net>
-         <c7eaea82-a5be-d047-c67a-ce9e58b4b65f@quantenna.com>
+To: Rob Herring <robh+dt@kernel.org>
+Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Date: Fri, 06 Jan 2017 13:59:57 +0100
+In-Reply-To: <CAL_JsqKYpTZFRJpPR1V9MmA-JW5ntoKzbkjwnYBp9HMWLObG3A@mail.gmail.com>
+References: <20170104175832.25996-1-zajec5@gmail.com>
+         <CAL_JsqLg5YkC-YUHg6mQ35nmGaG7SC33VJB++fgtZsu1fRV-7Q@mail.gmail.com>
+         <1483617089.4394.13.camel@sipsolutions.net>
+         <CAL_JsqKYpTZFRJpPR1V9MmA-JW5ntoKzbkjwnYBp9HMWLObG3A@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, 2017-01-05 at 10:34 -0600, Rob Herring wrote:
+> On Thu, Jan 5, 2017 at 5:51 AM, Johannes Berg <johannes@sipsolutions.
+> net> wrote:
+> > 
+> > > Acked-by: Rob Herring <robh@kernel.org>
+> > 
+> > Do I take that to mean that we'll merge it through the subsystem
+> > tree,
+> > and not go through some common DT tree?
+> 
+> Yes, that's generally the case when bindings are in a series with
+> driver changes.
 
-> Acknowledgment is done for transmitter<->receiver addresses,
-> not for source<->destination?
+Alright, thanks.
 
-Well, these are management frames, there either are no SA/DA or they're
-identical to RA/TA, depending on how you want to look at it. Typically
-it does get called SA/DA too then.
+I've applied patches 1-3, patch 4 obviously still needs work (and
+probably won't go through my tree anyway.)
 
-> Patch talks about source address randomization, but I guess it
-> actually
->   meant transmitter address (basically dynamic BSSID config?). Maybe
-> naming should be changed in the patch.
-
-Yes, I suppose TA might be a tad more accurate.
-
-BSSID is another (unrelated) address.
-
-> For NL80211_EXT_FEATURE_MGMT_TX_RANDOM_SA_CONNECTED case,
-> I wonder if HW can be configured to not filter-out multiple BSSIDs
-> or 
-> the idea
-> is that while random_sa frame is pending for ACK, HW will drop all 
-> frames destined
-> for initially configured BSSID?
-
-Again, BSSID is unrelated (unless you're restricting yourself to the AP
-STA case where BSSID == local MAC address).
-
-And no, traffic would not be permitted to be dropped in this case, IMO
+Note that I made some documentation fixes in patch 3, Rafał, please
+check.
 
 johannes
