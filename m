@@ -1,66 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35992 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933373AbdABQcZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 11:32:25 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Received: from nbd.name ([46.4.11.11]:33623 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751428AbdAFNww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 6 Jan 2017 08:52:52 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
 To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V3 1/2] dt-bindings: document common IEEE 802.11 frequency limit property
-Date: Mon,  2 Jan 2017 17:32:07 +0100
-Message-Id: <20170102163209.2445-1-zajec5@gmail.com> (sfid-20170102_173243_174518_8AB82DF0)
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        netdev@vger.kernel.org
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Michael Braun <michael-dev@fami-braun.de>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <8836daaa-9638-4502-d079-fd428595f822@nbd.name> (sfid-20170106_145320_210283_3D6E93A1)
+Date: Fri, 6 Jan 2017 14:52:47 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1483706872.4089.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On 2017-01-06 13:47, Johannes Berg wrote:
+> On Mon, 2017-01-02 at 20:32 +0100, Linus Lüssing wrote:
+>> Implements an optional, per bridge port flag and feature to deliver
+>> multicast packets to any host on the according port via unicast
+>> individually. This is done by copying the packet per host and
+>> changing the multicast destination MAC to a unicast one accordingly.
+> 
+> How does this compare and/or relate to the multicast-to-unicast feature
+> we were going to add to the wifi stack, particularly mac80211? Do we
+> perhaps not need that feature at all, if bridging will have it?
+> 
+> I suppose that the feature there could apply also to locally generated
+> traffic when the AP interface isn't in a bridge, but I think I could
+> live with requiring the AP to be put into a bridge to achieve a similar
+> configuration?
+> 
+> Additionally, on an unrelated note, this seems to apply generically to
+> all kinds of frames, losing information by replacing the address.
+> Shouldn't it have similar limitations as the wifi stack feature has
+> then, like only applying to ARP, IPv4, IPv6 and not general protocols?
+> 
+> Also, it should probably come with the same caveat as we documented for
+> the wifi feature:
+> 
+>     Note that this may break certain expectations of the receiver,
+>     such as the ability to drop unicast IP packets received within
+>     multicast L2 frames, or the ability to not send ICMP destination
+>     unreachable messages for packets received in L2 multicast (which
+>     is required, but the receiver can't tell the difference if this
+>     new option is enabled.)
+> 
+> 
+> I'll hold off sending my tree in until we see that we really need both
+> features, or decide that we want the wifi feature *instead* of the
+> bridge feature.
+The bridge layer can use IGMP snooping to ensure that the multicast
+stream is only transmitted to clients that are actually a member of the
+group. Can the mac80211 feature do the same?
 
-This new file should be used for properties that apply to all wireless
-devices.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Switch to a single ieee80211-freq-limit property that allows specifying
-    *multiple* ranges. This resolves problem with more complex rules as pointed
-    by Felx.
-    Make description implementation agnostic as pointed by Arend.
-    Rename node to wifi as suggested by Martin.
-V3: Use more real-life frequencies in the example.
----
- .../devicetree/bindings/net/wireless/ieee80211.txt     | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-new file mode 100644
-index 0000000..0cd1219
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-@@ -0,0 +1,18 @@
-+Common IEEE 802.11 properties
-+
-+This provides documentation of common properties that are valid for all wireless
-+devices.
-+
-+Optional properties:
-+ - ieee80211-freq-limit : list of supported frequency ranges in KHz
-+
-+Example:
-+
-+pcie@0,0 {
-+	reg = <0x0000 0 0 0 0>;
-+	wifi@0,0 {
-+		reg = <0x0000 0 0 0 0>;
-+		ieee80211-freq-limit = <2402000 2482000>,
-+				       <5170000 5250000>;
-+	};
-+};
--- 
-2.10.1
+- Felix
