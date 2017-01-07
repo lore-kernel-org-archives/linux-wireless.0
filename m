@@ -1,125 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48262 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751298AbdAMIyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 03:54:39 -0500
-Subject: Re: [PATCH] mac80211: initialize SMPS field in HT capabilities
-To: Johannes Berg <johannes@sipsolutions.net>,
+Received: from mail.aperture-lab.de ([138.201.29.205]:32944 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753209AbdAGOzT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 7 Jan 2017 09:55:19 -0500
+Date: Sat, 7 Jan 2017 15:55:16 +0100
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To: "M. Braun" <michael-dev@fami-braun.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
         linux-wireless@vger.kernel.org
-References: <20170111223322.14698-1-nbd@nbd.name>
- <1484295655.19860.9.camel@sipsolutions.net>
-Cc: onelektra@gmx.net
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <ba04d61c-3f80-573f-3108-c94a9c991404@nbd.name> (sfid-20170113_095445_796154_72B53E86)
-Date: Fri, 13 Jan 2017 09:54:35 +0100
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+Message-ID: <20170107145516.GE3134@otheros> (sfid-20170107_155556_187218_2E5F5D7E)
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
 MIME-Version: 1.0
-In-Reply-To: <1484295655.19860.9.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-13 09:20, Johannes Berg wrote:
-> On Wed, 2017-01-11 at 23:33 +0100, Felix Fietkau wrote:
->> ibss and mesh modes copy the ht capabilites from the band without
->> overriding the SMPS state. Unfortunately the default value 0 for the
->> SMPS field means static SMPS instead of disabled.
->> 
->> This results in HT ibss and mesh setups using only single-stream
->> rates,
->> even though SMPS is not supposed to be active.
->> 
->> Initialize SMPS to disabled for all bands on ieee80211_hw_register to
->> ensure that the value is sane where it is not overriden with the real
->> SMPS state.
+On Sat, Jan 07, 2017 at 11:32:57AM +0100, M. Braun wrote:
+> Am 06.01.2017 um 14:54 schrieb Johannes Berg:
+> > 
+> >> The bridge layer can use IGMP snooping to ensure that the multicast
+> >> stream is only transmitted to clients that are actually a member of
+> >> the group. Can the mac80211 feature do the same?
+> > 
+> > No, it'll convert the packet for all clients that are behind that
+> > netdev. But that's an argument for dropping the mac80211 feature, which
+> > hasn't been merged upstream yet, no?
 > 
-> Hmm. I guess the only other place affected by it will be scanning?
-Right.
-
->> Reported-by: Elektra Wagenrad <onelektra@gmx.net>
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> ---
->>  net/mac80211/main.c | 13 +++++++++----
->>  1 file changed, 9 insertions(+), 4 deletions(-)
->> 
->> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
->> index 1822c77f2b1c..c269046aa02b 100644
->> --- a/net/mac80211/main.c
->> +++ b/net/mac80211/main.c
->> @@ -913,10 +913,15 @@ int ieee80211_register_hw(struct ieee80211_hw
->> *hw)
->>  		supp_ht = supp_ht || sband->ht_cap.ht_supported;
->>  		supp_vht = supp_vht || sband->vht_cap.vht_supported;
->>  
->> -		if (sband->ht_cap.ht_supported)
->> -			local->rx_chains =
->> -				max(ieee80211_mcs_to_chains(&sband-
->> >ht_cap.mcs),
->> -				    local->rx_chains);
->> +		if (!sband->ht_cap.ht_supported)
->> +			continue;
->> +
->> +		local->rx_chains =
->> +			max(ieee80211_mcs_to_chains(&sband-
->> >ht_cap.mcs),
->> +			    local->rx_chains);
->> +
->> +		sband->ht_cap.cap |= WLAN_HT_CAP_SM_PS_DISABLED <<
->> +			             IEEE80211_HT_CAP_SM_PS_SHIFT;
+> But there is multicast/broadcast traffic like e.g. ARP and some IP
+> multicast groups that are not covered by IGMP snooping. The mac80211
+> patch converts this to unicast as well, which the bridge cannot do.
 > 
-> This ... looks fishy. I know it's not, since it sets both bits, but
-> still.
-> 
-> Additionally, ath10k appears to be setting this to
-> WLAN_HT_CAP_SM_PS_DYNAMIC already, so apparently it's expecting
-> something to happen with that value? Is it really correct then to be
-> overwriting it?
-Actually, that code seems to leave the value at 
-WLAN_HT_CAP_SM_PS_DISABLED, because it sets that first and doesn't mask
-out the field before trying to set it to WLAN_HT_CAP_SM_PS_DYNAMIC.
-I don't think it even makes sense to set WLAN_HT_CAP_SM_PS_DYNAMIC at
-this point, since it's up to mac80211 to deal with the SMPS state.
+> That way, these features both complement and overlap each other.
 
-Either way, WLAN_HT_CAP_SM_PS_STATIC is a really bad default to have at
-init time. If you want, I can change the patch to check for that value
-before changing it, but I don't really see the point.
+Right, I'd agree with that.
 
-Additionally, I found this ath10k commit:
+I didn't write it explicitly in the commit message, but yes, the
+like anything concerning bridge multicast snooping, bridge
+multicast-to-unicast can only affect packets as noted in
+RFC4541 ("Considerations for Internet Group Management Protocol (IGMP)
+and Multicast Listener Discovery (MLD) Snooping Switches"), too.
+
+So it is only working for IPv4 multicast, excluding link-local
+(224.0.0.0/24), and IPv6 multicast, excluding all-host-multicast
+(ff02::1).
+
+And does not concern ARP in any way.
 
 
-commit e33a99e227e430a788467e5a85dc29f6df16b983
-Author: Peter Oh <poh@qca.qualcomm.com>
-Date:   Thu Dec 31 15:26:20 2015 +0200
+The nice complementary effect is, that the bridge can first sieve
+out those IP packets thanks to IGMP/MLD snooping knowledge and for
+anything else, like ARP, 224.0.0.x or ff02::1, the mac80211
+multicast-to-unicast could do its job.
 
-    ath10k: set SM power save disabled to default value
-    
-    Use SMPS disabled as default because FW does not indicate
-    any support of SMPS.
-    
-    This change will help STAs out that don’t support SMPS from
-    sticking on 1SS, since they don’t have method to change it
-    back to multiple chains.
-    
-    This change also should not affect power consumption of STAs
-    supporting SMPS, because they are capable to switch the mode
-    to dynamic or static either at the end of frame sequence or
-    by using SMPS action frame.
-    
-    Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b4bdeb07a012..6146a293601a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3860,7 +3860,8 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
-        ht_cap.ampdu_density = IEEE80211_HT_MPDU_DENSITY_8;
-        ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-        ht_cap.cap |= IEEE80211_HT_CAP_DSSSCCK40;
--       ht_cap.cap |= WLAN_HT_CAP_SM_PS_STATIC << IEEE80211_HT_CAP_SM_PS_SHIFT;
-+       ht_cap.cap |=
-+               WLAN_HT_CAP_SM_PS_DISABLED << IEEE80211_HT_CAP_SM_PS_SHIFT;
- 
-        if (ar->ht_cap_info & WMI_HT_CAP_HT20_SGI)
-                ht_cap.cap |= IEEE80211_HT_CAP_SGI_20;
-
-- Felix
+For APs with a small number of STAs (like your private home AP),
+you might want to enable both bridge multicast-to-unicast and
+mac80211 multicast-to-unicast for this complementary effect. While
+on public APs with 30 to 50 STAs with varying distances and bitrates,
+you might only one to enable the bridge one, because sending an ARP
+packet 50x might actually reduce performance and airtime
+significantly.
