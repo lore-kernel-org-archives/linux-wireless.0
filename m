@@ -1,48 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:33064 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752079AbdAaTWj (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33794 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750945AbdAGWn4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:39 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Timur Tabi <timur@codeaurora.org>
-Subject: [PATCH 4.10-rc3 08/13] net: emac: fix build errors when linux/phy*.h
- is removed from net/dsa.h
+        Sat, 7 Jan 2017 17:43:56 -0500
+Received: by mail-lf0-f66.google.com with SMTP id q89so2676977lfi.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2017 14:43:55 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: make brcmf_of_probe more generic
+Date: Sat,  7 Jan 2017 23:43:45 +0100
+Message-Id: <20170107224345.3079-1-zajec5@gmail.com> (sfid-20170107_234400_123899_43F2AE82)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdxI-0000Wk-5w@rmk-PC.armlinux.org.uk> (sfid-20170131_202438_807795_4D265400)
-Date: Tue, 31 Jan 2017 19:19:04 +0000
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/ethernet/qualcomm/emac/emac-sgmii.c:58:12: error: dereferencing pointer to incomplete type 'struct phy_device'
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Add linux/phy.h to emac-sgmii.c
+We may want to use Open Firmware for other devices than just SDIO ones.
+In future we may want to support more Broadcom properties so there is
+really no reason for such limitation.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Call brcmf_of_probe for all kind of devices & move extra conditions to
+the body of that funcion.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/ethernet/qualcomm/emac/emac-sgmii.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 8 +++-----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c     | 7 +++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h     | 6 ++++--
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/ethernet/qualcomm/emac/emac-sgmii.c b/drivers/net/ethernet/qualcomm/emac/emac-sgmii.c
-index bf722a9bb09d..5e31fb7e4ab8 100644
---- a/drivers/net/ethernet/qualcomm/emac/emac-sgmii.c
-+++ b/drivers/net/ethernet/qualcomm/emac/emac-sgmii.c
-@@ -16,6 +16,7 @@
- #include <linux/iopoll.h>
- #include <linux/acpi.h>
- #include <linux/of_device.h>
-+#include <linux/phy.h>
- #include "emac.h"
- #include "emac-mac.h"
- #include "emac-sgmii.h"
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 3e15d64..b1f574f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -299,11 +299,9 @@ struct brcmf_mp_device *brcmf_get_module_param(struct device *dev,
+ 			}
+ 		}
+ 	}
+-	if ((bus_type == BRCMF_BUSTYPE_SDIO) && (!found)) {
+-		/* No platform data for this device. In case of SDIO try OF
+-		 * (Open Firwmare) Device Tree.
+-		 */
+-		brcmf_of_probe(dev, &settings->bus.sdio);
++	if (!found) {
++		/* No platform data for this device, try OF (Open Firwmare) */
++		brcmf_of_probe(dev, bus_type, settings);
+ 	}
+ 	return settings;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+index 425c41d..aee6e59 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+@@ -23,14 +23,17 @@
+ #include "common.h"
+ #include "of.h"
+ 
+-void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd *sdio)
++void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
++		    struct brcmf_mp_device *settings)
+ {
++	struct brcmfmac_sdio_pd *sdio = &settings->bus.sdio;
+ 	struct device_node *np = dev->of_node;
+ 	int irq;
+ 	u32 irqf;
+ 	u32 val;
+ 
+-	if (!np || !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
++	if (!np || bus_type != BRCMF_BUSTYPE_SDIO ||
++	    !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
+ 		return;
+ 
+ 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
+index a9d94c1..95b7032 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
+@@ -14,9 +14,11 @@
+  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ #ifdef CONFIG_OF
+-void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd *sdio);
++void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
++		    struct brcmf_mp_device *settings);
+ #else
+-static void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd *sdio)
++static void brcmf_of_probe(struct device *dev, enum brcmf_bus_type bus_type,
++			   struct brcmf_mp_device *settings)
+ {
+ }
+ #endif /* CONFIG_OF */
 -- 
-2.7.4
+2.10.1
