@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34180 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751467AbdAQWzz (ORCPT
+Received: from mail-pg0-f53.google.com ([74.125.83.53]:35291 "EHLO
+        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936590AbdAGDN7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 17:55:55 -0500
-Received: by mail-pf0-f196.google.com with SMTP id y143so17072741pfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 14:55:55 -0800 (PST)
-From: gavinli@thegavinli.com
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Cc: stable@vger.kernel.org, Gavin Li <git@thegavinli.com>
-Subject: [PATCH] brcmfmac: fix incorrect event channel deduction
-Date: Tue, 17 Jan 2017 14:55:45 -0800
-Message-Id: <20170117225545.6706-1-gavinli@thegavinli.com> (sfid-20170117_235613_017405_181371C0)
+        Fri, 6 Jan 2017 22:13:59 -0500
+Received: by mail-pg0-f53.google.com with SMTP id i5so192780584pgh.2
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2017 19:13:59 -0800 (PST)
+Date: Fri, 6 Jan 2017 19:13:56 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Linus =?UTF-8?B?TMO8c3Npbmc=?= <linus.luessing@c0d3.blue>
+Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+Message-ID: <20170106191356.43740a26@xeon-e3> (sfid-20170107_041434_695334_095060C9)
+In-Reply-To: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gavin Li <git@thegavinli.com>
+On Mon,  2 Jan 2017 20:32:14 +0100
+Linus L=C3=BCssing <linus.luessing@c0d3.blue> wrote:
 
-brcmf_sdio_fromevntchan() was being called on the the data frame
-rather than the software header, causing some frames to be
-mischaracterized as on the event channel rather than the data channel.
+> This feature is intended for interface types which have a more reliable
+> and/or efficient way to deliver unicast packets than broadcast ones
+> (e.g. wifi).
 
-This fixes a major performance regression (due to dropped packets).
 
-Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
-Signed-off-by: Gavin Li <git@thegavinli.com>
-Cc: <stable@vger.kernel.org> [4.6+]
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index dfb0658713d9..d2219885071f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 					   pfirst->len, pfirst->next,
- 					   pfirst->prev);
- 			skb_unlink(pfirst, &bus->glom);
--			if (brcmf_sdio_fromevntchan(pfirst->data))
-+			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
- 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
- 			else
- 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
--- 
-2.11.0
+Why is this not done in MAC80211 rather than  bridge?
