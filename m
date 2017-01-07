@@ -1,164 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:39839 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751281AbdAPDGE (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35209 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935166AbdAGMxF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 22:06:04 -0500
-Date: Mon, 16 Jan 2017 04:05:47 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 08/14] rt2x00: rt2800mmio: add a workaround for spurious
- TX_FIFO_STATUS interrupts
-Message-ID: <20170116030535.GA32238@makrotopia.org> (sfid-20170116_040607_369329_1AF5601A)
-References: <874m114lwq.fsf@codeaurora.org>
+        Sat, 7 Jan 2017 07:53:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+In-Reply-To: <1483707597.12677.0.camel@sipsolutions.net>
+References: <20170104175832.25996-1-zajec5@gmail.com> <CAL_JsqLg5YkC-YUHg6mQ35nmGaG7SC33VJB++fgtZsu1fRV-7Q@mail.gmail.com>
+ <1483617089.4394.13.camel@sipsolutions.net> <CAL_JsqKYpTZFRJpPR1V9MmA-JW5ntoKzbkjwnYBp9HMWLObG3A@mail.gmail.com>
+ <1483707597.12677.0.camel@sipsolutions.net>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sat, 7 Jan 2017 13:53:04 +0100
+Message-ID: <CACna6rzyd3cRMNBTLqCX8-8PYCAvkW1pSq_AF=LAmkL8ccv2NQ@mail.gmail.com> (sfid-20170107_135308_822131_67BDF55A)
+Subject: Re: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency
+ limit property
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rob Herring <robh+dt@kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Felix Fietkau <nbd@nbd.name>,
+        Arend van Spriel <arend@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On 6 January 2017 at 13:59, Johannes Berg <johannes@sipsolutions.net> wrote=
+:
+> On Thu, 2017-01-05 at 10:34 -0600, Rob Herring wrote:
+>> On Thu, Jan 5, 2017 at 5:51 AM, Johannes Berg <johannes@sipsolutions.
+>> net> wrote:
+>> >
+>> > > Acked-by: Rob Herring <robh@kernel.org>
+>> >
+>> > Do I take that to mean that we'll merge it through the subsystem
+>> > tree,
+>> > and not go through some common DT tree?
+>>
+>> Yes, that's generally the case when bindings are in a series with
+>> driver changes.
+>
+> Alright, thanks.
+>
+> I've applied patches 1-3, patch 4 obviously still needs work (and
+> probably won't go through my tree anyway.)
+>
+> Note that I made some documentation fixes in patch 3, Rafa=C5=82, please
+> check.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.c | 72 ++++++++++++++++++++-----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h     |  5 ++
- 2 files changed, 65 insertions(+), 12 deletions(-)
+Looks great, thanks everyone for your help on getting this patchset in shap=
+e!
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-index 5f1936aa8fa7..750a9425b5be 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
-@@ -415,9 +415,9 @@ void rt2800mmio_autowake_tasklet(unsigned long data)
- }
- EXPORT_SYMBOL_GPL(rt2800mmio_autowake_tasklet);
- 
--static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
-+static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev,
-+					  u32 status)
- {
--	u32 status;
- 	int i;
- 
- 	/*
-@@ -438,29 +438,77 @@ static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
- 	 * Since we have only one producer and one consumer we don't
- 	 * need to lock the kfifo.
- 	 */
--	for (i = 0; i < rt2x00dev->tx->limit; i++) {
--		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
--
--		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
--			break;
--
-+	i = 0;
-+	do {
- 		if (!kfifo_put(&rt2x00dev->txstatus_fifo, status)) {
--			rt2x00_warn(rt2x00dev, "TX status FIFO overrun, drop tx status report\n");
-+			rt2x00_warn(rt2x00dev,
-+				    "TX status FIFO overrun, drop TX status report\n");
- 			break;
- 		}
--	}
-+
-+		if (++i >= rt2x00dev->tx->limit)
-+			break;
-+
-+		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
-+	} while (rt2x00_get_field32(status, TX_STA_FIFO_VALID));
- 
- 	/* Schedule the tasklet for processing the tx status. */
- 	tasklet_schedule(&rt2x00dev->txstatus_tasklet);
- }
- 
-+#define RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES	4
-+
-+static bool rt2800mmio_txstatus_is_spurious(struct rt2x00_dev *rt2x00dev,
-+					    u32 txstatus)
-+{
-+	if (likely(rt2x00_get_field32(txstatus, TX_STA_FIFO_VALID))) {
-+		rt2x00dev->txstatus_irq_retries = 0;
-+		return false;
-+	}
-+
-+	rt2x00dev->txstatus_irq_retries++;
-+
-+	/* Ensure that we don't go into an infinite IRQ loop. */
-+	if (rt2x00dev->txstatus_irq_retries >=
-+	    RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES) {
-+		rt2x00_warn(rt2x00dev,
-+			    "%u spurious TX_FIFO_STATUS interrupt(s)\n",
-+			    rt2x00dev->txstatus_irq_retries);
-+		rt2x00dev->txstatus_irq_retries = 0;
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
- irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
- {
- 	struct rt2x00_dev *rt2x00dev = dev_instance;
- 	u32 reg, mask;
-+	u32 txstatus = 0;
- 
--	/* Read status and ACK all interrupts */
-+	/* Read status */
- 	rt2x00mmio_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
-+
-+	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
-+		/* Due to unknown reason the hardware generates a
-+		 * TX_FIFO_STATUS interrupt before the TX_STA_FIFO
-+		 * register contain valid data. Read the TX status
-+		 * here to see if we have to process the actual
-+		 * request.
-+		 */
-+		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &txstatus);
-+		if (rt2800mmio_txstatus_is_spurious(rt2x00dev, txstatus)) {
-+			/* Remove the TX_FIFO_STATUS bit so it won't be
-+			 * processed in this turn. The hardware will
-+			 * generate another IRQ for us.
-+			 */
-+			rt2x00_set_field32(&reg,
-+					   INT_SOURCE_CSR_TX_FIFO_STATUS, 0);
-+		}
-+	}
-+
-+	/* ACK interrupts */
- 	rt2x00mmio_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
- 
- 	if (!reg)
-@@ -477,7 +525,7 @@ irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
- 	mask = ~reg;
- 
- 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
--		rt2800mmio_txstatus_interrupt(rt2x00dev);
-+		rt2800mmio_txstatus_interrupt(rt2x00dev, txstatus);
- 		/*
- 		 * Never disable the TX_FIFO_STATUS interrupt.
- 		 */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 034a07273038..c27408b494ef 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -995,6 +995,11 @@ struct rt2x00_dev {
- 	int rf_channel;
- 
- 	/*
-+	 * Counter for tx status irq retries (rt2800pci).
-+	 */
-+	unsigned int txstatus_irq_retries;
-+
-+	/*
- 	 * Protect the interrupt mask register.
- 	 */
- 	spinlock_t irqmask_lock;
--- 
-2.11.0
+--=20
+Rafa=C5=82
