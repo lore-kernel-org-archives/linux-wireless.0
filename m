@@ -1,87 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:35097 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750932AbdARWhl (ORCPT
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:35109 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754788AbdAHWco (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 17:37:41 -0500
-Received: by mail-wm0-f45.google.com with SMTP id r126so265620490wmr.0
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 14:35:49 -0800 (PST)
-Subject: Re: [PATCH v3] brcmfmac: fix incorrect event channel deduction
-To: Gavin Li <gavinli@thegavinli.com>
-References: <20170117232405.7672-1-gavinli@thegavinli.com>
- <bab86bb5-7815-e5ea-053d-ed6b18af6677@broadcom.com>
- <CA+GxvY43AbKOVJFWAxHg1Gku=LD-dveHY8m6=zPPu9qR4+r=Fg@mail.gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Stable <stable@vger.kernel.org>, Gavin Li <git@thegavinli.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <70ec23a2-16a8-0eca-cd3f-f08374bfc2b4@broadcom.com> (sfid-20170118_233754_560699_14B4CE39)
-Date: Wed, 18 Jan 2017 23:35:47 +0100
+        Sun, 8 Jan 2017 17:32:44 -0500
+Received: by mail-oi0-f48.google.com with SMTP id b126so672966435oia.2
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2017 14:32:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+GxvY43AbKOVJFWAxHg1Gku=LD-dveHY8m6=zPPu9qR4+r=Fg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170103212136.GA9899@animalcreek.com>
+References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
+ <1482380314-16440-3-git-send-email-geoff@kuvee.com> <20161224060141.GA9069@animalcreek.com>
+ <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com>
+ <20161224172439.GA15103@animalcreek.com> <CAO7Z3WJa0goJ-VXc7dvyz8imZtqby6QsC0QNH+uRAE8LhxqU2w@mail.gmail.com>
+ <20170103163324.GA3184@animalcreek.com> <CAO7Z3WK5pF+q0vAoPPie8wXYQPigpGd7W8uQiGSgN79z4=W9uQ@mail.gmail.com>
+ <20170103212136.GA9899@animalcreek.com>
+From: Geoff Lansberry <geoff@kuvee.com>
+Date: Sun, 8 Jan 2017 17:32:02 -0500
+Message-ID: <CAO7Z3WL9evhhOC2as_R2k4cxgTRHMxE7_2h3+cHUYvaL_m+b1Q@mail.gmail.com> (sfid-20170108_233454_751486_E1FA4703)
+Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
+ crashing the kernel
+To: Mark Greer <mgreer@animalcreek.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
+        mark.rutland@arm.com, netdev@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Justin Bronder <justin@kuvee.com>,
+        Jaret Cantu <jaret.cantu@timesys.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18-1-2017 19:39, Gavin Li wrote:
-> I think calling this a performance regression is a bit understated; my
-> download speed jumped from 1Mbit/s back up to 40MBit/s after applying
-> the patch due to the sheer amount of packets being incorrectly
-> processed.
-
-I was merely using your own words although admittedly I left out the
-word "major".
-
-> In addition, processing arbitrary data frames as firmware events might
-> be a security vulnerability.
-
-True. So I am not saying there is no need to backport it to stable
-kernel. I meant there are no reported crashes related to this bug so
-there is no need to push it through the current release cycle.
-
-Regards,
-Arend
-
-> On Wed, Jan 18, 2017 at 4:38 AM, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 18-1-2017 0:24, gavinli@thegavinli.com wrote:
->>> From: Gavin Li <git@thegavinli.com>
->>>
->>> brcmf_sdio_fromevntchan() was being called on the the data frame
->>> rather than the software header, causing some frames to be
->>> mischaracterized as on the event channel rather than the data channel.
->>>
->>> This fixes a major performance regression (due to dropped packets).
->>>
->>> Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
+On Tue, Jan 3, 2017 at 4:21 PM, Mark Greer <mgreer@animalcreek.com> wrote:
+> On Tue, Jan 03, 2017 at 01:35:18PM -0500, Geoff Lansberry wrote:
+>> On Tue, Jan 3, 2017 at 11:33 AM, Mark Greer <mgreer@animalcreek.com> wrote:
+>> > On Tue, Dec 27, 2016 at 09:18:32AM -0500, Geoff Lansberry wrote:
+>
+>> >> In the meantime - here is some more info about how we use it.
+>> >>
+>> >> We do use NFC structures.    I did find an interesting clue in that
+>> >> there are certain bottles that cause neard to segfault,  I'm not sure
+>> >> what is different about them.  We write a string, like
+>> >> "coppola_chardonnay_2015" to the bottles.
+>> >
+>> > Off the top of my head, it could be the length of the text.
+>> > It would be useful to compare the data that works to the data
+>> > that doesn't work.  Can you install NXP's 'TagInfo' app on a
+>> > smartphone and scan tags with working & non-working data?
+>> > You can email the data from the app to yourself, edit out
+>> > the cruft, and share here.
 >>
->> Actually would prefer Franky to chime in as well as he made the change
->> and confirm correctness. It was introduced a couple of kernel versions
->> back and only a performance regression so seems ok to let this go in
->> 4.11 for now and backport as needed for stable later.
->>
->> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>> Signed-off-by: Gavin Li <git@thegavinli.com>
->>> Cc: <stable@vger.kernel.org> [4.7+]
->>> ---
->>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> index dfb0658713d9..d2219885071f 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> @@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
->>>                                          pfirst->len, pfirst->next,
->>>                                          pfirst->prev);
->>>                       skb_unlink(pfirst, &bus->glom);
->>> -                     if (brcmf_sdio_fromevntchan(pfirst->data))
->>> +                     if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
->>>                               brcmf_rx_event(bus->sdiodev->dev, pfirst);
->>>                       else
->>>                               brcmf_rx_frame(bus->sdiodev->dev, pfirst,
->>>
+>> The data is always the same - and the tags are all the same.  Only
+>> difference is that the tag is physically different, and perhaps
+>> orientation; distance from antenna to tag is fixed.
+>
+> Interesting...  They're all type 2 tags, right?
+
+Yes type 2.
+
+>
+>> I can't even
+>> write the tags at all, so reading them will show blank.   Also a minor
+>> but significant detail, is that the tags are embedded in such a way
+>> that the phone cannot get close enough to them to connect.
+>
+> This section had me completely confused for a couple minutes until I realized
+> that you mean that you can read & write the tags using the trf7970a with
+> an attached antenna but not with your phone.  Is that correct?
+
+Correct, due to the physical arrangement of the part the tag is embedded in.
+
+>
+> If so, try a tag that isn't embedded in something else and move it around
+> the back of the phone.  Try to find where it works best.  The phone
+> manufacturers are notorius for paying little attention to the NFC antenna
+> they put on their products.  For example, I have a Samsung S5 next to me
+> and it seems to work best around the center of the phone.  I've used others
+> where I had to use the upper-left or upper-right corner of the phone.
+
+I can borrow a phone and try, I do have some other tags.  This will
+take me some time and
+ I'm not optimistic that we will learn much, other than that the tag
+was not programmed when
+it does not work.   Don't wait on this answer.
+>
+> Mark
+> --
