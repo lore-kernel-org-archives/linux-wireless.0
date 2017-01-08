@@ -1,221 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36647 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751350AbdAMV0w (ORCPT
+Received: from mail-wj0-f178.google.com ([209.85.210.178]:35910 "EHLO
+        mail-wj0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751264AbdAHNBC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:26:52 -0500
-Received: by mail-lf0-f67.google.com with SMTP id h65so7028100lfi.3
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:51 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v3 2/8] ath10k: htc: rx trailer lookahead support
-Date: Fri, 13 Jan 2017 22:26:05 +0100
-Message-Id: <1484342771-6160-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222702_427615_CB8280F7)
-In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+        Sun, 8 Jan 2017 08:01:02 -0500
+Received: by mail-wj0-f178.google.com with SMTP id ew7so41518892wjc.3
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2017 05:01:02 -0800 (PST)
+Subject: Re: [PATCH 2/2] brcmfmac: setup wiphy bands after registering it
+ first
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170107203605.24866-1-zajec5@gmail.com>
+ <20170107203605.24866-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <117c6355-a612-1797-a1ae-225f68543568@broadcom.com> (sfid-20170108_140107_873794_20D5E9D7)
+Date: Sun, 8 Jan 2017 14:00:58 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170107203605.24866-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RX trailer parsing is now capable of parsing lookahead reports.
-A lookahead contains the first 4 bytes of the next HTC message
-(that will be read in the next SDIO read operation).
-Lookaheads are used by the SDIO/mbox HIF layer to determine if
-the next message is part of a bundle, which endpoint it belongs
-to and how long it is.
+On 7-1-2017 21:36, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> During bands setup we disable all channels that firmware doesn't support
+> in the current regulatory setup. If we do this before wiphy_register
+> it will result in copying set flags (including IEEE80211_CHAN_DISABLED)
+> to the orig_flags which is supposed to be persistent. We don't want this
+> as regulatory change may result in enabling some channels. We shouldn't
+> mess with orig_flags then (by changing them or ignoring them) so it's
+> better to just take care of their proper values.
+> 
+> This patch cleanups code a bit (by taking orig_flags more seriously) and
+> allows further improvements like disabling really unavailable channels.
+> We will need that e.g. if some frequencies should be disabled for good
+> due to hardware setup (design).
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 93 ++++++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/htc.h | 30 +++++++++--
- 2 files changed, 118 insertions(+), 5 deletions(-)
+I think this and previous patch are too dependent and prefer to have
+them in a single patch. Despite that for both:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 35e67c4..e72f385 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -228,10 +228,76 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
- 	spin_unlock_bh(&htc->tx_lock);
- }
- 
-+static int
-+ath10k_htc_process_lookahead(struct ath10k_htc *htc,
-+			     const struct ath10k_htc_lookahead_report *report,
-+			     int len,
-+			     enum ath10k_htc_ep_id eid,
-+			     void *next_lookaheads,
-+			     int *next_lookaheads_len)
-+{
-+	struct ath10k *ar = htc->ar;
-+
-+	/* Invalid lookahead flags are actually transmitted by
-+	 * the target in the HTC control message.
-+	 * Since this will happen at every boot we silently ignore
-+	 * the lookahead in this case
-+	 */
-+	if (report->pre_valid != ((~report->post_valid) & 0xFF))
-+		return 0;
-+
-+	if (next_lookaheads && next_lookaheads_len) {
-+		ath10k_dbg(ar, ATH10K_DBG_HTC,
-+			   "htc rx lookahead found pre_valid 0x%x post_valid 0x%x\n",
-+			   report->pre_valid, report->post_valid);
-+
-+		/* look ahead bytes are valid, copy them over */
-+		memcpy((u8 *)next_lookaheads, report->lookahead, 4);
-+
-+		*next_lookaheads_len = 1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
-+ath10k_htc_process_lookahead_bundle(struct ath10k_htc *htc,
-+				    const struct ath10k_htc_lookahead_report_bundle *report,
-+				    int len,
-+				    enum ath10k_htc_ep_id eid,
-+				    void *next_lookaheads,
-+				    int *next_lookaheads_len)
-+{
-+	struct ath10k *ar = htc->ar;
-+	int bundle_cnt = len / sizeof(*report);
-+
-+	if (!bundle_cnt || (bundle_cnt > HTC_HOST_MAX_MSG_PER_BUNDLE)) {
-+		ath10k_warn(ar, "Invalid lookahead bundle count: %d\n",
-+			    bundle_cnt);
-+		return -EINVAL;
-+	}
-+
-+	if (next_lookaheads && next_lookaheads_len) {
-+		int i;
-+
-+		for (i = 0; i < bundle_cnt; i++) {
-+			memcpy(((u8 *)next_lookaheads) + 4 * i,
-+			       report->lookahead, 4);
-+			report++;
-+		}
-+
-+		*next_lookaheads_len = bundle_cnt;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 			       u8 *buffer,
- 			       int length,
--			       enum ath10k_htc_ep_id src_eid)
-+			       enum ath10k_htc_ep_id src_eid,
-+			       void *next_lookaheads,
-+			       int *next_lookaheads_len)
- {
- 	struct ath10k *ar = htc->ar;
- 	int status = 0;
-@@ -272,6 +338,28 @@ int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 							 record->hdr.len,
- 							 src_eid);
- 			break;
-+		case ATH10K_HTC_RECORD_LOOKAHEAD:
-+			len = sizeof(struct ath10k_htc_lookahead_report);
-+			if (record->hdr.len < len) {
-+				ath10k_warn(ar, "Lookahead report too long\n");
-+				status = -EINVAL;
-+				break;
-+			}
-+			status = ath10k_htc_process_lookahead(htc,
-+							      record->lookahead_report,
-+							      record->hdr.len,
-+							      src_eid,
-+							      next_lookaheads,
-+							      next_lookaheads_len);
-+			break;
-+		case ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE:
-+			status = ath10k_htc_process_lookahead_bundle(htc,
-+								     record->lookahead_bundle,
-+								     record->hdr.len,
-+								     src_eid,
-+								     next_lookaheads,
-+								     next_lookaheads_len);
-+			break;
- 		default:
- 			ath10k_warn(ar, "Unhandled record: id:%d length:%d\n",
- 				    record->hdr.id, record->hdr.len);
-@@ -359,7 +447,8 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- 		trailer += payload_len;
- 		trailer -= trailer_len;
- 		status = ath10k_htc_process_trailer(htc, trailer,
--						    trailer_len, hdr->eid);
-+						    trailer_len, hdr->eid,
-+						    NULL, NULL);
- 		if (status)
- 			goto out;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index f728ce7..9a1db90 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -50,6 +50,8 @@ struct ath10k;
-  * 4-byte aligned.
-  */
- 
-+#define HTC_HOST_MAX_MSG_PER_BUNDLE        8
-+
- enum ath10k_htc_tx_flags {
- 	ATH10K_HTC_FLAG_NEED_CREDIT_UPDATE = 0x01,
- 	ATH10K_HTC_FLAG_SEND_BUNDLE        = 0x02
-@@ -174,8 +176,10 @@ struct ath10k_htc_msg {
- } __packed __aligned(4);
- 
- enum ath10k_ath10k_htc_record_id {
--	ATH10K_HTC_RECORD_NULL    = 0,
--	ATH10K_HTC_RECORD_CREDITS = 1
-+	ATH10K_HTC_RECORD_NULL             = 0,
-+	ATH10K_HTC_RECORD_CREDITS          = 1,
-+	ATH10K_HTC_RECORD_LOOKAHEAD        = 2,
-+	ATH10K_HTC_RECORD_LOOKAHEAD_BUNDLE = 3,
- };
- 
- struct ath10k_ath10k_htc_record_hdr {
-@@ -192,10 +196,28 @@ struct ath10k_htc_credit_report {
- 	u8 pad1;
- } __packed;
- 
-+struct ath10k_htc_lookahead_report {
-+	u8 pre_valid;
-+	u8 pad0;
-+	u8 pad1;
-+	u8 pad2;
-+	u8 lookahead[4];
-+	u8 post_valid;
-+	u8 pad3;
-+	u8 pad4;
-+	u8 pad5;
-+} __packed;
-+
-+struct ath10k_htc_lookahead_report_bundle {
-+	u8 lookahead[4];
-+} __packed;
-+
- struct ath10k_htc_record {
- 	struct ath10k_ath10k_htc_record_hdr hdr;
- 	union {
- 		struct ath10k_htc_credit_report credit_report[0];
-+		struct ath10k_htc_lookahead_report lookahead_report[0];
-+		struct ath10k_htc_lookahead_report_bundle lookahead_bundle[0];
- 		u8 pauload[0];
- 	};
- } __packed __aligned(4);
-@@ -356,6 +378,8 @@ void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 			       u8 *buffer,
- 			       int length,
--			       enum ath10k_htc_ep_id src_eid);
-+			       enum ath10k_htc_ep_id src_eid,
-+			       void *next_lookaheads,
-+			       int *next_lookaheads_len);
- 
- #endif
--- 
-2.7.4
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++--
+>  1 file changed, 7 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 45ee5b6..729bf33 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6477,8 +6477,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+>  			wiphy->bands[NL80211_BAND_5GHZ] = band;
+>  		}
+>  	}
+> -	err = brcmf_setup_wiphybands(wiphy);
+> -	return err;
+> +	return 0;
+>  }
+>  
+>  static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+> @@ -6843,6 +6842,12 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+>  		goto priv_out;
+>  	}
+>  
+> +	err = brcmf_setup_wiphybands(wiphy);
+> +	if (err) {
+> +		brcmf_err("Setting wiphy bands failed (%d)\n", err);
+> +		goto wiphy_unreg_out;
+> +	}
+> +
+>  	/* If cfg80211 didn't disable 40MHz HT CAP in wiphy_register(),
+>  	 * setup 40MHz in 2GHz band and enable OBSS scanning.
+>  	 */
+> 
