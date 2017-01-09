@@ -1,106 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27469 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751521AbdAEMPE (ORCPT
+Received: from smtp26.msg.oleane.net ([62.161.4.26]:43466 "EHLO
+        smtp26.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751807AbdAIIhJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 07:15:04 -0500
-Date: Thu, 5 Jan 2017 15:14:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>
-Cc: Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: Connect to highest RSSI value for
- required SSID
-Message-ID: <20170105121450.GF13756@mwanda> (sfid-20170105_131529_023620_D002A3EE)
-References: <1483601621-27545-1-git-send-email-aditya.shankar@microchip.com>
+        Mon, 9 Jan 2017 03:37:09 -0500
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: "'Stephen Hemminger'" <stephen@networkplumber.org>,
+        "=?UTF-8?Q?'Linus_L=C3=BCssing'?=" <linus.luessing@c0d3.blue>
+Cc: <netdev@vger.kernel.org>,
+        "'David S . Miller'" <davem@davemloft.net>,
+        <bridge@lists.linux-foundation.org>,
+        <linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+        "'Felix Fietkau'" <nbd@nbd.name>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue> <20170106191356.43740a26@xeon-e3>
+In-Reply-To: <20170106191356.43740a26@xeon-e3>
+Subject: RE: [PATCH net-next] bridge: multicast to unicast
+Date: Mon, 9 Jan 2017 09:36:55 +0100
+Message-ID: <002f01d26a53$88c8da60$9a5a8f20$@acksys.fr> (sfid-20170109_093713_679466_7EA405CC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1483601621-27545-1-git-send-email-aditya.shankar@microchip.com>
+Content-Type: text/plain;
+        charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 05, 2017 at 01:03:41PM +0530, Aditya Shankar wrote:
-> Connect to the highest rssi with the required SSID in the shadow
-> table if the connection criteria is based only on the SSID.
-> For the first matching SSID, an index to the table is saved.
-> Later the index is updated if matching SSID has a higher
-> RSSI value than the last saved index.
+> -----Message d'origine-----
+> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de Stephen Hemminger
+> Envoyé : samedi 7 janvier 2017 04:14
+> À : Linus Lüssing
+> Cc : netdev@vger.kernel.org; David S . Miller; bridge@lists.linux-
+> foundation.org; linux-kernel@vger.kernel.org; linux-
+> wireless@vger.kernel.org; Felix Fietkau
+> Objet : Re: [PATCH net-next] bridge: multicast to unicast
 > 
-> However if decision is made based on BSSID, there is only one match
-> in the table and corresponding index is used.
+> On Mon,  2 Jan 2017 20:32:14 +0100
+> Linus Lüssing <linus.luessing@c0d3.blue> wrote:
 > 
-> Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
+> > This feature is intended for interface types which have a more
+> > reliable and/or efficient way to deliver unicast packets than
+> > broadcast ones (e.g. wifi).
 > 
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> index c1a24f7..32206b8 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> @@ -665,6 +665,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
->  {
->  	s32 s32Error = 0;
->  	u32 i;
-> +	u32 sel_bssi_idx = last_scanned_cnt + 1;
+> 
+> Why is this not done in MAC80211 rather than  bridge?
 
-
-My understanding from reading the code is that "last_scanned_cnt + 1"
-is a randomly chosen invalid value.  Just saying:
-
-	sel_bssi_idx = last_scanned_cnt;
-
-would  also work because it's also invalid and slightly shorter to type.
-But I suggest that you go with something like UINT_MAX because that's
-more clearly invalid.
-
->  	u8 u8security = NO_ENCRYPT;
->  	enum AUTHTYPE tenuAuth_type = ANY;
->  
-> @@ -688,18 +689,25 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
->  		    memcmp(last_scanned_shadow[i].ssid,
->  			   sme->ssid,
->  			   sme->ssid_len) == 0) {
-> -			if (!sme->bssid)
-> -				break;
-> -			else
-> +			if (!sme->bssid) {
-> +				if (sel_bssi_idx == (last_scanned_cnt + 1))
-> +					sel_bssi_idx = i;
-> +				else if (last_scanned_shadow[i].rssi >
-> +					 last_scanned_shadow[sel_bssi_idx].rssi)
-> +					sel_bssi_idx = i;
-
-Combine these with an ||.
-
-			if (!sme->bssid) {
-				if (sel_bssi_idx == UINT_MAX ||
-				    last_scanned_shadow[i].rssi >
-				    last_scanned_shadow[sel_bssi_idx].rssi)
-					sel_bssi_idx = i;
-
-
-
-In a separate patch, you can reverse the if statement at the start of
-the loop:
-
-		if (sme->ssid_len != last_scanned_shadow[i].ssid_len ||
-		    memcmp(last_scanned_shadow[i].ssid, sme->ssid,
-			   sme->ssid_len) != 0)
-			continue;
-
-That way you can pull these lines in a tab.
-
-
-> +			} else {
->  				if (memcmp(last_scanned_shadow[i].bssid,
->  					   sme->bssid,
-> -					   ETH_ALEN) == 0)
-> +					   ETH_ALEN) == 0){
-
-Add a space before the curly brace.
-
-regards,
-dan carpenter
+OTOH mac80211 has more information to decide whether it is more economic to send one multicast or several unicast.
+It depends on the bitrate of each station, number of stations and the (not necessarily slower) bitrate of multicasts.
