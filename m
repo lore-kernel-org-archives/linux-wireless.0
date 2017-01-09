@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:60018 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751104AbdAMVVH (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:21:07 -0500
-Date: Fri, 13 Jan 2017 22:20:59 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 05/40] rt2x00: rt2800lib: add hw_beacon_count field to struct
- rt2800_drv_data
-Message-ID: <20170113212054.GA3383@makrotopia.org> (sfid-20170113_222110_755834_857E27E9)
+Received: from mail-by2nam03on0069.outbound.protection.outlook.com ([104.47.42.69]:33664
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S967072AbdAIOkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 09:40:00 -0500
+Subject: Re: [PATCH] cfg80211: size various nl80211 messages correctly
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <20170109101042.23919-1-johannes@sipsolutions.net>
+ <ec9fb205-91ca-9591-0b0b-92672d093395@broadcom.com>
+ <1483965571.17582.35.camel@sipsolutions.net>
+ <d6a54188-8538-87e4-d0db-95ed11102501@quantenna.com>
+CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        <linux-wireless@vger.kernel.org>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <d8204af4-0ef1-6f18-6fee-276fc215bea4@quantenna.com> (sfid-20170109_154146_040838_6F31CFD0)
+Date: Mon, 9 Jan 2017 17:39:14 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d6a54188-8538-87e4-d0db-95ed11102501@quantenna.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On 01/09/2017 05:28 PM, IgorMitsyanko wrote:
+> On 01/09/2017 03:39 PM, Johannes Berg wrote:
+>>>> -    msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+>>>> +    msg = nlmsg_new(100 + ie_len, GFP_KERNEL);
+>>>
+>>> Don't you want the '100' to be a define?
+>>
+>> I didn't want to glorify it too much - some places may need more or
+>> less over time. There's no significance to this number.
+>>
+>> johannes
+>>
+>
+> Looking at what NLMSG_DEFAULT_SIZE is, wouldn't it be more descriptive
+> to replace 100 with something like:
+>
+> #define NLMSG_OVERHEAD (SKB_DATA_ALIGN(sizeof(struct skb_shared_info)) +
+> NLMSG_HDRLEN)
+>
 
-Some chipsets can handle more than 8 beacons at once.
-Add a new field to the rt2800_drv_data structure which
-will hold the number of supported beacons of the given
-chipset.
-
-Update the rt2x00_init_registers function to get the
-beacon count from the new field instead of using a
-hardcoded value.
-
-In order to keep the current behaviour, initialize the
-new field with the actually used value.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 4 +++-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index dcacfa54b3d6..0893d9147af9 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -5025,7 +5025,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	/*
- 	 * Clear all beacons
- 	 */
--	for (i = 0; i < 8; i++)
-+	for (i = 0; i < drv_data->hw_beacon_count; i++)
- 		rt2800_clear_beacon_register(rt2x00dev, i);
- 
- 	if (rt2x00_is_usb(rt2x00dev)) {
-@@ -7875,6 +7875,8 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	if (rt2x00_rt(rt2x00dev, RT3593))
- 		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
- 
-+	drv_data->hw_beacon_count = 8;
-+
- 	/*
- 	 * Allocate eeprom data.
- 	 */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-index ccfa8cf1f5ac..ab49e6feeeb9 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-@@ -37,6 +37,7 @@ struct rt2800_drv_data {
- 	u8 max_psdu;
- 	unsigned int tbtt_tick;
- 	unsigned int ampdu_factor_cnt[4];
-+	unsigned int hw_beacon_count;
- 	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
- 
- 	unsigned long rt2800_flags;
--- 
-2.11.0
+Now I see, it's not for msg overhead, but for other fixed-width netlink 
+attributes like WIPHY, IFINDEX etc
