@@ -1,86 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39502 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965058AbdAILFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 06:05:14 -0500
-Message-ID: <1483959910.17582.25.camel@sipsolutions.net> (sfid-20170109_120811_069826_645D8E3C)
-Subject: Re: SIOCSIWFREQ while in NL80211_IFTYPE_STATION
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jorge Ramirez <jorge.ramirez-ortiz@linaro.org>,
-        netdev@vger.kernel.org, Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 09 Jan 2017 12:05:10 +0100
-In-Reply-To: <f8e8b557-3e7b-cc1a-c31a-91f9d754e683@linaro.org> (sfid-20170105_153832_371808_8A30C9BF)
-References: <685811c3-6247-77fd-8c70-617951886451@linaro.org>
-         <1483616301.4394.6.camel@sipsolutions.net>
-         <92e60cb2-8bb4-df03-3434-4a055f575df0@linaro.org>
-         <1483625204.4394.23.camel@sipsolutions.net>
-         <f8e8b557-3e7b-cc1a-c31a-91f9d754e683@linaro.org>
-         (sfid-20170105_153832_371808_8A30C9BF)
+Received: from mail1.windriver.com ([147.11.146.13]:36211 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750842AbdAIAVQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 8 Jan 2017 19:21:16 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        <linux-ia64@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH] nfc: don't be making arch specific unaligned decisions at driver level.
+Date: Sun, 8 Jan 2017 19:19:07 -0500
+Message-ID: <20170109001907.101949-1-paul.gortmaker@windriver.com> (sfid-20170109_012449_046972_85A5CBF7)
+MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-05 at 15:38 +0100, Jorge Ramirez wrote:
+Currently ia64 fails building allmodconfig with variations of:
 
-> do you mean this?
-> 
-> [jramirez@igloo ~ (debian-qcom-dragonboard410c-16.09-local $)]$ git
-> diff
-> diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
-> index a4e8af3..c56bac5 100644
-> --- a/net/wireless/wext-sme.c
-> +++ b/net/wireless/wext-sme.c
-> @@ -106,30 +106,7 @@ int cfg80211_mgd_wext_siwfreq(struct net_device
-> *dev,
->                          goto out;
->          }
-> 
-> -
->          wdev->wext.connect.channel = chan;
-> -
-> -   /*
-> -    * SSID is not set, we just want to switch monitor channel,
-> -    * this is really just backward compatibility, if the SSID
-> -    * is set then we use the channel to select the BSS to use
-> -    * to connect to instead. If we were connected on another
-> -    * channel we disconnected above and reconnect below.
-> -    */
-> -   if (chan && !wdev->wext.connect.ssid_len) {
-> -           struct cfg80211_chan_def chandef = {
-> -                   .width = NL80211_CHAN_WIDTH_20_NOHT,
-> -                   .center_freq1 = freq,
-> -           };
-> -
-> -           chandef.chan = ieee80211_get_channel(&rdev->wiphy, freq);
-> -           if (chandef.chan)
-> -                   err = cfg80211_set_monitor_channel(rdev,
-> &chandef);
-> -           else
-> -                   err = -EINVAL;
-> -           goto out;
-> -   }
-> -
->          err = cfg80211_mgd_wext_connect(rdev, wdev);
->    out:
->          wdev_unlock(wdev);
+   In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
+   ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
+    static __always_inline void put_unaligned_be64(u64 val, void *p)
+                                ^~~~~~~~~~~~~~~~~~
+   In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
+                    from ./arch/ia64/include/asm/io.h:22,
+                    from ./arch/ia64/include/asm/smp.h:20,
+                    from ./include/linux/smp.h:59,
+                    from ./include/linux/topology.h:33,
+                    from ./include/linux/gfp.h:8,
+                    from ./include/linux/slab.h:14,
+                    from ./include/linux/resource_ext.h:19,
+                    from ./include/linux/acpi.h:26,
+                    from drivers/nfc/nxp-nci/i2c.c:28:
+   ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definition of ‘put_unaligned_be64’ was here
+    static inline void put_unaligned_be64(u64 val, void *p)
+                       ^~~~~~~~~~~~~~~~~~
+   scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c.o' failed
 
-Yeah. Frankly, I don't even understand that comment anymore - if the
-interface is in managed mode, why set the monitor channel, it's not
-monitoring? And if it's not in managed mode we don't get here.
+The easiest explanation for this is to look at the non-arch users in
+the following output:
 
-> 
-> 
-> I tested the change above: we can now modify the channel/frequency
-> when 
-> the SSID is not set in managed mode.
-> When the SSID is set however iwconfig does not report any error but 
-> channel/frequency doesn't change.
-> 
-> if you think this is acceptable I can submit a patch
+   linux$git grep include.*access_ok.h
+   arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
+   arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
+   include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h>
 
-I think it looks fine, though writing the commit message may be tricky
-:)
+Note that nfc is essentially the only non-arch user in the above.
+When it forces use of access_ok.h, it will break any arch that has
+already selected be_byteshift.h (or other conflicting implementations)
+at the arch level.
 
-johannes
+The decision of what variant for unaligned access to use needs to be
+left to the arch level and not used at the driver level.  Delete the
+errant includes, as the right ones will be pulled in at the arch
+level, giving us just the one definition that is needed.
+
+See commit 064106a91be5 ("kernel: add common infrastructure for
+unaligned access") as a reference.
+
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+
+diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
+index f8dcdf4b24f6..32144d66ba88 100644
+--- a/drivers/nfc/nfcmrvl/fw_dnld.c
++++ b/drivers/nfc/nfcmrvl/fw_dnld.c
+@@ -17,7 +17,6 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/unaligned/access_ok.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
+index 5291797324ba..f2bd651fc60d 100644
+--- a/drivers/nfc/nxp-nci/firmware.c
++++ b/drivers/nfc/nxp-nci/firmware.c
+@@ -24,7 +24,6 @@
+ #include <linux/completion.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+-#include <linux/unaligned/access_ok.h>
+ 
+ #include "nxp-nci.h"
+ 
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index 36099e557730..d25f6257458e 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -36,7 +36,6 @@
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
+ #include <linux/platform_data/nxp-nci.h>
+-#include <linux/unaligned/access_ok.h>
+ 
+ #include <net/nfc/nfc.h>
+ 
+-- 
+2.11.0
