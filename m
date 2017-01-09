@@ -1,92 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:56326 "EHLO
-        smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751692AbdARKr2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47058 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935288AbdAIKK7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 05:47:28 -0500
-From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
-To: "'Adrian Chadd'" <adrian@freebsd.org>,
-        "'ath9k-devel'" <ath9k-devel@venema.h4ckr.net>,
-        <linux-wireless@vger.kernel.org>
-References: <CAJ-Vmo=_apPFE1LQmXj6pn9g1c0bvzAS-gk86Hi7-CX+KuZtrw@mail.gmail.com>
-In-Reply-To: <CAJ-Vmo=_apPFE1LQmXj6pn9g1c0bvzAS-gk86Hi7-CX+KuZtrw@mail.gmail.com>
-Subject: RE: ath9k/ath10k DFS testing / certification
-Date: Wed, 18 Jan 2017 11:26:10 +0100
-Message-ID: <009701d27175$499fafc0$dcdf0f40$@acksys.fr> (sfid-20170118_114758_694907_8A4E9F77)
+        Mon, 9 Jan 2017 05:10:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 09 Jan 2017 15:40:57 +0530
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
+ support BTCOEX
+In-Reply-To: <1483623500.4394.18.camel@sipsolutions.net>
+References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+ <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
+ <1480949353.31788.27.camel@sipsolutions.net>
+ <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
+ <1481645351.20412.34.camel@sipsolutions.net>
+ <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
+ <1481881024.27953.14.camel@sipsolutions.net>
+ <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
+ <1483354130.4596.5.camel@sipsolutions.net>
+ <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
+ <1483623500.4394.18.camel@sipsolutions.net>
+Message-ID: <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org> (sfid-20170109_111109_678226_B4156143)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Adrian,
+Hi Johannes,
 
-Also, about ath9k:
+Thank you for the reply.
 
-I don't know if it's relevant to you, but we had the same problem of
-NO_IR/RADAR mismatch in ath9k.
-We fixed this in mac80211 layer at that time. Here is the patch. We didn't
-send it upstream since
-We have no experience with other chipsets, and we didn't know whether it
-would be generic enough.
+On 2017-01-05 19:08, Johannes Berg wrote:
+>> > IOW - why have all these bits rather than just one?
+>> 
+>> Hardware supports data across all the access categories, this is
+>> justÂ  meant for prioritising the traffic. f.e, If the fw/target has
+>> both wlan and bt traffic queued and if VO isÂ  set as priority, then
+>> wlan VO packets will be pushed out of the radio first and then the bt
+>> traffic.
+> 
+> Exactly. So as far as *capabilities* are concerned, why do we need so
+> many bits?
+> 
+Is it fine to have something like this
 
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -598,7 +598,7 @@ static int __ieee80211_start_scan(struct
- 		ieee80211_hw_config(local, 0);
- 
- 		if ((req->channels[0]->flags &
--		     IEEE80211_CHAN_NO_IR) ||
-+		     (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)) ||
- 		    !req->n_ssids) {
- 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		} else {
-@@ -646,7 +646,7 @@ ieee80211_scan_get_channel_time(struct i
- 	 * TODO: channel switching also consumes quite some time,
- 	 * add that delay as well to get a better estimation
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR)
-+	if (chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR))
- 		return IEEE80211_PASSIVE_CHANNEL_TIME;
- 	return local->scan_req->probe_delay_ticks +
-local->scan_req->max_channel_time_ticks;
- }
-@@ -810,7 +810,7 @@ static void ieee80211_scan_state_set_cha
- 	 *
- 	 * In any case, it is not necessary for a passive scan.
- 	 */
--	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids) {
-+	if (chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR) ||
-!scan_req->n_ssids) {
- 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
- 		local->next_scan_state = SCAN_DECISION;
- 		return;
---
-Diff -u
+1) We can have this btcoex_priority value as a optional value in btcoex 
+enable command like below
 
-> -----Message d'origine-----
-> De : ath10k [mailto:ath10k-bounces@lists.infradead.org] De la part de
-> Adrian Chadd
-> Envoyé : dimanche 15 janvier 2017 22:17
-> À : ath9k-devel; ath10k@lists.infradead.org
-> Objet : ath9k/ath10k DFS testing / certification
-> 
-> hiya,
-> 
-> I'm working on a set of things that will involve DFS certification for
-> ath9k/ath10k. Initially it'll be for FCC but I'll branch out to the other
-> regions shortly afterwards.
-> 
-> I'd love to hear from anyone else who has done this and what their
-> challenges were, including whether they have any local patches / tools
-> that haven't yet been upstreamed.
-> 
-> Thanks!
-> 
-> 
-> -adrian
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+iw phyX btcoex_state <enable| disable> [prirority(vendor spcific value)]
+
+2) Or we can have seperate command for btcoex_priority as below
+
+iw phyX set btcoex_priority <priority (vendor spcific value)>
+
+Hopefully this will get rid off all the nl80211 bits.
+
+Kindly suggest your thoughts.
+
+Thanks,
+Tamizh.
