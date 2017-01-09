@@ -1,54 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51114 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938436AbdAIUey (ORCPT
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:34669 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760068AbdAIMHt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 15:34:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: David Miller <davem@davemloft.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [GIT] Networking
-References: <20170108.223847.1035900535306187665.davem@davemloft.net>
-        <CA+55aFzjL6Tf7JazeZtbi9UARhqofWU8xzYm0rbdAeCsD+nMPw@mail.gmail.com>
-Date: Mon, 09 Jan 2017 22:34:43 +0200
-In-Reply-To: <CA+55aFzjL6Tf7JazeZtbi9UARhqofWU8xzYm0rbdAeCsD+nMPw@mail.gmail.com>
-        (Linus Torvalds's message of "Mon, 9 Jan 2017 12:08:02 -0800")
-Message-ID: <87r34ct1jw.fsf@kamboji.qca.qualcomm.com> (sfid-20170109_213532_267369_83BD3702)
+        Mon, 9 Jan 2017 07:07:49 -0500
+Received: by mail-pg0-f44.google.com with SMTP id 14so29924775pgg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 04:07:49 -0800 (PST)
+Subject: Re: [PATCH] RFC: Universal scan proposal
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Dmitry Shmidt <dimitrysh@google.com>
+References: <94eb2c110db85c2379054172dad0@google.com>
+ <1480948100.31788.15.camel@sipsolutions.net>
+ <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
+ <1481093061.4092.17.camel@sipsolutions.net>
+ <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
+ <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
+ <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
+ <1481645205.20412.32.camel@sipsolutions.net>
+ <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
+ <1483536510.7312.5.camel@sipsolutions.net>
+ <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
+ <1483616763.4394.8.camel@sipsolutions.net>
+ <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com>
+ <1483623882.4394.20.camel@sipsolutions.net>
+ <ac6c15d8-5d4f-722c-7d7e-c43f6a118b53@broadcom.com>
+ <1483958921.17582.20.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <eb6a9c5e-0817-3b63-1e2f-d6bbff867b05@broadcom.com> (sfid-20170109_130755_277154_19D8ED31)
+Date: Mon, 9 Jan 2017 13:07:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1483958921.17582.20.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-> On Sun, Jan 8, 2017 at 7:38 PM, David Miller <davem@davemloft.net> wrote:
+
+On 9-1-2017 11:48, Johannes Berg wrote:
+> On Thu, 2017-01-05 at 20:59 +0100, Arend Van Spriel wrote:
 >>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
->
-> Hmm. This still doesn't contain the rtlwifi oops fix that was posted
-> back before christmas.
->
-> Kalle said it was applied to the wireless-drivers tree as commit
-> 60f59ce02785 in his tree, but it's never gotten to me.
->
-> What's up? It's three weeks later, and people are hitting the bug.
+>> From what Dmitry listed I guess there's really only one.
+> 
+> Ok. I guess I need to go back to that then.
+> 
+>> Early on in the thread Luca gave some other examples of scan
+>> extensions so may need to consider notification/dump methods that are
+>> extensible. It seems awkward to have a single "initiate" command and
+>> a couple of "notification/retrieval" commands. It may not be so bad
+>> as long as it is clear which retrieval command goes with a
+>> notification.
+> 
+> Well, we might not even need different commands. We need different
+> storage internally, but if you request the results for a given scan ID
+> then you might get a totally different result format? Though that
+> wouldn't lend itself well to query "everything you have" which is also
+> useful. But even then, it could be done by passing the appropriate
+> "report type" attribute to the dump command - we need that anyway for
+> trigger.
 
-You mean this one:
+True. With "report type" attribute you do not mean the actual
+report_type thing, right. Hopefully you mean the parameter attribute
+that implicitly relates to a "report type". The risk here is that it
+requires careful description of what user-space needs to look for if it
+gets a notification. I think having separate notification/retrieval
+commands lowers the risk of misinterpretation.
 
-60f59ce02785 rtlwifi: rtl_usb: Fix missing entry in USB driver's private data
+> I think with that discussion we're getting ahead of ourselves though -
+> do we really know that we just need the two result types
+> 
+>  * full, and
+>  * partial (for history scan)
+> 
+> and have we even defined the attributes we want in the partial one?
 
-I accidentally missed the patch during my holiday pull request,
-committed the patch late, and I haven't sent a new pull request since.
-Also the commit log didn't mention anything about an oops, only about
-"missing an entry", so I didn't realise it was a critical fix.
+Not sure if we're getting ahead of ourselves. Yes, we have to determine
+attributes for each scan "report type", but it is not a prerequisite for
+the other topic. I guess to answer the question about the partial
+results attributes we need to know what the possible higher-level
+use-cases are. Other source of information would be to look what is done
+for g-scan in Android "M" or "N", but not sure if that is best approach
+as we may not consider all use-cases.
 
-Sorry about that, I'll send a new pull request to Dave first thing
-tomorrow. It's too late now for me.
-
--- 
-Kalle Valo
+Regards,
+Arend
