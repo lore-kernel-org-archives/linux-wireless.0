@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53100 "EHLO mail.kernel.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42176 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761952AbdADTrN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 14:47:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170104175832.25996-1-zajec5@gmail.com>
-References: <20170104175832.25996-1-zajec5@gmail.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Wed, 4 Jan 2017 13:46:46 -0600
-Message-ID: <CAL_JsqLg5YkC-YUHg6mQ35nmGaG7SC33VJB++fgtZsu1fRV-7Q@mail.gmail.com> (sfid-20170104_204802_194080_5A1819D6)
-Subject: Re: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency
- limit property
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+        id S932390AbdAIPrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 10:47:10 -0500
+Message-ID: <1483976821.20579.0.camel@sipsolutions.net> (sfid-20170109_164932_356127_678A19EE)
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: michael-dev <michael-dev@fami-braun.de>
+Cc: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
+        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date: Mon, 09 Jan 2017 16:47:01 +0100
+In-Reply-To: <ebc5050e12c04273fa518e35d7f0b8bc@fami-braun.de>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+         <1483706872.4089.8.camel@sipsolutions.net>
+         <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+         <1483710841.12677.1.camel@sipsolutions.net>
+         <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+         <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+         <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+         <1483964159.17582.34.camel@sipsolutions.net>
+         <ebc5050e12c04273fa518e35d7f0b8bc@fami-braun.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 4, 2017 at 11:58 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
->
-> This new file should be used for properties that apply to all wireless
-> devices.
->
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> V2: Switch to a single ieee80211-freq-limit property that allows specifying
->     *multiple* ranges. This resolves problem with more complex rules as pointed
->     by Felx.
->     Make description implementation agnostic as pointed by Arend.
->     Rename node to wifi as suggested by Martin.
-> V3: Use more real-life frequencies in the example.
-> V5: Describe hardware design as possible use for this property
-> V6: Even better property description, thanks Rob for your help!
-> ---
->  .../devicetree/bindings/net/wireless/ieee80211.txt | 24 ++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+On Mon, 2017-01-09 at 16:25 +0100, michael-dev wrote:
+> Am 09.01.2017 13:15, schrieb Johannes Berg:
+> > > That is bridge fdb entries (need to) expire so the bridge might
+> > > "forget" a still-connected station not sending but only consuming
+> > > broadcast traffic.
+> > 
+> > Ok, that I don't know. Somehow if you address a unicast packet
+> > there
+> > the bridge has to make a decision - so it really should know?
+> 
+> If the bridge has not learned the unicast destination mac address on
+> any port, it will flood the packet on all ports except the port it
+> received the packet on.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Ok, so this really needs to be done in mac80211.
+
+I'll send out the pull request soon then.
+
+johannes
