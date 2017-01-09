@@ -1,321 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:55658 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752669AbdASOBK (ORCPT
+Received: from mail.aperture-lab.de ([138.201.29.205]:34753 "EHLO
+        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030994AbdAIVXt (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 09:01:10 -0500
-Date: Thu, 19 Jan 2017 14:38:45 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
+        Mon, 9 Jan 2017 16:23:49 -0500
+Date: Mon, 9 Jan 2017 22:23:45 +0100
+From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
+To: "M. Braun" <michael-dev@fami-braun.de>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v3] rt2x00: add support for RT5350 WiSoC
-Message-ID: <20170119133834.GA17398@makrotopia.org> (sfid-20170119_150114_188954_B8E339B6)
-References: <20170118144719.GB22837@redhat.com>
+        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+Message-ID: <20170109212345.GA5513@otheros> (sfid-20170109_222414_863109_E4B7C50B)
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros>
+ <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170118144719.GB22837@redhat.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michel Stempin <michel.stempin@wanadoo.fr>
+On Mon, Jan 09, 2017 at 12:44:19PM +0100, M. Braun wrote:
+> Am 09.01.2017 um 09:08 schrieb Johannes Berg:
+> > Does it make sense to implement the two in separate layers though?
+> > 
+> > Clearly, this part needs to be implemented in the bridge layer due to
+> > the snooping knowledge, but the code is very similar to what mac80211
+> > has now.
+> 
+> Does the bridge always know about all stations connected?
 
-Support for the RT5350 WiSoC was added to OpenWrt after having a
-lengthy debate about the legality of the original submission, see
-https://lists.openwrt.org/pipermail/openwrt-devel/2013-January/018224.html
-MTK/Ralink Acked replied and says we can merge this patch under the GPL.
-https://dev.openwrt.org/changeset/36177
+The bridge does not always know about all stations, especially the
+silent ones like in your DVB-T example.
 
-Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
-Tested-by: Michel Stempin <michel.stempin@wanadoo.fr>
-Acked-by: John Crispin <blogic@openwrt.org>
-[daniel@makrotopia.org: added commit message, cleaned up code]
+However, concerning IP multicast, there is IGMP/MLD. So the bridge
+does know about all stations which are interested in a specific IP
+multicast stream.
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
-v2: reordered patches to breakout RT3883 from the original series
-v3: remove superflus EEPROM_NIC_CONF0 mangeling from RT5350 patch
+(As long as there is a querier on the link, which periodically
+queriers for IGMP/MLD reports from any listener. If there is no
+querier then the bridge multicast snooping, including the bridge
+multicast-to-unicast will fall back to flooding)
 
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |   1 +
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 125 +++++++++++++++++++++++--
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |   1 +
- 3 files changed, 120 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 18096903e20f..256496bfbafb 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -72,6 +72,7 @@
- #define RF5592				0x000f
- #define RF3070				0x3070
- #define RF3290				0x3290
-+#define RF5350				0x5350
- #define RF5360				0x5360
- #define RF5362				0x5362
- #define RF5370				0x5370
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index c33298baecc3..b4b28caff39d 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -2759,6 +2759,13 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 
- 				rt2800_rfcsr_write(rt2x00dev, 59,
- 						   r59_non_bt[idx]);
-+			} else if (rt2x00_rt(rt2x00dev, RT5350)) {
-+				static const char r59_non_bt[] = {0x0b, 0x0b,
-+					0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0a,
-+					0x0a, 0x09, 0x08, 0x07, 0x07, 0x06};
-+
-+				rt2800_rfcsr_write(rt2x00dev, 59,
-+						   r59_non_bt[idx]);
- 			}
- 		}
- 	}
-@@ -3196,6 +3203,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
- 		break;
- 	case RF3070:
-+	case RF5350:
- 	case RF5360:
- 	case RF5362:
- 	case RF5370:
-@@ -3214,6 +3222,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	if (rt2x00_rf(rt2x00dev, RF3070) ||
- 	    rt2x00_rf(rt2x00dev, RF3290) ||
- 	    rt2x00_rf(rt2x00dev, RF3322) ||
-+	    rt2x00_rf(rt2x00dev, RF5350) ||
- 	    rt2x00_rf(rt2x00dev, RF5360) ||
- 	    rt2x00_rf(rt2x00dev, RF5362) ||
- 	    rt2x00_rf(rt2x00dev, RF5370) ||
-@@ -3471,7 +3480,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	/*
- 	 * Clear update flag
- 	 */
--	if (rt2x00_rt(rt2x00dev, RT3352)) {
-+	if (rt2x00_rt(rt2x00dev, RT3352) ||
-+	    rt2x00_rt(rt2x00dev, RT5350)) {
- 		rt2800_bbp_read(rt2x00dev, 49, &bbp);
- 		rt2x00_set_field8(&bbp, BBP49_UPDATE_FLAG, 0);
- 		rt2800_bbp_write(rt2x00dev, 49, bbp);
-@@ -4352,6 +4362,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
- 	case RF3053:
- 	case RF3070:
- 	case RF3290:
-+	case RF5350:
- 	case RF5360:
- 	case RF5362:
- 	case RF5370:
-@@ -4734,6 +4745,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-+	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
-+		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
- 	} else {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000000);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-@@ -5379,9 +5392,13 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 
--	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
--
--	rt2800_bbp_write(rt2x00dev, 84, 0x99);
-+	if (rt2x00_rt(rt2x00dev, RT5350)) {
-+		rt2800_bbp_write(rt2x00dev, 83, 0x7a);
-+		rt2800_bbp_write(rt2x00dev, 84, 0x9a);
-+	} else {
-+		rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-+		rt2800_bbp_write(rt2x00dev, 84, 0x99);
-+	}
- 
- 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
- 
-@@ -5395,9 +5412,13 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2800_bbp_write(rt2x00dev, 104, 0x92);
- 
--	rt2800_bbp_write(rt2x00dev, 105, 0x34);
--
--	rt2800_bbp_write(rt2x00dev, 106, 0x05);
-+	if (rt2x00_rt(rt2x00dev, RT5350)) {
-+		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
-+		rt2800_bbp_write(rt2x00dev, 106, 0x03);
-+	} else {
-+		rt2800_bbp_write(rt2x00dev, 105, 0x34);
-+		rt2800_bbp_write(rt2x00dev, 106, 0x05);
-+	}
- 
- 	rt2800_bbp_write(rt2x00dev, 120, 0x50);
- 
-@@ -5422,6 +5443,16 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
- 	rt2800_bbp_write(rt2x00dev, 143, 0xa2);
- 
- 	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
-+
-+	if (rt2x00_rt(rt2x00dev, RT5350)) {
-+		/* Antenna Software OFDM */
-+		rt2800_bbp_write(rt2x00dev, 150, 0x40);
-+		/* Antenna Software CCK */
-+		rt2800_bbp_write(rt2x00dev, 151, 0x30);
-+		rt2800_bbp_write(rt2x00dev, 152, 0xa3);
-+		/* Clear previously selected antenna */
-+		rt2800_bbp_write(rt2x00dev, 154, 0);
-+	}
- }
- 
- static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
-@@ -5722,6 +5753,7 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_init_bbp_3290(rt2x00dev);
- 		break;
- 	case RT3352:
-+	case RT5350:
- 		rt2800_init_bbp_3352(rt2x00dev);
- 		break;
- 	case RT3390:
-@@ -6532,6 +6564,76 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- 	/* TODO: enable stream mode support */
- }
- 
-+static void rt2800_init_rfcsr_5350(struct rt2x00_dev *rt2x00dev)
-+{
-+	rt2800_rfcsr_write(rt2x00dev, 0, 0xf0);
-+	rt2800_rfcsr_write(rt2x00dev, 1, 0x23);
-+	rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
-+	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
-+	rt2800_rfcsr_write(rt2x00dev, 4, 0x49);
-+	rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
-+	rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
-+	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
-+	rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
-+	rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
-+	rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
-+	rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
-+	if (rt2x00dev->spec.clk_is_20mhz)
-+		rt2800_rfcsr_write(rt2x00dev, 13, 0x1f);
-+	else
-+		rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
-+	rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 16, 0xc0);
-+	rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
-+	rt2800_rfcsr_write(rt2x00dev, 19, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 21, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
-+	rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 26, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
-+	rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 29, 0xd0);
-+	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
-+	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
-+	rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
-+	rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
-+	rt2800_rfcsr_write(rt2x00dev, 38, 0x85);
-+	rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
-+	rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
-+	rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
-+	rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
-+	rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
-+	rt2800_rfcsr_write(rt2x00dev, 44, 0x0c);
-+	rt2800_rfcsr_write(rt2x00dev, 45, 0xa6);
-+	rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
-+	rt2800_rfcsr_write(rt2x00dev, 47, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
-+	rt2800_rfcsr_write(rt2x00dev, 49, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 50, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 51, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 52, 0x38);
-+	rt2800_rfcsr_write(rt2x00dev, 53, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
-+	rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
-+	rt2800_rfcsr_write(rt2x00dev, 56, 0x82);
-+	rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
-+	rt2800_rfcsr_write(rt2x00dev, 59, 0x0b);
-+	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
-+	rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
-+	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
-+}
-+
- static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- {
- 	rt2800_rf_init_calibration(rt2x00dev, 2);
-@@ -6769,6 +6871,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	case RT3593:
- 		rt2800_init_rfcsr_3593(rt2x00dev);
- 		break;
-+	case RT5350:
-+		rt2800_init_rfcsr_5350(rt2x00dev);
-+		break;
- 	case RT5390:
- 		rt2800_init_rfcsr_5390(rt2x00dev);
- 		break;
-@@ -7148,6 +7253,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 		rt2800_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
- 	else if (rt2x00_rt(rt2x00dev, RT3352))
- 		rf = RF3322;
-+	else if (rt2x00_rt(rt2x00dev, RT5350))
-+		rf = RF5350;
- 	else
- 		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
- 
-@@ -7166,6 +7273,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
-+	case RF5350:
- 	case RF5360:
- 	case RF5362:
- 	case RF5370:
-@@ -7669,6 +7777,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF3290:
- 	case RF3320:
- 	case RF3322:
-+	case RF5350:
- 	case RF5360:
- 	case RF5362:
- 	case RF5370:
-@@ -7805,6 +7914,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	case RF3053:
- 	case RF3070:
- 	case RF3290:
-+	case RF5350:
- 	case RF5360:
- 	case RF5362:
- 	case RF5370:
-@@ -7845,6 +7955,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
- 	case RT3390:
- 	case RT3572:
- 	case RT3593:
-+	case RT5350:
- 	case RT5390:
- 	case RT5392:
- 	case RT5592:
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 4b3dd1163653..7ac265fd879e 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -169,6 +169,7 @@ struct rt2x00_chip {
- #define RT3572		0x3572
- #define RT3593		0x3593
- #define RT3883		0x3883	/* WSOC */
-+#define RT5350		0x5350  /* WSOC 2.4GHz */
- #define RT5390		0x5390  /* 2.4GHz */
- #define RT5392		0x5392  /* 2.4GHz */
- #define RT5592		0x5592
--- 
-2.11.0
+So if your television example uses IP multicast properly, it is
+completely doable with the bridge multicast-to-unicast, thanks to
+IGMP/MLD.
