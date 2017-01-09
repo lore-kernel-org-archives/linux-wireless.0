@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37520 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932236AbdABL2v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 06:28:51 -0500
-Message-ID: <1483356523.4596.12.camel@sipsolutions.net> (sfid-20170102_122853_587864_689C3D56)
-Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
- exchange
-From: Johannes Berg <johannes@sipsolutions.net>
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
-        jouni@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, vamsin@qti.qualcomm.com
-Date: Mon, 02 Jan 2017 12:28:43 +0100
-In-Reply-To: <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
-References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
-         <cf228384-c98e-737e-3ba6-6c18e988210c@quantenna.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36662 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754352AbdAIXBK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 18:01:10 -0500
+Received: by mail-oi0-f68.google.com with SMTP id u143so18619469oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 15:01:10 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH 2/3] rtlwifi: rtl8192cu: Calculate descriptor checksum correctly for BE
+Date: Mon,  9 Jan 2017 17:00:57 -0600
+Message-Id: <20170109230058.22758-3-Larry.Finger@lwfinger.net> (sfid-20170110_000115_916045_CF954608)
+In-Reply-To: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
+References: <20170109230058.22758-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-12-30 at 22:55 +0300, IgorMitsyanko wrote:
-> 
-> > The driver needs to configure receive behavior to accept frames to
-> > the
-> > specified random address during the time the frame exchange is
-> > pending
-> > and such frames need to be acknowledged similarly to frames sent to
-> > the
-> > local permanent address when this random address functionality is
-> > not
-> > used.
-> 
-> A (probably) silly question: how wireless drivers are supposed to use
-> SA 
-> in a frame? I think drivers are not concerned about source address,
-> they 
-> simply pass whatever there is already set by userspace in 
-> cfg80211_mgmt_tx_params::buf into air on Tx.
-> And on Rx, they filter frames based on receiver address/BSSID, pass
-> it 
-> to upper layers and do not care what address is in DA (it is handled
-> by 
-> upper layers).
+This driver requires a checksum for the descriptors so that the wifi
+chip is assured that the USB transmission was correct. These entries
+are little-endian, but the driver was always using cpu order in the
+calculation. As a result, the driver failed on BE hardware.
 
-They do care about the DA in RX, since - as the commit message states -
-"such frames need to be acknowledged [...]"
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+index 6da6e2a..1611e42 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/trx.c
+@@ -477,14 +477,14 @@ static void _rtl_fill_usb_tx_desc(u8 *txdesc)
+  */
+ static void _rtl_tx_desc_checksum(u8 *txdesc)
+ {
+-	u16 *ptr = (u16 *)txdesc;
++	__le16 *ptr = (__le16 *)txdesc;
+ 	u16	checksum = 0;
+ 	u32 index;
+ 
+ 	/* Clear first */
+ 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, 0);
+ 	for (index = 0; index < 16; index++)
+-		checksum = checksum ^ (*(ptr + index));
++		checksum = checksum ^ le16_to_cpu(*(ptr + index));
+ 	SET_TX_DESC_TX_DESC_CHECKSUM(txdesc, checksum);
+ }
+ 
+-- 
+2.10.2
