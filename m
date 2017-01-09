@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36444 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751482AbdAMPDN (ORCPT
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.162]:24350 "EHLO
+        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967342AbdAILr6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 10:03:13 -0500
-Date: Fri, 13 Jan 2017 07:03:06 -0800
-From: Kyle McMartin <kyle@infradead.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
-        netdev@vger.kernel.org, linux-firmware@kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192ee: New firmware from Realtek
-Message-ID: <20170113150306.GE13400@bombadil.infradead.org> (sfid-20170113_160317_619158_BE312F6F)
-References: <20161217185054.15017-1-Larry.Finger@lwfinger.net>
+        Mon, 9 Jan 2017 06:47:58 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+Cc: Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+From: "M. Braun" <michael-dev@fami-braun.de>
+Message-ID: <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de> (sfid-20170109_125050_403787_A1A45E87)
+Date: Mon, 9 Jan 2017 12:44:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20161217185054.15017-1-Larry.Finger@lwfinger.net>
+In-Reply-To: <1483949336.17582.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 17, 2016 at 12:50:54PM -0600, Larry Finger wrote:
-> -Info: Taken from Realtek version rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
-> +Info: Initial version taken from Realtek version
-> +      rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
-> +      Updated Jan. 14, 2015 with file added by Realtek to
-> +      http://github.com/lwfinger/rtlwifi_new.git.
->  File: rtlwifi/rtl8192eefw.bin
->  
+Am 09.01.2017 um 09:08 schrieb Johannes Berg:
+> Does it make sense to implement the two in separate layers though?
+> 
+> Clearly, this part needs to be implemented in the bridge layer due to
+> the snooping knowledge, but the code is very similar to what mac80211
+> has now.
 
-Uh, did something weird happen here? This patch was applied in 2015. ;-)
+Does the bridge always know about all stations connected?
 
-cheers, Kyle
+That is bridge fdb entries (need to) expire so the bridge might "forget"
+a still-connected station not sending but only consuming broadcast traffic.
+
+E.g. there is a television broadcast station here that receives a video
+stream (via wifi, udp packets) and then airs it (dvb-t) but (on its own)
+would not send any data packet on wifi (static ip, etc.).
+
+An other reason to implement this in mac80211 initially was that
+mac80211 could encapsulate broacast/multicast ethernet packtes in
+unicast A-MSDU packets in a way, so that the receiver would still see
+process ethernet packets (after conversion) but have unicast wifi
+frames. This cannot be done in bridge easily but one might want to add
+this later to mac80211.
+
+Michael
