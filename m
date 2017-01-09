@@ -1,38 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:34044 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936652AbdAKIuz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 03:50:55 -0500
-Received: by mail-pf0-f180.google.com with SMTP id 127so60751173pfg.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 00:50:55 -0800 (PST)
-Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
- <1484121737.23671.0.camel@sipsolutions.net>
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com> (sfid-20170111_095059_406415_EC708AFC)
-Date: Wed, 11 Jan 2017 17:50:52 +0900
-MIME-Version: 1.0
-In-Reply-To: <1484121737.23671.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:39098 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935282AbdAIKKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 05:10:46 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: size various nl80211 messages correctly
+Date: Mon,  9 Jan 2017 11:10:42 +0100
+Message-Id: <20170109101042.23919-1-johannes@sipsolutions.net> (sfid-20170109_111110_076021_AF096544)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017年01月11日 17:02, Johannes Berg wrote:
-> I don't think this makes sense - if you only have two peers then you
-> shouldn't even run into forwarding code paths?
->
-> johannes
+From: Johannes Berg <johannes.berg@intel.com>
 
-Though it looks odd, the code has run into forwarding code path even 
-though peer to peer mesh connection.
+Ilan reported that sometimes nl80211 messages weren't working if
+the frames being transported got very large, which was really a
+problem for userspace-to-kernel messages, but prompted me to look
+at the code.
 
-	fwd_skb = skb_copy(skb, GFP_ATOMIC);
+Upon review, I found various places where variable-length data is
+transported in an nl80211 message but the message isn't allocated
+taking that into account. This shouldn't cause any problems since
+the frames aren't really that long, apart in one place where two
+(possibly very long frames) might not fit.
 
-I checked it with printk().
+Fix all the places (that I found) that get variable length data
+from the driver and put it into a message to take the length of
+the variable data into account. The 100 there is just a safe
+constant for the remaining message overhead (it's usually around
+50 for most messages.)
 
-# I know printk() should not be used in the context, just for checking.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Masashi Honma.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 23692658fe98..f55b251e4b0d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13249,7 +13249,7 @@ void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	msg = nlmsg_new(100 + ie_len, GFP_KERNEL);
+ 	if (!msg)
+ 		return;
+ 
+@@ -13325,7 +13325,7 @@ void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
+ 
+ 	trace_cfg80211_notify_new_peer_candidate(dev, addr);
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + ie_len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -13362,7 +13362,7 @@ void nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + req_ie_len + resp_ie_len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -13456,7 +13456,7 @@ static void nl80211_send_remain_on_chan_event(
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -13696,7 +13696,7 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + len, gfp);
+ 	if (!msg)
+ 		return -ENOMEM;
+ 
+@@ -13740,7 +13740,7 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
+ 
+ 	trace_cfg80211_mgmt_tx_status(wdev, cookie, ack);
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -14046,7 +14046,7 @@ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	msg = nlmsg_new(100 + req_ie_len + resp_ie_len, gfp);
+ 	if (!msg)
+ 		return;
+ 
+@@ -14551,7 +14551,7 @@ void cfg80211_ft_event(struct net_device *netdev,
+ 	if (!ft_event->target_ap)
+ 		return;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	msg = nlmsg_new(100 + ft_event->ric_ies_len, GFP_KERNEL);
+ 	if (!msg)
+ 		return;
+ 
+-- 
+2.9.3
