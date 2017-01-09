@@ -1,64 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35165 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1031568AbdAFTYo (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34129 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753310AbdAIXeJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 14:24:44 -0500
-Received: by mail-io0-f196.google.com with SMTP id m98so942940iod.2
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2017 11:24:43 -0800 (PST)
-Received: from mail-it0-f45.google.com (mail-it0-f45.google.com. [209.85.214.45])
-        by smtp.gmail.com with ESMTPSA id e143sm1892384itc.9.2017.01.06.11.24.42
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 06 Jan 2017 11:24:42 -0800 (PST)
-Received: by mail-it0-f45.google.com with SMTP id 192so22771299itl.0
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2017 11:24:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1483610213.4394.4.camel@sipsolutions.net>
-References: <20161218002554.6362-1-andrew.zaborowski@intel.com>
- <1483544433.7312.13.camel@sipsolutions.net> <CAOq732KZrpsjK96uwwe3hna2DPkwbN3CvJz+LFxJzXxWw08wRA@mail.gmail.com>
- <1483610213.4394.4.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Fri, 6 Jan 2017 14:24:41 -0500
-Message-ID: <CAOq732Ls-9bMaWV8HF7faY8iaHyqOj8PN+vbTPmFnAUJNnFrmQ@mail.gmail.com> (sfid-20170106_202502_372249_273441F0)
-Subject: Re: [PATCH v4] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Mon, 9 Jan 2017 18:34:09 -0500
+Received: by mail-pf0-f181.google.com with SMTP id 127so35446473pfg.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 15:34:09 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
+Date: Mon,  9 Jan 2017 15:33:50 -0800
+Message-Id: <20170109233350.134036-1-briannorris@chromium.org> (sfid-20170110_003414_679299_CCF57E94)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Similar to commit fcd2042e8d36 ("mwifiex: printk() overflow with 32-byte
+SSIDs"), we failed to account for the existence of 32-char SSIDs in our
+debugfs code. Unlike in that case though, we zeroed out the containing
+struct first, and I'm pretty sure we're guaranteed to have some padding
+after the 'ssid.ssid' and 'ssid.ssid_len' fields (the struct is 33 bytes
+long).
 
-On 5 January 2017 at 04:56, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2017-01-04 at 15:35 -0500, Andrew Zaborowski wrote:
->> On 4 January 2017 at 10:40, Johannes Berg <johannes@sipsolutions.net>
->> wrote:
->> > This also doesn't seem right - the same socket could possibly own
->> > both
->> > an interface and a connection? If the connection is on the same
->> > interface you might not really want to do both - though it
->> > shouldn't
->> > hurt if all the cancel_work is in the right place - but it could be
->> > a
->> > different interface?
->>
->> This is only a syntactic change though.  The "continue" is now in the
->> "if (schedule_destroy_work)" block so the other actions will not be
->> scheduled is the interface is being destroyed.
->
-> Yes, this part is only syntactic, but you added something new
-> afterwards, and that new thing should happen even if another interface
-> is going to be scheduled for destruction.
->
-> I actually think that the code right now is already wrong though, since
-> schedule_destroy_work and schedule_scan_stop shouldn't be mutually
-> exclusive, a single socket could own both a sched scan and a different
-> interface.
->
-> I'll fix that bug, and we'll have to deal with the conflicts when
-> merging this.
+So, this is the difference between:
 
-Yes, good point.  I'll just rebase this patch on top of the fix.
+  # cat /sys/kernel/debug/mwifiex/mlan0/info
+  ...
+  essid="0123456789abcdef0123456789abcdef "
+  ...
 
-Best regards
+and the correct output:
+
+  # cat /sys/kernel/debug/mwifiex/mlan0/info
+  ...
+  essid="0123456789abcdef0123456789abcdef"
+  ...
+
+Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+Marking the 'Fixes' tag just for completeness, but AIUI, this isn't a security
+vulnerability (besides, it's debugfs), so it might not really warrant -stable.
+
+ drivers/net/wireless/marvell/mwifiex/debugfs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+index b9284b533294..ae2b69db5994 100644
+--- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
++++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+@@ -114,7 +114,8 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
+ 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) {
+ 		p += sprintf(p, "multicast_count=\"%d\"\n",
+ 			     netdev_mc_count(netdev));
+-		p += sprintf(p, "essid=\"%s\"\n", info.ssid.ssid);
++		p += sprintf(p, "essid=\"%.*s\"\n", info.ssid.ssid_len,
++			     info.ssid.ssid);
+ 		p += sprintf(p, "bssid=\"%pM\"\n", info.bssid);
+ 		p += sprintf(p, "channel=\"%d\"\n", (int) info.bss_chan);
+ 		p += sprintf(p, "country_code = \"%s\"\n", info.country_code);
+-- 
+2.11.0.390
