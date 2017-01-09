@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48048 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753730AbdAZK0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 05:26:06 -0500
-Subject: Re: [PATCH 3/4] ath9k: check for deaf rx path state
-To: Simon Wunderlich <sw@simonwunderlich.de>
-References: <20170125163654.66431-1-nbd@nbd.name> <4839692.lfma8z9lJt@prime>
- <809a5011-4361-0459-2937-5dd5b0d619c2@nbd.name> <2448336.mzt5URIzpg@prime>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <8306f20d-ca2a-60fd-b0d9-5155f3bbd094@nbd.name> (sfid-20170126_112610_258768_20CAC347)
-Date: Thu, 26 Jan 2017 11:26:03 +0100
-MIME-Version: 1.0
-In-Reply-To: <2448336.mzt5URIzpg@prime>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wj0-f177.google.com ([209.85.210.177]:33114 "EHLO
+        mail-wj0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932881AbdAIO0G (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 09:26:06 -0500
+Received: by mail-wj0-f177.google.com with SMTP id kq3so20326858wjc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 06:26:06 -0800 (PST)
+From: Jorge Ramirez-Ortiz <jorge.ramirez-ortiz@linaro.org>
+To: jorge.ramirez-ortiz@linaro.org, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, daniel.lezcano@linaro.org,
+        daniel.thompson@linaro.org
+Subject: [PATCH] cfg80211: wext does not need to set monitor channel in managed mode
+Date: Mon,  9 Jan 2017 15:25:49 +0100
+Message-Id: <1483971949-10014-1-git-send-email-jorge.ramirez-ortiz@linaro.org> (sfid-20170109_152659_127924_AA496DD8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-26 11:15, Simon Wunderlich wrote:
-> Hey,
-> 
-> On Thursday, January 26, 2017 11:02:53 AM CET Felix Fietkau wrote:
->> On 2017-01-26 10:50, Simon Wunderlich wrote:
->> > Hey Felix,
->> > 
->> > On Wednesday, January 25, 2017 5:36:53 PM CET Felix Fietkau wrote:
->> >> Various chips occasionally run into a state where the tx path still
->> >> appears to be working normally, but the rx path is deaf.
->> >> 
->> >> There is no known register signature to check for this state explicitly,
->> >> so use the lack of rx interrupts as an indicator.
->> >> 
->> >> This detection is prone to false positives, since a device could also
->> >> simply be in an environment where there are no frames on the air.
->> >> However, in this case doing a reset should be harmless since it's
->> >> obviously not interrupting any real activity. To avoid confusion, call
->> >> the reset counters in this case "Rx path inactive" instead of something
->> >> like "Rx path deaf", since it may not be an indication of a real
->> >> hardware failure.
->> >> 
->> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> > 
->> > As we observed in the field, it may happen that there are still RX
->> > interrupts triggered, but just a very low number - in which case I
->> > believe your version wouldn't fix the problem. Therefore we had a
->> > threshold in our original patch [1].
->> 
->> It seems that you were seeing something different than what I was seeing
->> in my tests. Though it could be that my issues were actually caused by
->> something else. I had queued up these changes a while back before I
->> finally found and fixed the IRQ issue.
-> 
-> What we found a good threshold was to check for less than 1 RX interrupt per 
-> second, and check the mean average (about) every 30 seconds. If there is any 
-> other AP or a station connected, it will not reset the chip, and also there 
-> will be no reset on short outages.
-But if there's less than 1 Rx interrupt per second, then my patch should
-also trigger, right?
+There is not a valid reason to attempt setting the monitor channel
+while in managed mode. Since this code path only deals with this mode,
+remove the code block.
 
-- Felix
+Signed-off-by: Jorge Ramirez-Ortiz <jorge.ramirez-ortiz@linaro.org>
+---
+ net/wireless/wext-sme.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
+
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 9951638..c434f19 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -105,30 +105,7 @@ int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
+ 			goto out;
+ 	}
+ 
+-
+ 	wdev->wext.connect.channel = chan;
+-
+-	/*
+-	 * SSID is not set, we just want to switch monitor channel,
+-	 * this is really just backward compatibility, if the SSID
+-	 * is set then we use the channel to select the BSS to use
+-	 * to connect to instead. If we were connected on another
+-	 * channel we disconnected above and reconnect below.
+-	 */
+-	if (chan && !wdev->wext.connect.ssid_len) {
+-		struct cfg80211_chan_def chandef = {
+-			.width = NL80211_CHAN_WIDTH_20_NOHT,
+-			.center_freq1 = freq,
+-		};
+-
+-		chandef.chan = ieee80211_get_channel(&rdev->wiphy, freq);
+-		if (chandef.chan)
+-			err = cfg80211_set_monitor_channel(rdev, &chandef);
+-		else
+-			err = -EINVAL;
+-		goto out;
+-	}
+-
+ 	err = cfg80211_mgd_wext_connect(rdev, wdev);
+  out:
+ 	wdev_unlock(wdev);
+-- 
+2.7.4
