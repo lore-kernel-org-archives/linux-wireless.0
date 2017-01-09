@@ -1,140 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36278 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751757AbdAWWSj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:18:39 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 24 Jan 2017 00:03:49 +0200
-Message-Id: <20170123220350.25305-25-luca@coelho.fi> (sfid-20170123_231842_532211_541D81FD)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 24/25] iwlwifi: mvm: use mvm_disable_queue instead of sharing logic
+Received: from s3.sipsolutions.net ([5.9.151.49]:39502 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965058AbdAILFO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 06:05:14 -0500
+Message-ID: <1483959910.17582.25.camel@sipsolutions.net> (sfid-20170109_120811_069826_645D8E3C)
+Subject: Re: SIOCSIWFREQ while in NL80211_IFTYPE_STATION
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jorge Ramirez <jorge.ramirez-ortiz@linaro.org>,
+        netdev@vger.kernel.org, Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 09 Jan 2017 12:05:10 +0100
+In-Reply-To: <f8e8b557-3e7b-cc1a-c31a-91f9d754e683@linaro.org> (sfid-20170105_153832_371808_8A30C9BF)
+References: <685811c3-6247-77fd-8c70-617951886451@linaro.org>
+         <1483616301.4394.6.camel@sipsolutions.net>
+         <92e60cb2-8bb4-df03-3434-4a055f575df0@linaro.org>
+         <1483625204.4394.23.camel@sipsolutions.net>
+         <f8e8b557-3e7b-cc1a-c31a-91f9d754e683@linaro.org>
+         (sfid-20170105_153832_371808_8A30C9BF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Thu, 2017-01-05 at 15:38 +0100, Jorge Ramirez wrote:
 
-When removing inactive queue - use the central disable queue
-function. This is needed due to a000 changes to come, but is
-a proper cleanup anyway.
+> do you mean this?
+> 
+> [jramirez@igloo ~ (debian-qcom-dragonboard410c-16.09-local $)]$ git
+> diff
+> diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+> index a4e8af3..c56bac5 100644
+> --- a/net/wireless/wext-sme.c
+> +++ b/net/wireless/wext-sme.c
+> @@ -106,30 +106,7 @@ int cfg80211_mgd_wext_siwfreq(struct net_device
+> *dev,
+>                          goto out;
+>          }
+> 
+> -
+>          wdev->wext.connect.channel = chan;
+> -
+> -   /*
+> -    * SSID is not set, we just want to switch monitor channel,
+> -    * this is really just backward compatibility, if the SSID
+> -    * is set then we use the channel to select the BSS to use
+> -    * to connect to instead. If we were connected on another
+> -    * channel we disconnected above and reconnect below.
+> -    */
+> -   if (chan && !wdev->wext.connect.ssid_len) {
+> -           struct cfg80211_chan_def chandef = {
+> -                   .width = NL80211_CHAN_WIDTH_20_NOHT,
+> -                   .center_freq1 = freq,
+> -           };
+> -
+> -           chandef.chan = ieee80211_get_channel(&rdev->wiphy, freq);
+> -           if (chandef.chan)
+> -                   err = cfg80211_set_monitor_channel(rdev,
+> &chandef);
+> -           else
+> -                   err = -EINVAL;
+> -           goto out;
+> -   }
+> -
+>          err = cfg80211_mgd_wext_connect(rdev, wdev);
+>    out:
+>          wdev_unlock(wdev);
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 22 ++++++++--------------
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 10 ++++++----
- 3 files changed, 16 insertions(+), 20 deletions(-)
+Yeah. Frankly, I don't even understand that comment anymore - if the
+interface is in managed mode, why set the monitor channel, it's not
+monitoring? And if it's not in managed mode we don't get here.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 4a9cb76b7611..a672aa71c656 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1657,8 +1657,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-  * Disable a TXQ.
-  * Note that in non-DQA mode the %mac80211_queue and %tid params are ignored.
-  */
--void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
--			 u8 tid, u8 flags);
-+int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+			u8 tid, u8 flags);
- int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq);
- 
- /* Return a bitmask with all the hw supported queues, except for the
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index cf8222a8b588..4ea9589e8823 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -755,28 +755,22 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	 * first
- 	 */
- 	if (using_inactive_queue) {
--		struct iwl_scd_txq_cfg_cmd cmd = {
--			.scd_queue = queue,
--			.action = SCD_CFG_DISABLE_QUEUE,
--		};
--		u8 txq_curr_ac;
--
--		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
-+		u8 txq_curr_ac, sta_id;
- 
- 		spin_lock_bh(&mvm->queue_info_lock);
- 		txq_curr_ac = mvm->queue_info[queue].mac80211_ac;
--		cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
--		cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[txq_curr_ac];
--		cmd.tid = mvm->queue_info[queue].txq_tid;
-+		sta_id = mvm->queue_info[queue].ra_sta_id;
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
-+		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
- 		/* Disable the queue */
- 		if (disable_agg_tids)
- 			iwl_mvm_invalidate_sta_queue(mvm, queue,
- 						     disable_agg_tids, false);
--		iwl_trans_txq_disable(mvm->trans, queue, false);
--		ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd),
--					   &cmd);
-+
-+		ret = iwl_mvm_disable_txq(mvm, queue,
-+					  mvmsta->vif->hw_queue[txq_curr_ac],
-+					  tid, 0);
- 		if (ret) {
- 			IWL_ERR(mvm,
- 				"Failed to free inactive queue %d (ret=%d)\n",
-@@ -791,7 +785,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 		}
- 
- 		/* If TXQ is allocated to another STA, update removal in FW */
--		if (cmd.sta_id != mvmsta->sta_id)
-+		if (sta_id != mvmsta->sta_id)
- 			iwl_mvm_invalidate_sta_queue(mvm, queue, 0, true);
- 	}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index d04babd99b53..2beea3b98e52 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -706,8 +706,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	}
- }
- 
--void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
--			 u8 tid, u8 flags)
-+int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
-+			u8 tid, u8 flags)
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
-@@ -720,7 +720,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 
- 	if (WARN_ON(mvm->queue_info[queue].hw_queue_refcount == 0)) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
--		return;
-+		return 0;
- 	}
- 
- 	mvm->queue_info[queue].tid_bitmap &= ~BIT(tid);
-@@ -760,7 +760,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	/* If the queue is still enabled - nothing left to do in this func */
- 	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
--		return;
-+		return 0;
- 	}
- 
- 	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
-@@ -791,6 +791,8 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	if (ret)
- 		IWL_ERR(mvm, "Failed to disable queue %d (ret=%d)\n",
- 			queue, ret);
-+
-+	return ret;
- }
- 
- /**
--- 
-2.11.0
+> 
+> 
+> I tested the change above: we can now modify the channel/frequency
+> when 
+> the SSID is not set in managed mode.
+> When the SSID is set however iwconfig does not report any error but 
+> channel/frequency doesn't change.
+> 
+> if you think this is acceptable I can submit a patch
+
+I think it looks fine, though writing the commit message may be tricky
+:)
+
+johannes
