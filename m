@@ -1,77 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:33544 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759294AbdAILCN (ORCPT
+Received: from mail1.windriver.com ([147.11.146.13]:48298 "EHLO
+        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933451AbdAIRwn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 06:02:13 -0500
-Received: by mail-pg0-f42.google.com with SMTP id 204so20788374pge.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 03:02:13 -0800 (PST)
-Subject: Re: [PATCH V6 4/3] brcmfmac: use wiphy_read_of_freq_limits to respect
- extra limits
-To: Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20170104175832.25996-1-zajec5@gmail.com>
- <20170104175832.25996-4-zajec5@gmail.com>
- <3fc87224-7f08-e365-7bbb-a4b8b5746e4f@broadcom.com>
- <CACna6rxay9sC+QT2G4AfjWT1ERsNDzFQ620hNhVhr0FRHXJu=w@mail.gmail.com>
- <e2bbce35-af09-adfa-09ea-e9fcf57b4d09@broadcom.com>
- <CACna6rw22benfuw_7BSFw1wedavmMJWTo_hfPLCVa1t0kV+Aqg@mail.gmail.com>
- <36d2dbd1-bcbe-021b-dd7f-068a5b9739ef@broadcom.com>
- <CACna6rxS-JqyW3cXFMJR6Lp-+HdJjZfkwsVRMPGn5Q1z8av75w@mail.gmail.com>
- <1483952320.17582.13.camel@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <684d1aff-a9ce-ae42-0c11-5840d3a92daf@broadcom.com> (sfid-20170109_121900_406996_434611DD)
-Date: Mon, 9 Jan 2017 12:02:07 +0100
+        Mon, 9 Jan 2017 12:52:43 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: kbuild test robot <lkp@intel.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        Samuel Ortiz <sameo@linux.intel.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>,
+        <linux-ia64@vger.kernel.org>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] nfc: don't be making arch specific unaligned decisions at driver level.
+Date: Mon, 9 Jan 2017 12:52:22 -0500
+Message-ID: <20170109175222.3162-1-paul.gortmaker@windriver.com> (sfid-20170109_185311_169237_BEF88BCB)
+In-Reply-To: <201701090839.5u37Hdez%fengguang.wu@intel.com>
+References: <201701090839.5u37Hdez%fengguang.wu@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1483952320.17582.13.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9-1-2017 9:58, Johannes Berg wrote:
-> On Sat, 2017-01-07 at 13:58 +0100, Rafał Miłecki wrote:
-> 
->>> I indeed prefer to talk about the driver instead of we. Indeed it
->>> is true due to the orig_flags behavior although that only seems to
->>> involve regulatory code. Could it be that brcmfmac undo that
->>> through the notifier?
->>
->> I guess you could touch orig_flags, but I don't know if it's
->> preferred way. This is probably question to Johannes & cfg80211 guys.
-> 
-> Right now - before the OF patch - there can't really be any orig_flags
-> with DISABLED since the driver doesn't set flags to DISABLED before
-> registering, does it? While registering, flags are copied to orig_flags
-> so the driver can register with flags like DFS or NO_IR already enabled
-> - say the firmware requires that - and they will never be overwritten
-> by cfg80211.
+Currently ia64 fails building allmodconfig with variations of:
 
-Actually, in brcmfmac we do set channels to DISABLED before registering.
-I was blissfully unaware of the orig_flags when I added the channel
-setup in our probe sequence.
+   In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
+   ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
+    static __always_inline void put_unaligned_be64(u64 val, void *p)
+                                ^~~~~~~~~~~~~~~~~~
+   In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
+                    from ./arch/ia64/include/asm/io.h:22,
+                    from ./arch/ia64/include/asm/smp.h:20,
+                    from ./include/linux/smp.h:59,
+                    from ./include/linux/topology.h:33,
+                    from ./include/linux/gfp.h:8,
+                    from ./include/linux/slab.h:14,
+                    from ./include/linux/resource_ext.h:19,
+                    from ./include/linux/acpi.h:26,
+                    from drivers/nfc/nxp-nci/i2c.c:28:
+   ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definition of ‘put_unaligned_be64’ was here
+    static inline void put_unaligned_be64(u64 val, void *p)
+                       ^~~~~~~~~~~~~~~~~~
+   scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c.o' failed
 
-> Arguably, what the driver does today - before OF - isn't incorrect
-> either, since it simply doesn't care about anything it registered with
-> at all.
+The easiest explanation for this is to look at the non-arch users in
+the following output:
 
-Given the statement above I think brcmfmac is incorrect.
+   linux$git grep include.*access_ok.h
+   arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
+   arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
+   drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
+   include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h>
 
-> However, with the OF, I argued (succesfully it seems :P) that the
-> sensible thing to do was to register with the DISABLED flag and thereby
-> "permanently" disable the channels that OF didn't think were usable,
-> but in this case now the driver has to adhere to the cfg80211 logic of
-> preserving orig_flags forever.
+Note that nfc is essentially the only non-arch user in the above.
+When it forces use of access_ok.h, it will break any arch that has
+already selected be_byteshift.h (or other conflicting implementations)
+at the arch level.
 
-By adhere you mean we should not enable channes for which orig_flags
-indicate DISABLED?
+The decision of what variant for unaligned access to use needs to be
+left to the arch level and not used at the driver level.  Since not
+all arch will have sourced asm/unaligned.h already, we need to call
+it out and then the arch can give us just the one definition that
+is needed.
 
-Regards,
-Arend
+See commit 064106a91be5 ("kernel: add common infrastructure for
+unaligned access") as a reference.
+
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+
+[v2: explicitly include asm/uaccess.h since some arch won't be
+ getting any variant of an unaligned access header without it.
+ Build test allmodconfig on x86-64, i386, arm64, ia64. ]
+
+ drivers/nfc/nfcmrvl/fw_dnld.c  | 2 +-
+ drivers/nfc/nxp-nci/firmware.c | 2 +-
+ drivers/nfc/nxp-nci/i2c.c      | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
+index f8dcdf4b24f6..f3f246ddae06 100644
+--- a/drivers/nfc/nfcmrvl/fw_dnld.c
++++ b/drivers/nfc/nfcmrvl/fw_dnld.c
+@@ -17,11 +17,11 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/unaligned/access_ok.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+ #include <net/nfc/nci_core.h>
++#include <asm/unaligned.h>
+ #include "nfcmrvl.h"
+ 
+ #define FW_DNLD_TIMEOUT			15000
+diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
+index 5291797324ba..553011f58339 100644
+--- a/drivers/nfc/nxp-nci/firmware.c
++++ b/drivers/nfc/nxp-nci/firmware.c
+@@ -24,7 +24,7 @@
+ #include <linux/completion.h>
+ #include <linux/firmware.h>
+ #include <linux/nfc.h>
+-#include <linux/unaligned/access_ok.h>
++#include <asm/unaligned.h>
+ 
+ #include "nxp-nci.h"
+ 
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index 36099e557730..20243dafea21 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -36,9 +36,9 @@
+ #include <linux/of_gpio.h>
+ #include <linux/of_irq.h>
+ #include <linux/platform_data/nxp-nci.h>
+-#include <linux/unaligned/access_ok.h>
+ 
+ #include <net/nfc/nfc.h>
++#include <asm/unaligned.h>
+ 
+ #include "nxp-nci.h"
+ 
+-- 
+2.11.0
