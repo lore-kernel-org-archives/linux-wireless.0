@@ -1,38 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48248 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40604 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750803AbdA2LWs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2017 06:22:48 -0500
-Date: Sun, 29 Jan 2017 12:16:27 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>
-Subject: Re: [PATCH v4 1/3] rt2x00: add copy of clk for soc devices
-Message-ID: <20170129111626.GA7489@redhat.com> (sfid-20170129_122251_838455_D4D9245E)
-References: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
- <1484918906-21856-2-git-send-email-sgruszka@redhat.com>
- <52ba40db-0f58-e982-2fd0-31d62343203d@nbd.name>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <52ba40db-0f58-e982-2fd0-31d62343203d@nbd.name>
+        id S935008AbdAIMjh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 07:39:37 -0500
+Message-ID: <1483965571.17582.35.camel@sipsolutions.net> (sfid-20170109_134126_078930_D5037A42)
+Subject: Re: [PATCH] cfg80211: size various nl80211 messages correctly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        linux-wireless@vger.kernel.org
+Date: Mon, 09 Jan 2017 13:39:31 +0100
+In-Reply-To: <ec9fb205-91ca-9591-0b0b-92672d093395@broadcom.com> (sfid-20170109_133643_721177_F4ABE60E)
+References: <20170109101042.23919-1-johannes@sipsolutions.net>
+         <ec9fb205-91ca-9591-0b0b-92672d093395@broadcom.com>
+         (sfid-20170109_133643_721177_F4ABE60E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 28, 2017 at 08:39:15PM +0100, Felix Fietkau wrote:
-> >  	rt2x00dev->hw = hw;
-> >  	rt2x00dev->irq = platform_get_irq(pdev, 0);
-> >  	rt2x00dev->name = pdev->dev.driver->name;
-> > +	rt2x00dev->clk = clk_get(&pdev->dev);
-> This looks broken, clk_get takes two parameters, not just one.
+> > -	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+> > +	msg = nlmsg_new(100 + ie_len, GFP_KERNEL);
+> 
+> Don't you want the '100' to be a define?
 
-Err, since patch was already applied in -next, I will post fix
-in separate patch.  
+I didn't want to glorify it too much - some places may need more or
+less over time. There's no significance to this number.
 
-Thanks
-Stanislaw
+johannes
