@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:54955 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750768AbdALJoc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 04:44:32 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point better
-Date: Thu, 12 Jan 2017 10:44:16 +0100
-Message-ID: <3158205.0GkzbOcZ01@wuerfel> (sfid-20170112_104625_489415_2B903242)
-In-Reply-To: <1484212560.5391.3.camel@sipsolutions.net>
-References: <20170111143532.485827-1-arnd@arndb.de> <3292373.oxnXTOSWCQ@wuerfel> <1484212560.5391.3.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:49816 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754039AbdAJK4M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jan 2017 05:56:12 -0500
+Message-ID: <1484045763.1014.0.camel@sipsolutions.net> (sfid-20170110_115640_475058_0F08C92D)
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>
+Cc: "M. Braun" <michael-dev@fami-braun.de>,
+        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Date: Tue, 10 Jan 2017 11:56:03 +0100
+In-Reply-To: <20170110041816.GJ5513@otheros>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+         <1483706872.4089.8.camel@sipsolutions.net>
+         <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+         <1483710841.12677.1.camel@sipsolutions.net>
+         <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+         <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+         <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+         <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
+         <20170110041816.GJ5513@otheros>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, January 12, 2017 10:16:00 AM CET Johannes Berg wrote:
-> And I realized only now that this was a different place ...
+On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
+> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
+> > I wonder if MAC80211 should be doing IGMP snooping and not bridge
+> > in this environment.
+> 
+> In the long term, yes. For now, not quite sure.
 
-Right, it was a few hundred randconfigs later after I had confirmed
-that the first patch fixed all the configurations that were broken
-at first.
+There's no "for now" in the kernel. Code added now will have to be
+maintained essentially forever.
 
-> I've just added the check you suggested - spent way too much time
-> already on this old crap 
-
-Ok, thanks! Let's hope it doesn't come back once more.
-
-I'm still trying to categorize the newly added warnings in gcc-7,
-there a number of very useful warnings that got added, but some of
-them are rather noisy and find both a number of real bugs and
-false positives. The NULL check had only a few findings that all
-seemed worth fixing.
-
-	Arnd
+johannes
