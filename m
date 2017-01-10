@@ -1,33 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:34181 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750905AbdALTFJ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12393 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932567AbdAJPwu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 14:05:09 -0500
-Received: by mail-qt0-f195.google.com with SMTP id a29so3532948qtb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 11:05:09 -0800 (PST)
+        Tue, 10 Jan 2017 10:52:50 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix Tx legacy rate reporting
+Date: Tue, 10 Jan 2017 21:23:23 +0530
+Message-ID: <1484063603-13652-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170110_165253_651536_2708CEE3)
 MIME-Version: 1.0
-In-Reply-To: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Thu, 12 Jan 2017 11:05:03 -0800
-Message-ID: <CAA93jw7PN+5Uinyp4JPd8XTd=F_ZFRKTD9SMEm_JVP2iuJDLxA@mail.gmail.com> (sfid-20170112_200518_858670_2F269A6E)
-Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Ben Greear <greearb@candelatech.com>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yay! This sounds like a potential fix for this?
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-https://bugs.lede-project.org/index.php?do=details&task_id=368
+Tx legacy rate is reported 10 fold, as below
 
-Are all the ath10k chipsets excluded by commit:
+iw dev wlan#N station dump | grep "tx bitrate"
+        tx bitrate:     240.0 MBit/s
 
-4ca1807815aa6801aaced7fdefa9edacc2521767
+This is because by mistake we muliply by the hardware reported
+rate twice by 10, fix this.
 
-Still needed to be excluded?
+Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index cb86530..ae10fe1 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2247,7 +2247,7 @@ static inline bool is_valid_legacy_rate(u8 rate)
+ 		rate *= 10;
+ 		if (rate == 60 && txrate.flags == WMI_RATE_PREAMBLE_CCK)
+ 			rate = rate - 5;
+-		arsta->txrate.legacy = rate * 10;
++		arsta->txrate.legacy = rate;
+ 	} else if (txrate.flags == WMI_RATE_PREAMBLE_HT) {
+ 		arsta->txrate.flags = RATE_INFO_FLAGS_MCS;
+ 		arsta->txrate.mcs = txrate.mcs;
+-- 
+1.9.1
