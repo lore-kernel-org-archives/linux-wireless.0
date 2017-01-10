@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54414 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44496 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750789AbdA1HKO (ORCPT
+        with ESMTP id S1758474AbdAJLwf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Jan 2017 02:10:14 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v4,1/3] rt2x00: add copy of clk for soc devices
+        Tue, 10 Jan 2017 06:52:35 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1484918906-21856-2-git-send-email-sgruszka@redhat.com>
-References: <1484918906-21856-2-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>,
-        John Crispin <blogic@openwrt.org>
-Message-Id: <20170128070943.8280C60A51@smtp.codeaurora.org> (sfid-20170128_081202_854805_9E1F934F)
-Date: Sat, 28 Jan 2017 07:09:43 +0000 (UTC)
+To: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+Cc: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de
+Subject: Re: [PATCH 1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
+References: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com>
+        <eeeaa63e-b179-be38-afbb-03c3bf9a0158@redpinesignals.com>
+Date: Tue, 10 Jan 2017 13:52:24 +0200
+In-Reply-To: <eeeaa63e-b179-be38-afbb-03c3bf9a0158@redpinesignals.com>
+        (Prameela Rani Garnepudi's message of "Tue, 10 Jan 2017 16:46:47
+        +0530")
+Message-ID: <87eg0brv2f.fsf@kamboji.qca.qualcomm.com> (sfid-20170110_125243_809415_021E9BE4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Since clk_get() is not trivial add copy of clk pointer to rt2x00dev
-> for System On Chip devices and initialize it on probe routine.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> Acked-by: Daniel Golle <daniel@makrotopia.org>
+Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com> writes:
 
-3 patches applied to wireless-drivers-next.git, thanks.
+> Can you please review these patches. You slipped through these patches  
+> and reviewing resent patches. Is there a specific reason? 
 
-34db70b92fae rt2x00: add copy of clk for soc devices
-5c4412e07280 rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
-98e71f44c51d rt2x00: add support for RT5350 WiSoC
+As you are new, your patches just take more time to review than others
+and haven't had a good slot to look at those yet.
 
 -- 
-https://patchwork.kernel.org/patch/9528399/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kalle Valo
