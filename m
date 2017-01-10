@@ -1,48 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38812 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:51287 "EHLO nbd.name"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751390AbdAQX2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 18:28:16 -0500
-From: Jes.Sorensen@gmail.com
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] rtl8xxxu: Add additional USB IDs for rtl8192eu devices
-Date: Tue, 17 Jan 2017 18:18:55 -0500
-Message-Id: <20170117231856.5075-5-Jes.Sorensen@gmail.com> (sfid-20170118_002854_520022_BD23E0BD)
-In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
-References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+        id S1161874AbdAJRXg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jan 2017 12:23:36 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Dave Taht <dave.taht@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+ <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
+ <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
+ <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
+Cc: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        "M. Braun" <michael-dev@fami-braun.de>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        bridge@lists.linux-foundation.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name> (sfid-20170110_182358_607613_2550111D)
+Date: Tue, 10 Jan 2017 18:23:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Axel Köllhofer <AxelKoellhofer@web.de>
+On 2017-01-10 18:17, Dave Taht wrote:
+> In the case of wifi I have 3 issues with this line of thought.
+> 
+> multicast in wifi has generally supposed to be unreliable. This makes
+> it reliable. reliability comes at a cost -
+> 
+> multicast is typically set at a fixed low rate today. unicast is
+> retried at different rates until it succeeds - for every station
+> listening. If one station is already at the lowest rate, the total
+> cost of the transmit increases, rather than decreases.
+> 
+> unicast gets block acks until it succeeds. Again, more delay.
+> 
+> I think there is something like 31 soft-retries in the ath9k driver....
+If I remember correctly, hardware retries are counted here as well.
 
-These IDs originate from the vendor driver
+> what happens to diffserv markings here? for unicast CS1 goes into the
+> BE queue, CS6, the VO queue. Do we go from one flat queue for all of
+> multicast to punching it through one of the hardware queues based on
+> the diffserv mark now with this patch?
+> 
+> I would like it if there was a way to preserve the unreliability
+> (which multiple mesh protocols depend on), send stuff with QoSNoack,
+> etc - or dynamically choose (based on the rates of the stations)
+> between conventional multicast and unicast.
+> 
+> Or - better, IMHO, keep sending multicast as is but pick the best of
+> the rates available to all the listening stations for it.
+The advantage of the multicast-to-unicast conversion goes beyond simply
+selecting a better rate - aggregation matters a lot as well, and that is
+simply incompatible with normal multicast.
 
-Signed-off-by: Axel Köllhofer <AxelKoellhofer@web.de>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Some multicast streams use lots of small-ish packets, the airtime impact
+of those is vastly reduced, even if the transmission has to be
+duplicated for a few stations.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index a8386f4..3585a04 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6354,6 +6354,13 @@ static struct usb_device_id dev_table[] = {
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0x7822, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
-+/* found in rtl8192eu vendor driver */
-+{USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0107, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8192eu_fops},
-+{USB_DEVICE_AND_INTERFACE_INFO(0x2019, 0xab33, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8192eu_fops},
-+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x818c, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8192eu_fops},
- #endif
- { }
- };
--- 
-2.7.4
+- Felix
