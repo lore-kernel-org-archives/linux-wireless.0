@@ -1,363 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5659 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751734AbdALNPX (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33614 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757710AbdAJQTB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 08:15:23 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 13/13] wil6210: convert symbolic permissions to octal permissions
-Date: Thu, 12 Jan 2017 15:06:05 +0200
-Message-Id: <1484226365-10433-14-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141534_771909_00F683AE)
-In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Tue, 10 Jan 2017 11:19:01 -0500
+Received: by mail-oi0-f65.google.com with SMTP id j15so17574187oih.0
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 08:19:01 -0800 (PST)
+Subject: Re: [bug report] rtlwifi: Remove some redundant code
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+References: <20170105111124.GA4548@elgon.mountain>
+ <8737grjaje.fsf@purkki.adurom.net>
+Cc: linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <fa0f2462-d3db-e0bb-2562-16d56cdfec7c@lwfinger.net> (sfid-20170110_171907_098300_F517233B)
+Date: Tue, 10 Jan 2017 10:18:58 -0600
+MIME-Version: 1.0
+In-Reply-To: <8737grjaje.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Symbolic permissions are no longer recommended.
-This patch changes the symbolic permissions in wil6210 driver
-to octal permissions.
+On 01/10/2017 07:43 AM, Kalle Valo wrote:
+> Dan Carpenter <dan.carpenter@oracle.com> writes:
+>
+>> Hello Larry Finger,
+>>
+>> The patch c93ac39da006: "rtlwifi: Remove some redundant code" from
+>> Dec 15, 2016, leads to the following static checker warning:
+>>
+>> 	drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:326 rtl92d_download_fw()
+>> 	warn: curly braces intended?
+>>
+>> drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+>>    306          /* If 8051 is running in RAM code, driver should
+>>    307           * inform Fw to reset by itself, or it will cause
+>>    308           * download Fw fail.*/
+>>    309          /* 8051 RAM code */
+>>    310          if (rtl_read_byte(rtlpriv, REG_MCUFWDL) & BIT(7)) {
+>>    311                  rtl92d_firmware_selfreset(hw);
+>>    312                  rtl_write_byte(rtlpriv, REG_MCUFWDL, 0x00);
+>>    313          }
+>>    314          _rtl92d_enable_fw_download(hw, true);
+>>    315          _rtl92d_write_fw(hw, version, pfwdata, fwsize);
+>>    316          _rtl92d_enable_fw_download(hw, false);
+>>    317          spin_lock_irqsave(&globalmutex_for_fwdownload, flags);
+>>    318          err = _rtl92d_fw_free_to_go(hw);
+>>    319          /* download fw over,clear 0x1f[5] */
+>>    320          value = rtl_read_byte(rtlpriv, 0x1f);
+>>    321          value &= (~BIT(5));
+>>    322          rtl_write_byte(rtlpriv, 0x1f, value);
+>>    323          spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
+>>    324          if (err)
+>>    325                  pr_err("fw is not ready to run!\n");
+>>    326                  goto exit;
+>>
+>> I guess we could add the braces back.
+>>
+>>    327  exit:
+>>    328          err = _rtl92d_fw_init(hw);
+>>
+>> Should we even be running _rtl92d_fw_init() if _rtl92d_fw_free_to_go()
+>> fails?  What about preserving the error code?
+>>
+>>    329          return err;
+>>    330  }
+>
+> A possible fix but which doesn't seem to address all your concerns:
+>
+> [next] rtlwifi: rtl8192de: fix missing curly braces
+>
+> https://patchwork.kernel.org/patch/9506837/
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c |   2 +-
- drivers/net/wireless/ath/wil6210/debugfs.c  | 128 ++++++++++++++--------------
- drivers/net/wireless/ath/wil6210/main.c     |  16 ++--
- drivers/net/wireless/ath/wil6210/pcie_bus.c |   2 +-
- drivers/net/wireless/ath/wil6210/txrx.c     |   4 +-
- drivers/net/wireless/ath/wil6210/wmi.c      |   6 +-
- 6 files changed, 79 insertions(+), 79 deletions(-)
+Strange, but Gmail put that patch in my spam. In any case, it is better to 
+remove the goto. Adding the braces back leaves a goto just before the target. 
+The compiler does the right thing, but it should be fixed.
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 9a92790..e25e78e 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -21,7 +21,7 @@
- #define WIL_MAX_ROC_DURATION_MS 5000
- 
- bool disable_ap_sme;
--module_param(disable_ap_sme, bool, S_IRUGO);
-+module_param(disable_ap_sme, bool, 0444);
- MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
- 
- #define CHAN60G(_channel, _flags) {				\
-diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
-index 97e9088..3e8cdf1 100644
---- a/drivers/net/wireless/ath/wil6210/debugfs.c
-+++ b/drivers/net/wireless/ath/wil6210/debugfs.c
-@@ -364,13 +364,13 @@ static void wil6210_debugfs_init_offset(struct wil6210_priv *wil,
- }
- 
- static const struct dbg_off isr_off[] = {
--	{"ICC", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICC), doff_io32},
--	{"ICR", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICR), doff_io32},
--	{"ICM", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICM), doff_io32},
--	{"ICS",		  S_IWUSR, offsetof(struct RGF_ICR, ICS), doff_io32},
--	{"IMV", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, IMV), doff_io32},
--	{"IMS",		  S_IWUSR, offsetof(struct RGF_ICR, IMS), doff_io32},
--	{"IMC",		  S_IWUSR, offsetof(struct RGF_ICR, IMC), doff_io32},
-+	{"ICC", 0644, offsetof(struct RGF_ICR, ICC), doff_io32},
-+	{"ICR", 0644, offsetof(struct RGF_ICR, ICR), doff_io32},
-+	{"ICM", 0644, offsetof(struct RGF_ICR, ICM), doff_io32},
-+	{"ICS",	0244, offsetof(struct RGF_ICR, ICS), doff_io32},
-+	{"IMV", 0644, offsetof(struct RGF_ICR, IMV), doff_io32},
-+	{"IMS",	0244, offsetof(struct RGF_ICR, IMS), doff_io32},
-+	{"IMC",	0244, offsetof(struct RGF_ICR, IMC), doff_io32},
- 	{},
- };
- 
-@@ -390,9 +390,9 @@ static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
- }
- 
- static const struct dbg_off pseudo_isr_off[] = {
--	{"CAUSE",   S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE), doff_io32},
--	{"MASK_SW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW), doff_io32},
--	{"MASK_FW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW), doff_io32},
-+	{"CAUSE",   0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE), doff_io32},
-+	{"MASK_SW", 0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW), doff_io32},
-+	{"MASK_FW", 0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW), doff_io32},
- 	{},
- };
- 
-@@ -411,40 +411,40 @@ static int wil6210_debugfs_create_pseudo_ISR(struct wil6210_priv *wil,
- }
- 
- static const struct dbg_off lgc_itr_cnt_off[] = {
--	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_TRSH), doff_io32},
--	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_DATA), doff_io32},
--	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_CRL), doff_io32},
-+	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_CNT_TRSH), doff_io32},
-+	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_CNT_DATA), doff_io32},
-+	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_CNT_CRL), doff_io32},
- 	{},
- };
- 
- static const struct dbg_off tx_itr_cnt_off[] = {
--	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH),
-+	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH),
- 	 doff_io32},
--	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_DATA),
-+	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_DATA),
- 	 doff_io32},
--	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL),
-+	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL),
- 	 doff_io32},
--	{"IDL_TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_TRSH),
-+	{"IDL_TRSH", 0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_TRSH),
- 	 doff_io32},
--	{"IDL_DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_DATA),
-+	{"IDL_DATA", 0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_DATA),
- 	 doff_io32},
--	{"IDL_CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_CTL),
-+	{"IDL_CTL",  0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_CTL),
- 	 doff_io32},
- 	{},
- };
- 
- static const struct dbg_off rx_itr_cnt_off[] = {
--	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH),
-+	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH),
- 	 doff_io32},
--	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_DATA),
-+	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_DATA),
- 	 doff_io32},
--	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL),
-+	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL),
- 	 doff_io32},
--	{"IDL_TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_TRSH),
-+	{"IDL_TRSH", 0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_TRSH),
- 	 doff_io32},
--	{"IDL_DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_DATA),
-+	{"IDL_DATA", 0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_DATA),
- 	 doff_io32},
--	{"IDL_CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_CTL),
-+	{"IDL_CTL",  0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_CTL),
- 	 doff_io32},
- 	{},
- };
-@@ -1624,7 +1624,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 		blob->data = (void * __force)wil->csr + HOSTADDR(map->host);
- 		blob->size = map->to - map->from;
- 		snprintf(name, sizeof(name), "blob_%s", map->name);
--		wil_debugfs_create_ioblob(name, S_IRUGO, dbg, wil_blob);
-+		wil_debugfs_create_ioblob(name, 0444, dbg, wil_blob);
- 	}
- }
- 
-@@ -1634,29 +1634,29 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
- 	umode_t mode;
- 	const struct file_operations *fops;
- } dbg_files[] = {
--	{"mbox",	S_IRUGO,		&fops_mbox},
--	{"vrings",	S_IRUGO,		&fops_vring},
--	{"stations",	S_IRUGO,		&fops_sta},
--	{"desc",	S_IRUGO,		&fops_txdesc},
--	{"bf",		S_IRUGO,		&fops_bf},
--	{"ssid",	S_IRUGO | S_IWUSR,	&fops_ssid},
--	{"mem_val",	S_IRUGO,		&fops_memread},
--	{"reset",		  S_IWUSR,	&fops_reset},
--	{"rxon",		  S_IWUSR,	&fops_rxon},
--	{"tx_mgmt",		  S_IWUSR,	&fops_txmgmt},
--	{"wmi_send",		  S_IWUSR,	&fops_wmi},
--	{"back",	S_IRUGO | S_IWUSR,	&fops_back},
--	{"pmccfg",	S_IRUGO | S_IWUSR,	&fops_pmccfg},
--	{"pmcdata",	S_IRUGO,		&fops_pmcdata},
--	{"temp",	S_IRUGO,		&fops_temp},
--	{"freq",	S_IRUGO,		&fops_freq},
--	{"link",	S_IRUGO,		&fops_link},
--	{"info",	S_IRUGO,		&fops_info},
--	{"recovery",	S_IRUGO | S_IWUSR,	&fops_recovery},
--	{"led_cfg",	S_IRUGO | S_IWUSR,	&fops_led_cfg},
--	{"led_blink_time",	S_IRUGO | S_IWUSR,	&fops_led_blink_time},
--	{"fw_capabilities",	S_IRUGO,	&fops_fw_capabilities},
--	{"fw_version",	S_IRUGO,		&fops_fw_version},
-+	{"mbox",	0444,		&fops_mbox},
-+	{"vrings",	0444,		&fops_vring},
-+	{"stations", 0444,		&fops_sta},
-+	{"desc",	0444,		&fops_txdesc},
-+	{"bf",		0444,		&fops_bf},
-+	{"ssid",	0644,		&fops_ssid},
-+	{"mem_val",	0644,		&fops_memread},
-+	{"reset",	0244,		&fops_reset},
-+	{"rxon",	0244,		&fops_rxon},
-+	{"tx_mgmt",	0244,		&fops_txmgmt},
-+	{"wmi_send", 0244,		&fops_wmi},
-+	{"back",	0644,		&fops_back},
-+	{"pmccfg",	0644,		&fops_pmccfg},
-+	{"pmcdata",	0444,		&fops_pmcdata},
-+	{"temp",	0444,		&fops_temp},
-+	{"freq",	0444,		&fops_freq},
-+	{"link",	0444,		&fops_link},
-+	{"info",	0444,		&fops_info},
-+	{"recovery", 0644,		&fops_recovery},
-+	{"led_cfg",	0644,		&fops_led_cfg},
-+	{"led_blink_time",	0644,	&fops_led_blink_time},
-+	{"fw_capabilities",	0444,	&fops_fw_capabilities},
-+	{"fw_version",	0444,		&fops_fw_version},
- };
- 
- static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
-@@ -1695,32 +1695,32 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
- 
- /* fields in struct wil6210_priv */
- static const struct dbg_off dbg_wil_off[] = {
--	WIL_FIELD(privacy,	S_IRUGO,		doff_u32),
--	WIL_FIELD(status[0],	S_IRUGO | S_IWUSR,	doff_ulong),
--	WIL_FIELD(hw_version,	S_IRUGO,		doff_x32),
--	WIL_FIELD(recovery_count, S_IRUGO,		doff_u32),
--	WIL_FIELD(ap_isolate,	S_IRUGO,		doff_u32),
--	WIL_FIELD(discovery_mode, S_IRUGO | S_IWUSR,	doff_u8),
--	WIL_FIELD(chip_revision, S_IRUGO,		doff_u8),
--	WIL_FIELD(abft_len, S_IRUGO | S_IWUSR,		doff_u8),
-+	WIL_FIELD(privacy,	0444,		doff_u32),
-+	WIL_FIELD(status[0],	0644,	doff_ulong),
-+	WIL_FIELD(hw_version,	0444,	doff_x32),
-+	WIL_FIELD(recovery_count, 0444,	doff_u32),
-+	WIL_FIELD(ap_isolate,	0444,	doff_u32),
-+	WIL_FIELD(discovery_mode, 0644,	doff_u8),
-+	WIL_FIELD(chip_revision, 0444,	doff_u8),
-+	WIL_FIELD(abft_len, 0644,		doff_u8),
- 	{},
- };
- 
- static const struct dbg_off dbg_wil_regs[] = {
--	{"RGF_MAC_MTRL_COUNTER_0", S_IRUGO, HOSTADDR(RGF_MAC_MTRL_COUNTER_0),
-+	{"RGF_MAC_MTRL_COUNTER_0", 0444, HOSTADDR(RGF_MAC_MTRL_COUNTER_0),
- 		doff_io32},
--	{"RGF_USER_USAGE_1", S_IRUGO, HOSTADDR(RGF_USER_USAGE_1), doff_io32},
-+	{"RGF_USER_USAGE_1", 0444, HOSTADDR(RGF_USER_USAGE_1), doff_io32},
- 	{},
- };
- 
- /* static parameters */
- static const struct dbg_off dbg_statics[] = {
--	{"desc_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_txdesc_index, doff_u32},
--	{"vring_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_vring_index, doff_u32},
--	{"mem_addr",	S_IRUGO | S_IWUSR, (ulong)&mem_addr, doff_u32},
--	{"vring_idle_trsh", S_IRUGO | S_IWUSR, (ulong)&vring_idle_trsh,
-+	{"desc_index",	0644, (ulong)&dbg_txdesc_index, doff_u32},
-+	{"vring_index",	0644, (ulong)&dbg_vring_index, doff_u32},
-+	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
-+	{"vring_idle_trsh", 0644, (ulong)&vring_idle_trsh,
- 	 doff_u32},
--	{"led_polarity", S_IRUGO | S_IWUSR, (ulong)&led_polarity, doff_u8},
-+	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
- 	{},
- };
- 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 85a795a..efb1f59 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -27,23 +27,23 @@
- #define WAIT_FOR_SCAN_ABORT_MS 1000
- 
- bool debug_fw; /* = false; */
--module_param(debug_fw, bool, S_IRUGO);
-+module_param(debug_fw, bool, 0444);
- MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
- 
- static bool oob_mode;
--module_param(oob_mode, bool, S_IRUGO);
-+module_param(oob_mode, bool, 0444);
- MODULE_PARM_DESC(oob_mode,
- 		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
- 
- bool no_fw_recovery;
--module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
-+module_param(no_fw_recovery, bool, 0644);
- MODULE_PARM_DESC(no_fw_recovery, " disable automatic FW error recovery");
- 
- /* if not set via modparam, will be set to default value of 1/8 of
-  * rx ring size during init flow
-  */
- unsigned short rx_ring_overflow_thrsh = WIL6210_RX_HIGH_TRSH_INIT;
--module_param(rx_ring_overflow_thrsh, ushort, S_IRUGO);
-+module_param(rx_ring_overflow_thrsh, ushort, 0444);
- MODULE_PARM_DESC(rx_ring_overflow_thrsh,
- 		 " RX ring overflow threshold in descriptors.");
- 
-@@ -73,7 +73,7 @@ static int mtu_max_set(const char *val, const struct kernel_param *kp)
- 	.get = param_get_uint,
- };
- 
--module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, S_IRUGO);
-+module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, 0444);
- MODULE_PARM_DESC(mtu_max, " Max MTU value.");
- 
- static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
-@@ -102,11 +102,11 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
- 	.get = param_get_uint,
- };
- 
--module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, S_IRUGO);
-+module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, 0444);
- MODULE_PARM_DESC(rx_ring_order, " Rx ring order; size = 1 << order");
--module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, S_IRUGO);
-+module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, 0444);
- MODULE_PARM_DESC(tx_ring_order, " Tx ring order; size = 1 << order");
--module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, S_IRUGO);
-+module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
- MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
- 
- #define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
-diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-index 3a63e98..76dc2b3 100644
---- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
-+++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
-@@ -23,7 +23,7 @@
- #include <linux/rtnetlink.h>
- 
- static bool use_msi = true;
--module_param(use_msi, bool, S_IRUGO);
-+module_param(use_msi, bool, 0444);
- MODULE_PARM_DESC(use_msi, " Use MSI interrupt, default - true");
- 
- #ifdef CONFIG_PM
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 1311688..072182e 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -29,12 +29,12 @@
- #include "trace.h"
- 
- static bool rtap_include_phy_info;
--module_param(rtap_include_phy_info, bool, S_IRUGO);
-+module_param(rtap_include_phy_info, bool, 0444);
- MODULE_PARM_DESC(rtap_include_phy_info,
- 		 " Include PHY info in the radiotap header, default - no");
- 
- bool rx_align_2;
--module_param(rx_align_2, bool, S_IRUGO);
-+module_param(rx_align_2, bool, 0444);
- MODULE_PARM_DESC(rx_align_2, " align Rx buffers on 4*n+2, default - no");
- 
- static inline uint wil_rx_snaplen(void)
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 27d21a3..1f22c19 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -24,16 +24,16 @@
- #include "trace.h"
- 
- static uint max_assoc_sta = WIL6210_MAX_CID;
--module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
-+module_param(max_assoc_sta, uint, 0644);
- MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
- 
- int agg_wsize; /* = 0; */
--module_param(agg_wsize, int, S_IRUGO | S_IWUSR);
-+module_param(agg_wsize, int, 0644);
- MODULE_PARM_DESC(agg_wsize, " Window size for Tx Block Ack after connect;"
- 		 " 0 - use default; < 0 - don't auto-establish");
- 
- u8 led_id = WIL_LED_INVALID_ID;
--module_param(led_id, byte, S_IRUGO);
-+module_param(led_id, byte, 0444);
- MODULE_PARM_DESC(led_id,
- 		 " 60G device led enablement. Set the led ID (0-2) to enable");
- 
--- 
-1.9.1
+Larry
