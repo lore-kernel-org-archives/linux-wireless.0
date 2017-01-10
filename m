@@ -1,42 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50776 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753522AbdAZPgd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 10:36:33 -0500
-Message-ID: <1485444985.14760.14.camel@sipsolutions.net> (sfid-20170126_163647_146654_D075A9E2)
-Subject: Re: IPv6-UDP 0x0000 checksum
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: netdev@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Jan 2017 16:36:25 +0100
-In-Reply-To: <1485444476.5145.136.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170126_162759_798052_1A660877)
-References: <1485437276.14760.3.camel@sipsolutions.net>
-         <1485438299.5145.117.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_144502_343976_16232A6D) <1485438546.14760.7.camel@sipsolutions.net>
-         <1485441942.5145.131.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_154545_190303_B1FB80BF) <1485442164.14760.11.camel@sipsolutions.net>
-         <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
-         <1485444476.5145.136.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_162759_798052_1A660877)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52590 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932277AbdAJBch (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 9 Jan 2017 20:32:37 -0500
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Chor Teck Law" <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
+Date: Tue, 10 Jan 2017 01:32:31 +0000
+Message-ID: <5b561668eb5b4804b0007d03bc723f9d@SC-EXCH02.marvell.com> (sfid-20170110_023241_768811_7F6F3337)
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+ <1483624722.4394.21.camel@sipsolutions.net>
+In-Reply-To: <1483624722.4394.21.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-26 at 07:27 -0800, Eric Dumazet wrote:
-> 
->                 if (!uh->check && !udp_sk(sk)->no_check6_rx) {
->                         udp6_csum_zero_error(skb);
->                         goto csum_error;
->                 }
-
-
-
-Yeah, I'd found no_check6_rx already, was still trying to figure out this one :)
-
-Looks like we actually check uh->check regardless of anything the
-driver said (CHECKSUM_UNNECESSARY, or whatever), so we should be fine
-even with the hardware tagging it as good in this case.
-
-johannes
+PiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gd3JvdGU6
+DQo+ID4gT24gV2VkLCAyMDE2LTEyLTIxIGF0IDA0OjExICswMDAwLCBEYXZpZCBMaW4gd3JvdGU6
+DQo+ID4gVGhpcyBwYXRjaCBwcm92aWRlcyB0aGUgbXdsd2lmaSBkcml2ZXIgZm9yIE1hcnZlbGwg
+ODg2MywgODg2NCBhbmQNCj4gPiA4ODk3DQo+ID4gY2hpcHNldHMuDQo+ID4gVGhpcyBkcml2ZXIg
+d2FzIGRldmVsb3BlZCBhcyBwYXJ0IG9mIHRoZSBvcGVud3J0Lm9yZyBwcm9qZWN0IHRvDQo+ID4g
+c3VwcG9ydCBMaW5rc3lzIFdSVDE5MDBBQyBhbmQgaXMgbWFpbnRhaW5lZCBvbg0KPiA+IGh0dHBz
+Oi8vZ2l0aHViLmNvbS9rYWxvei9td2x3aSBmaS4NCj4gDQo+IEkgZm91bmQgc29tZSBtaW5vciB0
+aGluZ3M6DQo+IA0KPiAgKiB1c2luZyBrbWFsbG9jL21lbXNldCBpbnN0ZWFkIG9mIGt6YWxsb2MN
+Cg0KSSB3aWxsIGNoYW5nZSBpdC4NCg0KPiAgKiBtd2xfZndjbWRfZ2V0XzgwbV9wcmlfY2hubCgp
+IGNvdWxkIHVzZSBzb21lIGFyaXRobWV0aWMgb3IgYXQgbGVhc3QNCj4gICAgc3dpdGNoIGNhc2Ug
+Y29uc29saWRhdGlvbiAtIGlmIGl0IHNob3VsZG4ndCBldmVuIGdvIGF3YXkgZW50aXJlbHkNCj4g
+ICAgc2luY2UgbWFjODAyMTEgZG9lc24ndCByZWFsbHkgbGltaXQgeW91IHRvIHRoZSBwcmltYXJ5
+IGNoYW5uZWwgYXMNCj4gICAgdGhlIHNwZWMgcmVxdWlyZXMgaXQgLSBzbyB0aGUgd2hvbGUgcHVy
+cG9zZSBvZiB0aGUgZnVuY3Rpb24gc2VlbXMgYQ0KPiAgICBiaXQgcXVlc3Rpb25hYmxlDQoNClRo
+aXMgZnVuY3Rpb24gaXMgdXNlZCBmb3IgdGhlIGhvc3QgY29tbWFuZCBvZiBmaXJtd2FyZS4NCg0K
+PiAgKiB3aXBoeV9lcnIoaHctPndpcGh5LCAiZmFpbGVkIGV4ZWN1dGlvblxuIik7IHNlZW1zIGxp
+a2UgYSBiaXQgdG9vDQo+ICAgIGdlbmVyaWMgKHlvdSBoYXZlIHRoYXQgbWFueSB0aW1lcyAtIGhv
+dyBhcmUgeW91IGdvaW5nIHRvIHRlbGwgd2hpY2gNCj4gICAgaGFwcGVuZWQ/KQ0KDQpJIHdpbGwg
+bW9kaWZ5IGl0Lg0KDQo+ICAqIHJhdGVzID0gc3RhLT5zdXBwX3JhdGVzW05MODAyMTFfQkFORF81
+R0haXSA8PCA1Ow0KPiAgICBpcyBhIGJpdCBxdWVzdGlvbmFibGUgLSB0aGF0IDUgc2hvdWxkIHBy
+b2JhYmx5IGJlIGRlZmluZWQgKGFsc28sDQo+ICAgIGRvZXMgdGhhdCBtZWFuIHlvdSBzdXBwb3J0
+IDEsMiwgNS41LCAxMSBhbmQgKjIyTUJwcyo/IGN1cmlvdXMsDQo+ICAgIGFsbW9zdCBub2JvZHkg
+ZG9lcyB0aGF0IGFmYWljdCkNCg0KVGhpcyBpcyB1c2VkIHRvIGNvbXBseSB3aXRoIHRoZSBwYXJh
+bWV0ZXJzIG9mIGhvc3QgY29tbWFuZCBvZiBmaXJtd2FyZS4NCg0KPiAgKiBhIGxvdCBvZiBpbml0
+aWFsaXphdGlvbnMgbGlrZQ0KPiDCoCDCoHN0cnVjdCBtd2xfdmlmICptd2xfdmlmOw0KPiAgICBb
+Li4uXQ0KPiDCoCDCoG13bF92aWYgPSBtd2xfZGV2X2dldF92aWYodmlmKTsNCj4gDQo+ICAgIGNv
+dWxkIGJlIHJvbGxlZCBpbnRvIGEgc2luZ2xlIGxpbmUgb2YgY29kZSAod2hpY2ggeW91IHNvbWV0
+aW1lcyBkbywNCj4gICAgYXBwYXJlbnRseSBhbHdheXMgZm9yICJwcml2IiBidXQgbmV2ZXIgZm9y
+ICJtd2xfdmlmIiBvciAicGNtZCI/KQ0KDQpJIHdpbGwgbW9kaWZ5IGl0Lg0KDQo+ICAqICJjZWxj
+aXVzIiBpc24ndCByZWFsbHkgc3BlbGxlZCB0aGF0IHdheSAtIGFuZCB5b3UgcHJvYmFibHkgbWVh
+bg0KPiAgICAidGVtcGVyYXR1cmUiIGFueXdheSBzaW5jZSBDZWxzaXVzIGlzIGEgdW5pdCA6KQ0K
+DQpJIHdpbGwgY2hhbmdlIGl0Lg0KDQo+ICAqIHR5cG86IGZpcndhcmUNCg0KSSB3aWxsIGZpeCBp
+dC4NCg0KPiAgKiBhIGJ1bmNoIG9mIHlvdXIgSUUgaGFuZGxpbmcgc3RydWN0cyBzZWVtIGR1cGxp
+Y2F0ZSB3aXRoIGllZWU4MDIxMS5oDQoNCk5vLCBvbmx5IHBvaW50ZXIgaXMgZGVmaW5lZCBmb3Ig
+ZXh0cmFjdGluZyBjb250ZW50IG9mIGJlYWNvbi4gVGhpcyBkcml2ZXIgZG9lcyBub3QgcmVkZWZp
+bmUgSUUgc3RydWN0dXJlIGlmIGl0IGlzIGFscmVhZHkgZGVmaW5lZCBpbiBpZWVlODAyMTEuaC4N
+Cg0KPiAgKiBhbmQgcGFydGlhbGx5IHdyb25nIC0gc29tZXRoaW5nIHdpdGggYSB2ZW5kb3IgT1VJ
+IGNhbid0IGJlIFJTTg0KPiAgICAobWF5YmUgeW91IG1lYW50IFdQQT8gdGhvdWdoIGl0J3Mgbm90
+IHF1aXRlIGNsZWFyIHRvIG1lIHdoeSB5b3UgbmVlZA0KPiAgICB0aGlzIGF0IGFsbCEpDQoNClll
+cy4gSXQgbWVhbnMgV1BBLiBUaGlzIGRyaXZlciBkb2VzIG5vdCBoYW5kbGUgY29udGVudCBvZiBp
+dC4gSXQgb25seSBuZWVkcyB0aGUgSUUgZm9yIGhvc3QgY29tbWFuZCBvZiBmaXJtd2FyZS4NCg0K
+PiAgKiArI2lmZGVmIENPTkZJR19PRg0KPiAgICArI2luY2x1ZGUgPGxpbnV4L29mLmg+DQo+ICAg
+ICsjZW5kaWYNCj4gICAgSSBkb24ndCB0aGluayB5b3UgaGF2ZSB0byBndWFyZCB0aGF0IGluY2x1
+ZGUgLi4uDQo+ICAqICsjaWZkZWYgQ09ORklHX0RFQlVHX0ZTDQo+ICAgICsjaW5jbHVkZSAiZGVi
+dWdmcy5oIg0KPiAgICArI2VuZGlmDQo+ICAgIGxpa2V3aXNlDQo+ICAqIGdpdCBhbSBhbHNvIGNv
+bXBsYWluZWQgYWJvdXQgYSBibGFuayBsaW5lIGF0IEVPRg0KPiANCg0KSSB3aWxsIHJlbW92ZSB0
+aGVtIGFuZCBmaXggYmxhbmsgbGluZS4NCg0KPiANCj4gVGhlIG9ubHkgdGhpbmcgdGhhdCByZWFs
+bHkgc2VlbXMgcXVlc3Rpb25hYmxlIHRvIG1lIGlzIHRoZSB3aG9sZSBiZWFjb24NCj4gcGFyc2lu
+ZyAoYW5kIGFwcGFyZW50IHJlYnVpbGRpbmcgaW4gZmlybXdhcmU/KS4gSXQncyB2ZXJ5IG9kZCB0
+aGF0IHlvdSBjb3VsZCBkbw0KPiB0aGF0LCB3aXRoIGEgc29mdG1hYyBkZXZpY2Ugd2hlcmUgYWxs
+IHRoZSBhdXRoZW50aWNhdGlvbiBhbmQgYXNzb2NpYXRpb24gaXMNCj4gaGFuZGxlZCBieSBob3N0
+YXBkIGFueXdheSwgYW5kIHlvdSBjYW4ndCBwb3NzaWJseSBwcmV0ZW5kIHRvIGhhbmRsZQ0KPiBl
+dmVyeXRoaW5nIGhvc3RhcGQgbWlnaHQgdGhyb3cgYXQgeW91IC0gdGhpcyB3aWxsIG1lYW4gdGhh
+dCB5b3UnbGwgaGF2ZQ0KPiBmZWF0dXJlcyBob3N0YXBkIGFuZCBldmVyeSBvdGhlciBtYWM4MDIx
+MSBzdXBwb3J0cyB0aGF0IHlvdSB3aWxsIHNpbGVudGx5DQo+IGRyb3AgYWZhaWN0IC0gd2hpY2gg
+aXMgcmF0aGVyIHVuZXhwZWN0ZWQuDQo+IA0KPiBGaXJzdCwgeW91J3JlIHBhcnNpbmcgdGhlIGRh
+dGEgb2J0YWluZWQgZnJvbSBob3N0YXBkLCBpbg0KPiBtd2xfZndjbWRfcGFyc2VfYmVhY29uKCks
+IGFuZCB0aGVuIHlvdSBzZW5kIHRoZW0gYWxsIHRvIHRoZSBmaXJtd2FyZSBpbg0KPiBtd2xfZndj
+bWRfc2V0X2llcygpLCBidXQgb25seSB0aGUgdGhpbmdzIHlvdSBhY3R1YWxseSB1bmRlcnN0b29k
+LiBOZXcNCj4gaGlnaGVyLWxldmVsIGZlYXR1cmVzIHlvdSBkb24ndCB1bmRlcnN0YW5kLCBvciB2
+ZW5kb3IgYmVhY29uIElFcyB0aGF0IGFyZW4ndA0KPiBXTU0sIHdvdWxkIGJlIGNvbXBsZXRlbHkg
+ZHJvcHBlZC4NCj4gDQo+IEknbSBub3QgdmVyeSBoYXBweSB3aXRoIHRoYXQgYmVoYXZpb3VyLg0K
+PiANCj4gV2h5IGRvZXMgdGhlIGZpcm13YXJlIHJlcXVpcmUgdGhpcz8gV2h5IG5vdCBqdXN0IHBh
+Y2sgYWxsIElFcyBpbnRvIHRoZQ0KPiBwY21kLT5pZV9saXN0X2xlbl9wcm9wcmlldGFyeSwgYW5k
+IGxlYXZlIGV2ZXJ5dGhpbmcgZWxzZSAwPyBPciAtIGlmDQo+IHBlcmhhcHMgZmlybXdhcmUgZm9y
+IHNvbWUgcmVhc29uIHJlcXVpcmVzIEhUL1ZIVCB0byBiZSB0cmVhdGVkIHNwZWNpYWxseSwNCj4g
+b25seSBwYXJzZSBvdXQgdGhlIG9uZXMgdGhhdCBhcmUgcmVhbGx5IG5lZWRlZCBzcGVjaWFsbHkg
+YW5kIGxlYXZlIGV2ZXJ5dGhpbmcNCj4gZWxzZSBpbiB0aGUgaWVfbGlzdF9sZW5fcHJvcHJpZXRh
+cnk/DQo+IA0KPiBBbHNvLCB0aGlzIGlzIGRyb3BwaW5nIGFsbCB0aGUgZW5jcnlwdGlvbiBzdHVm
+ZiAtIGV2ZW4gdGhvc2UgYXJlIGV4dGVuc2libGUgYnR3LA0KPiBhbmQgaG9zdGFwZCBtaWdodCBk
+byBzby4gSGF2aW5nIHRoZSBmaXJtd2FyZSByZWJ1aWxkIHRob3NlIG91dCBvZiBvdXQtb2YtYmFu
+ZA0KPiBpbmZvcm1hdGlvbiBpcyB2ZXJ5IHVuZXhwZWN0ZWQgZm9yIGEgbWFjODAyMTEgZHJpdmVy
+Lg0KPiANCg0KVGhpcyBkcml2ZXIganVzdCBleHRyYWN0cyBuZWVkZWQgSUVzIHdoaWNoIGlzIHVz
+ZWQgZm9yIHRoZSBob3N0IGNvbW1hbmQgb2YgZmlybXdhcmUuIEkgdGhpbmsgd2Ugd2lsbCBub3Qg
+c3VwcG9ydCBvdGhlciB2ZW5kb3IgSUVzLiBBbmQgaWYgbmVlZGVkLCB3ZSBjYW4gYWRkIHRoZW0g
+dG8gcGNtZC0+aWVfbGlzdF9wcm9wcmlldGFyeS4NCg0KPiBqb2hhbm5lcw0K
