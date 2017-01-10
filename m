@@ -1,171 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13983 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751517AbdAaSvW (ORCPT
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:33260 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762940AbdAJSYi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 13:51:22 -0500
-From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-        <arnagara@codeaurora.org>,
-        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-Subject: [PATCH v2 2/2] mac80211: store tx power value from user to station
-Date: Wed, 1 Feb 2017 00:11:41 +0530
-Message-ID: <1485888101-23454-2-git-send-email-arnagara@qti.qualcomm.com> (sfid-20170131_195310_471359_7676FEBF)
-In-Reply-To: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+        Tue, 10 Jan 2017 13:24:38 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net> <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net> <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de> <20170109212345.GA5513@otheros>
+ <20170109133032.221f8669@xeon-e3> <20170110041816.GJ5513@otheros>
+ <1484045763.1014.0.camel@sipsolutions.net> <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
+ <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Tue, 10 Jan 2017 10:24:36 -0800
+Message-ID: <CAA93jw7jBCFLGgMbBbDcUGwSRS5uWnLQU0w-T4UxEQOyQdiUgA@mail.gmail.com> (sfid-20170110_192808_447951_D5D2F5F3)
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        "M. Braun" <michael-dev@fami-braun.de>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        bridge@lists.linux-foundation.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduce a new driver callback drv_sta_set_txpwr. This API will
-copy the transmit power value passed from user space and call the driver
-callback to set the tx power for the station.
+On Tue, Jan 10, 2017 at 9:23 AM, Felix Fietkau <nbd@nbd.name> wrote:
+> On 2017-01-10 18:17, Dave Taht wrote:
+>> In the case of wifi I have 3 issues with this line of thought.
+>>
+>> multicast in wifi has generally supposed to be unreliable. This makes
+>> it reliable. reliability comes at a cost -
+>>
+>> multicast is typically set at a fixed low rate today. unicast is
+>> retried at different rates until it succeeds - for every station
+>> listening. If one station is already at the lowest rate, the total
+>> cost of the transmit increases, rather than decreases.
+>>
+>> unicast gets block acks until it succeeds. Again, more delay.
+>>
+>> I think there is something like 31 soft-retries in the ath9k driver....
+> If I remember correctly, hardware retries are counted here as well.
 
-Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
----
- include/net/mac80211.h    |  6 ++++++
- net/mac80211/cfg.c        |  7 +++++++
- net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
- net/mac80211/driver-ops.h |  5 +++++
- net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
- 5 files changed, 66 insertions(+)
+I chopped this to something more reasonable but never got around to
+quantifying it, so never pushed the patch. I figured I'd measure ATF
+in a noisy environment (which I'd be doing now if it weren't for
+https://bugs.lede-project.org/index.php?do=3Ddetails&task_id=3D368 )
+first.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5345d35..e059d5a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1777,6 +1777,8 @@ struct ieee80211_sta_rates {
-  *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
-  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
-  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
-+ * @txpwr: indicates the tx power, in dBm, to be used when sending data frames
-+ *	to the STA. Value of 0 means, automatic (default) tx power.
-  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
-  */
- struct ieee80211_sta {
-@@ -1800,6 +1802,7 @@ struct ieee80211_sta {
- 	u16 max_amsdu_len;
- 	bool support_p2p_ps;
- 	u16 max_rc_amsdu_len;
-+	u8 txpwr;
- 
- 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
- 
-@@ -3545,6 +3548,9 @@ struct ieee80211_ops {
- #endif
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
-+	int (*sta_set_txpwr)(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct ieee80211_sta *sta);
- 	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			 struct ieee80211_sta *sta,
- 			 enum ieee80211_sta_state old_state,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index e91e503..f84ada0 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1346,6 +1346,13 @@ static int sta_apply_parameters(struct ieee80211_local *local,
- 	if (params->listen_interval >= 0)
- 		sta->listen_interval = params->listen_interval;
- 
-+	if (params->txpwr >= 0) {
-+		sta->sta.txpwr = MBM_TO_DBM(params->txpwr);
-+		ret = drv_sta_set_txpwr(local, sdata, sta);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	if (params->supported_rates) {
- 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
- 					 sband, params->supported_rates,
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index bb886e7..839c002 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -138,6 +138,27 @@ int drv_sta_state(struct ieee80211_local *local,
- 	return ret;
- }
- 
-+__must_check
-+int drv_sta_set_txpwr(struct ieee80211_local *local,
-+		      struct ieee80211_sub_if_data *sdata,
-+		      struct sta_info *sta)
-+{
-+	int ret = -EOPNOTSUPP;
-+
-+	might_sleep();
-+
-+	sdata = get_bss_sdata(sdata);
-+	if (!check_sdata_in_driver(sdata))
-+		return -EIO;
-+
-+	trace_drv_sta_set_txpwr(local, sdata, &sta->sta);
-+	if (local->ops->sta_set_txpwr)
-+		ret = local->ops->sta_set_txpwr(&local->hw, &sdata->vif,
-+						&sta->sta);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- void drv_sta_rc_update(struct ieee80211_local *local,
- 		       struct ieee80211_sub_if_data *sdata,
- 		       struct ieee80211_sta *sta, u32 changed)
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index 09f77e4..2b13c39 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -526,6 +526,11 @@ int drv_sta_state(struct ieee80211_local *local,
- 		  enum ieee80211_sta_state old_state,
- 		  enum ieee80211_sta_state new_state);
- 
-+__must_check
-+int drv_sta_set_txpwr(struct ieee80211_local *local,
-+		      struct ieee80211_sub_if_data *sdata,
-+		      struct sta_info *sta);
-+
- void drv_sta_rc_update(struct ieee80211_local *local,
- 		       struct ieee80211_sub_if_data *sdata,
- 		       struct ieee80211_sta *sta, u32 changed);
-diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
-index 92a47af..a264261 100644
---- a/net/mac80211/trace.h
-+++ b/net/mac80211/trace.h
-@@ -823,6 +823,33 @@
- 	)
- );
- 
-+TRACE_EVENT(drv_sta_set_txpwr,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta),
-+
-+	TP_ARGS(local, sdata, sta),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		STA_ENTRY
-+		__field(u8, txpwr)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->txpwr = sta->txpwr;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " txpwr: %d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->txpwr
-+	)
-+);
-+
- TRACE_EVENT(drv_sta_rc_update,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
--- 
-1.9.1
+>> what happens to diffserv markings here? for unicast CS1 goes into the
+>> BE queue, CS6, the VO queue. Do we go from one flat queue for all of
+>> multicast to punching it through one of the hardware queues based on
+>> the diffserv mark now with this patch?
+
+I meant CS1=3DBK here. Tracing the path through the bridge code made my
+head hurt, I can go look at some aircaps to see if the mcast->unicast
+conversion respects those markings or not (my vote is *not*).
+
+>> I would like it if there was a way to preserve the unreliability
+>> (which multiple mesh protocols depend on), send stuff with QoSNoack,
+>> etc - or dynamically choose (based on the rates of the stations)
+>> between conventional multicast and unicast.
+>>
+>> Or - better, IMHO, keep sending multicast as is but pick the best of
+>> the rates available to all the listening stations for it.
+
+> The advantage of the multicast-to-unicast conversion goes beyond simply
+> selecting a better rate - aggregation matters a lot as well, and that is
+> simply incompatible with normal multicast.
+
+Except for the VO queue which cannot aggregate. And for that matter,
+using any other hardware queue than BE tends to eat a txop that would
+otherwise possibly be combined with an aggregate.
+
+(and the VI queue has always misbehaved, long on my todo list)
+
+> Some multicast streams use lots of small-ish packets, the airtime impact
+> of those is vastly reduced, even if the transmission has to be
+> duplicated for a few stations.
+
+The question was basically how far up does it scale. Arguably, for a
+very few, well connected stations, this patch would help. For a
+network with more - and more badly connected stations, I think it
+would hurt.
+
+What sorts of multicast traffic are being observed that flood the
+network sufficiently to be worth optimizing out? arp? nd? upnp? mdns?
+uftp? tv?
+
+(my questions above are related to basically trying to setup a sane
+a/b test, I've been building up a new testbed in noisy environment to
+match the one I have in a quiet one, and don't have any "good" mcast
+tests defined. Has anyone done an a/b test of this code with some
+repeatable test already?)
+
+(In my observations... The only truly heavy creator of a multicast
+"burp" has tended to be upnp and mdns on smaller networks. Things like
+nd and arp get more problematic as the number of stations go up also.
+I can try things like abusing vlc or uftp to see what happens?)
+
+I certainly agree multicast is a "problem" (I've seen 20-80% or more
+of a given wifi network eaten by multicast) but I'm not convinced that
+making it reliable, aggregatable unicast scales much past
+basement-level testing of a few "good" stations, and don't know which
+protocols are making it worse, the worst, in typical environments.
+Certainly apple gear puts out a lot of multicast.
+
+...
+
+As best as I recall a recommendation in the 802.11-2012 standard was
+that multicast packets be rate-limited so that you'd have a fixed
+amount of crap after each beacon sufficient to keep the rest of the
+unicast traffic flowing rapidly, instead of dumping everything into a
+given beacon transmit.
+
+That, combined with (maybe) picking the "best" union of known rates
+per station, was essentially the strategy I'd intended[1] to pursue
+for tackling the currently infinite wifi multicast queue - fq the
+entries, have a fairly short queue (codel is not the best choice here)
+drop from head, and limit the number of packets transmitted per beacon
+to spread them out. That would solve the issue for sparse multicast
+(dhcp etc), and smooth out the burps from bigger chunks while
+impacting conventional unicast minimally.
+
+There's also the pursuit of less multicast overall at least in some protoco=
+ls
+
+https://tools.ietf.org/html/draft-ietf-dnssd-hybrid-05
+
+
+>
+> - Felix
+
+
+[1] but make-wifi-fast has been out of funding since august
+
+--=20
+Dave T=C3=A4ht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
