@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34459 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753412AbdA3RlE (ORCPT
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36577 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758790AbdAJIVN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 12:41:04 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Jurij Smakov <jurij@wooyd.org>, Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl8192ce: Fix loading of incorrect firmware
-Date: Mon, 30 Jan 2017 11:40:57 -0600
-Message-Id: <20170130174057.7681-1-Larry.Finger@lwfinger.net> (sfid-20170130_184145_812504_85BF58E9)
+        Tue, 10 Jan 2017 03:21:13 -0500
+From: Fabio Coatti <fabio.coatti@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: kernel 4.9 iwlwifi startup error
+Date: Tue, 10 Jan 2017 09:21:10 +0100
+Message-ID: <2231220.vMvt4J1trM@calvin> (sfid-20170110_092130_823306_896CE0CF)
+In-Reply-To: <1484000511.5227.33.camel@coelho.fi>
+References: <2029482.jt8IarKZJs@calvin> <942b4775-6027-2b99-84c7-37b7cde124b9@au1.ibm.com> <1484000511.5227.33.camel@coelho.fi>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit cf4747d7535a ("rtlwifi: Fix regression caused by commit
-d86e64768859, an error in the edit results in the wrong firmware
-being loaded for some models of the RTL8188/8192CE.
+In data marted=EC 10 gennaio 2017 00:21:51 CET, Luca Coelho ha scritto:
+> On Tue, 2017-01-03 at 13:42 +1100, Andrew Donnellan wrote:
+> > On 02/01/17 21:12, Fabio Coatti wrote:
+> > > Hi all,
+> > > I'm using kernel 4.9 and maybe half of the times I boot my laptop I g=
+et
+> > > the
+> > > error reported below, and the wifi does not work. I have to remove
+> > > iwlwifi (like modprobe -r iwldvm iwlwifi) and insert it again to get
+> > > things workig again. This seems a bit random, it does not happens all
+> > > the times so it could be a timing issue or even a flaky hardware
+> > > (unlikely, as I see only this issue with wifi, once it starts it works
+> > > just fine)
+> > > I'm pretty sure to have seen the same behaviour at some point in 4.8.X
+> > > release, but right now I lost the related notes.
+> > > Environment:
+> > > Distro: gentoo
+> > > gcc 5.4.0
+> > > HW: Hewlett-Packard HP EliteBook Folio 9470m/18DF, BIOS 68IBD Ver. F.=
+63
+> > > 04/26/2016
+> > > Intel(R) Core(TM) i5-3427U CPU @ 1.80GHz
+> > > Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 2=
+4)
+> > >=20
+> > > Of course if more info is needed, just drop me a note.
+> > >=20
+> > > I'm not subscribed to mailing lists, so please keep me in CC: for any
+> > > information request.
+> > >=20
+> > > Many thanks.
+> >=20
+> > I've so far seen this once on my laptop, a Samsung NP540U3C (don't have
+> > it with me right now, so I'm not sure what the wifi chipset is), running
+> > with a Debian 4.9 kernel.
+>=20
+> This bug has already been reported in bugzilla:
+>=20
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D190281
+>=20
+> Did you have any problems with older kernel versions? If so, would it be
+> possible for you to bisect?
 
-Fixes: cf4747d7535a ("rtlwifi: Fix regression caused by commit d86e64768859")
-Signed-off-by: Jurij Smakov <jurij@wooyd.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
-Kalle,
 
-This patch should be pushed upstream as soon as possible. Note that it
-does not cause a kernel panic. It does, however, reduce the reliability
-of the wireless connection.
+Well, it happens on a laptop that I use quite intensively, so it will take=
+=20
+some time to bisect. However, in the meantime I checked the old logs and th=
+e=20
+first recorded occurrence happened with 4.8.10 release and firmware version=
+=20
+18.168.6.1
 
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index b875a72..9a94e45 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -96,7 +96,7 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	char *fw_name = "rtlwifi/rtl8192cfwU.bin";
-+	char *fw_name;
- 
- 	rtl8192ce_bt_reg_init(hw);
- 
-@@ -167,8 +167,13 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 	}
- 
- 	/* request fw */
--	if (IS_81XXC_VENDOR_UMC_B_CUT(rtlhal->version))
-+	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
-+	    !IS_92C_SERIAL(rtlhal->version))
-+		fw_name = "rtlwifi/rtl8192cfwU.bin";
-+	else if (IS_81XXC_VENDOR_UMC_B_CUT(rtlhal->version))
- 		fw_name = "rtlwifi/rtl8192cfwU_B.bin";
-+	else
-+		fw_name = "rtlwifi/rtl8192cfw.bin";
- 
- 	rtlpriv->max_fw_size = 0x4000;
- 	pr_info("Using firmware %s\n", fw_name);
--- 
-2.10.2
+=2D-=20
+=46abio
