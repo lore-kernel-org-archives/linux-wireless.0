@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39000 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755468AbdABMwI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 07:52:08 -0500
-Message-ID: <1483361523.21014.1.camel@sipsolutions.net> (sfid-20170102_135236_313216_5EAFE79F)
-Subject: Re: [PATCH v3] rfkill: Add rfkill-any LED trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>,
-        "David S . Miller" <davem@davemloft.net>
-Cc: =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
-         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
-        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 02 Jan 2017 13:52:03 +0100
-In-Reply-To: <1483359705.21014.0.camel@sipsolutions.net> (sfid-20170102_132212_994207_4FFA7191)
-References: <20161221084533.27006-1-kernel@kempniu.pl>
-         (sfid-20161221_094622_545524_B00A9AE7) <1483355533.4596.11.camel@sipsolutions.net>
-         (sfid-20170102_121239_821112_5D7AEC4A) <1483359705.21014.0.camel@sipsolutions.net>
-         (sfid-20170102_132212_994207_4FFA7191)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34282 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751298AbdAJQPc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 10 Jan 2017 11:15:32 -0500
+Received: by mail-oi0-f67.google.com with SMTP id 3so70343598oih.1
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 08:15:32 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] rtlwifi: rtl8192de: Remove a pointless goto
+Date: Tue, 10 Jan 2017 10:15:26 -0600
+Message-Id: <20170110161526.22255-1-Larry.Finger@lwfinger.net> (sfid-20170110_171538_747406_F4CA374A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-02 at 13:21 +0100, Johannes Berg wrote:
-> > I'm not super happy with this conditional locking - can't we
-> > instead
-> > defer the necessary work to a workqueue, or so, for purposes of the
-> > LED?
-> 
-> Actually, since you can sleep in here, and do various other things
-> like scheduling etc. this can't even be correct as is - one thread
-> might be in the probe and another might also attempt to do some
-> operations that require the lock but now don't take it.
+In commit c93ac39da0064 ("rtlwifi: Remove some redundant code), a goto
+statement was inadvertently left in the code.
 
-Additionally, this doesn't address the "can be called in any context"
-part, only the "even from within rfkill callbacks" part. It's clearly
-still not safe to call this from any context that is not allowed to
-sleep, for example.
+Fixes: c93ac39da0064 ("rtlwifi: Remove some redundant code)
+Reported-by: kbuild test robot <fengguang.wu@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 8931bcd..88faeab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -271,7 +271,6 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
+ 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
+ 	if (err)
+ 		pr_err("fw is not ready to run!\n");
+-		goto exit;
+ exit:
+ 	err = _rtl92d_fw_init(hw);
+ 	return err;
+-- 
+2.10.2
