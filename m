@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36234 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751699AbdAWWSE (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33794 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755547AbdAJRRQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:18:04 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
-Date: Tue, 24 Jan 2017 00:03:46 +0200
-Message-Id: <20170123220350.25305-22-luca@coelho.fi> (sfid-20170123_231806_885688_458EF83B)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
+        Tue, 10 Jan 2017 12:17:16 -0500
 MIME-Version: 1.0
+In-Reply-To: <1484045763.1014.0.camel@sipsolutions.net>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net> <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net> <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de> <20170109212345.GA5513@otheros>
+ <20170109133032.221f8669@xeon-e3> <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Tue, 10 Jan 2017 09:17:14 -0800
+Message-ID: <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com> (sfid-20170110_181742_861475_66E08728)
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        "M. Braun" <michael-dev@fami-braun.de>,
+        Felix Fietkau <nbd@nbd.name>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        bridge@lists.linux-foundation.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 21/25] iwlwifi: mvm: remove unused sta_id variable in iwl_mvm_change_queue_owner()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+In the case of wifi I have 3 issues with this line of thought.
 
-Remove the sta_id variable, to avoid this compile warning when
-compiling with W=1:
+multicast in wifi has generally supposed to be unreliable. This makes
+it reliable. reliability comes at a cost -
 
-/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/sta.c: In function ‘iwl_mvm_change_queue_owner’:
-/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/sta.c:871:5: warning: variable ‘sta_id’ set but not used [-Wunused-but-set-variable]
-  s8 sta_id;
-     ^
+multicast is typically set at a fixed low rate today. unicast is
+retried at different rates until it succeeds - for every station
+listening. If one station is already at the lowest rate, the total
+cost of the transmit increases, rather than decreases.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 --
- 1 file changed, 2 deletions(-)
+unicast gets block acks until it succeeds. Again, more delay.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 636c8b03e318..cf8222a8b588 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -868,7 +868,6 @@ static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
- 		.scd_queue = queue,
- 		.action = SCD_CFG_UPDATE_QUEUE_TID,
- 	};
--	s8 sta_id;
- 	int tid;
- 	unsigned long tid_bitmap;
- 	int ret;
-@@ -876,7 +875,6 @@ static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	spin_lock_bh(&mvm->queue_info_lock);
--	sta_id = mvm->queue_info[queue].ra_sta_id;
- 	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
- 	spin_unlock_bh(&mvm->queue_info_lock);
- 
--- 
-2.11.0
+I think there is something like 31 soft-retries in the ath9k driver....
+
+what happens to diffserv markings here? for unicast CS1 goes into the
+BE queue, CS6, the VO queue. Do we go from one flat queue for all of
+multicast to punching it through one of the hardware queues based on
+the diffserv mark now with this patch?
+
+I would like it if there was a way to preserve the unreliability
+(which multiple mesh protocols depend on), send stuff with QoSNoack,
+etc - or dynamically choose (based on the rates of the stations)
+between conventional multicast and unicast.
+
+Or - better, IMHO, keep sending multicast as is but pick the best of
+the rates available to all the listening stations for it.
+
+Has anyone actually looked at the effects of this with, say, 5-10
+stations at middlin to poor quality (longer distance)? using something
+to measure the real effect of the multicast conversion? (uftp, mdns?)
