@@ -1,86 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:37921 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752332AbdATOcp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 09:32:45 -0500
-Date: Fri, 20 Jan 2017 15:32:19 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>,
-        John Crispin <blogic@openwrt.org>
-Subject: Re: [PATCH v4 0/3] rt2x00: RT5350 support
-Message-ID: <20170120143219.GB22861@makrotopia.org> (sfid-20170120_153324_838187_0A7A13FB)
-References: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
+Received: from nbd.name ([46.4.11.11]:49837 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754191AbdAKMVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 07:21:40 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+ <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
+ <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
+ <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
+ <058f2afd-2502-e2e5-6427-1536fcd5851f@quantenna.com>
+ <015bf651-7584-13c0-16b9-d4e29e23c96b@nbd.name>
+ <ee946686-699c-da64-4932-f58e3f1a83ad@quantenna.com>
+Cc: netdev@vger.kernel.org, bridge@lists.linux-foundation.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "David S . Miller" <davem@davemloft.net>,
+        "M. Braun" <michael-dev@fami-braun.de>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <8d3f0bd9-8b66-ce49-ab1d-56e8c73764fc@nbd.name> (sfid-20170111_132205_106654_047D1D19)
+Date: Wed, 11 Jan 2017 13:21:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <ee946686-699c-da64-4932-f58e3f1a83ad@quantenna.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
-
-On Fri, Jan 20, 2017 at 02:28:23PM +0100, Stanislaw Gruszka wrote:
-> Repost patches from Daniel with updated clock handling and
-> correct author of RT5350 patch.
+On 2017-01-11 13:15, IgorMitsyanko wrote:
+> On 01/11/2017 02:30 PM, Felix Fietkau wrote:
+>> On 2017-01-11 12:26, IgorMitsyanko wrote:
+>>> On 01/11/2017 12:27 AM, Felix Fietkau wrote:
+>>>> On 2017-01-10 11:56, Johannes Berg wrote:
+>>>>> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
+>>>>>> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
+>>>>>>> I wonder if MAC80211 should be doing IGMP snooping and not bridge
+>>>>>>> in this environment.
+>>>>>> In the long term, yes. For now, not quite sure.
+>>>>> There's no "for now" in the kernel. Code added now will have to be
+>>>>> maintained essentially forever.
+>>>> I'm not sure that putting the IGMP snooping code in mac80211 is a good
+>>>> idea, that would be quite a bit of code duplication.
+>>>> This implementation works, it's very simple, and it's quite flexible for
+>>>> a number of use cases.
+>>>>
+>>>> Is there any remaining objection to merging this in principle (aside
+>>>> from potential issues with the code)?
+>>>>
+>>>> - Felix
+>>>>
+>>>
+>>> Hi Felix, can we consider two examples configurations with multicast
+>>> traffic:
+>>>
+>>> 1. AP is a source of multicast traffic itself, no bridge on AP. For
+>>> example, wireless video server streaming to several clients.
+>>> In this situation, we can not make use of possible advantages given by
+>>> mc-to-uc conversion?
+>> You could simply put the AP interface in a bridge, no need to have any
+>> other bridge members present.
+>>
+>>> 2. A configuration with AP + STA + 3 client devices behind STA.
+>>>                               ----|client 1|
+>>>                              |
+>>> |  mc  |----|AP|----|STA|---|---|client 2|
+>>> |server|                    |
+>>>                               ----|client 3|
+>>>
+>>> Multicast server behind AP streams MC video traffic. All 3 clients
+>>> behind the STA have joined the multicast group.
+>>> I'm not sure if this case will be handled correctly with mc-to-uc
+>>> conversion in bridge on AP?
+>> What do you mean by "3 client devices behind STA"? Are you using a
+>> 4-addr STA, multicast routing, or some kind of vendor specific "client
+>> bridge" hackery?
 > 
-> Note I did not test patches on SOC devices, but getting
-> clock frequency is simple and should be trouble-free.
+> 3 client devices connected by backbone Ethernet network. Generic
+> case is probably STA/AP operating in 4-addr mode (more or less standard
+> solution as far as I know).
+If the AP is running in 4-addr mode, it will need to have a bridge
+interface anyway, because the link to the STA will be split out into a
+separate virtual interface (AP_VLAN iftype).
 
-Thanks a lot for handling this!
-And big thanks to everyone involved for reviewing a smelly pile of
-patches we had rotting here for half a decade...
+In this case you don't actually need any multicast-to-unicast
+conversion, because the multicast traffic will be unicast on 802.11
+already (due to use of 4-addr mode).
 
-Would you like me to re-work and re-submit the remaining patches needed
-to support RT3883 and RF3853?
-
-Otherwise, the next thing I'd have in mind would be to add device-tree
-bindings to handle in-flash EEPROM loading, see the patches 60[2-9]* in
-https://git.lede-project.org/?p=source.git;a=tree;f=package/kernel/mac80211/patches
-
-Imho having only support for MTD partitions and skip support for
-requesting firmware files from userspace for now would be the cleanest
-way towards proper WiSoC support in vanilla kernels.
-Obviously our existing patches need to be reworked and stuff needs to
-be added to Documentation/devicetree/bindings.
-Support for non-device-tree legacy platforms which need platform_data
-and legacy EEPROM loading mechanism can remain a local patch in our
-tree until those will no longer be needed.
-Does everybody agree with this general direction?
-
-John, Mathias: Are you going to rework and upstream your work to
-support loading in-flash EEPROM yourself our would you like me to give
-it a shot?
-
-
-Cheers
-
-
-Daniel
-
-
-
-> 
-> Daniel Golle (1):
->   rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
-> 
-> Serge Vasilugin (1):
->   rt2x00: add support for RT5350 WiSoC
-> 
-> Stanislaw Gruszka (1):
->   rt2x00: add copy of clk for soc devices
-> 
->  drivers/net/wireless/ralink/rt2x00/rt2800.h    |   1 +
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 156 +++++++++++++++++++++++--
->  drivers/net/wireless/ralink/rt2x00/rt2x00.h    |   5 +
->  drivers/net/wireless/ralink/rt2x00/rt2x00soc.c |   1 +
->  4 files changed, 155 insertions(+), 8 deletions(-)
-> 
-> -- 
-> 1.8.3.1
-> 
+- Felix
