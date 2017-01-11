@@ -1,44 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f41.google.com ([74.125.83.41]:36530 "EHLO
-        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750783AbdA0TsO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 14:48:14 -0500
-Received: by mail-pg0-f41.google.com with SMTP id 3so24916179pgj.3
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 11:48:13 -0800 (PST)
-Subject: Re: iwlwifi: fix kernel crash when unregistering thermal zone
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <b6a2209c-1343-cbda-c6c2-ae5eb93148d3@kernel.dk>
- <20170121125917.2E08F609D0@smtp.codeaurora.org>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <1e6ae9d2-fef7-1ce0-53fc-4948f81ae27d@kernel.dk> (sfid-20170127_204820_107804_57CCA04D)
-Date: Fri, 27 Jan 2017 12:48:11 -0700
+Received: from mail-sn1nam01on0044.outbound.protection.outlook.com ([104.47.32.44]:61264
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752768AbdAKL01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 06:26:27 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Felix Fietkau <nbd@nbd.name>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+ <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
+ <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
+ <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
+CC: <netdev@vger.kernel.org>, <bridge@lists.linux-foundation.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        "M. Braun" <michael-dev@fami-braun.de>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <058f2afd-2502-e2e5-6427-1536fcd5851f@quantenna.com> (sfid-20170111_122701_572259_8F29330C)
+Date: Wed, 11 Jan 2017 14:26:16 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170121125917.2E08F609D0@smtp.codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2017 05:59 AM, Kalle Valo wrote:
-> Jens Axboe <axboe@kernel.dk> wrote:
->> A recent firmware change seems to have enabled thermal zones on the
->> iwlwifi driver. Unfortunately, my device fails when registering the
->> thermal zone. This doesn't stop the driver from attempting to unregister
->> the thermal zone at unload time, triggering a NULL pointer deference in
->> strlen() off the thermal_zone_device_unregister() path.
+On 01/11/2017 12:27 AM, Felix Fietkau wrote:
+> On 2017-01-10 11:56, Johannes Berg wrote:
+>> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
+>>> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
+>>>> I wonder if MAC80211 should be doing IGMP snooping and not bridge
+>>>> in this environment.
+>>>
+>>> In the long term, yes. For now, not quite sure.
 >>
->> Don't unregister if name is NULL, for that case we failed registering.
->> Do the same for the cooling zone.
->>
->> Signed-off-by: Jens Axboe <axboe@fb.com>
-> 
-> Patch applied to wireless-drivers.git, thanks.
-> 
-> 92549cdc288f iwlwifi: fix kernel crash when unregistering thermal zone
+>> There's no "for now" in the kernel. Code added now will have to be
+>> maintained essentially forever.
+> I'm not sure that putting the IGMP snooping code in mac80211 is a good
+> idea, that would be quite a bit of code duplication.
+> This implementation works, it's very simple, and it's quite flexible for
+> a number of use cases.
+>
+> Is there any remaining objection to merging this in principle (aside
+> from potential issues with the code)?
+>
+> - Felix
+>
 
-When is this going out?
 
--- 
-Jens Axboe
+Hi Felix, can we consider two examples configurations with multicast 
+traffic:
+
+1. AP is a source of multicast traffic itself, no bridge on AP. For 
+example, wireless video server streaming to several clients.
+In this situation, we can not make use of possible advantages given by 
+mc-to-uc conversion?
+
+2. A configuration with AP + STA + 3 client devices behind STA.
+                             ----|client 1|
+                             |
+|  mc  |----|AP|----|STA|---|---|client 2|
+|server|                    |
+                             ----|client 3|
+
+Multicast server behind AP streams MC video traffic. All 3 clients 
+behind the STA have joined the multicast group.
+I'm not sure if this case will be handled correctly with mc-to-uc 
+conversion in bridge on AP?
