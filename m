@@ -1,103 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:39158 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751107AbdAMVSc (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33404 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752794AbdAKLKl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:18:32 -0500
-Date: Fri, 13 Jan 2017 22:18:10 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 00/40] rt2x00 patches form OpenWrt.org
-Message-ID: <20170113211804.GA3321@makrotopia.org> (sfid-20170113_221841_054854_CBD4842F)
+        Wed, 11 Jan 2017 06:10:41 -0500
+Received: by mail-pf0-f170.google.com with SMTP id y143so40967669pfb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 03:10:41 -0800 (PST)
+Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
+References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
+ <1484121737.23671.0.camel@sipsolutions.net>
+ <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
+ <1484125220.23671.1.camel@sipsolutions.net>
+ <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
+ <1484128809.23671.11.camel@sipsolutions.net>
+ <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com>
+ <1484132519.23671.12.camel@sipsolutions.net>
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <1dd6e9f3-5ad2-1138-8017-c0ab208d9f88@gmail.com> (sfid-20170111_121045_992589_9DE72DE1)
+Date: Wed, 11 Jan 2017 20:10:38 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484132519.23671.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some of these are fixes, most importantly Serge Vasilugin fixed setting
-the HT20/HT40 filter which got us much closer to the expected
-performance when using HT40 modes.
+On 2017年01月11日 20:01, Johannes Berg wrote:
+> Sure, ssh won't - I was thinking of netconsole:
+> https://www.kernel.org/doc/Documentation/networking/netconsole.txt
 
-There is also a lot of new hardware support added:
-Gabor Juhos wrote code for the Rt3883 WiSoC.
-Daniel Golle implemented support for Rt3352 boards with external PA as
-well as for boards using a 20MHz crystal instead of the usual 40MHz.
-Serge Vasilugin contributed support for the Rt5350 WiSoC.
-Michel Stempin, Felix Fietkau and John Crispin have been helping with
-cleaning up things and putting away legal doubts.
+Oh, I see. Thanks, I will try.
 
-
-Claudio Mignanti (1):
-  rt2x00: rt2x00pci: set PCI MWI only if supported
-
-Daniel Golle (2):
-  rt2x00: support for for RT3352 with external PA
-  rt2x00: add support for RT3352 with 20MHz crystal
-
-Felix Fietkau (1):
-  rt2x00: fix rf id for RT3352
-
-Gabor Juhos (34):
-  rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
-  rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM flag
-  rt2x00: rt2800: serialize shared memory access
-  rt2x00: rt2800lib: fix beacon generation on RT3593
-  rt2x00: rt2800lib: add hw_beacon_count field to struct rt2800_drv_data
-  rt2x00: rt2800lib: init additional beacon offset registers
-  rt2x00: rt2800lib: fix max supported beacon count for RT3593
-  rt2x00: allow to build rt2800soc module for RT3883
-  rt2x00: rt2800lib: enable support for RT3883
-  rt2x00: rt2800lib: add rf_vals for RF3853
-  rt2x00: rt2800lib: enable VCO calibration for RF3853
-  rt2x00: rt2800lib: add channel configuration function for RF3853
-  rt2x00: rt2800lib: enable RF3853 support
-  rt2x00: rt2800lib: add MAC register initialization for RT3883
-  rt2x00: rt2800soc: fix rt2800soc_disable_radio for RT3883
-  rt2x00: rt2800lib: add BBP register initialization for RT3883
-  rt2x00: rt2800lib: add RFCSR initialization for RT3883
-  rt2x00: rt2800lib: use the extended EEPROM map for RT3883
-  rt2x00: rt2800lib: force rf type to RF3853 on RT3883
-  rt2x00: rt2800lib: add channel configuration code for RT3883
-  rt2x00: rt2800lib: fix txpower_to_dev function for RT3883
-  rt2x00: rt2800lib: use correct txpower calculation function for RT3883
-  rt2x00: rt2800lib: hardcode txmixer gain values to zero for RT3883
-  rt2x00: rt2800lib: use correct [RT]XWI size for RT3883
-  rt2x00: rt2800lib: use correct beacon base for RT3883
-  rt2x00: rt2800lib: use correct beacon count for RT3883
-  rt2x00: rt2800lib: fix antenna configuration for RT3883
-  rt2x00: rt2800lib: fix LNA gain configuration for RT3883
-  rt2x00: rt2800lib: fix VGC setup for RT3883
-  rt2x00: rt2800lib: fix EEPROM LNA validation for RT3883
-  rt2x00: rt2800lib: fix txpower compensation for RT3883
-  rt2x00: rt2800lib: enable RT2800_HAS_HIGH_SHARED_MEM for RT3883
-  rt2x00: rt2800lib: use high memory for beacons on RT3883
-  rt2x00: rt2800mmio: add a workaround for spurious TX_FIFO_STATUS
-    interrupts
-
-Michel Stempin (1):
-  rt2x00: add support for RT5350 WiSoC
-
-Serge Vasilugin (1):
-  rt2x00: correctly set HT20/HT40 filter
-
- drivers/net/wireless/ralink/rt2x00/Kconfig      |    2 +-
- drivers/net/wireless/ralink/rt2x00/rt2800.h     |   77 +-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c  | 1013 ++++++++++++++++++++++-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h  |   65 ++
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.c |   98 ++-
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.h |    4 +
- drivers/net/wireless/ralink/rt2x00/rt2800pci.c  |   14 +
- drivers/net/wireless/ralink/rt2x00/rt2800soc.c  |   12 +-
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c  |   31 +
- drivers/net/wireless/ralink/rt2x00/rt2x00.h     |   10 +
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.c  |    2 +
- 11 files changed, 1254 insertions(+), 74 deletions(-)
-
--- 
-2.11.0
+Masashi Honma.
