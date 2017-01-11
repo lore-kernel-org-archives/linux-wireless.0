@@ -1,67 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:36255 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751439AbdAMVf3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:35:29 -0500
-Received: by mail-lf0-f68.google.com with SMTP id h65so7043284lfi.3
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:28 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 06/10] ath10k: disable frame aggregation for high latency
-Date: Fri, 13 Jan 2017 22:35:05 +0100
-Message-Id: <1484343309-6327-7-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223539_570865_88DB47CD)
-In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59242 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763119AbdAKJZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 04:25:34 -0500
+Message-ID: <1484126730.23671.5.camel@sipsolutions.net> (sfid-20170111_102537_821578_700CC51E)
+Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Chor Teck Law <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Date: Wed, 11 Jan 2017 10:25:30 +0100
+In-Reply-To: <5b561668eb5b4804b0007d03bc723f9d@SC-EXCH02.marvell.com>
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+         <1483624722.4394.21.camel@sipsolutions.net>
+         <5b561668eb5b4804b0007d03bc723f9d@SC-EXCH02.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch disables frame aggregation for HL interfaces.
-It is safest to do so until a mechanism for setting the limits
-from fw etc. has been implemented.
+On Tue, 2017-01-10 at 01:32 +0000, David Lin wrote:
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 9 +++++++--
- drivers/net/wireless/ath/ath10k/htt.h  | 4 ++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+> > The only thing that really seems questionable to me is the whole
+> > beacon parsing (and apparent rebuilding in firmware?). It's very
+> > odd that you could do that, with a softmac device where all the
+> > authentication and association is handled by hostapd anyway, and
+> > you can't possibly pretend to handle everything hostapd might throw
+> > at you - this will mean that you'll have features hostapd and every
+> > other mac80211 supports that you will silently drop afaict - which
+> > is rather unexpected.
+> > 
+> > First, you're parsing the data obtained from hostapd, in
+> > mwl_fwcmd_parse_beacon(), and then you send them all to the
+> > firmware in mwl_fwcmd_set_ies(), but only the things you actually
+> > understood. New higher-level features you don't understand, or
+> > vendor beacon IEs that aren't WMM, would be completely dropped.
+> > 
+> > I'm not very happy with that behaviour.
+> > 
+> > Why does the firmware require this? Why not just pack all IEs into
+> > the pcmd->ie_list_len_proprietary, and leave everything else 0? Or
+> > - if perhaps firmware for some reason requires HT/VHT to be treated
+> > specially, only parse out the ones that are really needed specially
+> > and leave everything else in the ie_list_len_proprietary?
+> > 
+> > Also, this is dropping all the encryption stuff - even those are
+> > extensible btw, and hostapd might do so. Having the firmware
+> > rebuild those out of out-of-band information is very unexpected for
+> > a mac80211 driver.
+> > 
+> 
+> This driver just extracts needed IEs which is used for the host
+> command of firmware. I think we will not support other vendor IEs.
+> And if needed, we can add them to pcmd->ie_list_proprietary.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index c275a52..573e772 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1615,8 +1615,13 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		return -EINVAL;
- 	}
- 
--	ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
--	ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
-+	if (ar->is_high_latency) {
-+		ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_HL;
-+		ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_HL;
-+	} else {
-+		ar->htt.max_num_amsdu = ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT;
-+		ar->htt.max_num_ampdu = ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT;
-+	}
- 
- 	if (rawmode) {
- 		if (!test_bit(ATH10K_FW_FEATURE_RAW_MODE_SUPPORT,
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 3d1bd6f..dd9e582 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1777,6 +1777,10 @@ struct htt_rx_desc {
- #define ATH10K_HTT_MAX_NUM_AMSDU_DEFAULT 3
- #define ATH10K_HTT_MAX_NUM_AMPDU_DEFAULT 64
- 
-+/* Disable frame aggregation for high latency devices */
-+#define ATH10K_HTT_MAX_NUM_AMSDU_HL 1
-+#define ATH10K_HTT_MAX_NUM_AMPDU_HL 1
-+
- int ath10k_htt_connect(struct ath10k_htt *htt);
- int ath10k_htt_init(struct ath10k *ar);
- int ath10k_htt_setup(struct ath10k_htt *htt);
--- 
-2.7.4
+Sure, I see that you're doing this. It still makes no sense though,
+since all management frames are handled by hostapd anyway. It would
+make some sense if you actually were going to handle association in the
+firmware, but it makes no sense here, as far as I can tell.
+
+I'm not sure how hard a line I should draw here, but I'll warn you now
+that I won't take this into consideration when adding new features to
+mac80211, and certainly Jouni won't take it into account when adding
+new features to hostapd, so that such new features will then SILENTLY
+and UNEXPECTEDLY (due to mac80211) not work with your driver.
+
+I strongly advise you to reconsider this and try to pass through all
+the IEs so that newly added features that shouldn't require firmware
+interaction (since hostapd is handling all the association handshake
+and IEs to advertise the feature) will automatically and cleanly work.
+
+If you really can't do that, for some reason, then for my benefit as
+the mac80211 maintainer and future maintainers of your driver, I'd like
+to have documentation in the driver as to why the firmware needs the
+driver to split up all those IEs and what it does with them. After all,
+a common-sense analysis would suggest that the firmware has no need for
+it, since all configuration should come through other places and all
+IEs are just for going out on the air.
+
+johannes
