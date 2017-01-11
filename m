@@ -1,29 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:48772 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751473AbdANREK (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34044 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936652AbdAKIuz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jan 2017 12:04:10 -0500
-Date: Sat, 14 Jan 2017 12:04:05 -0500 (EST)
-Message-Id: <20170114.120405.510393682983930825.davem@davemloft.net> (sfid-20170114_180414_694274_41FA7C40)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2017-01-13
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170113102933.8246-1-johannes@sipsolutions.net>
-References: <20170113102933.8246-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Wed, 11 Jan 2017 03:50:55 -0500
+Received: by mail-pf0-f180.google.com with SMTP id 127so60751173pfg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 00:50:55 -0800 (PST)
+Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
+References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
+ <1484121737.23671.0.camel@sipsolutions.net>
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com> (sfid-20170111_095059_406415_EC708AFC)
+Date: Wed, 11 Jan 2017 17:50:52 +0900
+MIME-Version: 1.0
+In-Reply-To: <1484121737.23671.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 13 Jan 2017 11:29:32 +0100
+On 2017年01月11日 17:02, Johannes Berg wrote:
+> I don't think this makes sense - if you only have two peers then you
+> shouldn't even run into forwarding code paths?
+>
+> johannes
 
-> This is my first pull request for net-next, and it seems a bit
-> bigger than the past few releases. Detailed information below,
-> as usual.
-> 
-> Please pull and let me know if there's any problem.
+Though it looks odd, the code has run into forwarding code path even 
+though peer to peer mesh connection.
 
-Pulled, thanks Johannes.
+	fwd_skb = skb_copy(skb, GFP_ATOMIC);
+
+I checked it with printk().
+
+# I know printk() should not be used in the context, just for checking.
+
+Masashi Honma.
