@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49488 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751232AbdAMIdk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 03:33:40 -0500
-Message-ID: <1484292252.19860.5.camel@sipsolutions.net> (sfid-20170113_093343_000392_210C8E44)
-Subject: Re: [PATCH] ath10k: prevent sta pointer rcu violation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        Ben Greear <greearb@candelatech.com>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Date: Fri, 13 Jan 2017 08:24:12 +0100
-In-Reply-To: <CA+BoTQkgD5umVsGnRM4uu_8GO=KjQ6MuJCjQRnSHrDuQdU4z1w@mail.gmail.com> (sfid-20170112_171858_779498_B3B00B28)
-References: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com>
-         <1484235986.19860.1.camel@sipsolutions.net>
-         <CA+BoTQkgD5umVsGnRM4uu_8GO=KjQ6MuJCjQRnSHrDuQdU4z1w@mail.gmail.com>
-         (sfid-20170112_171858_779498_B3B00B28)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15294 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754659AbdAKQNy (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 11:13:54 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 00/12] wil6210 patches
+Date: Wed, 11 Jan 2017 18:12:36 +0200
+Message-Id: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170111_171431_536463_D8BB5543)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The following set of patches include various wil6210 fixes
 
-> Unless you then continue to use that sta pointer after you release
-> data_lock.
+Dedy Lansky (2):
+  wil6210: add disable_ap_sme module parameter
+  wil6210: support new WMI-only FW capability
 
-Ouch, ok. That's rather strangely hidden though.
+Hamad Kadmany (2):
+  wil6210: protect against false interrupt during reset sequence
+  wil6210: set dma mask to reflect device capability
 
-> Consider this:
-> 
-> >          CPU0             CPU1
-> > 1   synchronize_net()
-> > 2    drv_sta_state()
-> > 3                      htt_fetch_ind(pid,tid) called
-> > 4                      rcu_read_lock()
-> > 5                      get(data_lock)
-> > 6                      txq=peers[pid]->sta->txq[tid]
-> > 7                      put(data_lock)
-> > 8    get(data_lock)
-> > 9     peer->sta=0
-> > 10   put(data_lock)
-> > 11     kfree(sta)
-> > 12                     ieee80211_tx_dequeue(txq)
-> 
-> Even though there's no code like (9) per se you can think of it as
-> anything that tries to "remove" the peer--sta association
-> (ath10k_peer
-> is removed implicitly via wmi peer delete command and waiting for htt
-> event completion).
-> 
-> Holding data_lock for the entire duration of handling fetch
-> indication isn't really good for performance so it's better to fix
-> RCU handling.
+Lazar Alexei (2):
+  wil6210: support loading dedicated image for sparrow-plus devices
+  wil6210: remove __func__ from debug printouts
 
-Yeah, I see it now - also the comment where this happens. You probably
-should mark some things __rcu though and actually use RCU primitives,
-so the code is actually understandable :)
+Lior David (6):
+  wil6210: add sysfs file for FTM calibration
+  wil6210: missing reinit_completion in wmi_call
+  wil6210: fix for broadcast workaround in PBSS
+  wil6210: align to latest auto generated wmi.h
+  wil6210: report association ID (AID) per station in debugfs
+  wil6210: option to override A-BFT length in start AP/PCP
 
-johannes
+ drivers/net/wireless/ath/wil6210/Makefile         |   1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c       | 170 ++++++++++++++++------
+ drivers/net/wireless/ath/wil6210/debugfs.c        |  10 +-
+ drivers/net/wireless/ath/wil6210/ethtool.c        |   8 +-
+ drivers/net/wireless/ath/wil6210/fw.c             |   5 +-
+ drivers/net/wireless/ath/wil6210/fw_inc.c         |  19 +++
+ drivers/net/wireless/ath/wil6210/interrupt.c      |  28 ++--
+ drivers/net/wireless/ath/wil6210/main.c           |  69 ++++-----
+ drivers/net/wireless/ath/wil6210/netdev.c         |  15 +-
+ drivers/net/wireless/ath/wil6210/p2p.c            |  34 ++---
+ drivers/net/wireless/ath/wil6210/pcie_bus.c       |  73 +++++++---
+ drivers/net/wireless/ath/wil6210/pm.c             |  15 +-
+ drivers/net/wireless/ath/wil6210/pmc.c            |  77 +++++-----
+ drivers/net/wireless/ath/wil6210/rx_reorder.c     |   6 +-
+ drivers/net/wireless/ath/wil6210/sysfs.c          | 126 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c           |  69 +++++----
+ drivers/net/wireless/ath/wil6210/wil6210.h        |  31 +++-
+ drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  16 +-
+ drivers/net/wireless/ath/wil6210/wmi.c            | 123 +++++++++++-----
+ drivers/net/wireless/ath/wil6210/wmi.h            |  65 ++++++++-
+ 20 files changed, 674 insertions(+), 286 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/sysfs.c
+
+-- 
+1.9.1
