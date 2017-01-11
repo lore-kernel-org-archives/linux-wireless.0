@@ -1,75 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34630 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751469AbdADR7g (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4523 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1764126AbdAKQN6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 12:59:36 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency limit property
-Date: Wed,  4 Jan 2017 18:58:29 +0100
-Message-Id: <20170104175832.25996-1-zajec5@gmail.com> (sfid-20170104_190243_372568_88791726)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Wed, 11 Jan 2017 11:13:58 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 08/12] wil6210: fix for broadcast workaround in PBSS
+Date: Wed, 11 Jan 2017 18:12:44 +0200
+Message-Id: <1484151168-894-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170111_171425_805790_1138A330)
+In-Reply-To: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-This new file should be used for properties that apply to all wireless
-devices.
+Currently we do not have full support for broadcast from
+a station inside a PBSS network.
+We have a workaround where instead of broadcast we do a
+unicast to every known station in the PBSS.
+This workaround was performed only for P2P clients.
+This fix will perform the broadcast workaround also for a
+regular station inside a PBSS.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
-V2: Switch to a single ieee80211-freq-limit property that allows specifying
-    *multiple* ranges. This resolves problem with more complex rules as pointed
-    by Felx.
-    Make description implementation agnostic as pointed by Arend.
-    Rename node to wifi as suggested by Martin.
-V3: Use more real-life frequencies in the example.
-V5: Describe hardware design as possible use for this property
-V6: Even better property description, thanks Rob for your help!
----
- .../devicetree/bindings/net/wireless/ieee80211.txt | 24 ++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+ drivers/net/wireless/ath/wil6210/cfg80211.c |  1 +
+ drivers/net/wireless/ath/wil6210/txrx.c     | 35 ++++++++++++++++-------------
+ 2 files changed, 20 insertions(+), 16 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-new file mode 100644
-index 0000000..f6442b1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-@@ -0,0 +1,24 @@
-+Common IEEE 802.11 properties
-+
-+This provides documentation of common properties that are valid for all wireless
-+devices.
-+
-+Optional properties:
-+ - ieee80211-freq-limit : list of supported frequency ranges in KHz. This can be
-+	used for devices that in a given config support less channels than
-+	normally. It may happen chipset supports a wide wireless band but it is
-+	limited to some part of it due to used antennas or power amplifier.
-+	An example case for this can be tri-band wireless router with two
-+	identical chipsets used for two different 5 GHz subbands. Using them
-+	incorrectly could not work or decrease performance noticeably.
-+
-+Example:
-+
-+pcie@0,0 {
-+	reg = <0x0000 0 0 0 0>;
-+	wifi@0,0 {
-+		reg = <0x0000 0 0 0 0>;
-+		ieee80211-freq-limit = <2402000 2482000>,
-+				       <5170000 5250000>;
-+	};
-+};
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index f99596e..efc8184 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -601,6 +601,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
+ 		goto out;
+ 	}
+ 	wil->privacy = sme->privacy;
++	wil->pbss = sme->pbss;
+ 
+ 	if (wil->privacy) {
+ 		/* For secure assoc, remove old keys */
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 9aee364..b2a5664 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1195,17 +1195,6 @@ static struct vring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
+ 	return v;
+ }
+ 
+-static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
+-				       struct sk_buff *skb)
+-{
+-	struct wireless_dev *wdev = wil->wdev;
+-
+-	if (wdev->iftype != NL80211_IFTYPE_AP)
+-		return wil_find_tx_bcast_2(wil, skb);
+-
+-	return wil_find_tx_bcast_1(wil, skb);
+-}
+-
+ static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
+ 			   int vring_index)
+ {
+@@ -1905,12 +1894,26 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	pr_once_fw = false;
+ 
+ 	/* find vring */
+-	if (wil->wdev->iftype == NL80211_IFTYPE_STATION) {
+-		/* in STA mode (ESS), all to same VRING */
++	if (wil->wdev->iftype == NL80211_IFTYPE_STATION && !wil->pbss) {
++		/* in STA mode (ESS), all to same VRING (to AP) */
+ 		vring = wil_find_tx_vring_sta(wil, skb);
+-	} else { /* direct communication, find matching VRING */
+-		vring = bcast ? wil_find_tx_bcast(wil, skb) :
+-				wil_find_tx_ucast(wil, skb);
++	} else if (bcast) {
++		if (wil->pbss)
++			/* in pbss, no bcast VRING - duplicate skb in
++			 * all stations VRINGs
++			 */
++			vring = wil_find_tx_bcast_2(wil, skb);
++		else if (wil->wdev->iftype == NL80211_IFTYPE_AP)
++			/* AP has a dedicated bcast VRING */
++			vring = wil_find_tx_bcast_1(wil, skb);
++		else
++			/* unexpected combination, fallback to duplicating
++			 * the skb in all stations VRINGs
++			 */
++			vring = wil_find_tx_bcast_2(wil, skb);
++	} else {
++		/* unicast, find specific VRING by dest. address */
++		vring = wil_find_tx_ucast(wil, skb);
+ 	}
+ 	if (unlikely(!vring)) {
+ 		wil_dbg_txrx(wil, "No Tx VRING found for %pM\n", eth->h_dest);
 -- 
-2.10.1
+1.9.1
