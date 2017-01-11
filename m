@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59398 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33456 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935987AbdAKKAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 05:00:15 -0500
-Message-ID: <1484128809.23671.11.camel@sipsolutions.net> (sfid-20170111_110018_452809_56E0C0E7)
-Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
+        id S1030473AbdAKPhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 10:37:50 -0500
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>,
-        linux-wireless@vger.kernel.org, Cedric.Izoard@ceva-dsp.com
-Date: Wed, 11 Jan 2017 11:00:09 +0100
-In-Reply-To: <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com> (sfid-20170111_103823_204216_DEC62468)
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
-         <1484121737.23671.0.camel@sipsolutions.net>
-         <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
-         <1484125220.23671.1.camel@sipsolutions.net>
-         <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
-         (sfid-20170111_103823_204216_DEC62468)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: fix the TID on NDPs sent as EOSP carrier
+Date: Wed, 11 Jan 2017 16:37:42 +0100
+Message-Id: <20170111153742.741-1-johannes@sipsolutions.net> (sfid-20170111_163801_987344_B02B478E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> I will call the mesh peers "STA A" and "STA B".
-> 
-> Both STA has one physical wireless I/F and wired I/F.
+In the commit below, I forgot to translate the mac80211's
+AC to QoS IE order. Moreover, the condition in the if was
+wrong. Fix both issues.
+This bug would hit only with clients that didn't set all
+the ACs as delivery enabled.
 
-Ok.
+Fixes: f438ceb81d4 ("mac80211: uapsd_queues is in QoS IE order")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/sta_info.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-[snip configuration]
-
-> Then STA A or STA B crashes, not both.
-
-Nevertheless, I don't have hardware to try to reproduce it, and I can't
-see any such issues (even with real forwarding, I even just wrote a
-wpa_s test for that) in hwsim.
-
-Even a photo of the crash on the VT would help. Or maybe you can set up
-netconsole on the wired interface?
-
-johannes
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index b6cfcf038c11..50c309094c37 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1501,8 +1501,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 
+ 		/* This will evaluate to 1, 3, 5 or 7. */
+ 		for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++)
+-			if (ignored_acs & BIT(ac))
+-				continue;
++			if (!(ignored_acs & ieee80211_ac_to_qos_mask[ac]))
++				break;
+ 		tid = 7 - 2 * ac;
+ 
+ 		ieee80211_send_null_response(sta, tid, reason, true, false);
+-- 
+2.9.3
