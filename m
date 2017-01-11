@@ -1,223 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:49509 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbdAMV0d (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:26:33 -0500
-Date: Fri, 13 Jan 2017 22:26:10 +0100
-From: Daniel Golle <daniel@makrotopia.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33488 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751869AbdAKPlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 10:41:13 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 17/40] rt2x00: rt2800lib: add RFCSR initialization for RT3883
-Message-ID: <20170113212606.GA3488@makrotopia.org> (sfid-20170113_222636_972249_E23220A4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: David Spinadel <david.spinadel@intel.com>
+Subject: [PATCH] mac80211: Add RX flag to indicate ICV stripped
+Date: Wed, 11 Jan 2017 16:41:10 +0100
+Message-Id: <20170111154110.1150-1-johannes@sipsolutions.net> (sfid-20170111_164244_865377_BE7410E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+From: David Spinadel <david.spinadel@intel.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-[daniel@makrotopia.org: use usleep_range instead of msleep, fixed comment]
+Add a flag that indicates that the WEP ICV was stripped from an
+RX packet, allowing the device to not transfer that if it's
+already checked.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |  13 +++
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 141 +++++++++++++++++++++++++
- 2 files changed, 154 insertions(+)
+ include/net/mac80211.h | 5 ++++-
+ net/mac80211/wep.c     | 3 ++-
+ net/mac80211/wpa.c     | 3 ++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 2190bf07d004..33a3b33c9a0b 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -1588,6 +1588,18 @@
- #define TX_PWR_CFG_9_STBC7_CH2		FIELD32(0x00000f00)
- 
- /*
-+ * TX_TXBF_CFG:
-+ */
-+#define TX_TXBF_CFG_0			0x138c
-+#define TX_TXBF_CFG_1			0x13a4
-+#define TX_TXBF_CFG_2			0x13a8
-+#define TX_TXBF_CFG_3			0x13ac
-+
-+/* TX_FBK_CFG_3S */
-+#define TX_FBK_CFG_3S_0			0x13c4
-+#define TX_FBK_CFG_3S_1			0x13c8
-+
-+/*
-  * RX_FILTER_CFG: RX configuration register.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5f5cb194cd78..86967b85dfd0 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1017,7 +1017,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_DECRYPTED: This frame was decrypted in hardware.
+  * @RX_FLAG_MMIC_STRIPPED: the Michael MIC is stripped off this frame,
+  *	verification has been done by the hardware.
+- * @RX_FLAG_IV_STRIPPED: The IV/ICV are stripped from this frame.
++ * @RX_FLAG_IV_STRIPPED: The IV and ICV are stripped from this frame.
+  *	If this flag is set, the stack cannot do any replay detection
+  *	hence the driver or hardware will have to do that.
+  * @RX_FLAG_PN_VALIDATED: Currently only valid for CCMP/GCMP frames, this
+@@ -1088,6 +1088,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_ALLOW_SAME_PN: Allow the same PN as same packet before.
+  *	This is used for AMSDU subframes which can have the same PN as
+  *	the first subframe.
++ * @RX_FLAG_ICV_STRIPPED: The ICV is stripped from this frame. CRC checking must
++ *	be done in the hardware.
   */
- #define RX_FILTER_CFG			0x1400
-@@ -2157,6 +2169,7 @@ struct mac_iveiv_entry {
- /*
-  * RFCSR 2:
-  */
-+#define RFCSR2_RESCAL_BP		FIELD8(0x40)
- #define RFCSR2_RESCAL_EN		FIELD8(0x80)
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+@@ -1123,6 +1125,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
+ 	RX_FLAG_MIC_STRIPPED		= BIT_ULL(32),
+ 	RX_FLAG_ALLOW_SAME_PN		= BIT_ULL(33),
++	RX_FLAG_ICV_STRIPPED		= BIT_ULL(34),
+ };
  
- /*
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index df0c6dd90735..870e2da20d47 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -6865,6 +6865,144 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
- 	/* TODO: enable stream mode support */
- }
+ #define RX_FLAG_STBC_SHIFT		26
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index efa3f48f1ec5..73e8f347802e 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -293,7 +293,8 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
+ 			return RX_DROP_UNUSABLE;
+ 		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
+ 		/* remove ICV */
+-		if (pskb_trim(rx->skb, rx->skb->len - IEEE80211_WEP_ICV_LEN))
++		if (!(status->flag & RX_FLAG_ICV_STRIPPED) &&
++		    pskb_trim(rx->skb, rx->skb->len - IEEE80211_WEP_ICV_LEN))
+ 			return RX_DROP_UNUSABLE;
+ 	}
  
-+static void rt2800_init_rfcsr_3883(struct rt2x00_dev *rt2x00dev)
-+{
-+	u8 rfcsr;
-+
-+	/* TODO: get the actual ECO value from the SoC */
-+	const unsigned int eco = 5;
-+
-+	rt2800_rf_init_calibration(rt2x00dev, 2);
-+
-+	rt2800_rfcsr_write(rt2x00dev, 0, 0xe0);
-+	rt2800_rfcsr_write(rt2x00dev, 1, 0x03);
-+	rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
-+	rt2800_rfcsr_write(rt2x00dev, 3, 0x20);
-+	rt2800_rfcsr_write(rt2x00dev, 4, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 5, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 6, 0x40);
-+	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 8, 0x5b);
-+	rt2800_rfcsr_write(rt2x00dev, 9, 0x08);
-+	rt2800_rfcsr_write(rt2x00dev, 10, 0xd3);
-+	rt2800_rfcsr_write(rt2x00dev, 11, 0x48);
-+	rt2800_rfcsr_write(rt2x00dev, 12, 0x1a);
-+	rt2800_rfcsr_write(rt2x00dev, 13, 0x12);
-+	rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 16, 0x00);
-+
-+	/* RFCSR 17 will be initialized later based on the
-+	 * frequency offset stored in the EEPROM
-+	 */
-+
-+	rt2800_rfcsr_write(rt2x00dev, 18, 0x40);
-+	rt2800_rfcsr_write(rt2x00dev, 19, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 21, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
-+	rt2800_rfcsr_write(rt2x00dev, 23, 0xc0);
-+	rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 25, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 26, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 27, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 29, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
-+	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
-+	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 34, 0x20);
-+	rt2800_rfcsr_write(rt2x00dev, 35, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 37, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 38, 0x86);
-+	rt2800_rfcsr_write(rt2x00dev, 39, 0x23);
-+	rt2800_rfcsr_write(rt2x00dev, 40, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 41, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 42, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 43, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 44, 0x93);
-+	rt2800_rfcsr_write(rt2x00dev, 45, 0xbb);
-+	rt2800_rfcsr_write(rt2x00dev, 46, 0x60);
-+	rt2800_rfcsr_write(rt2x00dev, 47, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 48, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 49, 0x8e);
-+	rt2800_rfcsr_write(rt2x00dev, 50, 0x86);
-+	rt2800_rfcsr_write(rt2x00dev, 51, 0x51);
-+	rt2800_rfcsr_write(rt2x00dev, 52, 0x05);
-+	rt2800_rfcsr_write(rt2x00dev, 53, 0x76);
-+	rt2800_rfcsr_write(rt2x00dev, 54, 0x76);
-+	rt2800_rfcsr_write(rt2x00dev, 55, 0x76);
-+	rt2800_rfcsr_write(rt2x00dev, 56, 0xdb);
-+	rt2800_rfcsr_write(rt2x00dev, 57, 0x3e);
-+	rt2800_rfcsr_write(rt2x00dev, 58, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 59, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 60, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 61, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
-+	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
-+
-+	/* TODO: rx filter calibration? */
-+
-+	rt2800_bbp_write(rt2x00dev, 137, 0x0f);
-+
-+	rt2800_bbp_write(rt2x00dev, 163, 0x9d);
-+
-+	rt2800_bbp_write(rt2x00dev, 105, 0x05);
-+
-+	rt2800_bbp_write(rt2x00dev, 179, 0x02);
-+	rt2800_bbp_write(rt2x00dev, 180, 0x00);
-+	rt2800_bbp_write(rt2x00dev, 182, 0x40);
-+	rt2800_bbp_write(rt2x00dev, 180, 0x01);
-+	rt2800_bbp_write(rt2x00dev, 182, 0x9c);
-+
-+	rt2800_bbp_write(rt2x00dev, 179, 0x00);
-+
-+	rt2800_bbp_write(rt2x00dev, 142, 0x04);
-+	rt2800_bbp_write(rt2x00dev, 143, 0x3b);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x06);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa0);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x07);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa1);
-+	rt2800_bbp_write(rt2x00dev, 142, 0x08);
-+	rt2800_bbp_write(rt2x00dev, 143, 0xa2);
-+	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
-+
-+	if (eco == 5) {
-+		rt2800_rfcsr_write(rt2x00dev, 32, 0xd8);
-+		rt2800_rfcsr_write(rt2x00dev, 33, 0x32);
-+	}
-+
-+	rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_BP, 0);
-+	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
-+	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
-+	usleep_range(1000, 1500);
-+	rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 0);
-+	rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
-+	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 6, &rfcsr);
-+	rfcsr |= 0xc0;
-+	rt2800_rfcsr_write(rt2x00dev, 6, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 22, &rfcsr);
-+	rfcsr |= 0x20;
-+	rt2800_rfcsr_write(rt2x00dev, 22, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 46, &rfcsr);
-+	rfcsr |= 0x20;
-+	rt2800_rfcsr_write(rt2x00dev, 46, rfcsr);
-+
-+	rt2800_rfcsr_read(rt2x00dev, 20, &rfcsr);
-+	rfcsr &= ~0xee;
-+	rt2800_rfcsr_write(rt2x00dev, 20, rfcsr);
-+}
-+
- static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
- {
- 	rt2800_rf_init_calibration(rt2x00dev, 2);
-@@ -7096,6 +7234,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	case RT3390:
- 		rt2800_init_rfcsr_3390(rt2x00dev);
- 		break;
-+	case RT3883:
-+		rt2800_init_rfcsr_3883(rt2x00dev);
-+		break;
- 	case RT3572:
- 		rt2800_init_rfcsr_3572(rt2x00dev);
- 		break;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 8af6dd388d11..c1ef22df865f 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -294,7 +294,8 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
+ 		return RX_DROP_UNUSABLE;
+ 
+ 	/* Trim ICV */
+-	skb_trim(skb, skb->len - IEEE80211_TKIP_ICV_LEN);
++	if (!(status->flag & RX_FLAG_ICV_STRIPPED))
++		skb_trim(skb, skb->len - IEEE80211_TKIP_ICV_LEN);
+ 
+ 	/* Remove IV */
+ 	memmove(skb->data + IEEE80211_TKIP_IV_LEN, skb->data, hdrlen);
 -- 
-2.11.0
+2.9.3
