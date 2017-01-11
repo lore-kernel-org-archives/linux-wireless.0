@@ -1,51 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42116 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751666AbdATKEb (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:62014 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752133AbdAKUjp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 05:04:31 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 11 Jan 2017 15:39:45 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point better
+Date: Wed, 11 Jan 2017 21:39:07 +0100
+Message-ID: <3292373.oxnXTOSWCQ@wuerfel> (sfid-20170111_214353_453969_C57DF835)
+In-Reply-To: <1484147177.29931.14.camel@sipsolutions.net>
+References: <20170111143532.485827-1-arnd@arndb.de> <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com> <1484147177.29931.14.camel@sipsolutions.net>
 MIME-Version: 1.0
-Subject: Re: [V2,
- 1/4] brcmfmac: drop unneeded function declarations from headers
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170118104854.32231-1-zajec5@gmail.com>
-References: <20170118104854.32231-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20170120100430.E5884609E9@smtp.codeaurora.org> (sfid-20170120_110442_198822_0F0C91DC)
-Date: Fri, 20 Jan 2017 10:04:30 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+On Wednesday, January 11, 2017 4:06:17 PM CET Johannes Berg wrote:
 > 
-> Functions brcmf_c_prec_enq and brcmf_sdio_init don't exist so we
-> really don't need their declarations. Function brcmf_parse_tlvs is used
-> in cfg80211.c only so make it static and drop from header as well.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Applied. Also fixed the typo in the subject :)
 
-4 patches applied to wireless-drivers-next.git, thanks.
+Thanks! Unfortunately I now got another warning for the same function,
+and though I would have expected the patch to fix it, that did not work:
 
-c8d870794d5d brcmfmac: drop unneeded function declarations from headers
-f5611e038172 brcmfmac: move brcmf_c_set_joinpref_default declaration to common.h
-bfa7295e5b4d brcmfmac: drop brcmf_bus_detach and inline its code
-e8cd47501fa0 brcmfmac: rename brcmf_bus_start function to brcmf_bus_started
+In file included from /git/arm-soc/drivers/net/wireless/intersil/prism54/islpci_dev.h:27:0,
+                 from /git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.h:24,
+                 from /git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c:32:
+/git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c: In function 'prism54_get_scan':
+/git/arm-soc/include/net/iw_handler.h:560:4: error: argument 2 null where non-null expected [-Werror=nonnull]
+    memcpy(stream + point_len, extra, iwe->u.data.length);
 
--- 
-https://patchwork.kernel.org/patch/9523097/
+The change below kills that warning too, but it gets even uglier there:
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
+index 1a41043688bc..c2aa73e5e6bb 100644
+--- a/include/net/iw_handler.h
++++ b/include/net/iw_handler.h
+@@ -556,7 +556,7 @@ iwe_stream_add_point(struct iw_request_info *info, char *stream, char *ends,
+ 		memcpy(stream + lcp_len,
+ 		       ((char *) &iwe->u) + IW_EV_POINT_OFF,
+ 		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+-		if (iwe->u.data.length)
++		if (iwe->u.data.length && extra)
+ 			memcpy(stream + point_len, extra, iwe->u.data.length);
+ 		stream += event_len;
+ 	}
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Let me know if you want a proper follow-up patch, or if you can amend your
+commit, or you have a better idea for resolving that warning.
+
+	Arnd
