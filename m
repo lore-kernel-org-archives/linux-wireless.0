@@ -1,53 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33156 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750717AbdAULWK (ORCPT
+Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:61868 "EHLO
+        sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752001AbdAKLvG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jan 2017 06:22:10 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Coelho\, Luciano" <luciano.coelho@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Berg\, Johannes" <johannes.berg@intel.com>,
-        "axboe\@kernel.dk" <axboe@kernel.dk>
-Subject: Re: iwlwifi: fix kernel crash when unregistering thermal zone
-References: <1484996068.2774.23.camel@intel.com>
-Date: Sat, 21 Jan 2017 13:22:04 +0200
-In-Reply-To: <1484996068.2774.23.camel@intel.com> (Luciano Coelho's message of
-        "Sat, 21 Jan 2017 10:54:30 +0000")
-Message-ID: <87wpdolktf.fsf@kamboji.qca.qualcomm.com> (sfid-20170121_122240_108472_F0125994)
+        Wed, 11 Jan 2017 06:51:06 -0500
+From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+To: Masashi Honma <masashi.honma@gmail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
+Date: Wed, 11 Jan 2017 11:35:51 +0000
+Message-ID: <927a79f16e8c429da7a0d06f1bfb2567@ceva-dsp.com> (sfid-20170111_125111_240224_639DEEE7)
+References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
+ <1484121737.23671.0.camel@sipsolutions.net>
+ <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
+ <1484125220.23671.1.camel@sipsolutions.net>
+ <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
+ <1484128809.23671.11.camel@sipsolutions.net>
+ <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com>
+ <1484132519.23671.12.camel@sipsolutions.net>
+ <1dd6e9f3-5ad2-1138-8017-c0ab208d9f88@gmail.com>
+In-Reply-To: <1dd6e9f3-5ad2-1138-8017-c0ab208d9f88@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Coelho, Luciano" <luciano.coelho@intel.com> writes:
-
-> On Jan 21, 2017 09:56, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Jens Axboe <axboe@kernel.dk> writes: 
->> > A recent firmware change seems to have enabled thermal zones on the 
->> > iwlwifi driver. Unfortunately, my device fails when registering the 
->> > thermal zone. This doesn't stop the driver from attempting to unregister 
->> > the thermal zone at unload time, triggering a NULL pointer deference in 
->> > strlen() off the thermal_zone_device_unregister() path. 
->> > 
->> > Don't unregister if name is NULL, for that case we failed registering. 
->> > Do the same for the cooling zone. 
->> > 
->> > Signed-off-by: Jens Axboe <axboe@fb.com> 
->> > 
->> > --- 
->> > 
->> > Would be great if this could go into the current series, as sometimes I 
->> > have to reload the driver. Right now I can't, since it crashes... 
->> 
->> Luca, can I take this directly to wireless-drivers? This is an important 
->> fix and we should get it to Linus' tree ASAP.
->
-> Yes, please go ahead and take it directly.
->
-> Acked-by: Luca Coelho <luciano.coelho@intel.com>
-
-Thanks, I'll apply it soon.
-
--- 
-Kalle Valo
+PiBPbiAyMDE35bm0MDHmnIgxMeaXpSAyMDowMSwgSm9oYW5uZXMgQmVyZyB3cm90ZToNCj4gPiBT
+dXJlLCBzc2ggd29uJ3QgLSBJIHdhcyB0aGlua2luZyBvZiBuZXRjb25zb2xlOg0KPiA+IGh0dHBz
+Oi8vd3d3Lmtlcm5lbC5vcmcvZG9jL0RvY3VtZW50YXRpb24vbmV0d29ya2luZy9uZXRjb25zb2xl
+LnR4dA0KPiANCj4gT2gsIEkgc2VlLiBUaGFua3MsIEkgd2lsbCB0cnkuDQo+IA0KPiBNYXNhc2hp
+IEhvbm1hLg0KSGksDQoNCkkgbWFkZSBhIHF1aWNrIHRlc3Qgd2l0aCBkb25nbGUgdXNpbmcgYXRo
+OWtfaHRjIGRyaXZlciBhbmQgSSBpbmRlZWQgcmVwcm9kdWNlIHRoZSBpc3N1ZS4NCkhlcmUgaXMg
+dGhlIHN0YWNrIHRyYWNlIEkgZ2V0Og0KSSBhZGRlZCBhIHRyYWNlIGJlZm9yZSBjYWxsaW5nIHNr
+Yl9jb3B5X2V4cGFuZCB0byBnZXQgdGhlIGhlYWRyb29tIG9mIHRoZSBidWZmZXIgYmVmb3JlIHRo
+ZSBjb3B5IGFuZCB0aGUgaGVhZHJvb20gYXNrZWQgYnkgdGhlIGRyaXZlci4NCg0KWyAgIDgzLjIw
+MDI2MV0gTUVTSCBmd2Q6IHNrYl9oZWFkcm9vbT0xNTQsIG5lZWRlZCBoZWFkcm9vbT0yNA0KWyAg
+IDgzLjIwMDM0Nl0gc2tidWZmOiBza2JfdW5kZXJfcGFuaWM6IHRleHQ6ZmZmZmZmZmZhMDM0YzAy
+OCBsZW46MTU0IHB1dDo4IGhlYWQ6ZmZmZjg4MDIxMzQyMmUwMCBkYXRhOmZmZmY4ODAyMTM0MjJk
+ZmEgdGFpbDoweDk0IGVuZDoweGMwIGRldjo8TlVMTD4NClsgICA4My4yMDAzNTldIC0tLS0tLS0t
+LS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQ0KWyAgIDgzLjIwMDM2Ml0ga2VybmVsIEJVRyBh
+dCAuLi9uZXQvY29yZS9za2J1ZmYuYzoxMDUhDQpbICAgODMuMjAwMzY0XSBpbnZhbGlkIG9wY29k
+ZTogMDAwMCBbIzFdIFNNUA0KWyAgIDgzLjIwMDM2Nl0gTW9kdWxlcyBsaW5rZWQgaW46IGF0aDlr
+X2h0YyBhdGg5a19jb21tb24gYXRoOWtfaHcgYXRoMTBrX3BjaSBhdGgxMGtfY29yZSBtYWM4MDIx
+MSBhdGggY2ZnODAyMTEgeDg2X3BrZ190ZW1wX3RoZXJtYWwNClsgICA4My4yMDAzNzddIENQVTog
+NCBQSUQ6IDI5IENvbW06IGtzb2Z0aXJxZC80IE5vdCB0YWludGVkIDQuOS4wKyAjMw0KWyAgIDgz
+LjIwMDM3OV0gSGFyZHdhcmUgbmFtZTogRGVsbCBJbmMuIE9wdGlQbGV4IDk5MC8wNkQ3VFIsIEJJ
+T1MgQTE5IDA4LzI2LzIwMTUNClsgICA4My4yMDAzODFdIHRhc2s6IGZmZmY4ODAyMjNlNTVjYzAg
+dGFzay5zdGFjazogZmZmZmM5MDAwMGRiODAwMA0KWyAgIDgzLjIwMDM4M10gUklQOiAwMDEwOls8
+ZmZmZmZmZmY4MTcwMDk0Yz5dICBbPGZmZmZmZmZmODE3MDA5NGM+XSBza2JfcGFuaWMrMHg1Yy8w
+eDYwDQpbICAgODMuMjAwMzkxXSBSU1A6IDAwMTg6ZmZmZmM5MDAwMGRiYmJhMCAgRUZMQUdTOiAw
+MDAxMDI4Ng0KWyAgIDgzLjIwMDM5M10gUkFYOiAwMDAwMDAwMDAwMDAwMDg2IFJCWDogMDAwMDAw
+MDAwMDAwMDAwNiBSQ1g6IDAwMDAwMDAwMDAwMDAwMDANClsgICA4My4yMDAzOThdIFJEWDogZmZm
+Zjg4MDIyNTMxMjZkOCBSU0k6IGZmZmY4ODAyMjUzMGNiMjggUkRJOiBmZmZmODgwMjI1MzBjYjI4
+DQpbICAgODMuMjAwNDAwXSBSQlA6IGZmZmZjOTAwMDBkYmJiYzAgUjA4OiAwMDAwMDAwMDAwMDMw
+ZTlhIFIwOTogMDAwMDAwMDAwMDAwMDAwNQ0KWyAgIDgzLjIwMDQwMV0gUjEwOiAwMDAwMDAwMDAw
+MDAwMDAwIFIxMTogMDAwMDAwMDAwMDAwMDJjOCBSMTI6IGZmZmY4ODAyMjJkMGEwMDANClsgICA4
+My4yMDA0MDNdIFIxMzogMDAwMDAwMDAwMDAwOTIwMCBSMTQ6IGZmZmY4ODAyMjFiYTdmMDAgUjE1
+OiAwMDAwMDAwMDAwMDAwMDEwDQpbICAgODMuMjAwNDA2XSBGUzogIDAwMDAwMDAwMDAwMDAwMDAo
+MDAwMCkgR1M6ZmZmZjg4MDIyNTMwMDAwMCgwMDAwKSBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQpb
+ICAgODMuMjAwNDA4XSBDUzogIDAwMTAgRFM6IDAwMDAgRVM6IDAwMDAgQ1IwOiAwMDAwMDAwMDgw
+MDUwMDMzDQpbICAgODMuMjAwNDEwXSBDUjI6IDAwMDA3ZmQ0MTQwMTBjOTggQ1IzOiAwMDAwMDAw
+MjIyNDdkMDAwIENSNDogMDAwMDAwMDAwMDA0MDZlMA0KWyAgIDgzLjIwMDQxMV0gU3RhY2s6DQpb
+ICAgODMuMjAwNDEzXSAgZmZmZjg4MDIxMzQyMmRmYSAwMDAwMDAwMDAwMDAwMDk0IDAwMDAwMDAw
+MDAwMDAwYzAgZmZmZmZmZmY4MWMzMDhkOQ0KWyAgIDgzLjIwMDQxN10gIGZmZmZjOTAwMDBkYmJi
+ZDAgZmZmZmZmZmY4MTcwMTliNyBmZmZmYzkwMDAwZGJiYzAwIGZmZmZmZmZmYTAzNGMwMjgNClsg
+ICA4My4yMDA0MjBdICBmZmZmODgwMjIxYmE3ZjAwIGZmZmY4ODAyMjI2ZDE1YTAgMDAwMDAwMDAw
+MDAwMDAwMCBmZmZmYzkwMDAwZGJiY2I4DQpbICAgODMuMjAwNDIzXSBDYWxsIFRyYWNlOg0KWyAg
+IDgzLjIwMDQyOV0gIFs8ZmZmZmZmZmY4MTcwMTliNz5dIHNrYl9wdXNoKzB4MzcvMHg0MA0KWyAg
+IDgzLjIwMDQzNV0gIFs8ZmZmZmZmZmZhMDM0YzAyOD5dIGh0Y19pc3N1ZV9zZW5kLmNvbnN0cHJv
+cC4yKzB4MjgvMHg2MCBbYXRoOWtfaHRjXQ0KWyAgIDgzLjIwMDQ0MV0gIFs8ZmZmZmZmZmZhMDM0
+YzNkMT5dIGh0Y19zZW5kKzB4MTEvMHgyMCBbYXRoOWtfaHRjXQ0KWyAgIDgzLjIwMDQ0NV0gIFs8
+ZmZmZmZmZmZhMDM0ZmJkNz5dIGF0aDlrX2h0Y190eF9zdGFydCsweGQ3LzB4MmEwIFthdGg5a19o
+dGNdDQpbICAgODMuMjAwNDUwXSAgWzxmZmZmZmZmZmEwMzUxMzI4Pl0gYXRoOWtfaHRjX3R4KzB4
+YTgvMHhkMCBbYXRoOWtfaHRjXQ0KWyAgIDgzLjIwMDQ3MV0gIFs8ZmZmZmZmZmZhMDBkNzAyNz5d
+IGllZWU4MDIxMV90eF9mcmFncysweDEzNy8weDFmMCBbbWFjODAyMTFdDQpbICAgODMuMjAwNDg5
+XSAgWzxmZmZmZmZmZmEwMGQ3MWZjPl0gX19pZWVlODAyMTFfdHgrMHg3Yy8weDE4MCBbbWFjODAy
+MTFdDQpbICAgODMuMjAwNTA2XSAgWzxmZmZmZmZmZmEwMGRjNTc1Pl0gaWVlZTgwMjExX3R4KzB4
+ZTUvMHgxMTAgW21hYzgwMjExXQ0KWyAgIDgzLjIwMDUxOF0gIFs8ZmZmZmZmZmZhMDBkZGRlZj5d
+IGllZWU4MDIxMV90eF9wZW5kaW5nKzB4OGYvMHgxZjAgW21hYzgwMjExXQ0KWyAgIDgzLjIwMDUy
+Ml0gIFs8ZmZmZmZmZmY4MTA5MDM4Nj5dID8gcGlja19uZXh0X3Rhc2tfZmFpcisweDQwNi8weDQ3
+MA0KWyAgIDgzLjIwMDUyOF0gIFs8ZmZmZmZmZmY4MTA1ZjExYT5dIHRhc2tsZXRfYWN0aW9uKzB4
+ZGEvMHhmMA0KWyAgIDgzLjIwMDUzMl0gIFs8ZmZmZmZmZmY4MTA1ZjZjMj5dIF9fZG9fc29mdGly
+cSsweGUyLzB4MjcwDQpbICAgODMuMjAwNTM2XSAgWzxmZmZmZmZmZjgxMDVmODY3Pl0gcnVuX2tz
+b2Z0aXJxZCsweDE3LzB4MzANClsgICA4My4yMDA1NDBdICBbPGZmZmZmZmZmODEwN2E1NjU+XSBz
+bXBib290X3RocmVhZF9mbisweDEwNS8weDE2MA0KWyAgIDgzLjIwMDU0M10gIFs8ZmZmZmZmZmY4
+MTA3YTQ2MD5dID8gc29ydF9yYW5nZSsweDIwLzB4MjANClsgICA4My4yMDA1NDddICBbPGZmZmZm
+ZmZmODEwNzZkZTU+XSBrdGhyZWFkKzB4YzUvMHhlMA0KWyAgIDgzLjIwMDU1MF0gIFs8ZmZmZmZm
+ZmY4MTA3NmQyMD5dID8ga3RocmVhZF9wYXJrKzB4NjAvMHg2MA0KWyAgIDgzLjIwMDU1NF0gIFs8
+ZmZmZmZmZmY4MTg1OGJkMj5dIHJldF9mcm9tX2ZvcmsrMHgyMi8weDMwDQpbICAgODMuMjAwNTU2
+XSBDb2RlOiBjNCAwMCAwMCAwMCA0OCA4OSA0NCAyNCAxMCA4YiA4NyBjMCAwMCAwMCAwMCA0OCA4
+OSA0NCAyNCAwOCA0OCA4YiA4NyBkMCAwMCAwMCAwMCA0OCBjNyBjNyAyOCA1NyBjMyA4MSA0OCA4
+OSAwNCAyNCBlOCAxNSA3OCBhMiBmZiA8MGY+IDBiIDY2IDkwIDU1IDQ4IDg5IGU1IDQxIDU3IDQx
+IDU2IDQxIDU1IDQxIDU0IDUzIDY1IDRjIDhiIDM0DQpbICAgODMuMjAwNTk2XSBSSVAgIFs8ZmZm
+ZmZmZmY4MTcwMDk0Yz5dIHNrYl9wYW5pYysweDVjLzB4NjANClsgICA4My4yMDA2MDJdICBSU1Ag
+PGZmZmZjOTAwMDBkYmJiYTA+DQoNCmNlZHJpYw0K
