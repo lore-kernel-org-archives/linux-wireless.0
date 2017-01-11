@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60744 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33308 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751837AbdADKbC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 05:31:02 -0500
-Message-ID: <1483525836.7312.1.camel@sipsolutions.net> (sfid-20170104_113134_852290_2053E4D1)
-Subject: Re: [RFC] nl80211: allow multiple active scheduled scan requests
+        id S1764175AbdAKPGW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 10:06:22 -0500
+Message-ID: <1484147177.29931.14.camel@sipsolutions.net> (sfid-20170111_160720_236035_2E1EA5EF)
+Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point
+ better
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Shmidt <dimitrysh@google.com>
-Date: Wed, 04 Jan 2017 11:30:36 +0100
-In-Reply-To: <5ad9a594-29b3-8c52-a88f-c4186511fe4f@broadcom.com> (sfid-20170104_112053_991115_3F397A44)
-References: <1481645071.20412.30.camel@sipsolutions.net>
-         <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1483353841.4596.2.camel@sipsolutions.net>
-         <ba1cb1a1-3d27-7421-47ea-a5625a886518@broadcom.com>
-         <1483523988.15591.9.camel@sipsolutions.net>
-         <5ad9a594-29b3-8c52-a88f-c4186511fe4f@broadcom.com>
-         (sfid-20170104_112053_991115_3F397A44)
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Date: Wed, 11 Jan 2017 16:06:17 +0100
+In-Reply-To: <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com> (sfid-20170111_160001_614546_326AFA12)
+References: <20170111143532.485827-1-arnd@arndb.de>
+         <1484145522.29931.13.camel@sipsolutions.net>
+         <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com>
+         (sfid-20170111_160001_614546_326AFA12)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> However, we need to prefer something
-> > -
-> > always preferring the new sched scan could lead to bounces, so we
-> > can
-> > prefer (1) existing, (2) legacy-single type or (3) new-multi type,
-> > but
-> > not (4) new sched scan.
+On Wed, 2017-01-11 at 16:00 +0100, Arnd Bergmann wrote:
+> On Wed, Jan 11, 2017 at 3:38 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2017-01-11 at 15:35 +0100, Arnd Bergmann wrote:
+> > > This works fine here because iwe->u.data.length is guaranteed to
+> > > be
+> > > NULL, and the memcpy doesn't actually have an effect.
+> > 
+> > I think you mean 0, not NULL, but I can fix that when I apply it.
 > 
-> Not sure I can follow. What is the difference between (1) and (2). 
+> Right, thanks!
 
-(1) would never cancel any existing sched scan, regardless of type
-(legacy vs. multi-capable)
-
-(2) would cancel an existing sched scan (in favour of a new one) if the
-existing one is multi-capable
-
-(3) would cancel an existing sched scan (in favour of a new one) if the
-existing one is legacy type
-
-> Also
-> what do you consider (4) new sched scan. You mean the additional
-> parameterization of the scheduled scan?
-
-No, I just meant any new request.
-
-> > I think preferring the existing would probably be best, i.e. refuse
-> > legacy if any sched scan is running, and refuse multi if legacy is
-> > running?
-> 
-> Whatever the response above, I can understand this and it seems most
-> straightforward. So I tend agree this is our best option although
-> maybe for the wrong reason.
-
-:)
+Applied. Also fixed the typo in the subject :)
 
 johannes
