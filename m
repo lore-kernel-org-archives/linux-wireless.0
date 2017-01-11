@@ -1,60 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:55848 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753981AbdASUiW (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 15:38:22 -0500
-Date: Thu, 19 Jan 2017 21:37:54 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
+Received: from mail-dm3nam03on0064.outbound.protection.outlook.com ([104.47.41.64]:18683
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1758711AbdAKMPl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 07:15:41 -0500
+Subject: Re: [PATCH net-next] bridge: multicast to unicast
+To: Felix Fietkau <nbd@nbd.name>,
         Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH v3] rt2x00: add support for RT5350 WiSoC
-Message-ID: <20170119203753.GA21298@makrotopia.org> (sfid-20170119_214035_986182_7ACD12D3)
-References: <20170118144719.GB22837@redhat.com>
- <20170119133834.GA17398@makrotopia.org>
- <87d1fioojx.fsf@kamboji.qca.qualcomm.com>
+        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        Stephen Hemminger <stephen@networkplumber.org>
+References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
+ <1483706872.4089.8.camel@sipsolutions.net>
+ <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
+ <1483710841.12677.1.camel@sipsolutions.net>
+ <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
+ <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
+ <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+ <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
+ <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
+ <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
+ <058f2afd-2502-e2e5-6427-1536fcd5851f@quantenna.com>
+ <015bf651-7584-13c0-16b9-d4e29e23c96b@nbd.name>
+CC: <netdev@vger.kernel.org>, <bridge@lists.linux-foundation.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        "M. Braun" <michael-dev@fami-braun.de>
+From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <ee946686-699c-da64-4932-f58e3f1a83ad@quantenna.com> (sfid-20170111_131620_944452_C1B720E2)
+Date: Wed, 11 Jan 2017 15:15:30 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87d1fioojx.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <015bf651-7584-13c0-16b9-d4e29e23c96b@nbd.name>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 19, 2017 at 09:08:34PM +0200, Kalle Valo wrote:
-> Daniel Golle <daniel@makrotopia.org> writes:
-> 
-> > From: Michel Stempin <michel.stempin@wanadoo.fr>
-> >
-> > Support for the RT5350 WiSoC was added to OpenWrt after having a
-> > lengthy debate about the legality of the original submission, see
-> > https://lists.openwrt.org/pipermail/openwrt-devel/2013-January/018224.html
-> > MTK/Ralink Acked replied and says we can merge this patch under the GPL.
-> > https://dev.openwrt.org/changeset/36177
-> >
-> > Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
-> > Tested-by: Michel Stempin <michel.stempin@wanadoo.fr>
-> > Acked-by: John Crispin <blogic@openwrt.org>
-> > [daniel@makrotopia.org: added commit message, cleaned up code]
-> >
-> > Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> > ---
-> > v2: reordered patches to breakout RT3883 from the original series
-> > v3: remove superflus EEPROM_NIC_CONF0 mangeling from RT5350 patch
-> 
-> As this is not part of the patch series I assume this patch doesn't have
-> any dependencies and can be applied separately (if Stanislaw acks it).
+On 01/11/2017 02:30 PM, Felix Fietkau wrote:
+> On 2017-01-11 12:26, IgorMitsyanko wrote:
+>> On 01/11/2017 12:27 AM, Felix Fietkau wrote:
+>>> On 2017-01-10 11:56, Johannes Berg wrote:
+>>>> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
+>>>>> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
+>>>>>> I wonder if MAC80211 should be doing IGMP snooping and not bridge
+>>>>>> in this environment.
+>>>>> In the long term, yes. For now, not quite sure.
+>>>> There's no "for now" in the kernel. Code added now will have to be
+>>>> maintained essentially forever.
+>>> I'm not sure that putting the IGMP snooping code in mac80211 is a good
+>>> idea, that would be quite a bit of code duplication.
+>>> This implementation works, it's very simple, and it's quite flexible for
+>>> a number of use cases.
+>>>
+>>> Is there any remaining objection to merging this in principle (aside
+>>> from potential issues with the code)?
+>>>
+>>> - Felix
+>>>
+>>
+>> Hi Felix, can we consider two examples configurations with multicast
+>> traffic:
+>>
+>> 1. AP is a source of multicast traffic itself, no bridge on AP. For
+>> example, wireless video server streaming to several clients.
+>> In this situation, we can not make use of possible advantages given by
+>> mc-to-uc conversion?
+> You could simply put the AP interface in a bridge, no need to have any
+> other bridge members present.
+>
+>> 2. A configuration with AP + STA + 3 client devices behind STA.
+>>                               ----|client 1|
+>>                              |
+>> |  mc  |----|AP|----|STA|---|---|client 2|
+>> |server|                    |
+>>                               ----|client 3|
+>>
+>> Multicast server behind AP streams MC video traffic. All 3 clients
+>> behind the STA have joined the multicast group.
+>> I'm not sure if this case will be handled correctly with mc-to-uc
+>> conversion in bridge on AP?
+> What do you mean by "3 client devices behind STA"? Are you using a
+> 4-addr STA, multicast routing, or some kind of vendor specific "client
+> bridge" hackery?
 
-Well, oops, it does depend on
-https://patchwork.kernel.org/patch/9518023/
-being merged first, at least partially.
-Sorry for the mess...
+3 client devices connected by backbone Ethernet network. Generic
+case is probably STA/AP operating in 4-addr mode (more or less standard
+solution as far as I know).
 
+"Client bridge" approach should not concern us here I think, it will
+seem to AP and AP's bridge as a single client.
 
-Cheers
-
-
-Daniel
+>
+> - Felix
