@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34617 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751562AbdAaKsu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 05:48:50 -0500
-Received: by mail-wm0-f67.google.com with SMTP id c85so83070622wmi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2017 02:48:50 -0800 (PST)
-From: Iain Hunter <drhunter95@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@aurora.org, Iain Hunter <i-hunter1@ti.com>
-Subject: [PATCH] wlcore: disable multicast filter in AP mode
-Date: Tue, 31 Jan 2017 10:48:40 +0000
-Message-Id: <20170131104840.10366-1-i-hunter1@ti.com> (sfid-20170131_114923_668801_2B366CE7)
+Received: from box.matheina.com ([104.236.11.237]:54610 "EHLO box.matheina.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752773AbdALDpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 22:45:15 -0500
+From: Scott Matheina <scott@matheina.com>
+To: linux-kernel@vger.kernel.org
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 4/7] staging:wilc1000:wilc_debugfs.c Aligns code to match open parenthesis
+Date: Wed, 11 Jan 2017 21:38:35 -0600
+Message-Id: <1484192328-16825-4-git-send-email-scott@matheina.com> (sfid-20170112_044533_004194_09728D23)
+In-Reply-To: <1484192328-16825-1-git-send-email-scott@matheina.com>
+References: <1484192328-16825-1-git-send-email-scott@matheina.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable AP support for allmulticast for MDNS It can be enabled by bringing
+Fixes checkpatch CHECK: Alignment should match open parenthesis
 
-up the interface with ip command with argument allmulticast on  
-Signed-off-by: Iain Hunter <i-hunter1@ti.com>
+Signed-off-by: Scott Matheina <scott@matheina.com>
 ---
-PATCH v2: resumbitting to handle error return value
- drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 3241e9eba73..4fabbb486e7 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -3281,6 +3281,21 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
- 			if (ret < 0)
- 				goto out_sleep;
- 		}
-+
-+        /*
-+         * If interface in AP mode and created with allmulticast then disable
-+         * the firmware filters so that all multicast packets are passed
-+         * This is mandatory for MDNS based discovery protocols 
-+         */
-+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
-+ 			if (*total & FIF_ALLMULTI) {
-+				ret = wl1271_acx_group_address_tbl(wl, wlvif,
-+								   false,
-+								   NULL, 0);
-+			    if (ret < 0)
-+				   goto out_sleep;
-+                }
-+           }
- 	}
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 07260c4..52aac75 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -52,7 +52,7 @@ static ssize_t wilc_debug_level_read(struct file *file, char __user *userbuf, si
+ }
  
- 	/*
+ static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
+-					size_t count, loff_t *ppos)
++				      size_t count, loff_t *ppos)
+ {
+ 	int flag = 0;
+ 	int ret;
 -- 
-2.11.0
+2.7.4
