@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:61733
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752422AbdATOOY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 09:14:24 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
- interrupts after enabling local irq flags
-Date: Fri, 20 Jan 2017 14:14:10 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263CA86D@XAP-PVEXMBX02.xlnx.xilinx.com> (sfid-20170120_151441_420878_7F228CE3)
-References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
- <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net>
-In-Reply-To: <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:37074 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdALU1M (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 15:27:12 -0500
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 12 Jan 2017 22:27:11 +0200
+From: merez@codeaurora.org
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Hamad Kadmany <QCA_hkadmany@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH v2 12/13] wil6210: set dma mask to reflect device
+ capability
+In-Reply-To: <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
+Message-ID: <fc9a14ebf619db9817d262aa5381a69e@codeaurora.org> (sfid-20170112_212716_662238_ED569B54)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > On 01/19/2017 04:14 AM, Bharat Kumar Gogada wrote:
-> > -Realtek 8192CE chipset maintains local irq flags after enabling/disabl=
-ing
-> > hardware interrupts.
-> > -Hardware interrupts are enabled before enabling the local irq
-> > flags(these flags are being checked in interrupt handler),
-> > leading to race condition on some RP, where the irq line between
-> > bridge and GIC goes high at ASSERT_INTx and goes low only
-> > at DEASSERT_INTx. In this kind of RP by the time ASSERT_INTx is seen
-> > irq_enable flag is still set to false, resulting in continuous
-> > interrupts seen by CPU as DEASSERT_INTx cannot be sent since
-> > flag is still false and making CPU stall.
-> > -Changing the sequence of setting these irq flags.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > ---
->=20
-> This patch should be enhanced with the smb_xx() calls as suggested by by =
-Lino.
->=20
-> The subject should be changed. I would suggest something like "rtlwifi:
-> rtl8192ce: Prevent race condition when enabling interrupts", as it explai=
-ns the
-> condition you are preventing.
->=20
-> The other PCI drivers also have the same problem. Do you want to prepare =
-the
-> patches, or should I do it?
->=20
-Thanks Larry. Please send out the patches adding the above enhancements sug=
-gested by Lino.
+On 2017-01-12 15:06, Maya Erez wrote:
+> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> 
+> 11ad device supports 48 bit addresses, reflect that
+> by setting the dma mask accordingly.
+> 
+> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> ---
 
-Bharat
+Kalle, we found an issue caused by this patch. Please don't apply it.
+-- 
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
