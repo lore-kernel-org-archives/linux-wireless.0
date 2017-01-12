@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37013 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932712AbdA0MUj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42697 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750904AbdALLBY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:20:39 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 2/5] brcmfmac: provide a value for struct wowlan_support::max_nd_match_sets
-Date: Fri, 27 Jan 2017 12:09:28 +0000
-Message-Id: <1485518971-28183-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132240_811847_30119414)
-In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 12 Jan 2017 06:01:24 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k: fix spelling mistake: "meaurement" -> "measurement"
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20161230140647.12945-1-colin.king@canonical.com>
+References: <20161230140647.12945-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <b06e4d8f8c004ab5977d5269ef71a9c1@euamsexm01a.eu.qualcomm.com> (sfid-20170112_120146_639705_866D5094)
+Date: Thu, 12 Jan 2017 12:01:15 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver advertises support for WOWLAN_NETDETECT but did not specify
-maximum amount of netdetect match sets. This was no issue due to a bug
-in nl80211. As that has been fixed, brcmfmac also needs fixing.
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> Trivial fix to spelling mistake in ath_err message
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 ++
- 1 file changed, 2 insertions(+)
+Patch applied to ath-next branch of ath.git, thanks.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index ec1171c..302a78d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6358,6 +6358,8 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
- 			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
-+			brcmf_wowlan_support.max_nd_match_sets =
-+				BRCMF_PNO_MAX_PFN_COUNT;
- 			init_waitqueue_head(&cfg->wowl.nd_data_wait);
- 		}
- 	}
+714ee339ff90 ath9k: fix spelling mistake: "meaurement" -> "measurement"
+
 -- 
-1.9.1
+https://patchwork.kernel.org/patch/9492191/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
