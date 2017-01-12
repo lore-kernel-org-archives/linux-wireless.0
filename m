@@ -1,149 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38458 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24022 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751119AbdA1ACP (ORCPT
+        with ESMTP id S1751117AbdALOBk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 19:02:15 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 2/3] mac80211: Make mesh failure moving average configurable
-Date: Fri, 27 Jan 2017 16:01:47 -0800
-Message-ID: <1485561708-31559-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20170128_010357_029333_A1FF194D)
-In-Reply-To: <1485561708-31559-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1485561708-31559-1-git-send-email-rmanohar@qca.qualcomm.com>
+        Thu, 12 Jan 2017 09:01:40 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Subject: Re: [PATCH 3/3] cfg80211: Specify the reason for connect timeout
+Date: Thu, 12 Jan 2017 14:01:33 +0000
+Message-ID: <20170112140131.GC17983@jouni.qca.qualcomm.com> (sfid-20170112_150144_902962_919C053A)
+References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
+ <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
+ <a59ef282-921d-6591-ab33-0a8dd3ef4294@broadcom.com>
+ <20170111131335.GB27748@jouni.qca.qualcomm.com>
+ <1484141166.29931.8.camel@sipsolutions.net>
+In-Reply-To: <1484141166.29931.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mesh moving fail average is calculated based on constant
-weight factor. In worst case moving average reaches threshold by
-considering 16 msdu tx ack status and deactivates mesh path. Having
-a constant weight factor might not be suitable for all environments.
-So make it tunable parameter and also lower default weight to 10 so
-that mesh broken link calculation will consider more packet status
-(32 msdus ack status) before dropping mesh path.
-
-In OTA 2-hop topolgy (MP1 <-> MP2 <-> MP3), while running TCP traffic
-of window size of 2M where each nodes are operating in VHT80 mode,
-mesh path between forwarding node (MP2) and border nodes (MP1/MP3) is
-deactivated more often when average weight is 20.
-
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- net/mac80211/debugfs_netdev.c | 27 +++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h    |  1 +
- net/mac80211/mesh.c           |  1 +
- net/mac80211/mesh.h           |  3 +++
- net/mac80211/mesh_hwmp.c      |  4 +++-
- 5 files changed, 35 insertions(+), 1 deletion(-)
-
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 8f5fff8b2040..3923401a85dd 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -586,6 +586,32 @@ static ssize_t ieee80211_if_parse_tsf(
- #ifdef CONFIG_MAC80211_MESH
- IEEE80211_IF_FILE(estab_plinks, u.mesh.estab_plinks, ATOMIC);
- 
-+static ssize_t ieee80211_if_fmt_fail_avg_weight(
-+	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-+{
-+	return snprintf(buf, buflen, "%d\n", sdata->u.mesh.fail_avg_weight);
-+}
-+
-+static ssize_t ieee80211_if_parse_fail_avg_weight(
-+	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
-+{
-+	u8 val;
-+	int ret;
-+
-+	ret = kstrtou8(buf, 0, &val);
-+	if (ret)
-+		return ret;
-+
-+	if (val > 100)
-+		return -ERANGE;
-+
-+	sdata->u.mesh.fail_avg_weight = val;
-+
-+	return buflen;
-+}
-+
-+IEEE80211_IF_FILE_RW(fail_avg_weight);
-+
- /* Mesh stats attributes */
- IEEE80211_IF_FILE(fwded_mcast, u.mesh.mshstats.fwded_mcast, DEC);
- IEEE80211_IF_FILE(fwded_unicast, u.mesh.mshstats.fwded_unicast, DEC);
-@@ -711,6 +737,7 @@ static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD_MODE(tsf, 0600);
- 	DEBUGFS_ADD_MODE(estab_plinks, 0400);
-+	DEBUGFS_ADD_MODE(fail_avg_weight, 0600);
- }
- 
- static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 159a1a733725..30babcea3e06 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -711,6 +711,7 @@ struct ieee80211_if_mesh {
- 	struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
- 	int mesh_paths_generation;
- 	int mpp_paths_generation;
-+	u8 fail_avg_weight;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9c23172feba0..491fd76f91bd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1368,6 +1368,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 	ifmsh->last_preq = jiffies;
- 	ifmsh->next_perr = jiffies;
- 	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
-+	ifmsh->fail_avg_weight = MESH_FAIL_AVG_WEIGHT;
- 	/* Allocate all mesh structures when creating the first mesh interface. */
- 	if (!mesh_allocated)
- 		ieee80211s_init();
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7e5f271e3c30..887746022cc6 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -185,6 +185,9 @@ struct mesh_rmc {
- /* Number of frames buffered per destination for unresolved destinations */
- #define MESH_FRAME_QUEUE_LEN	10
- 
-+/* Moving failure average weight of mesh peer link (in percent) */
-+#define MESH_FAIL_AVG_WEIGHT 10
-+
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f0aa1da15bd0..61a824eb2c73 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -301,6 +301,7 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u32 fail_avg = sta->mesh->fail_avg;
-+	u8 fail_avg_weight = sta->sdata->u.mesh.fail_avg_weight;
- 	int failed;
- 
- 	if (!ieee80211_is_data(hdr->frame_control))
-@@ -309,7 +310,8 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
- 
- 	/* moving average, scaled to 100 */
--	fail_avg = ((80 * fail_avg + 5) / 100 + 20 * failed);
-+	fail_avg = (((100 - fail_avg_weight) * fail_avg + 5) / 100 +
-+		    fail_avg_weight * failed);
- 
- 	/* bump up fail average since fractional part of average is ignored.
- 	 * Otherwise fail average always stuck at the same level and
--- 
-1.9.1
+T24gV2VkLCBKYW4gMTEsIDIwMTcgYXQgMDI6MjY6MDZQTSArMDEwMCwgSm9oYW5uZXMgQmVyZyB3
+cm90ZToNCj4gT24gV2VkLCAyMDE3LTAxLTExIGF0IDEzOjEzICswMDAwLCBNYWxpbmVuLCBKb3Vu
+aSB3cm90ZToNCj4gPiANCj4gPiA+ID4gQEAgLTE3Miw2ICsxNzQsNyBAQCBzdGF0aWMgaW50IGNm
+ZzgwMjExX2Nvbm5fZG9fd29yayhzdHJ1Y3QNCj4gPiA+ID4gd2lyZWxlc3NfZGV2ICp3ZGV2KQ0K
+PiA+ID4gPiDCoAljYXNlIENGRzgwMjExX0NPTk5fQVVUSF9GQUlMRUQ6DQo+ID4gPiA+ICsJCSp0
+cmVhc29uID0gTkw4MDIxMV9USU1FT1VUX0FVVEg7DQo+ID4gPiANCj4gPiA+IC4uLiBidXQgaXQg
+c2VlbXMgQVVUSCBmYWlsdXJlIGFsd2F5cyBpcyBhIHRpbWVvdXQ/DQo+ID4gDQo+ID4gVGhlIENG
+RzgwMjExX0NPTk5fQVVUSF9GQUlMRUQgY2FzZSBpcyBjdXJyZW50bHkgdXNlZCBvbmx5IGluDQo+
+ID4gY2ZnODAyMTFfc21lX2F1dGhfdGltZW91dCgpIHdoaWNoIGlzIGluZGVlZCBhbHdheXMgYSB0
+aW1lb3V0Lg0KPiANCj4gTWlnaHQgYmUgd29ydGggc2ltcGx5IHJlbmFtaW5nIGl0LCBzaW5jZSB5
+b3UgaGF2ZSB0aGUgcmVhc29uIHRoZXJlDQo+IHVuY29uZGl0aW9uYWxseT8NCg0KU3VyZSwgdGhh
+dCBzb3VuZHMgZmluZSBhbmQgZG9jdW1lbnRzIHRoZSBleGlzdGluZyBjYXNlIG1vcmUgYWNjdXJh
+dGVseS4NCg0KLS0gDQpKb3VuaSBNYWxpbmVuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICBQR1AgaWQgRUZDODk1RkE=
