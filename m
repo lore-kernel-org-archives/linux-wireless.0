@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39316 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759042AbdAIKjz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:39:55 -0500
-Message-ID: <1483958390.17582.16.camel@sipsolutions.net> (sfid-20170109_114113_080691_4077E97D)
-Subject: Re: [PATCH v4] rfkill: Add rfkill-any LED trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82_K=C4=99pie=C5=84?= <kernel@kempniu.pl>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        =?UTF-8?Q?=D0=9C=D0=B8=D1=85=D0=B0=D0=B8=D0=BB_?=
-         =?UTF-8?Q?=D0=9A=D1=80=D0=B8=D0=BD=D0=BA=D0=B8=D0=BD?=
-        <krinkin.m.u@gmail.com>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 09 Jan 2017 11:39:50 +0100
-In-Reply-To: <20170106192027.GA756@kmp-mobile.hq.kempniu.pl> (sfid-20170106_202031_655798_4350A20F)
-References: <20170106060747.6162-1-kernel@kempniu.pl>
-         <1483705333.4089.6.camel@sipsolutions.net>
-         <20170106192027.GA756@kmp-mobile.hq.kempniu.pl>
-         (sfid-20170106_202031_655798_4350A20F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:34181 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750905AbdALTFJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 14:05:09 -0500
+Received: by mail-qt0-f195.google.com with SMTP id a29so3532948qtb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 11:05:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
+References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Thu, 12 Jan 2017 11:05:03 -0800
+Message-ID: <CAA93jw7PN+5Uinyp4JPd8XTd=F_ZFRKTD9SMEm_JVP2iuJDLxA@mail.gmail.com> (sfid-20170112_200518_858670_2F269A6E)
+Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Ben Greear <greearb@candelatech.com>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Yay! This sounds like a potential fix for this?
 
-> > Looks better, but
-> > 
-> > > +static struct work_struct rfkill_any_work;
-> > 
-> > At least on module exit you need to cancel this work.
-> 
-> It is cancelled in rfkill_any_led_trigger_unregister().  It seemed
-> fitting to do it this way as rfkill_any_work is initialized in
-> rfkill_any_led_trigger_register().  And if CONFIG_RFKILL_LEDS=n,
-> rfkill_any_work is neither initialized nor scheduled, so we should be
-> good as well.  Am I missing something?
+https://bugs.lede-project.org/index.php?do=details&task_id=368
 
-No, I just missed that, sorry.
+Are all the ath10k chipsets excluded by commit:
 
-Applied the patch now.
+4ca1807815aa6801aaced7fdefa9edacc2521767
 
-johannes
+Still needed to be excluded?
