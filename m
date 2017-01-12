@@ -1,60 +1,363 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59902 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1032249AbdAFMtM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 07:49:12 -0500
-Message-ID: <1483706872.4089.8.camel@sipsolutions.net> (sfid-20170106_135014_921872_AFAD8E27)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
-        netdev@vger.kernel.org
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Michael Braun <michael-dev@fami-braun.de>
-Date: Fri, 06 Jan 2017 13:47:52 +0100
-In-Reply-To: <20170102193214.31723-1-linus.luessing@c0d3.blue> (sfid-20170102_204412_831542_1DC6188A)
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-         (sfid-20170102_204412_831542_1DC6188A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5659 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751734AbdALNPX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 08:15:23 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 13/13] wil6210: convert symbolic permissions to octal permissions
+Date: Thu, 12 Jan 2017 15:06:05 +0200
+Message-Id: <1484226365-10433-14-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141534_771909_00F683AE)
+In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-02 at 20:32 +0100, Linus Lüssing wrote:
-> Implements an optional, per bridge port flag and feature to deliver
-> multicast packets to any host on the according port via unicast
-> individually. This is done by copying the packet per host and
-> changing the multicast destination MAC to a unicast one accordingly.
+Symbolic permissions are no longer recommended.
+This patch changes the symbolic permissions in wil6210 driver
+to octal permissions.
 
-How does this compare and/or relate to the multicast-to-unicast feature
-we were going to add to the wifi stack, particularly mac80211? Do we
-perhaps not need that feature at all, if bridging will have it?
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c |   2 +-
+ drivers/net/wireless/ath/wil6210/debugfs.c  | 128 ++++++++++++++--------------
+ drivers/net/wireless/ath/wil6210/main.c     |  16 ++--
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   2 +-
+ drivers/net/wireless/ath/wil6210/txrx.c     |   4 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      |   6 +-
+ 6 files changed, 79 insertions(+), 79 deletions(-)
 
-I suppose that the feature there could apply also to locally generated
-traffic when the AP interface isn't in a bridge, but I think I could
-live with requiring the AP to be put into a bridge to achieve a similar
-configuration?
-
-Additionally, on an unrelated note, this seems to apply generically to
-all kinds of frames, losing information by replacing the address.
-Shouldn't it have similar limitations as the wifi stack feature has
-then, like only applying to ARP, IPv4, IPv6 and not general protocols?
-
-Also, it should probably come with the same caveat as we documented for
-the wifi feature:
-
-    Note that this may break certain expectations of the receiver,
-    such as the ability to drop unicast IP packets received within
-    multicast L2 frames, or the ability to not send ICMP destination
-    unreachable messages for packets received in L2 multicast (which
-    is required, but the receiver can't tell the difference if this
-    new option is enabled.)
-
-
-I'll hold off sending my tree in until we see that we really need both
-features, or decide that we want the wifi feature *instead* of the
-bridge feature.
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 9a92790..e25e78e 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -21,7 +21,7 @@
+ #define WIL_MAX_ROC_DURATION_MS 5000
+ 
+ bool disable_ap_sme;
+-module_param(disable_ap_sme, bool, S_IRUGO);
++module_param(disable_ap_sme, bool, 0444);
+ MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+ 
+ #define CHAN60G(_channel, _flags) {				\
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 97e9088..3e8cdf1 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -364,13 +364,13 @@ static void wil6210_debugfs_init_offset(struct wil6210_priv *wil,
+ }
+ 
+ static const struct dbg_off isr_off[] = {
+-	{"ICC", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICC), doff_io32},
+-	{"ICR", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICR), doff_io32},
+-	{"ICM", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, ICM), doff_io32},
+-	{"ICS",		  S_IWUSR, offsetof(struct RGF_ICR, ICS), doff_io32},
+-	{"IMV", S_IRUGO | S_IWUSR, offsetof(struct RGF_ICR, IMV), doff_io32},
+-	{"IMS",		  S_IWUSR, offsetof(struct RGF_ICR, IMS), doff_io32},
+-	{"IMC",		  S_IWUSR, offsetof(struct RGF_ICR, IMC), doff_io32},
++	{"ICC", 0644, offsetof(struct RGF_ICR, ICC), doff_io32},
++	{"ICR", 0644, offsetof(struct RGF_ICR, ICR), doff_io32},
++	{"ICM", 0644, offsetof(struct RGF_ICR, ICM), doff_io32},
++	{"ICS",	0244, offsetof(struct RGF_ICR, ICS), doff_io32},
++	{"IMV", 0644, offsetof(struct RGF_ICR, IMV), doff_io32},
++	{"IMS",	0244, offsetof(struct RGF_ICR, IMS), doff_io32},
++	{"IMC",	0244, offsetof(struct RGF_ICR, IMC), doff_io32},
+ 	{},
+ };
+ 
+@@ -390,9 +390,9 @@ static int wil6210_debugfs_create_ISR(struct wil6210_priv *wil,
+ }
+ 
+ static const struct dbg_off pseudo_isr_off[] = {
+-	{"CAUSE",   S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE), doff_io32},
+-	{"MASK_SW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW), doff_io32},
+-	{"MASK_FW", S_IRUGO, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW), doff_io32},
++	{"CAUSE",   0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE), doff_io32},
++	{"MASK_SW", 0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_SW), doff_io32},
++	{"MASK_FW", 0444, HOSTADDR(RGF_DMA_PSEUDO_CAUSE_MASK_FW), doff_io32},
+ 	{},
+ };
+ 
+@@ -411,40 +411,40 @@ static int wil6210_debugfs_create_pseudo_ISR(struct wil6210_priv *wil,
+ }
+ 
+ static const struct dbg_off lgc_itr_cnt_off[] = {
+-	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_TRSH), doff_io32},
+-	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_DATA), doff_io32},
+-	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_CNT_CRL), doff_io32},
++	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_CNT_TRSH), doff_io32},
++	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_CNT_DATA), doff_io32},
++	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_CNT_CRL), doff_io32},
+ 	{},
+ };
+ 
+ static const struct dbg_off tx_itr_cnt_off[] = {
+-	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH),
++	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_TRSH),
+ 	 doff_io32},
+-	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_DATA),
++	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_DATA),
+ 	 doff_io32},
+-	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL),
++	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_TX_CNT_CTL),
+ 	 doff_io32},
+-	{"IDL_TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_TRSH),
++	{"IDL_TRSH", 0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_TRSH),
+ 	 doff_io32},
+-	{"IDL_DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_DATA),
++	{"IDL_DATA", 0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_DATA),
+ 	 doff_io32},
+-	{"IDL_CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_CTL),
++	{"IDL_CTL",  0644, HOSTADDR(RGF_DMA_ITR_TX_IDL_CNT_CTL),
+ 	 doff_io32},
+ 	{},
+ };
+ 
+ static const struct dbg_off rx_itr_cnt_off[] = {
+-	{"TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH),
++	{"TRSH", 0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_TRSH),
+ 	 doff_io32},
+-	{"DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_DATA),
++	{"DATA", 0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_DATA),
+ 	 doff_io32},
+-	{"CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL),
++	{"CTL",  0644, HOSTADDR(RGF_DMA_ITR_RX_CNT_CTL),
+ 	 doff_io32},
+-	{"IDL_TRSH", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_TRSH),
++	{"IDL_TRSH", 0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_TRSH),
+ 	 doff_io32},
+-	{"IDL_DATA", S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_DATA),
++	{"IDL_DATA", 0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_DATA),
+ 	 doff_io32},
+-	{"IDL_CTL",  S_IRUGO | S_IWUSR, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_CTL),
++	{"IDL_CTL",  0644, HOSTADDR(RGF_DMA_ITR_RX_IDL_CNT_CTL),
+ 	 doff_io32},
+ 	{},
+ };
+@@ -1624,7 +1624,7 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 		blob->data = (void * __force)wil->csr + HOSTADDR(map->host);
+ 		blob->size = map->to - map->from;
+ 		snprintf(name, sizeof(name), "blob_%s", map->name);
+-		wil_debugfs_create_ioblob(name, S_IRUGO, dbg, wil_blob);
++		wil_debugfs_create_ioblob(name, 0444, dbg, wil_blob);
+ 	}
+ }
+ 
+@@ -1634,29 +1634,29 @@ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 	umode_t mode;
+ 	const struct file_operations *fops;
+ } dbg_files[] = {
+-	{"mbox",	S_IRUGO,		&fops_mbox},
+-	{"vrings",	S_IRUGO,		&fops_vring},
+-	{"stations",	S_IRUGO,		&fops_sta},
+-	{"desc",	S_IRUGO,		&fops_txdesc},
+-	{"bf",		S_IRUGO,		&fops_bf},
+-	{"ssid",	S_IRUGO | S_IWUSR,	&fops_ssid},
+-	{"mem_val",	S_IRUGO,		&fops_memread},
+-	{"reset",		  S_IWUSR,	&fops_reset},
+-	{"rxon",		  S_IWUSR,	&fops_rxon},
+-	{"tx_mgmt",		  S_IWUSR,	&fops_txmgmt},
+-	{"wmi_send",		  S_IWUSR,	&fops_wmi},
+-	{"back",	S_IRUGO | S_IWUSR,	&fops_back},
+-	{"pmccfg",	S_IRUGO | S_IWUSR,	&fops_pmccfg},
+-	{"pmcdata",	S_IRUGO,		&fops_pmcdata},
+-	{"temp",	S_IRUGO,		&fops_temp},
+-	{"freq",	S_IRUGO,		&fops_freq},
+-	{"link",	S_IRUGO,		&fops_link},
+-	{"info",	S_IRUGO,		&fops_info},
+-	{"recovery",	S_IRUGO | S_IWUSR,	&fops_recovery},
+-	{"led_cfg",	S_IRUGO | S_IWUSR,	&fops_led_cfg},
+-	{"led_blink_time",	S_IRUGO | S_IWUSR,	&fops_led_blink_time},
+-	{"fw_capabilities",	S_IRUGO,	&fops_fw_capabilities},
+-	{"fw_version",	S_IRUGO,		&fops_fw_version},
++	{"mbox",	0444,		&fops_mbox},
++	{"vrings",	0444,		&fops_vring},
++	{"stations", 0444,		&fops_sta},
++	{"desc",	0444,		&fops_txdesc},
++	{"bf",		0444,		&fops_bf},
++	{"ssid",	0644,		&fops_ssid},
++	{"mem_val",	0644,		&fops_memread},
++	{"reset",	0244,		&fops_reset},
++	{"rxon",	0244,		&fops_rxon},
++	{"tx_mgmt",	0244,		&fops_txmgmt},
++	{"wmi_send", 0244,		&fops_wmi},
++	{"back",	0644,		&fops_back},
++	{"pmccfg",	0644,		&fops_pmccfg},
++	{"pmcdata",	0444,		&fops_pmcdata},
++	{"temp",	0444,		&fops_temp},
++	{"freq",	0444,		&fops_freq},
++	{"link",	0444,		&fops_link},
++	{"info",	0444,		&fops_info},
++	{"recovery", 0644,		&fops_recovery},
++	{"led_cfg",	0644,		&fops_led_cfg},
++	{"led_blink_time",	0644,	&fops_led_blink_time},
++	{"fw_capabilities",	0444,	&fops_fw_capabilities},
++	{"fw_version",	0444,		&fops_fw_version},
+ };
+ 
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -1695,32 +1695,32 @@ static void wil6210_debugfs_init_isr(struct wil6210_priv *wil,
+ 
+ /* fields in struct wil6210_priv */
+ static const struct dbg_off dbg_wil_off[] = {
+-	WIL_FIELD(privacy,	S_IRUGO,		doff_u32),
+-	WIL_FIELD(status[0],	S_IRUGO | S_IWUSR,	doff_ulong),
+-	WIL_FIELD(hw_version,	S_IRUGO,		doff_x32),
+-	WIL_FIELD(recovery_count, S_IRUGO,		doff_u32),
+-	WIL_FIELD(ap_isolate,	S_IRUGO,		doff_u32),
+-	WIL_FIELD(discovery_mode, S_IRUGO | S_IWUSR,	doff_u8),
+-	WIL_FIELD(chip_revision, S_IRUGO,		doff_u8),
+-	WIL_FIELD(abft_len, S_IRUGO | S_IWUSR,		doff_u8),
++	WIL_FIELD(privacy,	0444,		doff_u32),
++	WIL_FIELD(status[0],	0644,	doff_ulong),
++	WIL_FIELD(hw_version,	0444,	doff_x32),
++	WIL_FIELD(recovery_count, 0444,	doff_u32),
++	WIL_FIELD(ap_isolate,	0444,	doff_u32),
++	WIL_FIELD(discovery_mode, 0644,	doff_u8),
++	WIL_FIELD(chip_revision, 0444,	doff_u8),
++	WIL_FIELD(abft_len, 0644,		doff_u8),
+ 	{},
+ };
+ 
+ static const struct dbg_off dbg_wil_regs[] = {
+-	{"RGF_MAC_MTRL_COUNTER_0", S_IRUGO, HOSTADDR(RGF_MAC_MTRL_COUNTER_0),
++	{"RGF_MAC_MTRL_COUNTER_0", 0444, HOSTADDR(RGF_MAC_MTRL_COUNTER_0),
+ 		doff_io32},
+-	{"RGF_USER_USAGE_1", S_IRUGO, HOSTADDR(RGF_USER_USAGE_1), doff_io32},
++	{"RGF_USER_USAGE_1", 0444, HOSTADDR(RGF_USER_USAGE_1), doff_io32},
+ 	{},
+ };
+ 
+ /* static parameters */
+ static const struct dbg_off dbg_statics[] = {
+-	{"desc_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_txdesc_index, doff_u32},
+-	{"vring_index",	S_IRUGO | S_IWUSR, (ulong)&dbg_vring_index, doff_u32},
+-	{"mem_addr",	S_IRUGO | S_IWUSR, (ulong)&mem_addr, doff_u32},
+-	{"vring_idle_trsh", S_IRUGO | S_IWUSR, (ulong)&vring_idle_trsh,
++	{"desc_index",	0644, (ulong)&dbg_txdesc_index, doff_u32},
++	{"vring_index",	0644, (ulong)&dbg_vring_index, doff_u32},
++	{"mem_addr",	0644, (ulong)&mem_addr, doff_u32},
++	{"vring_idle_trsh", 0644, (ulong)&vring_idle_trsh,
+ 	 doff_u32},
+-	{"led_polarity", S_IRUGO | S_IWUSR, (ulong)&led_polarity, doff_u8},
++	{"led_polarity", 0644, (ulong)&led_polarity, doff_u8},
+ 	{},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 85a795a..efb1f59 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -27,23 +27,23 @@
+ #define WAIT_FOR_SCAN_ABORT_MS 1000
+ 
+ bool debug_fw; /* = false; */
+-module_param(debug_fw, bool, S_IRUGO);
++module_param(debug_fw, bool, 0444);
+ MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
+ 
+ static bool oob_mode;
+-module_param(oob_mode, bool, S_IRUGO);
++module_param(oob_mode, bool, 0444);
+ MODULE_PARM_DESC(oob_mode,
+ 		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
+ 
+ bool no_fw_recovery;
+-module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
++module_param(no_fw_recovery, bool, 0644);
+ MODULE_PARM_DESC(no_fw_recovery, " disable automatic FW error recovery");
+ 
+ /* if not set via modparam, will be set to default value of 1/8 of
+  * rx ring size during init flow
+  */
+ unsigned short rx_ring_overflow_thrsh = WIL6210_RX_HIGH_TRSH_INIT;
+-module_param(rx_ring_overflow_thrsh, ushort, S_IRUGO);
++module_param(rx_ring_overflow_thrsh, ushort, 0444);
+ MODULE_PARM_DESC(rx_ring_overflow_thrsh,
+ 		 " RX ring overflow threshold in descriptors.");
+ 
+@@ -73,7 +73,7 @@ static int mtu_max_set(const char *val, const struct kernel_param *kp)
+ 	.get = param_get_uint,
+ };
+ 
+-module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, S_IRUGO);
++module_param_cb(mtu_max, &mtu_max_ops, &mtu_max, 0444);
+ MODULE_PARM_DESC(mtu_max, " Max MTU value.");
+ 
+ static uint rx_ring_order = WIL_RX_RING_SIZE_ORDER_DEFAULT;
+@@ -102,11 +102,11 @@ static int ring_order_set(const char *val, const struct kernel_param *kp)
+ 	.get = param_get_uint,
+ };
+ 
+-module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, S_IRUGO);
++module_param_cb(rx_ring_order, &ring_order_ops, &rx_ring_order, 0444);
+ MODULE_PARM_DESC(rx_ring_order, " Rx ring order; size = 1 << order");
+-module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, S_IRUGO);
++module_param_cb(tx_ring_order, &ring_order_ops, &tx_ring_order, 0444);
+ MODULE_PARM_DESC(tx_ring_order, " Tx ring order; size = 1 << order");
+-module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, S_IRUGO);
++module_param_cb(bcast_ring_order, &ring_order_ops, &bcast_ring_order, 0444);
+ MODULE_PARM_DESC(bcast_ring_order, " Bcast ring order; size = 1 << order");
+ 
+ #define RST_DELAY (20) /* msec, for loop in @wil_target_reset */
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 3a63e98..76dc2b3 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -23,7 +23,7 @@
+ #include <linux/rtnetlink.h>
+ 
+ static bool use_msi = true;
+-module_param(use_msi, bool, S_IRUGO);
++module_param(use_msi, bool, 0444);
+ MODULE_PARM_DESC(use_msi, " Use MSI interrupt, default - true");
+ 
+ #ifdef CONFIG_PM
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 1311688..072182e 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -29,12 +29,12 @@
+ #include "trace.h"
+ 
+ static bool rtap_include_phy_info;
+-module_param(rtap_include_phy_info, bool, S_IRUGO);
++module_param(rtap_include_phy_info, bool, 0444);
+ MODULE_PARM_DESC(rtap_include_phy_info,
+ 		 " Include PHY info in the radiotap header, default - no");
+ 
+ bool rx_align_2;
+-module_param(rx_align_2, bool, S_IRUGO);
++module_param(rx_align_2, bool, 0444);
+ MODULE_PARM_DESC(rx_align_2, " align Rx buffers on 4*n+2, default - no");
+ 
+ static inline uint wil_rx_snaplen(void)
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 27d21a3..1f22c19 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -24,16 +24,16 @@
+ #include "trace.h"
+ 
+ static uint max_assoc_sta = WIL6210_MAX_CID;
+-module_param(max_assoc_sta, uint, S_IRUGO | S_IWUSR);
++module_param(max_assoc_sta, uint, 0644);
+ MODULE_PARM_DESC(max_assoc_sta, " Max number of stations associated to the AP");
+ 
+ int agg_wsize; /* = 0; */
+-module_param(agg_wsize, int, S_IRUGO | S_IWUSR);
++module_param(agg_wsize, int, 0644);
+ MODULE_PARM_DESC(agg_wsize, " Window size for Tx Block Ack after connect;"
+ 		 " 0 - use default; < 0 - don't auto-establish");
+ 
+ u8 led_id = WIL_LED_INVALID_ID;
+-module_param(led_id, byte, S_IRUGO);
++module_param(led_id, byte, 0444);
+ MODULE_PARM_DESC(led_id,
+ 		 " 60G device led enablement. Set the led ID (0-2) to enable");
+ 
+-- 
+1.9.1
