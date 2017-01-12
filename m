@@ -1,271 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34768 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751453AbdAMVfa (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24410 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751753AbdALNPX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:35:30 -0500
-Received: by mail-lf0-f67.google.com with SMTP id q89so7082149lfi.1
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:29 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 07/10] ath10k: per target configurablity of various items
-Date: Fri, 13 Jan 2017 22:35:06 +0100
-Message-Id: <1484343309-6327-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223533_858434_C7098717)
-In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+        Thu, 12 Jan 2017 08:15:23 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 12/13] wil6210: set dma mask to reflect device capability
+Date: Thu, 12 Jan 2017 15:06:04 +0200
+Message-Id: <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141541_642698_57FBA11D)
+In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ability to set bus type and configure the max number of
-peers in the ath10k_hw_params struct.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-With this functionality it is possible to have a different
-hw configuration depending on bus type for the same radio
-chipset.
+11ad device supports 48 bit addresses, reflect that
+by setting the dma mask accordingly.
 
-E.g. SDIO and USB devices using the same chipset as PCIe
-devices will potentially use different board files and perhaps
-other configuration parameters.
-
-One such parameter is the max number of peers.
-Instead of using a default value (suitable for PCIe devices)
-derived from the WMI op version, a per target value can be
-used instead.
-
-This is needed by the QCA9377 USB device in order to prevent
-the target fw to crash after HTT RX ring cfg is issued.
-
-Apparently, the QCA9377 HL device does not seem to handle the
-same amount of peers as the LL devices.
-
-A new struct ath10k_hw_params item for QCA9377 USB devices was
-also added to ath10k_hw_params_list.
-
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c    | 55 ++++++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath10k/core.h    |  7 ----
- drivers/net/wireless/ath/ath10k/hw.h      | 23 +++++++++++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  4 +--
- 4 files changed, 72 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/wil6210/pcie_bus.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 573e772..31a9471 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -282,6 +282,28 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.decap_align_bytes = 4,
- 	},
- 	{
-+		.id = QCA9377_HW_1_1_DEV_VERSION,
-+		.dev_id = QCA9377_1_0_DEVICE_ID,
-+		.name = "qca9377 hw1.1 usb",
-+		.patch_load_addr = QCA9377_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 6,
-+		.otp_exe_param = 0,
-+		.channel_counters_freq_hz = 88000,
-+		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
-+		.fw = {
-+			.dir = QCA9377_HW_1_0_FW_DIR,
-+			.board = QCA9377_HW_1_0_BOARD_DATA_FILE_USB,
-+			.board_size = QCA9377_BOARD_DATA_SZ,
-+			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
-+		},
-+		.hw_ops = &qca988x_ops,
-+		.decap_align_bytes = 4,
-+		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
-+		.is_high_latency = true,
-+		.bus = ATH10K_BUS_USB,
-+	},
-+	{
- 		.id = QCA4019_HW_1_0_DEV_VERSION,
- 		.dev_id = 0,
- 		.name = "qca4019 hw1.0",
-@@ -1487,9 +1509,19 @@ static int ath10k_init_hw_params(struct ath10k *ar)
- 	for (i = 0; i < ARRAY_SIZE(ath10k_hw_params_list); i++) {
- 		hw_params = &ath10k_hw_params_list[i];
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index e891068..3a63e98 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -205,6 +205,19 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		return -ENODEV;
+ 	}
  
--		if (hw_params->id == ar->target_version &&
--		    hw_params->dev_id == ar->dev_id)
--			break;
-+		if (ar->is_high_latency) {
-+			/* High latency devices will use different fw depending
-+			 * on if it is a USB or SDIO device.
-+			 */
-+			if (hw_params->bus == ar->hif.bus &&
-+			    hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
-+		} else {
-+			if (hw_params->id == ar->target_version &&
-+			    hw_params->dev_id == ar->dev_id)
-+				break;
++	/* device supports 48bit addresses */
++	rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(48));
++	if (rc) {
++		dev_err(dev, "dma_set_mask_and_coherent(48) failed: %d\n", rc);
++		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32));
++		if (rc) {
++			dev_err(dev,
++				"dma_set_mask_and_coherent(32) failed: %d\n",
++				rc);
++			return rc;
 +		}
- 	}
- 
- 	if (i == ARRAY_SIZE(ath10k_hw_params_list)) {
-@@ -1580,6 +1612,7 @@ static void ath10k_core_set_coverage_class_work(struct work_struct *work)
- static int ath10k_core_init_firmware_features(struct ath10k *ar)
- {
- 	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-+	int max_num_peers;
- 
- 	if (test_bit(ATH10K_FW_FEATURE_WMI_10_2, fw_file->fw_features) &&
- 	    !test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
-@@ -1664,7 +1697,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 
- 	switch (fw_file->wmi_op_version) {
- 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
--		ar->max_num_peers = TARGET_NUM_PEERS;
-+		max_num_peers = TARGET_NUM_PEERS;
- 		ar->max_num_stations = TARGET_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_NUM_VDEVS;
- 		ar->htt.max_num_pending_tx = TARGET_NUM_MSDU_DESC;
-@@ -1676,10 +1709,10 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
- 		if (ath10k_peer_stats_enabled(ar)) {
--			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
-+			max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
- 		} else {
--			ar->max_num_peers = TARGET_10X_NUM_PEERS;
-+			max_num_peers = TARGET_10X_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
- 		}
- 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
-@@ -1688,7 +1721,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_TLV:
--		ar->max_num_peers = TARGET_TLV_NUM_PEERS;
-+		max_num_peers = TARGET_TLV_NUM_PEERS;
- 		ar->max_num_stations = TARGET_TLV_NUM_STATIONS;
- 		ar->max_num_vdevs = TARGET_TLV_NUM_VDEVS;
- 		ar->max_num_tdls_vdevs = TARGET_TLV_NUM_TDLS_VDEVS;
-@@ -1699,7 +1732,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_10_4:
--		ar->max_num_peers = TARGET_10_4_NUM_PEERS;
-+		max_num_peers = TARGET_10_4_NUM_PEERS;
- 		ar->max_num_stations = TARGET_10_4_NUM_STATIONS;
- 		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
- 		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
-@@ -1716,10 +1749,16 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		break;
- 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
- 	case ATH10K_FW_WMI_OP_VERSION_MAX:
-+	default:
- 		WARN_ON(1);
- 		return -EINVAL;
- 	}
- 
-+	if (ar->hw_params.max_num_peers)
-+		ar->max_num_peers = ar->hw_params.max_num_peers;
-+	else
-+		ar->max_num_peers = max_num_peers;
++	}
 +
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_HTT_OP_VERSION.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c58250c..d9d7805 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -71,13 +71,6 @@
- 
- struct ath10k;
- 
--enum ath10k_bus {
--	ATH10K_BUS_PCI,
--	ATH10K_BUS_AHB,
--	ATH10K_BUS_SDIO,
--	ATH10K_BUS_USB,
--};
--
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- {
- 	switch (bus) {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 9f4cd76..33186be 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -20,6 +20,13 @@
- 
- #include "targaddrs.h"
- 
-+enum ath10k_bus {
-+	ATH10K_BUS_PCI,
-+	ATH10K_BUS_AHB,
-+	ATH10K_BUS_SDIO,
-+	ATH10K_BUS_USB,
-+};
-+
- #define ATH10K_FW_DIR			"ath10k"
- 
- #define QCA988X_2_0_DEVICE_ID   (0x003c)
-@@ -120,6 +127,7 @@ enum qca9377_chip_id_rev {
- /* QCA9377 1.0 definitions */
- #define QCA9377_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA9377/hw1.0"
- #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
-+#define QCA9377_HW_1_0_BOARD_DATA_FILE_USB "board-usb.bin"
- #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
- 
- /* QCA4019 1.0 definitions */
-@@ -416,6 +424,18 @@ struct ath10k_hw_params {
- 
- 	/* Number of bytes used for alignment in rx_hdr_status of rx desc. */
- 	int decap_align_bytes;
-+
-+	/* max_num_peers can be used to override the setting derived from
-+	 * the WMI op version. If this value is non-zero, it will always
-+	 * be used instead of the default value derived from the WMI op
-+	 * version.
-+	 */
-+	int max_num_peers;
-+
-+	/* Specifies whether or not the device is a high latency device */
-+	bool is_high_latency;
-+
-+	enum ath10k_bus bus;
- };
- 
- struct htt_rx_desc;
-@@ -522,6 +542,9 @@ ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
- #define TARGET_TLV_NUM_MSDU_DESC		(1024 + 32)
- #define TARGET_TLV_NUM_WOW_PATTERNS		22
- 
-+/* Target specific defines for QCA9377 high latency firmware */
-+#define TARGET_QCA9377_HL_NUM_PEERS		15
-+
- /* Diagnostic Window */
- #define CE_DIAG_PIPE	7
- 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi-tlv.c b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-index f918802..754d445 100644
---- a/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi-tlv.c
-@@ -1406,7 +1406,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	cmd->num_host_mem_chunks = __cpu_to_le32(ar->wmi.num_mem_chunks);
- 
- 	cfg->num_vdevs = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
--	cfg->num_peers = __cpu_to_le32(TARGET_TLV_NUM_PEERS);
-+	cfg->num_peers = __cpu_to_le32(ar->max_num_peers);
- 
- 	if (test_bit(WMI_SERVICE_RX_FULL_REORDER, ar->wmi.svc_map)) {
- 		cfg->num_offload_peers = __cpu_to_le32(TARGET_TLV_NUM_VDEVS);
-@@ -1417,7 +1417,7 @@ static struct sk_buff *ath10k_wmi_tlv_op_gen_init(struct ath10k *ar)
- 	}
- 
- 	cfg->num_peer_keys = __cpu_to_le32(2);
--	cfg->num_tids = __cpu_to_le32(TARGET_TLV_NUM_TIDS);
-+	cfg->num_tids = __cpu_to_le32(ar->max_num_peers * 2);
- 	cfg->ast_skid_limit = __cpu_to_le32(0x10);
- 	cfg->tx_chain_mask = __cpu_to_le32(0x7);
- 	cfg->rx_chain_mask = __cpu_to_le32(0x7);
+ 	wil = wil_if_alloc(dev);
+ 	if (IS_ERR(wil)) {
+ 		rc = (int)PTR_ERR(wil);
 -- 
-2.7.4
+1.9.1
