@@ -1,56 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39292 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758598AbdAIKgg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:36:36 -0500
-Message-ID: <1483958190.17582.15.camel@sipsolutions.net> (sfid-20170109_113702_739278_26A66746)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Mon, 09 Jan 2017 11:36:30 +0100
-In-Reply-To: <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-         <1480949353.31788.27.camel@sipsolutions.net>
-         <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-         <1481645351.20412.34.camel@sipsolutions.net>
-         <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
-         <1481881024.27953.14.camel@sipsolutions.net>
-         <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
-         <1483354130.4596.5.camel@sipsolutions.net>
-         <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
-         <1483623500.4394.18.camel@sipsolutions.net>
-         <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34457 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750838AbdALLAe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 06:00:34 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath9k: ar9002_mac: kill off ACCESS_ONCE()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1482864599-19995-2-git-send-email-mark.rutland@arm.com>
+References: <1482864599-19995-2-git-send-email-mark.rutland@arm.com>
+To: Mark Rutland <mark.rutland@arm.com>
+CC: <linux-kernel@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+        <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        <ath9k-devel@lists.ath9k.org>, <netdev@vger.kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Message-ID: <35e1ad24f23d41c7956d82b5ca9fc0e6@euamsexm01a.eu.qualcomm.com> (sfid-20170112_120052_170277_EC74840D)
+Date: Thu, 12 Jan 2017 12:00:25 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Is it fine to have something like this
+Mark Rutland <mark.rutland@arm.com> wrote:
+> For several reasons, it is desirable to use {READ,WRITE}_ONCE() in
+> preference to ACCESS_ONCE(), and new code is expected to use one of the
+> former. So far, there's been no reason to change most existing uses of
+> ACCESS_ONCE(), as these aren't currently harmful.
 > 
-> 1) We can have this btcoex_priority value as a optional value in
-> btcoex enable command like below
+> However, for some new features (e.g. KTSAN / Kernel Thread Sanitizer),
+> it is necessary to instrument reads and writes separately, which is not
+> possible with ACCESS_ONCE(). This distinction is critical to correct
+> operation.
 > 
-> iw phyX btcoex_state <enable| disable> [prirority(vendor spcific
-> value)]
+> It's possible to transform the bulk of kernel code using the Coccinelle
+> script below. However, for some files (including the ath9k ar9002 mac
+> driver), this mangles the formatting. As a preparatory step, this patch
+> converts the driver to use {READ,WRITE}_ONCE() without said mangling.
 > 
-> 2) Or we can have seperate command for btcoex_priority as below
+> ----
+> virtual patch
 > 
-> iw phyX set btcoex_priority <priority (vendor spcific value)>
+> @ depends on patch @
+> expression E1, E2;
+> @@
 > 
-> Hopefully this will get rid off all the nl80211 bits.
+> - ACCESS_ONCE(E1) = E2
+> + WRITE_ONCE(E1, E2)
+> 
+> @ depends on patch @
+> expression E;
+> @@
+> 
+> - ACCESS_ONCE(E)
+> + READ_ONCE(E)
+> ----
+> 
+> Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+> Cc: ath9k-devel@qca.qualcomm.com
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: ath9k-devel@lists.ath9k.org
+> Cc: netdev@vger.kernel.org
 
-That makes no sense.
+2 patches applied to ath-next branch of ath.git, thanks.
 
-If the bits are vendor specific, then there's no value in having this
-as an nl80211 command (rather than a vendor command) to start with.
+d5a3a76a9cb8 ath9k: ar9002_mac: kill off ACCESS_ONCE()
+50f3818196f5 ath9k: ar9003_mac: kill off ACCESS_ONCE()
 
-You need to understand that I'm differentiating between *capability*
-bits and actual *priority setting* bits - please re-read the thread
-with that in mind.
+-- 
+https://patchwork.kernel.org/patch/9489799/
 
-johannes
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
