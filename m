@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37118 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751208AbdABKsz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 05:48:55 -0500
-Message-ID: <1483354130.4596.5.camel@sipsolutions.net> (sfid-20170102_114858_400325_D219FCD7)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Mon, 02 Jan 2017 11:48:50 +0100
-In-Reply-To: <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-         <1480949353.31788.27.camel@sipsolutions.net>
-         <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-         <1481645351.20412.34.camel@sipsolutions.net>
-         <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
-         <1481881024.27953.14.camel@sipsolutions.net>
-         <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24410 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751715AbdALNPU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 08:15:20 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 06/13] wil6210: missing reinit_completion in wmi_call
+Date: Thu, 12 Jan 2017 15:05:58 +0200
+Message-Id: <1484226365-10433-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141533_592382_257C6409)
+In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-> > 1) does it even make sense to split it out per AC? wouldn't it be
-> > weird
-> > if you supported this only for VO and BK, and not the others, or
-> > something like that?
-> > 
-> 
-> It has support for BE, VI, management and beacon frames also.
-> Or do you meant to say like support only for VO and BK?
+The code in wmi_call uses the wil->wmi_call completion
+structure to wait for a reply.
+In some scenarios, complete was called twice on the
+completion structure. This happened mainly with a disconnect
+event which can arrive both unsolicited and as a reply to
+a disconnect request. In this case the completion structure
+was left marked as "done" and the next wmi_call returned
+immediately with a corrupted reply buffer. This caused
+unexpected results including crashes.
+Fix this by adding the missing call to reinit_completion.
 
-I mean - does it make sense for a piece of hardware to support only
-VO/BK, without the others? I don't really see how that would make
-sense, but maybe I'm missing something?
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-IOW - why have all these bits rather than just one?
-
-> > 2) Wouldn't it make more sense to define this in nl80211 and just
-> > pass the bitmap through to userspace? That would save quite a bit
-> > of netlink mangling complexity.
-> > 
-> 
-> Please let me know if the below design/thought is fine to you.
-> 
-> iw phyX set btcoex_priority <[vi, vo, be, bk, mgmt, beacon]>
-
-That seems fine, but I don't see how the iw command line is relevant to
-the question of whether we pass flag attributes or a bitmap??
-
-> By this command user should give one or more than one frame types
-> for 
-> this btcoex priority,
-> we will parse that in "iw" and send as a single bitmap(less than
-> 0x64)  to the driver?
-
-Right, and also to nl80211. Why not?
-
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 0137ac5..d30b3fc 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -957,6 +957,7 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ 	wil->reply_id = reply_id;
+ 	wil->reply_buf = reply;
+ 	wil->reply_size = reply_size;
++	reinit_completion(&wil->wmi_call);
+ 	spin_unlock(&wil->wmi_ev_lock);
+ 
+ 	rc = __wmi_send(wil, cmdid, buf, len);
+-- 
+1.9.1
