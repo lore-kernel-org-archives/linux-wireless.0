@@ -1,46 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33456 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43514 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1030473AbdAKPhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 10:37:50 -0500
+        id S1750750AbdALOvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 09:51:25 -0500
+Message-ID: <1484232680.5391.8.camel@sipsolutions.net> (sfid-20170112_155128_341181_D5E9AA0F)
+Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: fix the TID on NDPs sent as EOSP carrier
-Date: Wed, 11 Jan 2017 16:37:42 +0100
-Message-Id: <20170111153742.741-1-johannes@sipsolutions.net> (sfid-20170111_163801_987344_B02B478E)
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+        Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        mohammed@qti.qualcomm.com
+Date: Thu, 12 Jan 2017 15:51:20 +0100
+In-Reply-To: <20170112144527.GA10941@atheros-ThinkPad-T61>
+References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
+         <20170112144527.GA10941@atheros-ThinkPad-T61>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Thu, 2017-01-12 at 20:15 +0530, Mohammed Shafi Shajakhan wrote:
+> 
+> > Reported-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-In the commit below, I forgot to translate the mac80211's
-AC to QoS IE order. Moreover, the condition in the if was
-wrong. Fix both issues.
-This bug would hit only with clients that didn't set all
-the ACs as delivery enabled.
+That makes no sense, you're not handling the patch in any way. You can
+say Tested-by, or Acked-by if you like, but not S-o-b. See the DCO
+(Documentation/SubmittingPatches)
 
-Fixes: f438ceb81d4 ("mac80211: uapsd_queues is in QoS IE order")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b6cfcf038c11..50c309094c37 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1501,8 +1501,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 		/* This will evaluate to 1, 3, 5 or 7. */
- 		for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++)
--			if (ignored_acs & BIT(ac))
--				continue;
-+			if (!(ignored_acs & ieee80211_ac_to_qos_mask[ac]))
-+				break;
- 		tid = 7 - 2 * ac;
- 
- 		ieee80211_send_null_response(sta, tid, reason, true, false);
--- 
-2.9.3
+johannes
