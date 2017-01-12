@@ -1,44 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39452 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750720AbdALOtG (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34959 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751191AbdALCko (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:49:06 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 11 Jan 2017 21:40:44 -0500
+Received: by mail-pf0-f181.google.com with SMTP id f144so4270019pfa.2
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 18:40:44 -0800 (PST)
+Subject: Re: mac80211: Fix headroom allocation when forwarding mesh pkt
+To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
+References: <e3b7a95724944c6aadc8512eadfe1c1d@ceva-dsp.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <74c98387-69d7-39c3-d4bb-8d8a3dcfc71c@gmail.com> (sfid-20170112_034048_616218_D5E235EE)
+Date: Thu, 12 Jan 2017 11:40:41 +0900
 MIME-Version: 1.0
-Subject: Re: mwifiex: use module_*_driver helper macros
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1480597700-2456-1-git-send-email-akarwar@marvell.com>
-References: <1480597700-2456-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20170112144811.D439A6126C@smtp.codeaurora.org> (sfid-20170112_154947_563715_703E10A1)
-Date: Thu, 12 Jan 2017 14:48:11 +0000 (UTC)
+In-Reply-To: <e3b7a95724944c6aadc8512eadfe1c1d@ceva-dsp.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> After user_rmmod global flag removal, *_init_module() and
-> *_cleanup_module() have become just a wrapper functions.
-> We will get rid of them with the help of module_*_driver() macros.
-> 
-> For pcie, existing ".init_if" handler has same name as what
-> module_pcie_driver() macro will create. Let's rename it to
-> avoid conflict.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On 2017/01/11 23:39, Cedric Izoard wrote:
+> -	fwd_skb = skb_copy_expand(skb, local->tx_headroom, 0, GFP_ATOMIC);
+> +	fwd_skb = skb_copy_expand(skb, local->tx_headroom +
+> +				  sdata->encrypt_headroom, 0, GFP_ATOMIC);
+>  	if (!fwd_skb) {
+>  		net_info_ratelimited("%s: failed to clone mesh frame\n",
+>  				    sdata->name);
+>
 
-Patch applied to wireless-drivers-next.git, thanks.
+# I retransmit this because of server error.
 
-c0e6aa426823 mwifiex: use module_*_driver helper macros
+Thanks ! It work for me.
 
--- 
-https://patchwork.kernel.org/patch/9456135/
+Bisected-reported-and-tested-by: Masashi Honma <masashi.honma@gmail.com>
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Masashi Honma.
