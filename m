@@ -1,149 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14380 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751913AbdAaULL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57758 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751516AbdALNPQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 15:11:11 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH v2 2/3] mac80211: Make mesh failure moving average configurable
-Date: Tue, 31 Jan 2017 12:07:51 -0800
-Message-ID: <1485893272-6893-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20170131_211115_871528_FAA5AEBF)
-In-Reply-To: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1485893272-6893-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 12 Jan 2017 08:15:16 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 01/13] wil6210: add sysfs file for FTM calibration
+Date: Thu, 12 Jan 2017 15:05:53 +0200
+Message-Id: <1484226365-10433-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141640_649537_A2CE8C94)
+In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently mesh moving fail average is calculated based on constant
-weight factor. In worst case moving average reaches threshold by
-considering 16 msdu tx ack status and deactivates mesh path. Having
-a constant weight factor might not be suitable for all environments.
-So make it tunable parameter and also lower default weight to 10 so
-that mesh broken link calculation will consider more packet status
-(32 msdus ack status) before dropping mesh path.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-In OTA 2-hop topolgy (MP1 <-> MP2 <-> MP3), while running TCP traffic
-of window size of 2M where each nodes are operating in VHT80 mode,
-mesh path between forwarding node (MP2) and border nodes (MP1/MP3) is
-deactivated more often when average weight is 20.
+In fine timing measurements, the calculation is affected by
+2 parts: timing of packets over the air, which is platform
+independent, and platform-specific delays, which are dependent
+on things like antenna cable length and type.
+Add a sysfs file which allows to get/set these platform specific
+delays, separated into the TX and RX components.
+There are 2 key scenarios where the file can be used:
+1. Calibration - start with some initial values (for example,
+the default values at startup), make measurements at a known
+distance, then iteratively change the values until the
+measurement results match the known distance.
+2. Adjust the delays when platform starts up, based on known
+values.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- net/mac80211/debugfs_netdev.c | 27 +++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h    |  1 +
- net/mac80211/mesh.c           |  1 +
- net/mac80211/mesh.h           |  3 +++
- net/mac80211/mesh_hwmp.c      |  4 +++-
- 5 files changed, 35 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wil6210/Makefile   |   1 +
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   4 +-
+ drivers/net/wireless/ath/wil6210/sysfs.c    | 126 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h  |   4 +-
+ 4 files changed, 133 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/sysfs.c
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 8f5fff8b2040..3923401a85dd 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -586,6 +586,32 @@ static ssize_t ieee80211_if_parse_tsf(
- #ifdef CONFIG_MAC80211_MESH
- IEEE80211_IF_FILE(estab_plinks, u.mesh.estab_plinks, ATOMIC);
+diff --git a/drivers/net/wireless/ath/wil6210/Makefile b/drivers/net/wireless/ath/wil6210/Makefile
+index 89bf2f9..2521343 100644
+--- a/drivers/net/wireless/ath/wil6210/Makefile
++++ b/drivers/net/wireless/ath/wil6210/Makefile
+@@ -5,6 +5,7 @@ wil6210-y += netdev.o
+ wil6210-y += cfg80211.o
+ wil6210-y += pcie_bus.o
+ wil6210-y += debugfs.o
++wil6210-y += sysfs.o
+ wil6210-y += wmi.o
+ wil6210-y += interrupt.o
+ wil6210-y += txrx.o
+diff --git a/drivers/net/wireless/ath/wil6210/pcie_bus.c b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+index 44746ca..6b8f4d21 100644
+--- a/drivers/net/wireless/ath/wil6210/pcie_bus.c
++++ b/drivers/net/wireless/ath/wil6210/pcie_bus.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -263,6 +263,7 @@ static int wil_pcie_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ #endif /* CONFIG_PM */
  
-+static ssize_t ieee80211_if_fmt_fail_avg_weight(
-+	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ 	wil6210_debugfs_init(wil);
++	wil6210_sysfs_init(wil);
+ 
+ 
+ 	return 0;
+@@ -297,6 +298,7 @@ static void wil_pcie_remove(struct pci_dev *pdev)
+ #endif /* CONFIG_PM_SLEEP */
+ #endif /* CONFIG_PM */
+ 
++	wil6210_sysfs_remove(wil);
+ 	wil6210_debugfs_remove(wil);
+ 	rtnl_lock();
+ 	wil_p2p_wdev_free(wil);
+diff --git a/drivers/net/wireless/ath/wil6210/sysfs.c b/drivers/net/wireless/ath/wil6210/sysfs.c
+new file mode 100644
+index 0000000..768f37c
+--- /dev/null
++++ b/drivers/net/wireless/ath/wil6210/sysfs.c
+@@ -0,0 +1,126 @@
++/*
++ * Copyright (c) 2017 Qualcomm Atheros, Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#include <linux/device.h>
++#include <linux/sysfs.h>
++
++#include "wil6210.h"
++#include "wmi.h"
++
++static ssize_t
++wil_ftm_txrx_offset_sysfs_show(struct device *dev,
++			       struct device_attribute *attr,
++			       char *buf)
 +{
-+	return snprintf(buf, buflen, "%d\n", sdata->u.mesh.fail_avg_weight);
++	struct wil6210_priv *wil = dev_get_drvdata(dev);
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_tof_get_tx_rx_offset_event evt;
++	} __packed reply;
++	int rc;
++	ssize_t len;
++
++	if (!test_bit(WMI_FW_CAPABILITY_FTM, wil->fw_capabilities))
++		return -EOPNOTSUPP;
++
++	memset(&reply, 0, sizeof(reply));
++	rc = wmi_call(wil, WMI_TOF_GET_TX_RX_OFFSET_CMDID, NULL, 0,
++		      WMI_TOF_GET_TX_RX_OFFSET_EVENTID,
++		      &reply, sizeof(reply), 100);
++	if (rc < 0)
++		return rc;
++	if (reply.evt.status) {
++		wil_err(wil, "get_tof_tx_rx_offset failed, error %d\n",
++			reply.evt.status);
++		return -EIO;
++	}
++	len = snprintf(buf, PAGE_SIZE, "%d %d\n",
++		       le32_to_cpu(reply.evt.tx_offset),
++		       le32_to_cpu(reply.evt.rx_offset));
++	return len;
 +}
 +
-+static ssize_t ieee80211_if_parse_fail_avg_weight(
-+	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
++static ssize_t
++wil_ftm_txrx_offset_sysfs_store(struct device *dev,
++				struct device_attribute *attr,
++				const char *buf, size_t count)
 +{
-+	u8 val;
-+	int ret;
++	struct wil6210_priv *wil = dev_get_drvdata(dev);
++	struct wmi_tof_set_tx_rx_offset_cmd cmd;
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_tof_set_tx_rx_offset_event evt;
++	} __packed reply;
++	u32 tx_offset, rx_offset;
++	int rc;
 +
-+	ret = kstrtou8(buf, 0, &val);
-+	if (ret)
-+		return ret;
++	if (sscanf(buf, "%d %d", &tx_offset, &rx_offset) != 2)
++		return -EINVAL;
 +
-+	if (val > 100)
-+		return -ERANGE;
++	if (!test_bit(WMI_FW_CAPABILITY_FTM, wil->fw_capabilities))
++		return -EOPNOTSUPP;
 +
-+	sdata->u.mesh.fail_avg_weight = val;
-+
-+	return buflen;
++	memset(&cmd, 0, sizeof(cmd));
++	cmd.tx_offset = cpu_to_le32(tx_offset);
++	cmd.rx_offset = cpu_to_le32(rx_offset);
++	memset(&reply, 0, sizeof(reply));
++	rc = wmi_call(wil, WMI_TOF_SET_TX_RX_OFFSET_CMDID, &cmd, sizeof(cmd),
++		      WMI_TOF_SET_TX_RX_OFFSET_EVENTID,
++		      &reply, sizeof(reply), 100);
++	if (rc < 0)
++		return rc;
++	if (reply.evt.status) {
++		wil_err(wil, "set_tof_tx_rx_offset failed, error %d\n",
++			reply.evt.status);
++		return -EIO;
++	}
++	return count;
 +}
 +
-+IEEE80211_IF_FILE_RW(fail_avg_weight);
++static DEVICE_ATTR(ftm_txrx_offset, 0644,
++		   wil_ftm_txrx_offset_sysfs_show,
++		   wil_ftm_txrx_offset_sysfs_store);
 +
- /* Mesh stats attributes */
- IEEE80211_IF_FILE(fwded_mcast, u.mesh.mshstats.fwded_mcast, DEC);
- IEEE80211_IF_FILE(fwded_unicast, u.mesh.mshstats.fwded_unicast, DEC);
-@@ -711,6 +737,7 @@ static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
- {
- 	DEBUGFS_ADD_MODE(tsf, 0600);
- 	DEBUGFS_ADD_MODE(estab_plinks, 0400);
-+	DEBUGFS_ADD_MODE(fail_avg_weight, 0600);
- }
- 
- static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 159a1a733725..30babcea3e06 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -711,6 +711,7 @@ struct ieee80211_if_mesh {
- 	struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
- 	int mesh_paths_generation;
- 	int mpp_paths_generation;
-+	u8 fail_avg_weight;
- };
- 
- #ifdef CONFIG_MAC80211_MESH
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9c23172feba0..491fd76f91bd 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -1368,6 +1368,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
- 	ifmsh->last_preq = jiffies;
- 	ifmsh->next_perr = jiffies;
- 	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
-+	ifmsh->fail_avg_weight = MESH_FAIL_AVG_WEIGHT;
- 	/* Allocate all mesh structures when creating the first mesh interface. */
- 	if (!mesh_allocated)
- 		ieee80211s_init();
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7e5f271e3c30..887746022cc6 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -185,6 +185,9 @@ struct mesh_rmc {
- /* Number of frames buffered per destination for unresolved destinations */
- #define MESH_FRAME_QUEUE_LEN	10
- 
-+/* Moving failure average weight of mesh peer link (in percent) */
-+#define MESH_FAIL_AVG_WEIGHT 10
++static struct attribute *wil6210_sysfs_entries[] = {
++	&dev_attr_ftm_txrx_offset.attr,
++	NULL
++};
 +
- /* Public interfaces */
- /* Various */
- int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f0aa1da15bd0..61a824eb2c73 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -301,6 +301,7 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	u32 fail_avg = sta->mesh->fail_avg;
-+	u8 fail_avg_weight = sta->sdata->u.mesh.fail_avg_weight;
- 	int failed;
++static struct attribute_group wil6210_attribute_group = {
++	.name = "wil6210",
++	.attrs = wil6210_sysfs_entries,
++};
++
++int wil6210_sysfs_init(struct wil6210_priv *wil)
++{
++	struct device *dev = wil_to_dev(wil);
++	int err;
++
++	err = sysfs_create_group(&dev->kobj, &wil6210_attribute_group);
++	if (err) {
++		wil_err(wil, "failed to create sysfs group: %d\n", err);
++		return err;
++	}
++
++	return 0;
++}
++
++void wil6210_sysfs_remove(struct wil6210_priv *wil)
++{
++	struct device *dev = wil_to_dev(wil);
++
++	sysfs_remove_group(&dev->kobj, &wil6210_attribute_group);
++}
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 237e166..07d4f76 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2017 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -869,6 +869,8 @@ int wil_cfg80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
  
- 	if (!ieee80211_is_data(hdr->frame_control))
-@@ -309,7 +310,8 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
- 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ int wil6210_debugfs_init(struct wil6210_priv *wil);
+ void wil6210_debugfs_remove(struct wil6210_priv *wil);
++int wil6210_sysfs_init(struct wil6210_priv *wil);
++void wil6210_sysfs_remove(struct wil6210_priv *wil);
+ int wil_cid_fill_sinfo(struct wil6210_priv *wil, int cid,
+ 		       struct station_info *sinfo);
  
- 	/* moving average, scaled to 100 */
--	fail_avg = ((80 * fail_avg + 5) / 100 + 20 * failed);
-+	fail_avg = (((100 - fail_avg_weight) * fail_avg + 5) / 100 +
-+		    fail_avg_weight * failed);
- 
- 	/* bump up fail average since fractional part of average is ignored.
- 	 * Otherwise fail average always stuck at the same level and
 -- 
 1.9.1
