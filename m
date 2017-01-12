@@ -1,80 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exsmtp03.microchip.com ([198.175.253.49]:20935 "EHLO
-        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S967172AbdAEHhZ (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36000 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750893AbdALVCq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 02:37:25 -0500
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH] staging: wilc1000: Connect to highest RSSI value for required SSID
-Date: Thu, 5 Jan 2017 13:03:41 +0530
-Message-ID: <1483601621-27545-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170105_083833_883275_8C7A3D85)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Thu, 12 Jan 2017 16:02:46 -0500
+Received: by mail-pf0-f172.google.com with SMTP id 189so18655705pfu.3
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 13:02:45 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 2/2] mwifiex: pcie: don't delay for sleep cookie when not required
+Date: Thu, 12 Jan 2017 13:02:32 -0800
+Message-Id: <20170112210232.18554-2-briannorris@chromium.org> (sfid-20170112_220252_258361_D32839A9)
+In-Reply-To: <20170112210232.18554-1-briannorris@chromium.org>
+References: <20170112210232.18554-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Connect to the highest rssi with the required SSID in the shadow
-table if the connection criteria is based only on the SSID.
-For the first matching SSID, an index to the table is saved.
-Later the index is updated if matching SSID has a higher
-RSSI value than the last saved index.
+Wifi modules like 8997 don't support the "sleep cookie", and so most of
+the time, we just time out in the mwifiex_delay_for_sleep_cookie()
+function ("max count reached while accessing sleep cookie"). This is a
+waste of time, and we should skip it for modules without the sleep
+cookie flag.
 
-However if decision is made based on BSSID, there is only one match
-in the table and corresponding index is used.
+Additionally, this delay is sometimes counterproductive. For instance,
+when PCIe ASPM is enabled, this extra delay can leave the link idle for
+long enough to re-enter a low-power state even while we are trying to
+wake the module, compounding an additional delay when it comes time to
+read the next register (e.g., the interrupt status). On some systems,
+this is detrimental to overall system latency.
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+Tested on Marvell 8997, but would be good to get confirmation from Marvell.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c1a24f7..32206b8 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -665,6 +665,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- {
- 	s32 s32Error = 0;
- 	u32 i;
-+	u32 sel_bssi_idx = last_scanned_cnt + 1;
- 	u8 u8security = NO_ENCRYPT;
- 	enum AUTHTYPE tenuAuth_type = ANY;
- 
-@@ -688,18 +689,25 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		    memcmp(last_scanned_shadow[i].ssid,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
--			if (!sme->bssid)
--				break;
--			else
-+			if (!sme->bssid) {
-+				if (sel_bssi_idx == (last_scanned_cnt + 1))
-+					sel_bssi_idx = i;
-+				else if (last_scanned_shadow[i].rssi >
-+					 last_scanned_shadow[sel_bssi_idx].rssi)
-+					sel_bssi_idx = i;
-+			} else {
- 				if (memcmp(last_scanned_shadow[i].bssid,
- 					   sme->bssid,
--					   ETH_ALEN) == 0)
-+					   ETH_ALEN) == 0){
-+					sel_bssi_idx = i;
- 					break;
-+				}
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 435ba879ef29..11e0673617c7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1712,11 +1712,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 					    "Write register failed\n");
+ 				return -1;
+ 			}
+-			mwifiex_delay_for_sleep_cookie(adapter,
+-						       MWIFIEX_MAX_DELAY_COUNT);
+-			while (reg->sleep_cookie && (count++ < 10) &&
+-			       mwifiex_pcie_ok_to_access_hw(adapter))
+-				usleep_range(50, 60);
++			if (reg->sleep_cookie) {
++				mwifiex_delay_for_sleep_cookie(adapter,
++							       MWIFIEX_MAX_DELAY_COUNT);
++				while ((count++ < 10) &&
++				       mwifiex_pcie_ok_to_access_hw(adapter))
++					usleep_range(50, 60);
 +			}
- 		}
- 	}
- 
--	if (i < last_scanned_cnt) {
--		pstrNetworkInfo = &last_scanned_shadow[i];
-+	if (sel_bssi_idx < last_scanned_cnt) {
-+		pstrNetworkInfo = &last_scanned_shadow[sel_bssi_idx];
- 	} else {
- 		s32Error = -ENOENT;
- 		wilc_connecting = 0;
+ 			mwifiex_pcie_enable_host_int(adapter);
+ 			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
+ 							   skb->len);
 -- 
-2.7.4
+2.11.0.390.gc69c2f50cf-goog
