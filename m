@@ -1,51 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36320 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751757AbdAWWTM (ORCPT
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33897 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750730AbdALQS6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:19:12 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
-Date: Tue, 24 Jan 2017 00:03:48 +0200
-Message-Id: <20170123220350.25305-24-luca@coelho.fi> (sfid-20170123_233339_786784_23AB2972)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
+        Thu, 12 Jan 2017 11:18:58 -0500
+Received: by mail-qk0-f181.google.com with SMTP id a20so25625018qkc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 08:18:58 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1484235986.19860.1.camel@sipsolutions.net>
+References: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com> <1484235986.19860.1.camel@sipsolutions.net>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Thu, 12 Jan 2017 17:18:57 +0100
+Message-ID: <CA+BoTQkgD5umVsGnRM4uu_8GO=KjQ6MuJCjQRnSHrDuQdU4z1w@mail.gmail.com> (sfid-20170112_171902_090833_571D0FD0)
+Subject: Re: [PATCH] ath10k: prevent sta pointer rcu violation
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        Ben Greear <greearb@candelatech.com>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 23/25] iwlwifi: mvm: mark ret as maybe_unused in iwl_dbgfs_fw_restart_write()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 12 January 2017 at 16:46, Johannes Berg <johannes@sipsolutions.net> wrot=
+e:
+> On Thu, 2017-01-12 at 16:14 +0100, Michal Kazior wrote:
+>> Station pointers are RCU protected so driver must
+>> be extra careful if it tries to store them
+>> internally for later use outside of the RCU
+>> section it obtained it in.
+>>
+>> It was possible for station teardown to race with
+>> some htt events. The possible outcome could be a
+>> use-after-free and a crash.
+>>
+>> Only peer-flow-control capable firmware was
+>> affected (so hardware-wise qca99x0 and qca4019).
+>>
+>> This could be done in sta_state() itself via
+>> explicit synchronize_net() call but there's
+>> already a convenient sta_pre_rcu_remove() op that
+>> can be hooked up to avoid extra rcu stall.
+>
+> I don't think this makes sense. You're not using RCU-protected pointers
+> to the stations yourself, all accesses to them are locked under the
+> &ar->data_lock. As a consequence, you can't have any need for waiting
+> for a grace period. Since you also remove the pointer (under lock) when
+> the station gets removed, I don't think RCU can be the problem?
 
-The value returned from iwl_mvm_send_cmd_pdu() in this function is not
-used and always returns an error (which is the whole point of the
-call).  Tag the ret variable with __maybe_unused to avoid this compile
-warning when W=1 is used:
+Unless you then continue to use that sta pointer after you release
+data_lock. Consider this:
 
-/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c: In function ‘iwl_dbgfs_fw_restart_write’:
-/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:875:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
-  int ret;
-      ^
+>          CPU0             CPU1
+> 1   synchronize_net()
+> 2    drv_sta_state()
+> 3                      htt_fetch_ind(pid,tid) called
+> 4                      rcu_read_lock()
+> 5                      get(data_lock)
+> 6                      txq=3Dpeers[pid]->sta->txq[tid]
+> 7                      put(data_lock)
+> 8    get(data_lock)
+> 9     peer->sta=3D0
+> 10   put(data_lock)
+> 11     kfree(sta)
+> 12                     ieee80211_tx_dequeue(txq)
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Even though there's no code like (9) per se you can think of it as
+anything that tries to "remove" the peer--sta association (ath10k_peer
+is removed implicitly via wmi peer delete command and waiting for htt
+event completion).
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 7b7d2a146e30..a260cd503200 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -798,7 +798,7 @@ static ssize_t iwl_dbgfs_drv_rx_stats_read(struct file *file,
- static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
- 					  size_t count, loff_t *ppos)
- {
--	int ret;
-+	int __maybe_unused ret;
- 
- 	mutex_lock(&mvm->mutex);
- 
--- 
-2.11.0
+Holding data_lock for the entire duration of handling fetch indication
+isn't really good for performance so it's better to fix RCU handling.
+
+
+Micha=C5=82
