@@ -1,536 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wj0-f177.google.com ([209.85.210.177]:35874 "EHLO
-        mail-wj0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752636AbdACL6T (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42762 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750892AbdALOza (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 06:58:19 -0500
-Received: by mail-wj0-f177.google.com with SMTP id c11so238233424wjx.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 03:58:19 -0800 (PST)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        netdev@vger.kernel.org
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-From: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
-Message-ID: <030e1370-d1ab-019d-80d4-7df7387af24b@cumulusnetworks.com> (sfid-20170103_125850_937501_90ED193F)
-Date: Tue, 3 Jan 2017 12:58:16 +0100
+        Thu, 12 Jan 2017 09:55:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        "rajatja\@google.com" <rajatja@google.com>,
+        "briannorris\@google.com" <briannorris@google.com>,
+        "dmitry.torokhov\@gmail.com" <dmitry.torokhov@gmail.com>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+        <20161205110906.28C706034F@smtp.codeaurora.org>
+        <25e936b31e1e4f3d9db2c2309da9f798@SC-EXCH04.marvell.com>
+        <87mvfdk65r.fsf@kamboji.qca.qualcomm.com>
+        <e03f76e98fae4ce1a6cf254a1838574c@SC-EXCH04.marvell.com>
+Date: Thu, 12 Jan 2017 16:55:24 +0200
+In-Reply-To: <e03f76e98fae4ce1a6cf254a1838574c@SC-EXCH04.marvell.com>
+        (Amitkumar Karwar's message of "Wed, 11 Jan 2017 15:47:43 +0000")
+Message-ID: <87lgugnx9f.fsf@kamboji.qca.qualcomm.com> (sfid-20170112_155533_055324_AAD1D2B2)
 MIME-Version: 1.0
-In-Reply-To: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/17 20:32, Linus Lüssing wrote:
-> Implements an optional, per bridge port flag and feature to deliver
-> multicast packets to any host on the according port via unicast
-> individually. This is done by copying the packet per host and
-> changing the multicast destination MAC to a unicast one accordingly.
->
-> multicast-to-unicast works on top of the multicast snooping feature of
-> the bridge. Which means unicast copies are only delivered to hosts which
-> are interested in it and signalized this via IGMP/MLD reports
-> previously.
->
-> This feature is intended for interface types which have a more reliable
-> and/or efficient way to deliver unicast packets than broadcast ones
-> (e.g. wifi).
->
-> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
-> report suppression takes place. This feature is disabled by default.
->
-> The initial patch and idea is from Felix Fietkau.
->
-> Cc: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
->
-> ---
->
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-Hi Linus,
-A few comments below, in general I have 2 concerns: the new mcast fast-path
-tests and cache line ref, and adding netlink support for the new flag.
+>> But these didn't. Can you please rebase these and resubmit in one
+>> patchset? Less conflicts that way.
+>> 
+>
+> The problem here is you tried to apply the patches in reverse order. Sorry for the confusion.
+> Please apply pending patches in below order.
+>
+> [v3,1/5] mwifiex: don't wait for main_process in shutdown_drv --- Apply this patch first.
+> [v3,2/5] mwifiex: do not free firmware dump memory in shutdown_drv
+> [v3,3/5] mwifiex: get rid of drv_info* adapter variables
+> [v3,4/5] mwifiex: wait firmware dump complete during card remove process
+> [v3,5/5] mwifiex: move pcie_work and related variables inside card
+>
+> [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+> [2/2] mwifiex: get rid of global user_rmmod flag
+>
+> mwifiex: use module_*_driver helper macros
+>
+> [1/5] mwifiex: get rid of mwifiex_do_flr wrapper
+> [2/5] mwifiex: cleanup in PCIe flr code path
+> [3/5] mwifiex: sdio card reset enhancement
+> [4/5] mwifiex: get rid of __mwifiex_sdio_remove helper 
+> [5/5] mwifiex: get rid of global save_adapter and sdio_work
 
-> This feature is used and enabled by default in OpenWRT and LEDE for AP
-> interfaces for more than a year now to allow both a more robust multicast
-> delivery and multicast at higher rates (e.g. multicast streaming).
->
-> In OpenWRT/LEDE the IGMP/MLD report suppression issue is overcome by
-> the network daemon enabling AP isolation and by that separating all STAs.
-> Delivery of STA-to-STA IP mulitcast is made possible again by
-> enabling and utilizing the bridge hairpin mode, which considers the
-> incoming port as a potential outgoing port, too.
->
-> Hairpin-mode is performed after multicast snooping, therefore leading to
-> only deliver reports to STAs running a multicast router.
-> ---
->  include/linux/if_bridge.h |  1 +
->  net/bridge/br_forward.c   | 44 +++++++++++++++++++++--
->  net/bridge/br_mdb.c       |  2 +-
->  net/bridge/br_multicast.c | 92 ++++++++++++++++++++++++++++++++++-------------
->  net/bridge/br_private.h   |  4 ++-
->  net/bridge/br_sysfs_if.c  |  2 ++
->  6 files changed, 115 insertions(+), 30 deletions(-)
->
-> diff --git a/include/linux/if_bridge.h b/include/linux/if_bridge.h
-> index c6587c0..f1b0d78 100644
-> --- a/include/linux/if_bridge.h
-> +++ b/include/linux/if_bridge.h
-> @@ -46,6 +46,7 @@ struct br_ip_list {
->  #define BR_LEARNING_SYNC	BIT(9)
->  #define BR_PROXYARP_WIFI	BIT(10)
->  #define BR_MCAST_FLOOD		BIT(11)
-> +#define BR_MULTICAST_TO_UCAST	BIT(12)
->
->  #define BR_DEFAULT_AGEING_TIME	(300 * HZ)
->
-> diff --git a/net/bridge/br_forward.c b/net/bridge/br_forward.c
-> index 7cb41ae..49d742d 100644
-> --- a/net/bridge/br_forward.c
-> +++ b/net/bridge/br_forward.c
-> @@ -174,6 +174,33 @@ static struct net_bridge_port *maybe_deliver(
->  	return p;
->  }
->
-> +static struct net_bridge_port *maybe_deliver_addr(
-> +	struct net_bridge_port *prev, struct net_bridge_port *p,
-> +	struct sk_buff *skb, const unsigned char *addr,
-> +	bool local_orig)
-> +{
-> +	struct net_device *dev = BR_INPUT_SKB_CB(skb)->brdev;
-> +	const unsigned char *src = eth_hdr(skb)->h_source;
-> +
-> +	if (!should_deliver(p, skb))
-> +		return prev;
-> +
-> +	/* Even with hairpin, no soliloquies - prevent breaking IPv6 DAD */
-> +	if (skb->dev == p->dev && ether_addr_equal(src, addr))
-> +		return prev;
-> +
-> +	skb = skb_copy(skb, GFP_ATOMIC);
-> +	if (!skb) {
-> +		dev->stats.tx_dropped++;
-> +		return prev;
-> +	}
-> +
-> +	memcpy(eth_hdr(skb)->h_dest, addr, ETH_ALEN);
-> +	__br_forward(p, skb, local_orig);
-> +
-> +	return prev;
-> +}
-> +
->  /* called under rcu_read_lock */
->  void br_flood(struct net_bridge *br, struct sk_buff *skb,
->  	      enum br_pkt_type pkt_type, bool local_rcv, bool local_orig)
-> @@ -231,6 +258,7 @@ void br_multicast_flood(struct net_bridge_mdb_entry *mdst,
->  	struct net_bridge_port *prev = NULL;
->  	struct net_bridge_port_group *p;
->  	struct hlist_node *rp;
-> +	const unsigned char *addr;
+Thanks, now I was able to apply these but please do double check the
+result in wireless-drivers-next.
 
-nit: please arrange these into reverse christmas tree
+I also noticed a new warning:
 
->
->  	rp = rcu_dereference(hlist_first_rcu(&br->router_list));
->  	p = mdst ? rcu_dereference(mdst->ports) : NULL;
-> @@ -241,10 +269,20 @@ void br_multicast_flood(struct net_bridge_mdb_entry *mdst,
->  		rport = rp ? hlist_entry(rp, struct net_bridge_port, rlist) :
->  			     NULL;
->
-> -		port = (unsigned long)lport > (unsigned long)rport ?
-> -		       lport : rport;
-> +		if ((unsigned long)lport > (unsigned long)rport) {
-> +			port = lport;
-> +			addr = p->unicast ? p->eth_addr : NULL;
-> +		} else {
-> +			port = rport;
-> +			addr = NULL;
-> +		}
-> +
-> +		if (addr)
-> +			prev = maybe_deliver_addr(prev, port, skb, addr,
-> +						  local_orig);
-> +		else
-> +			prev = maybe_deliver(prev, port, skb, local_orig);
+drivers/net/wireless/marvell/mwifiex/pcie.c: In function 'mwifiex_pcie_remove':
+drivers/net/wireless/marvell/mwifiex/pcie.c:303:5: warning: 'fw_status'
+may be used uninitialized in this function [-Wmaybe-uninitialized]
+  if (fw_status == FIRMWARE_READY_PCIE && !adapter->mfg_mode) {
 
-This hunk adds 2 new tests and an additional cache line ref to all mcast forwarding,
-regardless if the new (special case) flag is set or not.
+Actually I'm not sure if this warning was caused by these patches as I
+have recently updated my ancient gcc to a newer one (5.4.0), but please
+take a look and send a fix if it's a valid warning.
 
-Also are you intentionally sending the original skb through the last port ?
-
->
-> -		prev = maybe_deliver(prev, port, skb, local_orig);
->  		if (IS_ERR(prev))
->  			goto out;
->  		if (prev == port)
-> diff --git a/net/bridge/br_mdb.c b/net/bridge/br_mdb.c
-> index 7dbc80d..056e6ac 100644
-> --- a/net/bridge/br_mdb.c
-> +++ b/net/bridge/br_mdb.c
-> @@ -531,7 +531,7 @@ static int br_mdb_add_group(struct net_bridge *br, struct net_bridge_port *port,
->  			break;
->  	}
->
-> -	p = br_multicast_new_port_group(port, group, *pp, state);
-> +	p = br_multicast_new_port_group(port, group, *pp, state, NULL);
->  	if (unlikely(!p))
->  		return -ENOMEM;
->  	rcu_assign_pointer(*pp, p);
-> diff --git a/net/bridge/br_multicast.c b/net/bridge/br_multicast.c
-> index b30e77e..470a2409 100644
-> --- a/net/bridge/br_multicast.c
-> +++ b/net/bridge/br_multicast.c
-> @@ -43,12 +43,14 @@ static void br_multicast_add_router(struct net_bridge *br,
->  static void br_ip4_multicast_leave_group(struct net_bridge *br,
->  					 struct net_bridge_port *port,
->  					 __be32 group,
-> -					 __u16 vid);
-> +					 __u16 vid,
-> +					 const unsigned char *src);
-> +
->  #if IS_ENABLED(CONFIG_IPV6)
->  static void br_ip6_multicast_leave_group(struct net_bridge *br,
->  					 struct net_bridge_port *port,
->  					 const struct in6_addr *group,
-> -					 __u16 vid);
-> +					 __u16 vid, const unsigned char *src);
->  #endif
->  unsigned int br_mdb_rehash_seq;
->
-> @@ -711,7 +713,8 @@ struct net_bridge_port_group *br_multicast_new_port_group(
->  			struct net_bridge_port *port,
->  			struct br_ip *group,
->  			struct net_bridge_port_group __rcu *next,
-> -			unsigned char flags)
-> +			unsigned char flags,
-> +			const unsigned char *src)
->  {
->  	struct net_bridge_port_group *p;
->
-> @@ -726,12 +729,35 @@ struct net_bridge_port_group *br_multicast_new_port_group(
->  	hlist_add_head(&p->mglist, &port->mglist);
->  	setup_timer(&p->timer, br_multicast_port_group_expired,
->  		    (unsigned long)p);
-> +
-> +	if ((port->flags & BR_MULTICAST_TO_UCAST) && src) {
-> +		memcpy(p->eth_addr, src, ETH_ALEN);
-> +		p->unicast = true;
-> +	}
-> +
->  	return p;
->  }
->
-> +static bool br_port_group_equal(struct net_bridge_port_group *p,
-> +				struct net_bridge_port *port,
-> +				const unsigned char *src)
-> +{
-> +	if (p->port != port)
-> +		return false;
-> +
-> +	if (!p->unicast)
-> +		return true;
-> +
-> +	if (!src)
-> +		return false;
-> +
-> +	return ether_addr_equal(src, p->eth_addr);
-> +}
-> +
->  static int br_multicast_add_group(struct net_bridge *br,
->  				  struct net_bridge_port *port,
-> -				  struct br_ip *group)
-> +				  struct br_ip *group,
-> +				  const unsigned char *src)
->  {
->  	struct net_bridge_port_group __rcu **pp;
->  	struct net_bridge_port_group *p;
-> @@ -758,13 +784,13 @@ static int br_multicast_add_group(struct net_bridge *br,
->  	for (pp = &mp->ports;
->  	     (p = mlock_dereference(*pp, br)) != NULL;
->  	     pp = &p->next) {
-> -		if (p->port == port)
-> +		if (br_port_group_equal(p, port, src))
->  			goto found;
->  		if ((unsigned long)p->port < (unsigned long)port)
->  			break;
->  	}
->
-> -	p = br_multicast_new_port_group(port, group, *pp, 0);
-> +	p = br_multicast_new_port_group(port, group, *pp, 0, src);
->  	if (unlikely(!p))
->  		goto err;
->  	rcu_assign_pointer(*pp, p);
-> @@ -783,7 +809,8 @@ static int br_multicast_add_group(struct net_bridge *br,
->  static int br_ip4_multicast_add_group(struct net_bridge *br,
->  				      struct net_bridge_port *port,
->  				      __be32 group,
-> -				      __u16 vid)
-> +				      __u16 vid,
-> +				      const unsigned char *src)
->  {
->  	struct br_ip br_group;
->
-> @@ -794,14 +821,15 @@ static int br_ip4_multicast_add_group(struct net_bridge *br,
->  	br_group.proto = htons(ETH_P_IP);
->  	br_group.vid = vid;
->
-> -	return br_multicast_add_group(br, port, &br_group);
-> +	return br_multicast_add_group(br, port, &br_group, src);
->  }
->
->  #if IS_ENABLED(CONFIG_IPV6)
->  static int br_ip6_multicast_add_group(struct net_bridge *br,
->  				      struct net_bridge_port *port,
->  				      const struct in6_addr *group,
-> -				      __u16 vid)
-> +				      __u16 vid,
-> +				      const unsigned char *src)
->  {
->  	struct br_ip br_group;
->
-> @@ -812,7 +840,7 @@ static int br_ip6_multicast_add_group(struct net_bridge *br,
->  	br_group.proto = htons(ETH_P_IPV6);
->  	br_group.vid = vid;
->
-> -	return br_multicast_add_group(br, port, &br_group);
-> +	return br_multicast_add_group(br, port, &br_group, src);
->  }
->  #endif
->
-> @@ -1081,6 +1109,7 @@ static int br_ip4_multicast_igmp3_report(struct net_bridge *br,
->  					 struct sk_buff *skb,
->  					 u16 vid)
->  {
-> +	const unsigned char *src;
->  	struct igmpv3_report *ih;
->  	struct igmpv3_grec *grec;
->  	int i;
-> @@ -1121,12 +1150,14 @@ static int br_ip4_multicast_igmp3_report(struct net_bridge *br,
->  			continue;
->  		}
->
-> +		src = eth_hdr(skb)->h_source;
->  		if ((type == IGMPV3_CHANGE_TO_INCLUDE ||
->  		     type == IGMPV3_MODE_IS_INCLUDE) &&
->  		    ntohs(grec->grec_nsrcs) == 0) {
-> -			br_ip4_multicast_leave_group(br, port, group, vid);
-> +			br_ip4_multicast_leave_group(br, port, group, vid, src);
->  		} else {
-> -			err = br_ip4_multicast_add_group(br, port, group, vid);
-> +			err = br_ip4_multicast_add_group(br, port, group, vid,
-> +							 src);
->  			if (err)
->  				break;
->  		}
-> @@ -1141,6 +1172,7 @@ static int br_ip6_multicast_mld2_report(struct net_bridge *br,
->  					struct sk_buff *skb,
->  					u16 vid)
->  {
-> +	const unsigned char *src = eth_hdr(skb)->h_source;
->  	struct icmp6hdr *icmp6h;
->  	struct mld2_grec *grec;
->  	int i;
-> @@ -1192,10 +1224,11 @@ static int br_ip6_multicast_mld2_report(struct net_bridge *br,
->  		     grec->grec_type == MLD2_MODE_IS_INCLUDE) &&
->  		    ntohs(*nsrcs) == 0) {
->  			br_ip6_multicast_leave_group(br, port, &grec->grec_mca,
-> -						     vid);
-> +						     vid, src);
->  		} else {
->  			err = br_ip6_multicast_add_group(br, port,
-> -							 &grec->grec_mca, vid);
-> +							 &grec->grec_mca, vid,
-> +							 src);
->  			if (err)
->  				break;
->  		}
-> @@ -1511,7 +1544,8 @@ br_multicast_leave_group(struct net_bridge *br,
->  			 struct net_bridge_port *port,
->  			 struct br_ip *group,
->  			 struct bridge_mcast_other_query *other_query,
-> -			 struct bridge_mcast_own_query *own_query)
-> +			 struct bridge_mcast_own_query *own_query,
-> +			 const unsigned char *src)
->  {
->  	struct net_bridge_mdb_htable *mdb;
->  	struct net_bridge_mdb_entry *mp;
-> @@ -1535,7 +1569,7 @@ br_multicast_leave_group(struct net_bridge *br,
->  		for (pp = &mp->ports;
->  		     (p = mlock_dereference(*pp, br)) != NULL;
->  		     pp = &p->next) {
-> -			if (p->port != port)
-> +			if (!br_port_group_equal(p, port, src))
->  				continue;
->
->  			rcu_assign_pointer(*pp, p->next);
-> @@ -1566,7 +1600,7 @@ br_multicast_leave_group(struct net_bridge *br,
->  		for (p = mlock_dereference(mp->ports, br);
->  		     p != NULL;
->  		     p = mlock_dereference(p->next, br)) {
-> -			if (p->port != port)
-> +			if (!br_port_group_equal(p, port, src))
->  				continue;
->
->  			if (!hlist_unhashed(&p->mglist) &&
-> @@ -1617,7 +1651,8 @@ br_multicast_leave_group(struct net_bridge *br,
->  static void br_ip4_multicast_leave_group(struct net_bridge *br,
->  					 struct net_bridge_port *port,
->  					 __be32 group,
-> -					 __u16 vid)
-> +					 __u16 vid,
-> +					 const unsigned char *src)
->  {
->  	struct br_ip br_group;
->  	struct bridge_mcast_own_query *own_query;
-> @@ -1632,14 +1667,15 @@ static void br_ip4_multicast_leave_group(struct net_bridge *br,
->  	br_group.vid = vid;
->
->  	br_multicast_leave_group(br, port, &br_group, &br->ip4_other_query,
-> -				 own_query);
-> +				 own_query, src);
->  }
->
->  #if IS_ENABLED(CONFIG_IPV6)
->  static void br_ip6_multicast_leave_group(struct net_bridge *br,
->  					 struct net_bridge_port *port,
->  					 const struct in6_addr *group,
-> -					 __u16 vid)
-> +					 __u16 vid,
-> +					 const unsigned char *src)
->  {
->  	struct br_ip br_group;
->  	struct bridge_mcast_own_query *own_query;
-> @@ -1654,7 +1690,7 @@ static void br_ip6_multicast_leave_group(struct net_bridge *br,
->  	br_group.vid = vid;
->
->  	br_multicast_leave_group(br, port, &br_group, &br->ip6_other_query,
-> -				 own_query);
-> +				 own_query, src);
->  }
->  #endif
->
-> @@ -1711,6 +1747,7 @@ static int br_multicast_ipv4_rcv(struct net_bridge *br,
->  				 struct sk_buff *skb,
->  				 u16 vid)
->  {
-> +	const unsigned char *src;
-
-nit: please arrange these in reverse christmas tree
-
->  	struct sk_buff *skb_trimmed = NULL;
->  	struct igmphdr *ih;
->  	int err;
-> @@ -1731,13 +1768,14 @@ static int br_multicast_ipv4_rcv(struct net_bridge *br,
->  	}
->
->  	ih = igmp_hdr(skb);
-> +	src = eth_hdr(skb)->h_source;
->  	BR_INPUT_SKB_CB(skb)->igmp = ih->type;
->
->  	switch (ih->type) {
->  	case IGMP_HOST_MEMBERSHIP_REPORT:
->  	case IGMPV2_HOST_MEMBERSHIP_REPORT:
->  		BR_INPUT_SKB_CB(skb)->mrouters_only = 1;
-> -		err = br_ip4_multicast_add_group(br, port, ih->group, vid);
-> +		err = br_ip4_multicast_add_group(br, port, ih->group, vid, src);
->  		break;
->  	case IGMPV3_HOST_MEMBERSHIP_REPORT:
->  		err = br_ip4_multicast_igmp3_report(br, port, skb_trimmed, vid);
-> @@ -1746,7 +1784,7 @@ static int br_multicast_ipv4_rcv(struct net_bridge *br,
->  		err = br_ip4_multicast_query(br, port, skb_trimmed, vid);
->  		break;
->  	case IGMP_HOST_LEAVE_MESSAGE:
-> -		br_ip4_multicast_leave_group(br, port, ih->group, vid);
-> +		br_ip4_multicast_leave_group(br, port, ih->group, vid, src);
->  		break;
->  	}
->
-> @@ -1765,6 +1803,7 @@ static int br_multicast_ipv6_rcv(struct net_bridge *br,
->  				 struct sk_buff *skb,
->  				 u16 vid)
->  {
-> +	const unsigned char *src;
-
-nit: same about arrangement
-
->  	struct sk_buff *skb_trimmed = NULL;
->  	struct mld_msg *mld;
->  	int err;
-> @@ -1785,8 +1824,10 @@ static int br_multicast_ipv6_rcv(struct net_bridge *br,
->
->  	switch (mld->mld_type) {
->  	case ICMPV6_MGM_REPORT:
-> +		src = eth_hdr(skb)->h_source;
->  		BR_INPUT_SKB_CB(skb)->mrouters_only = 1;
-> -		err = br_ip6_multicast_add_group(br, port, &mld->mld_mca, vid);
-> +		err = br_ip6_multicast_add_group(br, port, &mld->mld_mca, vid,
-> +						 src);
->  		break;
->  	case ICMPV6_MLD2_REPORT:
->  		err = br_ip6_multicast_mld2_report(br, port, skb_trimmed, vid);
-> @@ -1795,7 +1836,8 @@ static int br_multicast_ipv6_rcv(struct net_bridge *br,
->  		err = br_ip6_multicast_query(br, port, skb_trimmed, vid);
->  		break;
->  	case ICMPV6_MGM_REDUCTION:
-> -		br_ip6_multicast_leave_group(br, port, &mld->mld_mca, vid);
-> +		src = eth_hdr(skb)->h_source;
-> +		br_ip6_multicast_leave_group(br, port, &mld->mld_mca, vid, src);
->  		break;
->  	}
->
-> diff --git a/net/bridge/br_private.h b/net/bridge/br_private.h
-> index 8ce621e..cc55100 100644
-> --- a/net/bridge/br_private.h
-> +++ b/net/bridge/br_private.h
-> @@ -177,6 +177,8 @@ struct net_bridge_port_group {
->  	struct timer_list		timer;
->  	struct br_ip			addr;
->  	unsigned char			flags;
-> +	unsigned char			eth_addr[ETH_ALEN];
-> +	bool				unicast;
-
-I think you can remove the boolean unicast here and either use the "flags" or
-the eth_addr itself.
-This structure needs a serious re-arrangement.
-
->  };
->
->  struct net_bridge_mdb_entry
-> @@ -599,7 +601,7 @@ void br_multicast_free_pg(struct rcu_head *head);
->  struct net_bridge_port_group *
->  br_multicast_new_port_group(struct net_bridge_port *port, struct br_ip *group,
->  			    struct net_bridge_port_group __rcu *next,
-> -			    unsigned char flags);
-> +			    unsigned char flags, const unsigned char *src);
->  void br_mdb_init(void);
->  void br_mdb_uninit(void);
->  void br_mdb_notify(struct net_device *dev, struct net_bridge_port *port,
-> diff --git a/net/bridge/br_sysfs_if.c b/net/bridge/br_sysfs_if.c
-> index 8bd5696..1730278 100644
-> --- a/net/bridge/br_sysfs_if.c
-> +++ b/net/bridge/br_sysfs_if.c
-> @@ -188,6 +188,7 @@ static BRPORT_ATTR(multicast_router, S_IRUGO | S_IWUSR, show_multicast_router,
->  		   store_multicast_router);
->
->  BRPORT_ATTR_FLAG(multicast_fast_leave, BR_MULTICAST_FAST_LEAVE);
-> +BRPORT_ATTR_FLAG(multicast_to_unicast, BR_MULTICAST_TO_UCAST);
->  #endif
->
->  static const struct brport_attribute *brport_attrs[] = {
-> @@ -214,6 +215,7 @@ static const struct brport_attribute *brport_attrs[] = {
->  #ifdef CONFIG_BRIDGE_IGMP_SNOOPING
->  	&brport_attr_multicast_router,
->  	&brport_attr_multicast_fast_leave,
-> +	&brport_attr_multicast_to_unicast,
->  #endif
->  	&brport_attr_proxyarp,
->  	&brport_attr_proxyarp_wifi,
->
-
-Please also add netlink support, we've been working hard at adding support for all bridge
-options via netlink.
-
-Thanks,
-  Nik
+-- 
+Kalle Valo
