@@ -1,90 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from llsa731-a03.servidoresdns.net ([82.223.190.25]:52638 "EHLO
-        llsa731-a03.servidoresdns.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933184AbdABSLL (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5659 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751734AbdALNPV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 13:11:11 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 02 Jan 2017 19:11:09 +0100
-From: info@leopoldosoria.com
-To: sedat.dilek@gmail.com
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
-Subject: Re: Installing driver for Ubuntu 16.04 Intel(R) Wireless WiFi Link
- 4965AGN
-In-Reply-To: <CA+icZUXtJG18ejLynO1FB0BS5Guqr35-Bn0_Obht-VyGNO4tAg@mail.gmail.com>
-References: <CA+icZUXtJG18ejLynO1FB0BS5Guqr35-Bn0_Obht-VyGNO4tAg@mail.gmail.com>
-Message-ID: <6df84be9db053beae03eb31ece0ab2d7@mail.leopoldosoria.com> (sfid-20170102_191308_387117_AF0EB447)
+        Thu, 12 Jan 2017 08:15:21 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH v2 07/13] wil6210: protect against false interrupt during reset sequence
+Date: Thu, 12 Jan 2017 15:05:59 +0200
+Message-Id: <1484226365-10433-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141533_325488_F665C48A)
+In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Madam Sedat,
-Thank you for your answer.
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-I already consulted Ubuntu Community but it is not so nice for a 
-beginner like me. I tried several recomedations from them, but no way.  
-So, I thought, it is better to ask to the source.
+During reset sequence it is seen that device is generating an
+interrupt eventhough interrupts are masked at device level.
 
-Yes, I have the firmware you mention, but wifi doesn't work. The icon 
-appear in the top bar but it doesn't seem to be conected. It doesn't 
-seach conections even when wifi is activated. The ligh of wifi simbol in 
-the laptop lights some times but others it doesn't.
+Add workaround to disable the interrupts from host side during
+reset and clear any pending interrupts before re-enabling
+the interrupt.
 
-Any help is welcome and I won't forget ladies next time, sorry.
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thank you for your help and have a happy new year 2017 also.
-
-Regards,
-Leopoldo
-
-
-
-El 02-01-2017 15:06, Sedat Dilek escribió:
-> On Mon, Jan 2, 2017 at 2:11 PM,  <info@leopoldosoria.com> wrote:
->> Dear Sirs,
->> Which of the below drivers should I install for my Lenovo 3000 V200?
->> I am runing Ubuntu 16.04
->> 
->> Intel® Wireless WiFi Link 4965AGN
->> 2.6.24+ iwlwifi-4965-ucode-4.44.14.tgz
->> 2.6.24+ iwlwifi-4965-ucode-4.44.15.tgz
->> 2.6.24+ iwlwifi-4965-ucode-4.44.17.tgz
->> 2.6.24+ iwlwifi-4965-ucode-4.44.1.18.tgz
->> 2.6.24+ iwlwifi-4965-ucode-4.44.1.20.tgz
->> 2.6.24+ iwlwifi-4965-ucode-228.57.1.21.tgz
->> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.21.tgz
->> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.23.tgz
->> 2.6.28+ (?)     iwlwifi-4965-ucode-228.61.2.24.tgz
->> 
->> Ans how shoudl I proceed for intalling the right driver?
->> 
->> Thank you
->> 
-> 
-> [ What about the Ladies, Sir :-)? ]
-> 
-> Happy new 2017!
-> 
-> You need the linux-firmware [1] package.
-> Normally, Ubuntu/xenial should ship it.
-> 
-> Check if you have...
-> 
-> /lib/firmware/iwlwifi-4965-2.ucode
-> 
-> ...file.
-> 
-> Not sure why you are asking or what is not working.
-> AFAICS, Ubuntu should have some nice wikis explaining a WLAN setup.
-> A good strategy will always be to consult your distro's help before 
-> asking here.
-> 
-> [3] as a gift.
-> 
-> Regards,
-> - Sedat -
-> 
-> [1] http://packages.ubuntu.com/xenial/linux-firmware
-> [2] http://packages.ubuntu.com/xenial/all/linux-firmware/filelist
-> [3] http://www.catb.org/~esr/faqs/smart-questions.html
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 9b8fa6a..85a795a 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -918,7 +918,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	flush_workqueue(wil->wmi_wq);
+ 
+ 	wil_bl_crash_info(wil, false);
++	wil_disable_irq(wil);
+ 	rc = wil_target_reset(wil);
++	wil6210_clear_irq(wil);
++	wil_enable_irq(wil);
+ 	wil_rx_fini(wil);
+ 	if (rc) {
+ 		wil_bl_crash_info(wil, true);
+-- 
+1.9.1
