@@ -1,44 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37108 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39132 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750996AbdABKpd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 05:45:33 -0500
-Message-ID: <1483353931.4596.3.camel@sipsolutions.net> (sfid-20170102_114536_764601_58DDDC32)
-Subject: Re: cfg80211: add set/get link loss profile
+        id S1750734AbdALIhN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 03:37:13 -0500
+Message-ID: <1484210226.5391.1.camel@sipsolutions.net> (sfid-20170112_093730_369726_BDB087EE)
+Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point
+ better
 From: Johannes Berg <johannes@sipsolutions.net>
-To: "Lazar, Alexei Avshalom" <ailizaro@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Date: Mon, 02 Jan 2017 11:45:31 +0100
-In-Reply-To: <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org>
-References: <7742335b-f05e-edcd-ad80-fd09fb295eab@codeaurora.org>
-         <1480344742.8107.63.camel@sipsolutions.net>
-         <58a1b983-6688-8b3e-81cb-83c62b46abbf@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Date: Thu, 12 Jan 2017 09:37:06 +0100
+In-Reply-To: <3292373.oxnXTOSWCQ@wuerfel>
+References: <20170111143532.485827-1-arnd@arndb.de>
+         <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com>
+         <1484147177.29931.14.camel@sipsolutions.net> <3292373.oxnXTOSWCQ@wuerfel>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-12-19 at 12:58 +0200, Lazar, Alexei Avshalom wrote:
-
-> > What you're doing here is *extremely* vague. No definitions of what
-> > this means, no description of how it's intended to be implemented,
-> > no note even on whether or not this is for full-MAC chips or not,
-> > etc.
+On Wed, 2017-01-11 at 21:39 +0100, Arnd Bergmann wrote:
+> On Wednesday, January 11, 2017 4:06:17 PM CET Johannes Berg wrote:
 > > 
+> > Applied. Also fixed the typo in the subject :)
 > 
-> The patch is intended for full-MAC chips and I will update the commit
-> message to include more details.
-> 
-> > At least for mac80211, we can define signals to userspace regarding
-> > "link quality" and make decisions in wpa_s then?
-> > 
-> 
-> The policy is offloaded today to the FW and the decision being made
-> by the FW.
-> We are only modifying the behavior and not making the decision.
+> Thanks! Unfortunately I now got another warning for the same
+> function, and though I would have expected the patch to fix it, that
+> did not work:
 
-Fair enough, but I stand by saying that it's extremely vague - how
-could userspace possibly know what "level" to pick, if you don't give
-it any information about what the levels really mean?
+I've come to expect better of you (i.e. testing your own patches) ;-)
+
+
+Come to think of it, I'm thinking I should drop this patch and the
+driver should just use iwe_stream_add_event() instead? It'll be
+somewhat tricky to get the length correct though.
+
+Alternatively, perhaps we should just uninline all the crap and then
+the compiler can't bother us :)
 
 johannes
