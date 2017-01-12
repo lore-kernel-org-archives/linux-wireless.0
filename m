@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49498 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1032048AbdAEMi7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 07:38:59 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wireless: move IEEE80211_NUM_ACS to ieee80211.h
-Date: Thu,  5 Jan 2017 13:38:49 +0100
-Message-Id: <20170105123849.21077-1-johannes@sipsolutions.net> (sfid-20170105_133910_270809_A3B80AB8)
+Received: from smtp.codeaurora.org ([198.145.29.96]:39930 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750983AbdALOt5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 09:49:57 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/5] mwifiex: get rid of mwifiex_do_flr wrapper
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+References: <1481724651-30397-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20170112144957.24F0A6120C@smtp.codeaurora.org> (sfid-20170112_155002_238155_EF3E13A2)
+Date: Thu, 12 Jan 2017 14:49:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> This patch gets rid of mwifiex_do_flr. We will call
+> mwifiex_shutdown_sw() and mwifiex_reinit_sw() directly.
+> These two general purpose functions will be useful for
+> sdio card reset handler.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-This constant isn't really specific to mac80211, so move it
-"up" a level to ieee80211.h
+5 patches applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/ieee80211.h | 2 ++
- include/net/mac80211.h    | 1 -
- 2 files changed, 2 insertions(+), 1 deletion(-)
+8750ab6236b0 mwifiex: get rid of mwifiex_do_flr wrapper
+ec750f1082d7 mwifiex: cleanup in PCIe flr code path
+c742e623e941 mwifiex: sdio card reset enhancement
+a7513a4fa919 mwifiex: get rid of __mwifiex_sdio_remove helper
+cc75c577806a mwifiex: get rid of global save_adapter and sdio_work
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index fe849329511a..87d1937e4671 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -185,6 +185,8 @@ static inline u16 ieee80211_sn_sub(u16 sn1, u16 sn2)
- 
- /* number of user priorities 802.11 uses */
- #define IEEE80211_NUM_UPS		8
-+/* number of ACs */
-+#define IEEE80211_NUM_ACS		4
- 
- #define IEEE80211_QOS_CTL_LEN		2
- /* 1d tag mask */
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5345d358a510..5f5cb194cd78 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -147,7 +147,6 @@ enum ieee80211_ac_numbers {
- 	IEEE80211_AC_BE		= 2,
- 	IEEE80211_AC_BK		= 3,
- };
--#define IEEE80211_NUM_ACS	4
- 
- /**
-  * struct ieee80211_tx_queue_params - transmit queue configuration
 -- 
-2.9.3
+https://patchwork.kernel.org/patch/9474231/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
