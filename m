@@ -1,56 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34030 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S965461AbdAILQa (ORCPT
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:35689 "EHLO
+        mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbdALPNR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 06:16:30 -0500
-Message-ID: <1483960583.5227.24.camel@coelho.fi> (sfid-20170109_121749_910933_F4D8DEE5)
-From: Luca Coelho <luca@coelho.fi>
-To: David Binderman <dcb314@hotmail.com>,
-        "johannes.berg@intel.com" <johannes.berg@intel.com>,
-        "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>,
-        "linuxwifi@intel.com" <linuxwifi@intel.com>,
-        "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 09 Jan 2017 13:16:23 +0200
-In-Reply-To: <VI1PR08MB1022D85586276BFDE1125B539C630@VI1PR08MB1022.eurprd08.prod.outlook.com>
-References: <VI1PR08MB1022D85586276BFDE1125B539C630@VI1PR08MB1022.eurprd08.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: drivers/net/wireless/intel/iwlwifi/pcie/trans.c: 2 * suspicious
- code ?
+        Thu, 12 Jan 2017 10:13:17 -0500
+Received: by mail-lf0-f44.google.com with SMTP id m78so14976721lfg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 07:13:17 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        greearb@candelatech.com, mohammed@qti.qualcomm.com,
+        Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH] ath10k: prevent sta pointer rcu violation
+Date: Thu, 12 Jan 2017 16:14:30 +0100
+Message-Id: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com> (sfid-20170112_161320_723424_362B312F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-01-06 at 17:47 +0000, David Binderman wrote:
-> Hello there,
+Station pointers are RCU protected so driver must
+be extra careful if it tries to store them
+internally for later use outside of the RCU
+section it obtained it in.
 
-Hi David,
+It was possible for station teardown to race with
+some htt events. The possible outcome could be a
+use-after-free and a crash.
 
+Only peer-flow-control capable firmware was
+affected (so hardware-wise qca99x0 and qca4019).
 
-> 1.
-> 
-> drivers/net/wireless/intel/iwlwifi/pcie/trans.c:2039:14: warning: decrement of a boolean expression [-Wbool-operation]
-> 
-> Source code is
-> 
->            txq->block--;
-> 
-> Maybe someone got a bool and a int mixed up ?
-> 
-> 2.
-> 
-> drivers/net/wireless/intel/iwlwifi/pcie/trans.c:2045:14: warning: increment of a boolean expression [-Wbool-operation]
-> 
-> Duplicate a few lines further down.
+This could be done in sta_state() itself via
+explicit synchronize_net() call but there's
+already a convenient sta_pre_rcu_remove() op that
+can be hooked up to avoid extra rcu stall.
 
-Emmanuel has fixed this in our internal tree and I'll be sending it out
-together with our normal upstreaming process.
+The peer->sta pointer itself can't be set to
+NULL/ERR_PTR because it is later used in
+sta_state() for extra sanity checks.
 
-Thanks for reporting!
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c7664d6569fa..1ab589296dff 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -314,6 +314,7 @@ struct ath10k_peer {
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
+ 
++	bool removed;
+ 	int vdev_id;
+ 	u8 addr[ETH_ALEN];
+ 	DECLARE_BITMAP(peer_ids, ATH10K_MAX_NUM_PEER_IDS);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d1b7edba5e49..aa91f55b35a4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3774,6 +3774,9 @@ struct ieee80211_txq *ath10k_mac_txq_lookup(struct ath10k *ar,
+ 	if (!peer)
+ 		return NULL;
+ 
++	if (peer->removed)
++		return NULL;
++
+ 	if (peer->sta)
+ 		return peer->sta->txq[tid];
+ 	else if (peer->vif)
+@@ -7476,6 +7479,20 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
+ 	return 0;
+ }
+ 
++static void ath10k_mac_op_sta_pre_rcu_remove(struct ieee80211_hw *hw,
++					     struct ieee80211_vif *vif,
++					     struct ieee80211_sta *sta)
++{
++	struct ath10k *ar;
++	struct ath10k_peer *peer;
++
++	ar = hw->priv;
++
++	list_for_each_entry(peer, &ar->peers, list)
++		if (peer->sta == sta)
++			peer->removed = true;
++}
++
+ static const struct ieee80211_ops ath10k_ops = {
+ 	.tx				= ath10k_mac_op_tx,
+ 	.wake_tx_queue			= ath10k_mac_op_wake_tx_queue,
+@@ -7516,6 +7533,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ 	.assign_vif_chanctx		= ath10k_mac_op_assign_vif_chanctx,
+ 	.unassign_vif_chanctx		= ath10k_mac_op_unassign_vif_chanctx,
+ 	.switch_vif_chanctx		= ath10k_mac_op_switch_vif_chanctx,
++	.sta_pre_rcu_remove		= ath10k_mac_op_sta_pre_rcu_remove,
+ 
+ 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
+ 
+-- 
+2.1.4
