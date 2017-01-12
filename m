@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40544 "EHLO sipsolutions.net"
+Received: from box.matheina.com ([104.236.11.237]:48399 "EHLO box.matheina.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750883AbdALJQJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 04:16:09 -0500
-Message-ID: <1484212560.5391.3.camel@sipsolutions.net> (sfid-20170112_101626_585414_384A580F)
-Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point
- better
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
-Date: Thu, 12 Jan 2017 10:16:00 +0100
-In-Reply-To: <3292373.oxnXTOSWCQ@wuerfel>
-References: <20170111143532.485827-1-arnd@arndb.de>
-         <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com>
-         <1484147177.29931.14.camel@sipsolutions.net> <3292373.oxnXTOSWCQ@wuerfel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752571AbdALDpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 11 Jan 2017 22:45:16 -0500
+From: Scott Matheina <scott@matheina.com>
+To: linux-kernel@vger.kernel.org
+Cc: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH 7/7] staging:wilc1000:wilc_sdio.c Deleted un-needed blank lines
+Date: Wed, 11 Jan 2017 21:38:38 -0600
+Message-Id: <1484192328-16825-7-git-send-email-scott@matheina.com> (sfid-20170112_044537_189752_B365D00F)
+In-Reply-To: <1484192328-16825-1-git-send-email-scott@matheina.com>
+References: <1484192328-16825-1-git-send-email-scott@matheina.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-01-11 at 21:39 +0100, Arnd Bergmann wrote:
-> On Wednesday, January 11, 2017 4:06:17 PM CET Johannes Berg wrote:
-> > 
-> > Applied. Also fixed the typo in the subject :)
-> 
-> Thanks! Unfortunately I now got another warning for the same
-> function, and though I would have expected the patch to fix it, that
-> did not work:
-> 
-> In file included from /git/arm-
-> soc/drivers/net/wireless/intersil/prism54/islpci_dev.h:27:0,
->                  from /git/arm-
-> soc/drivers/net/wireless/intersil/prism54/isl_ioctl.h:24,
->                  from /git/arm-
-> soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c:32:
-> /git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c: In
-> function 'prism54_get_scan':
-> /git/arm-soc/include/net/iw_handler.h:560:4: error: argument 2 null
-> where non-null expected [-Werror=nonnull]
->     memcpy(stream + point_len, extra, iwe->u.data.length);
+Fixes checkpatch CHECK:
+Blank lines aren't necessary before a close brace '}'
+Please don't use multiple blank lines
 
-And I realized only now that this was a different place ...
+Signed-off-by: Scott Matheina <scott@matheina.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-I've just added the check you suggested - spent way too much time
-already on this old crap :)
-
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index e48cebe..cd6b8ba 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -81,7 +81,6 @@ static int wilc_sdio_cmd52(struct wilc *wilc, struct sdio_cmd52 *cmd)
+ 	return ret;
+ }
+ 
+-
+ static int wilc_sdio_cmd53(struct wilc *wilc, struct sdio_cmd53 *cmd)
+ {
+ 	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
+@@ -915,7 +914,6 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 					__LINE__);
+ 				goto _fail_;
+ 			}
+-
+ 		}
+ 	} else {
+ 		if (g_sdio.irq_gpio) {
+@@ -945,7 +943,6 @@ static int sdio_clear_int_ext(struct wilc *wilc, u32 val)
+ 								__LINE__);
+ 							goto _fail_;
+ 						}
+-
+ 					}
+ 					if (!ret)
+ 						break;
+-- 
+2.7.4
