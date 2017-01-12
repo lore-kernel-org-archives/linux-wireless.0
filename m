@@ -1,115 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:33404 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757698AbdADKsZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39270 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750720AbdALOq6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 05:48:25 -0500
-Received: by mail-pg0-f53.google.com with SMTP id g1so187095833pgn.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 02:48:25 -0800 (PST)
-Subject: Re: [PATCH next V2] brcmfmac: avoid writing channel out of allocated
- array
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20170103083858.6981-1-zajec5@gmail.com>
- <20170103164930.29989-1-zajec5@gmail.com>
- <17d4eeb8-0cc2-4e0a-ad16-442dfec32a08@broadcom.com>
- <CACna6rzFvpjfV_aTmYOac6_jE4XPmq6k6kNGwFM9_xFKgJ7MuA@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f2f23dca-d5e6-b127-7fa1-ebebdcbf19be@broadcom.com> (sfid-20170104_114829_340542_4219ADC5)
-Date: Wed, 4 Jan 2017 11:48:19 +0100
+        Thu, 12 Jan 2017 09:46:58 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzFvpjfV_aTmYOac6_jE4XPmq6k6kNGwFM9_xFKgJ7MuA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [1/2] mwifiex: code rearrangement in pcie.c and sdio.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+References: <1480517537-9920-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20170112144657.5677C61272@smtp.codeaurora.org> (sfid-20170112_154702_015936_B5A737F6)
+Date: Thu, 12 Jan 2017 14:46:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4-1-2017 11:40, Rafał Miłecki wrote:
-> On 4 January 2017 at 10:39, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 3-1-2017 17:49, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> Our code was assigning number of channels to the index variable by
->>> default. If firmware reported channel we didn't predict this would
->>> result in using that initial index value and writing out of array. This
->>> never happened so far (we got a complete list of supported channels) but
->>> it means possible memory corruption so we should handle it anyway.
->>>
->>> This patch simply detects unexpected channel and ignores it.
->>>
->>> As we don't try to create new entry now, it's also safe to drop hw_value
->>> and center_freq assignment. For known channels we have these set anyway.
->>>
->>> I decided to fix this issue by assigning NULL or a target channel to the
->>> channel variable. This was one of possible ways, I prefefred this one as
->>> it also avoids using channel[index] over and over.
->>>
->>> Fixes: 58de92d2f95e ("brcmfmac: use static superset of channels for wiphy bands")
->>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>> ---
->>> V2: Add extra comment in code for not-found channel.
->>>     Make it clear this problem have never been seen so far
->>>     Explain why it's safe to drop extra assignments
->>>     Note & reason changing channel variable usage
->>> ---
->>>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 32 ++++++++++++----------
->>>  1 file changed, 17 insertions(+), 15 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> index 9c2c128..a16dd7b 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> @@ -5825,7 +5825,6 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
->>>       u32 i, j;
->>>       u32 total;
->>>       u32 chaninfo;
->>> -     u32 index;
->>>
->>>       pbuf = kzalloc(BRCMF_DCMD_MEDLEN, GFP_KERNEL);
->>>
->>> @@ -5873,33 +5872,36 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
->>>                   ch.bw == BRCMU_CHAN_BW_80)
->>>                       continue;
->>>
->>> -             channel = band->channels;
->>> -             index = band->n_channels;
->>> +             channel = NULL;
->>>               for (j = 0; j < band->n_channels; j++) {
->>> -                     if (channel[j].hw_value == ch.control_ch_num) {
->>> -                             index = j;
->>> +                     if (band->channels[j].hw_value == ch.control_ch_num) {
->>> +                             channel = &band->channels[j];
->>>                               break;
->>>                       }
->>>               }
->>> -             channel[index].center_freq =
->>> -                     ieee80211_channel_to_frequency(ch.control_ch_num,
->>> -                                                    band->band);
->>> -             channel[index].hw_value = ch.control_ch_num;
->>> +             if (!channel) {
->>> +                     /* It seems firmware supports some channel we never
->>> +                      * considered. Something new in IEEE standard?
->>> +                      */
->>> +                     brcmf_err("Firmware reported unexpected channel %d\n",
->>> +                               ch.control_ch_num);
->>
->> Maybe rephrase to "Ignoring unexpected firmware channel %d\n" so
->> end-users are not alarmed by this error message. I think using
->> brcmf_err() is justified, but you may even consider chiming down to
->> brcmf_dbg(INFO, ...).
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
 > 
-> Can you suggest a better error message? It seems I'm too brave and I
-> don't find this one alarming, so I need suggestion.
+> Next patch in this series is going to use mwifiex_read_reg() in remove
+> handlers. The changes here are prerequisites to avoid forward
+> declarations.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Uhm. There is a suggestion above. :-p
+2 patches applied to wireless-drivers-next.git, thanks.
 
-Regards,
-Arend
+90ff71f95575 mwifiex: code rearrangement in pcie.c and sdio.c
+045f0c1b5e26 mwifiex: get rid of global user_rmmod flag
+
+-- 
+https://patchwork.kernel.org/patch/9454491/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
