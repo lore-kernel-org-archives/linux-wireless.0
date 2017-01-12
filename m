@@ -1,75 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33269 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751173AbdAXPGe (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:54955 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750768AbdALJoc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 10:06:34 -0500
-Received: by mail-lf0-f65.google.com with SMTP id x1so17837350lff.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 07:06:28 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 3/6] brcmfmac: pcie: store private pointer to struct brcmf_pub
-Date: Tue, 24 Jan 2017 16:06:09 +0100
-Message-Id: <20170124150612.25138-3-zajec5@gmail.com> (sfid-20170124_160641_695597_F02FD9B0)
-In-Reply-To: <20170124150612.25138-1-zajec5@gmail.com>
-References: <20170124150612.25138-1-zajec5@gmail.com>
+        Thu, 12 Jan 2017 04:44:32 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point better
+Date: Thu, 12 Jan 2017 10:44:16 +0100
+Message-ID: <3158205.0GkzbOcZ01@wuerfel> (sfid-20170112_104625_489415_2B903242)
+In-Reply-To: <1484212560.5391.3.camel@sipsolutions.net>
+References: <20170111143532.485827-1-arnd@arndb.de> <3292373.oxnXTOSWCQ@wuerfel> <1484212560.5391.3.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Thursday, January 12, 2017 10:16:00 AM CET Johannes Berg wrote:
+> And I realized only now that this was a different place ...
 
-Getting this pointer in PCIe code is not trivial and requires using
-dev_get_drvdata helper which adds extra line of code. Having access to
-this struct is useful for using generic stuff and e.g. improving logging
-messages.
+Right, it was a few hundred randconfigs later after I had confirmed
+that the first patch fixed all the configurations that were broken
+at first.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+> I've just added the check you suggested - spent way too much time
+> already on this old crap 
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index 19db8f26729a..a6e7f670d893 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -265,6 +265,7 @@ struct brcmf_pciedev_info {
- 	void (*write_ptr)(struct brcmf_pciedev_info *devinfo, u32 mem_offset,
- 			  u16 value);
- 	struct brcmf_mp_device *settings;
-+	struct brcmf_pub *pub;
- };
- 
- struct brcmf_pcie_ringbuf {
-@@ -1565,14 +1566,18 @@ static void brcmf_pcie_release_resource(struct brcmf_pciedev_info *devinfo)
- 
- static int brcmf_pcie_attach_bus(struct brcmf_pciedev_info *devinfo)
- {
-+	struct device *dev = &devinfo->pdev->dev;
-+	struct brcmf_bus *bus = dev_get_drvdata(dev);
- 	int ret;
- 
- 	/* Attach to the common driver interface */
--	ret = brcmf_attach(&devinfo->pdev->dev, devinfo->settings);
-+	ret = brcmf_attach(dev, devinfo->settings);
- 	if (ret) {
- 		brcmf_err("brcmf_attach failed\n");
- 	} else {
--		ret = brcmf_bus_started(&devinfo->pdev->dev);
-+		devinfo->pub = bus->drvr;
-+
-+		ret = brcmf_bus_started(dev);
- 		if (ret)
- 			brcmf_err("dongle is not responding\n");
- 	}
--- 
-2.11.0
+Ok, thanks! Let's hope it doesn't come back once more.
+
+I'm still trying to categorize the newly added warnings in gcc-7,
+there a number of very useful warnings that got added, but some of
+them are rather noisy and find both a number of real bugs and
+false positives. The NULL check had only a few findings that all
+seemed worth fixing.
+
+	Arnd
