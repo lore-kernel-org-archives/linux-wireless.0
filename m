@@ -1,116 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24410 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751737AbdALNPW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25749 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750736AbdALOaK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 08:15:22 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 09/13] wil6210: align to latest auto generated wmi.h
-Date: Thu, 12 Jan 2017 15:06:01 +0200
-Message-Id: <1484226365-10433-10-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141538_530016_B295BD7E)
-In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 12 Jan 2017 09:30:10 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Subject: Re: [PATCH 3/3] cfg80211: Specify the reason for connect timeout
+Date: Thu, 12 Jan 2017 14:29:28 +0000
+Message-ID: <20170112142926.GA19489@jouni.qca.qualcomm.com> (sfid-20170112_153014_338037_C8403431)
+References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
+ <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
+ <1484141491.29931.10.camel@sipsolutions.net>
+ <20170112135843.GB17983@jouni.qca.qualcomm.com>
+ <1484229979.5391.5.camel@sipsolutions.net>
+In-Reply-To: <1484229979.5391.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On Thu, Jan 12, 2017 at 03:06:19PM +0100, Johannes Berg wrote:
+> On Thu, 2017-01-12 at 13:58 +0000, Malinen, Jouni wrote:
+> >=20
+> > > I think this description is misleading - one could easily
+> > > understand
+> > > "for other cases" to indicate for the cases that the AP did
+> > > explicitly
+> > > reject it, but that's obviously not true.
+> >=20
+> > Well, the expectation here really was that the reason for the timeout
+> > would be known if there was a timeout and the unspecified value would
+> > be used in all other cases, i.e., in cases where the AP did indeed
+> > explicitly reject the connection.
+>=20
+> Hmm. It doesn't really make sense to include the attribute in that case
+> at all though, does it?
 
-Align to latest version of the auto generated wmi file
-describing the interface with FW.
+We don't.. This discussion here is about the C API where we cannot
+remove the argument from the call without adding yet another inline
+wrapper, but the actual function that generates the netlink message does
+not add the timeout reason attribute for success or explicit rejection
+cases.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/wmi.h | 45 ++++++++++++++++++++++++++++++++--
- 1 file changed, 43 insertions(+), 2 deletions(-)
+> > Sure, I can say that NL80211_TIMEOUT_UNSPECIFIED is used when the
+> > reason for the timeout is not known or there was an explicit
+> > rejection instead of a timeout.
+>=20
+> See above - why even think about this attribute in the successful case?
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 906aa72..7c9fee5 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -187,6 +187,7 @@ enum wmi_command_id {
- 	WMI_RS_CFG_CMDID				= 0x921,
- 	WMI_GET_DETAILED_RS_RES_CMDID			= 0x922,
- 	WMI_AOA_MEAS_CMDID				= 0x923,
-+	WMI_BRP_SET_ANT_LIMIT_CMDID			= 0x924,
- 	WMI_SET_MGMT_RETRY_LIMIT_CMDID			= 0x930,
- 	WMI_GET_MGMT_RETRY_LIMIT_CMDID			= 0x931,
- 	WMI_NEW_STA_CMDID				= 0x935,
-@@ -547,7 +548,9 @@ struct wmi_pcp_start_cmd {
- 	u8 pcp_max_assoc_sta;
- 	u8 hidden_ssid;
- 	u8 is_go;
--	u8 reserved0[6];
-+	u8 reserved0[5];
-+	/* abft_len override if non-0 */
-+	u8 abft_len;
- 	u8 disable_ap_sme;
- 	u8 network_type;
- 	u8 channel;
-@@ -1084,6 +1087,7 @@ enum wmi_event_id {
- 	WMI_RS_CFG_DONE_EVENTID				= 0x1921,
- 	WMI_GET_DETAILED_RS_RES_EVENTID			= 0x1922,
- 	WMI_AOA_MEAS_EVENTID				= 0x1923,
-+	WMI_BRP_SET_ANT_LIMIT_EVENTID			= 0x1924,
- 	WMI_SET_MGMT_RETRY_LIMIT_EVENTID		= 0x1930,
- 	WMI_GET_MGMT_RETRY_LIMIT_EVENTID		= 0x1931,
- 	WMI_TOF_SESSION_END_EVENTID			= 0x1991,
-@@ -1304,7 +1308,8 @@ struct wmi_connect_event {
- 	u8 assoc_req_len;
- 	u8 assoc_resp_len;
- 	u8 cid;
--	u8 reserved2[3];
-+	u8 aid;
-+	u8 reserved2[2];
- 	/* not in use */
- 	u8 assoc_info[0];
- } __packed;
-@@ -1777,6 +1782,42 @@ struct wmi_get_detailed_rs_res_event {
- 	u8 reserved[3];
- } __packed;
- 
-+/* BRP antenna limit mode */
-+enum wmi_brp_ant_limit_mode {
-+	/* Disable BRP force antenna limit */
-+	WMI_BRP_ANT_LIMIT_MODE_DISABLE		= 0x00,
-+	/* Define maximal antennas limit. Only effective antennas will be
-+	 * actually used
-+	 */
-+	WMI_BRP_ANT_LIMIT_MODE_EFFECTIVE	= 0x01,
-+	/* Force a specific number of antennas */
-+	WMI_BRP_ANT_LIMIT_MODE_FORCE		= 0x02,
-+	/* number of BRP antenna limit modes */
-+	WMI_BRP_ANT_LIMIT_MODES_NUM		= 0x03,
-+};
-+
-+/* WMI_BRP_SET_ANT_LIMIT_CMDID */
-+struct wmi_brp_set_ant_limit_cmd {
-+	/* connection id */
-+	u8 cid;
-+	/* enum wmi_brp_ant_limit_mode */
-+	u8 limit_mode;
-+	/* antenna limit count, 1-27
-+	 * disable_mode - ignored
-+	 * effective_mode - upper limit to number of antennas to be used
-+	 * force_mode - exact number of antennas to be used
-+	 */
-+	u8 ant_limit;
-+	u8 reserved;
-+} __packed;
-+
-+/* WMI_BRP_SET_ANT_LIMIT_EVENTID */
-+struct wmi_brp_set_ant_limit_event {
-+	/* wmi_fw_status */
-+	u8 status;
-+	u8 reserved[3];
-+} __packed;
-+
- /* broadcast connection ID */
- #define WMI_LINK_MAINTAIN_CFG_CID_BROADCAST	(0xFFFFFFFF)
- 
--- 
-1.9.1
+See above.. C API. Or do you want yet another wrapper for
+cfg80211_connect_bss() to be added while trying to hide
+cfg80211_connect_bss() from drivers somehow?
+
+> Fair enough. I still think we should not include the
+> ATTR_TIMEOUT_REASON for the successful or explicit rejection case at
+> all though. We can really even distinguish that in the low-level
+> function, I think?
+
+nl80211_send_connect_result() already does this:
+
+        (status < 0 &&
+         (nla_put_flag(msg, NL80211_ATTR_TIMED_OUT) ||
+          nla_put_u32(msg, NL80211_ATTR_TIMEOUT_REASON, timeout_reason))) |=
+|
+
+That status =3D=3D -1 special case used to be internal special value within
+cfg80211, but it gets exposed to drivers since we use
+cfg80211_connect_bss() both internally and from drivers instead of
+having separate wrappers for drivers for cases where the bss entry is
+explicitly specified.
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
