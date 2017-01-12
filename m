@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:47697 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41106 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753367AbdAZKC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 05:02:57 -0500
-Subject: Re: [PATCH 3/4] ath9k: check for deaf rx path state
-To: Simon Wunderlich <sw@simonwunderlich.de>
-References: <20170125163654.66431-1-nbd@nbd.name>
- <20170125163654.66431-3-nbd@nbd.name> <4839692.lfma8z9lJt@prime>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <809a5011-4361-0459-2937-5dd5b0d619c2@nbd.name> (sfid-20170126_110302_141032_78E53862)
-Date: Thu, 26 Jan 2017 11:02:53 +0100
-MIME-Version: 1.0
-In-Reply-To: <4839692.lfma8z9lJt@prime>
-Content-Type: text/plain; charset=utf-8
+        id S1751175AbdALJdr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 12 Jan 2017 04:33:47 -0500
+Message-ID: <1484212414.5391.2.camel@sipsolutions.net> (sfid-20170112_103423_552833_3BA5AAC1)
+Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point
+ better
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>,
+        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
+Date: Thu, 12 Jan 2017 10:13:34 +0100
+In-Reply-To: <1484210226.5391.1.camel@sipsolutions.net> (sfid-20170112_093730_369726_BDB087EE)
+References: <20170111143532.485827-1-arnd@arndb.de>
+         <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com>
+         <1484147177.29931.14.camel@sipsolutions.net> <3292373.oxnXTOSWCQ@wuerfel>
+         <1484210226.5391.1.camel@sipsolutions.net>
+         (sfid-20170112_093730_369726_BDB087EE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-26 10:50, Simon Wunderlich wrote:
-> Hey Felix,
-> 
-> 
-> On Wednesday, January 25, 2017 5:36:53 PM CET Felix Fietkau wrote:
->> Various chips occasionally run into a state where the tx path still
->> appears to be working normally, but the rx path is deaf.
->> 
->> There is no known register signature to check for this state explicitly,
->> so use the lack of rx interrupts as an indicator.
->> 
->> This detection is prone to false positives, since a device could also
->> simply be in an environment where there are no frames on the air.
->> However, in this case doing a reset should be harmless since it's
->> obviously not interrupting any real activity. To avoid confusion, call
->> the reset counters in this case "Rx path inactive" instead of something
->> like "Rx path deaf", since it may not be an indication of a real
->> hardware failure.
->> 
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> 
-> As we observed in the field, it may happen that there are still RX interrupts 
-> triggered, but just a very low number - in which case I believe your version 
-> wouldn't fix the problem. Therefore we had a threshold in our original patch 
-> [1].
-It seems that you were seeing something different than what I was seeing
-in my tests. Though it could be that my issues were actually caused by
-something else. I had queued up these changes a while back before I
-finally found and fixed the IRQ issue.
 
-> We would also appreciate if you can at least briefly mention our work if you 
-> resend/rework our stuff.
-Sorry about that. I rebased this from older experimental patches and
-forgot to put in all the relevant context.
+> Come to think of it, I'm thinking I should drop this patch and the
+> driver should just use iwe_stream_add_event() instead? It'll be
+> somewhat tricky to get the length correct though.
 
-Kalle, please drop this change for now.
+No, turns out that's basically impossible with all the compat etc.
+stuff here.
 
-- Felix
+johannes
