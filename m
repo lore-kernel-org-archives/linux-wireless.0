@@ -1,43 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40026 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752083AbdATNjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 08:39:41 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>,
-        John Crispin <blogic@openwrt.org>
-Subject: [PATCH v4 0/3] rt2x00: RT5350 support
-Date: Fri, 20 Jan 2017 14:28:23 +0100
-Message-Id: <1484918906-21856-1-git-send-email-sgruszka@redhat.com> (sfid-20170120_143944_527907_014F83B2)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44400 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751363AbdAMKaN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 05:30:13 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix per station tx bit rate reporting
+Date: Fri, 13 Jan 2017 16:00:03 +0530
+Message-ID: <1484303403-8908-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20170113_113016_801495_1B4BF94D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Repost patches from Daniel with updated clock handling and
-correct author of RT5350 patch.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Note I did not test patches on SOC devices, but getting
-clock frequency is simple and should be trouble-free.
+Not clearing the previous tx bit rate status
+results in a ambigous tx bit rate reporting to
+mac80211/cfg80211, for example the previous bit
+rate status would have been marked as legacy rate
+, while the current rate would have been an HT/VHT
+rate with the tx bit rate flags set and this results
+in exporting tx bitrate as legacy rate but with HT/VHT
+rate flags set, fix this by clearing the tx bitrate
+status for each event. This also fixes the below
+warning when we do:
 
-Daniel Golle (1):
-  rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
+iw dev wlan#N station dump
 
-Serge Vasilugin (1):
-  rt2x00: add support for RT5350 WiSoC
+WARNING: net/wireless/util.c:1222 cfg80211
 
-Stanislaw Gruszka (1):
-  rt2x00: add copy of clk for soc devices
+[<c022f104>] (warn_slowpath_null) from [<bf3b9adc>]
+(cfg80211_calculate_bitrate+0x110/0x1f4 [cfg80211])
+[<bf3b9adc>] (cfg80211_calculate_bitrate [cfg80211]) from
+[<bf3dcd54>] (nl80211_put_sta_rate+0x44/0x1dc [cfg80211])
+[<bf3dcd54>] (nl80211_put_sta_rate [cfg80211]) from
+[<bf3cbc34>] (nl80211_set_interface+0x724/0xd70 [cfg80211])
+[<bf3cbc34>] (nl80211_set_interface [cfg80211]) from
+[<bf3d0a18>] (nl80211_dump_station+0xdc/0x100 [cfg80211])
+[<bf3d0a18>] (nl80211_dump_station [cfg80211])
 
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |   1 +
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 156 +++++++++++++++++++++++--
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |   5 +
- drivers/net/wireless/ralink/rt2x00/rt2x00soc.c |   1 +
- 4 files changed, 155 insertions(+), 8 deletions(-)
+Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 0bc7fe8..74b66e5 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2231,6 +2231,8 @@ static inline bool is_valid_legacy_rate(u8 rate)
+ 		return;
+ 	}
+ 
++	memset(&arsta->txrate, 0, sizeof(arsta->txrate));
++
+ 	if (txrate.flags == WMI_RATE_PREAMBLE_CCK ||
+ 	    txrate.flags == WMI_RATE_PREAMBLE_OFDM) {
+ 		rate = ATH10K_HW_LEGACY_RATE(peer_stats->ratecode);
 -- 
-1.8.3.1
+1.9.1
