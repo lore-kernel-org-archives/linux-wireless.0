@@ -1,101 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38196 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932227AbdAIIJC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 03:09:02 -0500
-Message-ID: <1483949336.17582.3.camel@sipsolutions.net> (sfid-20170109_090931_711602_61F5798B)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
-        "M. Braun" <michael-dev@fami-braun.de>
-Cc: Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date: Mon, 09 Jan 2017 09:08:56 +0100
-In-Reply-To: <20170107145516.GE3134@otheros>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-         <1483706872.4089.8.camel@sipsolutions.net>
-         <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
-         <1483710841.12677.1.camel@sipsolutions.net>
-         <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
-         <20170107145516.GE3134@otheros>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fudo.makrotopia.org ([185.142.180.71]:57717 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdAMV0l (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:26:41 -0500
+Date: Fri, 13 Jan 2017 22:26:32 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 18/40] rt2x00: rt2800lib: use the extended EEPROM map for
+ RT3883
+Message-ID: <20170113212628.GA3494@makrotopia.org> (sfid-20170113_222643_875205_535EFCA7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2017-01-07 at 15:55 +0100, Linus Lüssing wrote:
-> On Sat, Jan 07, 2017 at 11:32:57AM +0100, M. Braun wrote:
-> > Am 06.01.2017 um 14:54 schrieb Johannes Berg:
-> > > 
-> > > > The bridge layer can use IGMP snooping to ensure that the
-> > > > multicast
-> > > > stream is only transmitted to clients that are actually a
-> > > > member of
-> > > > the group. Can the mac80211 feature do the same?
-> > > 
-> > > No, it'll convert the packet for all clients that are behind that
-> > > netdev. But that's an argument for dropping the mac80211 feature,
-> > > which
-> > > hasn't been merged upstream yet, no?
-> > 
-> > But there is multicast/broadcast traffic like e.g. ARP and some IP
-> > multicast groups that are not covered by IGMP snooping. The
-> > mac80211
-> > patch converts this to unicast as well, which the bridge cannot do.
-> > 
-> > That way, these features both complement and overlap each other.
-> 
-> Right, I'd agree with that.
+From: Gabor Juhos <juhosg@openwrt.org>
 
-Ok.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> I didn't write it explicitly in the commit message, but yes, the
-> like anything concerning bridge multicast snooping, bridge
-> multicast-to-unicast can only affect packets as noted in
-> RFC4541 ("Considerations for Internet Group Management Protocol (IGMP)
-> and Multicast Listener Discovery (MLD) Snooping Switches"), too.
-> 
-> So it is only working for IPv4 multicast, excluding link-local
-> (224.0.0.0/24), and IPv6 multicast, excluding all-host-multicast
-> (ff02::1).
-> 
-> And does not concern ARP in any way.
-> 
-> 
-> The nice complementary effect is, that the bridge can first sieve
-> out those IP packets thanks to IGMP/MLD snooping knowledge and for
-> anything else, like ARP, 224.0.0.x or ff02::1, the mac80211
-> multicast-to-unicast could do its job.
-> 
-> 
-> For APs with a small number of STAs (like your private home AP),
-> you might want to enable both bridge multicast-to-unicast and
-> mac80211 multicast-to-unicast for this complementary effect. While
-> on public APs with 30 to 50 STAs with varying distances and bitrates,
-> you might only one to enable the bridge one, because sending an ARP
-> packet 50x might actually reduce performance and airtime
-> significantly.
-
-Does it make sense to implement the two in separate layers though?
-
-Clearly, this part needs to be implemented in the bridge layer due to
-the snooping knowledge, but the code is very similar to what mac80211
-has now.
-
-It would probably not make sense to combine the two options into one,
-but it seems relatively simple for bridge to also implement the one
-mac80211 tentatively has now, with multiple benefits:
-
- * single place for configuration, leading to less possible confusion
-
- * single implementation for all wireless devices, including ones with
-   Full-MAC firmware that don't use mac80211
-
- * code sharing for the duplication, although admittedly not so much
-
-Thoughts?
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 870e2da20d47..e3b9a97b1fc2 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -342,7 +342,8 @@ static unsigned int rt2800_eeprom_word_index(struct rt2x00_dev *rt2x00dev,
+ 		      wiphy_name(rt2x00dev->hw->wiphy), word))
+ 		return 0;
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3593))
++	if (rt2x00_rt(rt2x00dev, RT3593) ||
++	    rt2x00_rt(rt2x00dev, RT3883))
+ 		map = rt2800_eeprom_map_ext;
+ 	else
+ 		map = rt2800_eeprom_map;
+-- 
+2.11.0
