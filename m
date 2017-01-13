@@ -1,39 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0064.outbound.protection.outlook.com ([104.47.38.64]:58969
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S940059AbdAIO2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 09:28:16 -0500
-Subject: Re: [PATCH] cfg80211: size various nl80211 messages correctly
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <20170109101042.23919-1-johannes@sipsolutions.net>
- <ec9fb205-91ca-9591-0b0b-92672d093395@broadcom.com>
- <1483965571.17582.35.camel@sipsolutions.net>
-CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        <linux-wireless@vger.kernel.org>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <d6a54188-8538-87e4-d0db-95ed11102501@quantenna.com> (sfid-20170109_152911_776197_3BFCDAF1)
-Date: Mon, 9 Jan 2017 17:28:08 +0300
+Received: from smtp.codeaurora.org ([198.145.29.96]:60682 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751640AbdAMNrw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 08:47:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Wireless <linux-wireless@vger.kernel.org>,
+        linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: Re: linux-next: build warning after merge of the wireless-drivers-next tree
+References: <20170113111250.2023a160@canb.auug.org.au>
+Date: Fri, 13 Jan 2017 15:47:41 +0200
+In-Reply-To: <20170113111250.2023a160@canb.auug.org.au> (Stephen Rothwell's
+        message of "Fri, 13 Jan 2017 11:12:50 +1100")
+Message-ID: <87shonjcle.fsf@codeaurora.org> (sfid-20170113_144805_604490_0CC4068C)
 MIME-Version: 1.0
-In-Reply-To: <1483965571.17582.35.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2017 03:39 PM, Johannes Berg wrote:
->>> -	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
->>> +	msg = nlmsg_new(100 + ie_len, GFP_KERNEL);
->>
->> Don't you want the '100' to be a define?
->
-> I didn't want to glorify it too much - some places may need more or
-> less over time. There's no significance to this number.
->
-> johannes
->
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-Looking at what NLMSG_DEFAULT_SIZE is, wouldn't it be more descriptive 
-to replace 100 with something like:
+> Hi all,
+>
+> After merging the wireless-drivers-next tree, today's linux-next build
+> (x86_64 allmodconfig) produced this warning:
+>
+> drivers/net/wireless/marvell/mwifiex/pcie.c: In function 'mwifiex_pcie_remove':
+> drivers/net/wireless/marvell/mwifiex/pcie.c:303:5: warning: 'fw_status' may be used uninitialized in this function [-Wmaybe-uninitialized]
+>   if (fw_status == FIRMWARE_READY_PCIE && !adapter->mfg_mode) {
+>      ^
+>
+> Introduced by commit
+>
+>   045f0c1b5e26 ("mwifiex: get rid of global user_rmmod flag")
+>
+> This is not a false positive since "reg" could be NULL just above
+> (otherwise it would be tested for).
 
-#define NLMSG_OVERHEAD (SKB_DATA_ALIGN(sizeof(struct skb_shared_info)) + 
-NLMSG_HDRLEN)
+Thanks, I noticed this myself yesterday (after I had applied the patch)
+and I have asked Marvell to send a fix.
+
+-- 
+Kalle Valo
