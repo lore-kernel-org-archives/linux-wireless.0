@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50220 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:55316 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S969276AbdAEOGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 09:06:47 -0500
-Message-ID: <1483625204.4394.23.camel@sipsolutions.net> (sfid-20170105_150650_903321_5D7C8EE5)
-Subject: Re: SIOCSIWFREQ while in NL80211_IFTYPE_STATION
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jorge Ramirez <jorge.ramirez-ortiz@linaro.org>,
-        netdev@vger.kernel.org, Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Jan 2017 15:06:44 +0100
-In-Reply-To: <92e60cb2-8bb4-df03-3434-4a055f575df0@linaro.org> (sfid-20170105_142703_879207_374EBEEC)
-References: <685811c3-6247-77fd-8c70-617951886451@linaro.org>
-         <1483616301.4394.6.camel@sipsolutions.net>
-         <92e60cb2-8bb4-df03-3434-4a055f575df0@linaro.org>
-         (sfid-20170105_142703_879207_374EBEEC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751280AbdAMJNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 04:13:49 -0500
+Date: Fri, 13 Jan 2017 10:09:10 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Mathias Kresin <dev@kresin.me>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 6/9] rt2800: fallback from mcs8 to mcs7
+Message-ID: <20170113090909.GA4964@redhat.com> (sfid-20170113_101354_667031_582D999E)
+References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+ <1483707918-31480-7-git-send-email-sgruszka@redhat.com>
+ <e3c3f693-3d34-ecfc-de13-855c1d75b849@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e3c3f693-3d34-ecfc-de13-855c1d75b849@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 12, 2017 at 12:10:48PM +0100, Felix Fietkau wrote:
+> On 2017-01-06 14:05, Stanislaw Gruszka wrote:
+> > If we do not fallback to lower rate, we are unable to calculate
+> > correctly number of retries in TX status code.
+> > 
+> > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> I think falling back from the lowest dual-stream to the highest
+> single-stream rate is a really bad idea.
 
-> I am not sure it matters - if I understood your reply, there is no
-> valid use case to change the frequency in that mode (and all that
-> code should be removed); 
+Ok, Kalle please drop this patch.
 
-All of wext *is* being removed - slowly :)
-It's not longer default in the kernel configuration now.
+> Instead you should get rid of the assumption that fallback rates are
+> ordered by their MCS index.
 
-IIRC, there actually was a valid use case here - to set the frequency
-before you set the SSID - to be able to force a connection on that
-channel with wext.
+I think I will stay with the current code. With decreased retry
+limit setting in other patch, problem is mitigated. For newer
+chips there is retry count TX_STA_FIFO_EXT register, so I'll look
+into that.
 
-> it seems to me that it is also your view that userspace (iwconfig)
-> should be fixed accordingly to not call the extensions?
-
-iwconfig should just be deleted and iw be used :-)
-
-> I am just trying to understand how the current code is supposed to
-> work  by exercising widely available user-space tools while debugging
-> the kernel.
-
-Heh, ok.
-
-> Actually the frequency gets programmed without errors when reverting 
-> your commit http://tinyurl.com/ho4urp8 (which comes as a surprise as
-> well).
-
-Well, it's not my commit, but that makes sense. I suppose we should
-treat this as a regression, but reverting that doesn't seem like the
-right fix. Actually, I'm not convinced we should do monitor channel
-change anyway when you set the frequency with wext, so we can probably
-just remove that call there - want to send a patch to that effect?
-
-johannes
+Thanks
+Stanislaw
