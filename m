@@ -1,214 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:36568 "EHLO
-        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750787AbdAQPMk (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:54776 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdAMVfC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 10:12:40 -0500
-Received: by mail-lf0-f41.google.com with SMTP id z134so106857513lff.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 07:12:39 -0800 (PST)
-From: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-To: kvalo@qca.qualcomm.com, ath10k@lists.infradead.org
-Cc: bartosz.markowski@tieto.com, rwchang@qti.qualcomm.com,
-        alanliu@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-Subject: [PATCH v2] ath10k: Search SMBIOS for OEM board file extension
-Date: Tue, 17 Jan 2017 16:03:34 +0100
-Message-Id: <20170117150334.8859-1-ext.waldemar.rymarkiewicz@tieto.com> (sfid-20170117_161244_855234_B13F1C2D)
+        Fri, 13 Jan 2017 16:35:02 -0500
+Date: Fri, 13 Jan 2017 22:34:54 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 40/40] rt2x00: correctly set HT20/HT40 filter
+Message-ID: <20170113213445.GA3678@makrotopia.org> (sfid-20170113_223506_287100_AE11E8EA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Board Data File (BDF) is loaded upon driver boot-up procedure. The right
-board data file is identified, among others, by device and sybsystem ids.
+From: Serge Vasilugin <vasilugin@yandex.ru>
 
-The problem, however, can occur when the (default) board data file cannot
-fulfill with the vendor requirements and it is necessary to use a different
-board data file.
+Simple patch to correct HT20/HT40 switching.
+Tested with Rt3290, Rt3352 and Rt5350
 
-To solve the issue QCA uses SMBIOS type 0xF8 to store Board Data File Name
-Extension to specify the extension/variant name. The driver will take the
-extension suffix into consideration and will load the right (non-default)
-board data file if necessary.
-
-If it is unnecessary to use extension board data file, please leave the
-SMBIOS field blank and default configuration will be used.
-
-Example:
-If a default board data file for a specific board is identified by a string
-      "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
-       subsystem-device=0310"
-then the OEM specific data file, if used, could be identified by variant
-suffix:
-      "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
-       subsystem-device=0310,variant=DE_1AB"
-
-Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
+[daniel@makrotopia.org: fixed code and commit message formatting]
 ---
- drivers/net/wireless/ath/ath10k/core.c | 84 ++++++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/core.h | 19 ++++++++
- 2 files changed, 100 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    |  2 ++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 13 +++++++++++--
+ 2 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 874c2a755c66..c2afcca6fd60 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -18,6 +18,8 @@
- #include <linux/module.h>
- #include <linux/firmware.h>
- #include <linux/of.h>
-+#include <linux/dmi.h>
-+#include <linux/ctype.h>
- #include <asm/byteorder.h>
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index f49babf2fbee..2fcb3eef65e6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -2319,6 +2319,8 @@ struct mac_iveiv_entry {
+ #define RFCSR30_RX_H20M			FIELD8(0x04)
+ #define RFCSR30_RX_VCM			FIELD8(0x18)
+ #define RFCSR30_RF_CALIBRATION		FIELD8(0x80)
++#define RF3322_RFCSR30_TX_H20M		FIELD8(0x01)
++#define RF3322_RFCSR30_RX_H20M		FIELD8(0x02)
  
- #include "core.h"
-@@ -707,6 +709,72 @@ static int ath10k_core_get_board_id_from_otp(struct ath10k *ar)
- 	return 0;
- }
- 
-+static void ath10k_core_check_bdfext(const struct dmi_header *hdr, void *data)
-+{
-+	struct ath10k *ar = data;
-+	const char *bdf_ext;
-+	const char *magic = ATH10K_SMBIOS_BDF_EXT_MAGIC;
-+	u8 bdf_enabled;
-+	int i;
-+
-+	if (hdr->type != ATH10K_SMBIOS_BDF_EXT_TYPE)
-+		return;
-+
-+	if (hdr->length != ATH10K_SMBIOS_BDF_EXT_LENGTH) {
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+			   "wrong smbios bdf ext type length (%d).\n",
-+			   hdr->length);
-+		return;
-+	}
-+
-+	bdf_enabled = *((u8 *)hdr + ATH10K_SMBIOS_BDF_EXT_OFFSET);
-+	if (!bdf_enabled) {
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT, "bdf variant name not found.\n");
-+		return;
-+	}
-+
-+	/* Only one string exists (per spec) */
-+	bdf_ext = (char *)hdr + hdr->length;
-+
-+	if (memcmp(bdf_ext, magic, strlen(magic)) != 0) {
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+			   "bdf variant magic does not match.\n");
-+		return;
-+	}
-+
-+	for (i = 0; i < strlen(bdf_ext); i++) {
-+		if (!isascii(bdf_ext[i]) || !isprint(bdf_ext[i])) {
-+			ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+				   "bdf variant name contains non ascii chars.\n");
-+			return;
+ /*
+  * RFCSR 31:
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 823bdc1b0322..c4e022edf119 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -3562,8 +3562,17 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	    rt2x00_rf(rt2x00dev, RF5390) ||
+ 	    rt2x00_rf(rt2x00dev, RF5392)) {
+ 		rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+-		rt2x00_set_field8(&rfcsr, RFCSR30_TX_H20M, 0);
+-		rt2x00_set_field8(&rfcsr, RFCSR30_RX_H20M, 0);
++		if (rt2x00_rf(rt2x00dev, RF3322)) {
++			rt2x00_set_field8(&rfcsr, RF3322_RFCSR30_TX_H20M,
++					  conf_is_ht40(conf));
++			rt2x00_set_field8(&rfcsr, RF3322_RFCSR30_RX_H20M,
++					  conf_is_ht40(conf));
++		} else {
++			rt2x00_set_field8(&rfcsr, RFCSR30_TX_H20M,
++					  conf_is_ht40(conf));
++			rt2x00_set_field8(&rfcsr, RFCSR30_RX_H20M,
++					  conf_is_ht40(conf));
 +		}
-+	}
-+
-+	/* Copy extension name without magic suffix */
-+	if (strscpy(ar->id.bdf_ext, bdf_ext + strlen(magic),
-+		    sizeof(ar->id.bdf_ext)) < 0) {
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+			   "bdf variant string is longer than the buffer can accommodate (variant: %s)\n",
-+			    bdf_ext);
-+		return;
-+	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT,
-+		   "found and validated bdf variant smbios_type 0x%x bdf %s\n",
-+		   ATH10K_SMBIOS_BDF_EXT_TYPE, bdf_ext);
-+}
-+
-+static int ath10k_core_check_smbios(struct ath10k *ar)
-+{
-+	ar->id.bdf_ext[0] = '\0';
-+	dmi_walk(ath10k_core_check_bdfext, ar);
-+
-+	if (ar->id.bdf_ext[0] == '\0')
-+		return -ENODATA;
-+
-+	return 0;
-+}
-+
- static int ath10k_download_and_run_otp(struct ath10k *ar)
- {
- 	u32 result, address = ar->hw_params.patch_load_addr;
-@@ -1053,6 +1121,9 @@ static int ath10k_core_fetch_board_data_api_n(struct ath10k *ar,
- static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
- 					 size_t name_len)
- {
-+	/* strlen(',variant=') + strlen(ar->id.bdf_ext) */
-+	char variant[9 + ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
-+
- 	if (ar->id.bmi_ids_valid) {
- 		scnprintf(name, name_len,
- 			  "bus=%s,bmi-chip-id=%d,bmi-board-id=%d",
-@@ -1062,12 +1133,15 @@ static int ath10k_core_create_board_name(struct ath10k *ar, char *name,
- 		goto out;
- 	}
+ 		rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
  
-+	if (ar->id.bdf_ext[0] != '\0')
-+		scnprintf(variant, sizeof(variant), ",variant=%s",
-+			  ar->id.bdf_ext);
-+
- 	scnprintf(name, name_len,
--		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x",
-+		  "bus=%s,vendor=%04x,device=%04x,subsystem-vendor=%04x,subsystem-device=%04x%s",
- 		  ath10k_bus_str(ar->hif.bus),
- 		  ar->id.vendor, ar->id.device,
--		  ar->id.subsystem_vendor, ar->id.subsystem_device);
--
-+		  ar->id.subsystem_vendor, ar->id.subsystem_device, variant);
- out:
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot using board name '%s'\n", name);
- 
-@@ -2128,6 +2202,10 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_free_firmware_files;
- 	}
- 
-+	ret = ath10k_core_check_smbios(ar);
-+	if (ret)
-+		ath10k_dbg(ar, ATH10K_DBG_BOOT, "bdf variant name not set.\n");
-+
- 	ret = ath10k_core_fetch_board_file(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to fetch board file: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c7664d6569fa..c7a289a4819d 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -69,6 +69,23 @@
- #define ATH10K_NAPI_BUDGET      64
- #define ATH10K_NAPI_QUOTA_LIMIT 60
- 
-+/* SMBIOS type containing Board Data File Name Extension */
-+#define ATH10K_SMBIOS_BDF_EXT_TYPE 0xF8
-+
-+/* SMBIOS type structure length (excluding strings-set) */
-+#define ATH10K_SMBIOS_BDF_EXT_LENGTH 0x9
-+
-+/* Offset pointing to Board Data File Name Extension */
-+#define ATH10K_SMBIOS_BDF_EXT_OFFSET 0x8
-+
-+/* Board Data File Name Extension string length.
-+ * String format: BDF_<Customer ID>_<Extension>\0
-+ */
-+#define ATH10K_SMBIOS_BDF_EXT_STR_LENGTH 0x20
-+
-+/* The magic used by QCA spec */
-+#define ATH10K_SMBIOS_BDF_EXT_MAGIC "BDF_"
-+
- struct ath10k;
- 
- enum ath10k_bus {
-@@ -781,6 +798,8 @@ struct ath10k {
- 		bool bmi_ids_valid;
- 		u8 bmi_board_id;
- 		u8 bmi_chip_id;
-+
-+		char bdf_ext[ATH10K_SMBIOS_BDF_EXT_STR_LENGTH];
- 	} id;
- 
- 	int fw_api;
+ 		rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
 -- 
 2.11.0
