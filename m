@@ -1,135 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:59527 "EHLO
-        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750985AbdAPLm1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 06:42:27 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [RFC V2 2/5] nl80211: include request id in scheduled scan event messages
-Date: Mon, 16 Jan 2017 11:42:18 +0000
-Message-Id: <1484566941-27000-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170116_124232_579556_BC2A9900)
-In-Reply-To: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:49500 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751296AbdAMIhx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 03:37:53 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wext: uninline point wrappers
+Date: Fri, 13 Jan 2017 09:37:48 +0100
+Message-Id: <20170113083748.20069-1-johannes@sipsolutions.net> (sfid-20170113_093757_020625_ED1577FE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Include the request id in the event messages so user-space knows
-which scan the event relates to.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+With 78, 111 and 85 bytes respectively, the functions
+iwe_stream_add_event(), iwe_stream_add_point() and
+iwe_stream_add_value() really shouldn't be inlines.
+
+It appears that at least my compiler already decided
+the same, and created a single instance of each one
+of them for each file using it, but that's still a
+number of instances in the system overall, which this
+reduces.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/wireless/nl80211.c | 23 +++++++++++------------
- net/wireless/nl80211.h |  3 +--
- net/wireless/scan.c    |  5 ++---
- 3 files changed, 14 insertions(+), 17 deletions(-)
+ include/net/iw_handler.h | 67 +++++-------------------------------------------
+ net/wireless/wext-core.c | 67 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 74 insertions(+), 60 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 411774b..f303f6f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7249,8 +7249,7 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
+index c2aa73e5e6bb..2509728650bd 100644
+--- a/include/net/iw_handler.h
++++ b/include/net/iw_handler.h
+@@ -505,25 +505,8 @@ static inline int iwe_stream_event_len_adjust(struct iw_request_info *info,
+ /*
+  * Wrapper to add an Wireless Event to a stream of events.
+  */
+-static inline char *
+-iwe_stream_add_event(struct iw_request_info *info, char *stream, char *ends,
+-		     struct iw_event *iwe, int event_len)
+-{
+-	int lcp_len = iwe_stream_lcp_len(info);
+-
+-	event_len = iwe_stream_event_len_adjust(info, event_len);
+-
+-	/* Check if it's possible */
+-	if(likely((stream + event_len) < ends)) {
+-		iwe->len = event_len;
+-		/* Beware of alignement issues on 64 bits */
+-		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
+-		memcpy(stream + lcp_len, &iwe->u,
+-		       event_len - lcp_len);
+-		stream += event_len;
+-	}
+-	return stream;
+-}
++char *iwe_stream_add_event(struct iw_request_info *info, char *stream,
++			   char *ends, struct iw_event *iwe, int event_len);
  
- 	cfg80211_add_sched_scan_req(rdev, sched_scan_req);
+ static inline char *
+ iwe_stream_add_event_check(struct iw_request_info *info, char *stream,
+@@ -541,27 +524,8 @@ iwe_stream_add_event_check(struct iw_request_info *info, char *stream,
+  * Wrapper to add an short Wireless Event containing a pointer to a
+  * stream of events.
+  */
+-static inline char *
+-iwe_stream_add_point(struct iw_request_info *info, char *stream, char *ends,
+-		     struct iw_event *iwe, char *extra)
+-{
+-	int event_len = iwe_stream_point_len(info) + iwe->u.data.length;
+-	int point_len = iwe_stream_point_len(info);
+-	int lcp_len   = iwe_stream_lcp_len(info);
+-
+-	/* Check if it's possible */
+-	if(likely((stream + event_len) < ends)) {
+-		iwe->len = event_len;
+-		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
+-		memcpy(stream + lcp_len,
+-		       ((char *) &iwe->u) + IW_EV_POINT_OFF,
+-		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
+-		if (iwe->u.data.length && extra)
+-			memcpy(stream + point_len, extra, iwe->u.data.length);
+-		stream += event_len;
+-	}
+-	return stream;
+-}
++char *iwe_stream_add_point(struct iw_request_info *info, char *stream,
++			   char *ends, struct iw_event *iwe, char *extra);
  
--	nl80211_send_sched_scan(rdev, dev,
--				NL80211_CMD_START_SCHED_SCAN);
-+	nl80211_send_sched_scan(sched_scan_req, NL80211_CMD_START_SCHED_SCAN);
- 	return 0;
+ static inline char *
+ iwe_stream_add_point_check(struct iw_request_info *info, char *stream,
+@@ -580,25 +544,8 @@ iwe_stream_add_point_check(struct iw_request_info *info, char *stream,
+  * Be careful, this one is tricky to use properly :
+  * At the first run, you need to have (value = event + IW_EV_LCP_LEN).
+  */
+-static inline char *
+-iwe_stream_add_value(struct iw_request_info *info, char *event, char *value,
+-		     char *ends, struct iw_event *iwe, int event_len)
+-{
+-	int lcp_len = iwe_stream_lcp_len(info);
+-
+-	/* Don't duplicate LCP */
+-	event_len -= IW_EV_LCP_LEN;
+-
+-	/* Check if it's possible */
+-	if(likely((value + event_len) < ends)) {
+-		/* Add new value */
+-		memcpy(value, &iwe->u, event_len);
+-		value += event_len;
+-		/* Patch LCP */
+-		iwe->len = value - event;
+-		memcpy(event, (char *) iwe, lcp_len);
+-	}
+-	return value;
+-}
++char *iwe_stream_add_value(struct iw_request_info *info, char *event,
++			   char *value, char *ends, struct iw_event *iwe,
++			   int event_len);
  
- out_free:
-@@ -12932,18 +12931,19 @@ static int nl80211_prep_scan_msg(struct sk_buff *msg,
- 
- static int
- nl80211_prep_sched_scan_msg(struct sk_buff *msg,
--			    struct cfg80211_registered_device *rdev,
--			    struct net_device *netdev,
--			    u32 portid, u32 seq, int flags, u32 cmd)
-+			    struct cfg80211_sched_scan_request *req, u32 cmd)
- {
- 	void *hdr;
- 
--	hdr = nl80211hdr_put(msg, portid, seq, flags, cmd);
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, cmd);
- 	if (!hdr)
- 		return -1;
- 
--	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
--	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex))
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY,
-+			wiphy_to_rdev(req->wiphy)->wiphy_idx) ||
-+	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, req->dev->ifindex) ||
-+	    nla_put_u64_64bit(msg, NL80211_ATTR_COOKIE, req->reqid,
-+			      NL80211_ATTR_PAD))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-@@ -13003,8 +13003,7 @@ void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
+ #endif	/* _IW_HANDLER_H */
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 6250b1cfcde5..1a4db6790e20 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -1119,3 +1119,70 @@ int compat_wext_handle_ioctl(struct net *net, unsigned int cmd,
+ 	return ret;
  }
- 
--void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
--			     struct net_device *netdev, u32 cmd)
-+void nl80211_send_sched_scan(struct cfg80211_sched_scan_request *req, u32 cmd)
- {
- 	struct sk_buff *msg;
- 
-@@ -13012,12 +13011,12 @@ void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
- 	if (!msg)
- 		return;
- 
--	if (nl80211_prep_sched_scan_msg(msg, rdev, netdev, 0, 0, 0, cmd) < 0) {
-+	if (nl80211_prep_sched_scan_msg(msg, req, cmd) < 0) {
- 		nlmsg_free(msg);
- 		return;
- 	}
- 
--	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(req->wiphy), msg, 0,
- 				NL80211_MCGRP_SCAN, GFP_KERNEL);
- }
- 
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index e488dca..eb66de6 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -16,8 +16,7 @@ struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
- 				       struct wireless_dev *wdev, bool aborted);
- void nl80211_send_scan_msg(struct cfg80211_registered_device *rdev,
- 			   struct sk_buff *msg);
--void nl80211_send_sched_scan(struct cfg80211_registered_device *rdev,
--			     struct net_device *netdev, u32 cmd);
-+void nl80211_send_sched_scan(struct cfg80211_sched_scan_request *req, u32 cmd);
- void nl80211_common_reg_change_event(enum nl80211_commands cmd_id,
- 				     struct regulatory_request *request);
- 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 6704198..f2b2064 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -379,8 +379,7 @@ void __cfg80211_sched_scan_results(struct work_struct *wk)
- 			spin_unlock_bh(&rdev->bss_lock);
- 			request->scan_start = jiffies;
- 		}
--		nl80211_send_sched_scan(rdev, request->dev,
--					NL80211_CMD_SCHED_SCAN_RESULTS);
-+		nl80211_send_sched_scan(request, NL80211_CMD_SCHED_SCAN_RESULTS);
- 	}
- 
- 	rtnl_unlock();
-@@ -429,7 +428,7 @@ int cfg80211_stop_sched_scan_req(struct cfg80211_registered_device *rdev,
- 			return err;
- 	}
- 
--	nl80211_send_sched_scan(rdev, req->dev, NL80211_CMD_SCHED_SCAN_STOPPED);
-+	nl80211_send_sched_scan(req, NL80211_CMD_SCHED_SCAN_STOPPED);
- 
- 	cfg80211_del_sched_scan_req(rdev, req);
- 
+ #endif
++
++char *iwe_stream_add_event(struct iw_request_info *info, char *stream,
++			   char *ends, struct iw_event *iwe, int event_len)
++{
++	int lcp_len = iwe_stream_lcp_len(info);
++
++	event_len = iwe_stream_event_len_adjust(info, event_len);
++
++	/* Check if it's possible */
++	if (likely((stream + event_len) < ends)) {
++		iwe->len = event_len;
++		/* Beware of alignement issues on 64 bits */
++		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
++		memcpy(stream + lcp_len, &iwe->u,
++		       event_len - lcp_len);
++		stream += event_len;
++	}
++
++	return stream;
++}
++EXPORT_SYMBOL(iwe_stream_add_event);
++
++char *iwe_stream_add_point(struct iw_request_info *info, char *stream,
++			   char *ends, struct iw_event *iwe, char *extra)
++{
++	int event_len = iwe_stream_point_len(info) + iwe->u.data.length;
++	int point_len = iwe_stream_point_len(info);
++	int lcp_len   = iwe_stream_lcp_len(info);
++
++	/* Check if it's possible */
++	if (likely((stream + event_len) < ends)) {
++		iwe->len = event_len;
++		memcpy(stream, (char *) iwe, IW_EV_LCP_PK_LEN);
++		memcpy(stream + lcp_len,
++		       ((char *) &iwe->u) + IW_EV_POINT_OFF,
++		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
++		if (iwe->u.data.length && extra)
++			memcpy(stream + point_len, extra, iwe->u.data.length);
++		stream += event_len;
++	}
++
++	return stream;
++}
++EXPORT_SYMBOL(iwe_stream_add_point);
++
++char *iwe_stream_add_value(struct iw_request_info *info, char *event,
++			   char *value, char *ends, struct iw_event *iwe,
++			   int event_len)
++{
++	int lcp_len = iwe_stream_lcp_len(info);
++
++	/* Don't duplicate LCP */
++	event_len -= IW_EV_LCP_LEN;
++
++	/* Check if it's possible */
++	if (likely((value + event_len) < ends)) {
++		/* Add new value */
++		memcpy(value, &iwe->u, event_len);
++		value += event_len;
++		/* Patch LCP */
++		iwe->len = value - event;
++		memcpy(event, (char *) iwe, lcp_len);
++	}
++
++	return value;
++}
++EXPORT_SYMBOL(iwe_stream_add_value);
 -- 
-1.9.1
+2.9.3
