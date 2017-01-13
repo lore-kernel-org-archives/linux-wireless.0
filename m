@@ -1,47 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59240 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751078AbdASJHN (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:34883 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750969AbdAMT6W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 04:07:13 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
-Subject: Re: [3/3] rtlwifi: Enable debug mask to be set from sysfs
-References: <20170101010706.13234-4-Larry.Finger@lwfinger.net>
-        <20170118144936.91B3E6080C@smtp.codeaurora.org>
-        <5aefd440-1b6f-1791-d85b-e71464c47620@lwfinger.net>
-Date: Thu, 19 Jan 2017 10:57:23 +0200
-In-Reply-To: <5aefd440-1b6f-1791-d85b-e71464c47620@lwfinger.net> (Larry
-        Finger's message of "Wed, 18 Jan 2017 10:38:01 -0600")
-Message-ID: <87h94vpguk.fsf@kamboji.qca.qualcomm.com> (sfid-20170119_100738_045232_430391BD)
+        Fri, 13 Jan 2017 14:58:22 -0500
+Received: by mail-io0-f196.google.com with SMTP id m98so6632803iod.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 11:58:22 -0800 (PST)
+From: Jamal Hadi Salim <jhs@mojatatu.com>
+Subject: ANNOUNCE: Netdev 2.1 in Montreal
+To: netdev@vger.kernel.org
+Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+        info@netdevconf.org, linux-wireless@vger.kernel.org,
+        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
+        Stephen Jaworski <jaws@mojatatu.com>,
+        Rob Echlin <rob@echlin.ca>, lwn@lwn.net
+Message-ID: <1a7b6b2c-38bc-7c6f-e3bf-ab913b163dba@mojatatu.com> (sfid-20170113_205829_482689_8F157291)
+Date: Fri, 13 Jan 2017 14:58:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> On 01/18/2017 08:49 AM, Kalle Valo wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> wrote:
->>> The previous commit changes the debug system to use a mask to select
->>> which components are to be debugged. Now, we add the necessary code
->>> to change the mask from sysfs.
->>>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->>> Cc: Ping-Ke Shih <pkshih@realtek.com>
->>
->> There's already a generic sysfs interface to change module parameters in
->> /sys/module/<driver>/parameters, drivers should not have a private interface for
->> that.
->
-> Kalle,
->
-> I was not aware of that part of sysfs. I will respin the patch as well
-> as remove the old code that set the debug level.
+Folks,
 
-Good, thanks. I dropped the whole series now and assume that you will
-send v2.
+We are pleased to announce Netdev 2.1 (year 2, conference 1)
+in the beautiful city of Montreal, Canada on the 6th to 8th of April.
+The website is now online: http://www.netdevconf.org/2.1/
+Netdev 2.1 will be held back to back with netconf2017.1
+(http://vger.kernel.org/netconf2017.html)
 
--- 
-Kalle Valo
+Netdev 2.1 is a  community-driven conference geared towards Linux
+netheads. Linux kernel networking and user space utilization of the
+interfaces to the Linux kernel networking subsystem are the central
+theme.
+If you are using Linux as a boot system for proprietary networking,
+then this conference _may not be for you_.
+
+Registration costs
+------------------
+Very Cheap.
+$CAN 300 if you register before Feb 27. $360 after.
+$CAN 150 if you are a student. $180 after Feb 27
+
+Why you should register
+-----------------------
+If you yearn for the old community tech driven conferences where
+you mingle with fellow geeks (only these would be Linux networking
+geeks) then this would be it. There will be no marketing flashing
+light openings or loud bad music. Just a pure feed of Linux
+networking. Gurus and magicians of all sorts will be there mingling,
+juggling and giving talks.
+
+While there will be heavy Linux kernel influence we expect a lot
+of user space presence as well.
+
+Exact Location:
+-----------------
+Tentative: LE WESTIN MONTRÉAL
+
+Sponsorship
+------------
+
+If you can help us organize this event by sponsoring, please drop us a 
+line to: sponsor@netdevconf.org and we'll send you our sponsorship policy.
+
+Important dates
+----------------
+January 18, 2017 Call for proposals open
+January 23, 2017 Registration opens
+February 20, 2017 Call for proposals close
+February 27, 2017 Early Registration close
+March 13, 2017 Conference schedule announced
+March 27, 2017 Paper submission
+March 31, 2017 Online Registration close
+April 3, 2017 Slides submission
+April 6-8, 2017 Conference days
+May 1, 2017 Slides release
+June 1, 2017 Paper release
+
+cheers,
+jamal
