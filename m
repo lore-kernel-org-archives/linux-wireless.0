@@ -1,33 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60448 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934241AbdA0Lwg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 06:52:36 -0500
-Message-ID: <1485516428.5851.6.camel@sipsolutions.net> (sfid-20170127_125245_395723_F4AB82F1)
-Subject: Re: [PATCH] nl80211: fix validation of scheduled scan info for
- wowlan netdetect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jan 2017 12:27:08 +0100
-In-Reply-To: <a36abf1d-5d4b-4c37-e325-a69166663a04@broadcom.com> (sfid-20170127_122523_881598_29BEDE90)
-References: <1484820088-24448-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1484827206.2774.12.camel@coelho.fi>
-         <bde55d09-6f3e-1f90-4aef-0e1169c11cf6@broadcom.com>
-         <1485248251.7244.3.camel@sipsolutions.net>
-         <13d1e654-6928-39e7-4751-fb90d3da7a54@broadcom.com>
-         <a36abf1d-5d4b-4c37-e325-a69166663a04@broadcom.com>
-         (sfid-20170127_122523_881598_29BEDE90)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36254 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdAMVf2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:35:28 -0500
+Received: by mail-lf0-f67.google.com with SMTP id h65so7043275lfi.3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:27 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 05/10] ath10k: htt: RX ring config HL support
+Date: Fri, 13 Jan 2017 22:35:04 +0100
+Message-Id: <1484343309-6327-6-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223531_526334_E9F174CF)
+In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Special HTT RX ring config message used by high latency
+devices.
 
-> I actually have two dependent brcmfmac patches. Do you expect
-> conflict if Kalle takes all?
+The main difference between HL and LL is that HL devices
+do not use shared memory between device and host and thus,
+no host paddr's are added to the RX config message.
 
-Not really, if that's somehow easier we can do that.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
+ drivers/net/wireless/ath/ath10k/htt.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
+ 3 files changed, 56 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index cd160b1..29ed4af 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
+ 	if (status)
+ 		return status;
+ 
+-	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
++	if (ar->is_high_latency)
++		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
++	else
++		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
+ 	if (status) {
+ 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
+ 			    status);
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 44b25cf..3d1bd6f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1797,6 +1797,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
+ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
+ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 86b427f..505d3ed 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -692,6 +692,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
++int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	struct htt_rx_ring_setup_ring *ring;
++	const int num_rx_ring = 1;
++	u16 flags;
++	int len;
++	int ret;
++
++	/*
++	 * the HW expects the buffer to be an integral number of 4-byte
++	 * "words"
++	 */
++	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
++	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
++
++	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
++	    + (sizeof(*ring) * num_rx_ring);
++	skb = ath10k_htc_alloc_skb(ar, len);
++	if (!skb)
++		return -ENOMEM;
++
++	skb_put(skb, len);
++
++	cmd = (struct htt_cmd *)skb->data;
++	ring = &cmd->rx_setup.rings[0];
++
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
++	cmd->rx_setup.hdr.num_rings = 1;
++
++	flags = 0;
++	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
++	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
++	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
++
++	memset(ring, 0, sizeof(*ring));
++	ring->rx_ring_len = __cpu_to_le32(HTT_RX_RING_SIZE_MIN);
++	ring->rx_ring_bufsize = __cpu_to_le32(HTT_RX_BUF_SIZE);
++	ring->flags = __cpu_to_le16(flags);
++
++	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
++	if (ret) {
++		dev_kfree_skb_any(skb);
++		return ret;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu)
+-- 
+2.7.4
