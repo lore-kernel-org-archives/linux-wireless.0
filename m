@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:60480 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751084AbdAMVTH (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36550 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751146AbdAMJML (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:19:07 -0500
-Date: Fri, 13 Jan 2017 22:18:59 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 01/40] rt2x00: rt2800lib: move rt2800_drv_data declaration
- into rt2800lib.h
-Message-ID: <20170113211837.GA3327@makrotopia.org> (sfid-20170113_221909_170468_55E1AFAD)
+        Fri, 13 Jan 2017 04:12:11 -0500
+Received: by mail-qk0-f176.google.com with SMTP id 11so47773698qkl.3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 01:12:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484295383.19860.7.camel@sipsolutions.net>
+References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com> <1484295383.19860.7.camel@sipsolutions.net>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 13 Jan 2017 10:04:42 +0100
+Message-ID: <CA+BoTQnA4X+OPC2eFQO9tj+a+-z=_FTKA6UR_uJAUrQvzjZZ8Q@mail.gmail.com> (sfid-20170113_101216_244282_58698D2E)
+Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Ben Greear <greearb@candelatech.com>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On 13 January 2017 at 09:16, Johannes Berg <johannes@sipsolutions.net> wrot=
+e:
+> On Thu, 2017-01-12 at 15:28 +0100, Michal Kazior wrote:
+>> Station structure is considered as not uploaded
+>> (to driver) until drv_sta_state() finishes. This
+>> call is however done after the structure is
+>> attached to mac80211 internal lists and hashes.
+>> This means mac80211 can lookup (and use) station
+>> structure before it is uploaded to a driver.
+>>
+>> If this happens (structure exists, but
+>> sta->uploaded is false) fast_tx path can still be
+>> taken. Deep in the fastpath call the sta->uploaded
+>> is checked against to derive "pubsta" argument for
+>> ieee80211_get_txq(). If sta->uploaded is false
+>> (and sta is actually non-NULL) ieee80211_get_txq()
+>> effectively downgraded to vif->txq.
+>>
+>> At first glance this may look innocent but coerces
+>> mac80211 into a state that is almost guaranteed
+>> (codel may drop offending skb) to crash because a
+>> station-oriented skb gets queued up on
+>> vif-oriented txq. The ieee80211_tx_dequeue() ends
+>> up looking at info->control.flags and tries to use
+>> txq->sta which in the fail case is NULL.
+>>
+>> It's probably pointless to pretend one can
+>> downgrade skb from sta-txq to vif-txq.
+>
+> Ok. I understand things until this point, more or less.
+>
+> What I don't understand - and you haven't really described - is how the
+> changes fix it? Could you resend with a paragraph added that explains
+> that?
 
-The rt2800_drv_data structure contains driver specific
-information. Move the declaration into the rt2800lib.h
-header which is a more logical place for it. Also fix
-the comment style to avoid checkpatch warning.
+"Since downgrading unicast traffic to vif->txq must not be done
+there's no txq to put a frame on if sta->uploaded is false. Therefore
+the code is made to fall back to regular tx() op path if the described
+condition is hit. " -- is this sufficient?
 
-The patch contains no functional changes, it is in
-preparation for the next patch.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-[daniel@makrotopia.org: removed stray newline]
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h    | 16 ----------------
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 16 ++++++++++++++++
- 2 files changed, 16 insertions(+), 16 deletions(-)
+> Also, you're adding a test:
+>
+>>       if (sta && !sta->uploaded)
+>
+> but couldn't do move that into the existing "if (sta)" block?
+> Everything before that only ever returns NULL anyway.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index ec622a08a486..2371896c1e99 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -2969,20 +2969,4 @@ enum rt2800_eeprom_word {
- #define WCID_END	222
- #define STA_IDS_SIZE	(WCID_END - WCID_START + 2)
- 
--/*
-- * RT2800 driver data structure
-- */
--struct rt2800_drv_data {
--	u8 calibration_bw20;
--	u8 calibration_bw40;
--	u8 bbp25;
--	u8 bbp26;
--	u8 txmixer_gain_24g;
--	u8 txmixer_gain_5g;
--	u8 max_psdu;
--	unsigned int tbtt_tick;
--	unsigned int ampdu_factor_cnt[4];
--	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
--};
--
- #endif /* RT2800_H */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-index 0a8b4df665fe..256928f0ea6a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-@@ -20,6 +20,22 @@
- #ifndef RT2800LIB_H
- #define RT2800LIB_H
- 
-+#include "rt2800.h"
-+
-+/* RT2800 driver data structure */
-+struct rt2800_drv_data {
-+	u8 calibration_bw20;
-+	u8 calibration_bw40;
-+	u8 bbp25;
-+	u8 bbp26;
-+	u8 txmixer_gain_24g;
-+	u8 txmixer_gain_5g;
-+	u8 max_psdu;
-+	unsigned int tbtt_tick;
-+	unsigned int ampdu_factor_cnt[4];
-+	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
-+};
-+
- struct rt2800_ops {
- 	void (*register_read)(struct rt2x00_dev *rt2x00dev,
- 			      const unsigned int offset, u32 *value);
--- 
-2.11.0
+Good point. It makes more sense to put the sta->uploaded check in if
+(sta) block. I'll move it.
+
+
+Micha=C5=82
