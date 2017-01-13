@@ -1,93 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:44671 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751013AbdAMVV3 (ORCPT
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:35319 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751476AbdAMMbm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:21:29 -0500
-Date: Fri, 13 Jan 2017 22:21:20 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 06/40] rt2x00: rt2800lib: init additional beacon offset
- registers
-Message-ID: <20170113212115.GA3391@makrotopia.org> (sfid-20170113_222131_764251_814AAAB9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 13 Jan 2017 07:31:42 -0500
+Received: by mail-lf0-f45.google.com with SMTP id m78so36195386lfg.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 04:31:41 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
+        mohammed@qti.qualcomm.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2] mac80211: prevent skb/txq mismatch
+Date: Fri, 13 Jan 2017 13:32:51 +0100
+Message-Id: <1484310771-28359-1-git-send-email-michal.kazior@tieto.com> (sfid-20170113_133146_202179_4EEB066E)
+In-Reply-To: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
+References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+Station structure is considered as not uploaded
+(to driver) until drv_sta_state() finishes. This
+call is however done after the structure is
+attached to mac80211 internal lists and hashes.
+This means mac80211 can lookup (and use) station
+structure before it is uploaded to a driver.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+If this happens (structure exists, but
+sta->uploaded is false) fast_tx path can still be
+taken. Deep in the fastpath call the sta->uploaded
+is checked against to derive "pubsta" argument for
+ieee80211_get_txq(). If sta->uploaded is false
+(and sta is actually non-NULL) ieee80211_get_txq()
+effectively downgraded to vif->txq.
+
+At first glance this may look innocent but coerces
+mac80211 into a state that is almost guaranteed
+(codel may drop offending skb) to crash because a
+station-oriented skb gets queued up on
+vif-oriented txq. The ieee80211_tx_dequeue() ends
+up looking at info->control.flags and tries to use
+txq->sta which in the fail case is NULL.
+
+It's probably pointless to pretend one can
+downgrade skb from sta-txq to vif-txq.
+
+Since downgrading unicast traffic to vif->txq must
+not be done there's no txq to put a frame on if
+sta->uploaded is false. Therefore the code is made
+to fall back to regular tx() op path if the
+described condition is hit.
+
+Only drivers using wake_tx_queue were affected.
+
+Example crash dump before fix:
+
+ Unable to handle kernel paging request at virtual address ffffe26c
+ PC is at ieee80211_tx_dequeue+0x204/0x690 [mac80211]
+ [<bf4252a4>] (ieee80211_tx_dequeue [mac80211]) from
+ [<bf4b1388>] (ath10k_mac_tx_push_txq+0x54/0x1c0 [ath10k_core])
+ [<bf4b1388>] (ath10k_mac_tx_push_txq [ath10k_core]) from
+ [<bf4bdfbc>] (ath10k_htt_txrx_compl_task+0xd78/0x11d0 [ath10k_core])
+ [<bf4bdfbc>] (ath10k_htt_txrx_compl_task [ath10k_core])
+ [<bf51c5a4>] (ath10k_pci_napi_poll+0x54/0xe8 [ath10k_pci])
+ [<bf51c5a4>] (ath10k_pci_napi_poll [ath10k_pci]) from
+ [<c0572e90>] (net_rx_action+0xac/0x160)
+
+Reported-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800.h    | 14 ++++++++++++++
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 24 ++++++++++++++++++++++++
- 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index a81852cfb4f9..02ed0d512734 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -629,6 +629,20 @@
-  */
- #define PBF_DBG				0x043c
+Notes:
+    v2:
+     * move sta->uploaded check to if (sta) {} block [johannes]
+     * explain how the change fixes the bug [johannes]
+
+ net/mac80211/tx.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 4dea18be385c..2076d62207ee 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1244,7 +1244,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
  
-+/* BCN_OFFSET2 */
-+#define BCN_OFFSET2			0x0444
-+#define BCN_OFFSET2_BCN8		FIELD32(0x000000ff)
-+#define BCN_OFFSET2_BCN9		FIELD32(0x0000ff00)
-+#define BCN_OFFSET2_BCN10		FIELD32(0x00ff0000)
-+#define BCN_OFFSET2_BCN11		FIELD32(0xff000000)
-+
-+/* BCN_OFFSET3 */
-+#define BCN_OFFSET3			0x0448
-+#define BCN_OFFSET3_BCN12		FIELD32(0x000000ff)
-+#define BCN_OFFSET3_BCN13		FIELD32(0x0000ff00)
-+#define BCN_OFFSET3_BCN14		FIELD32(0x00ff0000)
-+#define BCN_OFFSET3_BCN15		FIELD32(0xff000000)
-+
- /*
-  * RF registers
-  */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 0893d9147af9..5058494d6c27 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4665,6 +4665,30 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	if (ret)
- 		return ret;
+ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 					  struct ieee80211_vif *vif,
+-					  struct ieee80211_sta *pubsta,
++					  struct sta_info *sta,
+ 					  struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+@@ -1258,10 +1258,13 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+ 	if (!ieee80211_is_data(hdr->frame_control))
+ 		return NULL;
  
-+	if (drv_data->hw_beacon_count == 16) {
-+		rt2800_register_read(rt2x00dev, BCN_OFFSET2, &reg);
-+		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN8,
-+				   rt2800_get_beacon_offset(rt2x00dev, 8));
-+		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN9,
-+				   rt2800_get_beacon_offset(rt2x00dev, 9));
-+		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN10,
-+				   rt2800_get_beacon_offset(rt2x00dev, 10));
-+		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN11,
-+				   rt2800_get_beacon_offset(rt2x00dev, 11));
-+		rt2800_register_write(rt2x00dev, BCN_OFFSET2, reg);
-+
-+		rt2800_register_read(rt2x00dev, BCN_OFFSET3, &reg);
-+		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN12,
-+				   rt2800_get_beacon_offset(rt2x00dev, 12));
-+		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN13,
-+				   rt2800_get_beacon_offset(rt2x00dev, 13));
-+		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN14,
-+				   rt2800_get_beacon_offset(rt2x00dev, 14));
-+		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN15,
-+				   rt2800_get_beacon_offset(rt2x00dev, 15));
-+		rt2800_register_write(rt2x00dev, BCN_OFFSET3, reg);
-+	}
-+
- 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
- 	rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
+-	if (pubsta) {
++	if (sta) {
+ 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
  
+-		txq = pubsta->txq[tid];
++		if (!sta->uploaded)
++			return NULL;
++
++		txq = sta->sta.txq[tid];
+ 	} else if (vif) {
+ 		txq = vif->txq;
+ 	}
+@@ -1504,23 +1507,17 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
+ 	struct fq *fq = &local->fq;
+ 	struct ieee80211_vif *vif;
+ 	struct txq_info *txqi;
+-	struct ieee80211_sta *pubsta;
+ 
+ 	if (!local->ops->wake_tx_queue ||
+ 	    sdata->vif.type == NL80211_IFTYPE_MONITOR)
+ 		return false;
+ 
+-	if (sta && sta->uploaded)
+-		pubsta = &sta->sta;
+-	else
+-		pubsta = NULL;
+-
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		sdata = container_of(sdata->bss,
+ 				     struct ieee80211_sub_if_data, u.ap);
+ 
+ 	vif = &sdata->vif;
+-	txqi = ieee80211_get_txq(local, vif, pubsta, skb);
++	txqi = ieee80211_get_txq(local, vif, sta, skb);
+ 
+ 	if (!txqi)
+ 		return false;
 -- 
-2.11.0
+2.1.4
