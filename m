@@ -1,85 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpout.microchip.com ([198.175.253.82]:42212 "EHLO
-        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752305AbdAIGMi (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:53636 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750914AbdAMVUl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 01:12:38 -0500
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: <dan.carpenter@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>
-CC: <linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>,
-        Aditya Shankar <aditya.shankar@microchip.com>
-Subject: [PATCH v2] staging: wilc1000: Connect to highest RSSI value for required SSID
-Date: Mon, 9 Jan 2017 11:42:15 +0530
-Message-ID: <1483942335-7957-1-git-send-email-aditya.shankar@microchip.com> (sfid-20170109_071308_936448_CF482B2B)
+        Fri, 13 Jan 2017 16:20:41 -0500
+Date: Fri, 13 Jan 2017 22:20:32 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 04/40] rt2x00: rt2800lib: fix beacon generation on RT3593
+Message-ID: <20170113212027.GA3372@makrotopia.org> (sfid-20170113_222044_027498_EEA8B23B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Connect to the highest rssi with the required SSID in the shadow
-table if the connection criteria is based only on the SSID.
-For the first matching SSID, an index to the table is saved.
-Later the index is updated if matching SSID has a higher
-RSSI value than the last saved index.
+From: Gabor Juhos <juhosg@openwrt.org>
 
-However if decision is made based on BSSID, there is only one match
-in the table and corresponding index is used.
+On the RT3593 chipset, the beacon registers are located
+in the high 8KB part of the shared memory.
 
-changes in v2:
-initialize sel_bssi_idx to UINT_MAX.
-Combine two checks for identifying
-sel_bssi_idx value for a SSID.
+The high part of the shared memory is only accessible
+if it is explicitly selected. Add a helper function
+in order to be able to control the SHR_MSEL bit in
+the PBF_SYS_CTRL register. Also add a few more helper
+functions and use those to select the correct part of
+the shared memory before and after accessing the beacon
+registers.
 
-Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
+The base addresses of the beacon registers are also
+different from the actually used values, so fix the
+'rt2800_hw_beacon_base' function to return the correct
+values.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++++++------
- 1 file changed, 13 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    |  3 ++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 44 ++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c1a24f7..507bdf7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -665,6 +665,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index 2371896c1e99..a81852cfb4f9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -574,6 +574,7 @@
+ #define PBF_SYS_CTRL			0x0400
+ #define PBF_SYS_CTRL_READY		FIELD32(0x00000080)
+ #define PBF_SYS_CTRL_HOST_RAM_WRITE	FIELD32(0x00010000)
++#define PBF_SYS_CTRL_SHR_MSEL		FIELD32(0x00080000)
+ 
+ /*
+  * HOST-MCU shared memory
+@@ -2026,6 +2027,8 @@ struct mac_iveiv_entry {
+ 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
+ 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
+ 
++#define HW_BEACON_BASE_HIGH(__index)	(0x4000 + (__index) * 512)
++
+ #define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
+ 
+ /*
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 0fd67026f806..dcacfa54b3d6 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -82,6 +82,39 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
+ 	return false;
+ }
+ 
++static inline void rt2800_shared_mem_select(struct rt2x00_dev *rt2x00dev,
++					    bool high)
++{
++	u32 reg;
++
++	if (WARN_ON_ONCE(!rt2800_has_high_shared_mem(rt2x00dev)))
++		return;
++
++	rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
++	rt2x00_set_field32(&reg, PBF_SYS_CTRL_SHR_MSEL, high);
++	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
++}
++
++static inline bool rt2800_beacon_uses_high_mem(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return true;
++
++	return false;
++}
++
++static inline void rt2800_select_beacon_mem(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2800_beacon_uses_high_mem(rt2x00dev))
++		rt2800_shared_mem_select(rt2x00dev, true);
++}
++
++static inline void rt2800_deselect_beacon_mem(struct rt2x00_dev *rt2x00dev)
++{
++	if (rt2800_beacon_uses_high_mem(rt2x00dev))
++		rt2800_shared_mem_select(rt2x00dev, false);
++}
++
+ static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
+ 			     const unsigned int word, const u8 value)
  {
- 	s32 s32Error = 0;
- 	u32 i;
-+	u32 sel_bssi_idx = UINT_MAX;
- 	u8 u8security = NO_ENCRYPT;
- 	enum AUTHTYPE tenuAuth_type = ANY;
+@@ -948,6 +981,9 @@ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
+ static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
+ 					  unsigned int index)
+ {
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		return HW_BEACON_BASE_HIGH(index);
++
+ 	return HW_BEACON_BASE(index);
+ }
  
-@@ -688,18 +689,24 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		    memcmp(last_scanned_shadow[i].ssid,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
--			if (!sme->bssid)
--				break;
--			else
-+			if (!sme->bssid) {
-+				if (sel_bssi_idx == UINT_MAX ||
-+				    last_scanned_shadow[i].rssi >
-+				    last_scanned_shadow[sel_bssi_idx].rssi)
-+					sel_bssi_idx = i;
-+			} else {
- 				if (memcmp(last_scanned_shadow[i].bssid,
- 					   sme->bssid,
--					   ETH_ALEN) == 0)
-+					   ETH_ALEN) == 0) {
-+					sel_bssi_idx = i;
- 					break;
-+				}
-+			}
- 		}
- 	}
+@@ -1046,8 +1082,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
+ 	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
  
--	if (i < last_scanned_cnt) {
--		pstrNetworkInfo = &last_scanned_shadow[i];
-+	if (sel_bssi_idx < last_scanned_cnt) {
-+		pstrNetworkInfo = &last_scanned_shadow[sel_bssi_idx];
- 	} else {
- 		s32Error = -ENOENT;
- 		wilc_connecting = 0;
+ 	rt2800_shared_mem_lock(rt2x00dev);
++
++	rt2800_select_beacon_mem(rt2x00dev);
+ 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
+ 				   entry->skb->len + padding_len);
++	rt2800_deselect_beacon_mem(rt2x00dev);
++
+ 	rt2800_shared_mem_unlock(rt2x00dev);
+ 	__set_bit(ENTRY_BCN_ENABLED, &entry->flags);
+ 
+@@ -1080,6 +1120,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
+ 
+ 	rt2800_shared_mem_lock(rt2x00dev);
+ 
++	rt2800_select_beacon_mem(rt2x00dev);
++
+ 	/*
+ 	 * For the Beacon base registers we only need to clear
+ 	 * the whole TXWI which (when set to 0) will invalidate
+@@ -1088,6 +1130,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
+ 	for (i = 0; i < txwi_desc_size; i += sizeof(__le32))
+ 		rt2800_register_write(rt2x00dev, beacon_base + i, 0);
+ 
++	rt2800_deselect_beacon_mem(rt2x00dev);
++
+ 	rt2800_shared_mem_unlock(rt2x00dev);
+ }
+ 
 -- 
-2.7.4
+2.11.0
