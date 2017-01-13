@@ -1,65 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40384 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760167AbdAIMQG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 07:16:06 -0500
-Message-ID: <1483964159.17582.34.camel@sipsolutions.net> (sfid-20170109_131709_333202_673804D8)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "M. Braun" <michael-dev@fami-braun.de>,
-        Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>
-Cc: Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date: Mon, 09 Jan 2017 13:15:59 +0100
-In-Reply-To: <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-         <1483706872.4089.8.camel@sipsolutions.net>
-         <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
-         <1483710841.12677.1.camel@sipsolutions.net>
-         <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
-         <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
-         <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35083 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdAMVfb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:35:31 -0500
+Received: by mail-lf0-f68.google.com with SMTP id v186so7072221lfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:30 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 08/10] ath10k: add start_once support
+Date: Fri, 13 Jan 2017 22:35:07 +0100
+Message-Id: <1484343309-6327-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223541_245153_0BBAF1BE)
+In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-09 at 12:44 +0100, M. Braun wrote:
-> Am 09.01.2017 um 09:08 schrieb Johannes Berg:
-> > Does it make sense to implement the two in separate layers though?
-> > 
-> > Clearly, this part needs to be implemented in the bridge layer due
-> > to
-> > the snooping knowledge, but the code is very similar to what
-> > mac80211
-> > has now.
-> 
-> Does the bridge always know about all stations connected?
-> 
-> That is bridge fdb entries (need to) expire so the bridge might
-> "forget" a still-connected station not sending but only consuming
-> broadcast traffic.
-> 
-> E.g. there is a television broadcast station here that receives a
-> video stream (via wifi, udp packets) and then airs it (dvb-t) but (on
-> its own) would not send any data packet on wifi (static ip, etc.).
+Add possibility to configure the driver to only start target once.
+This can reduce startup time of SDIO devices significantly since
+loading the firmware can take a substantial amount of time.
 
-Ok, that I don't know. Somehow if you address a unicast packet there
-the bridge has to make a decision - so it really should know? Would it
-query the port somehow to see if the device is behind it, if getting a
-packet for a station it forgot about?
+The patch is also necessary for high latency devices in general
+since it does not seem to be possible to rerun the BMI phase
+(fw upload) without power-cycling the device.
 
-> An other reason to implement this in mac80211 initially was that
-> mac80211 could encapsulate broacast/multicast ethernet packtes in
-> unicast A-MSDU packets in a way, so that the receiver would still see
-> process ethernet packets (after conversion) but have unicast wifi
-> frames. This cannot be done in bridge easily but one might want to
-> add this later to mac80211.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 20 ++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/core.h |  2 ++
+ drivers/net/wireless/ath/ath10k/hw.h   |  6 ++++++
+ 3 files changed, 24 insertions(+), 4 deletions(-)
 
-Yes, DMG would have to be done in mac80211, but that's a lot clearer
-case too since it requires negotiation functionality etc.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 31a9471..250e32b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -302,6 +302,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.max_num_peers = TARGET_QCA9377_HL_NUM_PEERS,
+ 		.is_high_latency = true,
+ 		.bus = ATH10K_BUS_USB,
++		.start_once = true,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -1841,6 +1842,9 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	int status;
+ 	u32 val;
+ 
++	if (ar->is_started && ar->hw_params.start_once)
++		return 0;
++
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+ 	clear_bit(ATH10K_FLAG_CRASH_FLUSH, &ar->dev_flags);
+@@ -2053,6 +2057,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	if (status)
+ 		goto err_hif_stop;
+ 
++	ar->is_started = true;
+ 	return 0;
+ 
+ err_hif_stop:
+@@ -2105,6 +2110,7 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	ath10k_htt_tx_stop(&ar->htt);
+ 	ath10k_htt_rx_free(&ar->htt);
+ 	ath10k_wmi_detach(ar);
++	ar->is_started = false;
+ }
+ EXPORT_SYMBOL(ath10k_core_stop);
+ 
+@@ -2202,12 +2208,18 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_unlock;
+ 	}
+ 
+-	ath10k_debug_print_boot_info(ar);
+-	ath10k_core_stop(ar);
++	/* Leave target running if hw_params.start_once is set */
++	if (ar->hw_params.start_once) {
++		mutex_unlock(&ar->conf_mutex);
++	} else {
++		ath10k_debug_print_boot_info(ar);
++		ath10k_core_stop(ar);
+ 
+-	mutex_unlock(&ar->conf_mutex);
++		mutex_unlock(&ar->conf_mutex);
++
++		ath10k_hif_power_down(ar);
++	}
+ 
+-	ath10k_hif_power_down(ar);
+ 	return 0;
+ 
+ err_unlock:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d9d7805..800f058 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -746,6 +746,8 @@ struct ath10k {
+ 
+ 	bool is_high_latency;
+ 
++	bool is_started;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 33186be..04ae66d 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -436,6 +436,12 @@ struct ath10k_hw_params {
+ 	bool is_high_latency;
+ 
+ 	enum ath10k_bus bus;
++
++	/* Specifies whether or not the device should be started once.
++	 * If set, the device will be started once by the early fw probe
++	 * and it will not be terminated afterwards.
++	 */
++	bool start_once;
+ };
+ 
+ struct htt_rx_desc;
+-- 
+2.7.4
