@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38784 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751243AbdAWQ3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 11:29:50 -0500
-Message-ID: <1485188986.7244.1.camel@sipsolutions.net> (sfid-20170123_172957_533701_783ECA37)
-Subject: Re: Strange Behaviors in 802.11 Association MLME
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jinghao Shi <jinghaos@buffalo.edu>, linux-wireless@vger.kernel.org
-Cc: Geoffrey Challen <challen@buffalo.edu>,
-        Shuvendu Lahiri <Shuvendu.Lahiri@microsoft.com>,
-        Ranveer Chandra <ranveer@microsoft.com>
-Date: Mon, 23 Jan 2017 17:29:46 +0100
-In-Reply-To: <CAKdW-HF5R2=mGUvqvdAdhx2EAXmmZaRh9GvnMemxE+GYEXBQQQ@mail.gmail.com> (sfid-20170116_222512_068147_8EC03192)
-References: <CAKdW-HF5R2=mGUvqvdAdhx2EAXmmZaRh9GvnMemxE+GYEXBQQQ@mail.gmail.com>
-         (sfid-20170116_222512_068147_8EC03192)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:30455 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751653AbdAMNgD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 08:36:03 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: Fix Tx legacy rate reporting
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1484063603-13652-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1484063603-13652-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <cbac3fa290ef42358b6717b801afbb2d@euamsexm01a.eu.qualcomm.com> (sfid-20170113_143606_398525_06C9BF0B)
+Date: Fri, 13 Jan 2017 14:35:51 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-16 at 16:16 -0500, Jinghao Shi wrote:
-> Hi,
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> We're working on a formal validation framework for wireless protocol
-> implementations. We have performed experiments on the 802.11
-> association state machine and have found peculiar association
-> behaviors.We'd like to share our findings to the community and
-> confirm
-> whether they reveal potential implementation bugs.
+> Tx legacy rate is reported 10 fold, as below
 > 
-> TLDR version: the client sends association request despite having
-> received association response from the AP, is this a bug?
+> iw dev wlan#N station dump | grep "tx bitrate"
+>         tx bitrate:     240.0 MBit/s
 > 
-> We utilized a real time reactive packet jammer to create the
-> following
-> packet loss pattern (the rate control policy was set to re-transmit
-> the packet at most once before reporting the packet as failed. This
-> may not be realistic in practice but helps reveal interesting
-> behaviors faster.)
+> This is because by mistake we muliply by the hardware reported
+> rate twice by 10, fix this.
 > 
->  - ASSOC_REQ (received by the AP, confirmed by the following
-> ASSOC_RESP)
->  - ACK <---- JAMMED
->  - ASSOC_REQ_RETRY <----- JAMMED, the driver will declare this packet
-> as failed
->  - ASSOC_RESP (received by the client, confirmed by the following
-> ACK)
->  - ACK
->  - ASSOC_REQ <--- problematic packet
->  - ...
+> Fixes: cec17c382140 ("ath10k: add per peer htt tx stats support for 10.4")
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-I don't really see a problem. We assume that the packet was lost due to
-the missing ACK, so instead of waiting for a long time, we transmit a
-new one. Typically, a missing ACK is far less likely than a missing
-frame.
+Patch applied to ath-next branch of ath.git, thanks.
 
-If, as here, the association response arrives, we should properly act
-on it either way.
+cd59102779ac ath10k: fix tx legacy rate reporting
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9508075/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
