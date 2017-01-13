@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37074 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750952AbdALU1M (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:8550 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751445AbdAMOEc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 15:27:12 -0500
+        Fri, 13 Jan 2017 09:04:32 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 12 Jan 2017 22:27:11 +0200
-From: merez@codeaurora.org
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Hamad Kadmany <QCA_hkadmany@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH v2 12/13] wil6210: set dma mask to reflect device
- capability
-In-Reply-To: <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
- <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
-Message-ID: <fc9a14ebf619db9817d262aa5381a69e@codeaurora.org> (sfid-20170112_212716_662238_ED569B54)
+Subject: Re: [3/5] ath10k: Remove unused wmi_p2p_noa_descriptor 'noa' in
+ wmi-tlv
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
+References: <99d0ff42e57d5f62560e72d926b4d69d5d7c418b.1479974100.git.kirtika@chromium.org>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+CC: Arnd Bergmann <arnd@arndb.de>, <netdev@vger.kernel.org>,
+        <linux-wireless@vger.kernel.org>,
+        Raja Mani <rmani@qti.qualcomm.com>,
+        "Michal Kazior" <michal.kazior@tieto.com>
+Message-ID: <ab6e49f1d0f2446c8a411cfd688ab0e9@euamsexm01a.eu.qualcomm.com> (sfid-20170113_150436_111178_05F72C2E)
+Date: Fri, 13 Jan 2017 15:01:57 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-12 15:06, Maya Erez wrote:
-> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Kirtika Ruchandani <kirtika.ruchandani@gmail.com> wrote:
+> Commit ca996ec56608 (ath10k: implement wmi-tlv backend)
+> introduced ath10k_wmi_tlv_op_gen_vdev_start() where
+> 'struct wmi_p2p_noa_descriptor *noa' is defined and set but not used.
+> Compiling with W=1 gives the following warning, fix it.
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c: In function ‘ath10k_wmi_tlv_op_gen_vdev_start’:
+> drivers/net/wireless/ath/ath10k/wmi-tlv.c:1647:33: warning: variable ‘noa’ set but not used [-Wunused-but-set-variable]
 > 
-> 11ad device supports 48 bit addresses, reflect that
-> by setting the dma mask accordingly.
-> 
-> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> ---
+> Fixes: ca996ec56608 ("ath10k: implement wmi-tlv backend")
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
 
-Kalle, we found an issue caused by this patch. Please don't apply it.
+No response to Michal's comment by the author
+
+Patch set to Changes Requested.
+
 -- 
-Maya Erez
-Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
-Linux Foundation Collaborative Project
+https://patchwork.kernel.org/patch/9444937/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
