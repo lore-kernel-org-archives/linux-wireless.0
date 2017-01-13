@@ -1,56 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39684 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755604AbdABNiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 08:38:22 -0500
-Message-ID: <1483364298.21014.3.camel@sipsolutions.net> (sfid-20170102_143825_771855_F82FDA2E)
-Subject: Re: [PATCH V2 1/3] cfg80211: allow passing struct device in the
- wiphy_new call
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Date: Mon, 02 Jan 2017 14:38:18 +0100
-In-Reply-To: <20170102132747.3491-1-zajec5@gmail.com> (sfid-20170102_142831_033140_A7AF3467)
-References: <20170102132747.3491-1-zajec5@gmail.com>
-         (sfid-20170102_142831_033140_A7AF3467)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:34244 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751553AbdAMWyJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 17:54:09 -0500
+Received: by mail-pf0-f175.google.com with SMTP id 127so37128628pfg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 14:54:09 -0800 (PST)
+Date: Fri, 13 Jan 2017 14:54:06 -0800
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>
+Subject: Re: [PATCH 2/2] mwifiex: pcie: don't delay for sleep cookie when not
+ required
+Message-ID: <20170113225405.GB14772@google.com> (sfid-20170113_235421_197960_52AE947C)
+References: <20170112210232.18554-1-briannorris@chromium.org>
+ <20170112210232.18554-2-briannorris@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170112210232.18554-2-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 12, 2017 at 01:02:32PM -0800, Brian Norris wrote:
+> Wifi modules like 8997 don't support the "sleep cookie", and so most of
+> the time, we just time out in the mwifiex_delay_for_sleep_cookie()
+> function ("max count reached while accessing sleep cookie"). This is a
+> waste of time, and we should skip it for modules without the sleep
+> cookie flag.
+> 
+> Additionally, this delay is sometimes counterproductive. For instance,
+> when PCIe ASPM is enabled, this extra delay can leave the link idle for
+> long enough to re-enter a low-power state even while we are trying to
+> wake the module, compounding an additional delay when it comes time to
+> read the next register (e.g., the interrupt status). On some systems,
+> this is detrimental to overall system latency.
+> 
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+> Tested on Marvell 8997, but would be good to get confirmation from Marvell.
 
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3730,8 +3730,8 @@ static inline const char *wiphy_name(const
-> struct wiphy *wiphy)
->   * Return: A pointer to the new wiphy. This pointer must be
->   * assigned to each netdev's ieee80211_ptr for proper operation.
->   */
-> -struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int
-> sizeof_priv,
-> -			   const char *requested_name);
-> +struct wiphy *wiphy_new_nm(struct device *dev, const struct
-> cfg80211_ops *ops,
-> +			   int sizeof_priv, const char
-> *requested_name);
+It would still be good to get comment from Marvell here, but elsewhere,
+they've told me that this breaks the expected handshake procedure. I'm
+still not quite sure how that is true, considering that we time out in
+the mwifiex_delay_for_sleep_cookie() all the time anyway (so what's the
+point of waiting then?)...
 
-This is obviously missing documentation updates.
+But anyway I think I have discovered a proper root cause [1] that is
+causing my latency problems above. I'll post a v2 which replaces the
+current patch with something else.
 
->   */
-> -static inline struct wiphy *wiphy_new(const struct cfg80211_ops
-> *ops,
-> +static inline struct wiphy *wiphy_new(struct device *dev,
-> +				      const struct cfg80211_ops
-> *ops,
+Brian
 
-Ditto.
+[1] The short version: re-reading the interrupt status register from the
+card after we've sent it to sleep takes a long time. We shouldn't do
+that.
 
-It looks like you practically removed all users of set_wiphy_dev(), why
-not do that completely and remove that entirely?
-
-johannes
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 435ba879ef29..11e0673617c7 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -1712,11 +1712,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+>  					    "Write register failed\n");
+>  				return -1;
+>  			}
+> -			mwifiex_delay_for_sleep_cookie(adapter,
+> -						       MWIFIEX_MAX_DELAY_COUNT);
+> -			while (reg->sleep_cookie && (count++ < 10) &&
+> -			       mwifiex_pcie_ok_to_access_hw(adapter))
+> -				usleep_range(50, 60);
+> +			if (reg->sleep_cookie) {
+> +				mwifiex_delay_for_sleep_cookie(adapter,
+> +							       MWIFIEX_MAX_DELAY_COUNT);
+> +				while ((count++ < 10) &&
+> +				       mwifiex_pcie_ok_to_access_hw(adapter))
+> +					usleep_range(50, 60);
+> +			}
+>  			mwifiex_pcie_enable_host_int(adapter);
+>  			mwifiex_process_sleep_confirm_resp(adapter, skb->data,
+>  							   skb->len);
+> -- 
+> 2.11.0.390.gc69c2f50cf-goog
+> 
