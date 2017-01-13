@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35464 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751459AbdATJq4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55784 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751568AbdAMN21 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 04:46:56 -0500
+        Fri, 13 Jan 2017 08:28:27 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,1/3] mwifiex: pcie: use posted write to wake up firmware
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170113233538.36196-1-briannorris@chromium.org>
-References: <20170113233538.36196-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170120094655.BB7AE607CD@smtp.codeaurora.org> (sfid-20170120_104724_123419_666D730D)
-Date: Fri, 20 Jan 2017 09:46:55 +0000 (UTC)
+Subject: Re: [1/2] ath10k: add accounting for the extended peer statistics
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+References: <992a4e2676037a06f482cdbe2d3d39e287530be5.1480974623.git.chunkeey@googlemail.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Message-ID: <270c5e95df7849f48fe0adf6ff448aed@euamsexm01a.eu.qualcomm.com> (sfid-20170113_142831_003970_20C46178)
+Date: Fri, 13 Jan 2017 14:28:21 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> Depending on system factors (e.g., the PCIe link PM state), the first
-> read to wake up the Wifi firmware can take a long time. There is no
-> reason to use a (blocking, non-posted) read at this point, so let's just
-> use a write instead. Write vs. read doesn't matter functionality-wise --
-> it's just a dummy operation. But let's make sure to re-write with the
-> correct "ready" signature, since we check for that in other parts of the
-> driver.
+Christian Lamparter <chunkeey@googlemail.com> wrote:
+> The 10.4 firmware adds extended peer information to the
+> firmware's statistics payload. This additional info is
+> stored as a separate data field and the elements are
+> stored in their own "peers_extd" list.
 > 
-> This has been shown to decrease the time spent blocking in this function
-> on RK3399.
+> These elements can pile up in the same way as the peer
+> information elements. This is because the
+> ath10k_wmi_10_4_op_pull_fw_stats() function tries to
+> pull the same amount (num_peer_stats) for every statistic
+> data unit.
 > 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Fixes: 4a49ae94a448faa ("ath10k: fix 10.4 extended peer stats update")
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 
-3 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-062e008a6e83 mwifiex: pcie: use posted write to wake up firmware
-5d5ddb5e0d9b mwifiex: pcie: don't loop/retry interrupt status checks
-fe1167883939 mwifiex: pcie: read FROMDEVICE DMA-able memory with READ_ONCE()
+c1e3330f22bc ath10k: add accounting for the extended peer statistics
 
 -- 
-https://patchwork.kernel.org/patch/9516615/
+https://patchwork.kernel.org/patch/9461631/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
