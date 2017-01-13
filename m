@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33614 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757710AbdAJQTB (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34710 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751675AbdAMMkL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 11:19:01 -0500
-Received: by mail-oi0-f65.google.com with SMTP id j15so17574187oih.0
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 08:19:01 -0800 (PST)
-Subject: Re: [bug report] rtlwifi: Remove some redundant code
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-References: <20170105111124.GA4548@elgon.mountain>
- <8737grjaje.fsf@purkki.adurom.net>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <fa0f2462-d3db-e0bb-2562-16d56cdfec7c@lwfinger.net> (sfid-20170110_171907_098300_F517233B)
-Date: Tue, 10 Jan 2017 10:18:58 -0600
+        Fri, 13 Jan 2017 07:40:11 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Jan 2017 14:39:17 +0200
+Message-Id: <20170113123919.30384-5-luca@coelho.fi> (sfid-20170113_134128_524692_160942EE)
+In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
+References: <20170113123919.30384-1-luca@coelho.fi>
 MIME-Version: 1.0
-In-Reply-To: <8737grjaje.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 4/6] iwlwifi: fix MODULE_FIRMWARE for 6030
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2017 07:43 AM, Kalle Valo wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
->
->> Hello Larry Finger,
->>
->> The patch c93ac39da006: "rtlwifi: Remove some redundant code" from
->> Dec 15, 2016, leads to the following static checker warning:
->>
->> 	drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:326 rtl92d_download_fw()
->> 	warn: curly braces intended?
->>
->> drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
->>    306          /* If 8051 is running in RAM code, driver should
->>    307           * inform Fw to reset by itself, or it will cause
->>    308           * download Fw fail.*/
->>    309          /* 8051 RAM code */
->>    310          if (rtl_read_byte(rtlpriv, REG_MCUFWDL) & BIT(7)) {
->>    311                  rtl92d_firmware_selfreset(hw);
->>    312                  rtl_write_byte(rtlpriv, REG_MCUFWDL, 0x00);
->>    313          }
->>    314          _rtl92d_enable_fw_download(hw, true);
->>    315          _rtl92d_write_fw(hw, version, pfwdata, fwsize);
->>    316          _rtl92d_enable_fw_download(hw, false);
->>    317          spin_lock_irqsave(&globalmutex_for_fwdownload, flags);
->>    318          err = _rtl92d_fw_free_to_go(hw);
->>    319          /* download fw over,clear 0x1f[5] */
->>    320          value = rtl_read_byte(rtlpriv, 0x1f);
->>    321          value &= (~BIT(5));
->>    322          rtl_write_byte(rtlpriv, 0x1f, value);
->>    323          spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
->>    324          if (err)
->>    325                  pr_err("fw is not ready to run!\n");
->>    326                  goto exit;
->>
->> I guess we could add the braces back.
->>
->>    327  exit:
->>    328          err = _rtl92d_fw_init(hw);
->>
->> Should we even be running _rtl92d_fw_init() if _rtl92d_fw_free_to_go()
->> fails?  What about preserving the error code?
->>
->>    329          return err;
->>    330  }
->
-> A possible fix but which doesn't seem to address all your concerns:
->
-> [next] rtlwifi: rtl8192de: fix missing curly braces
->
-> https://patchwork.kernel.org/patch/9506837/
+From: Jürg Billeter <j@bitron.ch>
 
-Strange, but Gmail put that patch in my spam. In any case, it is better to 
-remove the goto. Adding the braces back leaves a goto just before the target. 
-The compiler does the right thing, but it should be fixed.
+IWL6000G2B_UCODE_API_MAX is not defined. ucode_api_max of
+IWL_DEVICE_6030 uses IWL6000G2_UCODE_API_MAX. Use this also for
+MODULE_FIRMWARE.
 
-Larry
+Fixes: 9d9b21d1b616 ("iwlwifi: remove IWL_*_UCODE_API_OK")
+Signed-off-by: Jürg Billeter <j@bitron.ch>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+index 0b9f6a7bc834..39335b7b0c16 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+@@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-- 
+2.11.0
