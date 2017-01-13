@@ -1,88 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f169.google.com ([209.85.213.169]:32981 "EHLO
-        mail-yb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752096AbdATNEf (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:36150 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750775AbdAMFWW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 08:04:35 -0500
-Received: by mail-yb0-f169.google.com with SMTP id w194so52624421ybe.0
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 05:04:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <6e5d0596c4af46668c02356ba17a4e5f@euamsexm01a.eu.qualcomm.com>
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <6e5d0596c4af46668c02356ba17a4e5f@euamsexm01a.eu.qualcomm.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 20 Jan 2017 13:56:09 +0100
-Message-ID: <CA+BoTQkutepRAGwE0xLiaGVqg5mXKFdjS26jDdxajkAsQRPuLA@mail.gmail.com> (sfid-20170120_140438_481445_9CC9D2CB)
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+        Fri, 13 Jan 2017 00:22:22 -0500
+Received: by mail-pf0-f173.google.com with SMTP id 189so25195037pfu.3
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:22:22 -0800 (PST)
+From: Matt Ranostay <matt@ranostay.consulting>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
+Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
+Subject: [PATCH v2 0/2] mmc: pwrseq: add support for Marvell SD8787 chip
+Date: Thu, 12 Jan 2017 21:22:16 -0800
+Message-Id: <20170113052218.10534-1-matt@ranostay.consulting> (sfid-20170113_062251_299229_407BABDE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 January 2017 at 13:51, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> wrote:
->> Firmware files are versioned to prevent older
->> driver instances to load unsupported firmware
->> blobs. This is reflected with a fallback logic
->> which attempts to load several firmware files.
->>
->> This however produced a lot of unnecessary
->> warnings sometimes confusing users and leading
->> them to rename firmware files making things even
->> more confusing.
->>
->> Hence use request_firmware_direct() which does not
->> produce extra warnings. This shouldn't really
->> break anything because most modern systems don't
->> rely on udev/hotplug helpers to load firmware
->> files anymore.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> This ended into a rather long discussion, see the full thread from the pa=
-tchwork link
-> below, but I'll try to summarise it here:
->
-> * Nobody stepped up and mentioned that they need/use the user fallback he=
-lper with ath10k.
->
-> * Felix confirmed that LEDE creates the calibration file before loading a=
-th10k
->   so this should not break LEDE.
->
-> * This also fixes a 60 second delay per _each_ unexistent firmware/calibr=
-ation
->   file with distros which have CONFIG_FW_LOADER_USER_HELPER_FALLBACK enab=
-led,
->   RHEL being a notable example. Using ath10k with firmware-2.bin this mig=
-ht
->   end up into a five minute delay in boot.
->
-> * Luis is working on new drvdata interface for kernel, but that's not mer=
-ged yet.
->
-> Based on this I think the right approach is to apply this patch. Any conc=
-erns?
->
-> While writing this I started to suspect is it just by accident that
-> request_firmware_direct() does not print any error messages and
-> request_firmware() again does print those? Let's hope nobody decides to c=
-hange
-> that.  And at least Luis' drvdata interface has a documented 'optional' f=
-lag,
-> so we can always switch to using that (once it's merged):
->
-> * struct drvdata_req_params - driver data request parameters
-> * @optional: if true it is not a hard requirement by the caller that this
-> *       file be present. An error will not be recorded if the file is not
-> *       found.
->
-> Michal, do you mind if I'll add more info to the commit log and submit th=
-is RFC
-> as a proper patch? It still seems to apply and work just fine.
+Changes from v1:
+* split devictree docs from pwrseq changes
+* rebase devicetree documents due to filename change
+* rebase pwrseq patchset
 
-I don't mind :)
+Matt Ranostay (2):
+  devicetree: document vmmc-supply and mmc-pwrseq options
+  mmc: pwrseq: add support for Marvell SD8787 chip
 
+ .../devicetree/bindings/net/wireless/marvell-8xxx.txt          |  7 ++++++-
+ drivers/mmc/core/Kconfig                                       | 10 ++++++++++
+ drivers/mmc/core/Makefile                                      |  1 +
+ 3 files changed, 17 insertions(+), 1 deletion(-)
 
-Micha=C5=82
+-- 
+2.10.2
