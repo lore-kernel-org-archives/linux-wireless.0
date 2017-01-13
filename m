@@ -1,45 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36336 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751757AbdAWWTV (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:44671 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751013AbdAMVV3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:19:21 -0500
-From: Luca Coelho <luca@coelho.fi>
+        Fri, 13 Jan 2017 16:21:29 -0500
+Date: Fri, 13 Jan 2017 22:21:20 +0100
+From: Daniel Golle <daniel@makrotopia.org>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>
-Date: Tue, 24 Jan 2017 00:03:39 +0200
-Message-Id: <20170123220350.25305-15-luca@coelho.fi> (sfid-20170123_233339_485271_D71B1A75)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 06/40] rt2x00: rt2800lib: init additional beacon offset
+ registers
+Message-ID: <20170113212115.GA3391@makrotopia.org> (sfid-20170113_222131_764251_814AAAB9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 14/25] iwlwifi: fix MODULE_FIRMWARE for 6030
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jürg Billeter <j@bitron.ch>
+From: Gabor Juhos <juhosg@openwrt.org>
 
-IWL6000G2B_UCODE_API_MAX is not defined. ucode_api_max of
-IWL_DEVICE_6030 uses IWL6000G2_UCODE_API_MAX. Use this also for
-MODULE_FIRMWARE.
-
-Fixes: 9d9b21d1b616 ("iwlwifi: remove IWL_*_UCODE_API_OK")
-Signed-off-by: Jürg Billeter <j@bitron.ch>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    | 14 ++++++++++++++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 24 ++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-index 0b9f6a7bc834..39335b7b0c16 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-@@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
--MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index a81852cfb4f9..02ed0d512734 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -629,6 +629,20 @@
+  */
+ #define PBF_DBG				0x043c
+ 
++/* BCN_OFFSET2 */
++#define BCN_OFFSET2			0x0444
++#define BCN_OFFSET2_BCN8		FIELD32(0x000000ff)
++#define BCN_OFFSET2_BCN9		FIELD32(0x0000ff00)
++#define BCN_OFFSET2_BCN10		FIELD32(0x00ff0000)
++#define BCN_OFFSET2_BCN11		FIELD32(0xff000000)
++
++/* BCN_OFFSET3 */
++#define BCN_OFFSET3			0x0448
++#define BCN_OFFSET3_BCN12		FIELD32(0x000000ff)
++#define BCN_OFFSET3_BCN13		FIELD32(0x0000ff00)
++#define BCN_OFFSET3_BCN14		FIELD32(0x00ff0000)
++#define BCN_OFFSET3_BCN15		FIELD32(0xff000000)
++
+ /*
+  * RF registers
+  */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 0893d9147af9..5058494d6c27 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4665,6 +4665,30 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	if (ret)
+ 		return ret;
+ 
++	if (drv_data->hw_beacon_count == 16) {
++		rt2800_register_read(rt2x00dev, BCN_OFFSET2, &reg);
++		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN8,
++				   rt2800_get_beacon_offset(rt2x00dev, 8));
++		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN9,
++				   rt2800_get_beacon_offset(rt2x00dev, 9));
++		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN10,
++				   rt2800_get_beacon_offset(rt2x00dev, 10));
++		rt2x00_set_field32(&reg, BCN_OFFSET2_BCN11,
++				   rt2800_get_beacon_offset(rt2x00dev, 11));
++		rt2800_register_write(rt2x00dev, BCN_OFFSET2, reg);
++
++		rt2800_register_read(rt2x00dev, BCN_OFFSET3, &reg);
++		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN12,
++				   rt2800_get_beacon_offset(rt2x00dev, 12));
++		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN13,
++				   rt2800_get_beacon_offset(rt2x00dev, 13));
++		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN14,
++				   rt2800_get_beacon_offset(rt2x00dev, 14));
++		rt2x00_set_field32(&reg, BCN_OFFSET3_BCN15,
++				   rt2800_get_beacon_offset(rt2x00dev, 15));
++		rt2800_register_write(rt2x00dev, BCN_OFFSET3, reg);
++	}
++
+ 	rt2800_register_write(rt2x00dev, LEGACY_BASIC_RATE, 0x0000013f);
+ 	rt2800_register_write(rt2x00dev, HT_BASIC_RATE, 0x00008003);
+ 
 -- 
 2.11.0
