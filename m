@@ -1,38 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48310 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033951AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from fudo.makrotopia.org ([185.142.180.71]:60480 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751084AbdAMVTH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:19:07 -0500
+Date: Fri, 13 Jan 2017 22:18:59 +0100
+From: Daniel Golle <daniel@makrotopia.org>
 To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 8/9] rt2x00: do not flush empty queue
-Date: Fri,  6 Jan 2017 14:05:17 +0100
-Message-Id: <1483707918-31480-9-git-send-email-sgruszka@redhat.com> (sfid-20170106_141131_754421_68121DD6)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 01/40] rt2x00: rt2800lib: move rt2800_drv_data declaration
+ into rt2800lib.h
+Message-ID: <20170113211837.GA3327@makrotopia.org> (sfid-20170113_221909_170468_55E1AFAD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00mac.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+From: Gabor Juhos <juhosg@openwrt.org>
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-index 3cc1384..ecc9631 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-@@ -743,7 +743,8 @@ void rt2x00mac_flush(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		return;
+The rt2800_drv_data structure contains driver specific
+information. Move the declaration into the rt2800lib.h
+header which is a more logical place for it. Also fix
+the comment style to avoid checkpatch warning.
+
+The patch contains no functional changes, it is in
+preparation for the next patch.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+[daniel@makrotopia.org: removed stray newline]
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    | 16 ----------------
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 16 ++++++++++++++++
+ 2 files changed, 16 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index ec622a08a486..2371896c1e99 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -2969,20 +2969,4 @@ enum rt2800_eeprom_word {
+ #define WCID_END	222
+ #define STA_IDS_SIZE	(WCID_END - WCID_START + 2)
  
- 	tx_queue_for_each(rt2x00dev, queue)
--		rt2x00queue_flush_queue(queue, drop);
-+		if (!rt2x00queue_empty(queue))
-+			rt2x00queue_flush_queue(queue, drop);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_flush);
+-/*
+- * RT2800 driver data structure
+- */
+-struct rt2800_drv_data {
+-	u8 calibration_bw20;
+-	u8 calibration_bw40;
+-	u8 bbp25;
+-	u8 bbp26;
+-	u8 txmixer_gain_24g;
+-	u8 txmixer_gain_5g;
+-	u8 max_psdu;
+-	unsigned int tbtt_tick;
+-	unsigned int ampdu_factor_cnt[4];
+-	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
+-};
+-
+ #endif /* RT2800_H */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index 0a8b4df665fe..256928f0ea6a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -20,6 +20,22 @@
+ #ifndef RT2800LIB_H
+ #define RT2800LIB_H
  
++#include "rt2800.h"
++
++/* RT2800 driver data structure */
++struct rt2800_drv_data {
++	u8 calibration_bw20;
++	u8 calibration_bw40;
++	u8 bbp25;
++	u8 bbp26;
++	u8 txmixer_gain_24g;
++	u8 txmixer_gain_5g;
++	u8 max_psdu;
++	unsigned int tbtt_tick;
++	unsigned int ampdu_factor_cnt[4];
++	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
++};
++
+ struct rt2800_ops {
+ 	void (*register_read)(struct rt2x00_dev *rt2x00dev,
+ 			      const unsigned int offset, u32 *value);
 -- 
-2.7.4
+2.11.0
