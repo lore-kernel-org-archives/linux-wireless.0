@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40714 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937229AbdAIMoI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 07:44:08 -0500
-Message-ID: <1483965843.17582.37.camel@sipsolutions.net> (sfid-20170109_134540_498190_4AB81D36)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>
-Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Michael Braun <michael-dev@fami-braun.de>
-Date: Mon, 09 Jan 2017 13:44:03 +0100
-In-Reply-To: <20170109124231.GA9086@otheros>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-         <1483706872.4089.8.camel@sipsolutions.net> <20170107151530.GG3134@otheros>
-         <1483949149.17582.1.camel@sipsolutions.net> <20170109124231.GA9086@otheros>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35494 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752023AbdAMP5Y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 10:57:24 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8192ee: New firmware from Realtek
+To: Kyle McMartin <kyle@infradead.org>
+References: <20161217185054.15017-1-Larry.Finger@lwfinger.net>
+ <20170113150306.GE13400@bombadil.infradead.org>
+Cc: linux-wireless@vger.kernel.org, Troy Tan <troy_tan@realsil.com.cn>,
+        netdev@vger.kernel.org, linux-firmware@kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <38b9425e-0353-f13f-994b-1beaae41c1d6@lwfinger.net> (sfid-20170113_165731_011315_179763B2)
+Date: Fri, 13 Jan 2017 09:57:21 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170113150306.GE13400@bombadil.infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/13/2017 09:03 AM, Kyle McMartin wrote:
+> On Sat, Dec 17, 2016 at 12:50:54PM -0600, Larry Finger wrote:
+>> -Info: Taken from Realtek version rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
+>> +Info: Initial version taken from Realtek version
+>> +      rtl_92ce_92se_92de_8723ae_88ee_8723be_92ee_linux_mac80211_0017.1224.2013
+>> +      Updated Jan. 14, 2015 with file added by Realtek to
+>> +      http://github.com/lwfinger/rtlwifi_new.git.
+>>  File: rtlwifi/rtl8192eefw.bin
+>>
+>
+> Uh, did something weird happen here? This patch was applied in 2015. ;-)
+>
+> cheers, Kyle
 
-> >          A host SHOULD silently discard a datagram that is received via
-> >          a link-layer broadcast (see Section 2.4) but does not specify
-> >          an IP multicast or broadcast destination address.
-> 
-> This example is the other way round. It specifies how the IP
-> destination should look like in case of link-layer broadcast. Not
-> how the link-layer destination should look like in case of a
-> multicast/broadcast IP destination.
+Realtek fixed some bugs in the firmware. This is a new version.
 
-You stopped reading too early - snipped the context part for you :)
-
-johannes
+Larry
