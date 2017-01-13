@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25181 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751516AbdAMNai (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35513 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751307AbdAMV0q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 08:30:38 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k: move RELAY and DEBUG_FS to ATH9K[_HTC]_DEBUGFS
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170109174852.20114-1-chunkeey@googlemail.com>
-References: <20170109174852.20114-1-chunkeey@googlemail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Message-ID: <c81df64bfa14419db793429c857b129f@euamsexm01a.eu.qualcomm.com> (sfid-20170113_143043_914910_37D8E919)
-Date: Fri, 13 Jan 2017 14:29:53 +0100
+        Fri, 13 Jan 2017 16:26:46 -0500
+Received: by mail-lf0-f67.google.com with SMTP id v186so7057057lfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:45 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 1/8] ath10k: htc: made static function public
+Date: Fri, 13 Jan 2017 22:26:04 +0100
+Message-Id: <1484342771-6160-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222657_622823_D250A4C0)
+In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> wrote:
-> Currently, the common ath9k_common module needs to have a
-> dependency on RELAY and DEBUG_FS in order to built. This
-> is usually not a problem. But for RAM and FLASH starved
-> AR71XX devices, every little bit counts.
-> 
-> This patch adds a new symbol CONFIG_ATH9K_COMMON_DEBUG
-> which makes it possible to drop the RELAY and DEBUG_FS
-> dependency there and move it to ATH_(HTC)_DEBUGFS.
-> 
-> Note: The shared FFT/spectral code (which is the only user
-> of the relayfs in ath9k*) needs DEBUG_FS to export the relayfs
-> interface to dump the data to userspace. So it makes no sense
-> to have the functions compiled in, if DEBUG_FS is not there.
-> 
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+Changed ath10k_htc_notify_tx_completion and
+ath10k_htc_process_trailer from static to non static.
 
-Patch applied to ath-next branch of ath.git, thanks.
+These functions are needed by SDIO/mbox.
 
-1077ec472df4 ath9k: move RELAY and DEBUG_FS to ATH9K[_HTC]_DEBUGFS
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 14 ++++++++------
+ drivers/net/wireless/ath/ath10k/htc.h |  6 ++++++
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index 9f6a915..35e67c4 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
+ 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
+ }
+ 
+-static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+-					    struct sk_buff *skb)
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = ep->htc->ar;
+ 
+@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
+ 
+ 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
+ }
++EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
+ 
+ static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
+ 				      struct sk_buff *skb)
+@@ -227,10 +228,10 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
+ 	spin_unlock_bh(&htc->tx_lock);
+ }
+ 
+-static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+-				      u8 *buffer,
+-				      int length,
+-				      enum ath10k_htc_ep_id src_eid)
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid)
+ {
+ 	struct ath10k *ar = htc->ar;
+ 	int status = 0;
+@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
+ 
+ 	return status;
+ }
++EXPORT_SYMBOL(ath10k_htc_process_trailer);
+ 
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 6ababa3..f728ce7 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -351,5 +351,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
+ struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
+ void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
+ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
++				     struct sk_buff *skb);
++int ath10k_htc_process_trailer(struct ath10k_htc *htc,
++			       u8 *buffer,
++			       int length,
++			       enum ath10k_htc_ep_id src_eid);
+ 
+ #endif
 -- 
-https://patchwork.kernel.org/patch/9505653/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
