@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:32908 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751784AbdAaTWa (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29354 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751157AbdAMIVX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:30 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 4.10-rc3 07/13] net: mvneta: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-MIME-Version: 1.0
+        Fri, 13 Jan 2017 03:21:23 -0500
 Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdxD-0000Wd-1D@rmk-PC.armlinux.org.uk> (sfid-20170131_202451_572810_47EE78F1)
-Date: Tue, 31 Jan 2017 19:18:59 +0000
+MIME-Version: 1.0
+Subject: Re: [v2,12/13] wil6210: set dma mask to reflect device capability
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-13-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <4039bae3b41f4655b33e83a3d949e96c@euamsexm01a.eu.qualcomm.com> (sfid-20170113_092127_609837_3E05FDDB)
+Date: Fri, 13 Jan 2017 09:20:27 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
-drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
-drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
-drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> 
+> 11ad device supports 48 bit addresses, reflect that
+> by setting the dma mask accordingly.
+> 
+> Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Add linux/phy_fixed.h to mvneta.c
+Dropped per Maya's request
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
----
- drivers/net/ethernet/marvell/mvneta.c | 1 +
- 1 file changed, 1 insertion(+)
+Patch set to Changes Requested.
 
-diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
-index e05e22705cf7..eb0eb3e62ca0 100644
---- a/drivers/net/ethernet/marvell/mvneta.c
-+++ b/drivers/net/ethernet/marvell/mvneta.c
-@@ -28,6 +28,7 @@
- #include <linux/of_mdio.h>
- #include <linux/of_net.h>
- #include <linux/phy.h>
-+#include <linux/phy_fixed.h>
- #include <linux/platform_device.h>
- #include <linux/skbuff.h>
- #include <net/hwbm.h>
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9513167/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
