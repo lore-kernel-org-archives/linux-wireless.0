@@ -1,93 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:34844 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751831AbdATLiB (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34848 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750818AbdAMFgX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 06:38:01 -0500
-Received: by mail-pg0-f42.google.com with SMTP id 194so23193541pgd.2
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 03:38:01 -0800 (PST)
-Subject: Re: [PATCH RFC 2/2] brcmfmac: add brcmf_err_pub macro for better
- error messages
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20170118142703.9824-1-zajec5@gmail.com>
- <20170118142703.9824-2-zajec5@gmail.com>
- <8819000f-f70f-e8b3-ca52-eebf10a431ac@broadcom.com>
- <e67a5583-8a1b-b370-5dcb-8717197542fb@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <668216db-8834-02e6-1b7c-9fbd05eeaf68@broadcom.com> (sfid-20170120_123805_115249_28759A46)
-Date: Fri, 20 Jan 2017 12:37:54 +0100
-MIME-Version: 1.0
-In-Reply-To: <e67a5583-8a1b-b370-5dcb-8717197542fb@gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Fri, 13 Jan 2017 00:36:23 -0500
+Received: by mail-pf0-f181.google.com with SMTP id f144so25339569pfa.2
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:36:08 -0800 (PST)
+From: Matt Ranostay <matt@ranostay.consulting>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
+Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
+Subject: [PATCH v3 1/2] devicetree: document new marvell-8xxx and pwrseq-sd8787 options
+Date: Thu, 12 Jan 2017 21:29:36 -0800
+Message-Id: <20170113052937.12538-2-matt@ranostay.consulting> (sfid-20170113_063629_197279_FFFF8062)
+In-Reply-To: <20170113052937.12538-1-matt@ranostay.consulting>
+References: <20170113052937.12538-1-matt@ranostay.consulting>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20-1-2017 12:17, Rafał Miłecki wrote:
-> On 01/20/2017 11:26 AM, Arend Van Spriel wrote:
->> On 18-1-2017 15:27, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> This macro accepts an extra argument of struct brcmf_pub pointer. It
->>> allows referencing struct device and printing error using dev_err. This
->>> is very useful on devices with more than one wireless card suppored by
->>> brcmfmac. Thanks for dev_err it's possible to identify device that error
->>> is related to.
->>>
->>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>> ---
->>> I could convert few more brcmf_err calls to this new brcmf_err_pub
->>> but I don't
->>> want to spent too much time on this in case someone has a better idea.
->>>
->>> If you do, comment! :)
->>
->> I do not, but still comment ;-). Like the idea. Was on our list because
->> it is damn convenient when testing on router with multiple devices. I
->> would prefer to replace the existing brcmf_err() rather than introducing
->> a new one and would like to do the same for brcmf_dbg(). However, not
->> all call sites have a struct brcmf_pub instance available. Everywhere
->> before completing brcmf_attach() that is.
-> 
-> I decided to try new macro because:
-> 1) I was too lazy to convert all calls at once
-> 2) I could stick to brcmf_err when struct brcmf_pub isn't available yet
-> 
-> In theory we could pass NULL to dev_err, I'd result in something like:
-> [   14.746754] (NULL device *): brcmf_c_preinit_dcmds: Firmware version
-> = wl0: Sep 18 2015 03:30:01 version 7.35.177.56 (r587209) FWID 01-6cb8e269
-> 
-> Unfortunately AFAIK it's not possible to handle
-> brcmf_err(NULL "Foo\n");
-> calls while keeping brcmf_err a macro.
-> 
-> I was thinking about something like:
-> #define brcmf_err(pub, fmt, ...)                    \
->     do {                                \
->         if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())    \
->             dev_err(pub ? pub->bus_if->dev : NULL,        \
->                 "%s: " fmt, __func__,            \
->                 ##__VA_ARGS__);                \
->     } while (0)
-> 
-> but this wouldn't compile because for brcmf_err(NULL "Foo\n"); it would
-> roll
-> out to:
-> dev_err(NULL ? NULL->bus_if->dev : NULL, "Foo\n");
-> 
-> I *can* support brcmf_err(NULL "Foo\n"); calls if I change brcmf_err from
-> macro to a function (inline probably). Do you think it's a good idea?
+Cc: devicetree@vger.kernel.org
+Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
+---
+ .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt          | 14 ++++++++++++++
+ .../devicetree/bindings/net/wireless/marvell-8xxx.txt      |  7 ++++++-
+ 2 files changed, 20 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
 
-I was wondering if brcmf_err(ptr, "bla\n") could determine the pointer
-type and accept 'struct device *' and 'struct brcmf_pub *'. I think we
-always have a struct device pointer. Only in brcmf_module_init() we do not.
-
-Regards,
-Arend
+diff --git a/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
+new file mode 100644
+index 000000000000..1b658351629b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
+@@ -0,0 +1,14 @@
++* Marvell SD8787 power sequence provider
++
++Required properties:
++- compatible: must be "mmc-pwrseq-sd8787".
++- pwndn-gpio: contains a power down GPIO specifier.
++- reset-gpio: contains a reset GPIO specifier.
++
++Example:
++
++	wifi_pwrseq: wifi_pwrseq {
++		compatible = "mmc-pwrseq-sd8787";
++		pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
++		reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
++	}
+diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+index 980b16df74c3..0854451ff91d 100644
+--- a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
++++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+@@ -1,4 +1,4 @@
+-Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
++Marvell 8787/8897/8997 (sd8787/sd8897/sd8997/pcie8997) SDIO/PCIE devices
+ ------
+ 
+ This node provides properties for controlling the Marvell SDIO/PCIE wireless device.
+@@ -8,6 +8,7 @@ connects the device to the system.
+ Required properties:
+ 
+   - compatible : should be one of the following:
++	* "marvell,sd8787"
+ 	* "marvell,sd8897"
+ 	* "marvell,sd8997"
+ 	* "pci11ab,2b42"
+@@ -34,6 +35,9 @@ Optional properties:
+ 		 so that the wifi chip can wakeup host platform under certain condition.
+ 		 during system resume, the irq will be disabled to make sure
+ 		 unnecessary interrupt is not received.
++  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
++  - mmc-pwrseq:  phandle to the MMC power sequence node. See "mmc-pwrseq-*"
++		 for documentation of MMC power sequence bindings.
+ 
+ Example:
+ 
+@@ -46,6 +50,7 @@ so that firmware can wakeup host using this device side pin.
+ &mmc3 {
+ 	status = "okay";
+ 	vmmc-supply = <&wlan_en_reg>;
++	mmc-pwrseq = <&wifi_pwrseq>;
+ 	bus-width = <4>;
+ 	cap-power-off-card;
+ 	keep-power-in-suspend;
+-- 
+2.10.2
