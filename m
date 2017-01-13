@@ -1,121 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35787 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932221AbdA0PvO (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:52400 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751107AbdAMVbT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 10:51:14 -0500
-Date: Fri, 27 Jan 2017 16:41:25 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170127154125.GL24223@pali> (sfid-20170127_183624_503954_8F1DDE09)
-References: <20170127094342.GC24223@pali>
- <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
- <20170127101043.GD24223@pali>
- <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
- <20170127103408.GG24223@pali>
- <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
- <20170127115706.GH24223@pali>
- <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
- <20170127131146.GI24223@pali>
- <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
+        Fri, 13 Jan 2017 16:31:19 -0500
+Date: Fri, 13 Jan 2017 22:31:10 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 31/40] rt2x00: rt2800lib: fix txpower compensation for RT3883
+Message-ID: <20170113213104.GA3616@makrotopia.org> (sfid-20170113_223122_487608_39B6524D)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 January 2017 17:23:07 Kalle Valo wrote:
-> Pali Rohár <pali.rohar@gmail.com> writes:
-> 
-> > On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
-> >> Pali Rohár <pali.rohar@gmail.com> writes:
-> >> 
-> >> > 2) It was already tested that example NVS data can be used for N900 e.g.
-> >> > for SSH connection. If real correct data are not available it is better
-> >> > to use at least those example (and probably log warning message) so user
-> >> > can connect via SSH and start investigating where is problem.
-> >> 
-> >> I disagree. Allowing default calibration data to be used can be
-> >> unnoticed by user and left her wondering why wifi works so badly.
-> >
-> > So there are only two options:
-> >
-> > 1) Disallow it and so these users will have non-working wifi.
-> >
-> > 2) Allow those data to be used as fallback mechanism.
-> >
-> > And personally I'm against 1) because it will break wifi support for
-> > *all* Nokia N900 devices right now.
-> 
-> All two of them? :)
+From: Gabor Juhos <juhosg@openwrt.org>
 
-Ehm...
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-> But not working is exactly my point, if correct calibration data is not
-> available wifi should not work. And it's not only about functionality
-> problems, there's also the regulatory aspect.
-
-About functionality, Pavel confirmed too that SSH is somehow working...
-
-Regulatory aspect is different, but via iw can be manually configured
-some settings.
-
-> >> > 3) If we do rename *now* we will totally break wifi support on Nokia
-> >> > N900.
-> >> 
-> >> Then the distro should fix that when updating the linux-firmware
-> >> packages. Can you provide details about the setup, what distro etc?
-> >
-> > Debian stable, Ubuntu LTSs 14.04, 16.04. 
-> 
-> You can run these out of box on N900?
-
-Out-of-box I can run Kubuntu 12.04 (which is LTS too). They had prepared
-special image for N900 and I still have it on uSD card.
-
-I guess that new versions of Ubuntu could somehow work (maybe not
-out-of-box but with some changes) and Pavel has working Debian.
-
-Also basic support needed for wifi and SSH server is probably working
-with any distribution targeting armv7-a or omap3. So yes, I can say it
-is out-of-box. We will not have GSM calls or camera support, but wifi
-breakage is there.
-
-> > And I think that other LTS distributions contains that example nvs
-> > file too (I'm not going to verify others, but list will be probably
-> > long). Upgrading linux-firmware is against policy of those
-> > distributions. So no this is not an solution.
-> 
-> So instead we should workaround distro policies in kernel? Come on.
-> 
-> Seriously, just rename the file in linux-firmware and file a bug (with a
-> patch) to distros. If they don't fix the bug you just have to do a
-> custom hack for N900. But such is life.
-
-I do not see point what will be changed. I rename that file and after
-system update (or integrity check) it will be there again.
-
-And if I do that, what prevents kernel to stop using NVS file from
-/lib/firmware/? Nothing, original problem (which is going solved by this
-patch series) still remains.
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 81368cee6e38..c8a14eaafd22 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -4017,6 +4017,9 @@ static u8 rt2800_compensate_txpower(struct rt2x00_dev *rt2x00dev, int is_rate_b,
+ 	if (rt2x00_rt(rt2x00dev, RT3593))
+ 		return min_t(u8, txpower, 0xc);
+ 
++	if (rt2x00_rt(rt2x00dev, RT3883))
++		return min_t(u8, txpower, 0xf);
++
+ 	if (rt2x00_has_cap_power_limit(rt2x00dev)) {
+ 		/*
+ 		 * Check if eirp txpower exceed txpower_limit.
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+2.11.0
