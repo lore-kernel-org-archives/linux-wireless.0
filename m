@@ -1,114 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35723 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750803AbdALRpR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 12:45:17 -0500
-Received: by mail-lf0-f66.google.com with SMTP id v186so2903489lfa.2
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 09:45:16 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] Revert "bcma: init serial console directly from ChipCommon code"
-Date: Thu, 12 Jan 2017 18:44:51 +0100
-Message-Id: <20170112174451.7124-1-zajec5@gmail.com> (sfid-20170112_184533_769856_B898EFF7)
+Received: from mga09.intel.com ([134.134.136.24]:5938 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751768AbdAMOVU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 09:21:20 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/6] iwlwifi: mvm: don't restart HW if suspend fails
+ with unified image
+Date: Fri, 13 Jan 2017 14:21:16 +0000
+Message-ID: <1484317274.5227.146.camel@intel.com> (sfid-20170113_152129_182068_C40402B7)
+References: <20170113123919.30384-1-luca@coelho.fi>
+         <20170113123919.30384-2-luca@coelho.fi> <87inpjhwu8.fsf@purkki.adurom.net>
+In-Reply-To: <87inpjhwu8.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
-
-This reverts commit 4c81acab3816 ("bcma: init serial console directly
-from ChipCommon code") as it broke IRQ assignment. Getting IRQ with
-bcma_core_irq helper on SoC requires MIPS core to be set. It happens
-*after* ChipCommon initialization so we can't do this so early.
-
-This fixes a regression but it seems noone noticed it for about a year.
-It could be it was because serial was still somehow working, just
-without IRQs. It doesn't look like a critical patch / fix.
-
-Reported-by: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/bcma/bcma_private.h      |  3 +++
- drivers/bcma/driver_chipcommon.c | 11 +++--------
- drivers/bcma/driver_mips.c       |  3 +++
- 3 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index f642c42..168fa17 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -45,6 +45,9 @@ int bcma_sprom_get(struct bcma_bus *bus);
- void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc);
- void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
- void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
- /* driver_chipcommon_b.c */
- int bcma_core_chipcommon_b_init(struct bcma_drv_cc_b *ccb);
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index b4f6520..62f5bfa 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -15,8 +15,6 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- 
--static void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
--
- static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
- 					 u32 mask, u32 value)
- {
-@@ -186,9 +184,6 @@ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- 	if (cc->capabilities & BCMA_CC_CAP_PMU)
- 		bcma_pmu_early_init(cc);
- 
--	if (IS_BUILTIN(CONFIG_BCM47XX) && bus->hosttype == BCMA_HOSTTYPE_SOC)
--		bcma_chipco_serial_init(cc);
--
- 	if (bus->hosttype == BCMA_HOSTTYPE_SOC)
- 		bcma_core_chipcommon_flash_detect(cc);
- 
-@@ -378,9 +373,9 @@ u32 bcma_chipco_gpio_pulldown(struct bcma_drv_cc *cc, u32 mask, u32 value)
- 	return res;
- }
- 
--static void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
-+#ifdef CONFIG_BCMA_DRIVER_MIPS
-+void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- {
--#if IS_BUILTIN(CONFIG_BCM47XX)
- 	unsigned int irq;
- 	u32 baud_base;
- 	u32 i;
-@@ -422,5 +417,5 @@ static void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 		ports[i].baud_base = baud_base;
- 		ports[i].reg_shift = 0;
- 	}
--#endif /* CONFIG_BCM47XX */
- }
-+#endif /* CONFIG_BCMA_DRIVER_MIPS */
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 96f1713..89af807 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -278,9 +278,12 @@ static void bcma_core_mips_nvram_init(struct bcma_drv_mips *mcore)
- 
- void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
- {
-+	struct bcma_bus *bus = mcore->core->bus;
-+
- 	if (mcore->early_setup_done)
- 		return;
- 
-+	bcma_chipco_serial_init(&bus->drv_cc);
- 	bcma_core_mips_nvram_init(mcore);
- 
- 	mcore->early_setup_done = true;
--- 
-2.10.1
+T24gRnJpLCAyMDE3LTAxLTEzIGF0IDE2OjEzICswMjAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBM
+dWNhIENvZWxobyA8bHVjYUBjb2VsaG8uZmk+IHdyaXRlczoNCj4gDQo+ID4gRnJvbTogTHVjYSBD
+b2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCj4gPiANCj4gPiBGb3IgdW5pZmllZCBp
+bWFnZXMsIHdlIHNob3VsZG4ndCByZXN0YXJ0IHRoZSBIVyBpZiBzdXNwZW5kIGZhaWxzLiAgVGhl
+DQo+ID4gb25seSByZWFzb24gZm9yIHJlc3RhcnRpbmcgdGhlIEhXIHdpdGggbm9uLXVuaWZpZWQg
+aW1hZ2VzIGlzIHRvIGdvDQo+ID4gYmFjayB0byB0aGUgRDAgaW1hZ2UuDQo+ID4gDQo+ID4gRml4
+ZXM6IGNvbW1pdCAyM2FlNjEyODJiODggKCJpd2x3aWZpOiBtdm06IERvIG5vdCBzd2l0Y2ggdG8g
+RDMgaW1hZ2Ugb24gc3VzcGVuZCIpDQo+IA0KPiBzL2NvbW1pdCAvLyA6KQ0KDQpBcmdoLCBkaWQg
+SSBkbyBpdCBhZ2Fpbj8gSSB3YXMgc3BlY2lmaWNhbGx5IHRyeWluZyB0byByZW1lbWJlciB0aGlz
+LCBidXQNCkkgZ3Vlc3MgaXQgd2FzIG5vdCBlbm91Z2guLi4NCg0KLS0NCkx1Y2Eu
