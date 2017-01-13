@@ -1,90 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33182 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750817AbdAPQ22 (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36419 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751523AbdAMXfv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 11:28:28 -0500
-Received: by mail-lf0-f68.google.com with SMTP id x1so7959241lff.0
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2017 08:28:27 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Richard Weinberger <richard@nod.at>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-mtd@lists.infradead.org, linux-wireless@vger.kernel.org,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2] mtd: bcm47xxsflash: use platform_(set|get)_drvdata
-Date: Mon, 16 Jan 2017 17:28:18 +0100
-Message-Id: <20170116162818.12094-1-zajec5@gmail.com> (sfid-20170116_172831_862168_EDA298C2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Fri, 13 Jan 2017 18:35:51 -0500
+Received: by mail-pf0-f174.google.com with SMTP id 189so38019481pfu.3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 15:35:51 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 2/3] mwifiex: pcie: don't loop/retry interrupt status checks
+Date: Fri, 13 Jan 2017 15:35:37 -0800
+Message-Id: <20170113233538.36196-2-briannorris@chromium.org> (sfid-20170114_003635_813087_E2AC6C7D)
+In-Reply-To: <20170113233538.36196-1-briannorris@chromium.org>
+References: <20170113233538.36196-1-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+The following sequence occurs when using IEEE power-save on 8997:
+(a) driver sees SLEEP event
+(b) driver issues SLEEP CONFIRM
+(c) driver recevies CMD interrupt; within the interrupt processing loop,
+    we do (d) and (e):
+(d) wait for FW sleep cookie (and often time out; it takes a while), FW
+    is putting card into low power mode
+(e) re-check PCIE_HOST_INT_STATUS register; quit loop with 0 value
 
-We have generic place & helpers for storing platform driver data so
-there is no reason for using custom priv pointer.
+But at (e), no one actually signaled an interrupt (i.e., we didn't check
+adapter->int_status). And what's more, because the card is going to
+sleep, this register read appears to take a very long time in some cases
+-- 3 milliseconds in my case!
 
-This allows cleaning up struct bcma_sflash from unneeded fields.
+Now, I propose that (e) is completely unnecessary. If there were any
+additional interrupts signaled after the start of this loop, then the
+interrupt handler would have set adapter->int_status to non-zero and
+queued more work for the main loop -- and we'd catch it on the next
+iteration of the main loop.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+So this patch drops all the looping/re-reading of PCIE_HOST_INT_STATUS,
+which avoids the problematic (and slow) register read in step (e).
+
+Incidentally, this is a very similar issue to the one fixed in commit
+ec815dd2a5f1 ("mwifiex: prevent register accesses after host is
+sleeping"), except that the register read is just very slow instead of
+fatal in this case.
+
+Tested on 8997 in both MSI and (though not technically supported at the
+moment) MSI-X mode.
+
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
-Kalle: This is mtd focused patch, so I guess it should go through mtd tree. Do
-       you find bcma change important enough to care to Ack it? :)
+v2:
+ * new in v2, replacing an attempt to mess with step (d) above
 ---
- drivers/mtd/devices/bcm47xxsflash.c         | 6 +++---
- include/linux/bcma/bcma_driver_chipcommon.h | 3 ---
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 102 +++++++++-------------------
+ 1 file changed, 32 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/mtd/devices/bcm47xxsflash.c b/drivers/mtd/devices/bcm47xxsflash.c
-index 514be04..4decd8c 100644
---- a/drivers/mtd/devices/bcm47xxsflash.c
-+++ b/drivers/mtd/devices/bcm47xxsflash.c
-@@ -284,7 +284,6 @@ static int bcm47xxsflash_bcma_probe(struct platform_device *pdev)
- 	b47s = devm_kzalloc(dev, sizeof(*b47s), GFP_KERNEL);
- 	if (!b47s)
- 		return -ENOMEM;
--	sflash->priv = b47s;
- 
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	if (!res) {
-@@ -334,6 +333,8 @@ static int bcm47xxsflash_bcma_probe(struct platform_device *pdev)
- 	b47s->size = sflash->size;
- 	bcm47xxsflash_fill_mtd(b47s, &pdev->dev);
- 
-+	platform_set_drvdata(pdev, b47s);
-+
- 	err = mtd_device_parse_register(&b47s->mtd, probes, NULL, NULL, 0);
- 	if (err) {
- 		pr_err("Failed to register MTD device: %d\n", err);
-@@ -349,8 +350,7 @@ static int bcm47xxsflash_bcma_probe(struct platform_device *pdev)
- 
- static int bcm47xxsflash_bcma_remove(struct platform_device *pdev)
- {
--	struct bcma_sflash *sflash = dev_get_platdata(&pdev->dev);
--	struct bcm47xxsflash *b47s = sflash->priv;
-+	struct bcm47xxsflash *b47s = platform_get_drvdata(pdev);
- 
- 	mtd_device_unregister(&b47s->mtd);
- 	iounmap(b47s->window);
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index b20e3d5..2f1c690 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -593,9 +593,6 @@ struct bcma_sflash {
- 	u32 blocksize;
- 	u16 numblocks;
- 	u32 size;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3f4cda2d3b61..194e0e04c3b1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2332,79 +2332,41 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 			}
+ 		}
+ 	}
+-	while (pcie_ireg & HOST_INTR_MASK) {
+-		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
+-			pcie_ireg &= ~HOST_INTR_DNLD_DONE;
+-			mwifiex_dbg(adapter, INTR,
+-				    "info: TX DNLD Done\n");
+-			ret = mwifiex_pcie_send_data_complete(adapter);
+-			if (ret)
+-				return ret;
+-		}
+-		if (pcie_ireg & HOST_INTR_UPLD_RDY) {
+-			pcie_ireg &= ~HOST_INTR_UPLD_RDY;
+-			mwifiex_dbg(adapter, INTR,
+-				    "info: Rx DATA\n");
+-			ret = mwifiex_pcie_process_recv_data(adapter);
+-			if (ret)
+-				return ret;
+-		}
+-		if (pcie_ireg & HOST_INTR_EVENT_RDY) {
+-			pcie_ireg &= ~HOST_INTR_EVENT_RDY;
+-			mwifiex_dbg(adapter, INTR,
+-				    "info: Rx EVENT\n");
+-			ret = mwifiex_pcie_process_event_ready(adapter);
+-			if (ret)
+-				return ret;
+-		}
 -
--	struct mtd_info *mtd;
--	void *priv;
- };
- #endif
+-		if (pcie_ireg & HOST_INTR_CMD_DONE) {
+-			pcie_ireg &= ~HOST_INTR_CMD_DONE;
+-			if (adapter->cmd_sent) {
+-				mwifiex_dbg(adapter, INTR,
+-					    "info: CMD sent Interrupt\n");
+-				adapter->cmd_sent = false;
+-			}
+-			/* Handle command response */
+-			ret = mwifiex_pcie_process_cmd_complete(adapter);
+-			if (ret)
+-				return ret;
+-			if (adapter->hs_activated)
+-				return ret;
+-		}
+-
+-		if (card->msi_enable) {
+-			spin_lock_irqsave(&adapter->int_lock, flags);
+-			adapter->int_status = 0;
+-			spin_unlock_irqrestore(&adapter->int_lock, flags);
+-		}
+-
+-		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
+-			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
+-					     &pcie_ireg)) {
+-				mwifiex_dbg(adapter, ERROR,
+-					    "Read register failed\n");
+-				return -1;
+-			}
  
+-			if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
+-				if (mwifiex_write_reg(adapter,
+-						      PCIE_HOST_INT_STATUS,
+-						      ~pcie_ireg)) {
+-					mwifiex_dbg(adapter, ERROR,
+-						    "Write register failed\n");
+-					return -1;
+-				}
+-			}
+-
+-		}
+-		if (!card->msi_enable) {
+-			spin_lock_irqsave(&adapter->int_lock, flags);
+-			pcie_ireg |= adapter->int_status;
+-			adapter->int_status = 0;
+-			spin_unlock_irqrestore(&adapter->int_lock, flags);
++	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
++		pcie_ireg &= ~HOST_INTR_DNLD_DONE;
++		mwifiex_dbg(adapter, INTR, "info: TX DNLD Done\n");
++		ret = mwifiex_pcie_send_data_complete(adapter);
++		if (ret)
++			return ret;
++	}
++	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
++		pcie_ireg &= ~HOST_INTR_UPLD_RDY;
++		mwifiex_dbg(adapter, INTR, "info: Rx DATA\n");
++		ret = mwifiex_pcie_process_recv_data(adapter);
++		if (ret)
++			return ret;
++	}
++	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
++		pcie_ireg &= ~HOST_INTR_EVENT_RDY;
++		mwifiex_dbg(adapter, INTR, "info: Rx EVENT\n");
++		ret = mwifiex_pcie_process_event_ready(adapter);
++		if (ret)
++			return ret;
++	}
++	if (pcie_ireg & HOST_INTR_CMD_DONE) {
++		pcie_ireg &= ~HOST_INTR_CMD_DONE;
++		if (adapter->cmd_sent) {
++			mwifiex_dbg(adapter, INTR,
++				    "info: CMD sent Interrupt\n");
++			adapter->cmd_sent = false;
+ 		}
++		/* Handle command response */
++		ret = mwifiex_pcie_process_cmd_complete(adapter);
++		if (ret)
++			return ret;
+ 	}
++
+ 	mwifiex_dbg(adapter, INTR,
+ 		    "info: cmd_sent=%d data_sent=%d\n",
+ 		    adapter->cmd_sent, adapter->data_sent);
 -- 
-2.10.1
+2.11.0.483.g087da7b7c-goog
