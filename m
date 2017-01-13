@@ -1,60 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:35394 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750763AbdAXL2T (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:53777 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdAMVcQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 06:28:19 -0500
-Received: by mail-qt0-f181.google.com with SMTP id x49so175983557qtc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 03:28:19 -0800 (PST)
-Subject: Re: [PATCH] nl80211: fix validation of scheduled scan info for wowlan
- netdetect
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-References: <1484820088-24448-1-git-send-email-arend.vanspriel@broadcom.com>
- <1484827206.2774.12.camel@coelho.fi>
- <bde55d09-6f3e-1f90-4aef-0e1169c11cf6@broadcom.com>
- <1485248251.7244.3.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <13d1e654-6928-39e7-4751-fb90d3da7a54@broadcom.com> (sfid-20170124_122823_352510_3E3A43A8)
-Date: Tue, 24 Jan 2017 12:28:16 +0100
+        Fri, 13 Jan 2017 16:32:16 -0500
+Date: Fri, 13 Jan 2017 22:32:08 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 34/40] rt2x00: rt2800mmio: add a workaround for spurious
+ TX_FIFO_STATUS interrupts
+Message-ID: <20170113213203.GA3636@makrotopia.org> (sfid-20170113_223219_217753_34C9FA99)
 MIME-Version: 1.0
-In-Reply-To: <1485248251.7244.3.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-1-2017 9:57, Johannes Berg wrote:
-> On Thu, 2017-01-19 at 14:08 +0100, Arend Van Spriel wrote:
->>
->> On 19-1-2017 13:00, Luca Coelho wrote:
->>> On Thu, 2017-01-19 at 10:01 +0000, Arend van Spriel wrote:
->>>> For wowlan netdetect a separate limit is defined for the number
->>>> of
->>>> matchsets. Currently, this limit is ignored and the regular limit
->>>> for scheduled scan matchsets, ie. struct wiphy::max_match_sets,
->>>> is
->>>> used for the net-detect case as well.
->>>>
->>>> Cc: Luciano Coelho <luciano.coelho@intel.com>
->>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
->>>> ---
->>>
->>> What?! You don't have the same number of matchsets for both? :P
->>
->> Actually I have, but your comment mentioned they do not have to be
->> the
->> same. brcmfmac actually did not set max_nd_match_sets so I was
->> surprised
->> it worked. That said this patch will result in regression in brcmfmac
->> :-p Not sure about other drivers supporting net-detect.
-> 
-> So do you want to submit a patch to brcmfmac first, and then I'll apply
-> this later? I can apply it and break it, but now that we already know
-> ...?
+From: Gabor Juhos <juhosg@openwrt.org>
 
-I have a brcmfmac patch in the queue. I will look at the other scheduled
-scan supporting drivers.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+[daniel@makrotopia.org: fixed indention]
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c | 72 ++++++++++++++++++++-----
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h     |  5 ++
+ 2 files changed, 65 insertions(+), 12 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index 5f1936aa8fa7..750a9425b5be 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -415,9 +415,9 @@ void rt2800mmio_autowake_tasklet(unsigned long data)
+ }
+ EXPORT_SYMBOL_GPL(rt2800mmio_autowake_tasklet);
+ 
+-static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
++static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev,
++					  u32 status)
+ {
+-	u32 status;
+ 	int i;
+ 
+ 	/*
+@@ -438,29 +438,77 @@ static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+ 	 * Since we have only one producer and one consumer we don't
+ 	 * need to lock the kfifo.
+ 	 */
+-	for (i = 0; i < rt2x00dev->tx->limit; i++) {
+-		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
+-
+-		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
+-			break;
+-
++	i = 0;
++	do {
+ 		if (!kfifo_put(&rt2x00dev->txstatus_fifo, status)) {
+-			rt2x00_warn(rt2x00dev, "TX status FIFO overrun, drop tx status report\n");
++			rt2x00_warn(rt2x00dev,
++				    "TX status FIFO overrun, drop TX status report\n");
+ 			break;
+ 		}
+-	}
++
++		if (++i >= rt2x00dev->tx->limit)
++			break;
++
++		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
++	} while (rt2x00_get_field32(status, TX_STA_FIFO_VALID));
+ 
+ 	/* Schedule the tasklet for processing the tx status. */
+ 	tasklet_schedule(&rt2x00dev->txstatus_tasklet);
+ }
+ 
++#define RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES	4
++
++static bool rt2800mmio_txstatus_is_spurious(struct rt2x00_dev *rt2x00dev,
++					    u32 txstatus)
++{
++	if (likely(rt2x00_get_field32(txstatus, TX_STA_FIFO_VALID))) {
++		rt2x00dev->txstatus_irq_retries = 0;
++		return false;
++	}
++
++	rt2x00dev->txstatus_irq_retries++;
++
++	/* Ensure that we don't go into an infinite IRQ loop. */
++	if (rt2x00dev->txstatus_irq_retries >=
++	    RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES) {
++		rt2x00_warn(rt2x00dev,
++			    "%u spurious TX_FIFO_STATUS interrupt(s)\n",
++			    rt2x00dev->txstatus_irq_retries);
++		rt2x00dev->txstatus_irq_retries = 0;
++		return false;
++	}
++
++	return true;
++}
++
+ irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
+ {
+ 	struct rt2x00_dev *rt2x00dev = dev_instance;
+ 	u32 reg, mask;
++	u32 txstatus = 0;
+ 
+-	/* Read status and ACK all interrupts */
++	/* Read status */
+ 	rt2x00mmio_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
++
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
++		/* Due to unknown reason the hardware generates a
++		 * TX_FIFO_STATUS interrupt before the TX_STA_FIFO
++		 * register contain valid data. Read the TX status
++		 * here to see if we have to process the actual
++		 * request.
++		 */
++		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &txstatus);
++		if (rt2800mmio_txstatus_is_spurious(rt2x00dev, txstatus)) {
++			/* Remove the TX_FIFO_STATUS bit so it won't be
++			 * processed in this turn. The hardware will
++			 * generate another IRQ for us.
++			 */
++			rt2x00_set_field32(&reg,
++					   INT_SOURCE_CSR_TX_FIFO_STATUS, 0);
++		}
++	}
++
++	/* ACK interrupts */
+ 	rt2x00mmio_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+ 
+ 	if (!reg)
+@@ -477,7 +525,7 @@ irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
+ 	mask = ~reg;
+ 
+ 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
+-		rt2800mmio_txstatus_interrupt(rt2x00dev);
++		rt2800mmio_txstatus_interrupt(rt2x00dev, txstatus);
+ 		/*
+ 		 * Never disable the TX_FIFO_STATUS interrupt.
+ 		 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 034a07273038..c27408b494ef 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -995,6 +995,11 @@ struct rt2x00_dev {
+ 	int rf_channel;
+ 
+ 	/*
++	 * Counter for tx status irq retries (rt2800pci).
++	 */
++	unsigned int txstatus_irq_retries;
++
++	/*
+ 	 * Protect the interrupt mask register.
+ 	 */
+ 	spinlock_t irqmask_lock;
+-- 
+2.11.0
