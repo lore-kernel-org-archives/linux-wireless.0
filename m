@@ -1,42 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:34306 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932544AbdA0L34 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 06:29:56 -0500
-Received: by mail-pf0-f182.google.com with SMTP id e4so72717049pfg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 03:29:55 -0800 (PST)
-Subject: Re: [PATCH] nl80211: fix validation of scheduled scan info for wowlan
- netdetect
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Luca Coelho <luca@coelho.fi>
-References: <1484820088-24448-1-git-send-email-arend.vanspriel@broadcom.com>
- <1484827206.2774.12.camel@coelho.fi>
- <bde55d09-6f3e-1f90-4aef-0e1169c11cf6@broadcom.com>
- <1485248251.7244.3.camel@sipsolutions.net>
- <13d1e654-6928-39e7-4751-fb90d3da7a54@broadcom.com>
- <a36abf1d-5d4b-4c37-e325-a69166663a04@broadcom.com>
- <1485516428.5851.6.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <be17fb77-9d9b-0889-f73c-735119730ffc@broadcom.com> (sfid-20170127_123005_368679_A9F63E17)
-Date: Fri, 27 Jan 2017 12:29:51 +0100
-MIME-Version: 1.0
-In-Reply-To: <1485516428.5851.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:50102 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751388AbdAMKMG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 05:12:06 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: corbet@lwn.net, linux-doc@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix documentation warnings
+Date: Fri, 13 Jan 2017 11:12:01 +0100
+Message-Id: <20170113101201.7352-1-johannes@sipsolutions.net> (sfid-20170113_111210_863954_DBDBE5D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-1-2017 12:27, Johannes Berg wrote:
-> 
->> I actually have two dependent brcmfmac patches. Do you expect
->> conflict if Kalle takes all?
-> 
-> Not really, if that's somehow easier we can do that.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Will do. I checked the other drivers. All those supporting wowl
-netdetect did provide max_nd_matchsets except for brcmfmac.
+For a few restructured text warnings in mac80211, making the
+documentation warning-free (for now). Again, this required
+adding trailing whitespace to keep multiple paragraphs in a
+parameter description together.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 28 ++++++++++++++++++----------
+ 1 file changed, 18 insertions(+), 10 deletions(-)
 
-Regards,
-Arend
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 86967b85dfd0..228c72617916 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1771,10 +1771,12 @@ struct ieee80211_sta_rates {
+  * @max_amsdu_len: indicates the maximal length of an A-MSDU in bytes. This
+  *	field is always valid for packets with a VHT preamble. For packets
+  *	with a HT preamble, additional limits apply:
+- *		+ If the skb is transmitted as part of a BA agreement, the
+- *		  A-MSDU maximal size is min(max_amsdu_len, 4065) bytes.
+- *		+ If the skb is not part of a BA aggreement, the A-MSDU maximal
+- *		  size is min(max_amsdu_len, 7935) bytes.
++ *	
++ *	* If the skb is transmitted as part of a BA agreement, the
++ *	  A-MSDU maximal size is min(max_amsdu_len, 4065) bytes.
++ *	* If the skb is not part of a BA aggreement, the A-MSDU maximal
++ *	  size is min(max_amsdu_len, 7935) bytes.
++ *	
+  *	Both additional HT limits must be enforced by the low level driver.
+  *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
+  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
+@@ -3212,14 +3214,20 @@ enum ieee80211_reconfig_type {
+  *	nor send aggregates in a way that lost frames would exceed the
+  *	buffer size. If just limiting the aggregate size, this would be
+  *	possible with a buf_size of 8:
+- *	 - TX: 1.....7
+- *	 - RX:  2....7 (lost frame #1)
+- *	 - TX:        8..1...
++ *	
++ *	- ``TX: 1.....7``
++ *	- ``RX:  2....7`` (lost frame #1)
++ *	- ``TX:        8..1...``
++ *	
+  *	which is invalid since #1 was now re-transmitted well past the
+  *	buffer size of 8. Correct ways to retransmit #1 would be:
+- *	 - TX:       1 or 18 or 81
+- *	Even "189" would be wrong since 1 could be lost again.
+- *
++ *	
++ *	- ``TX:        1   or``
++ *	- ``TX:        18  or``
++ *	- ``TX:        81``
++ *	
++ *	Even ``189`` would be wrong since 1 could be lost again.
++ *	
+  *	Returns a negative error code on failure.
+  *	The callback can sleep.
+  *
+-- 
+2.9.3
