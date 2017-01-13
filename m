@@ -1,103 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:35689 "EHLO
-        mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750720AbdALPNR (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:34973 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751107AbdAMVXH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 10:13:17 -0500
-Received: by mail-lf0-f44.google.com with SMTP id m78so14976721lfg.2
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 07:13:17 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        greearb@candelatech.com, mohammed@qti.qualcomm.com,
-        Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: prevent sta pointer rcu violation
-Date: Thu, 12 Jan 2017 16:14:30 +0100
-Message-Id: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com> (sfid-20170112_161320_723424_362B312F)
+        Fri, 13 Jan 2017 16:23:07 -0500
+Date: Fri, 13 Jan 2017 22:22:59 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 09/40] rt2x00: rt2800lib: enable support for RT3883
+Message-ID: <20170113212254.GA3413@makrotopia.org> (sfid-20170113_222325_511362_6703290E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Station pointers are RCU protected so driver must
-be extra careful if it tries to store them
-internally for later use outside of the RCU
-section it obtained it in.
+From: Gabor Juhos <juhosg@openwrt.org>
 
-It was possible for station teardown to race with
-some htt events. The possible outcome could be a
-use-after-free and a crash.
-
-Only peer-flow-control capable firmware was
-affected (so hardware-wise qca99x0 and qca4019).
-
-This could be done in sta_state() itself via
-explicit synchronize_net() call but there's
-already a convenient sta_pre_rcu_remove() op that
-can be hooked up to avoid extra rcu stall.
-
-The peer->sta pointer itself can't be set to
-NULL/ERR_PTR because it is later used in
-sta_state() for extra sanity checks.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 18 ++++++++++++++++++
- 2 files changed, 19 insertions(+)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c7664d6569fa..1ab589296dff 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -314,6 +314,7 @@ struct ath10k_peer {
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
- 
-+	bool removed;
- 	int vdev_id;
- 	u8 addr[ETH_ALEN];
- 	DECLARE_BITMAP(peer_ids, ATH10K_MAX_NUM_PEER_IDS);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d1b7edba5e49..aa91f55b35a4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3774,6 +3774,9 @@ struct ieee80211_txq *ath10k_mac_txq_lookup(struct ath10k *ar,
- 	if (!peer)
- 		return NULL;
- 
-+	if (peer->removed)
-+		return NULL;
-+
- 	if (peer->sta)
- 		return peer->sta->txq[tid];
- 	else if (peer->vif)
-@@ -7476,6 +7479,20 @@ ath10k_mac_op_switch_vif_chanctx(struct ieee80211_hw *hw,
- 	return 0;
- }
- 
-+static void ath10k_mac_op_sta_pre_rcu_remove(struct ieee80211_hw *hw,
-+					     struct ieee80211_vif *vif,
-+					     struct ieee80211_sta *sta)
-+{
-+	struct ath10k *ar;
-+	struct ath10k_peer *peer;
-+
-+	ar = hw->priv;
-+
-+	list_for_each_entry(peer, &ar->peers, list)
-+		if (peer->sta == sta)
-+			peer->removed = true;
-+}
-+
- static const struct ieee80211_ops ath10k_ops = {
- 	.tx				= ath10k_mac_op_tx,
- 	.wake_tx_queue			= ath10k_mac_op_wake_tx_queue,
-@@ -7516,6 +7533,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.assign_vif_chanctx		= ath10k_mac_op_assign_vif_chanctx,
- 	.unassign_vif_chanctx		= ath10k_mac_op_unassign_vif_chanctx,
- 	.switch_vif_chanctx		= ath10k_mac_op_switch_vif_chanctx,
-+	.sta_pre_rcu_remove		= ath10k_mac_op_sta_pre_rcu_remove,
- 
- 	CFG80211_TESTMODE_CMD(ath10k_tm_cmd)
- 
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index ff653f0d43d2..efac8a320054 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7869,6 +7869,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+ 	case RT3390:
+ 	case RT3572:
+ 	case RT3593:
++	case RT3883:
+ 	case RT5390:
+ 	case RT5392:
+ 	case RT5592:
 -- 
-2.1.4
+2.11.0
