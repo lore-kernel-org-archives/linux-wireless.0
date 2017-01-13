@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33874 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750787AbdAMFhD (ORCPT
+Received: from mail-ua0-f194.google.com ([209.85.217.194]:35082 "EHLO
+        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751482AbdAMOZ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 00:37:03 -0500
-Received: by mail-pf0-f172.google.com with SMTP id 127so25129767pfg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:37:02 -0800 (PST)
-From: Matt Ranostay <matt@ranostay.consulting>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
-Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
-Subject: [PATCH v3 0/2]  mmc: pwrseq: add support for Marvell SD8787 chip
-Date: Thu, 12 Jan 2017 21:29:12 -0800
-Message-Id: <20170113052914.12400-1-matt@ranostay.consulting> (sfid-20170113_063712_113307_A101B55E)
+        Fri, 13 Jan 2017 09:25:59 -0500
+Received: by mail-ua0-f194.google.com with SMTP id 96so4251462uaq.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 06:25:59 -0800 (PST)
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Subject: Google Summer of Code 2017 - Project ideas page for the Linux
+ Foundation online
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+        "Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+        "lsb-discuss@lists.linux-foundation.org"
+        <lsb-discuss@lists.linux-foundation.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Open Printing <printing-architecture@lists.linux-foundation.org>,
+        dl9pf@gmx.de
+Message-ID: <169b38fe-ff8e-8a49-a163-8016418a410b@gmail.com> (sfid-20170113_152603_186217_BF16D530)
+Date: Fri, 13 Jan 2017 12:18:44 -0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v1:
-* split devictree docs from pwrseq changes
-* rebase devicetree documents due to filename change
-* rebase pwrseq patchset
+Hi,
 
-Changes from v2:
-* fix rookie mistake missing the main source file and docs
+I have set up a page for project ideas for the Linux Foundation's
+participation in the Google Summer of Code 2017:
 
-Matt Ranostay (2):
-  devicetree: document new marvell-8xxx and pwrseq-sd8787 options
-  mmc: pwrseq: add support for Marvell SD8787 chip
+https://wiki.linuxfoundation.org/gsoc/google-summer-code-2017
 
- .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt  |  14 +++
- .../bindings/net/wireless/marvell-8xxx.txt         |   7 +-
- drivers/mmc/core/Kconfig                           |  10 ++
- drivers/mmc/core/Makefile                          |   1 +
- drivers/mmc/core/pwrseq_sd8787.c                   | 117 +++++++++++++++++++++
- 5 files changed, 148 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
- create mode 100644 drivers/mmc/core/pwrseq_sd8787.c
+Please add your ideas to the sub-page of your work group. If you have
+problems mail me with your project idea.
 
--- 
-2.10.2
+ From this year on the ideas list is in the Linux Foundation Wiki. AFAIK 
+it is enough to have a Linux Foundation web site account to be able to 
+edit and there is no requirement of a special group membership.
+
+Please also take into account that the deadline for our application as 
+mentoring organization is Feb 9 and after that Google will evaluate the 
+applications. So have your ideas (at least most of them, ideas can be 
+posted up to the student application deadline) in by then to raise our 
+chances to get accepted.
+
+    Till
