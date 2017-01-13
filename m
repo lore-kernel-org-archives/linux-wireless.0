@@ -1,180 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36419 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751523AbdAMXfv (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34135 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751353AbdAMV1C (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 18:35:51 -0500
-Received: by mail-pf0-f174.google.com with SMTP id 189so38019481pfu.3
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 15:35:51 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH v2 2/3] mwifiex: pcie: don't loop/retry interrupt status checks
-Date: Fri, 13 Jan 2017 15:35:37 -0800
-Message-Id: <20170113233538.36196-2-briannorris@chromium.org> (sfid-20170114_003635_813087_E2AC6C7D)
-In-Reply-To: <20170113233538.36196-1-briannorris@chromium.org>
-References: <20170113233538.36196-1-briannorris@chromium.org>
+        Fri, 13 Jan 2017 16:27:02 -0500
+Received: by mail-lf0-f68.google.com with SMTP id q89so7066722lfi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:51 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 8/8] ath10k: htc: ready_ext msg support
+Date: Fri, 13 Jan 2017 22:26:11 +0100
+Message-Id: <1484342771-6160-9-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222706_137857_607124D6)
+In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following sequence occurs when using IEEE power-save on 8997:
-(a) driver sees SLEEP event
-(b) driver issues SLEEP CONFIRM
-(c) driver recevies CMD interrupt; within the interrupt processing loop,
-    we do (d) and (e):
-(d) wait for FW sleep cookie (and often time out; it takes a while), FW
-    is putting card into low power mode
-(e) re-check PCIE_HOST_INT_STATUS register; quit loop with 0 value
+Added support for extended ready message.
+The extended ready message contains the maximum bundle
+count supported by SDIO chipsets.
 
-But at (e), no one actually signaled an interrupt (i.e., we didn't check
-adapter->int_status). And what's more, because the card is going to
-sleep, this register read appears to take a very long time in some cases
--- 3 milliseconds in my case!
+It is transmitted by SDIO chipset only and replaces the
+"standard" ready message in this case.
 
-Now, I propose that (e) is completely unnecessary. If there were any
-additional interrupts signaled after the start of this loop, then the
-interrupt handler would have set adapter->int_status to non-zero and
-queued more work for the main loop -- and we'd catch it on the next
-iteration of the main loop.
-
-So this patch drops all the looping/re-reading of PCIE_HOST_INT_STATUS,
-which avoids the problematic (and slow) register read in step (e).
-
-Incidentally, this is a very similar issue to the one fixed in commit
-ec815dd2a5f1 ("mwifiex: prevent register accesses after host is
-sleeping"), except that the register read is just very slow instead of
-fatal in this case.
-
-Tested on 8997 in both MSI and (though not technically supported at the
-moment) MSI-X mode.
-
-Signed-off-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
-v2:
- * new in v2, replacing an attempt to mess with step (d) above
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 102 +++++++++-------------------
- 1 file changed, 32 insertions(+), 70 deletions(-)
+ drivers/net/wireless/ath/ath10k/htc.c | 28 ++++++++++++++++++++++------
+ drivers/net/wireless/ath/ath10k/htc.h |  5 +++++
+ 2 files changed, 27 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3f4cda2d3b61..194e0e04c3b1 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2332,79 +2332,41 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- 			}
- 		}
- 	}
--	while (pcie_ireg & HOST_INTR_MASK) {
--		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
--			pcie_ireg &= ~HOST_INTR_DNLD_DONE;
--			mwifiex_dbg(adapter, INTR,
--				    "info: TX DNLD Done\n");
--			ret = mwifiex_pcie_send_data_complete(adapter);
--			if (ret)
--				return ret;
--		}
--		if (pcie_ireg & HOST_INTR_UPLD_RDY) {
--			pcie_ireg &= ~HOST_INTR_UPLD_RDY;
--			mwifiex_dbg(adapter, INTR,
--				    "info: Rx DATA\n");
--			ret = mwifiex_pcie_process_recv_data(adapter);
--			if (ret)
--				return ret;
--		}
--		if (pcie_ireg & HOST_INTR_EVENT_RDY) {
--			pcie_ireg &= ~HOST_INTR_EVENT_RDY;
--			mwifiex_dbg(adapter, INTR,
--				    "info: Rx EVENT\n");
--			ret = mwifiex_pcie_process_event_ready(adapter);
--			if (ret)
--				return ret;
--		}
--
--		if (pcie_ireg & HOST_INTR_CMD_DONE) {
--			pcie_ireg &= ~HOST_INTR_CMD_DONE;
--			if (adapter->cmd_sent) {
--				mwifiex_dbg(adapter, INTR,
--					    "info: CMD sent Interrupt\n");
--				adapter->cmd_sent = false;
--			}
--			/* Handle command response */
--			ret = mwifiex_pcie_process_cmd_complete(adapter);
--			if (ret)
--				return ret;
--			if (adapter->hs_activated)
--				return ret;
--		}
--
--		if (card->msi_enable) {
--			spin_lock_irqsave(&adapter->int_lock, flags);
--			adapter->int_status = 0;
--			spin_unlock_irqrestore(&adapter->int_lock, flags);
--		}
--
--		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
--			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
--					     &pcie_ireg)) {
--				mwifiex_dbg(adapter, ERROR,
--					    "Read register failed\n");
--				return -1;
--			}
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index eb036b3..3eaa9a8 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -581,8 +581,6 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 	unsigned long time_left;
+ 	struct ath10k_htc_msg *msg;
+ 	u16 message_id;
+-	u16 credit_count;
+-	u16 credit_size;
  
--			if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
--				if (mwifiex_write_reg(adapter,
--						      PCIE_HOST_INT_STATUS,
--						      ~pcie_ireg)) {
--					mwifiex_dbg(adapter, ERROR,
--						    "Write register failed\n");
--					return -1;
--				}
--			}
--
--		}
--		if (!card->msi_enable) {
--			spin_lock_irqsave(&adapter->int_lock, flags);
--			pcie_ireg |= adapter->int_status;
--			adapter->int_status = 0;
--			spin_unlock_irqrestore(&adapter->int_lock, flags);
-+	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
-+		pcie_ireg &= ~HOST_INTR_DNLD_DONE;
-+		mwifiex_dbg(adapter, INTR, "info: TX DNLD Done\n");
-+		ret = mwifiex_pcie_send_data_complete(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
-+		pcie_ireg &= ~HOST_INTR_UPLD_RDY;
-+		mwifiex_dbg(adapter, INTR, "info: Rx DATA\n");
-+		ret = mwifiex_pcie_process_recv_data(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
-+		pcie_ireg &= ~HOST_INTR_EVENT_RDY;
-+		mwifiex_dbg(adapter, INTR, "info: Rx EVENT\n");
-+		ret = mwifiex_pcie_process_event_ready(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_CMD_DONE) {
-+		pcie_ireg &= ~HOST_INTR_CMD_DONE;
-+		if (adapter->cmd_sent) {
-+			mwifiex_dbg(adapter, INTR,
-+				    "info: CMD sent Interrupt\n");
-+			adapter->cmd_sent = false;
- 		}
-+		/* Handle command response */
-+		ret = mwifiex_pcie_process_cmd_complete(adapter);
-+		if (ret)
-+			return ret;
+ 	time_left = wait_for_completion_timeout(&htc->ctl_resp,
+ 						ATH10K_HTC_WAIT_TIMEOUT_HZ);
+@@ -619,16 +617,14 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 
+ 	msg = (struct ath10k_htc_msg *)htc->control_resp_buffer;
+ 	message_id   = __le16_to_cpu(msg->hdr.message_id);
+-	credit_count = __le16_to_cpu(msg->ready.credit_count);
+-	credit_size  = __le16_to_cpu(msg->ready.credit_size);
+ 
+ 	if (message_id != ATH10K_HTC_MSG_READY_ID) {
+ 		ath10k_err(ar, "Invalid HTC ready msg: 0x%x\n", message_id);
+ 		return -ECOMM;
  	}
+ 
+-	htc->total_transmit_credits = credit_count;
+-	htc->target_credit_size = credit_size;
++	htc->total_transmit_credits = __le16_to_cpu(msg->ready.credit_count);
++	htc->target_credit_size = __le16_to_cpu(msg->ready.credit_size);
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC,
+ 		   "Target ready! transmit resources: %d size:%d\n",
+@@ -641,6 +637,19 @@ int ath10k_htc_wait_target(struct ath10k_htc *htc)
+ 		return -ECOMM;
+ 	}
+ 
++	/* The only way to determine if the ready message is an extended
++	 * message is from the size.
++	 */
++	if (htc->control_resp_len >=
++	    sizeof(msg->hdr) + sizeof(msg->ready_ext)) {
++		htc->max_msgs_per_htc_bundle =
++			min_t(u8, msg->ready_ext.max_msgs_per_htc_bundle,
++			      HTC_HOST_MAX_MSG_PER_BUNDLE);
++		ath10k_dbg(ar, ATH10K_DBG_HTC,
++			   "Extended ready message. RX bundle size: %d\n",
++			   htc->max_msgs_per_htc_bundle);
++	}
 +
- 	mwifiex_dbg(adapter, INTR,
- 		    "info: cmd_sent=%d data_sent=%d\n",
- 		    adapter->cmd_sent, adapter->data_sent);
+ 	return 0;
+ }
+ 
+@@ -836,6 +845,13 @@ int ath10k_htc_start(struct ath10k_htc *htc)
+ 	msg->hdr.message_id =
+ 		__cpu_to_le16(ATH10K_HTC_MSG_SETUP_COMPLETE_EX_ID);
+ 
++	if (ar->hif.bus == ATH10K_BUS_SDIO) {
++		/* Extra setup params used by SDIO */
++		msg->setup_complete_ext.flags =
++			__cpu_to_le32(ATH10K_HTC_SETUP_COMPLETE_FLAGS_RX_BNDL_EN);
++		msg->setup_complete_ext.max_msgs_per_bundled_recv =
++			htc->max_msgs_per_htc_bundle;
++	}
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "HTC is using TX credit flow control\n");
+ 
+ 	status = ath10k_htc_send(htc, ATH10K_HTC_EP_0, skb);
+diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+index 9a1db90..566e437 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.h
++++ b/drivers/net/wireless/ath/ath10k/htc.h
+@@ -112,6 +112,10 @@ enum ath10k_htc_conn_svc_status {
+ 	ATH10K_HTC_CONN_SVC_STATUS_NO_MORE_EP   = 4
+ };
+ 
++enum ath10k_htc_setup_complete_flags {
++	ATH10K_HTC_SETUP_COMPLETE_FLAGS_RX_BNDL_EN = 1
++};
++
+ struct ath10k_ath10k_htc_msg_hdr {
+ 	__le16 message_id; /* @enum htc_message_id */
+ } __packed;
+@@ -360,6 +364,7 @@ struct ath10k_htc {
+ 
+ 	int total_transmit_credits;
+ 	int target_credit_size;
++	u8 max_msgs_per_htc_bundle;
+ };
+ 
+ int ath10k_htc_init(struct ath10k *ar);
 -- 
-2.11.0.483.g087da7b7c-goog
+2.7.4
