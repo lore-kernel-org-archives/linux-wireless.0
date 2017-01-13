@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:36268 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751196AbdARDDb (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:50319 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751019AbdAMVa5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 22:03:31 -0500
-Received: by mail-ot0-f195.google.com with SMTP id 36so41107otx.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 19:02:29 -0800 (PST)
-Subject: Re: Clarifying rtl8188ee's channel wifi changing code
-To: Farhan Khan <farhan@offmail.us>, linux-wireless@vger.kernel.org
-References: <20170118054001.GA88602@offmail.us>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <1c751468-a3f8-19ff-4fc3-d426fb5cb8e0@lwfinger.net> (sfid-20170118_040336_150127_DBFC17A5)
-Date: Tue, 17 Jan 2017 21:02:26 -0600
+        Fri, 13 Jan 2017 16:30:57 -0500
+Date: Fri, 13 Jan 2017 22:30:49 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 30/40] rt2x00: rt2800lib: fix EEPROM LNA validation for RT3883
+Message-ID: <20170113213044.GA3610@makrotopia.org> (sfid-20170113_223059_269038_4DF2E24C)
 MIME-Version: 1.0
-In-Reply-To: <20170118054001.GA88602@offmail.us>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/17/2017 11:40 PM, Farhan Khan wrote:
-> Hi all,
->
-> I am having a bit of trouble understanding the rtl8188ee source,
-> specifically how its switch_channel function (rtl88e_phy_sw_chnl) works. I
-> gather that this function calls rtl88ee_phy_sw_chnl_callback, which in turn
-> calls _rtl88_phy_sw_chnl_step_by_step (
-> https://github.com/torvalds/linux/blob/master/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c#L1253
-> ).
->
-> This is where I get lost. Where is the 'channel' variable used, other than
-> to change the TX power? I presume it has something to do with case
-> CMDID_RF_WRITEREG, but I am not certain.
->
-> Please explain what is going on. Thank you!
+From: Gabor Juhos <juhosg@openwrt.org>
 
-I have no idea where you are getting those routine names, but my source does not 
-have them, unless something has broken grep on my system.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index e79714b898b9..81368cee6e38 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7648,7 +7648,8 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_BG2, &word);
+ 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_BG2_OFFSET2)) > 10)
+ 		rt2x00_set_field16(&word, EEPROM_RSSI_BG2_OFFSET2, 0);
+-	if (!rt2x00_rt(rt2x00dev, RT3593)) {
++	if (!rt2x00_rt(rt2x00dev, RT3593) &&
++	    !rt2x00_rt(rt2x00dev, RT3883)) {
+ 		if (rt2x00_get_field16(word, EEPROM_RSSI_BG2_LNA_A1) == 0x00 ||
+ 		    rt2x00_get_field16(word, EEPROM_RSSI_BG2_LNA_A1) == 0xff)
+ 			rt2x00_set_field16(&word, EEPROM_RSSI_BG2_LNA_A1,
+@@ -7668,7 +7669,8 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_RSSI_A2, &word);
+ 	if (abs(rt2x00_get_field16(word, EEPROM_RSSI_A2_OFFSET2)) > 10)
+ 		rt2x00_set_field16(&word, EEPROM_RSSI_A2_OFFSET2, 0);
+-	if (!rt2x00_rt(rt2x00dev, RT3593)) {
++	if (!rt2x00_rt(rt2x00dev, RT3593) &&
++	    !rt2x00_rt(rt2x00dev, RT3883)) {
+ 		if (rt2x00_get_field16(word, EEPROM_RSSI_A2_LNA_A2) == 0x00 ||
+ 		    rt2x00_get_field16(word, EEPROM_RSSI_A2_LNA_A2) == 0xff)
+ 			rt2x00_set_field16(&word, EEPROM_RSSI_A2_LNA_A2,
+@@ -7676,7 +7678,8 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	}
+ 	rt2800_eeprom_write(rt2x00dev, EEPROM_RSSI_A2, word);
+ 
+-	if (rt2x00_rt(rt2x00dev, RT3593)) {
++	if (rt2x00_rt(rt2x00dev, RT3593) ||
++	    rt2x00_rt(rt2x00dev, RT3883)) {
+ 		rt2800_eeprom_read(rt2x00dev, EEPROM_EXT_LNA2, &word);
+ 		if (rt2x00_get_field16(word, EEPROM_EXT_LNA2_A1) == 0x00 ||
+ 		    rt2x00_get_field16(word, EEPROM_EXT_LNA2_A1) == 0xff)
+-- 
+2.11.0
