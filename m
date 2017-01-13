@@ -1,418 +1,1329 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34226 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751414AbdAYLn6 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33548 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdAMVf1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 25 Jan 2017 06:43:58 -0500
-Received: by mail-wm0-f67.google.com with SMTP id c85so41880831wmi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2017 03:43:57 -0800 (PST)
-Received: from localhost.localdomain ([92.176.165.227])
-        by smtp.gmail.com with ESMTPSA id l9sm31033784wmf.18.2017.01.25.03.43.55
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 25 Jan 2017 03:43:55 -0800 (PST)
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v4 5/5] wireless: Set NL80211_EXT_FEATURE_CQM_RSSI_LIST in multiple drivers
-Date: Wed, 25 Jan 2017 12:43:44 +0100
-Message-Id: <20170125114344.8179-5-andrew.zaborowski@intel.com> (sfid-20170125_124404_230290_DDCD5537)
-In-Reply-To: <20170125114344.8179-1-andrew.zaborowski@intel.com>
-References: <20170125114344.8179-1-andrew.zaborowski@intel.com>
+        Fri, 13 Jan 2017 16:35:27 -0500
+Received: by mail-lf0-f65.google.com with SMTP id x1so1724505lff.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:25 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 02/10] ath10k: usb support
+Date: Fri, 13 Jan 2017 22:35:01 +0100
+Message-Id: <1484343309-6327-3-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223944_168602_2594A5AE)
+In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Set the NL80211_EXT_FEATURE_CQM_RSSI_LIST wiphy extended feature
-wholesale in all mac80211-based drivers that do not set the
-IEEE80211_VIF_BEACON_FILTER flags on their interfaces.  mac80211 will
-be processing supplied RSSI values in ieee80211_rx_mgmt_beacon and
-will detect when the thresholds set by
-ieee80211_set_cqm_rssi_range_config are crossed.  Remaining (few)
-drivers need code to enable the firmware to monitor the thresholds.
-This is mostly only compile-tested.
+usb HIF implementation
 
-Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/admtek/adm8211.c                          | 2 ++
- drivers/net/wireless/ath/ar5523/ar5523.c                       | 2 ++
- drivers/net/wireless/ath/ath10k/mac.c                          | 2 ++
- drivers/net/wireless/ath/ath5k/base.c                          | 2 ++
- drivers/net/wireless/ath/ath9k/htc_drv_init.c                  | 2 ++
- drivers/net/wireless/ath/ath9k/init.c                          | 2 ++
- drivers/net/wireless/ath/carl9170/main.c                       | 2 ++
- drivers/net/wireless/ath/wcn36xx/main.c                        | 3 +++
- drivers/net/wireless/atmel/at76c50x-usb.c                      | 2 ++
- drivers/net/wireless/broadcom/b43/main.c                       | 2 ++
- drivers/net/wireless/broadcom/b43legacy/main.c                 | 2 ++
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c | 2 ++
- drivers/net/wireless/intel/iwlegacy/3945-mac.c                 | 2 ++
- drivers/net/wireless/intel/iwlegacy/4965-mac.c                 | 2 ++
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c              | 2 ++
- drivers/net/wireless/mac80211_hwsim.c                          | 2 ++
- drivers/net/wireless/marvell/libertas_tf/main.c                | 2 ++
- drivers/net/wireless/marvell/mwl8k.c                           | 2 ++
- drivers/net/wireless/mediatek/mt7601u/init.c                   | 2 ++
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c                 | 3 +++
- drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c             | 2 ++
- drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c             | 2 ++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c          | 2 ++
- drivers/net/wireless/rsi/rsi_91x_mac80211.c                    | 2 ++
- drivers/net/wireless/zydas/zd1211rw/zd_mac.c                   | 2 ++
- drivers/staging/vt6655/device_main.c                           | 2 ++
- drivers/staging/vt6656/main_usb.c                              | 2 ++
- 27 files changed, 56 insertions(+)
+ drivers/net/wireless/ath/ath10k/Kconfig  |    6 +
+ drivers/net/wireless/ath/ath10k/Makefile |    3 +
+ drivers/net/wireless/ath/ath10k/usb.c    | 1125 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/usb.h    |  128 ++++
+ 4 files changed, 1262 insertions(+)
+ create mode 100644 drivers/net/wireless/ath/ath10k/usb.c
+ create mode 100644 drivers/net/wireless/ath/ath10k/usb.h
 
-diff --git a/drivers/net/wireless/admtek/adm8211.c b/drivers/net/wireless/admtek/adm8211.c
-index 70ecd82..96362f0 100644
---- a/drivers/net/wireless/admtek/adm8211.c
-+++ b/drivers/net/wireless/admtek/adm8211.c
-@@ -1896,6 +1896,8 @@ static int adm8211_probe(struct pci_dev *pdev,
+diff --git a/drivers/net/wireless/ath/ath10k/Kconfig b/drivers/net/wireless/ath/ath10k/Kconfig
+index 9a03178..c8b95e0 100644
+--- a/drivers/net/wireless/ath/ath10k/Kconfig
++++ b/drivers/net/wireless/ath/ath10k/Kconfig
+@@ -27,6 +27,12 @@ config ATH10K_SDIO
+ 	---help---
+ 	  This module adds support for SDIO/MMC bus
  
- 	dev->wiphy->bands[NL80211_BAND_2GHZ] = &priv->band;
- 
-+	wiphy_ext_feature_set(dev->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++config ATH10K_USB
++	tristate "Atheros ath10k USB support (EXPERIMENTAL)"
++	depends on ATH10K && USB
++	---help---
++	  This module adds support for USB bus
 +
- 	err = ieee80211_register_hw(dev);
- 	if (err) {
- 		printk(KERN_ERR "%s (adm8211): Cannot register device\n",
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index 7a60d2e..f2f4ccf 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -1689,6 +1689,8 @@ static int ar5523_probe(struct usb_interface *intf,
- 	if (error)
- 		goto out_cancel_rx_cmd;
+ config ATH10K_DEBUG
+ 	bool "Atheros ath10k debugging"
+ 	depends on ATH10K
+diff --git a/drivers/net/wireless/ath/ath10k/Makefile b/drivers/net/wireless/ath/ath10k/Makefile
+index b0b19a7..899b9b7 100644
+--- a/drivers/net/wireless/ath/ath10k/Makefile
++++ b/drivers/net/wireless/ath/ath10k/Makefile
+@@ -30,5 +30,8 @@ ath10k_pci-$(CONFIG_ATH10K_AHB) += ahb.o
+ obj-$(CONFIG_ATH10K_SDIO) += ath10k_sdio.o
+ ath10k_sdio-y += sdio.o
  
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++obj-$(CONFIG_ATH10K_USB) += ath10k_usb.o
++ath10k_usb-y += usb.o
 +
- 	usb_set_intfdata(intf, hw);
- 
- 	error = ieee80211_register_hw(hw);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index aa545a1..fe7eab3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -8146,6 +8146,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 	ar->hw->wiphy->cipher_suites = cipher_suites;
- 	ar->hw->wiphy->n_cipher_suites = ARRAY_SIZE(cipher_suites);
- 
-+	wiphy_ext_feature_set(ar->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
+ # for tracing framework to find trace.h
+ CFLAGS_trace.o := -I$(src)
+diff --git a/drivers/net/wireless/ath/ath10k/usb.c b/drivers/net/wireless/ath/ath10k/usb.c
+new file mode 100644
+index 0000000..4ccf36a
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/usb.c
+@@ -0,0 +1,1125 @@
++/*
++ * Copyright (c) 2007-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2012 Qualcomm Atheros, Inc.
++ * Copyright (c) 2016 Erik Stromdahl.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
- 	ret = ieee80211_register_hw(ar->hw);
- 	if (ret) {
- 		ath10k_err(ar, "failed to register ieee80211: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index d98fd42..92ece64 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2564,6 +2564,8 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 
- 	hw->extra_tx_headroom = 2;
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++#include <linux/module.h>
++#include <linux/usb.h>
 +
- 	/*
- 	 * Mark the device as detached to avoid processing
- 	 * interrupts until setup is complete.
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index b65c1b6..defacc6 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -780,6 +780,8 @@ static void ath9k_set_hw_capab(struct ath9k_htc_priv *priv,
- 	}
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
++#include "debug.h"
++#include "core.h"
++#include "bmi.h"
++#include "hif.h"
++#include "htc.h"
++#include "usb.h"
 +
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- }
- 
- static int ath9k_init_firmware_version(struct ath9k_htc_priv *priv)
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2079466..6bacda1 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -951,6 +951,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	ath9k_cmn_reload_chainmask(ah);
- 
- 	SET_IEEE80211_PERM_ADDR(hw, common->macaddr);
++static void ath10k_usb_post_recv_transfers(struct ath10k *ar,
++					   struct ath10k_usb_pipe *recv_pipe);
 +
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
- }
- 
- int ath9k_init_device(u16 devid, struct ath_softc *sc,
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index ffb22a0..988c885 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1874,6 +1874,8 @@ void *carl9170_alloc(size_t priv_size)
- 	for (i = 0; i < ARRAY_SIZE(ar->noise); i++)
- 		ar->noise[i] = -95; /* ATH_DEFAULT_NOISE_FLOOR */
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++/* inlined helper functions */
 +
- 	return ar;
- 
- err_nomem:
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index e1d59da..1b6c173 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -1046,6 +1046,9 @@ static int wcn36xx_init_ieee80211(struct wcn36xx *wcn)
- 	wcn->hw->sta_data_size = sizeof(struct wcn36xx_sta);
- 	wcn->hw->vif_data_size = sizeof(struct wcn36xx_vif);
- 
-+	wiphy_ext_feature_set(wcn->hw->wiphy,
-+			      NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static inline enum ath10k_htc_ep_id
++eid_from_htc_hdr(struct ath10k_htc_hdr *htc_hdr)
++{
++	return (enum ath10k_htc_ep_id)htc_hdr->eid;
++}
 +
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
-index 0e18067..09defbc 100644
---- a/drivers/net/wireless/atmel/at76c50x-usb.c
-+++ b/drivers/net/wireless/atmel/at76c50x-usb.c
-@@ -2377,6 +2377,8 @@ static int at76_init_new_device(struct at76_priv *priv,
- 
- 	wiphy->hw_version = priv->board_type;
- 
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static inline bool is_trailer_only_msg(struct ath10k_htc_hdr *htc_hdr)
++{
++	bool trailer_only = false;
++	u16 len = __le16_to_cpu(htc_hdr->len);
 +
- 	ret = ieee80211_register_hw(priv->hw);
- 	if (ret) {
- 		printk(KERN_ERR "cannot register mac80211 hw (status %d)!\n",
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 52f3541..d23aac7 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -5598,6 +5598,8 @@ static struct b43_wl *b43_wireless_init(struct b43_bus_dev *dev)
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	if (len == htc_hdr->trailer_len)
++		trailer_only = true;
 +
- 	wl->hw_registred = false;
- 	hw->max_rates = 2;
- 	SET_IEEE80211_DEV(hw, dev->dev);
-diff --git a/drivers/net/wireless/broadcom/b43legacy/main.c b/drivers/net/wireless/broadcom/b43legacy/main.c
-index e97ab2b..44781b8 100644
---- a/drivers/net/wireless/broadcom/b43legacy/main.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/main.c
-@@ -3850,6 +3850,8 @@ static int b43legacy_wireless_init(struct ssb_device *dev)
- 	else
- 		SET_IEEE80211_PERM_ADDR(hw, sprom->il0mac);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	return trailer_only;
++}
 +
- 	/* Get and initialize struct b43legacy_wl */
- 	wl = hw_to_b43legacy_wl(hw);
- 	memset(wl, 0, sizeof(*wl));
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-index 7c2a9a9..ddfdfe1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/mac80211_if.c
-@@ -1082,6 +1082,8 @@ static int ieee_hw_init(struct ieee80211_hw *hw)
- 	 * hw->wiphy->flags |= WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD;
- 	 */
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++/* pipe/urb operations */
++static struct ath10k_urb_context *
++ath10k_usb_alloc_urb_from_pipe(struct ath10k_usb_pipe *pipe)
++{
++	struct ath10k_urb_context *urb_context = NULL;
++	unsigned long flags;
 +
- 	hw->rate_control_algorithm = "minstrel_ht";
- 
- 	hw->sta_data_size = 0;
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945-mac.c b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-index 466912e..ebd74f7 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945-mac.c
-@@ -3592,6 +3592,8 @@ il3945_setup_mac(struct il_priv *il)
- 
- 	il_leds_init(il);
- 
-+	wiphy_ext_feature_set(il->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	spin_lock_irqsave(&pipe->ar_usb->cs_lock, flags);
++	if (!list_empty(&pipe->urb_list_head)) {
++		urb_context =
++		    list_first_entry(&pipe->urb_list_head,
++				     struct ath10k_urb_context, link);
++		list_del(&urb_context->link);
++		pipe->urb_cnt--;
++	}
++	spin_unlock_irqrestore(&pipe->ar_usb->cs_lock, flags);
 +
- 	ret = ieee80211_register_hw(il->hw);
- 	if (ret) {
- 		IL_ERR("Failed to register hw (error %d)\n", ret);
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index a91d170..54ecda5 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -5799,6 +5799,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 
- 	il_leds_init(il);
- 
-+	wiphy_ext_feature_set(il->hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	return urb_context;
++}
 +
- 	ret = ieee80211_register_hw(il->hw);
- 	if (ret) {
- 		IL_ERR("Failed to register hw (error %d)\n", ret);
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-index 8c07194..2b23c3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-@@ -213,6 +213,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 
- 	iwl_leds_init(priv);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static void ath10k_usb_free_urb_to_pipe(struct ath10k_usb_pipe *pipe,
++					struct ath10k_urb_context *urb_context)
++{
++	unsigned long flags;
 +
- 	ret = ieee80211_register_hw(priv->hw);
- 	if (ret) {
- 		IWL_ERR(priv, "Failed to register hw (error %d)\n", ret);
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 1620a5d..0150747 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2645,6 +2645,8 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 	if (param->no_vif)
- 		ieee80211_hw_set(hw, NO_AUTO_VIF);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	spin_lock_irqsave(&pipe->ar_usb->cs_lock, flags);
++	pipe->urb_cnt++;
 +
- 	err = ieee80211_register_hw(hw);
- 	if (err < 0) {
- 		printk(KERN_DEBUG "mac80211_hwsim: ieee80211_register_hw failed (%d)\n",
-diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-index 54e426c..d803331 100644
---- a/drivers/net/wireless/marvell/libertas_tf/main.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-@@ -641,6 +641,8 @@ struct lbtf_private *lbtf_add_card(void *card, struct device *dmdev)
- 		BIT(NL80211_IFTYPE_ADHOC);
- 	skb_queue_head_init(&priv->bc_ps_buf);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	list_add(&urb_context->link, &pipe->urb_list_head);
++	spin_unlock_irqrestore(&pipe->ar_usb->cs_lock, flags);
++}
 +
- 	SET_IEEE80211_DEV(hw, dmdev);
- 
- 	INIT_WORK(&priv->cmd_work, lbtf_cmd_work);
-diff --git a/drivers/net/wireless/marvell/mwl8k.c b/drivers/net/wireless/marvell/mwl8k.c
-index b1b400b..c295a4c 100644
---- a/drivers/net/wireless/marvell/mwl8k.c
-+++ b/drivers/net/wireless/marvell/mwl8k.c
-@@ -6144,6 +6144,8 @@ static int mwl8k_firmware_load_success(struct mwl8k_priv *priv)
- 	if (priv->sta_macids_supported || priv->device_info->fw_image_sta)
- 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_STATION);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static void ath10k_usb_cleanup_recv_urb(struct ath10k_urb_context *urb_context)
++{
++	dev_kfree_skb(urb_context->skb);
++	urb_context->skb = NULL;
 +
- 	rc = ieee80211_register_hw(hw);
- 	if (rc) {
- 		wiphy_err(hw->wiphy, "Cannot register device\n");
-diff --git a/drivers/net/wireless/mediatek/mt7601u/init.c b/drivers/net/wireless/mediatek/mt7601u/init.c
-index a6e9017..d3b611a 100644
---- a/drivers/net/wireless/mediatek/mt7601u/init.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/init.c
-@@ -615,6 +615,8 @@ int mt7601u_register_device(struct mt7601u_dev *dev)
- 	wiphy->features |= NL80211_FEATURE_ACTIVE_MONITOR;
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION);
- 
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	ath10k_usb_free_urb_to_pipe(urb_context->pipe, urb_context);
++}
 +
- 	ret = mt76_init_sband_2g(dev);
- 	if (ret)
- 		return ret;
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index eb7b714..139bb51 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -1389,6 +1389,9 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
- 
- 	rt2x00dev->hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 
-+	wiphy_ext_feature_set(rt2x00dev->hw->wiphy,
-+			      NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static void ath10k_usb_free_pipe_resources(struct ath10k *ar,
++					   struct ath10k_usb_pipe *pipe)
++{
++	if (!pipe->ar_usb) {
++		/* nothing allocated for this pipe */
++		return;
++	}
 +
- 	/*
- 	 * Initialize ieee80211 structure.
- 	 */
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-index e895a84..e387dec 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-@@ -1877,6 +1877,8 @@ static int rtl8180_probe(struct pci_dev *pdev,
- 	else
- 		ieee80211_hw_set(dev, SIGNAL_UNSPEC);
- 
-+	wiphy_ext_feature_set(dev->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	ath10k_dbg(ar, ATH10K_DBG_USB,
++		   "free resources lpipe:%d hpipe:0x%X urbs:%d avail:%d\n",
++		   pipe->logical_pipe_num, pipe->usb_pipe_handle,
++		   pipe->urb_alloc, pipe->urb_cnt);
 +
- 	rtl8180_eeprom_read(priv);
- 
- 	switch (priv->rf_type) {
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-index 231f84d..274ad6d 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8187/dev.c
-@@ -1609,6 +1609,8 @@ static int rtl8187_probe(struct usb_interface *intf,
- 	dev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 				      BIT(NL80211_IFTYPE_ADHOC) ;
- 
-+	wiphy_ext_feature_set(dev->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	if (pipe->urb_alloc != pipe->urb_cnt) {
++		ath10k_dbg(ar, ATH10K_DBG_USB,
++			   "urb leak! lpipe:%d hpipe:0x%X urbs:%d avail:%d\n",
++			   pipe->logical_pipe_num, pipe->usb_pipe_handle,
++			   pipe->urb_alloc, pipe->urb_cnt);
++	}
 +
- 	if ((id->driver_info == DEVICE_RTL8187) && priv->is_rtl8187b)
- 		printk(KERN_INFO "rtl8187: inconsistency between id with OEM"
- 		       " info!\n");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 3a86675..75fbb39 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6134,6 +6134,8 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 	ieee80211_hw_set(hw, HAS_RATE_CONTROL);
- 	ieee80211_hw_set(hw, AMPDU_AGGREGATION);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	while (true) {
++		struct ath10k_urb_context *urb_context;
 +
- 	ret = ieee80211_register_hw(priv->hw);
- 	if (ret) {
- 		dev_err(&udev->dev, "%s: Failed to register: %i\n",
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index e321647..021e5ac 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -1261,6 +1261,8 @@ int rsi_mac80211_attach(struct rsi_common *common)
- 
- 	wiphy->reg_notifier = rsi_reg_notify;
- 
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++		urb_context = ath10k_usb_alloc_urb_from_pipe(pipe);
++		if (!urb_context)
++			break;
++		kfree(urb_context);
++	}
++}
 +
- 	status = ieee80211_register_hw(hw);
- 	if (status)
- 		return status;
-diff --git a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-index 3e37a04..fe6517a 100644
---- a/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zydas/zd1211rw/zd_mac.c
-@@ -1408,6 +1408,8 @@ struct ieee80211_hw *zd_mac_alloc_hw(struct usb_interface *intf)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_AP);
- 
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++static void ath10k_usb_cleanup_pipe_resources(struct ath10k *ar)
++{
++	int i;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
 +
- 	hw->max_signal = 100;
- 	hw->queues = 1;
- 	hw->extra_tx_headroom = sizeof(struct zd_ctrlset);
-diff --git a/drivers/staging/vt6655/device_main.c b/drivers/staging/vt6655/device_main.c
-index da0f711..7f18f70 100644
---- a/drivers/staging/vt6655/device_main.c
-+++ b/drivers/staging/vt6655/device_main.c
-@@ -1661,6 +1661,8 @@ vt6655_probe(struct pci_dev *pcid, const struct pci_device_id *ent)
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++	for (i = 0; i < ATH10K_USB_PIPE_MAX; i++)
++		ath10k_usb_free_pipe_resources(ar, &ar_usb->pipes[i]);
++}
 +
- 	ieee80211_hw_set(priv->hw, TIMING_BEACON_ONLY);
- 	ieee80211_hw_set(priv->hw, SIGNAL_DBM);
- 	ieee80211_hw_set(priv->hw, RX_INCLUDES_FCS);
-diff --git a/drivers/staging/vt6656/main_usb.c b/drivers/staging/vt6656/main_usb.c
-index 50d02d9..80b5c73 100644
---- a/drivers/staging/vt6656/main_usb.c
-+++ b/drivers/staging/vt6656/main_usb.c
-@@ -986,6 +986,8 @@ vt6656_probe(struct usb_interface *intf, const struct usb_device_id *id)
- 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_AP);
- 
-+	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_CQM_RSSI_LIST);
++/* hif usb rx/tx completion functions */
 +
- 	ieee80211_hw_set(priv->hw, TIMING_BEACON_ONLY);
- 	ieee80211_hw_set(priv->hw, SIGNAL_DBM);
- 	ieee80211_hw_set(priv->hw, RX_INCLUDES_FCS);
++static void ath10k_usb_recv_complete(struct urb *urb)
++{
++	struct ath10k_urb_context *urb_context = urb->context;
++	struct ath10k_usb_pipe *pipe = urb_context->pipe;
++	struct ath10k *ar = pipe->ar_usb->ar;
++	struct sk_buff *skb = NULL;
++	int status = 0;
++
++	ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++		   "%s: recv pipe: %d, stat:%d, len:%d urb:0x%p\n", __func__,
++		   pipe->logical_pipe_num, urb->status, urb->actual_length,
++		   urb);
++
++	if (urb->status != 0) {
++		status = -EIO;
++		switch (urb->status) {
++		case -ECONNRESET:
++		case -ENOENT:
++		case -ESHUTDOWN:
++			/* no need to spew these errors when device
++			 * removed or urb killed due to driver shutdown
++			 */
++			status = -ECANCELED;
++			break;
++		default:
++			ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++				   "%s recv pipe: %d (ep:0x%2.2X), failed:%d\n",
++				   __func__, pipe->logical_pipe_num,
++				   pipe->ep_address, urb->status);
++			break;
++		}
++		goto cleanup_recv_urb;
++	}
++
++	if (urb->actual_length == 0)
++		goto cleanup_recv_urb;
++
++	skb = urb_context->skb;
++
++	/* we are going to pass it up */
++	urb_context->skb = NULL;
++	skb_put(skb, urb->actual_length);
++
++	/* note: queue implements a lock */
++	skb_queue_tail(&pipe->io_comp_queue, skb);
++	schedule_work(&pipe->io_complete_work);
++
++cleanup_recv_urb:
++	ath10k_usb_cleanup_recv_urb(urb_context);
++
++	if (status == 0 &&
++	    pipe->urb_cnt >= pipe->urb_cnt_thresh) {
++		/* our free urbs are piling up, post more transfers */
++		ath10k_usb_post_recv_transfers(ar, pipe);
++	}
++}
++
++static void ath10k_usb_transmit_complete(struct urb *urb)
++{
++	struct ath10k_urb_context *urb_context = urb->context;
++	struct ath10k_usb_pipe *pipe = urb_context->pipe;
++	struct ath10k *ar = pipe->ar_usb->ar;
++	struct sk_buff *skb;
++
++	if (urb->status != 0) {
++		ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++			   "pipe: %d, failed:%d\n",
++			   pipe->logical_pipe_num, urb->status);
++	}
++
++	skb = urb_context->skb;
++	urb_context->skb = NULL;
++	ath10k_usb_free_urb_to_pipe(urb_context->pipe, urb_context);
++
++	/* note: queue implements a lock */
++	skb_queue_tail(&pipe->io_comp_queue, skb);
++	schedule_work(&pipe->io_complete_work);
++}
++
++/* pipe operations */
++static void ath10k_usb_post_recv_transfers(struct ath10k *ar,
++					   struct ath10k_usb_pipe *recv_pipe)
++{
++	struct ath10k_urb_context *urb_context;
++	struct urb *urb;
++	int usb_status;
++
++	while (true) {
++		urb_context = ath10k_usb_alloc_urb_from_pipe(recv_pipe);
++		if (!urb_context)
++			break;
++
++		urb_context->skb = dev_alloc_skb(ATH10K_USB_RX_BUFFER_SIZE);
++		if (!urb_context->skb)
++			goto err;
++
++		urb = usb_alloc_urb(0, GFP_ATOMIC);
++		if (!urb)
++			goto err;
++
++		usb_fill_bulk_urb(urb,
++				  recv_pipe->ar_usb->udev,
++				  recv_pipe->usb_pipe_handle,
++				  urb_context->skb->data,
++				  ATH10K_USB_RX_BUFFER_SIZE,
++				  ath10k_usb_recv_complete, urb_context);
++
++		ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++			   "bulk recv submit:%d, 0x%X (ep:0x%2.2X), %d bytes buf:0x%p\n",
++			   recv_pipe->logical_pipe_num,
++			   recv_pipe->usb_pipe_handle, recv_pipe->ep_address,
++			   ATH10K_USB_RX_BUFFER_SIZE, urb_context->skb);
++
++		usb_anchor_urb(urb, &recv_pipe->urb_submitted);
++		usb_status = usb_submit_urb(urb, GFP_ATOMIC);
++
++		if (usb_status) {
++			ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++				   "usb bulk recv failed %d\n",
++				   usb_status);
++			usb_unanchor_urb(urb);
++			usb_free_urb(urb);
++			goto err;
++		}
++		usb_free_urb(urb);
++	}
++
++	return;
++
++err:
++	ath10k_usb_cleanup_recv_urb(urb_context);
++}
++
++static void ath10k_usb_flush_all(struct ath10k *ar)
++{
++	int i;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++
++	for (i = 0; i < ATH10K_USB_PIPE_MAX; i++) {
++		if (ar_usb->pipes[i].ar_usb) {
++			usb_kill_anchored_urbs(&ar_usb->pipes[i].urb_submitted);
++			cancel_work_sync(&ar_usb->pipes[i].io_complete_work);
++		}
++	}
++}
++
++static void ath10k_usb_start_recv_pipes(struct ath10k *ar)
++{
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++
++	ar_usb->pipes[ATH10K_USB_PIPE_RX_DATA].urb_cnt_thresh = 1;
++
++	ath10k_usb_post_recv_transfers(ar,
++				       &ar_usb->pipes[ATH10K_USB_PIPE_RX_DATA]);
++}
++
++static void ath10k_usb_tx_complete(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct ath10k_htc_ep *ep;
++	struct ath10k_htc_hdr *htc_hdr;
++
++	htc_hdr = (struct ath10k_htc_hdr *)skb->data;
++	ep = &ar->htc.endpoint[htc_hdr->eid];
++	ath10k_htc_notify_tx_completion(ep, skb);
++	/* The TX complete handler now owns the skb... */
++}
++
++static void ath10k_usb_rx_complete(struct ath10k *ar, struct sk_buff *skb)
++{
++	int ret;
++	struct ath10k_htc_ep *ep;
++	struct ath10k_htc_hdr *htc_hdr;
++	struct ath10k_htc *htc = &ar->htc;
++	u16 payload_len;
++	enum ath10k_htc_ep_id eid;
++
++	htc_hdr = (struct ath10k_htc_hdr *)skb->data;
++	eid = eid_from_htc_hdr(htc_hdr);
++	ep = &ar->htc.endpoint[eid];
++
++	if (ep->service_id == 0) {
++		ath10k_warn(ar, "ep %d is not connected !\n", eid);
++		goto out_free_skb;
++	}
++
++	payload_len = le16_to_cpu(htc_hdr->len);
++	if (!payload_len) {
++		ath10k_warn(ar, "Zero length frame received! Possible fw crash?\n");
++		goto out_free_skb;
++	}
++
++	if (payload_len < htc_hdr->trailer_len) {
++		ath10k_warn(ar, "Malformed frame received! Possible fw crash?\n");
++		goto out_free_skb;
++	}
++
++	if (htc_hdr->flags & ATH10K_HTC_FLAG_TRAILER_PRESENT) {
++		u8 *trailer;
++
++		trailer = skb->data + sizeof(*htc_hdr) + payload_len -
++			  htc_hdr->trailer_len;
++
++		ret = ath10k_htc_process_trailer(htc,
++						 trailer,
++						 htc_hdr->trailer_len,
++						 eid,
++						 NULL,
++						 0);
++		if (ret)
++			goto out_free_skb;
++
++		if (is_trailer_only_msg(htc_hdr))
++			goto out_free_skb;
++
++		/* strip off the trailer from the skb since it should not
++		 * be passed on to upper layers
++		 */
++		skb_trim(skb, skb->len - htc_hdr->trailer_len);
++	}
++
++	skb_pull(skb, sizeof(*htc_hdr));
++	ep->ep_ops.ep_rx_complete(ar, skb);
++	/* The RX complete handler now owns the skb... */
++
++	return;
++
++out_free_skb:
++	dev_kfree_skb(skb);
++}
++
++static void ath10k_usb_io_comp_work(struct work_struct *work)
++{
++	struct ath10k_usb_pipe *pipe = container_of(work,
++						    struct ath10k_usb_pipe,
++						    io_complete_work);
++	struct ath10k *ar = pipe->ar_usb->ar;
++	struct sk_buff *skb;
++
++	while ((skb = skb_dequeue(&pipe->io_comp_queue))) {
++		if (pipe->flags & ATH10K_USB_PIPE_FLAG_TX)
++			ath10k_usb_tx_complete(ar, skb);
++		else
++			ath10k_usb_rx_complete(ar, skb);
++	}
++}
++
++#define ATH10K_USB_MAX_DIAG_CMD (sizeof(struct ath10k_usb_ctrl_diag_cmd_write))
++#define ATH10K_USB_MAX_DIAG_RESP (sizeof(struct ath10k_usb_ctrl_diag_resp_read))
++
++static void ath10k_usb_destroy(struct ath10k *ar)
++{
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++
++	ath10k_usb_flush_all(ar);
++	ath10k_usb_cleanup_pipe_resources(ar);
++	usb_set_intfdata(ar_usb->interface, NULL);
++
++	kfree(ar_usb->diag_cmd_buffer);
++	kfree(ar_usb->diag_resp_buffer);
++}
++
++static int ath10k_usb_hif_start(struct ath10k *ar)
++{
++	int i;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++
++	ath10k_usb_start_recv_pipes(ar);
++
++	/* set the TX resource avail threshold for each TX pipe */
++	for (i = ATH10K_USB_PIPE_TX_CTRL;
++	     i <= ATH10K_USB_PIPE_TX_DATA_HP; i++) {
++		ar_usb->pipes[i].urb_cnt_thresh =
++		    ar_usb->pipes[i].urb_alloc / 2;
++	}
++
++	return 0;
++}
++
++static int ath10k_usb_hif_tx_sg(struct ath10k *ar, u8 pipe_id,
++				struct ath10k_hif_sg_item *items, int n_items)
++{
++	int ret, i;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	struct ath10k_usb_pipe *pipe = &ar_usb->pipes[pipe_id];
++	struct ath10k_urb_context *urb_context;
++	struct urb *urb;
++
++	for (i = 0; i < n_items; i++) {
++		struct sk_buff *skb;
++
++		urb_context = ath10k_usb_alloc_urb_from_pipe(pipe);
++		if (!urb_context) {
++			ret = -ENOMEM;
++			goto err;
++		}
++
++		skb = items[i].transfer_context;
++		urb_context->skb = skb;
++
++		urb = usb_alloc_urb(0, GFP_ATOMIC);
++		if (!urb) {
++			ret = -ENOMEM;
++			goto err_free_urb_to_pipe;
++		}
++
++		usb_fill_bulk_urb(urb,
++				  ar_usb->udev,
++				  pipe->usb_pipe_handle,
++				  skb->data,
++				  skb->len,
++				  ath10k_usb_transmit_complete, urb_context);
++
++		if (!(skb->len % pipe->max_packet_size)) {
++			/* hit a max packet boundary on this pipe */
++			urb->transfer_flags |= URB_ZERO_PACKET;
++		}
++
++		usb_anchor_urb(urb, &pipe->urb_submitted);
++		ret = usb_submit_urb(urb, GFP_ATOMIC);
++		if (ret) {
++			ath10k_dbg(ar, ATH10K_DBG_USB_BULK,
++				   "usb bulk transmit failed %d\n", ret);
++			usb_unanchor_urb(urb);
++			ret = -EINVAL;
++			goto err_free_urb_to_pipe;
++		}
++
++		usb_free_urb(urb);
++	}
++
++	return 0;
++
++err_free_urb_to_pipe:
++	ath10k_usb_free_urb_to_pipe(urb_context->pipe, urb_context);
++err:
++	return ret;
++}
++
++static void ath10k_usb_hif_stop(struct ath10k *ar)
++{
++	ath10k_usb_flush_all(ar);
++}
++
++static u16 ath10k_usb_hif_get_free_queue_number(struct ath10k *ar, u8 pipe_id)
++{
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++
++	return ar_usb->pipes[pipe_id].urb_cnt;
++}
++
++static int ath10k_usb_submit_ctrl_out(struct ath10k *ar,
++				      u8 req, u16 value, u16 index, void *data,
++				      u32 size)
++{
++	int ret;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	u8 *buf = NULL;
++
++	if (size > 0) {
++		buf = kmemdup(data, size, GFP_KERNEL);
++		if (!buf)
++			return -ENOMEM;
++	}
++
++	/* note: if successful returns number of bytes transferred */
++	ret = usb_control_msg(ar_usb->udev,
++			      usb_sndctrlpipe(ar_usb->udev, 0),
++			      req,
++			      USB_DIR_OUT | USB_TYPE_VENDOR |
++			      USB_RECIP_DEVICE, value, index, buf,
++			      size, 1000);
++
++	if (ret < 0) {
++		ath10k_warn(ar, "Failed to submit usb control message: %d\n",
++			    ret);
++		kfree(buf);
++		return ret;
++	}
++
++	kfree(buf);
++
++	return 0;
++}
++
++static int ath10k_usb_submit_ctrl_in(struct ath10k *ar,
++				     u8 req, u16 value, u16 index, void *data,
++				     u32 size)
++{
++	int ret;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	u8 *buf = NULL;
++
++	if (size > 0) {
++		buf = kmalloc(size, GFP_KERNEL);
++		if (!buf)
++			return -ENOMEM;
++	}
++
++	/* note: if successful returns number of bytes transferred */
++	ret = usb_control_msg(ar_usb->udev,
++			      usb_rcvctrlpipe(ar_usb->udev, 0),
++			      req,
++			      USB_DIR_IN | USB_TYPE_VENDOR |
++			      USB_RECIP_DEVICE, value, index, buf,
++			      size, 2 * HZ);
++
++	if (ret < 0) {
++		ath10k_warn(ar, "Failed to read usb control message: %d\n",
++			    ret);
++		kfree(buf);
++		return ret;
++	}
++
++	memcpy((u8 *)data, buf, size);
++
++	kfree(buf);
++
++	return 0;
++}
++
++static int ath10k_usb_ctrl_msg_exchange(struct ath10k *ar,
++					u8 req_val, u8 *req_buf, u32 req_len,
++					u8 resp_val, u8 *resp_buf,
++					u32 *resp_len)
++{
++	int ret;
++
++	/* send command */
++	ret = ath10k_usb_submit_ctrl_out(ar, req_val, 0, 0,
++					 req_buf, req_len);
++	if (ret)
++		goto err;
++
++	/* get response */
++	if (resp_buf) {
++		ret = ath10k_usb_submit_ctrl_in(ar, resp_val, 0, 0,
++						resp_buf, *resp_len);
++		if (ret)
++			goto err;
++	}
++
++	return 0;
++err:
++	return ret;
++}
++
++static int ath10k_usb_hif_diag_read(struct ath10k *ar, u32 address, void *buf,
++				    size_t buf_len)
++{
++	int ret;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	struct ath10k_usb_ctrl_diag_cmd_read *cmd;
++	u32 resp_len;
++
++	if (buf_len < sizeof(struct ath10k_usb_ctrl_diag_resp_read)) {
++		ret = -EINVAL;
++		goto err;
++	}
++
++	cmd = (struct ath10k_usb_ctrl_diag_cmd_read *)ar_usb->diag_cmd_buffer;
++	memset(cmd, 0, sizeof(*cmd));
++	cmd->cmd = ATH10K_USB_CTRL_DIAG_CC_READ;
++	cmd->address = cpu_to_le32(address);
++	resp_len = sizeof(struct ath10k_usb_ctrl_diag_resp_read);
++
++	ret = ath10k_usb_ctrl_msg_exchange(ar,
++					   ATH10K_USB_CONTROL_REQ_DIAG_CMD,
++					   (u8 *)cmd,
++					   sizeof(*cmd),
++					   ATH10K_USB_CONTROL_REQ_DIAG_RESP,
++					   ar_usb->diag_resp_buffer, &resp_len);
++	if (ret)
++		goto err;
++
++	if (resp_len != sizeof(struct ath10k_usb_ctrl_diag_resp_read)) {
++		ret = -EMSGSIZE;
++		goto err;
++	}
++
++	memcpy(buf, ar_usb->diag_resp_buffer,
++	       sizeof(struct ath10k_usb_ctrl_diag_resp_read));
++	return 0;
++err:
++	return ret;
++}
++
++static int ath10k_usb_hif_diag_write(struct ath10k *ar, u32 address,
++				     const void *data, int nbytes)
++{
++	int ret;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	struct ath10k_usb_ctrl_diag_cmd_write *cmd;
++
++	if (nbytes != sizeof(cmd->value)) {
++		ret = -EINVAL;
++		goto err;
++	}
++
++	cmd = (struct ath10k_usb_ctrl_diag_cmd_write *)ar_usb->diag_cmd_buffer;
++	memset(cmd, 0, sizeof(*cmd));
++	cmd->cmd = cpu_to_le32(ATH10K_USB_CTRL_DIAG_CC_WRITE);
++	cmd->address = cpu_to_le32(address);
++	memcpy(&cmd->value, data, nbytes);
++
++	ret = ath10k_usb_ctrl_msg_exchange(ar,
++					   ATH10K_USB_CONTROL_REQ_DIAG_CMD,
++					   (u8 *)cmd,
++					   sizeof(*cmd),
++					   0, NULL, NULL);
++	if (ret)
++		goto err;
++
++	return 0;
++err:
++	return ret;
++}
++
++static int ath10k_usb_bmi_exchange_msg(struct ath10k *ar,
++				       void *req, u32 req_len,
++				       void *resp, u32 *resp_len)
++{
++	int ret;
++
++	if (req) {
++		ret = ath10k_usb_submit_ctrl_out(ar,
++						 ATH10K_USB_CONTROL_REQ_SEND_BMI_CMD,
++						 0, 0, req, req_len);
++		if (ret) {
++			ath10k_warn(ar,
++				    "unable to send the bmi data to the device: %d\n",
++				    ret);
++			goto err;
++		}
++	}
++
++	if (resp) {
++		ret = ath10k_usb_submit_ctrl_in(ar,
++						ATH10K_USB_CONTROL_REQ_RECV_BMI_RESP,
++						0, 0, resp, *resp_len);
++		if (ret) {
++			ath10k_warn(ar,
++				    "Unable to read the bmi data from the device: %d\n",
++				    ret);
++			goto err;
++		}
++	}
++
++	return 0;
++err:
++	return ret;
++}
++
++static void ath10k_usb_hif_get_default_pipe(struct ath10k *ar,
++					    u8 *ul_pipe, u8 *dl_pipe)
++{
++	*ul_pipe = ATH10K_USB_PIPE_TX_CTRL;
++	*dl_pipe = ATH10K_USB_PIPE_RX_CTRL;
++}
++
++static int ath10k_usb_hif_map_service_to_pipe(struct ath10k *ar, u16 svc_id,
++					      u8 *ul_pipe, u8 *dl_pipe)
++{
++	int ret = 0;
++
++	switch (svc_id) {
++	case ATH10K_HTC_SVC_ID_RSVD_CTRL:
++	case ATH10K_HTC_SVC_ID_WMI_CONTROL:
++		*ul_pipe = ATH10K_USB_PIPE_TX_CTRL;
++		/* due to large control packets, shift to data pipe */
++		*dl_pipe = ATH10K_USB_PIPE_RX_DATA;
++		break;
++	case ATH10K_HTC_SVC_ID_HTT_DATA_MSG:
++		*ul_pipe = ATH10K_USB_PIPE_TX_DATA_LP;
++		/* Disable rxdata2 directly, it will be enabled
++		 * if FW enable rxdata2
++		 */
++		*dl_pipe = ATH10K_USB_PIPE_RX_DATA;
++		break;
++	default:
++		ret = -EPERM;
++		break;
++	}
++
++	return ret;
++}
++
++/* This op is currently only used by htc_wait_target if the HTC ready
++ * message times out. It is not applicable for USB since there is nothing
++ * we can do if the HTC ready message does not arrive in time.
++ * TODO: Make this op non mandatory by introducing a NULL check in the
++ * hif op wrapper.
++ */
++static void ath10k_usb_hif_send_complete_check(struct ath10k *ar,
++					       u8 pipe, int force)
++{
++}
++
++static int ath10k_usb_hif_power_up(struct ath10k *ar)
++{
++	return 0;
++}
++
++static void ath10k_usb_hif_power_down(struct ath10k *ar)
++{
++	ath10k_usb_flush_all(ar);
++}
++
++#ifdef CONFIG_PM
++
++static int ath10k_usb_hif_suspend(struct ath10k *ar)
++{
++	return -EOPNOTSUPP;
++}
++
++static int ath10k_usb_hif_resume(struct ath10k *ar)
++{
++	return -EOPNOTSUPP;
++}
++#endif
++
++static const struct ath10k_hif_ops ath10k_usb_hif_ops = {
++	.tx_sg			= ath10k_usb_hif_tx_sg,
++	.diag_read		= ath10k_usb_hif_diag_read,
++	.diag_write		= ath10k_usb_hif_diag_write,
++	.exchange_bmi_msg	= ath10k_usb_bmi_exchange_msg,
++	.start			= ath10k_usb_hif_start,
++	.stop			= ath10k_usb_hif_stop,
++	.map_service_to_pipe	= ath10k_usb_hif_map_service_to_pipe,
++	.get_default_pipe	= ath10k_usb_hif_get_default_pipe,
++	.send_complete_check	= ath10k_usb_hif_send_complete_check,
++	.get_free_queue_number	= ath10k_usb_hif_get_free_queue_number,
++	.power_up		= ath10k_usb_hif_power_up,
++	.power_down		= ath10k_usb_hif_power_down,
++#ifdef CONFIG_PM
++	.suspend		= ath10k_usb_hif_suspend,
++	.resume			= ath10k_usb_hif_resume,
++#endif
++};
++
++static u8 ath10k_usb_get_logical_pipe_num(u8 ep_address, int *urb_count)
++{
++	u8 pipe_num = ATH10K_USB_PIPE_INVALID;
++
++	switch (ep_address) {
++	case ATH10K_USB_EP_ADDR_APP_CTRL_IN:
++		pipe_num = ATH10K_USB_PIPE_RX_CTRL;
++		*urb_count = RX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_DATA_IN:
++		pipe_num = ATH10K_USB_PIPE_RX_DATA;
++		*urb_count = RX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_INT_IN:
++		pipe_num = ATH10K_USB_PIPE_RX_INT;
++		*urb_count = RX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_DATA2_IN:
++		pipe_num = ATH10K_USB_PIPE_RX_DATA2;
++		*urb_count = RX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_CTRL_OUT:
++		pipe_num = ATH10K_USB_PIPE_TX_CTRL;
++		*urb_count = TX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_DATA_LP_OUT:
++		pipe_num = ATH10K_USB_PIPE_TX_DATA_LP;
++		*urb_count = TX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_DATA_MP_OUT:
++		pipe_num = ATH10K_USB_PIPE_TX_DATA_MP;
++		*urb_count = TX_URB_COUNT;
++		break;
++	case ATH10K_USB_EP_ADDR_APP_DATA_HP_OUT:
++		pipe_num = ATH10K_USB_PIPE_TX_DATA_HP;
++		*urb_count = TX_URB_COUNT;
++		break;
++	default:
++		/* note: there may be endpoints not currently used */
++		break;
++	}
++
++	return pipe_num;
++}
++
++static int ath10k_usb_alloc_pipe_resources(struct ath10k *ar,
++					   struct ath10k_usb_pipe *pipe,
++					   int urb_cnt)
++{
++	int ret, i;
++	struct ath10k_urb_context *urb_context;
++
++	INIT_LIST_HEAD(&pipe->urb_list_head);
++	init_usb_anchor(&pipe->urb_submitted);
++
++	for (i = 0; i < urb_cnt; i++) {
++		urb_context = kzalloc(sizeof(*urb_context), GFP_KERNEL);
++		if (!urb_context) {
++			ret = -ENOMEM;
++			goto err;
++		}
++
++		urb_context->pipe = pipe;
++
++		/* we are only allocate the urb contexts here, the actual URB
++		 * is allocated from the kernel as needed to do a transaction
++		 */
++		pipe->urb_alloc++;
++		ath10k_usb_free_urb_to_pipe(pipe, urb_context);
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_USB,
++		   "alloc resources lpipe:%d hpipe:0x%X urbs:%d\n",
++		   pipe->logical_pipe_num, pipe->usb_pipe_handle,
++		   pipe->urb_alloc);
++
++	return 0;
++err:
++	return ret;
++}
++
++static int ath10k_usb_setup_pipe_resources(struct ath10k *ar,
++					   struct usb_interface *interface)
++{
++	int ret = 0, i, urbcount;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	struct usb_host_interface *iface_desc = interface->cur_altsetting;
++	struct usb_endpoint_descriptor *endpoint;
++	struct ath10k_usb_pipe *pipe;
++	u8 pipe_num;
++
++	ath10k_dbg(ar, ATH10K_DBG_USB, "setting up USB Pipes using interface\n");
++
++	/* walk decriptors and setup pipes */
++	for (i = 0; i < iface_desc->desc.bNumEndpoints; ++i) {
++		endpoint = &iface_desc->endpoint[i].desc;
++
++		if (ATH10K_USB_IS_BULK_EP(endpoint->bmAttributes)) {
++			ath10k_dbg(ar, ATH10K_DBG_USB,
++				   "%s Bulk Ep:0x%2.2X maxpktsz:%d\n",
++				   ATH10K_USB_IS_DIR_IN
++				   (endpoint->bEndpointAddress) ?
++				   "RX" : "TX", endpoint->bEndpointAddress,
++				   le16_to_cpu(endpoint->wMaxPacketSize));
++		} else if (ATH10K_USB_IS_INT_EP(endpoint->bmAttributes)) {
++			ath10k_dbg(ar, ATH10K_DBG_USB,
++				   "%s Int Ep:0x%2.2X maxpktsz:%d interval:%d\n",
++				   ATH10K_USB_IS_DIR_IN
++				   (endpoint->bEndpointAddress) ?
++				   "RX" : "TX", endpoint->bEndpointAddress,
++				   le16_to_cpu(endpoint->wMaxPacketSize),
++				   endpoint->bInterval);
++		} else if (ATH10K_USB_IS_ISOC_EP(endpoint->bmAttributes)) {
++			/* TODO for ISO */
++			ath10k_dbg(ar, ATH10K_DBG_USB,
++				   "%s ISOC Ep:0x%2.2X maxpktsz:%d interval:%d\n",
++				   ATH10K_USB_IS_DIR_IN
++				   (endpoint->bEndpointAddress) ?
++				   "RX" : "TX", endpoint->bEndpointAddress,
++				   le16_to_cpu(endpoint->wMaxPacketSize),
++				   endpoint->bInterval);
++		}
++		urbcount = 0;
++
++		pipe_num =
++		    ath10k_usb_get_logical_pipe_num(endpoint->bEndpointAddress,
++						    &urbcount);
++		if (pipe_num == ATH10K_USB_PIPE_INVALID)
++			continue;
++
++		pipe = &ar_usb->pipes[pipe_num];
++		if (pipe->ar_usb) {
++			/* hmmm..pipe was already setup */
++			continue;
++		}
++
++		pipe->ar_usb = ar_usb;
++		pipe->logical_pipe_num = pipe_num;
++		pipe->ep_address = endpoint->bEndpointAddress;
++		pipe->max_packet_size = le16_to_cpu(endpoint->wMaxPacketSize);
++
++		if (ATH10K_USB_IS_BULK_EP(endpoint->bmAttributes)) {
++			if (ATH10K_USB_IS_DIR_IN(pipe->ep_address)) {
++				pipe->usb_pipe_handle =
++				    usb_rcvbulkpipe(ar_usb->udev,
++						    pipe->ep_address);
++			} else {
++				pipe->usb_pipe_handle =
++				    usb_sndbulkpipe(ar_usb->udev,
++						    pipe->ep_address);
++			}
++		} else if (ATH10K_USB_IS_INT_EP(endpoint->bmAttributes)) {
++			if (ATH10K_USB_IS_DIR_IN(pipe->ep_address)) {
++				pipe->usb_pipe_handle =
++				    usb_rcvintpipe(ar_usb->udev,
++						   pipe->ep_address);
++			} else {
++				pipe->usb_pipe_handle =
++				    usb_sndintpipe(ar_usb->udev,
++						   pipe->ep_address);
++			}
++		} else if (ATH10K_USB_IS_ISOC_EP(endpoint->bmAttributes)) {
++			/* TODO for ISO */
++			if (ATH10K_USB_IS_DIR_IN(pipe->ep_address)) {
++				pipe->usb_pipe_handle =
++				    usb_rcvisocpipe(ar_usb->udev,
++						    pipe->ep_address);
++			} else {
++				pipe->usb_pipe_handle =
++				    usb_sndisocpipe(ar_usb->udev,
++						    pipe->ep_address);
++			}
++		}
++
++		pipe->ep_desc = endpoint;
++
++		if (!ATH10K_USB_IS_DIR_IN(pipe->ep_address))
++			pipe->flags |= ATH10K_USB_PIPE_FLAG_TX;
++
++		ret = ath10k_usb_alloc_pipe_resources(ar, pipe, urbcount);
++		if (ret != 0)
++			break;
++	}
++
++	return ret;
++}
++
++static int ath10k_usb_create(struct ath10k *ar,
++			     struct usb_interface *interface)
++{
++	int ret = 0, i;
++	struct ath10k_usb *ar_usb = ath10k_usb_priv(ar);
++	struct usb_device *dev = interface_to_usbdev(interface);
++	struct ath10k_usb_pipe *pipe;
++
++	usb_set_intfdata(interface, ar_usb);
++	spin_lock_init(&ar_usb->cs_lock);
++	ar_usb->udev = dev;
++	ar_usb->interface = interface;
++
++	for (i = 0; i < ATH10K_USB_PIPE_MAX; i++) {
++		pipe = &ar_usb->pipes[i];
++		INIT_WORK(&pipe->io_complete_work,
++			  ath10k_usb_io_comp_work);
++		skb_queue_head_init(&pipe->io_comp_queue);
++	}
++
++	ar_usb->diag_cmd_buffer = kzalloc(ATH10K_USB_MAX_DIAG_CMD, GFP_KERNEL);
++	if (!ar_usb->diag_cmd_buffer) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ar_usb->diag_resp_buffer = kzalloc(ATH10K_USB_MAX_DIAG_RESP,
++					   GFP_KERNEL);
++	if (!ar_usb->diag_resp_buffer) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ret = ath10k_usb_setup_pipe_resources(ar, interface);
++	if (ret)
++		goto err;
++
++	return 0;
++err:
++	ath10k_usb_destroy(ar);
++	return ret;
++}
++
++/* ath10k usb driver registered functions */
++static int ath10k_usb_probe(struct usb_interface *interface,
++			    const struct usb_device_id *id)
++{
++	int ret, vendor_id, product_id;
++	struct ath10k_usb *ar_usb;
++	struct ath10k *ar;
++	struct usb_device *dev = interface_to_usbdev(interface);
++	u32 chip_id;
++	enum ath10k_hw_rev hw_rev;
++
++	/* Assumption: All USB based chipsets (so far) are QCA9377 based.
++	 * If there will be newer chipsets that does not use the hw reg
++	 * setup as defined in qca6174_regs and qca6174_values, this
++	 * assumption is no longer valid and hw_rev must be setup differently
++	 * depending on chipset.
++	 */
++	hw_rev = ATH10K_HW_QCA9377;
++
++	ar = ath10k_core_create(sizeof(*ar_usb), &dev->dev, ATH10K_BUS_USB,
++				hw_rev, &ath10k_usb_hif_ops);
++	if (!ar) {
++		dev_err(&dev->dev, "failed to allocate core\n");
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	usb_get_dev(dev);
++	vendor_id = le16_to_cpu(dev->descriptor.idVendor);
++	product_id = le16_to_cpu(dev->descriptor.idProduct);
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT,
++		   "usb new func: vendor 0x%04x, product 0x%04x\n",
++		   vendor_id, product_id);
++
++	ar_usb = ath10k_usb_priv(ar);
++	ret = ath10k_usb_create(ar, interface);
++	ar_usb->ar = ar;
++
++	ar->dev_id = product_id;
++	ar->id.vendor = vendor_id;
++	ar->id.device = product_id;
++
++	/* TODO: don't know yet how to get chip_id with USB */
++	chip_id = 0;
++	ret = ath10k_core_register(ar, chip_id);
++	if (ret) {
++		ath10k_warn(ar, "failed to register driver core: %d\n", ret);
++		goto err;
++	}
++
++	return 0;
++
++err:
++	usb_put_dev(dev);
++	return ret;
++}
++
++static void ath10k_usb_remove(struct usb_interface *interface)
++{
++	struct ath10k_usb *ar_usb;
++
++	ar_usb = usb_get_intfdata(interface);
++	if (!ar_usb)
++		return;
++
++	ath10k_core_unregister(ar_usb->ar);
++	ath10k_usb_destroy(ar_usb->ar);
++	usb_put_dev(interface_to_usbdev(interface));
++	ath10k_core_destroy(ar_usb->ar);
++}
++
++#ifdef CONFIG_PM
++
++static int ath10k_usb_pm_suspend(struct usb_interface *interface,
++				 pm_message_t message)
++{
++	struct ath10k_usb *ar_usb = usb_get_intfdata(interface);
++
++	ath10k_usb_flush_all(ar_usb->ar);
++	return 0;
++}
++
++static int ath10k_usb_pm_resume(struct usb_interface *interface)
++{
++	struct ath10k_usb *ar_usb = usb_get_intfdata(interface);
++	struct ath10k *ar = ar_usb->ar;
++
++	ath10k_usb_post_recv_transfers(ar,
++				       &ar_usb->pipes[ATH10K_USB_PIPE_RX_DATA]);
++
++	return 0;
++}
++
++#else
++
++#define ath10k_usb_pm_suspend NULL
++#define ath10k_usb_pm_resume NULL
++
++#endif
++
++/* table of devices that work with this driver */
++static struct usb_device_id ath10k_usb_ids[] = {
++	{USB_DEVICE(0x13b1, 0x0042)}, /* Linksys WUSB6100M */
++	{ /* Terminating entry */ },
++};
++
++MODULE_DEVICE_TABLE(usb, ath10k_usb_ids);
++
++static struct usb_driver ath10k_usb_driver = {
++	.name = "ath10k_usb",
++	.probe = ath10k_usb_probe,
++	.suspend = ath10k_usb_pm_suspend,
++	.resume = ath10k_usb_pm_resume,
++	.disconnect = ath10k_usb_remove,
++	.id_table = ath10k_usb_ids,
++	.supports_autosuspend = true,
++	.disable_hub_initiated_lpm = 1,
++};
++
++module_usb_driver(ath10k_usb_driver);
++
++MODULE_AUTHOR("Atheros Communications, Inc.");
++MODULE_DESCRIPTION("Driver support for Atheros AR600x USB devices");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/ath/ath10k/usb.h b/drivers/net/wireless/ath/ath10k/usb.h
+new file mode 100644
+index 0000000..984dcb9
+--- /dev/null
++++ b/drivers/net/wireless/ath/ath10k/usb.h
+@@ -0,0 +1,128 @@
++/*
++ * Copyright (c) 2004-2011 Atheros Communications Inc.
++ * Copyright (c) 2011-2012 Qualcomm Atheros, Inc.
++ * Copyright (c) 2016 Kapsch Trafficcom AB
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
++
++#ifndef _USB_H_
++#define _USB_H_
++
++/* constants */
++#define TX_URB_COUNT               32
++#define RX_URB_COUNT               32
++#define ATH10K_USB_RX_BUFFER_SIZE  4096
++
++#define ATH10K_USB_PIPE_INVALID ATH10K_USB_PIPE_MAX
++
++/* USB endpoint definitions */
++#define ATH10K_USB_EP_ADDR_APP_CTRL_IN          0x81
++#define ATH10K_USB_EP_ADDR_APP_DATA_IN          0x82
++#define ATH10K_USB_EP_ADDR_APP_DATA2_IN         0x83
++#define ATH10K_USB_EP_ADDR_APP_INT_IN           0x84
++
++#define ATH10K_USB_EP_ADDR_APP_CTRL_OUT         0x01
++#define ATH10K_USB_EP_ADDR_APP_DATA_LP_OUT      0x02
++#define ATH10K_USB_EP_ADDR_APP_DATA_MP_OUT      0x03
++#define ATH10K_USB_EP_ADDR_APP_DATA_HP_OUT      0x04
++
++/* diagnostic command defnitions */
++#define ATH10K_USB_CONTROL_REQ_SEND_BMI_CMD        1
++#define ATH10K_USB_CONTROL_REQ_RECV_BMI_RESP       2
++#define ATH10K_USB_CONTROL_REQ_DIAG_CMD            3
++#define ATH10K_USB_CONTROL_REQ_DIAG_RESP           4
++
++#define ATH10K_USB_CTRL_DIAG_CC_READ               0
++#define ATH10K_USB_CTRL_DIAG_CC_WRITE              1
++
++#define ATH10K_USB_IS_BULK_EP(attr) (((attr) & 3) == 0x02)
++#define ATH10K_USB_IS_INT_EP(attr)  (((attr) & 3) == 0x03)
++#define ATH10K_USB_IS_ISOC_EP(attr) (((attr) & 3) == 0x01)
++#define ATH10K_USB_IS_DIR_IN(addr)  ((addr) & 0x80)
++
++struct ath10k_usb_ctrl_diag_cmd_write {
++	__le32 cmd;
++	__le32 address;
++	__le32 value;
++	__le32 padding;
++} __packed;
++
++struct ath10k_usb_ctrl_diag_cmd_read {
++	__le32 cmd;
++	__le32 address;
++} __packed;
++
++struct ath10k_usb_ctrl_diag_resp_read {
++	u8 value[4];
++} __packed;
++
++/* tx/rx pipes for usb */
++enum ath10k_usb_pipe_id {
++	ATH10K_USB_PIPE_TX_CTRL = 0,
++	ATH10K_USB_PIPE_TX_DATA_LP,
++	ATH10K_USB_PIPE_TX_DATA_MP,
++	ATH10K_USB_PIPE_TX_DATA_HP,
++	ATH10K_USB_PIPE_RX_CTRL,
++	ATH10K_USB_PIPE_RX_DATA,
++	ATH10K_USB_PIPE_RX_DATA2,
++	ATH10K_USB_PIPE_RX_INT,
++	ATH10K_USB_PIPE_MAX
++};
++
++struct ath10k_usb_pipe {
++	struct list_head urb_list_head;
++	struct usb_anchor urb_submitted;
++	u32 urb_alloc;
++	u32 urb_cnt;
++	u32 urb_cnt_thresh;
++	unsigned int usb_pipe_handle;
++	u32 flags;
++	u8 ep_address;
++	u8 logical_pipe_num;
++	struct ath10k_usb *ar_usb;
++	u16 max_packet_size;
++	struct work_struct io_complete_work;
++	struct sk_buff_head io_comp_queue;
++	struct usb_endpoint_descriptor *ep_desc;
++};
++
++#define ATH10K_USB_PIPE_FLAG_TX    (1 << 0)
++
++/* usb device object */
++struct ath10k_usb {
++	/* protects pipe->urb_list_head and  pipe->urb_cnt */
++	spinlock_t cs_lock;
++
++	struct usb_device *udev;
++	struct usb_interface *interface;
++	struct ath10k_usb_pipe pipes[ATH10K_USB_PIPE_MAX];
++	u8 *diag_cmd_buffer;
++	u8 *diag_resp_buffer;
++	struct ath10k *ar;
++};
++
++/* usb urb object */
++struct ath10k_urb_context {
++	struct list_head link;
++	struct ath10k_usb_pipe *pipe;
++	struct sk_buff *skb;
++	struct ath10k *ar;
++};
++
++static inline struct ath10k_usb *ath10k_usb_priv(struct ath10k *ar)
++{
++	return (struct ath10k_usb *)ar->drv_priv;
++}
++
++#endif
 -- 
-2.9.3
+2.7.4
