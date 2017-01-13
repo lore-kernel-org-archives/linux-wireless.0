@@ -1,88 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51198 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751621AbdAMNzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 08:55:23 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2017-01-13
-Date: Fri, 13 Jan 2017 14:55:15 +0100
-Message-Id: <20170113135516.19593-1-johannes@sipsolutions.net> (sfid-20170113_145534_731762_53C8EF51)
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33874 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750787AbdAMFhD (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 00:37:03 -0500
+Received: by mail-pf0-f172.google.com with SMTP id 127so25129767pfg.1
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:37:02 -0800 (PST)
+From: Matt Ranostay <matt@ranostay.consulting>
+To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
+Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
+Subject: [PATCH v3 0/2]  mmc: pwrseq: add support for Marvell SD8787 chip
+Date: Thu, 12 Jan 2017 21:29:12 -0800
+Message-Id: <20170113052914.12400-1-matt@ranostay.consulting> (sfid-20170113_063712_113307_A101B55E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Changes from v1:
+* split devictree docs from pwrseq changes
+* rebase devicetree documents due to filename change
+* rebase pwrseq patchset
 
-Here's another update for the current cycle. Some of those
-patches have been sitting in our tree and I haven't been
-pulling them out quickly enough - will try to do better...
+Changes from v2:
+* fix rookie mistake missing the main source file and docs
 
-Please pull and let me know if there's any problem.
+Matt Ranostay (2):
+  devicetree: document new marvell-8xxx and pwrseq-sd8787 options
+  mmc: pwrseq: add support for Marvell SD8787 chip
 
-Thanks,
-johannes
+ .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt  |  14 +++
+ .../bindings/net/wireless/marvell-8xxx.txt         |   7 +-
+ drivers/mmc/core/Kconfig                           |  10 ++
+ drivers/mmc/core/Makefile                          |   1 +
+ drivers/mmc/core/pwrseq_sd8787.c                   | 117 +++++++++++++++++++++
+ 5 files changed, 148 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
+ create mode 100644 drivers/mmc/core/pwrseq_sd8787.c
 
-
-
-The following changes since commit 03430fa10b99e95e3a15eb7c00978fb1652f3b24:
-
-  Merge branch 'bcm_sf2-fixes' (2017-01-08 22:01:22 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-01-13
-
-for you to fetch changes up to dbef53621116474bb883f76f0ba6b7640bc42332:
-
-  mac80211: prevent skb/txq mismatch (2017-01-13 14:47:21 +0100)
-
-----------------------------------------------------------------
-We have a number of fixes, in part because I was late
-in actually sending them out - will try to do better in
-the future:
- * handle VHT opmode properly when hostapd is controlling
-   full station state
- * two fixes for minimum channel width in mac80211
- * don't leave SMPS set to junk in HT capabilities
- * fix headroom when forwarding mesh packets, recently
-   broken by another fix that failed to take into account
-   frame encryption
- * fix the TID in null-data packets indicating EOSP (end
-   of service period) in U-APSD
- * prevent attempting to use (and then failing which
-   results in crashes) TXQs on stations that aren't added
-   to the driver yet
-
-----------------------------------------------------------------
-Beni Lev (1):
-      cfg80211: consider VHT opmode on station update
-
-Cedric Izoard (1):
-      mac80211: Fix headroom allocation when forwarding mesh pkt
-
-Emmanuel Grumbach (1):
-      mac80211: fix the TID on NDPs sent as EOSP carrier
-
-Felix Fietkau (1):
-      mac80211: initialize SMPS field in HT capabilities
-
-Johannes Berg (3):
-      mac80211: implement multicast forwarding on fast-RX path
-      mac80211: calculate min channel width correctly
-      mac80211: recalculate min channel width on VHT opmode changes
-
-Michal Kazior (1):
-      mac80211: prevent skb/txq mismatch
-
- include/uapi/linux/nl80211.h |  4 +++-
- net/mac80211/chan.c          |  3 ---
- net/mac80211/iface.c         | 21 +++++++++++++++++++++
- net/mac80211/main.c          | 13 +++++++++----
- net/mac80211/rate.c          |  2 ++
- net/mac80211/rx.c            | 38 +++++++++++++++++++++-----------------
- net/mac80211/sta_info.c      |  4 ++--
- net/mac80211/tx.c            | 17 +++++++----------
- net/mac80211/vht.c           |  4 +++-
- net/wireless/nl80211.c       | 15 +++++++++++++++
- 10 files changed, 83 insertions(+), 38 deletions(-)
+-- 
+2.10.2
