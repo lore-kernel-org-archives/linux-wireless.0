@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42176 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932390AbdAIPrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 10:47:10 -0500
-Message-ID: <1483976821.20579.0.camel@sipsolutions.net> (sfid-20170109_164932_356127_678A19EE)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
-        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Date: Mon, 09 Jan 2017 16:47:01 +0100
-In-Reply-To: <ebc5050e12c04273fa518e35d7f0b8bc@fami-braun.de>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
-         <1483706872.4089.8.camel@sipsolutions.net>
-         <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
-         <1483710841.12677.1.camel@sipsolutions.net>
-         <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
-         <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
-         <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
-         <1483964159.17582.34.camel@sipsolutions.net>
-         <ebc5050e12c04273fa518e35d7f0b8bc@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fudo.makrotopia.org ([185.142.180.71]:38305 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdAMVci (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:32:38 -0500
+Date: Fri, 13 Jan 2017 22:32:30 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 35/40] rt2x00: rt2x00pci: set PCI MWI only if supported
+Message-ID: <20170113213225.GA3642@makrotopia.org> (sfid-20170113_223240_660383_6FF74A95)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-09 at 16:25 +0100, michael-dev wrote:
-> Am 09.01.2017 13:15, schrieb Johannes Berg:
-> > > That is bridge fdb entries (need to) expire so the bridge might
-> > > "forget" a still-connected station not sending but only consuming
-> > > broadcast traffic.
-> > 
-> > Ok, that I don't know. Somehow if you address a unicast packet
-> > there
-> > the bridge has to make a decision - so it really should know?
-> 
-> If the bridge has not learned the unicast destination mac address on
-> any port, it will flood the packet on all ports except the port it
-> received the packet on.
+From: Claudio Mignanti <c.mignanti@gmail.com>
 
-Ok, so this really needs to be done in mac80211.
+This is needed for devices without support for PCI MWI. See also
+https://dev.openwrt.org/changeset/21850
 
-I'll send out the pull request soon then.
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+index eb6dbcd4fddf..4becfeb75ba8 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+@@ -94,8 +94,10 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+ 
+ 	pci_set_master(pci_dev);
+ 
++#ifdef CONFIG_PCI_SET_MWI
+ 	if (pci_set_mwi(pci_dev))
+ 		rt2x00_probe_err("MWI not available\n");
++#endif
+ 
+ 	if (dma_set_mask(&pci_dev->dev, DMA_BIT_MASK(32))) {
+ 		rt2x00_probe_err("PCI DMA not supported\n");
+-- 
+2.11.0
