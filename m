@@ -1,76 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34204 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754157AbdAJI1C (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33544 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdAMVfZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 03:27:02 -0500
-Message-ID: <1484036818.5227.48.camel@coelho.fi> (sfid-20170110_092727_906710_5BF2D3CB)
-From: Luca Coelho <luca@coelho.fi>
-To: Fabio Coatti <fabio.coatti@gmail.com>
-Cc: Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Date: Tue, 10 Jan 2017 10:26:58 +0200
-In-Reply-To: <2231220.vMvt4J1trM@calvin>
-References: <2029482.jt8IarKZJs@calvin>
-         <942b4775-6027-2b99-84c7-37b7cde124b9@au1.ibm.com>
-         <1484000511.5227.33.camel@coelho.fi> <2231220.vMvt4J1trM@calvin>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: kernel 4.9 iwlwifi startup error
+        Fri, 13 Jan 2017 16:35:25 -0500
+Received: by mail-lf0-f68.google.com with SMTP id x1so1724451lff.0
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:24 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 01/10] ath10k: various usb related definitions
+Date: Fri, 13 Jan 2017 22:35:00 +0100
+Message-Id: <1484343309-6327-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223544_625719_4E394082)
+In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-01-10 at 09:21 +0100, Fabio Coatti wrote:
-> In data martedì 10 gennaio 2017 00:21:51 CET, Luca Coelho ha scritto:
-> > On Tue, 2017-01-03 at 13:42 +1100, Andrew Donnellan wrote:
-> > > On 02/01/17 21:12, Fabio Coatti wrote:
-> > > > Hi all,
-> > > > I'm using kernel 4.9 and maybe half of the times I boot my laptop I get
-> > > > the
-> > > > error reported below, and the wifi does not work. I have to remove
-> > > > iwlwifi (like modprobe -r iwldvm iwlwifi) and insert it again to get
-> > > > things workig again. This seems a bit random, it does not happens all
-> > > > the times so it could be a timing issue or even a flaky hardware
-> > > > (unlikely, as I see only this issue with wifi, once it starts it works
-> > > > just fine)
-> > > > I'm pretty sure to have seen the same behaviour at some point in 4.8.X
-> > > > release, but right now I lost the related notes.
-> > > > Environment:
-> > > > Distro: gentoo
-> > > > gcc 5.4.0
-> > > > HW: Hewlett-Packard HP EliteBook Folio 9470m/18DF, BIOS 68IBD Ver. F.63
-> > > > 04/26/2016
-> > > > Intel(R) Core(TM) i5-3427U CPU @ 1.80GHz
-> > > > Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 24)
-> > > > 
-> > > > Of course if more info is needed, just drop me a note.
-> > > > 
-> > > > I'm not subscribed to mailing lists, so please keep me in CC: for any
-> > > > information request.
-> > > > 
-> > > > Many thanks.
-> > > 
-> > > I've so far seen this once on my laptop, a Samsung NP540U3C (don't have
-> > > it with me right now, so I'm not sure what the wifi chipset is), running
-> > > with a Debian 4.9 kernel.
-> > 
-> > This bug has already been reported in bugzilla:
-> > 
-> > https://bugzilla.kernel.org/show_bug.cgi?id=190281
-> > 
-> > Did you have any problems with older kernel versions? If so, would it be
-> > possible for you to bisect?
-> 
-> 
-> Well, it happens on a laptop that I use quite intensively, so it will take 
-> some time to bisect. However, in the meantime I checked the old logs and the 
-> first recorded occurrence happened with 4.8.10 release and firmware version 
-> 18.168.6.1
+Definitions for USB based chipsets
 
-Thanks! Let's continue tracking this in bugzilla.
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 3 +++
+ drivers/net/wireless/ath/ath10k/debug.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
---
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1ffef90..3f865c0 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -75,6 +75,7 @@ enum ath10k_bus {
+ 	ATH10K_BUS_PCI,
+ 	ATH10K_BUS_AHB,
+ 	ATH10K_BUS_SDIO,
++	ATH10K_BUS_USB,
+ };
+ 
+ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+@@ -86,6 +87,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
+ 		return "ahb";
+ 	case ATH10K_BUS_SDIO:
+ 		return "sdio";
++	case ATH10K_BUS_USB:
++		return "usb";
+ 	}
+ 
+ 	return "unknown";
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 257d109..548ad54 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -40,6 +40,8 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_AHB		= 0x00008000,
+ 	ATH10K_DBG_SDIO		= 0x00010000,
+ 	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
++	ATH10K_DBG_USB		= 0x00040000,
++	ATH10K_DBG_USB_BULK	= 0x00080000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+ 
+-- 
+2.7.4
