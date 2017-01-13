@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37854 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932522AbdA0M1z (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35074 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751315AbdAMVf0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:27:55 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 3/5] brcmfmac: fix handling firmware results for wowl netdetect
-Date: Fri, 27 Jan 2017 12:27:46 +0000
-Message-Id: <1485520068-5807-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_133123_259904_05D374DC)
-In-Reply-To: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 13 Jan 2017 16:35:26 -0500
+Received: by mail-lf0-f67.google.com with SMTP id v186so7072126lfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:26 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC 03/10] ath10k: high_latency detection
+Date: Fri, 13 Jan 2017 22:35:02 +0100
+Message-Id: <1484343309-6327-4-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223530_713202_54426562)
+In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For wowl netdetect the event data changed for newer chips. This
-was recently fixed for scheduled scan, but same change is needed
-for wowl netdetect. Removing now pointles += operation from both
-result handlers.
+The setup of high latency chips (USB and SDIO) is
+sometimes different than for chips using low latency
+interfaces.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+The bus type is used to determine if the interface is
+a high latency interface.
+
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 302a78d..c81d78f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3330,7 +3330,6 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
- 		goto out_err;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e34c734..e985316 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2294,6 +2294,7 @@ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 	ar->hw_rev = hw_rev;
+ 	ar->hif.ops = hif_ops;
+ 	ar->hif.bus = bus;
++	ar->is_high_latency = ath10k_is_high_latency(bus);
  
--	data += sizeof(struct brcmf_pno_scanresults_le);
- 	netinfo_start = brcmf_get_netinfo_array(pfn_result);
+ 	switch (hw_rev) {
+ 	case ATH10K_HW_QCA988X:
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3f865c0..c58250c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -751,6 +751,8 @@ struct ath10k {
  
- 	for (i = 0; i < result_count; i++) {
-@@ -3478,8 +3477,7 @@ static s32 brcmf_config_wowl_pattern(struct brcmf_if *ifp, u8 cmd[4],
- 		return -EINVAL;
- 	}
+ 	bool p2p;
  
--	data += sizeof(struct brcmf_pno_scanresults_le);
--	netinfo = (struct brcmf_pno_net_info_le *)data;
-+	netinfo = brcmf_get_netinfo_array(pfn_result);
- 	memcpy(cfg->wowl.nd->ssid.ssid, netinfo->SSID, netinfo->SSID_len);
- 	cfg->wowl.nd->ssid.ssid_len = netinfo->SSID_len;
- 	cfg->wowl.nd->n_channels = 1;
++	bool is_high_latency;
++
+ 	struct {
+ 		enum ath10k_bus bus;
+ 		const struct ath10k_hif_ops *ops;
+@@ -967,6 +969,11 @@ static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
+ 	return false;
+ }
+ 
++static inline bool ath10k_is_high_latency(enum ath10k_bus bus)
++{
++	return ((bus == ATH10K_BUS_SDIO) || (bus == ATH10K_BUS_USB));
++}
++
+ struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
+ 				  enum ath10k_bus bus,
+ 				  enum ath10k_hw_rev hw_rev,
 -- 
-1.9.1
+2.7.4
