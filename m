@@ -1,76 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0044.outbound.protection.outlook.com ([104.47.32.44]:61264
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752768AbdAKL01 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 06:26:27 -0500
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: Felix Fietkau <nbd@nbd.name>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Stephen Hemminger <stephen@networkplumber.org>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net>
- <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
- <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
- <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
- <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
-CC: <netdev@vger.kernel.org>, <bridge@lists.linux-foundation.org>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        "M. Braun" <michael-dev@fami-braun.de>
-From: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <058f2afd-2502-e2e5-6427-1536fcd5851f@quantenna.com> (sfid-20170111_122701_572259_8F29330C)
-Date: Wed, 11 Jan 2017 14:26:16 +0300
-MIME-Version: 1.0
-In-Reply-To: <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:36650 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751353AbdAMV0x (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:26:53 -0500
+Received: by mail-lf0-f65.google.com with SMTP id h65so7028121lfi.3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:52 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 4/8] ath10k: htc: refactorization
+Date: Fri, 13 Jan 2017 22:26:07 +0100
+Message-Id: <1484342771-6160-5-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222702_839285_FDE6D5B3)
+In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/11/2017 12:27 AM, Felix Fietkau wrote:
-> On 2017-01-10 11:56, Johannes Berg wrote:
->> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
->>> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
->>>> I wonder if MAC80211 should be doing IGMP snooping and not bridge
->>>> in this environment.
->>>
->>> In the long term, yes. For now, not quite sure.
->>
->> There's no "for now" in the kernel. Code added now will have to be
->> maintained essentially forever.
-> I'm not sure that putting the IGMP snooping code in mac80211 is a good
-> idea, that would be quite a bit of code duplication.
-> This implementation works, it's very simple, and it's quite flexible for
-> a number of use cases.
->
-> Is there any remaining objection to merging this in principle (aside
-> from potential issues with the code)?
->
-> - Felix
->
+Code refactorization:
 
+Moved the code for ep 0 in ath10k_htc_rx_completion_handler
+to ath10k_htc_control_rx_complete.
 
-Hi Felix, can we consider two examples configurations with multicast 
-traffic:
+This eases the implementation of SDIO/mbox significantly since
+the ep_rx_complete cb is invoked directly from the SDIO/mbox
+hif layer.
 
-1. AP is a source of multicast traffic itself, no bridge on AP. For 
-example, wireless video server streaming to several clients.
-In this situation, we can not make use of possible advantages given by 
-mc-to-uc conversion?
+Since the ath10k_htc_control_rx_complete already is present
+(only containing a warning message) there is no reason for not
+using it (instead of having a special case for ep 0 in
+ath10k_htc_rx_completion_handler).
 
-2. A configuration with AP + STA + 3 client devices behind STA.
-                             ----|client 1|
-                             |
-|  mc  |----|AP|----|STA|---|---|client 2|
-|server|                    |
-                             ----|client 3|
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+---
+ drivers/net/wireless/ath/ath10k/htc.c | 73 ++++++++++++++++-------------------
+ 1 file changed, 34 insertions(+), 39 deletions(-)
 
-Multicast server behind AP streams MC video traffic. All 3 clients 
-behind the STA have joined the multicast group.
-I'm not sure if this case will be handled correctly with mc-to-uc 
-conversion in bridge on AP?
+diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
+index f39eef6..eb036b3 100644
+--- a/drivers/net/wireless/ath/ath10k/htc.c
++++ b/drivers/net/wireless/ath/ath10k/htc.c
+@@ -459,42 +459,6 @@ void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		/* zero length packet with trailer data, just drop these */
+ 		goto out;
+ 
+-	if (eid == ATH10K_HTC_EP_0) {
+-		struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
+-
+-		switch (__le16_to_cpu(msg->hdr.message_id)) {
+-		case ATH10K_HTC_MSG_READY_ID:
+-		case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
+-			/* handle HTC control message */
+-			if (completion_done(&htc->ctl_resp)) {
+-				/*
+-				 * this is a fatal error, target should not be
+-				 * sending unsolicited messages on the ep 0
+-				 */
+-				ath10k_warn(ar, "HTC rx ctrl still processing\n");
+-				complete(&htc->ctl_resp);
+-				goto out;
+-			}
+-
+-			htc->control_resp_len =
+-				min_t(int, skb->len,
+-				      ATH10K_HTC_MAX_CTRL_MSG_LEN);
+-
+-			memcpy(htc->control_resp_buffer, skb->data,
+-			       htc->control_resp_len);
+-
+-			complete(&htc->ctl_resp);
+-			break;
+-		case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
+-			htc->htc_ops.target_send_suspend_complete(ar);
+-			break;
+-		default:
+-			ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
+-			break;
+-		}
+-		goto out;
+-	}
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_HTC, "htc rx completion ep %d skb %pK\n",
+ 		   eid, skb);
+ 	ep->ep_ops.ep_rx_complete(ar, skb);
+@@ -509,9 +473,40 @@ EXPORT_SYMBOL(ath10k_htc_rx_completion_handler);
+ static void ath10k_htc_control_rx_complete(struct ath10k *ar,
+ 					   struct sk_buff *skb)
+ {
+-	/* This is unexpected. FW is not supposed to send regular rx on this
+-	 * endpoint. */
+-	ath10k_warn(ar, "unexpected htc rx\n");
++	struct ath10k_htc *htc = &ar->htc;
++	struct ath10k_htc_msg *msg = (struct ath10k_htc_msg *)skb->data;
++
++	switch (__le16_to_cpu(msg->hdr.message_id)) {
++	case ATH10K_HTC_MSG_READY_ID:
++	case ATH10K_HTC_MSG_CONNECT_SERVICE_RESP_ID:
++		/* handle HTC control message */
++		if (completion_done(&htc->ctl_resp)) {
++			/* this is a fatal error, target should not be
++			 * sending unsolicited messages on the ep 0
++			 */
++			ath10k_warn(ar, "HTC rx ctrl still processing\n");
++			complete(&htc->ctl_resp);
++			goto out;
++		}
++
++		htc->control_resp_len =
++			min_t(int, skb->len,
++			      ATH10K_HTC_MAX_CTRL_MSG_LEN);
++
++		memcpy(htc->control_resp_buffer, skb->data,
++		       htc->control_resp_len);
++
++		complete(&htc->ctl_resp);
++		break;
++	case ATH10K_HTC_MSG_SEND_SUSPEND_COMPLETE:
++		htc->htc_ops.target_send_suspend_complete(ar);
++		break;
++	default:
++		ath10k_warn(ar, "ignoring unsolicited htc ep0 event\n");
++		break;
++	}
++
++out:
+ 	kfree_skb(skb);
+ }
+ 
+-- 
+2.7.4
