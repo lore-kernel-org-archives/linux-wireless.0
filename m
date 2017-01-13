@@ -1,110 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35809 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750765AbdAXNgO (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:36658 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751307AbdAMV0v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 08:36:14 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: mwifiex_unmap_pci_memory() handling for sleep confirm
-Date: Tue, 24 Jan 2017 19:05:44 +0530
-Message-ID: <1485264945-1248-1-git-send-email-akarwar@marvell.com> (sfid-20170124_143617_068915_A57568D3)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 13 Jan 2017 16:26:51 -0500
+Received: by mail-lf0-f65.google.com with SMTP id h65so7028213lfi.3
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:51 -0800 (PST)
+From: Erik Stromdahl <erik.stromdahl@gmail.com>
+To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
+Subject: [RFC v3 7/8] ath10k: sdio get target info
+Date: Fri, 13 Jan 2017 22:26:10 +0100
+Message-Id: <1484342771-6160-8-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222658_020146_9C236F8E)
+In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sleep confirm is a special command for which "adapter->cur_cmd" pointer
-is not set. When it's response is received, host writes SLEEP confirm done
-to a register. Firmware will perform DMA for writing sleep cookie signature
-on same buffer after this.
+Special BMI get target info function for SDIO.
 
-Let's not immediately call mwifiex_unmap_pci_memory() for this special
-command. Unmapping will be done when firmware completes writing sleep
-cookie signature.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 19 ++++++++++++++++---
- drivers/net/wireless/marvell/mwifiex/pcie.h |  1 +
- 2 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/bmi.c  | 70 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/bmi.h  |  2 +
+ drivers/net/wireless/ath/ath10k/core.c |  5 ++-
+ 3 files changed, 76 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ca51411..3f4ca28 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -441,7 +441,7 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- 	u32 sleep_cookie, count;
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.c b/drivers/net/wireless/ath/ath10k/bmi.c
+index 2872d34..d9db153 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.c
++++ b/drivers/net/wireless/ath/ath10k/bmi.c
+@@ -88,6 +88,76 @@ int ath10k_bmi_get_target_info(struct ath10k *ar,
+ 	return 0;
+ }
  
- 	for (count = 0; count < max_delay_loop_cnt; count++) {
--		buffer = card->cmdrsp_buf->data - INTF_HEADER_LEN;
-+		buffer = card->cmdrsp_buf->data;
- 		sleep_cookie = READ_ONCE(*(u32 *)buffer);
++#define TARGET_VERSION_SENTINAL 0xffffffffu
++
++int ath10k_bmi_get_target_info_sdio(struct ath10k *ar,
++				    struct bmi_target_info *target_info)
++{
++	struct bmi_cmd cmd;
++	union bmi_resp resp;
++	u32 cmdlen = sizeof(cmd.id) + sizeof(cmd.get_target_info);
++	u32 resplen, tmp, ver_len;
++	int ret;
++
++	ath10k_dbg(ar, ATH10K_DBG_BMI, "bmi get target info SDIO\n");
++
++	if (ar->bmi.done_sent) {
++		ath10k_warn(ar, "BMI Get Target Info Command disallowed\n");
++		return -EBUSY;
++	}
++
++	cmd.id = __cpu_to_le32(BMI_GET_TARGET_INFO);
++
++	/* Step 1: Read 4 bytes of the target info and check if it is
++	 * the special sentinal version word or the first word in the
++	 * version response.
++	 */
++	resplen = sizeof(u32);
++	ret = ath10k_hif_exchange_bmi_msg(ar, &cmd, cmdlen, &tmp, &resplen);
++	if (ret) {
++		ath10k_warn(ar, "unable to read from device\n");
++		return ret;
++	}
++
++	/* Some SDIO boards have a special sentinal byte before the real
++	 * version response.
++	 */
++	if (tmp == TARGET_VERSION_SENTINAL) {
++		/* Step 1b: Read the version length */
++		resplen = sizeof(u32);
++		ret = ath10k_hif_exchange_bmi_msg(ar, NULL, 0, &tmp,
++						  &resplen);
++		if (ret) {
++			ath10k_warn(ar, "unable to read from device\n");
++			return ret;
++		}
++	}
++
++	ver_len = __le32_to_cpu(tmp);
++
++	/* Step 2: Check the target info length */
++	if (ver_len != sizeof(resp.get_target_info)) {
++		ath10k_warn(ar, "Unexpected target info len: %u. Expected: %lu\n",
++			    ver_len, sizeof(resp.get_target_info));
++		return -EINVAL;
++	}
++
++	/* Step 3: Read the rest of the version response */
++	resplen = sizeof(resp.get_target_info) - sizeof(u32);
++	ret = ath10k_hif_exchange_bmi_msg(ar, NULL, 0,
++					  &resp.get_target_info.version,
++					  &resplen);
++	if (ret) {
++		ath10k_warn(ar, "unable to read from device\n");
++		return ret;
++	}
++
++	target_info->version = __le32_to_cpu(resp.get_target_info.version);
++	target_info->type    = __le32_to_cpu(resp.get_target_info.type);
++
++	return 0;
++}
++
+ int ath10k_bmi_read_memory(struct ath10k *ar,
+ 			   u32 address, void *buffer, u32 length)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index 7d3231a..8a5ef1b 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -197,6 +197,8 @@ void ath10k_bmi_start(struct ath10k *ar);
+ int ath10k_bmi_done(struct ath10k *ar);
+ int ath10k_bmi_get_target_info(struct ath10k *ar,
+ 			       struct bmi_target_info *target_info);
++int ath10k_bmi_get_target_info_sdio(struct ath10k *ar,
++				    struct bmi_target_info *target_info);
+ int ath10k_bmi_read_memory(struct ath10k *ar, u32 address,
+ 			   void *buffer, u32 length);
+ int ath10k_bmi_write_memory(struct ath10k *ar, u32 address,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 874c2a7..e34c734 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2084,7 +2084,10 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 	}
  
- 		if (sleep_cookie == MWIFIEX_DEF_SLEEP_COOKIE) {
-@@ -1690,7 +1690,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 	mwifiex_dbg(adapter, CMD,
- 		    "info: Rx CMD Response\n");
- 
--	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
-+	if (adapter->curr_cmd)
-+		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
+ 	memset(&target_info, 0, sizeof(target_info));
+-	ret = ath10k_bmi_get_target_info(ar, &target_info);
++	if (ar->hif.bus == ATH10K_BUS_SDIO)
++		ret = ath10k_bmi_get_target_info_sdio(ar, &target_info);
 +	else
-+		pci_dma_sync_single_for_cpu(card->dev,
-+					    MWIFIEX_SKB_DMA_ADDR(skb),
-+					    MWIFIEX_UPLD_SIZE,
-+					    PCI_DMA_FROMDEVICE);
- 
- 	/* Unmap the command as a response has been received. */
- 	if (card->cmd_buf) {
-@@ -1703,10 +1709,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 	rx_len = le16_to_cpu(pkt_len);
- 	skb_put(skb, MWIFIEX_UPLD_SIZE - skb->len);
- 	skb_trim(skb, rx_len);
--	skb_pull(skb, INTF_HEADER_LEN);
- 
- 	if (!adapter->curr_cmd) {
- 		if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
-+			pci_dma_sync_single_for_device(card->dev,
-+						MWIFIEX_SKB_DMA_ADDR(skb),
-+						MWIFIEX_SLEEP_COOKIE_SIZE,
-+						PCI_DMA_FROMDEVICE);
- 			if (mwifiex_write_reg(adapter,
- 					      PCIE_CPU_INT_EVENT,
- 					      CPU_INTR_SLEEP_CFM_DONE)) {
-@@ -1716,6 +1725,9 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 			}
- 			mwifiex_delay_for_sleep_cookie(adapter,
- 						       MWIFIEX_MAX_DELAY_COUNT);
-+			mwifiex_unmap_pci_memory(adapter, skb,
-+						 PCI_DMA_FROMDEVICE);
-+			skb_pull(skb, INTF_HEADER_LEN);
- 			while (reg->sleep_cookie && (count++ < 10) &&
- 			       mwifiex_pcie_ok_to_access_hw(adapter))
- 				usleep_range(50, 60);
-@@ -1733,6 +1745,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
- 					   PCI_DMA_FROMDEVICE))
- 			return -1;
- 	} else if (mwifiex_pcie_ok_to_access_hw(adapter)) {
-+		skb_pull(skb, INTF_HEADER_LEN);
- 		adapter->curr_cmd->resp_skb = skb;
- 		adapter->cmd_resp_received = true;
- 		/* Take the pointer and set it to CMD node and will
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 21ba5e6..00e8ee5 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -116,6 +116,7 @@
- /* FW awake cookie after FW ready */
- #define FW_AWAKE_COOKIE						(0xAA55AA55)
- #define MWIFIEX_DEF_SLEEP_COOKIE			0xBEEFBEEF
-+#define MWIFIEX_SLEEP_COOKIE_SIZE			4
- #define MWIFIEX_MAX_DELAY_COUNT				100
- 
- struct mwifiex_pcie_card_reg {
++		ret = ath10k_bmi_get_target_info(ar, &target_info);
+ 	if (ret) {
+ 		ath10k_err(ar, "could not get target info (%d)\n", ret);
+ 		goto err_power_down;
 -- 
-1.9.1
+2.7.4
