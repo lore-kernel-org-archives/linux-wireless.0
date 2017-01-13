@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33073 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755628AbdAKQbm (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 11:31:42 -0500
-Received: by mail-pg0-f66.google.com with SMTP id 194so9675051pgd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2017 08:31:42 -0800 (PST)
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-wireless@vger.kernel.org
-Subject: [PATCH net-next] ath6kl: fix warning for using 0 as NULL
-Date: Wed, 11 Jan 2017 16:31:30 +0000
-Message-Id: <20170111163130.19087-1-weiyj.lk@gmail.com> (sfid-20170111_173146_082462_37A1D2BB)
+Received: from mx1.redhat.com ([209.132.183.28]:42606 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751640AbdAMOVO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 09:21:14 -0500
+Date: Fri, 13 Jan 2017 15:15:55 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: linux-wireless@vger.kernel.org, lede-dev@lists.infradead.org,
+        openwrt-devel@lists.openwrt.org, john@phrozen.org, nbd@nbd.name,
+        roman@advem.lv, evaxige@qq.com, c.mignanti@gmail.com,
+        michel.stempin@wanadoo.fr, vasilugin@yandex.ru,
+        Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: Re: [RFC] [PULL REQUEST] rt2x00 patches from OpenWrt.org
+Message-ID: <20170113141554.GA8018@redhat.com> (sfid-20170113_152121_654262_4C78F169)
+References: <20170113035020.GA9063@makrotopia.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170113035020.GA9063@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+Hi
 
-Fixes the following sparse warning:
+On Fri, Jan 13, 2017 at 04:50:32AM +0100, Daniel Golle wrote:
+> Please review and comment, so we can get those patches merged!
 
-drivers/net/wireless/ath/ath6kl/sdio.c:716:55: warning:
- Using plain integer as NULL pointer
+As already pointed by Kalle posting patches to mailing list is better
+way for review. Posing patches is easy with git-format-patch and
+git-send-email. Ideally patch series should not be long, let say no more
+than 30 patches - I suggest to split this into two series: second one
+for RT3853 support and first one for other patches.
 
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> evaxige (1):
+>       rt2x00: fix WARN_ON_ONCE() caused by inbalanced set/clear of beacon enable bit
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 8ec66e7..2195b1b 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -713,7 +713,7 @@ static void ath6kl_sdio_cleanup_scatter(struct ath6kl *ar)
- 		 * that the packet is properly freed?
- 		 */
- 		if (s_req->busrequest) {
--			s_req->busrequest->scat_req = 0;
-+			s_req->busrequest->scat_req = NULL;
- 			ath6kl_sdio_free_bus_req(ar_sdio, s_req->busrequest);
- 		}
- 		kfree(s_req->virt_dma_buf);
+I think I would prefer to remove:
+
+WARN_ON_ONCE(bcn_num != rt2x00dev->intf_beaconing);
+
+line instead of this patch. Other patches looks ok after quick glance.
+I think you can post them as normal PATCH in the topic (not as RFC).
+
+Thanks
+Stanislaw
