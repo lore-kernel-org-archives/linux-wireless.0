@@ -1,71 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55268 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751982AbdATNUw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 08:20:52 -0500
-Date: Fri, 20 Jan 2017 14:16:10 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+Received: from fudo.makrotopia.org ([185.142.180.71]:58492 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751311AbdAMV1X (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:27:23 -0500
+Date: Fri, 13 Jan 2017 22:27:15 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
         michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
         Kalle Valo <kvalo@codeaurora.org>,
         Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
         Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH v3] rt2x00: rt2800lib: add support for RT3352 with 20MHz
- crystal
-Message-ID: <20170120131609.GA21564@redhat.com> (sfid-20170120_142055_566168_A4282066)
-References: <20170118142958.GA14573@redhat.com>
- <20170119234239.GA22196@makrotopia.org>
+Subject: [PATCH 20/40] rt2x00: rt2800lib: add channel configuration code for
+ RT3883
+Message-ID: <20170113212710.GA3508@makrotopia.org> (sfid-20170113_222726_347947_9200DE3B)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170119234239.GA22196@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel
+From: Gabor Juhos <juhosg@openwrt.org>
 
-On Fri, Jan 20, 2017 at 12:42:44AM +0100, Daniel Golle wrote:
-> +int rt2800_probe_clk(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	struct hw_mode_spec *spec = &rt2x00dev->spec;
-> +	struct clk *clk = clk_get(rt2x00dev->dev, NULL);
-> +
-> +	if (IS_ERR(clk))
-> +		return PTR_ERR(clk);
-> +
-> +	if (clk_get_rate(clk) == 20000000)
-> +		spec->clk_is_20mhz = 1;
-> +
-> +	return 0;
-> +}
-> +
->  int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
->  {
->  	int retval;
-> @@ -7864,6 +7903,15 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
->  	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
->  
->  	/*
-> +	 * Probe SoC clock.
-> +	 */
-> +	if (rt2x00_is_soc(rt2x00dev)) {
-> +		retval = rt2800_probe_clk(rt2x00dev);
-> +		if (retval)
-> +			return retval;
-> +	}
-<snip>
-> @@ -415,6 +416,7 @@ struct hw_mode_spec {
->  	const struct channel_info *channels_info;
->  
->  	struct ieee80211_sta_ht_cap ht;
-> +	int clk_is_20mhz;
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 72 ++++++++++++++++++++++++--
+ 1 file changed, 69 insertions(+), 3 deletions(-)
 
-I dislike adding this variable to structure that is intended to describe
-wireless capabilities. Additionally we do not actually "probe" the
-clock but just read it value from rt2x00dev->dev, this can be handled
-better. I'll post different patch reading clk and on top of if this
-patch and "add support for RT5350 WiSoC" .
-
-Regards
-Stanislaw
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 005fd02c0226..62ac5aa0f016 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -3441,6 +3441,36 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
+ 		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
+ }
+ 
++static void rt3883_bbp_adjust(struct rt2x00_dev *rt2x00dev,
++			      struct rf_channel *rf)
++{
++	u8 bbp;
++
++	bbp = (rf->channel > 14) ? 0x48 : 0x38;
++	rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, bbp);
++
++	rt2800_bbp_write(rt2x00dev, 69, 0x12);
++
++	if (rf->channel <= 14) {
++		rt2800_bbp_write(rt2x00dev, 70, 0x0a);
++	} else {
++		/* Disable CCK packet detection */
++		rt2800_bbp_write(rt2x00dev, 70, 0x00);
++	}
++
++	rt2800_bbp_write(rt2x00dev, 73, 0x10);
++
++	if (rf->channel > 14) {
++		rt2800_bbp_write(rt2x00dev, 62, 0x1d);
++		rt2800_bbp_write(rt2x00dev, 63, 0x1d);
++		rt2800_bbp_write(rt2x00dev, 64, 0x1d);
++	} else {
++		rt2800_bbp_write(rt2x00dev, 62, 0x2d);
++		rt2800_bbp_write(rt2x00dev, 63, 0x2d);
++		rt2800_bbp_write(rt2x00dev, 64, 0x2d);
++	}
++}
++
+ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 				  struct ieee80211_conf *conf,
+ 				  struct rf_channel *rf,
+@@ -3459,6 +3489,12 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 			rt2800_txpower_to_dev(rt2x00dev, rf->channel,
+ 					      info->default_power3);
+ 
++	switch (rt2x00dev->chip.rt) {
++	case RT3883:
++		rt3883_bbp_adjust(rt2x00dev, rf);
++		break;
++	}
++
+ 	switch (rt2x00dev->chip.rf) {
+ 	case RF2020:
+ 	case RF3020:
+@@ -3542,6 +3578,15 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+ 		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
+ 		rt2800_bbp_write(rt2x00dev, 77, 0x98);
++	} else if (rt2x00_rt(rt2x00dev, RT3883)) {
++		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
++		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
++
++		if (rt2x00dev->default_ant.rx_chain_num > 1)
++			rt2800_bbp_write(rt2x00dev, 86, 0x46);
++		else
++			rt2800_bbp_write(rt2x00dev, 86, 0);
+ 	} else {
+ 		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
+ 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
+@@ -3554,6 +3599,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		    !rt2x00_rt(rt2x00dev, RT5392)) {
+ 			if (rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
+ 				rt2800_bbp_write(rt2x00dev, 82, 0x62);
++				rt2800_bbp_write(rt2x00dev, 82, 0x62);
+ 				rt2800_bbp_write(rt2x00dev, 75, 0x46);
+ 			} else {
+ 				if (rt2x00_rt(rt2x00dev, RT3593))
+@@ -3562,19 +3608,22 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 					rt2800_bbp_write(rt2x00dev, 82, 0x84);
+ 				rt2800_bbp_write(rt2x00dev, 75, 0x50);
+ 			}
+-			if (rt2x00_rt(rt2x00dev, RT3593))
++			if (rt2x00_rt(rt2x00dev, RT3593) ||
++			    rt2x00_rt(rt2x00dev, RT3883))
+ 				rt2800_bbp_write(rt2x00dev, 83, 0x8a);
+ 		}
+ 
+ 	} else {
+ 		if (rt2x00_rt(rt2x00dev, RT3572))
+ 			rt2800_bbp_write(rt2x00dev, 82, 0x94);
+-		else if (rt2x00_rt(rt2x00dev, RT3593))
++		else if (rt2x00_rt(rt2x00dev, RT3593) ||
++			 rt2x00_rt(rt2x00dev, RT3883))
+ 			rt2800_bbp_write(rt2x00dev, 82, 0x82);
+ 		else
+ 			rt2800_bbp_write(rt2x00dev, 82, 0xf2);
+ 
+-		if (rt2x00_rt(rt2x00dev, RT3593))
++		if (rt2x00_rt(rt2x00dev, RT3593) ||
++		    rt2x00_rt(rt2x00dev, RT3883))
+ 			rt2800_bbp_write(rt2x00dev, 83, 0x9a);
+ 
+ 		if (rt2x00_has_cap_external_lna_a(rt2x00dev))
+@@ -3699,6 +3748,23 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		usleep_range(1000, 1500);
+ 	}
+ 
++	if (rt2x00_rt(rt2x00dev, RT3883)) {
++		if (!conf_is_ht40(conf))
++			rt2800_bbp_write(rt2x00dev, 105, 0x34);
++		else
++			rt2800_bbp_write(rt2x00dev, 105, 0x04);
++
++		/* AGC init */
++		if (rf->channel <= 14)
++			reg = 0x2e + rt2x00dev->lna_gain;
++		else
++			reg = 0x20 + ((rt2x00dev->lna_gain * 5) / 3);
++
++		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
++
++		usleep_range(1000, 1500);
++	}
++
+ 	if (rt2x00_rt(rt2x00dev, RT5592)) {
+ 		rt2800_bbp_write(rt2x00dev, 195, 141);
+ 		rt2800_bbp_write(rt2x00dev, 196, conf_is_ht40(conf) ? 0x10 : 0x1a);
+-- 
+2.11.0
