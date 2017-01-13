@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:64311 "EHLO
-        sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932151AbdAKOyT (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:35216 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdAMV3q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 09:54:19 -0500
-From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: mac80211: Fix headroom allocation when forwarding mesh pkt
-Date: Wed, 11 Jan 2017 14:39:07 +0000
-Message-ID: <e3b7a95724944c6aadc8512eadfe1c1d@ceva-dsp.com> (sfid-20170111_155422_675776_897E23BB)
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 13 Jan 2017 16:29:46 -0500
+Date: Fri, 13 Jan 2017 22:29:37 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 27/40] rt2x00: rt2800lib: fix antenna configuration for RT3883
+Message-ID: <20170113212932.GA3570@makrotopia.org> (sfid-20170113_222948_347066_2689F249)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix issue introduced by commit
-"mac80211: Ensure enough headroom when forwarding mesh pkt"
+From: Gabor Juhos <juhosg@openwrt.org>
 
-When forwarding mesh pkt, mac80211 may also add security header,
-and it must therefore be taken into account in the needed headroom.
-
-Signed-off-by: Cedric Izoard <cedric.izoard@ceva-dsp.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/mac80211/rx.c | 3 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
  1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c037c5b..e376093 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2472,7 +2472,8 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	if (!ifmsh->mshcfg.dot11MeshForwarding)
- 		goto out;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index ba73be7101b7..bde8177c30c4 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1971,7 +1971,8 @@ void rt2800_config_ant(struct rt2x00_dev *rt2x00dev, struct antenna_setup *ant)
+ 	rt2800_bbp_write(rt2x00dev, 3, r3);
+ 	rt2800_bbp_write(rt2x00dev, 1, r1);
  
--	fwd_skb = skb_copy_expand(skb, local->tx_headroom, 0, GFP_ATOMIC);
-+	fwd_skb = skb_copy_expand(skb, local->tx_headroom +
-+				  sdata->encrypt_headroom, 0, GFP_ATOMIC);
- 	if (!fwd_skb) {
- 		net_info_ratelimited("%s: failed to clone mesh frame\n",
- 				    sdata->name);
+-	if (rt2x00_rt(rt2x00dev, RT3593)) {
++	if (rt2x00_rt(rt2x00dev, RT3593) ||
++	    rt2x00_rt(rt2x00dev, RT3883)) {
+ 		if (ant->rx_chain_num == 1)
+ 			rt2800_bbp_write(rt2x00dev, 86, 0x00);
+ 		else
 -- 
-2.7.4
+2.11.0
