@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34140 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S934450AbdAIW0P (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37822 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751356AbdAMKmJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 17:26:15 -0500
-Message-ID: <1484000770.5227.35.camel@coelho.fi> (sfid-20170109_232640_028595_1306F87E)
-From: Luca Coelho <luca@coelho.fi>
-To: Alexander Morozov <alexandr.morozov@docker.com>,
-        Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Cc: Fabio Coatti <fabio.coatti@gmail.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Date: Tue, 10 Jan 2017 00:26:10 +0200
-In-Reply-To: <CA+EAOG50cJM_Sg5Q+G+LCfCgUwZ92BH5mcctUvFeWeT9aPAS7Q@mail.gmail.com>
-References: <2029482.jt8IarKZJs@calvin>
-         <942b4775-6027-2b99-84c7-37b7cde124b9@au1.ibm.com>
-         <CA+EAOG50cJM_Sg5Q+G+LCfCgUwZ92BH5mcctUvFeWeT9aPAS7Q@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: kernel 4.9 iwlwifi startup error
+        Fri, 13 Jan 2017 05:42:09 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH] Revert "bcma: init serial console directly from ChipCommon code"
+References: <20170112174451.7124-1-zajec5@gmail.com>
+        <87fuknl0x9.fsf@codeaurora.org>
+        <CACna6rwupQ68meKJNRLcHdXEg+sQXvP5mH-C4fqofNQg0Y2hTQ@mail.gmail.com>
+Date: Fri, 13 Jan 2017 12:42:05 +0200
+In-Reply-To: <CACna6rwupQ68meKJNRLcHdXEg+sQXvP5mH-C4fqofNQg0Y2hTQ@mail.gmail.com>
+        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Fri, 13 Jan 2017
+ 11:23:48 +0100")
+Message-ID: <878tqfkzr6.fsf@codeaurora.org> (sfid-20170113_114212_941767_C776DB96)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2017-01-03 at 07:41 -0800, Alexander Morozov wrote:
-> I have a similar problem on Gentoo. But in my case, it just can't load
-> firmware: "no suitable firmware found". I've tried to reinstall
-> firmware with no luck. Everything is ok with 4.8.6.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-This is a completely different issue.  This means that you don't have
-the correct firmware installed for this kernel version.  We do support
-several versions back from the latest, but we can't support older
-firmwares forever, so if you're using a recent kernel you must upgrade
-the firmwares too.
+> On 13 January 2017 at 11:16, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+>>
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>
+>>> This reverts commit 4c81acab3816 ("bcma: init serial console directly
+>>> from ChipCommon code") as it broke IRQ assignment. Getting IRQ with
+>>> bcma_core_irq helper on SoC requires MIPS core to be set. It happens
+>>> *after* ChipCommon initialization so we can't do this so early.
+>>>
+>>> This fixes a regression but it seems noone noticed it for about a year.
+>>> It could be it was because serial was still somehow working, just
+>>> without IRQs. It doesn't look like a critical patch / fix.
+>>>
+>>> Reported-by: Felix Fietkau <nbd@nbd.name>
+>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> So this is for 4.11? What about CC stable?
+>>
+>> I'll add a Fixes line:
+>>
+>> Fixes: 4c81acab3816 ("bcma: init serial console directly from ChipCommon=
+ code")
+>
+> After hearing about policy for fixes getting more strict, I thought we
+> can get it for next only.
 
-Let me know which device you have, so I can tell you which firmware you
-need to use.  But as a general rule, if you clone the linux-firmware
-repository[1] and install all the iwlwifi*.ucode files in /lib/firmware
-(or wherever gentoo looks for the firmware in your filesystem), you will
-surely get the latest version of the firmware that works with your
-kernel.
+As this is a user reported regression it would qualify for 4.10, but on
+the other hand quite old regression so can easily wait for 4.11 as well.
+Up to you really.
 
-[1] http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git
+But I would like to add CC stable so that this gets backported to older
+releases. Is that ok?
 
---
-Cheers,
-Luca.
+> Thanks for "Fixes:", I wasn't sure if we need that for reverts.
+
+If you are fixing a regression it's always a good idea to add the Fixes
+line. Makes it easier to backport the fix.
+
+--=20
+Kalle Valo
