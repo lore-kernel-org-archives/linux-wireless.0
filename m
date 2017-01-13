@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43266 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754837AbdA0NLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 08:11:05 -0500
-Subject: Re: [PATCH 4/4] ath9k: fix race condition in enabling/disabling IRQs
+Received: from paleale.coelho.fi ([176.9.41.70]:34704 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751673AbdAMMkL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 07:40:11 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-References: <20170125163654.66431-1-nbd@nbd.name>
- <20170125163654.66431-4-nbd@nbd.name>
-Cc: kvalo@codeaurora.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <ca32601f-81f1-aec0-9ab4-02631b226900@nbd.name> (sfid-20170127_141147_018290_2F6BB7EE)
-Date: Fri, 27 Jan 2017 13:47:06 +0100
+Cc: =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 13 Jan 2017 14:39:16 +0200
+Message-Id: <20170113123919.30384-4-luca@coelho.fi> (sfid-20170113_134112_866550_AE5A7CBC)
+In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
+References: <20170113123919.30384-1-luca@coelho.fi>
 MIME-Version: 1.0
-In-Reply-To: <20170125163654.66431-4-nbd@nbd.name>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 3/6] iwlwifi: fix double hyphen in MODULE_FIRMWARE for 8000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-25 17:36, Felix Fietkau wrote:
-> The code currently relies on refcounting to disable IRQs from within the
-> IRQ handler and re-enabling them again after the tasklet has run.
-> 
-> However, due to race conditions sometimes the IRQ handler might be
-> called twice, or the tasklet may not run at all (if interrupted in the
-> middle of a reset).
-> 
-> This can cause nasty imbalances in the irq-disable refcount which will
-> get the driver permanently stuck until the entire radio has been stopped
-> and started again (ath_reset will not recover from this).
-> 
-> Instead of using this fragile logic, change the code to ensure that
-> running the irq handler during tasklet processing is safe, and leave the
-> refcount untouched.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-Please don't apply this yet, it looks like it might cause some
-regressions on other devices. I will investigate.
+From: Jürg Billeter <j@bitron.ch>
 
-- Felix
+There is only a single hyphen between iwlwifi-8000C and the API version
+in the firmware filename.
+
+Fixes: e1ba684f762b ("iwlwifi: 8000: fix MODULE_FIRMWARE input")
+Signed-off-by: Jürg Billeter <j@bitron.ch>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index d02ca1491d16..8d3e53fac1da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -91,7 +91,7 @@
+ 
+ #define IWL8000_FW_PRE "iwlwifi-8000C-"
+ #define IWL8000_MODULE_FIRMWARE(api) \
+-	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
++	IWL8000_FW_PRE __stringify(api) ".ucode"
+ 
+ #define IWL8265_FW_PRE "iwlwifi-8265-"
+ #define IWL8265_MODULE_FIRMWARE(api) \
+-- 
+2.11.0
