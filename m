@@ -1,77 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37012 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932708AbdA0MUe (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:60277 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbdAMVeL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:20:34 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH 1/5] nl80211: fix validation of scheduled scan info for wowlan netdetect
-Date: Fri, 27 Jan 2017 12:09:27 +0000
-Message-Id: <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132234_218655_59FDFD26)
-In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 13 Jan 2017 16:34:11 -0500
+Date: Fri, 13 Jan 2017 22:34:03 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 39/40] rt2x00: fix rf id for RT3352
+Message-ID: <20170113213358.GA3670@makrotopia.org> (sfid-20170113_223413_741875_08CCA3D7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For wowlan netdetect a separate limit is defined for the number of
-matchsets. Currently, this limit is ignored and the regular limit
-for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
-used for the net-detect case as well.
+From: Felix Fietkau <nbd@openwrt.org>
 
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/nl80211.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ef5eff93..90833a4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6850,7 +6850,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
-
- static struct cfg80211_sched_scan_request *
- nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
--			 struct nlattr **attrs)
-+			 struct nlattr **attrs, int max_match_sets)
- {
- 	struct cfg80211_sched_scan_request *request;
- 	struct nlattr *attr;
-@@ -6915,7 +6915,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
- 	if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
- 		n_match_sets = 1;
-
--	if (n_match_sets > wiphy->max_match_sets)
-+	if (n_match_sets > max_match_sets)
- 		return ERR_PTR(-EINVAL);
-
- 	if (attrs[NL80211_ATTR_IE])
-@@ -7189,7 +7189,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
- 		return -EINPROGRESS;
-
- 	sched_scan_req = nl80211_parse_sched_scan(&rdev->wiphy, wdev,
--						  info->attrs);
-+						  info->attrs,
-+						  rdev->wiphy.max_match_sets);
-
- 	err = PTR_ERR_OR_ZERO(sched_scan_req);
- 	if (err)
-@@ -9966,7 +9967,8 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
- 	if (err)
- 		goto out;
-
--	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb);
-+	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb,
-+						   wowlan->max_nd_match_sets);
- 	err = PTR_ERR_OR_ZERO(trig->nd_config);
- 	if (err)
- 		trig->nd_config = NULL;
---
-1.9.1
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 5f49117b9035..823bdc1b0322 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7861,10 +7861,11 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * RT53xx: defined in "EEPROM_CHIP_ID" field
+ 	 */
+ 	if (rt2x00_rt(rt2x00dev, RT3290) ||
+-	    rt2x00_rt(rt2x00dev, RT3352) ||
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rf = RF3322;
+ 	else if (rt2x00_rt(rt2x00dev, RT3883))
+ 		rf = RF3853;
+ 	else if (rt2x00_rt(rt2x00dev, RT5350))
+-- 
+2.11.0
