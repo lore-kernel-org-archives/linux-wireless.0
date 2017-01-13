@@ -1,64 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx144.netapp.com ([216.240.21.25]:42040 "EHLO mx144.netapp.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51006 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751749AbdAaTsY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:48:24 -0500
-Subject: Re: [PATCH 4.10-rc3 01/13] net: sunrpc: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-To: Russell King <rmk+kernel@armlinux.org.uk>,
-        <linux-mips@linux-mips.org>, <linux-nfs@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <target-devel@vger.kernel.org>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
- <E1cYdwi-0000Vs-97@rmk-PC.armlinux.org.uk>
-CC: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Trond Myklebust <trond.myklebust@primarydata.com>
-From: Anna Schumaker <Anna.Schumaker@Netapp.com>
-Message-ID: <52ceb082-1e0a-7210-833a-f4ac22df4b8c@Netapp.com> (sfid-20170131_204830_842956_5D4B037E)
-Date: Tue, 31 Jan 2017 14:48:02 -0500
-MIME-Version: 1.0
-In-Reply-To: <E1cYdwi-0000Vs-97@rmk-PC.armlinux.org.uk>
-Content-Type: text/plain; charset="utf-8"
+        id S1751406AbdAMNO3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 08:14:29 -0500
+Message-ID: <1484313263.8670.1.camel@sipsolutions.net> (sfid-20170113_141432_411766_F8115321)
+Subject: Re: [PATCH] mac80211: fix documentation warnings
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Markus Heiser <markus.heiser@darmarit.de>
+Cc: linux-wireless@vger.kernel.org, corbet@lwn.net,
+        linux-doc@vger.kernel.org
+Date: Fri, 13 Jan 2017 14:14:23 +0100
+In-Reply-To: <4973EEB8-5F54-451E-B939-CDA94332CEF7@darmarit.de>
+References: <20170113101201.7352-1-johannes@sipsolutions.net>
+         <4973EEB8-5F54-451E-B939-CDA94332CEF7@darmarit.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Russell,
+On Fri, 2017-01-13 at 13:43 +0100, Markus Heiser wrote:
 
-On 01/31/2017 02:18 PM, Russell King wrote:
-> Removing linux/phy.h from net/dsa.h reveals a build error in the sunrpc
-> code:
+> does it make live easier when we use in-line member comments:
 > 
-> net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_rdma_bc_put':
-> net/sunrpc/xprtrdma/svc_rdma_backchannel.c:277:2: error: implicit declaration of function 'module_put' [-Werror=implicit-function-declaration]
-> net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_setup_rdma_bc':
-> net/sunrpc/xprtrdma/svc_rdma_backchannel.c:348:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
+>  https://www.kernel.org/doc/html/latest/doc-guide/kernel-doc.html#in-
+> line-member-documentation-comments
 > 
-> Fix this by adding linux/module.h to svc_rdma_backchannel.c
-> 
-> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+> and place the entire list in a literalblock? 
 
-This patch looks okay to me:
+Ah yes, I forgot about that. I should convert everything to that, but
+that's probably better done separately.
 
-Acked-by: Anna Schumaker <Anna.Schumaker@Netapp.com>
-
-> ---
->  net/sunrpc/xprtrdma/svc_rdma_backchannel.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-> index 288e35c2d8f4..cb1e48e54eb1 100644
-> --- a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-> +++ b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-> @@ -4,6 +4,7 @@
->   * Support for backward direction RPCs on RPC/RDMA (server-side).
->   */
->  
-> +#include <linux/module.h>
->  #include <linux/sunrpc/svc_rdma.h>
->  #include "xprt_rdma.h"
->  
-> 
+johannes
