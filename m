@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:34716 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941317AbdAGJne (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 7 Jan 2017 04:43:34 -0500
-Received: by mail-it0-f68.google.com with SMTP id q186so4401300itb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2017 01:43:34 -0800 (PST)
-Received: from mail-io0-f180.google.com (mail-io0-f180.google.com. [209.85.223.180])
-        by smtp.gmail.com with ESMTPSA id u130sm6215549iod.8.2017.01.07.01.43.33
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 07 Jan 2017 01:43:33 -0800 (PST)
-Received: by mail-io0-f180.google.com with SMTP id j18so3034806ioe.2
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2017 01:43:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1483616947.4394.10.camel@sipsolutions.net>
-References: <20161212015213.21323-2-andrew.zaborowski@intel.com>
- <20161212015213.21323-3-andrew.zaborowski@intel.com> <1483545210.7312.17.camel@sipsolutions.net>
- <CAOq732JfxTx7KrPhic+2aej0ddj6igaqjcGzg+9MJ6=zDYfWAw@mail.gmail.com> <1483616947.4394.10.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Sat, 7 Jan 2017 04:43:31 -0500
-Message-ID: <CAOq732JhLoeMQSwadM=ReBv7gAy9zb1uQ9RZAzEtvyDo7je+ww@mail.gmail.com> (sfid-20170107_104448_334801_07DB7451)
-Subject: Re: [PATCH v2 3/4] cfg80211: Accept multiple RSSI thresholds for CQM
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:51198 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751621AbdAMNzX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 08:55:23 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-01-13
+Date: Fri, 13 Jan 2017 14:55:15 +0100
+Message-Id: <20170113135516.19593-1-johannes@sipsolutions.net> (sfid-20170113_145534_731762_53C8EF51)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Dave,
 
-On 5 January 2017 at 06:49, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2017-01-04 at 15:19 -0500, Andrew Zaborowski wrote:
->> On 4 January 2017 at 10:53, Johannes Berg <johannes@sipsolutions.net>
->> wrote:
->> > Thus, you either need an nl80211 protocol feature bit (enum
->> > nl80211_protocol_features) or a new attribute, or so, I think.
->>
->> True, I'd assumed that netlink would check for exact attribute length
->> with NLA_S32.
->>
->> I'll add the feature bit but I wonder if it's better as a
->> driver/device feature (enum nl80211_ext_feature_index) so that it can
->> take into account whether rdev->set_cqm_rssi_range_config is set.
->
-> Well, it's even more complicated than that because mac80211 may have
-> the callback but still not be able to support it, with filtering,
-> perhaps? Not quite sure now.
+Here's another update for the current cycle. Some of those
+patches have been sitting in our tree and I haven't been
+pulling them out quickly enough - will try to do better...
 
-With the basic mac80211 implementation in my patch 4/4 this feature
-should be set when IEEE80211_VIF_BEACON_FILTER is not set.  The
-problem with a nl80211_ext_feature is that it's per wiphy instead of
-per interface.  So in the case mac80211, it would need to be set if
-all interfaces can accept lists of thresholds and that can change
-dynamically as interfaces are added.  And nl80211 has no per-interface
-features.
+Please pull and let me know if there's any problem.
 
-I wonder if it's better to add a ieee80211_hw_flags flag to advertise
-this feature per wiphy, or, as an approximation, set the flag based on
-the default interface that is created in ieee80211_register_hw.
+Thanks,
+johannes
 
-Best regards
+
+
+The following changes since commit 03430fa10b99e95e3a15eb7c00978fb1652f3b24:
+
+  Merge branch 'bcm_sf2-fixes' (2017-01-08 22:01:22 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-01-13
+
+for you to fetch changes up to dbef53621116474bb883f76f0ba6b7640bc42332:
+
+  mac80211: prevent skb/txq mismatch (2017-01-13 14:47:21 +0100)
+
+----------------------------------------------------------------
+We have a number of fixes, in part because I was late
+in actually sending them out - will try to do better in
+the future:
+ * handle VHT opmode properly when hostapd is controlling
+   full station state
+ * two fixes for minimum channel width in mac80211
+ * don't leave SMPS set to junk in HT capabilities
+ * fix headroom when forwarding mesh packets, recently
+   broken by another fix that failed to take into account
+   frame encryption
+ * fix the TID in null-data packets indicating EOSP (end
+   of service period) in U-APSD
+ * prevent attempting to use (and then failing which
+   results in crashes) TXQs on stations that aren't added
+   to the driver yet
+
+----------------------------------------------------------------
+Beni Lev (1):
+      cfg80211: consider VHT opmode on station update
+
+Cedric Izoard (1):
+      mac80211: Fix headroom allocation when forwarding mesh pkt
+
+Emmanuel Grumbach (1):
+      mac80211: fix the TID on NDPs sent as EOSP carrier
+
+Felix Fietkau (1):
+      mac80211: initialize SMPS field in HT capabilities
+
+Johannes Berg (3):
+      mac80211: implement multicast forwarding on fast-RX path
+      mac80211: calculate min channel width correctly
+      mac80211: recalculate min channel width on VHT opmode changes
+
+Michal Kazior (1):
+      mac80211: prevent skb/txq mismatch
+
+ include/uapi/linux/nl80211.h |  4 +++-
+ net/mac80211/chan.c          |  3 ---
+ net/mac80211/iface.c         | 21 +++++++++++++++++++++
+ net/mac80211/main.c          | 13 +++++++++----
+ net/mac80211/rate.c          |  2 ++
+ net/mac80211/rx.c            | 38 +++++++++++++++++++++-----------------
+ net/mac80211/sta_info.c      |  4 ++--
+ net/mac80211/tx.c            | 17 +++++++----------
+ net/mac80211/vht.c           |  4 +++-
+ net/wireless/nl80211.c       | 15 +++++++++++++++
+ 10 files changed, 83 insertions(+), 38 deletions(-)
