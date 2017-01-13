@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48336 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750990AbdA2Oyk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2017 09:54:40 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] rt2x00: fix clk_get call
-References: <20170129114052.GB7489@redhat.com>
-Date: Sun, 29 Jan 2017 16:53:38 +0200
-In-Reply-To: <20170129114052.GB7489@redhat.com> (Stanislaw Gruszka's message
-        of "Sun, 29 Jan 2017 12:40:52 +0100")
-Message-ID: <87vasxgbnx.fsf@purkki.adurom.net> (sfid-20170129_155445_240357_AF1883DB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:49740 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751146AbdAMJCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 04:02:19 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: corbet@lwn.net, linux-doc@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] cfg80211: fix a documentation warning
+Date: Fri, 13 Jan 2017 10:02:13 +0100
+Message-Id: <20170113090213.29414-1-johannes@sipsolutions.net> (sfid-20170113_100222_034504_EDBDF673)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> clk_get() takes two arguments and might return ERR_PTR(), so we
-> have to nullify pointer on that case, to do not break further call
-> to clk_get_rate().
->
-> Reported-by: Felix Fietkau <nbd@nbd.name>
-> Fixes: 34db70b92fae5 ("rt2x00: add copy of clk for soc devices")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+The new restructured text parser complains about the formatting,
+and really this should be a definition list.
 
-The commit id looks wrong, I think it should be:
+Unfortunately, due to it being inside the parameter description,
+and the definition list needing a blank line, this adds trailing
+whitespace to keep it in the parameter description.
 
-Fixes: 34db70b92fae ("rt2x00: add copy of clk for soc devices")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-I can fix that during commit.
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b7aba6e1a586..181e2d544a1b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3190,10 +3190,13 @@ struct ieee80211_iface_limit {
+  * @radar_detect_regions: bitmap of regions supported for radar detection
+  * @beacon_int_min_gcd: This interface combination supports different
+  *	beacon intervals.
+- *	= 0 - all beacon intervals for different interface must be same.
+- *	> 0 - any beacon interval for the interface part of this combination AND
+- *	      *GCD* of all beacon intervals from beaconing interfaces of this
+- *	      combination must be greater or equal to this value.
++ *	
++ *	= 0
++ *	  all beacon intervals for different interface must be same.
++ *	> 0
++ *	  any beacon interval for the interface part of this combination AND
++ *	  GCD of all beacon intervals from beaconing interfaces of this
++ *	  combination must be greater or equal to this value.
+  *
+  * With this structure the driver can describe which interface
+  * combinations it supports concurrently.
 -- 
-Kalle Valo
+2.9.3
