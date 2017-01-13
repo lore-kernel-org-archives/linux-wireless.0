@@ -1,64 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59815 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750893AbdALScZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 13:32:25 -0500
-Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
-To: Michal Kazior <michal.kazior@tieto.com>, johannes@sipsolutions.net
-References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        mohammed@qti.qualcomm.com
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <f0d5cbb6-14cc-91c9-a378-2ab9b1551cef@nbd.name> (sfid-20170112_193336_890780_759B2F3A)
-Date: Thu, 12 Jan 2017 19:11:01 +0100
+Received: from fudo.makrotopia.org ([185.142.180.71]:35656 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751162AbdAMVaG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 13 Jan 2017 16:30:06 -0500
+Date: Fri, 13 Jan 2017 22:29:57 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 28/40] rt2x00: rt2800lib: fix LNA gain configuration for
+ RT3883
+Message-ID: <20170113212952.GA3584@makrotopia.org> (sfid-20170113_223009_200277_9AE0A873)
 MIME-Version: 1.0
-In-Reply-To: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-12 15:28, Michal Kazior wrote:
-> Station structure is considered as not uploaded
-> (to driver) until drv_sta_state() finishes. This
-> call is however done after the structure is
-> attached to mac80211 internal lists and hashes.
-> This means mac80211 can lookup (and use) station
-> structure before it is uploaded to a driver.
-> 
-> If this happens (structure exists, but
-> sta->uploaded is false) fast_tx path can still be
-> taken. Deep in the fastpath call the sta->uploaded
-> is checked against to derive "pubsta" argument for
-> ieee80211_get_txq(). If sta->uploaded is false
-> (and sta is actually non-NULL) ieee80211_get_txq()
-> effectively downgraded to vif->txq.
-> 
-> At first glance this may look innocent but coerces
-> mac80211 into a state that is almost guaranteed
-> (codel may drop offending skb) to crash because a
-> station-oriented skb gets queued up on
-> vif-oriented txq. The ieee80211_tx_dequeue() ends
-> up looking at info->control.flags and tries to use
-> txq->sta which in the fail case is NULL.
-> 
-> It's probably pointless to pretend one can
-> downgrade skb from sta-txq to vif-txq.
-> 
-> Only drivers using wake_tx_queue were affected.
-> 
-> Example crash dump before fix:
-> 
->  Unable to handle kernel paging request at virtual address ffffe26c
->  PC is at ieee80211_tx_dequeue+0x204/0x690 [mac80211]
->  [<bf4252a4>] (ieee80211_tx_dequeue [mac80211]) from
->  [<bf4b1388>] (ath10k_mac_tx_push_txq+0x54/0x1c0 [ath10k_core])
->  [<bf4b1388>] (ath10k_mac_tx_push_txq [ath10k_core]) from
->  [<bf4bdfbc>] (ath10k_htt_txrx_compl_task+0xd78/0x11d0 [ath10k_core])
->  [<bf4bdfbc>] (ath10k_htt_txrx_compl_task [ath10k_core])
->  [<bf51c5a4>] (ath10k_pci_napi_poll+0x54/0xe8 [ath10k_pci])
->  [<bf51c5a4>] (ath10k_pci_napi_poll [ath10k_pci]) from
->  [<c0572e90>] (net_rx_action+0xac/0x160)
-> 
-> Reported-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Acked-by: Felix Fietkau <nbd@nbd.name>
+From: Gabor Juhos <juhosg@openwrt.org>
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index bde8177c30c4..da430e304d1f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1994,7 +1994,8 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_eeprom_read(rt2x00dev, EEPROM_LNA, &eeprom);
+ 		lna_gain = rt2x00_get_field16(eeprom, EEPROM_LNA_A0);
+ 	} else if (libconf->rf.channel <= 128) {
+-		if (rt2x00_rt(rt2x00dev, RT3593)) {
++		if (rt2x00_rt(rt2x00dev, RT3593) ||
++		    rt2x00_rt(rt2x00dev, RT3883)) {
+ 			rt2800_eeprom_read(rt2x00dev, EEPROM_EXT_LNA2, &eeprom);
+ 			lna_gain = rt2x00_get_field16(eeprom,
+ 						      EEPROM_EXT_LNA2_A1);
+@@ -2004,7 +2005,8 @@ static void rt2800_config_lna_gain(struct rt2x00_dev *rt2x00dev,
+ 						      EEPROM_RSSI_BG2_LNA_A1);
+ 		}
+ 	} else {
+-		if (rt2x00_rt(rt2x00dev, RT3593)) {
++		if (rt2x00_rt(rt2x00dev, RT3593) ||
++		    rt2x00_rt(rt2x00dev, RT3883)) {
+ 			rt2800_eeprom_read(rt2x00dev, EEPROM_EXT_LNA2, &eeprom);
+ 			lna_gain = rt2x00_get_field16(eeprom,
+ 						      EEPROM_EXT_LNA2_A2);
+-- 
+2.11.0
