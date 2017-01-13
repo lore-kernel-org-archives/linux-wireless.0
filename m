@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from llsd478-a03.servidoresdns.net ([82.223.190.30]:59526 "EHLO
-        llsd478-a03.servidoresdns.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932557AbdABNUz (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:37929 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751107AbdAMV2p (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 08:20:55 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 02 Jan 2017 14:11:58 +0100
-From: info@leopoldosoria.com
+        Fri, 13 Jan 2017 16:28:45 -0500
+Date: Fri, 13 Jan 2017 22:28:36 +0100
+From: Daniel Golle <daniel@makrotopia.org>
 To: linux-wireless@vger.kernel.org
-Cc: ilw@linux.intel.com
-Subject: =?UTF-8?Q?Installing_driver_for_Ubuntu_16=2E04_Intel=C2=AE_Wirel?=
- =?UTF-8?Q?ess_WiFi_Link_4965AGN?=
-Message-ID: <f6cef307fa8d53c67df65c87a0a5628d@mail.leopoldosoria.com> (sfid-20170102_142058_833116_A7377EF7)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 24/40] rt2x00: rt2800lib: use correct [RT]XWI size for RT3883
+Message-ID: <20170113212830.GA3534@makrotopia.org> (sfid-20170113_222847_732511_FA5BDD9A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Sirs,
-Which of the below drivers should I install for my Lenovo 3000 V200?
-I am runing Ubuntu 16.04
+From: Gabor Juhos <juhosg@openwrt.org>
 
-Intel® Wireless WiFi Link 4965AGN
-2.6.24+	iwlwifi-4965-ucode-4.44.14.tgz
-2.6.24+	iwlwifi-4965-ucode-4.44.15.tgz
-2.6.24+	iwlwifi-4965-ucode-4.44.17.tgz
-2.6.24+	iwlwifi-4965-ucode-4.44.1.18.tgz
-2.6.24+	iwlwifi-4965-ucode-4.44.1.20.tgz
-2.6.24+	iwlwifi-4965-ucode-228.57.1.21.tgz
-2.6.28+ (?)	iwlwifi-4965-ucode-228.57.2.21.tgz
-2.6.28+ (?)	iwlwifi-4965-ucode-228.57.2.23.tgz
-2.6.28+ (?)	iwlwifi-4965-ucode-228.61.2.24.tgz
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Ans how shoudl I proceed for intalling the right driver?
-
-Thank you
-
-Leopoldo Soria
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index e406885a5cc3..1933dc22f1c4 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -558,6 +558,7 @@ void rt2800_get_txwi_rxwi_size(struct rt2x00_dev *rt2x00dev,
+ {
+ 	switch (rt2x00dev->chip.rt) {
+ 	case RT3593:
++	case RT3883:
+ 		*txwi_size = TXWI_DESC_SIZE_4WORDS;
+ 		*rxwi_size = RXWI_DESC_SIZE_5WORDS;
+ 		break;
+-- 
+2.11.0
