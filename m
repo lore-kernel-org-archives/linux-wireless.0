@@ -1,108 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36226 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751136AbdAWWRu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:17:50 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 24 Jan 2017 00:03:45 +0200
-Message-Id: <20170123220350.25305-21-luca@coelho.fi> (sfid-20170123_231753_483496_45D26542)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 20/25] iwlwifi: pcie: cleanup rfkill checks
+Received: from venema.h4ckr.net ([217.24.1.135]:53953 "EHLO venema.h4ckr.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751373AbdANHPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 14 Jan 2017 02:15:17 -0500
+Message-ID: <49460.217.24.3.26.1484376490.squirrel@webmail.madwifi-project.org> (sfid-20170114_081520_810222_CCFA29D7)
+In-Reply-To: <87y3yfi78t.fsf@purkki.adurom.net>
+References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
+    <87y3yfi78t.fsf@purkki.adurom.net>
+Date: Sat, 14 Jan 2017 07:48:10 +0100 (CET)
+Subject: Re: Searching new home for ath[59]k-devel mailing lists
+From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
+To: "Kalle Valo" <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
+        ath9k-devel@lists.ath9k.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Kalle.
 
-Move repeating code to a separate function.
+Thanks for your response.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 39 ++++++++++++-------------
- 1 file changed, 18 insertions(+), 21 deletions(-)
+Kalle Valo wrote:
+> So feel free to close both of the lists and thanks for the heads up.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 16790db650c1..c1d99d15796d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1062,6 +1062,20 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 					       &first_ucode_section);
- }
- 
-+static bool iwl_trans_check_hw_rf_kill(struct iwl_trans *trans)
-+{
-+	bool hw_rfkill = iwl_is_rfkill_set(trans);
-+
-+	if (hw_rfkill)
-+		set_bit(STATUS_RFKILL, &trans->status);
-+	else
-+		clear_bit(STATUS_RFKILL, &trans->status);
-+
-+	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+
-+	return hw_rfkill;
-+}
-+
- static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1204,12 +1218,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 	mutex_lock(&trans_pcie->mutex);
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	hw_rfkill = iwl_trans_check_hw_rf_kill(trans);
- 	if (hw_rfkill && !run_in_rfkill) {
- 		ret = -ERFKILL;
- 		goto out;
-@@ -1257,13 +1266,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 		ret = iwl_pcie_load_given_ucode(trans, fw);
- 
- 	/* re-check RF-Kill state since we may have missed the interrupt */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	hw_rfkill = iwl_trans_check_hw_rf_kill(trans);
- 	if (hw_rfkill && !run_in_rfkill)
- 		ret = -ERFKILL;
- 
-@@ -1655,7 +1658,6 @@ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
- static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool hw_rfkill;
- 	int err;
- 
- 	lockdep_assert_held(&trans_pcie->mutex);
-@@ -1679,13 +1681,8 @@ static int _iwl_trans_pcie_start_hw(struct iwl_trans *trans, bool low_power)
- 	/* Set is_down to false here so that...*/
- 	trans_pcie->is_down = false;
- 
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--	/* ... rfkill can call stop_device and set it false if needed */
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	/* ...rfkill can call stop_device and set it false if needed */
-+	iwl_trans_check_hw_rf_kill(trans);
- 
- 	/* Make sure we sync here, because we'll need full access later */
- 	if (low_power)
--- 
-2.11.0
+Ok. I will send a shutdown notice to both lists during the next few days,
+then unsubscribe all subscribers, and close the lists for new
+subscriptions. I intend to keep the mailing list archives online, for
+reference purpose.
+
+> Are you planning to update the MAINTAINERS file or should I?
+
+It would be great if you could take care of that.
+
+Someone should also update the "Mailing list" section of [1] accordingly.
+I guess one needs to have a valid user account for that to do, and I don't
+have one atm.
+
+[1] https://wireless.wiki.kernel.org/en/users/Drivers/ath9k
+
+Bye, Mike
