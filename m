@@ -1,76 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:32906 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751847AbdADUfM (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33129 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751024AbdAPRYT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 15:35:12 -0500
-Received: by mail-io0-f195.google.com with SMTP id 71so514330ioe.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:35:11 -0800 (PST)
-Received: from mail-io0-f175.google.com (mail-io0-f175.google.com. [209.85.223.175])
-        by smtp.gmail.com with ESMTPSA id d25sm25240537ioj.25.2017.01.04.12.35.10
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 04 Jan 2017 12:35:11 -0800 (PST)
-Received: by mail-io0-f175.google.com with SMTP id d9so463174844ioe.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:35:10 -0800 (PST)
+        Mon, 16 Jan 2017 12:24:19 -0500
+Received: by mail-oi0-f67.google.com with SMTP id j15so13103447oih.0
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2017 09:24:19 -0800 (PST)
+Subject: Re: Support of rtl8723bs
+To: Jes Sorensen <Jes.Sorensen@gmail.com>, Hanno Zulla <abos@hanno.de>
+References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
+ <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
+ <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
+ <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
+ <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
+ <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de> <wrfjpojn3zms.fsf@redhat.com>
+Cc: Bastien Nocera <hadess@hadess.net>, anthony.wong@canonical.com,
+        linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5e24275f-c6ea-c1c6-088a-a244006ffbad@lwfinger.net> (sfid-20170116_182424_349938_9EDB25F2)
+Date: Mon, 16 Jan 2017 11:24:17 -0600
 MIME-Version: 1.0
-In-Reply-To: <1483544433.7312.13.camel@sipsolutions.net>
-References: <20161218002554.6362-1-andrew.zaborowski@intel.com> <1483544433.7312.13.camel@sipsolutions.net>
-From: Andrew Zaborowski <andrew.zaborowski@intel.com>
-Date: Wed, 4 Jan 2017 15:35:10 -0500
-Message-ID: <CAOq732KZrpsjK96uwwe3hna2DPkwbN3CvJz+LFxJzXxWw08wRA@mail.gmail.com> (sfid-20170104_213515_572455_0998A0A9)
-Subject: Re: [PATCH v4] cfg80211: NL80211_ATTR_SOCKET_OWNER support for CMD_CONNECT
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <wrfjpojn3zms.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 January 2017 at 10:40, Johannes Berg <johannes@sipsolutions.net> wrote:
->> +++ b/net/wireless/mlme.c
->> @@ -340,6 +340,8 @@ int cfg80211_mlme_deauth(struct
->> cfg80211_registered_device *rdev,
+On 01/16/2017 07:25 AM, Jes Sorensen wrote:
+> Hanno Zulla <abos@hanno.de> writes:
+>> Hi,
 >>
->>       ASSERT_WDEV_LOCK(wdev);
+>> has there been any progress on the rtl8723bs / sdio issue?
 >>
->> +     wdev->conn_owner_nlportid = 0;
+>> There were no updates to this mailing list or the usual git repositories
+>> since this was last discussed, unless I missed the proper place to look
+>> for this.
+>>
+>> I'm sorry that I can't be more helpful with actual development, but am
+>> eager to help with testing this device.
+>>
+>> Thank you,
+>> Hanno
 >
-> Is this really correct? The deauth might not be to the current_bss, as
-> you can see in the following if statement:
+> Hanno,
 >
->>       if (local_state_change &&
->>           (!wdev->current_bss ||
->>            !ether_addr_equal(wdev->current_bss->pub.bssid, bssid)))
->
-> It seems that perhaps this should go into some other place, perhaps
-> only be reset when current_bss is also reset to NULL?
+> The 8723bs project is currently in idle mode, I haven't had time to
+> spend time on it for the last couple of months.
 
-In this case yes, I think I should perform the same bssid comparison.
-But elsewhere we want conn_owner_nlportid to be set earlier than
-current_bss, and reset earlier than current_bss because (1) we want to
-be able to interrupt an ongoing attempt, and (2) we also don't want to
-trigger another disconnect / deauth if one is already in progress.
+I have also been busy.
 
->
->> @@ -14539,13 +14554,21 @@ static int nl80211_netlink_notify(struct
->> notifier_block * nb,
->>                               spin_unlock(&rdev-
->> >destroy_list_lock);
->>                               schedule_work(&rdev->destroy_work);
->>                       }
->> -             } else if (schedule_scan_stop) {
->> +
->> +                     continue;
->> +             }
->
-> This also doesn't seem right - the same socket could possibly own both
-> an interface and a connection? If the connection is on the same
-> interface you might not really want to do both - though it shouldn't
-> hurt if all the cancel_work is in the right place - but it could be a
-> different interface?
-
-This is only a syntactic change though.  The "continue" is now in the
-"if (schedule_destroy_work)" block so the other actions will not be
-scheduled is the interface is being destroyed.
-
-Best regards
+Larry
