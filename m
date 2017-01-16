@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38866 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750802AbdA2N41 (ORCPT
+Received: from mail-it0-f49.google.com ([209.85.214.49]:38852 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbdAPO6u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2017 08:56:27 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Cc: linuxwifi@intel.com
-Subject: [regression] iwlwifi: crash in iwl_parse_tlv_firmware()
-Date: Sun, 29 Jan 2017 15:56:20 +0200
-Message-ID: <87inoyt1ff.fsf@kamboji.qca.qualcomm.com> (sfid-20170129_145636_157794_3672B13D)
+        Mon, 16 Jan 2017 09:58:50 -0500
+Received: by mail-it0-f49.google.com with SMTP id c7so23002184itd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2017 06:58:50 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201701150241.yCa5lXiT%fengguang.wu@intel.com>
+References: <20170113111022.5570-1-ext.waldemar.rymarkiewicz@tieto.com> <201701150241.yCa5lXiT%fengguang.wu@intel.com>
+From: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+Date: Mon, 16 Jan 2017 15:58:24 +0100
+Message-ID: <CAJ2u5D++qAhQZObmw_P_d8AsWWmi-v0AK+dRjo96j+gXgk2rVg@mail.gmail.com> (sfid-20170116_155855_265033_E2ECBE9A)
+Subject: Re: [PATCH] ath10k: Search SMBIOS for OEM board file extension
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        ath10k@lists.infradead.org,
+        Bartosz Markowski <bartosz.markowski@tieto.com>,
+        "Chang, Robert" <rwchang@qti.qualcomm.com>,
+        "Liu, Alan" <alanliu@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 14 January 2017 at 19:09, kbuild test robot <lkp@intel.com> wrote:
+> Hi Waldemar,
+>
+> [auto build test WARNING on ath6kl/ath-next]
+> [also build test WARNING on v4.10-rc3 next-20170113]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Waldemar-Rymarkiewicz/ath10k-Search-SMBIOS-for-OEM-board-file-extension/20170115-005232
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
+> config: xtensa-allmodconfig (attached as .config)
+> compiler: xtensa-linux-gcc (GCC) 4.9.0
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=xtensa
+>
+> All warnings (new ones prefixed by >>):
+>
+>    drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_check_bdfext':
+>>> drivers/net/wireless/ath/ath10k/core.c:754:2: warning: ignoring return value of 'strscpy', declared with attribute warn_unused_result [-Wunused-result]
+>      strscpy(ar->id.bdf_ext, bdf_ext + strlen(magic),
+>      ^
 
-updated the kernel on my test laptop and noticed that now iwlwifi
-crashes every time during boot. This is with tag ath-201701271935
-ath.git master branch, which essentially is wt-2017-01-27 from
-wireless-testing plus latest ath patches.
+I will fix and send v2.
 
-I tried v4.10-rc5 and iwlwifi didn't crash so my guess is that this is a
-regression in the latest iwlwifi pull. Below is the crash log and the
-location in source. This is all I got via netconsole.
-
-[   39.296218] Intel(R) Wireless WiFi driver for Linux
-[   39.296219] Copyright(c) 2003- 2015 Intel Corporation
-[   39.299373] iwlwifi 0000:44:00.0: can't disable ASPM; OS doesn't have ASPM control
-[   39.677192] BUG: unable to handle kernel NULL pointer dereference at 0000000c
-[   39.677212] IP: iwl_parse_tlv_firmware.isra.5+0x9a0/0xd60 [iwlwifi]
-[   39.677213] *pdpt = 000000002f5bd001 *pde = 0000000000000000 
-[   39.677215] 
-[   39.677217] Oops: 0002 [#1] SMP
-[   39.677219] Modules linked in: btrtl(+) snd_seq_midi_event btbcm rfcomm(+) iwlwifi snd_rawmidi btintel bnep joydev input_leds coretemp cfg80211 bluetooth snd_seq snd_timer serio_raw snd_seq_device wmi snd video mac_hid soundcore lpc_ich shpchp parport_pc ppdev lp parport psmouse firewire_ohc
-[   39.677244] CPU: 3 PID: 35 Comm: kworker/3:1 Not tainted 4.10.0-rc5-wt-ath+ #173
-[   39.677245] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 68CDD Ver. F.04 01/27/2010
-[   39.677252] Workqueue: events request_firmware_work_func
-[   39.677254] task: f387bac0 task.stack: f3916000
-[   39.677263] EIP: iwl_parse_tlv_firmware.isra.5+0x9a0/0xd60 [iwlwifi]
-[   39.677264] EFLAGS: 00010293 CPU: 3
-[   39.677266] EAX: 00000000 EBX: 0001ec18 ECX: f8fc2060 EDX: 000339f8
-[   39.677267] ESI: f8fc2058 EDI: f8fe0c78 EBP: f3917e54 ESP: f3917df8
-[   39.677268]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-[   39.677270] CR0: 80050033 CR2: 0000000c CR3: 3033cd20 CR4: 000006f0
-[   39.677271] Call Trace:
-
-gdb drivers/net/wireless/intel/iwlwifi/iwlwifi.ko
-(gdb) l *(iwl_parse_tlv_firmware+0x9a0)
-0x2170 is in iwl_parse_tlv_firmware (drivers/net/wireless/intel/iwlwifi/iwl-drv.c:299).
-294     static void set_sec_data(struct iwl_firmware_pieces *pieces,
-295                              enum iwl_ucode_type type,
-296                              int sec,
-297                              const void *data)
-298     {
-299             pieces->img[type].sec[sec].data = data;
-300     }
-301
-302     static void set_sec_size(struct iwl_firmware_pieces *pieces,
-303                              enum iwl_ucode_type type,
-(gdb) 
-
--- 
-Kalle Valo
+Thanks,
+/Waldek
