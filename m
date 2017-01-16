@@ -1,76 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:60666 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1761421AbdACVVj (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:39839 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751281AbdAPDGE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 16:21:39 -0500
-Date: Tue, 3 Jan 2017 14:21:36 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>, robh+dt@kernel.org,
-        mark.rutland@arm.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Justin Bronder <justin@kuvee.com>,
-        Jaret Cantu <jaret.cantu@timesys.com>
-Subject: Re: [PATCH v3 3/3] nfc: trf7970a: Prevent repeated polling from
- crashing the kernel
-Message-ID: <20170103212136.GA9899@animalcreek.com> (sfid-20170103_222211_498400_89006CFF)
-References: <1482380314-16440-1-git-send-email-geoff@kuvee.com>
- <1482380314-16440-3-git-send-email-geoff@kuvee.com>
- <20161224060141.GA9069@animalcreek.com>
- <CAO7Z3W+n85jbr8cmj3HJV1c+eL=oRh-XRy+O=iZ+mD=ov2WABA@mail.gmail.com>
- <20161224172439.GA15103@animalcreek.com>
- <CAO7Z3WJa0goJ-VXc7dvyz8imZtqby6QsC0QNH+uRAE8LhxqU2w@mail.gmail.com>
- <20170103163324.GA3184@animalcreek.com>
- <CAO7Z3WK5pF+q0vAoPPie8wXYQPigpGd7W8uQiGSgN79z4=W9uQ@mail.gmail.com>
+        Sun, 15 Jan 2017 22:06:04 -0500
+Date: Mon, 16 Jan 2017 04:05:47 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 08/14] rt2x00: rt2800mmio: add a workaround for spurious
+ TX_FIFO_STATUS interrupts
+Message-ID: <20170116030535.GA32238@makrotopia.org> (sfid-20170116_040607_369329_1AF5601A)
+References: <874m114lwq.fsf@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAO7Z3WK5pF+q0vAoPPie8wXYQPigpGd7W8uQiGSgN79z4=W9uQ@mail.gmail.com>
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 03, 2017 at 01:35:18PM -0500, Geoff Lansberry wrote:
-> On Tue, Jan 3, 2017 at 11:33 AM, Mark Greer <mgreer@animalcreek.com> wrote:
-> > On Tue, Dec 27, 2016 at 09:18:32AM -0500, Geoff Lansberry wrote:
+From: Gabor Juhos <juhosg@openwrt.org>
 
-> >> In the meantime - here is some more info about how we use it.
-> >>
-> >> We do use NFC structures.    I did find an interesting clue in that
-> >> there are certain bottles that cause neard to segfault,  I'm not sure
-> >> what is different about them.  We write a string, like
-> >> "coppola_chardonnay_2015" to the bottles.
-> >
-> > Off the top of my head, it could be the length of the text.
-> > It would be useful to compare the data that works to the data
-> > that doesn't work.  Can you install NXP's 'TagInfo' app on a
-> > smartphone and scan tags with working & non-working data?
-> > You can email the data from the app to yourself, edit out
-> > the cruft, and share here.
-> 
-> The data is always the same - and the tags are all the same.  Only
-> difference is that the tag is physically different, and perhaps
-> orientation; distance from antenna to tag is fixed.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800mmio.c | 72 ++++++++++++++++++++-----
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h     |  5 ++
+ 2 files changed, 65 insertions(+), 12 deletions(-)
 
-Interesting...  They're all type 2 tags, right?
-
-> I can't even
-> write the tags at all, so reading them will show blank.   Also a minor
-> but significant detail, is that the tags are embedded in such a way
-> that the phone cannot get close enough to them to connect.
-
-This section had me completely confused for a couple minutes until I realized
-that you mean that you can read & write the tags using the trf7970a with
-an attached antenna but not with your phone.  Is that correct?
-
-If so, try a tag that isn't embedded in something else and move it around
-the back of the phone.  Try to find where it works best.  The phone
-manufacturers are notorius for paying little attention to the NFC antenna
-they put on their products.  For example, I have a Samsung S5 next to me
-and it seems to work best around the center of the phone.  I've used others
-where I had to use the upper-left or upper-right corner of the phone.
-
-Mark
---
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+index 5f1936aa8fa7..750a9425b5be 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800mmio.c
+@@ -415,9 +415,9 @@ void rt2800mmio_autowake_tasklet(unsigned long data)
+ }
+ EXPORT_SYMBOL_GPL(rt2800mmio_autowake_tasklet);
+ 
+-static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
++static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev,
++					  u32 status)
+ {
+-	u32 status;
+ 	int i;
+ 
+ 	/*
+@@ -438,29 +438,77 @@ static void rt2800mmio_txstatus_interrupt(struct rt2x00_dev *rt2x00dev)
+ 	 * Since we have only one producer and one consumer we don't
+ 	 * need to lock the kfifo.
+ 	 */
+-	for (i = 0; i < rt2x00dev->tx->limit; i++) {
+-		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
+-
+-		if (!rt2x00_get_field32(status, TX_STA_FIFO_VALID))
+-			break;
+-
++	i = 0;
++	do {
+ 		if (!kfifo_put(&rt2x00dev->txstatus_fifo, status)) {
+-			rt2x00_warn(rt2x00dev, "TX status FIFO overrun, drop tx status report\n");
++			rt2x00_warn(rt2x00dev,
++				    "TX status FIFO overrun, drop TX status report\n");
+ 			break;
+ 		}
+-	}
++
++		if (++i >= rt2x00dev->tx->limit)
++			break;
++
++		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &status);
++	} while (rt2x00_get_field32(status, TX_STA_FIFO_VALID));
+ 
+ 	/* Schedule the tasklet for processing the tx status. */
+ 	tasklet_schedule(&rt2x00dev->txstatus_tasklet);
+ }
+ 
++#define RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES	4
++
++static bool rt2800mmio_txstatus_is_spurious(struct rt2x00_dev *rt2x00dev,
++					    u32 txstatus)
++{
++	if (likely(rt2x00_get_field32(txstatus, TX_STA_FIFO_VALID))) {
++		rt2x00dev->txstatus_irq_retries = 0;
++		return false;
++	}
++
++	rt2x00dev->txstatus_irq_retries++;
++
++	/* Ensure that we don't go into an infinite IRQ loop. */
++	if (rt2x00dev->txstatus_irq_retries >=
++	    RT2800MMIO_TXSTATUS_IRQ_MAX_RETRIES) {
++		rt2x00_warn(rt2x00dev,
++			    "%u spurious TX_FIFO_STATUS interrupt(s)\n",
++			    rt2x00dev->txstatus_irq_retries);
++		rt2x00dev->txstatus_irq_retries = 0;
++		return false;
++	}
++
++	return true;
++}
++
+ irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
+ {
+ 	struct rt2x00_dev *rt2x00dev = dev_instance;
+ 	u32 reg, mask;
++	u32 txstatus = 0;
+ 
+-	/* Read status and ACK all interrupts */
++	/* Read status */
+ 	rt2x00mmio_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
++
++	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
++		/* Due to unknown reason the hardware generates a
++		 * TX_FIFO_STATUS interrupt before the TX_STA_FIFO
++		 * register contain valid data. Read the TX status
++		 * here to see if we have to process the actual
++		 * request.
++		 */
++		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &txstatus);
++		if (rt2800mmio_txstatus_is_spurious(rt2x00dev, txstatus)) {
++			/* Remove the TX_FIFO_STATUS bit so it won't be
++			 * processed in this turn. The hardware will
++			 * generate another IRQ for us.
++			 */
++			rt2x00_set_field32(&reg,
++					   INT_SOURCE_CSR_TX_FIFO_STATUS, 0);
++		}
++	}
++
++	/* ACK interrupts */
+ 	rt2x00mmio_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+ 
+ 	if (!reg)
+@@ -477,7 +525,7 @@ irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
+ 	mask = ~reg;
+ 
+ 	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
+-		rt2800mmio_txstatus_interrupt(rt2x00dev);
++		rt2800mmio_txstatus_interrupt(rt2x00dev, txstatus);
+ 		/*
+ 		 * Never disable the TX_FIFO_STATUS interrupt.
+ 		 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 034a07273038..c27408b494ef 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -995,6 +995,11 @@ struct rt2x00_dev {
+ 	int rf_channel;
+ 
+ 	/*
++	 * Counter for tx status irq retries (rt2800pci).
++	 */
++	unsigned int txstatus_irq_retries;
++
++	/*
+ 	 * Protect the interrupt mask register.
+ 	 */
+ 	spinlock_t irqmask_lock;
+-- 
+2.11.0
