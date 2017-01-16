@@ -1,37 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:17441 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932236AbdABL2H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 06:28:07 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:59523 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750985AbdAPLmc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 06:42:32 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "masashi.honma@gmail.com" <masashi.honma@gmail.com>
-Subject: RE: [PATCH] mac80211: Fix addition of mesh configuration element
-Date: Mon, 2 Jan 2017 11:28:03 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0615E3C59@HASMSX110.ger.corp.intel.com> (sfid-20170102_122811_019633_9282F95E)
-References: <1482769056-28577-1-git-send-email-ilan.peer@intel.com>
-         (sfid-20161226_151931_342648_794604E1)
- <1483354796.4596.9.camel@sipsolutions.net>
-In-Reply-To: <1483354796.4596.9.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFC V2 3/5] cfg80211: add request id parameter to .sched_scan_stop() signature
+Date: Mon, 16 Jan 2017 11:42:19 +0000
+Message-Id: <1484566941-27000-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170116_124237_457408_99DB4380)
+In-Reply-To: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWls
-dG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0NCj4gU2VudDogTW9uZGF5LCBKYW51YXJ5IDAy
-LCAyMDE3IDEzOjAwDQo+IFRvOiBQZWVyLCBJbGFuIDxpbGFuLnBlZXJAaW50ZWwuY29tPg0KPiBD
-YzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBtYXNhc2hpLmhvbm1hQGdtYWlsLmNv
-bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIXSBtYWM4MDIxMTogRml4IGFkZGl0aW9uIG9mIG1lc2gg
-Y29uZmlndXJhdGlvbiBlbGVtZW50DQo+IA0KPiBPbiBNb24sIDIwMTYtMTItMjYgYXQgMTg6MTcg
-KzAyMDAsIElsYW4gUGVlciB3cm90ZToNCj4gPiBUaGUgY29kZSB3YXMgc2V0dGluZyB0aGUgY2Fw
-YWJpbGl0aWVzIGJ5dGUgdG8gemVybywgYWZ0ZXIgaXQgd2FzDQo+ID4gYWxyZWFkeSBwcm9wZXJs
-eSBzZXQgcHJldmlvdXNseS4gRml4IGl0Lg0KPiA+DQo+ID4gVGhlIGJ1ZyB3YXMgZm91bmQgd2hp
-bGUgZGVidWdnaW5nIGh3c2ltIG1lc2ggdGVzdHMgZmFpbHVyZXMgdGhhdA0KPiA+IGhhcHBlbmVk
-IGluIGNvbW1pdCA3NmY0M2I0IChtYWM4MDIxMTogUmVtb3ZlIGludmFsaWQgZmxhZyBvcGVyYXRp
-b25zDQo+ID4gaW4gbWVzaCBUU0Ygc3luY2hyb25pemF0aW9uKS4NCj4gPg0KPiBBcHBsaWVkLCB0
-aGFua3MuDQo+IA0KPiBXaGVuIHlvdSBoYXZlIHRoZSBjb21taXQgYWxyZWFkeSwgcGxlYXNlIGFk
-ZCBhIEZpeGVzIHRhZywgYW5kIGFsc28gdXNlDQo+IDEyIGhleCBkaWdpdHMgdG8gYWJicmV2aWF0
-ZSBTSEExcyBwbGVhc2UuIChJJ3ZlIGRvbmUgdGhhdCBub3cpDQo+IA0KDQpTdXJlLiBUaGFua3Mu
-DQoNCklsYW4uDQo=
+For multiple scheduled scan support the driver needs to know which
+scheduled scan request is being stopped. Pass the request id in the
+.sched_scan_stop() callback.
+
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c                |  2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c   |  6 +++---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c           |  2 +-
+ include/net/cfg80211.h                                    | 15 ++++++++-------
+ net/mac80211/cfg.c                                        |  3 ++-
+ net/wireless/rdev-ops.h                                   |  6 +++---
+ net/wireless/scan.c                                       |  2 +-
+ net/wireless/trace.h                                      | 10 +++++-----
+ 8 files changed, 24 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index b7fe0af..1509286 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -3354,7 +3354,7 @@ static int ath6kl_cfg80211_sscan_start(struct wiphy *wiphy,
+ }
+ 
+ static int ath6kl_cfg80211_sscan_stop(struct wiphy *wiphy,
+-				      struct net_device *dev)
++				      struct net_device *dev, u64 reqid)
+ {
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	bool stopped;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ccae3bb..8280f19 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3392,7 +3392,7 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
+ }
+ 
+ static int brcmf_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+-					  struct net_device *ndev)
++					  struct net_device *ndev, u64 reqid)
+ {
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+@@ -3595,7 +3595,7 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
+ 				      cfg->wowl.pre_pmmode);
+ 		cfg->wowl.active = false;
+ 		if (cfg->wowl.nd_enabled) {
+-			brcmf_cfg80211_sched_scan_stop(cfg->wiphy, ifp->ndev);
++			brcmf_cfg80211_sched_scan_stop(cfg->wiphy, ifp->ndev, 0);
+ 			brcmf_fweh_unregister(cfg->pub, BRCMF_E_PFN_NET_FOUND);
+ 			brcmf_fweh_register(cfg->pub, BRCMF_E_PFN_NET_FOUND,
+ 					    brcmf_notify_sched_scan_results);
+@@ -3679,7 +3679,7 @@ static s32 brcmf_cfg80211_suspend(struct wiphy *wiphy,
+ 
+ 	/* Stop scheduled scan */
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO))
+-		brcmf_cfg80211_sched_scan_stop(wiphy, ndev);
++		brcmf_cfg80211_sched_scan_stop(wiphy, ndev, 0);
+ 
+ 	/* end any scanning */
+ 	if (test_bit(BRCMF_SCAN_STATUS_BUSY, &cfg->scan_status))
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 1e3bd43..243349476 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -2701,7 +2701,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
+  * previous bgscan configuration in the firmware
+  */
+ static int mwifiex_cfg80211_sched_scan_stop(struct wiphy *wiphy,
+-					    struct net_device *dev)
++					    struct net_device *dev, u64 reqid)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 4b98ff8..0a65cfe 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2709,12 +2709,12 @@ struct cfg80211_nan_func {
+  * @set_cqm_txe_config: Configure connection quality monitor TX error
+  *	thresholds.
+  * @sched_scan_start: Tell the driver to start a scheduled scan.
+- * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan. This
+- *	call must stop the scheduled scan and be ready for starting a new one
+- *	before it returns, i.e. @sched_scan_start may be called immediately
+- *	after that again and should not fail in that case. The driver should
+- *	not call cfg80211_sched_scan_stopped() for a requested stop (when this
+- *	method returns 0.)
++ * @sched_scan_stop: Tell the driver to stop an ongoing scheduled scan with
++ *	given request id. This call must stop the scheduled scan and be ready
++ *	for starting a new one before it returns, i.e. @sched_scan_start may be
++ *	called immediately after that again and should not fail in that case.
++ *	The driver should not call cfg80211_sched_scan_stopped() for a requested
++ *	stop (when this method returns 0).
+  *
+  * @mgmt_frame_register: Notify driver that a management frame type was
+  *	registered. The callback is allowed to sleep.
+@@ -3009,7 +3009,8 @@ struct cfg80211_ops {
+ 	int	(*sched_scan_start)(struct wiphy *wiphy,
+ 				struct net_device *dev,
+ 				struct cfg80211_sched_scan_request *request);
+-	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev);
++	int	(*sched_scan_stop)(struct wiphy *wiphy, struct net_device *dev,
++				   u64 reqid);
+ 
+ 	int	(*set_rekey_data)(struct wiphy *wiphy, struct net_device *dev,
+ 				  struct cfg80211_gtk_rekey_data *data);
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a0be2f6..85748d0 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2198,7 +2198,8 @@ static void ieee80211_abort_scan(struct wiphy *wiphy, struct wireless_dev *wdev)
+ }
+ 
+ static int
+-ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev)
++ieee80211_sched_scan_stop(struct wiphy *wiphy, struct net_device *dev,
++			  u64 reqid)
+ {
+ 	struct ieee80211_local *local = wiphy_priv(wiphy);
+ 
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 9ada5e2..9da0701 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -809,11 +809,11 @@ static inline int rdev_get_antenna(struct cfg80211_registered_device *rdev,
+ }
+ 
+ static inline int rdev_sched_scan_stop(struct cfg80211_registered_device *rdev,
+-				       struct net_device *dev)
++				       struct net_device *dev, u64 reqid)
+ {
+ 	int ret;
+-	trace_rdev_sched_scan_stop(&rdev->wiphy, dev);
+-	ret = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
++	trace_rdev_sched_scan_stop(&rdev->wiphy, dev, reqid);
++	ret = rdev->ops->sched_scan_stop(&rdev->wiphy, dev, reqid);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index f2b2064..04615338 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -423,7 +423,7 @@ int cfg80211_stop_sched_scan_req(struct cfg80211_registered_device *rdev,
+ 	ASSERT_RTNL();
+ 
+ 	if (!driver_initiated) {
+-		int err = rdev_sched_scan_stop(rdev, req->dev);
++		int err = rdev_sched_scan_stop(rdev, req->dev, req->reqid);
+ 		if (err)
+ 			return err;
+ 	}
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 7990c07..8c04685 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -576,11 +576,6 @@
+ 	TP_ARGS(wiphy, netdev)
+ );
+ 
+-DEFINE_EVENT(wiphy_netdev_evt, rdev_sched_scan_stop,
+-	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
+-	TP_ARGS(wiphy, netdev)
+-);
+-
+ DEFINE_EVENT(wiphy_netdev_evt, rdev_set_rekey_data,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev),
+ 	TP_ARGS(wiphy, netdev)
+@@ -1610,6 +1605,11 @@
+ 	TP_ARGS(wiphy, netdev, id)
+ );
+ 
++DEFINE_EVENT(wiphy_netdev_id_evt, rdev_sched_scan_stop,
++	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev, u64 id),
++	TP_ARGS(wiphy, netdev, id)
++);
++
+ TRACE_EVENT(rdev_tdls_mgmt,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 u8 *peer, u8 action_code, u8 dialog_token,
+-- 
+1.9.1
