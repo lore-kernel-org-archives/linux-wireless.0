@@ -1,64 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39422 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964935AbdAIKsp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:48:45 -0500
-Message-ID: <1483958921.17582.20.camel@sipsolutions.net> (sfid-20170109_115023_543747_9679AF00)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Dmitry Shmidt <dimitrysh@google.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 09 Jan 2017 11:48:41 +0100
-In-Reply-To: <ac6c15d8-5d4f-722c-7d7e-c43f6a118b53@broadcom.com> (sfid-20170105_205959_067611_AE4895FD)
-References: <94eb2c110db85c2379054172dad0@google.com>
-         <1480948100.31788.15.camel@sipsolutions.net>
-         <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
-         <1481093061.4092.17.camel@sipsolutions.net>
-         <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
-         <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
-         <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
-         <1481645205.20412.32.camel@sipsolutions.net>
-         <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
-         <1483536510.7312.5.camel@sipsolutions.net>
-         <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
-         <1483616763.4394.8.camel@sipsolutions.net>
-         <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com>
-         <1483623882.4394.20.camel@sipsolutions.net>
-         <ac6c15d8-5d4f-722c-7d7e-c43f6a118b53@broadcom.com>
-         (sfid-20170105_205959_067611_AE4895FD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fudo.makrotopia.org ([185.142.180.71]:56317 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751410AbdAPDQO (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Jan 2017 22:16:14 -0500
+Date: Mon, 16 Jan 2017 04:15:56 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 13/14] rt2x00: rt2800lib: add support for RT3352 with
+ 20MHz crystal
+Message-ID: <20170116031541.GA32313@makrotopia.org> (sfid-20170116_041617_092446_3D22A060)
+References: <874m114lwq.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-05 at 20:59 +0100, Arend Van Spriel wrote:
-> 
-> From what Dmitry listed I guess there's really only one.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Mathias Kresin <dev@kresin.me>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 50 +++++++++++++++++++++++++-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  2 ++
+ 2 files changed, 51 insertions(+), 1 deletion(-)
 
-Ok. I guess I need to go back to that then.
-
-> Early on in the thread Luca gave some other examples of scan
-> extensions so may need to consider notification/dump methods that are
-> extensible. It seems awkward to have a single "initiate" command and
-> a couple of "notification/retrieval" commands. It may not be so bad
-> as long as it is clear which retrieval command goes with a
-> notification.
-
-Well, we might not even need different commands. We need different
-storage internally, but if you request the results for a given scan ID
-then you might get a totally different result format? Though that
-wouldn't lend itself well to query "everything you have" which is also
-useful. But even then, it could be done by passing the appropriate
-"report type" attribute to the dump command - we need that anyway for
-trigger.
-
-I think with that discussion we're getting ahead of ourselves though -
-do we really know that we just need the two result types
-
- * full, and
- * partial (for history scan)
-
-and have we even defined the attributes we want in the partial one?
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 93c97eade334..cb1457595f05 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -36,6 +36,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
++#include <linux/clk.h>
+ 
+ #include "rt2x00.h"
+ #include "rt2800lib.h"
+@@ -7675,6 +7676,27 @@ static const struct rf_channel rf_vals_5592_xtal40[] = {
+ 	{196, 83, 0, 12, 1},
+ };
+ 
++/*
++ * RF value list for rt3xxx with Xtal20MHz
++ * Supports: 2.4 GHz (all) (RF3322)
++ */
++static const struct rf_channel rf_vals_xtal20mhz_3x[] = {
++	{1,    0xE2,	 2,  0x14},
++	{2,    0xE3,	 2,  0x14},
++	{3,    0xE4,	 2,  0x14},
++	{4,    0xE5,	 2,  0x14},
++	{5,    0xE6,	 2,  0x14},
++	{6,    0xE7,	 2,  0x14},
++	{7,    0xE8,	 2,  0x14},
++	{8,    0xE9,	 2,  0x14},
++	{9,    0xEA,	 2,  0x14},
++	{10,   0xEB,	 2,  0x14},
++	{11,   0xEC,	 2,  0x14},
++	{12,   0xED,	 2,  0x14},
++	{13,   0xEE,	 2,  0x14},
++	{14,   0xF0,	 2,  0x18},
++};
++
+ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct hw_mode_spec *spec = &rt2x00dev->spec;
+@@ -7764,7 +7786,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	case RF5390:
+ 	case RF5392:
+ 		spec->num_channels = 14;
+-		spec->channels = rf_vals_3x;
++		if (spec->clk_is_20mhz)
++			spec->channels = rf_vals_xtal20mhz_3x;
++		else
++			spec->channels = rf_vals_3x;
+ 		break;
+ 
+ 	case RF3052:
+@@ -7945,6 +7970,20 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+ 	return 0;
+ }
+ 
++int rt2800_probe_clk(struct rt2x00_dev *rt2x00dev)
++{
++	struct hw_mode_spec *spec = &rt2x00dev->spec;
++	struct clk *clk = clk_get(rt2x00dev->dev, NULL);
++
++	if (IS_ERR(clk))
++		return PTR_ERR(clk);
++
++	if (clk_get_rate(clk) == 20000000)
++		spec->clk_is_20mhz = 1;
++
++	return 0;
++}
++
+ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
+ 	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+@@ -7985,6 +8024,15 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_register_write(rt2x00dev, GPIO_CTRL, reg);
+ 
+ 	/*
++	 * Probe SoC clock.
++	 */
++	if (rt2x00_is_soc(rt2x00dev)) {
++		retval = rt2800_probe_clk(rt2x00dev);
++		if (retval)
++			return retval;
++	}
++
++	/*
+ 	 * Initialize hw specifications.
+ 	 */
+ 	retval = rt2800_probe_hw_mode(rt2x00dev);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index cfbf414c2627..b1eec49b0dac 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -400,6 +400,7 @@ static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
+  * @channels: Device/chipset specific channel values (See &struct rf_channel).
+  * @channels_info: Additional information for channels (See &struct channel_info).
+  * @ht: Driver HT Capabilities (See &ieee80211_sta_ht_cap).
++ * @clk_is_20mhz: External crystal of WiSoC is 20MHz instead of 40MHz
+  */
+ struct hw_mode_spec {
+ 	unsigned int supported_bands;
+@@ -415,6 +416,7 @@ struct hw_mode_spec {
+ 	const struct channel_info *channels_info;
+ 
+ 	struct ieee80211_sta_ht_cap ht;
++	int clk_is_20mhz;
+ };
+ 
+ /*
+-- 
+2.11.0
