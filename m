@@ -1,48 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48120 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757161AbdACHBD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 02:01:03 -0500
-Message-ID: <1483426858.15591.3.camel@sipsolutions.net> (sfid-20170103_080107_338084_45E1A6DE)
-Subject: Re: [PATCH V3 2/2] cfg80211: support ieee80211-freq-limit DT
- property
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Date: Tue, 03 Jan 2017 08:00:58 +0100
-In-Reply-To: <e194b980-1048-8da6-624b-26f824ff655d@broadcom.com> (sfid-20170102_211210_491488_1DB64A4C)
-References: <20170102163209.2445-1-zajec5@gmail.com>
-         <20170102163209.2445-2-zajec5@gmail.com>
-         <1483379548.15591.1.camel@sipsolutions.net>
-         <e194b980-1048-8da6-624b-26f824ff655d@broadcom.com>
-         (sfid-20170102_211210_491488_1DB64A4C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from fudo.makrotopia.org ([185.142.180.71]:52040 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751431AbdAPC5Z (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Jan 2017 21:57:25 -0500
+Date: Mon, 16 Jan 2017 03:55:56 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 02/14] rt2x00: rt2800lib: introduce
+ RT2800_HAS_HIGH_SHARED_MEM flag
+Message-ID: <20170116025544.GA32165@makrotopia.org> (sfid-20170116_035729_215386_A1417C9E)
+References: <874m114lwq.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Gabor Juhos <juhosg@openwrt.org>
 
-> I suppose this then can also be done early in the wiphy_register()
-> function itself, right?
+Some chipsets have more than 16KB of shared memory.
+Introduce a new rt2800 specific flag to indicate that
+and add a helper function which helps to check the
+presence of the new flag.
 
-No, because of the shared channel data issue. If this is
-unconditionally in wiphy_register() then we can no longer guarantee
-that sharing it is acceptable - which it is today under certain
-circumstances the driver controls. This would move it out of driver
-control, making it never possible to share any more.
+Also enable the new flag for the RT3593 chipset which
+has 24KB of shared memory. The flag can also be used
+for other chipsets, but none of those has been tested
+yet.
 
-> So does it mean the function can go in core.c again :-p If it is
-> likely there will be other properties being added it might justify
-> adding a new source file, eg. of.c, and only compile it when
-> CONFIG_OF is set. Just a thought.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  4 ++++
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 13 +++++++++++++
+ 2 files changed, 17 insertions(+)
 
-Yeah, whatever :)
-We can figure that out once we have the mechanisms in place.
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 5436cdb07937..5045af1b0dc9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7770,6 +7770,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+ 
+ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+ {
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
+ 	int retval;
+ 	u32 reg;
+ 
+@@ -7777,6 +7778,9 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	if (retval)
+ 		return retval;
+ 
++	if (rt2x00_rt(rt2x00dev, RT3593))
++		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
++
+ 	/*
+ 	 * Allocate eeprom data.
+ 	 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index 256928f0ea6a..4ee424dfe23f 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -22,6 +22,10 @@
+ 
+ #include "rt2800.h"
+ 
++enum rt2800_flag {
++	RT2800_HAS_HIGH_SHARED_MEM,
++};
++
+ /* RT2800 driver data structure */
+ struct rt2800_drv_data {
+ 	u8 calibration_bw20;
+@@ -34,6 +38,8 @@ struct rt2800_drv_data {
+ 	unsigned int tbtt_tick;
+ 	unsigned int ampdu_factor_cnt[4];
+ 	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
++
++	unsigned long rt2800_flags;
+ };
+ 
+ struct rt2800_ops {
+@@ -66,6 +72,13 @@ struct rt2800_ops {
+ 	__le32 *(*drv_get_txwi)(struct queue_entry *entry);
+ };
+ 
++static inline bool rt2800_has_high_shared_mem(struct rt2x00_dev *rt2x00dev)
++{
++	struct rt2800_drv_data *drv_data = rt2x00dev->drv_data;
++
++	return test_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
++}
++
+ static inline void rt2800_register_read(struct rt2x00_dev *rt2x00dev,
+ 					const unsigned int offset,
+ 					u32 *value)
+-- 
+2.11.0
