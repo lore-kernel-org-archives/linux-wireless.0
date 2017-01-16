@@ -1,66 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34129 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753310AbdAIXeJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 18:34:09 -0500
-Received: by mail-pf0-f181.google.com with SMTP id 127so35446473pfg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 15:34:09 -0800 (PST)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
-Date: Mon,  9 Jan 2017 15:33:50 -0800
-Message-Id: <20170109233350.134036-1-briannorris@chromium.org> (sfid-20170110_003414_679299_CCF57E94)
+Received: from mx1.redhat.com ([209.132.183.28]:50282 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751571AbdAPNZt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 08:25:49 -0500
+From: Jes Sorensen <Jes.Sorensen@gmail.com>
+To: Hanno Zulla <abos@hanno.de>
+Cc: Bastien Nocera <hadess@hadess.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        anthony.wong@canonical.com, linux-wireless@vger.kernel.org
+Subject: Re: Support of rtl8723bs
+References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
+        <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
+        <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
+        <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
+        <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
+        <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de>
+Date: Mon, 16 Jan 2017 08:25:47 -0500
+In-Reply-To: <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de> (Hanno Zulla's
+        message of "Mon, 16 Jan 2017 14:09:20 +0100")
+Message-ID: <wrfjpojn3zms.fsf@redhat.com> (sfid-20170116_142606_830726_149F74AE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Similar to commit fcd2042e8d36 ("mwifiex: printk() overflow with 32-byte
-SSIDs"), we failed to account for the existence of 32-char SSIDs in our
-debugfs code. Unlike in that case though, we zeroed out the containing
-struct first, and I'm pretty sure we're guaranteed to have some padding
-after the 'ssid.ssid' and 'ssid.ssid_len' fields (the struct is 33 bytes
-long).
+Hanno Zulla <abos@hanno.de> writes:
+> Hi,
+>
+> has there been any progress on the rtl8723bs / sdio issue?
+>
+> There were no updates to this mailing list or the usual git repositories
+> since this was last discussed, unless I missed the proper place to look
+> for this.
+>
+> I'm sorry that I can't be more helpful with actual development, but am
+> eager to help with testing this device.
+>
+> Thank you,
+> Hanno
 
-So, this is the difference between:
+Hanno,
 
-  # cat /sys/kernel/debug/mwifiex/mlan0/info
-  ...
-  essid="0123456789abcdef0123456789abcdef "
-  ...
+The 8723bs project is currently in idle mode, I haven't had time to
+spend time on it for the last couple of months.
 
-and the correct output:
-
-  # cat /sys/kernel/debug/mwifiex/mlan0/info
-  ...
-  essid="0123456789abcdef0123456789abcdef"
-  ...
-
-Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-Marking the 'Fixes' tag just for completeness, but AIUI, this isn't a security
-vulnerability (besides, it's debugfs), so it might not really warrant -stable.
-
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index b9284b533294..ae2b69db5994 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -114,7 +114,8 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
- 	if (GET_BSS_ROLE(priv) == MWIFIEX_BSS_ROLE_STA) {
- 		p += sprintf(p, "multicast_count=\"%d\"\n",
- 			     netdev_mc_count(netdev));
--		p += sprintf(p, "essid=\"%s\"\n", info.ssid.ssid);
-+		p += sprintf(p, "essid=\"%.*s\"\n", info.ssid.ssid_len,
-+			     info.ssid.ssid);
- 		p += sprintf(p, "bssid=\"%pM\"\n", info.bssid);
- 		p += sprintf(p, "channel=\"%d\"\n", (int) info.bss_chan);
- 		p += sprintf(p, "country_code = \"%s\"\n", info.country_code);
--- 
-2.11.0.390
+Cheers,
+Jes
