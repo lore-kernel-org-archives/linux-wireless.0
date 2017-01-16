@@ -1,59 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38742 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750866AbdAQMGF (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:35897 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751246AbdAPDCf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 07:06:05 -0500
-Content-Type: text/plain; charset="utf-8"
+        Sun, 15 Jan 2017 22:02:35 -0500
+Date: Mon, 16 Jan 2017 04:02:19 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 05/14] rt2x00: rt2800lib: add hw_beacon_count field to
+ struct rt2800_drv_data
+Message-ID: <20170116030154.GA32200@makrotopia.org> (sfid-20170116_040238_207708_FD70557F)
+References: <874m114lwq.fsf@codeaurora.org>
 MIME-Version: 1.0
-Subject: Re: mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170109233350.134036-1-briannorris@chromium.org>
-References: <20170109233350.134036-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170117120350.5CE4E607CE@smtp.codeaurora.org> (sfid-20170117_130633_786550_71B7A441)
-Date: Tue, 17 Jan 2017 12:03:50 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> Similar to commit fcd2042e8d36 ("mwifiex: printk() overflow with 32-byte
-> SSIDs"), we failed to account for the existence of 32-char SSIDs in our
-> debugfs code. Unlike in that case though, we zeroed out the containing
-> struct first, and I'm pretty sure we're guaranteed to have some padding
-> after the 'ssid.ssid' and 'ssid.ssid_len' fields (the struct is 33 bytes
-> long).
-> 
-> So, this is the difference between:
-> 
->   # cat /sys/kernel/debug/mwifiex/mlan0/info
->   ...
->   essid="0123456789abcdef0123456789abcdef "
->   ...
-> 
-> and the correct output:
-> 
->   # cat /sys/kernel/debug/mwifiex/mlan0/info
->   ...
->   essid="0123456789abcdef0123456789abcdef"
->   ...
-> 
-> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+From: Gabor Juhos <juhosg@openwrt.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
+Some chipsets can handle more than 8 beacons at once.
+Add a new field to the rt2800_drv_data structure which
+will hold the number of supported beacons of the given
+chipset.
 
-6183468a23fc mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
+Update the rt2x00_init_registers function to get the
+beacon count from the new field instead of using a
+hardcoded value.
 
+In order to keep the current behaviour, initialize the
+new field with the actually used value.
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index dcacfa54b3d6..0893d9147af9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -5025,7 +5025,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 	/*
+ 	 * Clear all beacons
+ 	 */
+-	for (i = 0; i < 8; i++)
++	for (i = 0; i < drv_data->hw_beacon_count; i++)
+ 		rt2800_clear_beacon_register(rt2x00dev, i);
+ 
+ 	if (rt2x00_is_usb(rt2x00dev)) {
+@@ -7875,6 +7875,8 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
+ 	if (rt2x00_rt(rt2x00dev, RT3593))
+ 		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
+ 
++	drv_data->hw_beacon_count = 8;
++
+ 	/*
+ 	 * Allocate eeprom data.
+ 	 */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+index ccfa8cf1f5ac..ab49e6feeeb9 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
+@@ -37,6 +37,7 @@ struct rt2800_drv_data {
+ 	u8 max_psdu;
+ 	unsigned int tbtt_tick;
+ 	unsigned int ampdu_factor_cnt[4];
++	unsigned int hw_beacon_count;
+ 	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
+ 
+ 	unsigned long rt2800_flags;
 -- 
-https://patchwork.kernel.org/patch/9506069/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
