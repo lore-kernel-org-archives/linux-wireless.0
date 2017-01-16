@@ -1,120 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:36211 "EHLO
-        mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750842AbdAIAVQ (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:51960 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751572AbdAPDGm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Jan 2017 19:21:16 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Tony Luck <tony.luck@intel.com>,
-        Fenghua Yu <fenghua.yu@intel.com>,
-        <linux-ia64@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH] nfc: don't be making arch specific unaligned decisions at driver level.
-Date: Sun, 8 Jan 2017 19:19:07 -0500
-Message-ID: <20170109001907.101949-1-paul.gortmaker@windriver.com> (sfid-20170109_012449_046972_85A5CBF7)
+        Sun, 15 Jan 2017 22:06:42 -0500
+Date: Mon, 16 Jan 2017 04:06:25 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 09/14] rt2x00: rt2x00pci: set PCI MWI only if supported
+Message-ID: <20170116030613.GA32249@makrotopia.org> (sfid-20170116_040644_867064_96322458)
+References: <874m114lwq.fsf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ia64 fails building allmodconfig with variations of:
+From: Claudio Mignanti <c.mignanti@gmail.com>
 
-   In file included from drivers/nfc/nxp-nci/i2c.c:39:0:
-   ./include/linux/unaligned/access_ok.h:62:29: error: redefinition of ‘put_unaligned_be64’
-    static __always_inline void put_unaligned_be64(u64 val, void *p)
-                                ^~~~~~~~~~~~~~~~~~
-   In file included from ./arch/ia64/include/asm/unaligned.h:5:0,
-                    from ./arch/ia64/include/asm/io.h:22,
-                    from ./arch/ia64/include/asm/smp.h:20,
-                    from ./include/linux/smp.h:59,
-                    from ./include/linux/topology.h:33,
-                    from ./include/linux/gfp.h:8,
-                    from ./include/linux/slab.h:14,
-                    from ./include/linux/resource_ext.h:19,
-                    from ./include/linux/acpi.h:26,
-                    from drivers/nfc/nxp-nci/i2c.c:28:
-   ./include/linux/unaligned/be_byteshift.h:65:20: note: previous definition of ‘put_unaligned_be64’ was here
-    static inline void put_unaligned_be64(u64 val, void *p)
-                       ^~~~~~~~~~~~~~~~~~
-   scripts/Makefile.build:293: recipe for target 'drivers/nfc/nxp-nci/i2c.o' failed
+This is needed for devices without support for PCI MWI. See also
+https://dev.openwrt.org/changeset/21850
 
-The easiest explanation for this is to look at the non-arch users in
-the following output:
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-   linux$git grep include.*access_ok.h
-   arch/arm64/crypto/crc32-arm64.c:#include <linux/unaligned/access_ok.h>
-   arch/cris/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   arch/m68k/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   arch/mn10300/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   arch/powerpc/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   arch/s390/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   arch/x86/include/asm/unaligned.h:#include <linux/unaligned/access_ok.h>
-   drivers/nfc/nfcmrvl/fw_dnld.c:#include <linux/unaligned/access_ok.h>
-   drivers/nfc/nxp-nci/firmware.c:#include <linux/unaligned/access_ok.h>
-   drivers/nfc/nxp-nci/i2c.c:#include <linux/unaligned/access_ok.h>
-   include/asm-generic/unaligned.h:# include <linux/unaligned/access_ok.h>
-
-Note that nfc is essentially the only non-arch user in the above.
-When it forces use of access_ok.h, it will break any arch that has
-already selected be_byteshift.h (or other conflicting implementations)
-at the arch level.
-
-The decision of what variant for unaligned access to use needs to be
-left to the arch level and not used at the driver level.  Delete the
-errant includes, as the right ones will be pulled in at the arch
-level, giving us just the one definition that is needed.
-
-See commit 064106a91be5 ("kernel: add common infrastructure for
-unaligned access") as a reference.
-
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fenghua Yu <fenghua.yu@intel.com>
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-
-diff --git a/drivers/nfc/nfcmrvl/fw_dnld.c b/drivers/nfc/nfcmrvl/fw_dnld.c
-index f8dcdf4b24f6..32144d66ba88 100644
---- a/drivers/nfc/nfcmrvl/fw_dnld.c
-+++ b/drivers/nfc/nfcmrvl/fw_dnld.c
-@@ -17,7 +17,6 @@
-  */
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+index eb6dbcd4fddf..4becfeb75ba8 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+@@ -94,8 +94,10 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
  
- #include <linux/module.h>
--#include <linux/unaligned/access_ok.h>
- #include <linux/firmware.h>
- #include <linux/nfc.h>
- #include <net/nfc/nci.h>
-diff --git a/drivers/nfc/nxp-nci/firmware.c b/drivers/nfc/nxp-nci/firmware.c
-index 5291797324ba..f2bd651fc60d 100644
---- a/drivers/nfc/nxp-nci/firmware.c
-+++ b/drivers/nfc/nxp-nci/firmware.c
-@@ -24,7 +24,6 @@
- #include <linux/completion.h>
- #include <linux/firmware.h>
- #include <linux/nfc.h>
--#include <linux/unaligned/access_ok.h>
+ 	pci_set_master(pci_dev);
  
- #include "nxp-nci.h"
++#ifdef CONFIG_PCI_SET_MWI
+ 	if (pci_set_mwi(pci_dev))
+ 		rt2x00_probe_err("MWI not available\n");
++#endif
  
-diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
-index 36099e557730..d25f6257458e 100644
---- a/drivers/nfc/nxp-nci/i2c.c
-+++ b/drivers/nfc/nxp-nci/i2c.c
-@@ -36,7 +36,6 @@
- #include <linux/of_gpio.h>
- #include <linux/of_irq.h>
- #include <linux/platform_data/nxp-nci.h>
--#include <linux/unaligned/access_ok.h>
- 
- #include <net/nfc/nfc.h>
- 
+ 	if (dma_set_mask(&pci_dev->dev, DMA_BIT_MASK(32))) {
+ 		rt2x00_probe_err("PCI DMA not supported\n");
 -- 
 2.11.0
