@@ -1,93 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34012 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932774AbdA0ORK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 09:17:10 -0500
-Date: Fri, 27 Jan 2017 15:14:16 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from fudo.makrotopia.org ([185.142.180.71]:60516 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751620AbdAPDOB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 15 Jan 2017 22:14:01 -0500
+Date: Mon, 16 Jan 2017 04:13:01 +0100
+From: Daniel Golle <daniel@makrotopia.org>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, vishalthanki@gmail.com, nbd@nbd.name
-Subject: [PATCH v2] rt2x00: avoid introducing a USB dependency in the
- rt2x00lib module
-Message-ID: <20170127141416.GA6491@redhat.com> (sfid-20170127_151819_257821_4D360722)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v2 11/14] rt2x00: rt2800lib: fix rf id for RT3352
+Message-ID: <20170116031246.GA32267@makrotopia.org> (sfid-20170116_041404_860747_5D3927B2)
+References: <874m114lwq.fsf@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <874m114lwq.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As reported by Felix:
+From: Felix Fietkau <nbd@openwrt.org>
 
-Though protected by an ifdef, introducing an usb symbol dependency in
-the rt2x00lib module is a major inconvenience for distributions that
-package kernel modules split into individual packages.
-
-Get rid of this unnecessary dependency by calling the usb related
-function from a more suitable place.
-
-Reported-by: Felix Fietkau <nbd@nbd.name>
-Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c |   23 ++++++++---------------
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c |    5 +++++
- 2 files changed, 13 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index e464bdc..c0a66af 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -1417,21 +1417,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
- 	cancel_work_sync(&rt2x00dev->sleep_work);
--#ifdef CONFIG_RT2X00_LIB_USB
--	if (rt2x00_is_usb(rt2x00dev)) {
--		usb_kill_anchored_urbs(rt2x00dev->anchor);
--		hrtimer_cancel(&rt2x00dev->txstatus_timer);
--		cancel_work_sync(&rt2x00dev->rxdone_work);
--		cancel_work_sync(&rt2x00dev->txdone_work);
--	}
--#endif
--	if (rt2x00dev->workqueue)
--		destroy_workqueue(rt2x00dev->workqueue);
--
--	/*
--	 * Free the tx status fifo.
--	 */
--	kfifo_free(&rt2x00dev->txstatus_fifo);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 4f454e143266..366310011491 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -7229,6 +7229,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	    rt2x00_rt(rt2x00dev, RT5390) ||
+ 	    rt2x00_rt(rt2x00dev, RT5392))
+ 		rt2800_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
++	else if (rt2x00_rt(rt2x00dev, RT3352))
++		rf = RF3322;
+ 	else
+ 		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
  
- 	/*
- 	 * Kill the tx status tasklet.
-@@ -1447,6 +1432,14 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	 */
- 	rt2x00lib_uninitialize(rt2x00dev);
- 
-+	if (rt2x00dev->workqueue)
-+		destroy_workqueue(rt2x00dev->workqueue);
-+
-+	/*
-+	 * Free the tx status fifo.
-+	 */
-+	kfifo_free(&rt2x00dev->txstatus_fifo);
-+
- 	/*
- 	 * Free extra components
- 	 */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 838ca58..5a2bf9f 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -744,6 +744,11 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 
-+	usb_kill_anchored_urbs(rt2x00dev->anchor);
-+	hrtimer_cancel(&rt2x00dev->txstatus_timer);
-+	cancel_work_sync(&rt2x00dev->rxdone_work);
-+	cancel_work_sync(&rt2x00dev->txdone_work);
-+
- 	queue_for_each(rt2x00dev, queue)
- 		rt2x00usb_free_entries(queue);
- }
 -- 
-1.7.1
+2.11.0
