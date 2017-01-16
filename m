@@ -1,101 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36604 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936941AbdADUHm (ORCPT
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:36014 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbdAPJn1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 15:07:42 -0500
-Received: by mail-wm0-f42.google.com with SMTP id c85so231179284wmi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:07:32 -0800 (PST)
-Subject: Re: [PATCH V6 4/3] brcmfmac: use wiphy_read_of_freq_limits to respect
- extra limits
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-References: <20170104175832.25996-1-zajec5@gmail.com>
- <20170104175832.25996-4-zajec5@gmail.com>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+        Mon, 16 Jan 2017 04:43:27 -0500
+Received: by mail-pg0-f46.google.com with SMTP id t6so9181402pgt.3
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2017 01:43:26 -0800 (PST)
+Subject: Re: support for Ampak AP6255 (bcm43455c0 with SDIO device ID 0xa9bf)
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <CAFBinCDyQqDQ3mS4H0qZCzHs7xYKwxRqvfboU4ibdN0WNmpkQA@mail.gmail.com>
+Cc: hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org
 From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <3fc87224-7f08-e365-7bbb-a4b8b5746e4f@broadcom.com> (sfid-20170104_210935_942468_119A9ECD)
-Date: Wed, 4 Jan 2017 21:07:29 +0100
+Message-ID: <5fa67b79-fd8b-aadb-0215-6f2b37856f9c@broadcom.com> (sfid-20170116_104331_104639_1526DAA3)
+Date: Mon, 16 Jan 2017 10:43:22 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170104175832.25996-4-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAFBinCDyQqDQ3mS4H0qZCzHs7xYKwxRqvfboU4ibdN0WNmpkQA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4-1-2017 18:58, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+On 15-1-2017 0:18, Martin Blumenstingl wrote:
+> Hello,
 > 
-> There are some devices (e.g. Netgear R8000 home router) with one chipset
-> model used for different radios, some of them limited to subbands. NVRAM
-> entries don't contain any extra info on such limitations and firmware
-> reports full list of channels to us. We need to store extra limitation
-> info in DT to support such devices properly.
+> I recently got a "Khadas VIM Pro" (see [0] for more information)
+> The "Pro" version comes with an AP6255 wifi chipset.
+> Looking at the vendor firmware this seems to be a bcm43455 device: [1]
 > 
-> Now there is a cfg80211 helper for reading such info use it in brcmfmac.
-> This patch adds check for channel being disabled with orig_flags which
-> is how this wiphy helper and wiphy_register work.
+> To my surprise brcmfmac from a mainline 4.10-rc3 kernel did not pick
+> this device up.
+> So I started investigating:
+> $ grep "" /sys/class/mmc_host/mmc2/mmc2\:0001/mmc2\:0001\:*/{class,device,vendor}
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:1/class:0x00
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/class:0x00
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:3/class:0x02
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:1/device:0xa9bf
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/device:0xa9bf
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:3/device:0xa9bf
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:1/vendor:0x02d0
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:2/vendor:0x02d0
+> /sys/class/mmc_host/mmc2/mmc2:0001/mmc2:0001:3/vendor:0x02d0
 > 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> This patch should probably go through wireless-driver-next which is why
-> it got weird number 4/3. I'm sending it just as a proof of concept.
-> It was succesfully tested on SmartRG SR400ac with BCM43602.
+> I then went ahead and added the device ID to
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c (sample
+> patch attached)
+> as a result of that the device is now being detected.
+> it boots fine with the firmware found in linux-firmware: [2] (plus the
+> nvram.txt from the vendor repo [1] renamed to brcmfmac43455-sdio.txt)
 > 
-> V4: Respect IEEE80211_CHAN_DISABLED in orig_flags
-> V5: Update commit message
-> V6: Call wiphy_read_of_freq_limits after brcmf_setup_wiphybands to make it work
->     with helper setting "flags" instead of "orig_flags".
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
+> $ cat /sys/kernel/debug/brcmfmac/mmc2\:0001\:1/revinfo
+> vendorid: 0x14e4
+> deviceid: 0x43ab
+> radiorev: 0.88.3.11
+> chipnum: 17221 (4345)
+> chiprev: 6
+> chippkg: 2
+> corerev: 54
+> boardid: 0x06e4
+> boardvendor: 0x14e4
+> boardrev: P304
+> driverrev: 7.45.18
+> ucoderev: 0
+> bus: 0
+> phytype: 11
+> phyrev: 20
+> anarev: 0
+> nvramrev: 00079ac5
 > 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index ccae3bb..a008ba5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
->  						       band->band);
->  		channel[index].hw_value = ch.control_ch_num;
->  
-> +		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
-> +			continue;
-> +
+> downloading a random 100MB file from the internet using curl confirms this.
+> There are no hangs, connection drops, other devices are also working fine.
+> 
+> the problem I'm facing is very simply (but unfortunately a very common
+> development problem): naming things (the SDIO_DEVICE_ID_BROADCOM_TODO
+> constant)!
+> there's already a definition for SDIO_DEVICE_ID_BROADCOM_4345 with
+> value 0x4345, does that mean 0xa9bf should be
+> SDIO_DEVICE_ID_BROADCOM_43455?
 
-So to be clear this is still needed for subsequent calls to
-brcmf_setup_wiphybands(). The subsequent calls are done from the
-regulatory notifier. So I think we have an issue with this approach. Say
-the device comes up with US. That would set DISABLED flags for channels
-12 to 14. With a country update to PL we would want to enable channels
-12 and 13, right? The orig_flags are copied from the initial flags
-during wiphy_register() so it seems we will skip enabling 12 and 13. I
-think we should remove the check above and call
-wiphy_read_of_freq_limits() as a last step within
-brcmf_setup_wiphybands(). It means it is called every time, but it
-safeguards that the limits in DT are always applied.
+Yup. That seems a good name to me.
 
 Regards,
 Arend
 
->  		/* assuming the chanspecs order is HT20,
->  		 * HT40 upper, HT40 lower, and VHT80.
->  		 */
-> @@ -6478,7 +6481,11 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
->  		}
->  	}
->  	err = brcmf_setup_wiphybands(wiphy);
-> -	return err;
-> +	if (err)
-> +		return err;
-> +	wiphy_read_of_freq_limits(wiphy);
-> +
-> +	return 0;
->  }
->  
->  static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+> Regards,
+> Martin
+> 
+> 
+> [0] http://khadas.com/vim/
+> [1] https://github.com/khadas/android_hardware_amlogic_wifi/tree/b6709758755568e4a0ff6e80993be0fc64c77fb9/bcm_ampak/config/6255
+> [2] https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/brcm/brcmfmac43455-sdio.bin?id=b9a38d041d38ac6cf47274e9933f8083e12fc601
 > 
