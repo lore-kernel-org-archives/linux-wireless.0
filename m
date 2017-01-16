@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35712 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751739AbdATJrr (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 04:47:47 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:44160 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750991AbdAPKQc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 05:16:32 -0500
+Date: Mon, 16 Jan 2017 11:14:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: [PATCH v2 12/14] rt2x00: rt2800lib: support for for RT3352 with
+ external PA
+Message-ID: <20170116101417.GE6968@redhat.com> (sfid-20170116_111635_702379_6BEAE1AB)
+References: <874m114lwq.fsf@codeaurora.org>
+ <20170116031444.GA32304@makrotopia.org>
 MIME-Version: 1.0
-Subject: Re: mwifiex: don't complain about 'unknown event id: 0x63'
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170114021657.147016-1-briannorris@chromium.org>
-References: <20170114021657.147016-1-briannorris@chromium.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        Cathy Luo <cluo@marvell.com>,
-        Brian Norris <briannorris@chromium.org>
-Message-Id: <20170120094746.8FDEC609C9@smtp.codeaurora.org> (sfid-20170120_104807_014427_7070F020)
-Date: Fri, 20 Jan 2017 09:47:46 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170116031444.GA32304@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <briannorris@chromium.org> wrote:
-> Marvell folks tell me this is a debugging event that the driver doesn't
-> need to handle, but on 8997 w/ firmware 16.68.1.p97, I see several of
-> these sorts of messages at (for instance) boot time:
+On Mon, Jan 16, 2017 at 04:14:57AM +0100, Daniel Golle wrote:
+> This is needed for WiFi to work e.g. on DIR-615 rev.H1 which got
+> external RF power amplifiers connected to the WiSoC.
 > 
-> [   13.825848] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-> [   14.838561] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-> [   14.850397] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-> [   32.529923] mwifiex_pcie 0000:01:00.0: event: unknown event id: 0x63
-> 
-> Let's handle this "event" with a much lower verbosity.
-> 
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-0ed917d09d51 mwifiex: don't complain about 'unknown event id: 0x63'
-
--- 
-https://patchwork.kernel.org/patch/9516687/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
