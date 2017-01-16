@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34282 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751298AbdAJQPc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 11:15:32 -0500
-Received: by mail-oi0-f67.google.com with SMTP id 3so70343598oih.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 08:15:32 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rtlwifi: rtl8192de: Remove a pointless goto
-Date: Tue, 10 Jan 2017 10:15:26 -0600
-Message-Id: <20170110161526.22255-1-Larry.Finger@lwfinger.net> (sfid-20170110_171538_747406_F4CA374A)
+Received: from zoot.epublica.de ([78.46.103.157]:40467 "EHLO zoot.epublica.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751137AbdAPNQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 08:16:08 -0500
+From: Hanno Zulla <abos@hanno.de>
+Subject: Re: Support of rtl8723bs
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Bastien Nocera <hadess@hadess.net>
+References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
+ <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
+ <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
+ <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
+ <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+        anthony.wong@canonical.com, linux-wireless@vger.kernel.org
+Message-ID: <5ff75d7f-3017-1028-eacb-57e37f2c03c1@hanno.de> (sfid-20170116_141612_564096_BDDFC15D)
+Date: Mon, 16 Jan 2017 14:09:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <wrfj4m5lhzja.fsf@redhat.com>
+Content-Type: text/plain; charset=iso-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit c93ac39da0064 ("rtlwifi: Remove some redundant code), a goto
-statement was inadvertently left in the code.
+Hi,
 
-Fixes: c93ac39da0064 ("rtlwifi: Remove some redundant code)
-Reported-by: kbuild test robot <fengguang.wu@intel.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c | 1 -
- 1 file changed, 1 deletion(-)
+has there been any progress on the rtl8723bs / sdio issue?
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index 8931bcd..88faeab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -271,7 +271,6 @@ int rtl92d_download_fw(struct ieee80211_hw *hw)
- 	spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
- 	if (err)
- 		pr_err("fw is not ready to run!\n");
--		goto exit;
- exit:
- 	err = _rtl92d_fw_init(hw);
- 	return err;
--- 
-2.10.2
+There were no updates to this mailing list or the usual git repositories
+since this was last discussed, unless I missed the proper place to look
+for this.
+
+I'm sorry that I can't be more helpful with actual development, but am
+eager to help with testing this device.
+
+Thank you,
+
+Hanno
