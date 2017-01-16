@@ -1,113 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45466 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756229AbdACDE3 (ORCPT
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:59529 "EHLO
+        relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbdAPLma (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 22:04:29 -0500
-Message-ID: <586B14C9.8050407@candelatech.com> (sfid-20170103_040440_590937_A0FCDE25)
-Date: Mon, 02 Jan 2017 19:04:41 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  Fix invalid 'info' access in xmit-fast.
-References: <1483123790-14412-1-git-send-email-greearb@candelatech.com> <1483352652.4596.0.camel@sipsolutions.net>
-In-Reply-To: <1483352652.4596.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 16 Jan 2017 06:42:30 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [RFC V2 5/5] cfg80211: add request id in cfg80211_sched_scan_stopped{,_rtnl}() api
+Date: Mon, 16 Jan 2017 11:42:21 +0000
+Message-Id: <1484566941-27000-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170116_124234_230371_C15909CC)
+In-Reply-To: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1484566941-27000-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/02/2017 02:24 AM, Johannes Berg wrote:
-> On Fri, 2016-12-30 at 10:49 -0800, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> ieee80211_xmit_fast assigns info from the passed-in
->> skb, but then later it also checks for skb_shared(skb),
->> and may create a new skb based on that check.
->>
->> But, the code did not re-assign 'info', so it pointed into
->> the old shared skb.  This leads to all sorts of problems,
->> most obviously crashes since the new skb's info->hw_queue is not
->> properly initialized.
->>
->> Bug was seen by sending pktgen packets on a bridge that
->> had an AP network interface in it.  hw-queue was out of
->> range, which made it crash like this:
->>
->> BUG: unable to handle kernel NULL pointer dereference
->> at           (null)
->> IP: [<ffffffffa0ad4672>] ieee80211_tx_frags+0x232/0x4c0 [mac80211]
->> PGD 0
->> Oops: 0002 [#1] PREEMPT SMP
->> CPU: 0 PID: 1512 Comm: kpktgend_0 Tainted: G           O    4.7.10+
->> #24
->> Hardware name: To be filled by O.E.M. To be filled by
->> O.E.M./ChiefRiver, BIOS 4.6.5 06/07/2013
->> task: ffff8802132f3a00 ti: ffff8800362ac000 task.ti: ffff8800362ac000
->> RIP: 0010:[<ffffffffa0ad4672>]  [<ffffffffa0ad4672>]
->> ieee80211_tx_frags+0x232/0x4c0 [mac80211]
->> RSP: 0018:ffff8800362afa28  EFLAGS: 00010086
->> RAX: ffff8802130a22c0 RBX: ffff8802130a13a0 RCX: ffff880035ef2200
->> RDX: ffff880035ef2200 RSI: 0000000000000292 RDI: 0000000000000000
->> RBP: ffff8800362afa90 R08: 0000000000000000 R09: 0000000000000000
->> R10: 0000000000000088 R11: 0000000000000001 R12: ffff880035ef2200
->> R13: ffff880035dabb90 R14: ffff8800362afb18 R15: 0000000000000cc0
->> FS:  0000000000000000(0000) GS:ffff88021e200000(0000)
->> knlGS:0000000000000000
->> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> CR2: 0000000000000000 CR3: 0000000001e06000 CR4: 00000000001406f0
->> Stack:
->>   0000000000000292 ffff880035daa880 ffff8802130a0b20 ffff8800d4f01808
->>   00ff8800362afaa0 ffff8800362afb18 ffff8802130a13c0 ffff88021e20db68
->>   ffff880035daa880 ffff8800362afb18 ffff880035ef2200 ffff88020f6ca300
->> Call Trace:
->>   [<ffffffffa0ad9f63>] __ieee80211_subif_start_xmit+0xc13/0xc30
->> [mac80211]
->>   [<ffffffff8113d2c5>] ? find_busiest_group+0x35/0x4a0
->>   [<ffffffffa0ad9f8b>] ieee80211_subif_start_xmit+0xb/0x10 [mac80211]
->>   [<ffffffff8177d40b>] dev_hard_start_xmit+0x9b/0x220
->>   [<ffffffff817a3716>] sch_direct_xmit+0xd6/0x1a0
->>   [<ffffffff8177da8e>] __dev_queue_xmit+0x3be/0x6c0
->>   [<ffffffff81127f43>] ? finish_task_switch+0x73/0x1f0
->>   [<ffffffff8177dd9d>] dev_queue_xmit+0xd/0x10
->>   [<ffffffffa0b5fe85>] br_dev_queue_push_xmit+0x75/0x140 [bridge]
->>   [<ffffffffa0b5ffc9>] br_forward_finish+0x29/0xa0 [bridge]
->>   [<ffffffff8116db83>] ? del_timer_sync+0x43/0x50
->>   [<ffffffffa0b600a2>] __br_deliver+0x62/0x130 [bridge]
->>   [<ffffffff81175937>] ? __getnstimeofday64+0x37/0xd0
->>   [<ffffffff811759d9>] ? getnstimeofday64+0x9/0x30
->>   [<ffffffffa0b605b6>] br_deliver+0x56/0x60 [bridge]
->>   [<ffffffffa0b5d472>] br_dev_xmit+0x1c2/0x250 [bridge]
->>   [<ffffffffa137aa1c>] pktgen_thread_worker+0x174c/0x2471 [pktgen]
->>   [<ffffffff8185087a>] ? __schedule+0x30a/0x7c0
->>   [<ffffffff811446e0>] ? wake_atomic_t_function+0x60/0x60
->>   [<ffffffffa13792d0>] ? pktgen_rem_all_ifs+0x80/0x80 [pktgen]
->>   [<ffffffff81121c14>] kthread+0xc4/0xe0
->>   [<ffffffff818551df>] ret_from_fork+0x1f/0x40
->>   [<ffffffff81121b50>] ? kthread_worker_fn+0x180/0x180
->>
->> Fix this by re-assigning info after creating new one.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>
->> This patch is against 4.7.10+
->
-> And thus didn't apply - I've replaced it with my own patch which I'll
-> send out in a moment
+Allow driver to indicate which scheduled scan request is being aborted
+by providing the request id.
 
-Thanks for your patch...  It is cleaner than what I originally wrote,
-and I was out the door before I thought to re-write it as you did.
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c              |  2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c |  2 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c         |  6 +++---
+ drivers/net/wireless/marvell/mwifiex/main.c             |  2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_event.c        |  2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c        |  2 +-
+ include/net/cfg80211.h                                  |  6 ++++--
+ net/mac80211/pm.c                                       |  2 +-
+ net/mac80211/scan.c                                     |  2 +-
+ net/mac80211/util.c                                     |  2 +-
+ net/wireless/scan.c                                     | 10 +++++-----
+ net/wireless/trace.h                                    | 17 +++++++++++------
+ 12 files changed, 31 insertions(+), 24 deletions(-)
 
-FYI, the same patch applies as far back as 4.4...I didn't look at anything older.
-
-Ben
-
->
-> johannes
->
-
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 1509286..e52aef8 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -170,7 +170,7 @@ static void ath6kl_cfg80211_sscan_disable(struct ath6kl_vif *vif)
+ 	if (!stopped)
+ 		return;
+ 
+-	cfg80211_sched_scan_stopped(ar->wiphy);
++	cfg80211_sched_scan_stopped(ar->wiphy, 0);
+ }
+ 
+ static int ath6kl_set_wpa_version(struct ath6kl_vif *vif,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 34d318e..8c5e54a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3359,7 +3359,7 @@ static int brcmf_start_internal_escan(struct brcmf_if *ifp,
+ 		goto free_req;
+ 
+ out_err:
+-	cfg80211_sched_scan_stopped(wiphy);
++	cfg80211_sched_scan_stopped(wiphy, 0);
+ free_req:
+ 	kfree(request);
+ 	return err;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 243349476..b5b7741 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -2036,7 +2036,7 @@ static int mwifiex_cfg80211_start_ap(struct wiphy *wiphy,
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 
+ 	if (!mwifiex_stop_bg_scan(priv))
+-		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy, 0);
+ 
+ 	if (mwifiex_deauthenticate(priv, NULL))
+ 		return -EFAULT;
+@@ -2304,7 +2304,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
+ 		    (int)sme->ssid_len, (char *)sme->ssid, sme->bssid);
+ 
+ 	if (!mwifiex_stop_bg_scan(priv))
+-		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy, 0);
+ 
+ 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
+ 				     priv->bss_mode, sme->channel, sme, 0);
+@@ -2513,7 +2513,7 @@ static int mwifiex_set_ibss_params(struct mwifiex_private *priv,
+ 		priv->scan_block = false;
+ 
+ 	if (!mwifiex_stop_bg_scan(priv))
+-		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy, 0);
+ 
+ 	user_scan_cfg = kzalloc(sizeof(*user_scan_cfg), GFP_KERNEL);
+ 	if (!user_scan_cfg)
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index e5c3a8a..ff9b767 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -750,7 +750,7 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter,
+ 		mwifiex_dbg(priv->adapter, INFO,
+ 			    "aborting bgscan on ndo_stop\n");
+ 		mwifiex_stop_bg_scan(priv);
+-		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++		cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 9df0c4d..cce61d8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -793,7 +793,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 
+ 	case EVENT_BG_SCAN_STOPPED:
+ 		dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
+-		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++		cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+ 		if (priv->sched_scanning)
+ 			priv->sched_scanning = false;
+ 		break;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 644f3a2..d9a9e25 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -560,7 +560,7 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+ #endif
+ 			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
+ 			mwifiex_stop_bg_scan(priv);
+-			cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++			cfg80211_sched_scan_stopped(priv->wdev.wiphy, 0);
+ #ifdef CONFIG_PM
+ 		}
+ #endif
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8a635e0..fc3f0b2 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4464,24 +4464,26 @@ void cfg80211_scan_done(struct cfg80211_scan_request *request,
+  * cfg80211_sched_scan_stopped - notify that the scheduled scan has stopped
+  *
+  * @wiphy: the wiphy on which the scheduled scan stopped
++ * @reqid: identifier for the related scheduled scan request
+  *
+  * The driver can call this function to inform cfg80211 that the
+  * scheduled scan had to be stopped, for whatever reason.  The driver
+  * is then called back via the sched_scan_stop operation when done.
+  */
+-void cfg80211_sched_scan_stopped(struct wiphy *wiphy);
++void cfg80211_sched_scan_stopped(struct wiphy *wiphy, u64 reqid);
+ 
+ /**
+  * cfg80211_sched_scan_stopped_rtnl - notify that the scheduled scan has stopped
+  *
+  * @wiphy: the wiphy on which the scheduled scan stopped
++ * @reqid: identifier for the related scheduled scan request
+  *
+  * The driver can call this function to inform cfg80211 that the
+  * scheduled scan had to be stopped, for whatever reason.  The driver
+  * is then called back via the sched_scan_stop operation when done.
+  * This function should be called with rtnl locked.
+  */
+-void cfg80211_sched_scan_stopped_rtnl(struct wiphy *wiphy);
++void cfg80211_sched_scan_stopped_rtnl(struct wiphy *wiphy, u64 reqid);
+ 
+ /**
+  * cfg80211_inform_bss_frame_data - inform cfg80211 of a received BSS frame
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 28a3a09..d37de3f 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -10,7 +10,7 @@ static void ieee80211_sched_scan_cancel(struct ieee80211_local *local)
+ {
+ 	if (ieee80211_request_sched_scan_stop(local))
+ 		return;
+-	cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
++	cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy, 0);
+ }
+ 
+ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 3fd8757..94be10e 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -1239,7 +1239,7 @@ void ieee80211_sched_scan_end(struct ieee80211_local *local)
+ 
+ 	mutex_unlock(&local->mtx);
+ 
+-	cfg80211_sched_scan_stopped(local->hw.wiphy);
++	cfg80211_sched_scan_stopped(local->hw.wiphy, 0);
+ }
+ 
+ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index ac59fbd..616d55d 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2103,7 +2103,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 	mutex_unlock(&local->mtx);
+ 
+ 	if (sched_scan_stopped)
+-		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy);
++		cfg80211_sched_scan_stopped_rtnl(local->hw.wiphy, 0);
+ 
+  wake_up:
+ 	if (local->in_reconfig) {
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 5f24c13..22bb9fd 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -396,22 +396,22 @@ void cfg80211_sched_scan_results(struct wiphy *wiphy, u64 reqid)
+ }
+ EXPORT_SYMBOL(cfg80211_sched_scan_results);
+ 
+-void cfg80211_sched_scan_stopped_rtnl(struct wiphy *wiphy)
++void cfg80211_sched_scan_stopped_rtnl(struct wiphy *wiphy, u64 reqid)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+ 
+ 	ASSERT_RTNL();
+ 
+-	trace_cfg80211_sched_scan_stopped(wiphy);
++	trace_cfg80211_sched_scan_stopped(wiphy, reqid);
+ 
+-	__cfg80211_stop_sched_scan(rdev, 0, true);
++	__cfg80211_stop_sched_scan(rdev, reqid, true);
+ }
+ EXPORT_SYMBOL(cfg80211_sched_scan_stopped_rtnl);
+ 
+-void cfg80211_sched_scan_stopped(struct wiphy *wiphy)
++void cfg80211_sched_scan_stopped(struct wiphy *wiphy, u64 reqid)
+ {
+ 	rtnl_lock();
+-	cfg80211_sched_scan_stopped_rtnl(wiphy);
++	cfg80211_sched_scan_stopped_rtnl(wiphy, reqid);
+ 	rtnl_unlock();
+ }
+ EXPORT_SYMBOL(cfg80211_sched_scan_stopped);
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index cb10ce7..7d03a0f 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -2795,12 +2795,7 @@
+ 		  MAC_PR_ARG(tsf_bssid))
+ );
+ 
+-DEFINE_EVENT(wiphy_only_evt, cfg80211_sched_scan_stopped,
+-	TP_PROTO(struct wiphy *wiphy),
+-	TP_ARGS(wiphy)
+-);
+-
+-TRACE_EVENT(cfg80211_sched_scan_results,
++DECLARE_EVENT_CLASS(wiphy_id_evt,
+ 	TP_PROTO(struct wiphy *wiphy, u64 id),
+ 	TP_ARGS(wiphy, id),
+ 	TP_STRUCT__entry(
+@@ -2814,6 +2809,16 @@
+ 	TP_printk(WIPHY_PR_FMT ", id: %llu", WIPHY_PR_ARG, __entry->id)
+ );
+ 
++DEFINE_EVENT(wiphy_id_evt, cfg80211_sched_scan_stopped,
++	TP_PROTO(struct wiphy *wiphy, u64 id),
++	TP_ARGS(wiphy, id)
++);
++
++DEFINE_EVENT(wiphy_id_evt, cfg80211_sched_scan_results,
++	TP_PROTO(struct wiphy *wiphy, u64 id),
++	TP_ARGS(wiphy, id)
++);
++
+ TRACE_EVENT(cfg80211_get_bss,
+ 	TP_PROTO(struct wiphy *wiphy, struct ieee80211_channel *channel,
+ 		 const u8 *bssid, const u8 *ssid, size_t ssid_len,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
