@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55904 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49794 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750717AbdAUKyd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jan 2017 05:54:33 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-Subject: Re: iwlwifi: fix kernel crash when unregistering thermal zone
-Date: Sat, 21 Jan 2017 10:54:30 +0000
-Message-ID: <1484996068.2774.23.camel@intel.com> (sfid-20170121_115436_088654_F45AE899)
-Content-Type: text/plain; charset="utf-8"
+        id S1750991AbdAPKUC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 05:20:02 -0500
+Date: Mon, 16 Jan 2017 11:17:44 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: [PATCH v2 14/14] rt2x00: add support for RT5350 WiSoC
+Message-ID: <20170116101743.GF6968@redhat.com> (sfid-20170116_112006_605135_CBBA85E3)
+References: <874m114lwq.fsf@codeaurora.org>
+ <20170116031734.GA32321@makrotopia.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170116031734.GA32321@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KHJlc2VuZGluZywgc29ycnkgZm9yIHRoZSBIVE1MIHZlcnNpb24gbXkgcGhvbmUgZGVjaWRlZCB0
-byB1c2UgZm9yIHRoaXMpDQoNCk9uIEphbiAyMSwgMjAxNyAwOTo1NiwgS2FsbGUgVmFsbyA8a3Zh
-bG9AY29kZWF1cm9yYS5vcmc+IHdyb3RlOg0KSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPiB3
-cml0ZXM6IA0KPiA+IEEgcmVjZW50IGZpcm13YXJlIGNoYW5nZSBzZWVtcyB0byBoYXZlIGVuYWJs
-ZWQgdGhlcm1hbCB6b25lcyBvbiB0aGUgDQo+ID4gaXdsd2lmaSBkcml2ZXIuIFVuZm9ydHVuYXRl
-bHksIG15IGRldmljZSBmYWlscyB3aGVuIHJlZ2lzdGVyaW5nIHRoZSANCj4gPiB0aGVybWFsIHpv
-bmUuIFRoaXMgZG9lc24ndCBzdG9wIHRoZSBkcml2ZXIgZnJvbSBhdHRlbXB0aW5nIHRvIHVucmVn
-aXN0ZXIgDQo+ID4gdGhlIHRoZXJtYWwgem9uZSBhdCB1bmxvYWQgdGltZSwgdHJpZ2dlcmluZyBh
-IE5VTEwgcG9pbnRlciBkZWZlcmVuY2UgaW4gDQo+ID4gc3RybGVuKCkgb2ZmIHRoZSB0aGVybWFs
-X3pvbmVfZGV2aWNlX3VucmVnaXN0ZXIoKSBwYXRoLiANCj4gPiANCj4gPiBEb24ndCB1bnJlZ2lz
-dGVyIGlmIG5hbWUgaXMgTlVMTCwgZm9yIHRoYXQgY2FzZSB3ZSBmYWlsZWQgcmVnaXN0ZXJpbmcu
-IA0KPiA+IERvIHRoZSBzYW1lIGZvciB0aGUgY29vbGluZyB6b25lLiANCj4gPiANCj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBKZW5zIEF4Ym9lIDxheGJvZUBmYi5jb20+IA0KPiA+IA0KPiA+IC0tLSANCj4g
-PiANCj4gPiBXb3VsZCBiZSBncmVhdCBpZiB0aGlzIGNvdWxkIGdvIGludG8gdGhlIGN1cnJlbnQg
-c2VyaWVzLCBhcyBzb21ldGltZXMgSSANCj4gPiBoYXZlIHRvIHJlbG9hZCB0aGUgZHJpdmVyLiBS
-aWdodCBub3cgSSBjYW4ndCwgc2luY2UgaXQgY3Jhc2hlcy4uLiANCj4gDQo+IEx1Y2EsIGNhbiBJ
-IHRha2UgdGhpcyBkaXJlY3RseSB0byB3aXJlbGVzcy1kcml2ZXJzPyBUaGlzIGlzIGFuIGltcG9y
-dGFudCANCj4gZml4IGFuZCB3ZSBzaG91bGQgZ2V0IGl0IHRvIExpbnVzJyB0cmVlIEFTQVAuDQoN
-ClllcywgcGxlYXNlIGdvIGFoZWFkIGFuZCB0YWtlIGl0IGRpcmVjdGx5Lg0KDQpBY2tlZC1ieTog
-THVjYSBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCg0KVGhhbmtzIQ0KDQotLQ0K
-Q2hlZXJzLA0KTHVjYS4=
+On Mon, Jan 16, 2017 at 04:17:58AM +0100, Daniel Golle wrote:
+> @@ -7131,6 +7236,12 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+>  		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RF_TYPE, RF2820);
+>  		rt2800_eeprom_write(rt2x00dev, EEPROM_NIC_CONF0, word);
+>  		rt2x00_eeprom_dbg(rt2x00dev, "Antenna: 0x%04x\n", word);
+> +	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
+> +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RXPATH, 1);
+> +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_TXPATH, 1);
+> +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RF_TYPE, RF3320);
+
+Here you set RF3320 ..
+> +		rt2x00_eeprom_write(rt2x00dev, EEPROM_NIC_CONF0, word);
+> +		rt2x00_eeprom_dbg(rt2x00dev, "Antenna: 0x%04x\n", word);
+>  	} else if (rt2x00_rt(rt2x00dev, RT2860) ||
+>  		   rt2x00_rt(rt2x00dev, RT2872)) {
+>  		/*
+> @@ -7265,6 +7376,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  		rt2800_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
+>  	else if (rt2x00_rt(rt2x00dev, RT3352))
+>  		rf = RF3322;
+> +	else if (rt2x00_rt(rt2x00dev, RT5350))
+> +		rf = RF5350;
+
+and here RF5350. This does not seems to be correct.
+
+Stanislaw
