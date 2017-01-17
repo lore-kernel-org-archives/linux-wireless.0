@@ -1,67 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f194.google.com ([209.85.217.194]:35972 "EHLO
-        mail-ua0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbdABOGF (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36518 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751180AbdAQWlN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 09:06:05 -0500
-Received: by mail-ua0-f194.google.com with SMTP id v2so14883850uac.3
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jan 2017 06:06:05 -0800 (PST)
+        Tue, 17 Jan 2017 17:41:13 -0500
+Received: by mail-oi0-f66.google.com with SMTP id u143so15899328oif.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 14:41:12 -0800 (PST)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-From: Sedat Dilek <sedat.dilek@gmail.com>
-Date: Mon, 2 Jan 2017 15:06:04 +0100
-Message-ID: <CA+icZUXtJG18ejLynO1FB0BS5Guqr35-Bn0_Obht-VyGNO4tAg@mail.gmail.com> (sfid-20170102_150608_870732_4ACECB95)
-Subject: Re: Installing driver for Ubuntu 16.04 Intel(R) Wireless WiFi Link 4965AGN
-To: info@leopoldosoria.com
-Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+In-Reply-To: <20170117222909.2880-1-gavinli@thegavinli.com>
+References: <20170117222909.2880-1-gavinli@thegavinli.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 17 Jan 2017 23:41:11 +0100
+Message-ID: <CACna6rymMzoYJHBYb3PQpyNomp-HixAFqvtafMw72dySk8MPLQ@mail.gmail.com> (sfid-20170117_234118_028024_B21FB690)
+Subject: Re: [PATCH] brcmfmac: fix incorrect event channel deduction
+To: gavinli@thegavinli.com
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Gavin Li <git@thegavinli.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2017 at 2:11 PM,  <info@leopoldosoria.com> wrote:
-> Dear Sirs,
-> Which of the below drivers should I install for my Lenovo 3000 V200?
-> I am runing Ubuntu 16.04
+On 17 January 2017 at 23:29,  <gavinli@thegavinli.com> wrote:
+> From: Gavin Li <git@thegavinli.com>
 >
-> Intel=C2=AE Wireless WiFi Link 4965AGN
-> 2.6.24+ iwlwifi-4965-ucode-4.44.14.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.15.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.17.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.1.18.tgz
-> 2.6.24+ iwlwifi-4965-ucode-4.44.1.20.tgz
-> 2.6.24+ iwlwifi-4965-ucode-228.57.1.21.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.21.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.57.2.23.tgz
-> 2.6.28+ (?)     iwlwifi-4965-ucode-228.61.2.24.tgz
->
-> Ans how shoudl I proceed for intalling the right driver?
->
-> Thank you
->
+> brcmf_sdio_fromevntchan() was being called on the the hardware header
+> rather than the software header, causing some frames to be
+> mischaracterized as on the event channel rather than the data channel.
+> This fixes the performance regression introduced in commit c56caa9d
+> where event processing is done separately.
 
-[ What about the Ladies, Sir :-)? ]
+This should be:
+in commit c56caa9db8ab ("brcmfmac: screening firmware event packet") where (...)
 
-Happy new 2017!
+You should also use
+Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet") where (...)
 
-You need the linux-firmware [1] package.
-Normally, Ubuntu/xenial should ship it.
 
-Check if you have...
+> Signed-off-by: Gavin Li <git@thegavinli.com>
 
-/lib/firmware/iwlwifi-4965-2.ucode
-
-...file.
-
-Not sure why you are asking or what is not working.
-AFAICS, Ubuntu should have some nice wikis explaining a WLAN setup.
-A good strategy will always be to consult your distro's help before asking =
-here.
-
-[3] as a gift.
-
-Regards,
-- Sedat -
-
-[1] http://packages.ubuntu.com/xenial/linux-firmware
-[2] http://packages.ubuntu.com/xenial/all/linux-firmware/filelist
-[3] http://www.catb.org/~esr/faqs/smart-questions.html
+Please add also:
+Cc: stable@vger.kernel.org # 4.6+
