@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32842 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757891AbdAKNZL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:25:11 -0500
-Message-ID: <1484141107.29931.7.camel@sipsolutions.net> (sfid-20170111_142514_102472_DB7F99F1)
-Subject: Re: [PATCH v2 2/3] cfg80211: Add support to randomize TA of Public
- Action frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        vamsi krishna <vamsin@qti.qualcomm.com>
-Date: Wed, 11 Jan 2017 14:25:07 +0100
-In-Reply-To: <1483984388-30237-2-git-send-email-jouni@qca.qualcomm.com>
-References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
-         <1483984388-30237-2-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:33586 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750830AbdAQMYW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 07:24:22 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [4.10, fix,
+ V2] Revert "bcma: init serial console directly from ChipCommon code"
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170113112335.23730-1-zajec5@gmail.com>
+References: <20170113112335.23730-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170117122421.4DDCC607C9@smtp.codeaurora.org> (sfid-20170117_132425_584188_600EE50A)
+Date: Tue, 17 Jan 2017 12:24:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-09 at 19:53 +0200, Jouni Malinen wrote:
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> +		if (!wdev->current_bss &&
-> +		    !wiphy_ext_feature_isset(
-> +			    &rdev->wiphy,
-> +			    NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA))
-> +			return -EINVAL;
-> +		if (wdev->current_bss &&
-> +		    !wiphy_ext_feature_isset(
-> +			    &rdev->wiphy,
-> +			    NL80211_EXT_FEATURE_MGMT_TX_RANDOM_TA_CO
-> NNECTED))
-> +			return -EINVAL;
-> +	}
+> This reverts commit 4c81acab3816 ("bcma: init serial console directly
+> from ChipCommon code") as it broke IRQ assignment. Getting IRQ with
+> bcma_core_irq helper on SoC requires MIPS core to be set. It happens
+> *after* ChipCommon initialization so we can't do this so early.
+> 
+> This fixes a user reported regression. It wasn't critical as serial was
+> still somehow working but lack of IRQs was making in unreliable.
+> 
+> Fixes: 4c81acab3816 ("bcma: init serial console directly from ChipCommon code")
+> Reported-by: Felix Fietkau <nbd@nbd.name>
+> Cc: stable@vger.kernel.org # 4.6+
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
-This current_bss stuff is going to be somewhat racy, but I guess we can
-live with that.
+Patch applied to wireless-drivers.git, thanks.
 
-Looks good, but doesn't apply without the first patch.
+7195439d1d71 Revert "bcma: init serial console directly from ChipCommon code"
 
-johannes
+-- 
+https://patchwork.kernel.org/patch/9515267/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
