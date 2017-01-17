@@ -1,33 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37338 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755485AbdABK77 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 05:59:59 -0500
-Message-ID: <1483354796.4596.9.camel@sipsolutions.net> (sfid-20170102_120002_392084_9842487C)
-Subject: Re: [PATCH] mac80211: Fix addition of mesh configuration element
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ilan Peer <ilan.peer@intel.com>
-Cc: linux-wireless@vger.kernel.org, masashi.honma@gmail.com
-Date: Mon, 02 Jan 2017 11:59:56 +0100
-In-Reply-To: <1482769056-28577-1-git-send-email-ilan.peer@intel.com> (sfid-20161226_151931_342648_794604E1)
-References: <1482769056-28577-1-git-send-email-ilan.peer@intel.com>
-         (sfid-20161226_151931_342648_794604E1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36362 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750952AbdAQTXh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 14:23:37 -0500
+Received: by mail-lf0-f67.google.com with SMTP id h65so17490844lfi.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 11:23:36 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 2/2] brcmfmac: drop brcmf_bus_detach and inline its code
+Date: Tue, 17 Jan 2017 20:23:25 +0100
+Message-Id: <20170117192325.14528-2-zajec5@gmail.com> (sfid-20170117_202340_561908_D94CAE99)
+In-Reply-To: <20170117192325.14528-1-zajec5@gmail.com>
+References: <20170117192325.14528-1-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-12-26 at 18:17 +0200, Ilan Peer wrote:
-> The code was setting the capabilities byte to zero,
-> after it was already properly set previously. Fix it.
-> 
-> The bug was found while debugging hwsim mesh tests failures
-> that happened in commit 76f43b4 (mac80211: Remove invalid flag
-> operations in mesh TSF synchronization).
-> 
-Applied, thanks.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-When you have the commit already, please add a Fixes tag, and also use
-12 hex digits to abbreviate SHA1s please. (I've done that now)
+Driver used to call brcmf_bus_detach only from one place and it already
+contained a check for drvr not being NULL. We can get rid of this extra
+function, call brcmf_bus_stop directly and simplify the code.
+There also isn't brcmf_bus_attach function which one could expect so it
+looks more consistent this way.
 
-johannes
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index adf8eb1..122c79d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1075,16 +1075,6 @@ void brcmf_bus_add_txhdrlen(struct device *dev, uint len)
+ 	}
+ }
+ 
+-static void brcmf_bus_detach(struct brcmf_pub *drvr)
+-{
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	if (drvr) {
+-		/* Stop the bus module */
+-		brcmf_bus_stop(drvr->bus_if);
+-	}
+-}
+-
+ void brcmf_dev_reset(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -1131,7 +1121,7 @@ void brcmf_detach(struct device *dev)
+ 
+ 	brcmf_fws_deinit(drvr);
+ 
+-	brcmf_bus_detach(drvr);
++	brcmf_bus_stop(drvr->bus_if);
+ 
+ 	brcmf_proto_detach(drvr);
+ 
+-- 
+2.10.1
