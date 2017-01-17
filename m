@@ -1,48 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sbg-il.ceva-dsp.com ([195.82.128.8]:63323 "EHLO
-        sbg-il.ceva-dsp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751162AbdAKNhw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:37:52 -0500
-From: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Masashi Honma <masashi.honma@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
-Date: Wed, 11 Jan 2017 13:22:40 +0000
-Message-ID: <2b0df84e78434d11af1089e82485704b@ceva-dsp.com> (sfid-20170111_143757_028213_7FE4DB52)
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
-         <1484121737.23671.0.camel@sipsolutions.net>
-         <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
-         <1484125220.23671.1.camel@sipsolutions.net>
-         <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
-         <1484128809.23671.11.camel@sipsolutions.net>
-         <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com>
-         <1484132519.23671.12.camel@sipsolutions.net>
-         <1dd6e9f3-5ad2-1138-8017-c0ab208d9f88@gmail.com>
-         <927a79f16e8c429da7a0d06f1bfb2567@ceva-dsp.com>
- <1484136355.29931.1.camel@sipsolutions.net>
-In-Reply-To: <1484136355.29931.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:42961 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750803AbdAQHfC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 02:35:02 -0500
+Subject: Re: [PATCH v2 09/14] rt2x00: rt2x00pci: set PCI MWI only if supported
+To: Daniel Golle <daniel@makrotopia.org>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+References: <874m114lwq.fsf@codeaurora.org>
+ <20170116030613.GA32249@makrotopia.org> <20170116100856.GB6968@redhat.com>
+ <20170117015653.GF1912@makrotopia.org>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, Gabor Juhos <juhosg@openwrt.org>
+From: John Crispin <john@phrozen.org>
+Message-ID: <ae4e2f18-b60d-4e28-5c31-014da951ab30@phrozen.org> (sfid-20170117_083510_563050_15D4EAAE)
+Date: Tue, 17 Jan 2017 08:34:44 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170117015653.GF1912@makrotopia.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiA+IEhlcmUgaXMgdGhlIHN0YWNrIHRyYWNlIEkgZ2V0Og0KPiA+IEkgYWRkZWQgYSB0cmFjZSBi
-ZWZvcmUgY2FsbGluZyBza2JfY29weV9leHBhbmQgdG8gZ2V0IHRoZSBoZWFkcm9vbSBvZg0KPiA+
-IHRoZSBidWZmZXIgYmVmb3JlIHRoZSBjb3B5IGFuZCB0aGUgaGVhZHJvb20gYXNrZWQgYnkgdGhl
-IGRyaXZlci4NCj4gPg0KPiA+IFvCoMKgwqA4My4yMDAyNjFdIE1FU0ggZndkOiBza2JfaGVhZHJv
-b209MTU0LCBuZWVkZWQgaGVhZHJvb209MjQNCj4gDQo+IENvdWxkIHlvdSBhbHNvIGFkZCBhIHNp
-bWlsYXIgdHJhY2UganVzdCBiZWZvcmUgY2FsbGluZyBkcnZfdHgoKT8NCg0KV2hlbiBjYWxsaW5n
-IGRydl90eCgpIHRoZSBoZWFkcm9vbSBpcyBub3QgYmlnIGVub3VnaCBmb3IgdGhlIGRyaXZlci4N
-Cg0KPiANCj4gTWF5YmUgd2UncmUgYWRkaW5nIHNvbWV0aGluZyBlbHNlIHRvIHRoaXMgc2tiPw0K
-PiANCj4gSSBjYW4ndCBmaW5kIGFueXRoaW5nIGluIHRoZSBhdGg5a19odGMgZHJpdmVyIHRoYXQn
-cyBhZGRpbmcgbW9yZSB0aGFuDQo+IDIzIGJ5dGVzIChpdCdzIGFkdmVydGlzaW5nIDI0KSBidXQg
-Y2xlYXJseSB0aGUgbGFzdCA4IGJ5dGVzIGhlcmUgYXJlDQo+IGZhaWxpbmc6DQo+IA0KPiA+IFvC
-oMKgwqA4My4yMDAzNDZdIHNrYnVmZjogc2tiX3VuZGVyX3BhbmljOiB0ZXh0OmZmZmZmZmZmYTAz
-NGMwMjggbGVuOjE1NA0KPiA+IHB1dDo4IGhlYWQ6ZmZmZjg4MDIxMzQyMmUwMCBkYXRhOmZmZmY4
-ODAyMTM0MjJkZmEgdGFpbDoweDk0IGVuZDoweGMwDQo+ID4gZGV2OjxOVUxMPg0KPiANCj4gTWF5
-YmUgbWFjODAyMTEgaXMgcHV0dGluZyBzb21ldGhpbmcgZWxzZT8gSXQnZCBoYXZlIHRvIGJlDQoN
-CnllcyBtYWM4MDIxMSBpcyBhZGRpbmcgdGhlIHNlY3VyaXR5IGhlYWRlci4NCmhlYWRyb29tIGFz
-a2VkIHRvIHNrYl9jb3B5X2V4cGFuZCBzaG91bGQgYWxzbyB0YWtlIHNkYXRhLT5lbmNyeXB0X2hl
-YWRyb29tIGludG8gYWNjb3VudC4NCg0KY2VkcmljDQo=
+
+
+On 17/01/2017 02:56, Daniel Golle wrote:
+> On Mon, Jan 16, 2017 at 11:08:57AM +0100, Stanislaw Gruszka wrote:
+>> On Mon, Jan 16, 2017 at 04:06:25AM +0100, Daniel Golle wrote:
+>>> From: Claudio Mignanti <c.mignanti@gmail.com>
+>>>
+>>> This is needed for devices without support for PCI MWI. See also
+>>> https://dev.openwrt.org/changeset/21850
+>>>
+>>> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+>>> ---
+>>>  drivers/net/wireless/ralink/rt2x00/rt2x00pci.c | 2 ++
+>>>  1 file changed, 2 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+>>> index eb6dbcd4fddf..4becfeb75ba8 100644
+>>> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+>>> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+>>> @@ -94,8 +94,10 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+>>>  
+>>>  	pci_set_master(pci_dev);
+>>>  
+>>> +#ifdef CONFIG_PCI_SET_MWI
+>>>  	if (pci_set_mwi(pci_dev))
+>>>  		rt2x00_probe_err("MWI not available\n");
+>>> +#endif
+>>
+>> There is no CONFIG_PCI_SET_MWI in the kernel. This patch is either not
+>> needed (pci subsystem has own PCI_DISABLE_MWI define) or wrong (we
+>> should not call this function for some devices).
+> 
+> Apparently we thus never enabled MWI on PCI devices. John Crispin has
+> started to investigate why this patch was needed in first place, see
+> http://lists.infradead.org/pipermail/lede-dev/2017-January/005400.html
+> 
+> I suggest to drop it entirely until we figure out why it wasn't safe to
+> use MWI at least on some platforms. Once we know more there might be
+> a follow-up to selectively have the precompiler skip pci_set_mwi in
+> case we really still need to do this.
+> Aparently this was originally related to a compiler error on Kernel
+> 2.6.30 when trying to build for Rt305x WiSoC platforms (which simply
+> do not have any PCI bus and probably explicite support for SoC devices
+> wasn't implemented in rt2x00 at the time).
+> 
+> 
+
+here is the original thread related to this patch
+
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2012-November/012227.html
+
+	John
+
+> Cheers
+> 
+> 
+> Daniel
+> 
+>>
+>> Stanislaw
