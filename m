@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40404 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:38810 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933053AbdABPD7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 10:03:59 -0500
-Message-ID: <1483369436.21014.12.camel@sipsolutions.net> (sfid-20170102_160414_006373_3DC505AE)
-Subject: Re: [PATCH] rfkill: remove rfkill-regulator
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, Guiming Zhuo <gmzhuo@gmail.com>,
-        Antonio Ospite <ospite@studenti.unina.it>,
-        Paul Cercueil <paul@crapouillou.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Maarten ter Huurne <maarten@treewalker.org>
-Date: Mon, 02 Jan 2017 16:03:56 +0100
-In-Reply-To: <20170102150157.26745-1-johannes@sipsolutions.net> (sfid-20170102_160217_157310_15217E5D)
-References: <20170102150157.26745-1-johannes@sipsolutions.net>
-         (sfid-20170102_160217_157310_15217E5D)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1751426AbdAQX2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 18:28:16 -0500
+From: Jes.Sorensen@gmail.com
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] Update USB IDs and email adress
+Date: Tue, 17 Jan 2017 18:18:51 -0500
+Message-Id: <20170117231856.5075-1-Jes.Sorensen@gmail.com> (sfid-20170118_002859_644221_A56A2DDC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2017-01-02 at 16:01 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> There are no users of this ("vrfkill") in the tree, so it's just
-> dead code - remove it.
-> 
-> This also isn't really how rfkill is supposed to be used - it's
-> intended as a signalling mechanism to/from the device, which the
-> driver (and partially cfg80211) will handle - having a separate
-> rfkill instance for a regulator is confusing, the driver should
-> use the regulator instead to turn off the device when requested.
+From: Jes Sorensen <Jes.Sorensen@gmail.com>
 
-OTOH, the rfkill-gpio is essentially the same thing, and it *does* get
-used - by ACPI even, to control a GPS chip. And I'm not even sure that
-there's a clear place to put this since there probably aren't any GPS
-drivers?
+Hi,
 
-johannes
+This patchset adds some additional USB IDs for rtl8192eu devices, as
+well as updates the email address and the copyright.
+
+I've been preoccupied with some other stuff the last little while, so
+I am a little out of touch with whether or not the patch window is
+open at the moment. Please yell at me if you want me to resubmit these later.
+
+Cheers,
+Jes
+
+
+Axel Köllhofer (2):
+  rtl8xxxu: Add USB ID for D-Link DWA-131 rev E1 (rtl8192eu)
+  rtl8xxxu: Add additional USB IDs for rtl8192eu devices
+
+Jes Sorensen (3):
+  rtl8xxxu: Mark 8192eu device 0x0bda:0x818b as tested
+  rtl8xxxu: Add another 8192eu device to the USB list
+  rtl8xxxu: Update author/maintainer contact info
+
+ MAINTAINERS                                            |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c |  2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 18 ++++++++++++++++--
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  2 +-
+ 8 files changed, 23 insertions(+), 9 deletions(-)
+
+-- 
+2.7.4
