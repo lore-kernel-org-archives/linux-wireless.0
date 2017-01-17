@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38760 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763764AbdAJNnG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 08:43:06 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-Subject: Re: [bug report] rtlwifi: Remove some redundant code
-References: <20170105111124.GA4548@elgon.mountain>
-Date: Tue, 10 Jan 2017 15:43:01 +0200
-In-Reply-To: <20170105111124.GA4548@elgon.mountain> (Dan Carpenter's message
-        of "Thu, 5 Jan 2017 14:11:24 +0300")
-Message-ID: <8737grjaje.fsf@purkki.adurom.net> (sfid-20170110_144330_971386_D77F906E)
+Received: from mx1.redhat.com ([209.132.183.28]:38812 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751390AbdAQX2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 18:28:16 -0500
+From: Jes.Sorensen@gmail.com
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 4/5] rtl8xxxu: Add additional USB IDs for rtl8192eu devices
+Date: Tue, 17 Jan 2017 18:18:55 -0500
+Message-Id: <20170117231856.5075-5-Jes.Sorensen@gmail.com> (sfid-20170118_002854_520022_BD23E0BD)
+In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+From: Axel Köllhofer <AxelKoellhofer@web.de>
 
-> Hello Larry Finger,
->
-> The patch c93ac39da006: "rtlwifi: Remove some redundant code" from
-> Dec 15, 2016, leads to the following static checker warning:
->
-> 	drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:326 rtl92d_download_fw()
-> 	warn: curly braces intended?
->
-> drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
->    306          /* If 8051 is running in RAM code, driver should
->    307           * inform Fw to reset by itself, or it will cause
->    308           * download Fw fail.*/
->    309          /* 8051 RAM code */
->    310          if (rtl_read_byte(rtlpriv, REG_MCUFWDL) & BIT(7)) {
->    311                  rtl92d_firmware_selfreset(hw);
->    312                  rtl_write_byte(rtlpriv, REG_MCUFWDL, 0x00);
->    313          }
->    314          _rtl92d_enable_fw_download(hw, true);
->    315          _rtl92d_write_fw(hw, version, pfwdata, fwsize);
->    316          _rtl92d_enable_fw_download(hw, false);
->    317          spin_lock_irqsave(&globalmutex_for_fwdownload, flags);
->    318          err = _rtl92d_fw_free_to_go(hw);
->    319          /* download fw over,clear 0x1f[5] */
->    320          value = rtl_read_byte(rtlpriv, 0x1f);
->    321          value &= (~BIT(5));
->    322          rtl_write_byte(rtlpriv, 0x1f, value);
->    323          spin_unlock_irqrestore(&globalmutex_for_fwdownload, flags);
->    324          if (err)
->    325                  pr_err("fw is not ready to run!\n");
->    326                  goto exit;
->
-> I guess we could add the braces back.
->
->    327  exit:
->    328          err = _rtl92d_fw_init(hw);
->
-> Should we even be running _rtl92d_fw_init() if _rtl92d_fw_free_to_go()
-> fails?  What about preserving the error code?
->
->    329          return err;
->    330  }
+These IDs originate from the vendor driver
 
-A possible fix but which doesn't seem to address all your concerns:
+Signed-off-by: Axel Köllhofer <AxelKoellhofer@web.de>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-[next] rtlwifi: rtl8192de: fix missing curly braces
-
-https://patchwork.kernel.org/patch/9506837/
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index a8386f4..3585a04 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6354,6 +6354,13 @@ static struct usb_device_id dev_table[] = {
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0x7822, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
++/* found in rtl8192eu vendor driver */
++{USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0107, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192eu_fops},
++{USB_DEVICE_AND_INTERFACE_INFO(0x2019, 0xab33, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192eu_fops},
++{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x818c, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192eu_fops},
+ #endif
+ { }
+ };
 -- 
-Kalle Valo
+2.7.4
