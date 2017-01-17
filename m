@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:32878 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750837AbdA1LwG (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33265 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751688AbdAQXPm (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Jan 2017 06:52:06 -0500
-Date: Sat, 28 Jan 2017 14:49:00 +0300
-From: Dmitriy Pichugin <smokeman85@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: johannes@sipsolutions.net, davem@davemloft.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] cfg80211 debugfs: Cleanup some checkpatch issues
-Message-ID: <20170128114859.GA2482@gmail.com> (sfid-20170128_125851_239149_30CA4BDC)
-References: <20170127192603.GA13522@gmail.com>
- <1485546515.12563.138.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485546515.12563.138.camel@perches.com>
+        Tue, 17 Jan 2017 18:15:42 -0500
+Received: by mail-pf0-f194.google.com with SMTP id e4so6763481pfg.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 15:15:42 -0800 (PST)
+From: gavinli@thegavinli.com
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Cc: stable@vger.kernel.org, Gavin Li <git@thegavinli.com>
+Subject: [PATCH] brcmfmac: fix incorrect event channel deduction
+Date: Tue, 17 Jan 2017 15:15:34 -0800
+Message-Id: <20170117231534.7099-1-gavinli@thegavinli.com> (sfid-20170118_001546_485228_D226111F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 27, 2017 at 11:48:35AM -0800, Joe Perches wrote:
-> On Fri, 2017-01-27 at 22:26 +0300, Pichugin Dmitry wrote:
-> > This fixes the checkpatch.pl warnings:
-> > * Macros should not use a trailing semicolon.
-> > * Spaces required around that '='.
-> > * Symbolic permissions 'S_IRUGO' are not preferred.
-> 
-> OK
-> 
-> > * Macro argument reuse 'buflen' - possible side-effects
-> 
-> Not all checkpatch messages need fixing.
-> This is one of them.
-> 
-> > diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
-> []
-> > @@ -17,11 +17,12 @@
-> >  static ssize_t name## _read(struct file *file, char __user *userbuf,	\
-> >  			    size_t count, loff_t *ppos)			\
-> >  {									\
-> > -	struct wiphy *wiphy= file->private_data;		\
-> > -	char buf[buflen];						\
-> > +	struct wiphy *wiphy = file->private_data;			\
-> > +	int __buflen = __builtin_constant_p(buflen) ? buflen : -1;	\
-> > +	char buf[__buflen];						\
-> 
-> That's rather an odd change too
-> 
-OK. I will update the patch.
+From: Gavin Li <git@thegavinli.com>
 
-Best Regards,
-Dmitriy.
+brcmf_sdio_fromevntchan() was being called on the the data frame
+rather than the software header, causing some frames to be
+mischaracterized as on the event channel rather than the data channel.
+
+This fixes a major performance regression (due to dropped packets).
+
+Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
+Signed-off-by: Gavin Li <git@thegavinli.com>
+Cc: <stable@vger.kernel.org> [4.7+]
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index dfb0658713d9..d2219885071f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 					   pfirst->len, pfirst->next,
+ 					   pfirst->prev);
+ 			skb_unlink(pfirst, &bus->glom);
+-			if (brcmf_sdio_fromevntchan(pfirst->data))
++			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
+ 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
+ 			else
+ 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
+-- 
+2.11.0
