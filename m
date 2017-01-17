@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33623 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751428AbdAFNww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:52:52 -0500
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        netdev@vger.kernel.org
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
-Cc: "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33846 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751139AbdAQWnr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 17:43:47 -0500
+Received: by mail-lf0-f68.google.com with SMTP id q89so18009391lfi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 14:43:47 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
         linux-wireless@vger.kernel.org,
-        Michael Braun <michael-dev@fami-braun.de>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <8836daaa-9638-4502-d079-fd428595f822@nbd.name> (sfid-20170106_145320_210283_3D6E93A1)
-Date: Fri, 6 Jan 2017 14:52:47 +0100
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH] brcmfmac: use wiphy_read_of_freq_limits to respect limits from DT
+Date: Tue, 17 Jan 2017 23:35:50 +0100
+Message-Id: <20170117223550.12114-1-zajec5@gmail.com> (sfid-20170117_234351_119212_4758F3CA)
 MIME-Version: 1.0
-In-Reply-To: <1483706872.4089.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-06 13:47, Johannes Berg wrote:
-> On Mon, 2017-01-02 at 20:32 +0100, Linus Lüssing wrote:
->> Implements an optional, per bridge port flag and feature to deliver
->> multicast packets to any host on the according port via unicast
->> individually. This is done by copying the packet per host and
->> changing the multicast destination MAC to a unicast one accordingly.
-> 
-> How does this compare and/or relate to the multicast-to-unicast feature
-> we were going to add to the wifi stack, particularly mac80211? Do we
-> perhaps not need that feature at all, if bridging will have it?
-> 
-> I suppose that the feature there could apply also to locally generated
-> traffic when the AP interface isn't in a bridge, but I think I could
-> live with requiring the AP to be put into a bridge to achieve a similar
-> configuration?
-> 
-> Additionally, on an unrelated note, this seems to apply generically to
-> all kinds of frames, losing information by replacing the address.
-> Shouldn't it have similar limitations as the wifi stack feature has
-> then, like only applying to ARP, IPv4, IPv6 and not general protocols?
-> 
-> Also, it should probably come with the same caveat as we documented for
-> the wifi feature:
-> 
->     Note that this may break certain expectations of the receiver,
->     such as the ability to drop unicast IP packets received within
->     multicast L2 frames, or the ability to not send ICMP destination
->     unreachable messages for packets received in L2 multicast (which
->     is required, but the receiver can't tell the difference if this
->     new option is enabled.)
-> 
-> 
-> I'll hold off sending my tree in until we see that we really need both
-> features, or decide that we want the wifi feature *instead* of the
-> bridge feature.
-The bridge layer can use IGMP snooping to ensure that the multicast
-stream is only transmitted to clients that are actually a member of the
-group. Can the mac80211 feature do the same?
+From: Rafał Miłecki <rafal@milecki.pl>
 
-- Felix
+This new helper reads extra frequency limits specified in DT and
+disables unavailable chanels. This is useful for devices (like home
+routers) with chipsets limited e.g. by board design.
+
+In order to respect info read from DT we simply need to check for
+IEEE80211_CHAN_DISABLED bit when constructing channel info.
+
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+This patch requires e691ac2f75b6 ("cfg80211: support ieee80211-freq-limit DT
+property") that is currently in net-next.
+
+Kalle: feel free to postpone this until merging net-next one day.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ec1171c..b96fc88 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
+ 			continue;
+ 		}
+ 
++		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
++			continue;
++
+ 		/* assuming the chanspecs order is HT20,
+ 		 * HT40 upper, HT40 lower, and VHT80.
+ 		 */
+@@ -6477,6 +6480,9 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 			wiphy->bands[NL80211_BAND_5GHZ] = band;
+ 		}
+ 	}
++
++	wiphy_read_of_freq_limits(wiphy);
++
+ 	return 0;
+ }
+ 
+-- 
+2.10.1
