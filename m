@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34710 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751675AbdAMMkL (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:32790 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751610AbdAQXR1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:40:11 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Jan 2017 14:39:17 +0200
-Message-Id: <20170113123919.30384-5-luca@coelho.fi> (sfid-20170113_134128_524692_160942EE)
-In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
-References: <20170113123919.30384-1-luca@coelho.fi>
+        Tue, 17 Jan 2017 18:17:27 -0500
 MIME-Version: 1.0
+In-Reply-To: <20170117225545.6706-1-gavinli@thegavinli.com>
+References: <20170117225545.6706-1-gavinli@thegavinli.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 18 Jan 2017 00:09:22 +0100
+Message-ID: <CACna6rxiNPkttfR+K5GMn1ZiaW-KZyNn3S4i9brkRE7zLE8BCw@mail.gmail.com> (sfid-20170118_001732_317089_733D71F8)
+Subject: Re: [PATCH] brcmfmac: fix incorrect event channel deduction
+To: gavinli@thegavinli.com
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Stable <stable@vger.kernel.org>, Gavin Li <git@thegavinli.com>
 Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 4/6] iwlwifi: fix MODULE_FIRMWARE for 6030
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jürg Billeter <j@bitron.ch>
+On 17 January 2017 at 23:55,  <gavinli@thegavinli.com> wrote:
+> From: Gavin Li <git@thegavinli.com>
+>
+> brcmf_sdio_fromevntchan() was being called on the the data frame
+> rather than the software header, causing some frames to be
+> mischaracterized as on the event channel rather than the data channel.
+>
+> This fixes a major performance regression (due to dropped packets).
+>
+> Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
+> Signed-off-by: Gavin Li <git@thegavinli.com>
+> Cc: <stable@vger.kernel.org> [4.6+]
 
-IWL6000G2B_UCODE_API_MAX is not defined. ucode_api_max of
-IWL_DEVICE_6030 uses IWL6000G2_UCODE_API_MAX. Use this also for
-MODULE_FIRMWARE.
+Oh, that was supposed to be 4.7+, I gave you a wrong hint, sorry!
 
-Fixes: 9d9b21d1b616 ("iwlwifi: remove IWL_*_UCODE_API_OK")
-Signed-off-by: Jürg Billeter <j@bitron.ch>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+You may send V3, or maybe ask Kalle to fix it by hand when applying the pat=
+ch.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-index 0b9f6a7bc834..39335b7b0c16 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
-@@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
- MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
- MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
--MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
-+MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
--- 
-2.11.0
+--=20
+Rafa=C5=82
