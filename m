@@ -1,79 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58377 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751759AbdASNTw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 08:19:52 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: dump Copy Engine registers during firmware crash
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <148458066842.22029.11182008791835649945.stgit@potku.adurom.net>
-References: <148458066842.22029.11182008791835649945.stgit@potku.adurom.net>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <942368b5799b490bbdff933a379ea80a@euamsexm01a.eu.qualcomm.com> (sfid-20170119_141955_601217_2682959A)
-Date: Thu, 19 Jan 2017 14:19:45 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:52766 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751410AbdAQXfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 18:35:13 -0500
+From: Jes.Sorensen@gmail.com
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] rtl8xxxu: Update author/maintainer contact info
+Date: Tue, 17 Jan 2017 18:18:56 -0500
+Message-Id: <20170117231856.5075-6-Jes.Sorensen@gmail.com> (sfid-20170118_003526_425216_335C16B0)
+In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> Dump Copy Engine source and destination ring addresses.
-> This is useful information to debug firmware crashes, assertes or hangs over long run
-> assessing the Copy Engine Register status. This also enables dumping CE
-> register status in debugfs Crash Dump file.
-> 
-> Screenshot:
-> 
-> ath10k_pci 0000:02:00.0: simulating hard firmware crash
-> ath10k_pci 0000:02:00.0: firmware crashed! (uuid 84901ff5-d33c-456e-93ee-0165dea643cf)
-> ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
-> ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 1 testmode 1
-> ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.59-2 api 5 features no-p2p,raw-mode,mfp,allows-mesh-bcast crc32 4159f498
-> ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
-> ath10k_pci 0000:02:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
-> ath10k_pci 0000:02:00.0: firmware register dump:
-> ath10k_pci 0000:02:00.0: [00]: 0x4100016C 0x00000000 0x009A0F2A 0x00000000
-> ath10k_pci 0000:02:00.0: [04]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [08]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [12]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [16]: 0x00000000 0x00000000 0x00000000 0x009A0F2A
-> ath10k_pci 0000:02:00.0: [20]: 0x00000000 0x00401930 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [24]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [28]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [32]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [36]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [40]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [44]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [48]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [52]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: [56]: 0x00000000 0x00000000 0x00000000 0x00000000
-> ath10k_pci 0000:02:00.0: Copy Engine register dump:
-> ath10k_pci 0000:02:00.0: [00]: 0x00057400   7   7   3   3
-> ath10k_pci 0000:02:00.0: [01]: 0x00057800  18  18  85  86
-> ath10k_pci 0000:02:00.0: [02]: 0x00057c00  49  49  48  49
-> ath10k_pci 0000:02:00.0: [03]: 0x00058000  16  16  17  16
-> ath10k_pci 0000:02:00.0: [04]: 0x00058400   4   4  44   4
-> ath10k_pci 0000:02:00.0: [05]: 0x00058800  12  12  11  12
-> ath10k_pci 0000:02:00.0: [06]: 0x00058c00   3   3   3   3
-> ath10k_pci 0000:02:00.0: [07]: 0x00059000   0   0   0   0
-> ieee80211 phy0: Hardware restart was requested
-> ath10k_pci 0000:02:00.0: device successfully recovered
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> [kvalo@qca.qualcomm.com: simplify the implementation]
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Update copyright year and email address.
 
-c75c398be6ed ath10k: dump Copy Engine registers during firmware crash
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+---
+ MAINTAINERS                                            | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 4 ++--
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 2 +-
+ 8 files changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c8df0e1..0b5c80e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10584,7 +10584,7 @@ F:	drivers/net/wireless/realtek/rtlwifi/
+ F:	drivers/net/wireless/realtek/rtlwifi/rtl8192ce/
+ 
+ RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
+-M:	Jes Sorensen <Jes.Sorensen@redhat.com>
++M:	Jes Sorensen <Jes.Sorensen@gmail.com>
+ L:	linux-wireless@vger.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git rtl8xxxu-devel
+ S:	Maintained
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index df551b2..95e3993 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+index f9e2050..a41a296 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+@@ -1,7 +1,7 @@
+ /*
+  * RTL8XXXU mac80211 USB driver - 8188c/8188r/8192c specific subdriver
+  *
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * Portions, notably calibration code:
+  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index a1178c5..80fee69 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1,7 +1,7 @@
+ /*
+  * RTL8XXXU mac80211 USB driver - 8192e specific subdriver
+  *
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * Portions, notably calibration code:
+  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+index aef3730..1746311 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+@@ -1,7 +1,7 @@
+ /*
+  * RTL8XXXU mac80211 USB driver - 8723a specific subdriver
+  *
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * Portions, notably calibration code:
+  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index 02b8ddd..c4b86a8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -1,7 +1,7 @@
+ /*
+  * RTL8XXXU mac80211 USB driver - 8723b specific subdriver
+  *
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * Portions, notably calibration code:
+  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 3585a04..e544dd1 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -1,7 +1,7 @@
+ /*
+  * RTL8XXXU mac80211 USB driver
+  *
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * Portions, notably calibration code:
+  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
+@@ -48,7 +48,7 @@ static bool rtl8xxxu_dma_aggregation;
+ static int rtl8xxxu_dma_agg_timeout = -1;
+ static int rtl8xxxu_dma_agg_pages = -1;
+ 
+-MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
++MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@gmail.com>");
+ MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
+ MODULE_LICENSE("GPL");
+ MODULE_FIRMWARE("rtlwifi/rtl8723aufw_A.bin");
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index 315ccfb..3d3e2e1 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
++ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
 -- 
-https://patchwork.kernel.org/patch/9518985/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.7.4
