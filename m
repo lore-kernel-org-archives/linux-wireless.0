@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.toke.dk ([52.28.52.200]:56559 "EHLO mail.toke.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754289AbdA3Tnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 14:43:52 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Klaus Kinski <jpo234@outlook.de>
-Cc: Dave Taht <dave.taht@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k is 20% worse than net80211/madwifi
-References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
-        <87lgtsjz6o.fsf@toke.dk>
-        <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
-        <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
-Date: Mon, 30 Jan 2017 20:43:47 +0100
-In-Reply-To: <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
-        (Klaus Kinski's message of "Mon, 30 Jan 2017 17:00:46 +0000")
-Message-ID: <87o9yo2v0s.fsf@toke.dk> (sfid-20170130_204410_304061_21F26BB1)
+Received: from fudo.makrotopia.org ([185.142.180.71]:60229 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750826AbdAQC3h (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 16 Jan 2017 21:29:37 -0500
+Date: Tue, 17 Jan 2017 02:56:53 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: [PATCH v2 09/14] rt2x00: rt2x00pci: set PCI MWI only if supported
+Message-ID: <20170117015653.GF1912@makrotopia.org> (sfid-20170117_032941_260780_3E0B2927)
+References: <874m114lwq.fsf@codeaurora.org>
+ <20170116030613.GA32249@makrotopia.org>
+ <20170116100856.GB6968@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170116100856.GB6968@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Klaus Kinski <jpo234@outlook.de> writes:
+On Mon, Jan 16, 2017 at 11:08:57AM +0100, Stanislaw Gruszka wrote:
+> On Mon, Jan 16, 2017 at 04:06:25AM +0100, Daniel Golle wrote:
+> > From: Claudio Mignanti <c.mignanti@gmail.com>
+> > 
+> > This is needed for devices without support for PCI MWI. See also
+> > https://dev.openwrt.org/changeset/21850
+> > 
+> > Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+> > ---
+> >  drivers/net/wireless/ralink/rt2x00/rt2x00pci.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+> > index eb6dbcd4fddf..4becfeb75ba8 100644
+> > --- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+> > +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
+> > @@ -94,8 +94,10 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
+> >  
+> >  	pci_set_master(pci_dev);
+> >  
+> > +#ifdef CONFIG_PCI_SET_MWI
+> >  	if (pci_set_mwi(pci_dev))
+> >  		rt2x00_probe_err("MWI not available\n");
+> > +#endif
+> 
+> There is no CONFIG_PCI_SET_MWI in the kernel. This patch is either not
+> needed (pci subsystem has own PCI_DISABLE_MWI define) or wrong (we
+> should not call this function for some devices).
 
-> The captures I used to create the statistics are here:
-> https://drive.google.com/open?id=0ByFGz3ZH6JcYMGp0a05lYzBPNzA
->
-> An obvious difference is, that Madwifi sends 5 packets in a row
-> without waiting for an ACK whereas ath9k/mac80211 always seems to wait
-> for an ACK. This seems to point to the "net80211 aggressive mode
-> theory" https://wiki.freebsd.org/WifiAggressiveMode, IMHO.
+Apparently we thus never enabled MWI on PCI devices. John Crispin has
+started to investigate why this patch was needed in first place, see
+http://lists.infradead.org/pipermail/lede-dev/2017-January/005400.html
 
-I'm not too familiar with that part of the stack, but that seems
-reasonable, yeah. AFAIK the "aggresive mode" is a pre-802.11n feature,
-though, which is why you won't see that in ath9k. In 802.11n this kind
-of bursting was replaced by aggregation, which you're not getting any of
-since you're running in 802.11a mode, obviously.
+I suggest to drop it entirely until we figure out why it wasn't safe to
+use MWI at least on some platforms. Once we know more there might be
+a follow-up to selectively have the precompiler skip pci_set_mwi in
+case we really still need to do this.
+Aparently this was originally related to a compiler error on Kernel
+2.6.30 when trying to build for Rt305x WiSoC platforms (which simply
+do not have any PCI bus and probably explicite support for SoC devices
+wasn't implemented in rt2x00 at the time).
 
-The lack of bursting will translate to slightly lower throughput, which
-will be why you see fewer packets transmitted by ath9k. Of course, if
-your receiver supported aggregation, the numbers would look dramatically
-better in ath9k's favour... ;)
 
--Toke
+Cheers
+
+
+Daniel
+
+> 
+> Stanislaw
