@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33668 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754832AbdAABHP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Dec 2016 20:07:15 -0500
-Received: by mail-oi0-f65.google.com with SMTP id f201so62677881oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2016 17:07:15 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:35922 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751391AbdAQX3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 18:29:41 -0500
+From: Jes.Sorensen@gmail.com
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 0/3] rtlwifi: Rework debug system
-Date: Sat, 31 Dec 2016 19:07:03 -0600
-Message-Id: <20170101010706.13234-1-Larry.Finger@lwfinger.net> (sfid-20170101_020725_225895_744CA531)
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/5] rtl8xxxu: Add USB ID for D-Link DWA-131 rev E1 (rtl8192eu)
+Date: Tue, 17 Jan 2017 18:18:54 -0500
+Message-Id: <20170117231856.5075-4-Jes.Sorensen@gmail.com> (sfid-20170118_003535_365619_050C3D72)
+In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches modifies the debug system by replacing some
-complicated macros with the equivalent operations in C. Then, the
-COMP_XX component debugging is converted into a debug mask. Finally,
-code is added to permit setting the debug mask from sysfs.
+From: Axel Köllhofer <AxelKoellhofer@web.de>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
+This was tested by David Patiño.
 
+Reported-by: David Patiño <davidpatino82@gmail.com>
+Signed-off-by: Axel Köllhofer <AxelKoellhofer@web.de>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Larry Finger (3):
-  rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA
-  rtlwifi: Convert COMP_XX entries into a proper debugging mask
-  rtlwifi: Enable debug mask to be set from sysfs
-
- drivers/net/wireless/realtek/rtlwifi/base.c        | 43 ++++++++++++++---
- drivers/net/wireless/realtek/rtlwifi/debug.c       | 55 +++++++++++++++-------
- drivers/net/wireless/realtek/rtlwifi/debug.h       | 31 +++++-------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192ce/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192cu/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192de/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192ee/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8192se/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8723ae/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  5 ++
- .../net/wireless/realtek/rtlwifi/rtl8821ae/sw.c    |  5 ++
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  4 +-
- 13 files changed, 135 insertions(+), 43 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 016ea24..a8386f4 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6200,6 +6200,9 @@ static struct usb_device_id dev_table[] = {
+ /* TP-Link TL-WN822N v4 */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0108, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192eu_fops},
++/* D-Link DWA-131 rev E1, tested by David Patiño */
++{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3319, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192eu_fops},
+ /* Tested by Myckel Habets */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192eu_fops},
 -- 
-2.10.2
+2.7.4
