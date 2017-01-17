@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50760 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753399AbdAZPc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 10:32:26 -0500
-Message-ID: <1485444741.14760.12.camel@sipsolutions.net> (sfid-20170126_163231_260243_5BB3577A)
-Subject: Re: IPv6-UDP 0x0000 checksum
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: netdev@vger.kernel.org,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 26 Jan 2017 16:32:21 +0100
-In-Reply-To: <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170126_162439_678922_DB33D27A)
-References: <1485437276.14760.3.camel@sipsolutions.net>
-         <1485438299.5145.117.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_144502_343976_16232A6D) <1485438546.14760.7.camel@sipsolutions.net>
-         <1485441942.5145.131.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_154545_190303_B1FB80BF) <1485442164.14760.11.camel@sipsolutions.net>
-         <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
-         (sfid-20170126_162439_678922_DB33D27A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34444 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750863AbdAQW3U (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 17 Jan 2017 17:29:20 -0500
+Received: by mail-pg0-f68.google.com with SMTP id t6so4895793pgt.1
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 14:29:18 -0800 (PST)
+From: gavinli@thegavinli.com
+To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+Cc: Gavin Li <git@thegavinli.com>
+Subject: [PATCH] brcmfmac: fix incorrect event channel deduction
+Date: Tue, 17 Jan 2017 14:29:09 -0800
+Message-Id: <20170117222909.2880-1-gavinli@thegavinli.com> (sfid-20170117_232924_275305_575DD926)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-26 at 07:24 -0800, Eric Dumazet wrote:
-> On Thu, 2017-01-26 at 15:49 +0100, Johannes Berg wrote:
-> 
-> > Unfortunately, I haven't been able to actually test this yet. I
-> > also
-> > didn't find the code that would drop frames with CSUM 0 either, so
-> > I'm
-> > thinking - for now - that if all the csum handling is skipped,
-> > dropping
-> > 0 csum frames would also be, and then we'd accept a frame we should
-> > actually have dropped.
-> > 
-> > I'll go test this I guess :)
-> > 
-> > Any pointers to where 0 csum frames are dropped?
-> 
-> Probably in udp6_csum_init()
+From: Gavin Li <git@thegavinli.com>
 
-Well, now that I see that, I see that they're actually valid in some
-circumstances. Oops. :)
+brcmf_sdio_fromevntchan() was being called on the the hardware header
+rather than the software header, causing some frames to be
+mischaracterized as on the event channel rather than the data channel.
+This fixes the performance regression introduced in commit c56caa9d
+where event processing is done separately.
 
-Will need to revisit, and check how we set no_check6_rx, etc.
+Signed-off-by: Gavin Li <git@thegavinli.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index dfb0658713d9..d2219885071f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+ 					   pfirst->len, pfirst->next,
+ 					   pfirst->prev);
+ 			skb_unlink(pfirst, &bus->glom);
+-			if (brcmf_sdio_fromevntchan(pfirst->data))
++			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
+ 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
+ 			else
+ 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
+-- 
+2.11.0
