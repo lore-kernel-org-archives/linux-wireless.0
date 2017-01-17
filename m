@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36984 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbdAWPFX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38742 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750866AbdAQMGF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 10:05:23 -0500
-Received: by mail-wm0-f47.google.com with SMTP id c206so160020873wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2017 07:04:48 -0800 (PST)
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH 3/3] ath10k: fix typo in addr calculation
-Date: Mon, 23 Jan 2017 15:04:36 +0000
-Message-Id: <1485183876-27080-3-git-send-email-srinivas.kandagatla@linaro.org> (sfid-20170123_160627_225088_665BBA15)
-In-Reply-To: <1485183876-27080-1-git-send-email-srinivas.kandagatla@linaro.org>
-References: <1485183876-27080-1-git-send-email-srinivas.kandagatla@linaro.org>
+        Tue, 17 Jan 2017 07:06:05 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170109233350.134036-1-briannorris@chromium.org>
+References: <20170109233350.134036-1-briannorris@chromium.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org,
+        Cathy Luo <cluo@marvell.com>,
+        Brian Norris <briannorris@chromium.org>
+Message-Id: <20170117120350.5CE4E607CE@smtp.codeaurora.org> (sfid-20170117_130633_786550_71B7A441)
+Date: Tue, 17 Jan 2017 12:03:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-CORE_CTRL_ADDRESS is offset in register address space, it does not
-make sense to OR it to derive the final address. It looks like its
-a typo, so fix it.
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Brian Norris <briannorris@chromium.org> wrote:
+> Similar to commit fcd2042e8d36 ("mwifiex: printk() overflow with 32-byte
+> SSIDs"), we failed to account for the existence of 32-char SSIDs in our
+> debugfs code. Unlike in that case though, we zeroed out the containing
+> struct first, and I'm pretty sure we're guaranteed to have some padding
+> after the 'ssid.ssid' and 'ssid.ssid_len' fields (the struct is 33 bytes
+> long).
+> 
+> So, this is the difference between:
+> 
+>   # cat /sys/kernel/debug/mwifiex/mlan0/info
+>   ...
+>   essid="0123456789abcdef0123456789abcdef "
+>   ...
+> 
+> and the correct output:
+> 
+>   # cat /sys/kernel/debug/mwifiex/mlan0/info
+>   ...
+>   essid="0123456789abcdef0123456789abcdef"
+>   ...
+> 
+> Fixes: 5e6e3a92b9a4 ("wireless: mwifiex: initial commit for Marvell mwifiex driver")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 855e3de..023ab10 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1936,7 +1936,7 @@ static int ath10k_pci_wake_target_cpu(struct ath10k *ar)
- {
- 	u32 addr, val;
- 
--	addr = SOC_CORE_BASE_ADDRESS | CORE_CTRL_ADDRESS;
-+	addr = SOC_CORE_BASE_ADDRESS + CORE_CTRL_ADDRESS;
- 	val = ath10k_pci_read32(ar, addr);
- 	val |= CORE_CTRL_CPU_INTR_MASK;
- 	ath10k_pci_write32(ar, addr, val);
+Patch applied to wireless-drivers-next.git, thanks.
+
+6183468a23fc mwifiex: debugfs: Fix (sometimes) off-by-1 SSID print
+
 -- 
-2.10.1
+https://patchwork.kernel.org/patch/9506069/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
