@@ -1,116 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39098 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935282AbdAIKKq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:10:46 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] cfg80211: size various nl80211 messages correctly
-Date: Mon,  9 Jan 2017 11:10:42 +0100
-Message-Id: <20170109101042.23919-1-johannes@sipsolutions.net> (sfid-20170109_111110_076021_AF096544)
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35757 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751590AbdARKtU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 05:49:20 -0500
+Received: by mail-lf0-f68.google.com with SMTP id v186so1176487lfa.2
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 02:49:19 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 1/4] brcmfmac: drop unneeded function declarations from headers
+Date: Wed, 18 Jan 2017 11:48:51 +0100
+Message-Id: <20170118104854.32231-1-zajec5@gmail.com> (sfid-20170118_114924_592461_3C9B535A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Ilan reported that sometimes nl80211 messages weren't working if
-the frames being transported got very large, which was really a
-problem for userspace-to-kernel messages, but prompted me to look
-at the code.
+Functions brcmf_c_prec_enq and brcmf_sdio_init don't exist so we
+really don't need their declarations. Function brcmf_parse_tlvs is used
+in cfg80211.c only so make it static and drop from header as well.
 
-Upon review, I found various places where variable-length data is
-transported in an nl80211 message but the message isn't allocated
-taking that into account. This shouldn't cause any problems since
-the frames aren't really that long, apart in one place where two
-(possibly very long frames) might not fit.
-
-Fix all the places (that I found) that get variable length data
-from the driver and put it into a message to take the length of
-the variable data into account. The 100 there is just a safe
-constant for the remaining message overhead (it's usually around
-50 for most messages.)
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- net/wireless/nl80211.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h      | 4 ----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 2 --
+ 3 files changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 23692658fe98..f55b251e4b0d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13249,7 +13249,7 @@ void nl80211_send_disconnected(struct cfg80211_registered_device *rdev,
- 	struct sk_buff *msg;
- 	void *hdr;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index e21f760..b5bb971 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -218,9 +218,6 @@ int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
+  * interface functions from common layer
+  */
  
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	msg = nlmsg_new(100 + ie_len, GFP_KERNEL);
- 	if (!msg)
- 		return;
+-bool brcmf_c_prec_enq(struct device *dev, struct pktq *q, struct sk_buff *pkt,
+-		      int prec);
+-
+ /* Receive frame for delivery to OS.  Callee disposes of rxp. */
+ void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
+ /* Receive async event packet from firmware. Callee disposes of rxp. */
+@@ -247,7 +244,6 @@ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
  
-@@ -13325,7 +13325,7 @@ void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
- 
- 	trace_cfg80211_notify_new_peer_candidate(dev, addr);
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + ie_len, gfp);
- 	if (!msg)
- 		return;
- 
-@@ -13362,7 +13362,7 @@ void nl80211_michael_mic_failure(struct cfg80211_registered_device *rdev,
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + req_ie_len + resp_ie_len, gfp);
- 	if (!msg)
- 		return;
- 
-@@ -13456,7 +13456,7 @@ static void nl80211_send_remain_on_chan_event(
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + len, gfp);
- 	if (!msg)
- 		return;
- 
-@@ -13696,7 +13696,7 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + len, gfp);
- 	if (!msg)
- 		return -ENOMEM;
- 
-@@ -13740,7 +13740,7 @@ void cfg80211_mgmt_tx_status(struct wireless_dev *wdev, u64 cookie,
- 
- 	trace_cfg80211_mgmt_tx_status(wdev, cookie, ack);
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + len, gfp);
- 	if (!msg)
- 		return;
- 
-@@ -14046,7 +14046,7 @@ static void nl80211_ch_switch_notify(struct cfg80211_registered_device *rdev,
- 	struct sk_buff *msg;
- 	void *hdr;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	msg = nlmsg_new(100 + req_ie_len + resp_ie_len, gfp);
- 	if (!msg)
- 		return;
- 
-@@ -14551,7 +14551,7 @@ void cfg80211_ft_event(struct net_device *netdev,
- 	if (!ft_event->target_ap)
- 		return;
- 
--	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	msg = nlmsg_new(100 + ft_event->ric_ies_len, GFP_KERNEL);
- 	if (!msg)
- 		return;
- 
+ #ifdef CONFIG_BRCMFMAC_SDIO
+ void brcmf_sdio_exit(void);
+-void brcmf_sdio_init(void);
+ void brcmf_sdio_register(void);
+ #endif
+ #ifdef CONFIG_BRCMFMAC_USB
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 729bf33..ec1171c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -326,7 +326,7 @@ u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+  * triples, returning a pointer to the substring whose first element
+  * matches tag
+  */
+-const struct brcmf_tlv *
++static const struct brcmf_tlv *
+ brcmf_parse_tlvs(const void *buf, int buflen, uint key)
+ {
+ 	const struct brcmf_tlv *elt = buf;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 0c9a708..8f19d95 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -396,8 +396,6 @@ void brcmf_free_vif(struct brcmf_cfg80211_vif *vif);
+ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+ 			  const u8 *vndr_ie_buf, u32 vndr_ie_len);
+ s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif);
+-const struct brcmf_tlv *
+-brcmf_parse_tlvs(const void *buf, int buflen, uint key);
+ u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+ 			struct ieee80211_channel *ch);
+ bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
 -- 
-2.9.3
+2.10.1
