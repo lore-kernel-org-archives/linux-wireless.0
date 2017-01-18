@@ -1,86 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34848 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750818AbdAMFgX (ORCPT
+Received: from smtp-out06.msg.oleane.net ([62.161.7.4]:56326 "EHLO
+        smtp-out06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751692AbdARKr2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 00:36:23 -0500
-Received: by mail-pf0-f181.google.com with SMTP id f144so25339569pfa.2
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:36:08 -0800 (PST)
-From: Matt Ranostay <matt@ranostay.consulting>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
-Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
-Subject: [PATCH v3 1/2] devicetree: document new marvell-8xxx and pwrseq-sd8787 options
-Date: Thu, 12 Jan 2017 21:29:36 -0800
-Message-Id: <20170113052937.12538-2-matt@ranostay.consulting> (sfid-20170113_063629_197279_FFFF8062)
-In-Reply-To: <20170113052937.12538-1-matt@ranostay.consulting>
-References: <20170113052937.12538-1-matt@ranostay.consulting>
+        Wed, 18 Jan 2017 05:47:28 -0500
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: "'Adrian Chadd'" <adrian@freebsd.org>,
+        "'ath9k-devel'" <ath9k-devel@venema.h4ckr.net>,
+        <linux-wireless@vger.kernel.org>
+References: <CAJ-Vmo=_apPFE1LQmXj6pn9g1c0bvzAS-gk86Hi7-CX+KuZtrw@mail.gmail.com>
+In-Reply-To: <CAJ-Vmo=_apPFE1LQmXj6pn9g1c0bvzAS-gk86Hi7-CX+KuZtrw@mail.gmail.com>
+Subject: RE: ath9k/ath10k DFS testing / certification
+Date: Wed, 18 Jan 2017 11:26:10 +0100
+Message-ID: <009701d27175$499fafc0$dcdf0f40$@acksys.fr> (sfid-20170118_114758_694907_8A4E9F77)
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: devicetree@vger.kernel.org
-Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
----
- .../devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt          | 14 ++++++++++++++
- .../devicetree/bindings/net/wireless/marvell-8xxx.txt      |  7 ++++++-
- 2 files changed, 20 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
+Hi Adrian,
 
-diff --git a/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-new file mode 100644
-index 000000000000..1b658351629b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/mmc/mmc-pwrseq-sd8787.txt
-@@ -0,0 +1,14 @@
-+* Marvell SD8787 power sequence provider
-+
-+Required properties:
-+- compatible: must be "mmc-pwrseq-sd8787".
-+- pwndn-gpio: contains a power down GPIO specifier.
-+- reset-gpio: contains a reset GPIO specifier.
-+
-+Example:
-+
-+	wifi_pwrseq: wifi_pwrseq {
-+		compatible = "mmc-pwrseq-sd8787";
-+		pwrdn-gpio = <&twl_gpio 0 GPIO_ACTIVE_LOW>;
-+		reset-gpio = <&twl_gpio 1 GPIO_ACTIVE_LOW>;
-+	}
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index 980b16df74c3..0854451ff91d 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,4 +1,4 @@
--Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
-+Marvell 8787/8897/8997 (sd8787/sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
+Also, about ath9k:
+
+I don't know if it's relevant to you, but we had the same problem of
+NO_IR/RADAR mismatch in ath9k.
+We fixed this in mac80211 layer at that time. Here is the patch. We didn't
+send it upstream since
+We have no experience with other chipsets, and we didn't know whether it
+would be generic enough.
+
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -598,7 +598,7 @@ static int __ieee80211_start_scan(struct
+ 		ieee80211_hw_config(local, 0);
  
- This node provides properties for controlling the Marvell SDIO/PCIE wireless device.
-@@ -8,6 +8,7 @@ connects the device to the system.
- Required properties:
- 
-   - compatible : should be one of the following:
-+	* "marvell,sd8787"
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
- 	* "pci11ab,2b42"
-@@ -34,6 +35,9 @@ Optional properties:
- 		 so that the wifi chip can wakeup host platform under certain condition.
- 		 during system resume, the irq will be disabled to make sure
- 		 unnecessary interrupt is not received.
-+  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
-+  - mmc-pwrseq:  phandle to the MMC power sequence node. See "mmc-pwrseq-*"
-+		 for documentation of MMC power sequence bindings.
- 
- Example:
- 
-@@ -46,6 +50,7 @@ so that firmware can wakeup host using this device side pin.
- &mmc3 {
- 	status = "okay";
- 	vmmc-supply = <&wlan_en_reg>;
-+	mmc-pwrseq = <&wifi_pwrseq>;
- 	bus-width = <4>;
- 	cap-power-off-card;
- 	keep-power-in-suspend;
--- 
-2.10.2
+ 		if ((req->channels[0]->flags &
+-		     IEEE80211_CHAN_NO_IR) ||
++		     (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR)) ||
+ 		    !req->n_ssids) {
+ 			next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		} else {
+@@ -646,7 +646,7 @@ ieee80211_scan_get_channel_time(struct i
+ 	 * TODO: channel switching also consumes quite some time,
+ 	 * add that delay as well to get a better estimation
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR)
++	if (chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR))
+ 		return IEEE80211_PASSIVE_CHANNEL_TIME;
+ 	return local->scan_req->probe_delay_ticks +
+local->scan_req->max_channel_time_ticks;
+ }
+@@ -810,7 +810,7 @@ static void ieee80211_scan_state_set_cha
+ 	 *
+ 	 * In any case, it is not necessary for a passive scan.
+ 	 */
+-	if (chan->flags & IEEE80211_CHAN_NO_IR || !scan_req->n_ssids) {
++	if (chan->flags & (IEEE80211_CHAN_NO_IR | IEEE80211_CHAN_RADAR) ||
+!scan_req->n_ssids) {
+ 		*next_delay = IEEE80211_PASSIVE_CHANNEL_TIME;
+ 		local->next_scan_state = SCAN_DECISION;
+ 		return;
+--
+Diff -u
+
+> -----Message d'origine-----
+> De : ath10k [mailto:ath10k-bounces@lists.infradead.org] De la part de
+> Adrian Chadd
+> Envoyé : dimanche 15 janvier 2017 22:17
+> À : ath9k-devel; ath10k@lists.infradead.org
+> Objet : ath9k/ath10k DFS testing / certification
+> 
+> hiya,
+> 
+> I'm working on a set of things that will involve DFS certification for
+> ath9k/ath10k. Initially it'll be for FCC but I'll branch out to the other
+> regions shortly afterwards.
+> 
+> I'd love to hear from anyone else who has done this and what their
+> challenges were, including whether they have any local patches / tools
+> that haven't yet been upstreamed.
+> 
+> Thanks!
+> 
+> 
+> -adrian
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
