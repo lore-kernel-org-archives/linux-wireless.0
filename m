@@ -1,53 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36796 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751157AbdARIDv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 03:03:51 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH] brcmfmac: use wiphy_read_of_freq_limits to respect limits from DT
-References: <20170117223550.12114-1-zajec5@gmail.com>
-Date: Wed, 18 Jan 2017 10:03:45 +0200
-In-Reply-To: <20170117223550.12114-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
- =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
-        message of "Tue, 17 Jan 2017 23:35:50 +0100")
-Message-ID: <87wpdsn6am.fsf@kamboji.qca.qualcomm.com> (sfid-20170118_090354_477688_FE4FD42F)
+Received: from mx1.redhat.com ([209.132.183.28]:58370 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750907AbdARPSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 10:18:02 -0500
+Date: Wed, 18 Jan 2017 16:13:24 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: Re: [PATCH v2 08/14] rt2x00: rt2800mmio: add a workaround for
+ spurious TX_FIFO_STATUS interrupts
+Message-ID: <20170118151324.GC22837@redhat.com> (sfid-20170118_161805_470073_E0038BC4)
+References: <874m114lwq.fsf@codeaurora.org>
+ <20170116030535.GA32238@makrotopia.org>
+ <20170118144446.GA22837@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170118144446.GA22837@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+On Wed, Jan 18, 2017 at 03:44:46PM +0100, Stanislaw Gruszka wrote:
+> On Mon, Jan 16, 2017 at 04:05:47AM +0100, Daniel Golle wrote:
+> >  irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
+> >  {
+> >  	struct rt2x00_dev *rt2x00dev = dev_instance;
+> >  	u32 reg, mask;
+> > +	u32 txstatus = 0;
+> >  
+> > -	/* Read status and ACK all interrupts */
+> > +	/* Read status */
+> >  	rt2x00mmio_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
+> > +
+> > +	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
+> > +		/* Due to unknown reason the hardware generates a
+> > +		 * TX_FIFO_STATUS interrupt before the TX_STA_FIFO
+> > +		 * register contain valid data. Read the TX status
+> > +		 * here to see if we have to process the actual
+> > +		 * request.
+> > +		 */
+> > +		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &txstatus);
+> > +		if (rt2800mmio_txstatus_is_spurious(rt2x00dev, txstatus)) {
+> > +			/* Remove the TX_FIFO_STATUS bit so it won't be
+> > +			 * processed in this turn. The hardware will
+> > +			 * generate another IRQ for us.
+> > +			 */
+> > +			rt2x00_set_field32(&reg,
+> > +					   INT_SOURCE_CSR_TX_FIFO_STATUS, 0);
+> > +		}
+> > +	}
+> > +
+> > +	/* ACK interrupts */
+> >  	rt2x00mmio_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+> 
+> I think spurious TX_STA_FIFO problem happen because we first ACK
+> interrupt and then read in bulk all statuses from TX_STA_FIFO
+> register, while hardware generate new interrupt (as previous
+> was ACKed), then in new interrupt we have no more statues to
+> read.
+> 
+> This is inherently racy situation and first ACK interrupt and
+> then read statuses is safer than reverse order which make risk we
+> will have pending status and not get interrupt about that.
+> 
+> Hence I think we should not apply this patch.
 
-> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->
-> This new helper reads extra frequency limits specified in DT and
-> disables unavailable chanels. This is useful for devices (like home
-> routers) with chipsets limited e.g. by board design.
->
-> In order to respect info read from DT we simply need to check for
-> IEEE80211_CHAN_DISABLED bit when constructing channel info.
->
-> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
-> ---
-> This patch requires e691ac2f75b6 ("cfg80211: support ieee80211-freq-limit=
- DT
-> property") that is currently in net-next.
->
-> Kalle: feel free to postpone this until merging net-next one day.
+Actually patch is safe in regard that we first ACK interrupt
+and then read all statuses TX_STA_FIFO. We only do not ACK 
+interrupt if we do not have valid status in TX_STA_FIFO .
 
-Thanks for documenting the dependency perfectly, makes my work a lot
-easier. I'm expecting to merge net-next after my next pull request, most
-likely early next week.
+However I don't really see point of the patch, we should get
+next interrupt when new status will be places in TX_STA_FIFO
+regardless we ACK this interrupt or don't and if we don't 
+ACK we possibly can get series of spurious interrupts.
 
---=20
-Kalle Valo
+Stanislaw
