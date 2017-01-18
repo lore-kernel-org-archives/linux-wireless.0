@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:51904 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752620AbdA3JHt (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:33037 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753800AbdARQiJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 04:07:49 -0500
-Date: Mon, 30 Jan 2017 10:06:55 +0100
-From: Greg KH <greg@kroah.com>
-To: c_traja@qti.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        stable@vger.kernel.org, tamizhchelvam@codeaurora.org
-Subject: Re: [PATCHv2] ath10k: fix boot failure in UTF mode/testmode
-Message-ID: <20170130090655.GB29062@kroah.com> (sfid-20170130_113018_125867_CEF1590A)
-References: <1485765958-26802-1-git-send-email-c_traja@qti.qualcomm.com>
+        Wed, 18 Jan 2017 11:38:09 -0500
+Received: by mail-ot0-f194.google.com with SMTP id f9so1661682otd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 08:38:04 -0800 (PST)
+Subject: Re: [3/3] rtlwifi: Enable debug mask to be set from sysfs
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20170101010706.13234-4-Larry.Finger@lwfinger.net>
+ <20170118144936.91B3E6080C@smtp.codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5aefd440-1b6f-1791-d85b-e71464c47620@lwfinger.net> (sfid-20170118_173819_059159_ACD66C7A)
+Date: Wed, 18 Jan 2017 10:38:01 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1485765958-26802-1-git-send-email-c_traja@qti.qualcomm.com>
+In-Reply-To: <20170118144936.91B3E6080C@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 02:15:58PM +0530, c_traja@qti.qualcomm.com wrote:
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> 
-> Rx filter reset and the dynamic tx switch mode (EXT_RESOURCE_CFG)
-> configuration are causing the following errors when UTF firmware
-> is loaded to the target.
-> 
-> Error message 1:
-> [ 598.015629] ath10k_pci 0001:01:00.0: failed to ping firmware: -110
-> [ 598.020828] ath10k_pci 0001:01:00.0: failed to reset rx filter: -110
-> [ 598.141556] ath10k_pci 0001:01:00.0: failed to start core (testmode): -110
-> 
-> Error message 2:
-> [ 668.615839] ath10k_ahb a000000.wifi: failed to send ext resource cfg command : -95
-> [ 668.618902] ath10k_ahb a000000.wifi: failed to start core (testmode): -95
-> 
-> Avoiding these configurations while bringing the target in
-> testmode is solving the problem.
-> 
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> ---
-> v2:
->    *Added stable@vger.kernel.org in cc list
+On 01/18/2017 08:49 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> The previous commit changes the debug system to use a mask to select
+>> which components are to be debugged. Now, we add the necessary code
+>> to change the mask from sysfs.
+>>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Ping-Ke Shih <pkshih@realtek.com>
+>
+> There's already a generic sysfs interface to change module parameters in
+> /sys/module/<driver>/parameters, drivers should not have a private interface for
+> that.
 
+Kalle,
 
-<formletter>
+I was not aware of that part of sysfs. I will respin the patch as well as remove 
+the old code that set the debug level.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
+Thanks,
 
-</formletter>
+Larry
