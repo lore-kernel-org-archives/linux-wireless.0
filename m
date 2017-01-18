@@ -1,189 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36134 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751445AbdAWWEF (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:33288 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752458AbdARJ7v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:04:05 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Johannes Berg <johannes.berg@intel.com>
-Date: Tue, 24 Jan 2017 00:03:30 +0200
-Message-Id: <20170123220350.25305-6-luca@coelho.fi> (sfid-20170123_230419_911598_3D48B492)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 05/25] iwlwifi: allow memory debug TLV to specify the memory type
+        Wed, 18 Jan 2017 04:59:51 -0500
+Received: by mail-ot0-f196.google.com with SMTP id f9so715625otd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 01:59:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <b2c7673d-ef13-f6ee-27be-54bf73221352@broadcom.com>
+References: <20170117192325.14528-1-zajec5@gmail.com> <b2c7673d-ef13-f6ee-27be-54bf73221352@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 18 Jan 2017 10:51:01 +0100
+Message-ID: <CACna6rw5wtw8mMTddKC-yncw-9UABUFija=hud8Q1tWPoCgaTQ@mail.gmail.com> (sfid-20170118_105959_783381_A977EE34)
+Subject: Re: [PATCH 1/2] brcmfmac: rename brcmf_bus_start function to brcmf_attach_phase2
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 18 January 2017 at 10:25, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 17-1-2017 20:23, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> This change intends to make init/attach process easier to follow.
+>>
+>> What driver were doing in brcmf_bus_start wasn't bus specific at all and
+>> function brcmf_bus_stop wasn't undoing things done there. It seems
+>> brcmf_detach was actually undoing things done in both: brcmf_attach and
+>> brcmf_bus_start.
+>>
+>> To me it makes more sense to call these two function in a similar way as
+>> they both handle some part of attaching process. It also makes
+>> brcmf_detach more meaningful.
+>
+> To me this is all bike-shedding and I have two options 1) what's in a
+> name and let it pass, or 2) explain the naming. Let's try option 2). It
+> seems your expectation was different because of the name
+> brcmf_*bus*_start(). The function brcmf_attach() is called by
+> bus-specific code, ie. sdio, pcie, or usb, to instantiate the common
+> driver structures and essential common facilities, eg. debugfs, and
+> brcmf_bus_start() is called by bus-specific code when everything is
+> ready for use. For PCIe there is nothing between those calls but for
+> SDIO there are several steps before the party can start, hence the name.
 
-Due to some new features and changes, the firmware file will now
-specify what type of memory to dump, in upper 8 bits of the type
-field of the TLV. Parse it (types we don't understand are errors)
-and teach the code to dump periphery memory.
+Sorry you find this cleanup try this way. If you still have some
+patience for this /silly/ stuff, I've one more question.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 12 +++++
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 15 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c  | 65 +++++++++++++++++++-----
- 3 files changed, 79 insertions(+), 13 deletions(-)
+So as you noticed (and confirmed my note) both: brcmf_attach and
+brcmf_bus_start are called from bus specific code. They initialize
+some *common* stuff. How did you come with the "brcmf_bus_start" name
+then?
+1) It's called after bus got initialized (started?)
+2) It's initializes common stuff
+3) It doesn't execute bus specific code
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 431581229948..a6719d67ac00 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1020,6 +1020,18 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 			IWL_DEBUG_INFO(drv, "Found debug memory segment: %u\n",
- 				       dbg_mem->data_type);
- 
-+			switch (type & FW_DBG_MEM_TYPE_MASK) {
-+			case FW_DBG_MEM_TYPE_REGULAR:
-+			case FW_DBG_MEM_TYPE_PRPH:
-+				/* we know how to handle these */
-+				break;
-+			default:
-+				IWL_ERR(drv,
-+					"Found debug memory segment with invalid type: 0x%x\n",
-+					type);
-+				return -EINVAL;
-+			}
-+
- 			size = sizeof(*pieces->dbg_mem_tlv) *
- 			       (pieces->n_dbg_mem_tlv + 1);
- 			n = krealloc(pieces->dbg_mem_tlv, size, GFP_KERNEL);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 11245b9117c7..c84207576587 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -489,9 +489,22 @@ enum iwl_fw_dbg_monitor_mode {
- };
- 
- /**
-+ * enum iwl_fw_mem_seg_type - memory segment type
-+ * @FW_DBG_MEM_TYPE_MASK: mask for the type indication
-+ * @FW_DBG_MEM_TYPE_REGULAR: regular memory
-+ * @FW_DBG_MEM_TYPE_PRPH: periphery memory (requires special reading)
-+ */
-+enum iwl_fw_mem_seg_type {
-+	FW_DBG_MEM_TYPE_MASK	= 0xff000000,
-+	FW_DBG_MEM_TYPE_REGULAR	= 0x00000000,
-+	FW_DBG_MEM_TYPE_PRPH	= 0x01000000,
-+};
-+
-+/**
-  * struct iwl_fw_dbg_mem_seg_tlv - configures the debug data memory segments
-  *
-- * @data_type: the memory segment type to record
-+ * @data_type: the memory segment type to record, see &enum iwl_fw_mem_seg_type
-+ *	for what we care about
-  * @ofs: the memory segment offset
-  * @len: the memory segment length, in bytes
-  *
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 7df3c3f4749e..10f2c6e4056a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -406,6 +406,30 @@ static const struct iwl_prph_range iwl_prph_dump_addr_9000[] = {
- 	{ .start = 0x00a02400, .end = 0x00a02758 },
- };
- 
-+static void _iwl_read_prph_block(struct iwl_trans *trans, u32 start,
-+				 u32 len_bytes, __le32 *data)
-+{
-+	u32 i;
-+
-+	for (i = 0; i < len_bytes / 4; i++)
-+		*data++ = cpu_to_le32(iwl_read_prph_no_grab(trans, start + i));
-+}
-+
-+static bool iwl_read_prph_block(struct iwl_trans *trans, u32 start,
-+				u32 len_bytes, __le32 *data)
-+{
-+	unsigned long flags;
-+	bool success = false;
-+
-+	if (iwl_trans_grab_nic_access(trans, &flags)) {
-+		success = true;
-+		_iwl_read_prph_block(trans, start, len_bytes, data);
-+		iwl_trans_release_nic_access(trans, &flags);
-+	}
-+
-+	return success;
-+}
-+
- static void iwl_dump_prph(struct iwl_trans *trans,
- 			  struct iwl_fw_error_dump_data **data,
- 			  const struct iwl_prph_range *iwl_prph_dump_addr,
-@@ -422,21 +446,18 @@ static void iwl_dump_prph(struct iwl_trans *trans,
- 		/* The range includes both boundaries */
- 		int num_bytes_in_chunk = iwl_prph_dump_addr[i].end -
- 			 iwl_prph_dump_addr[i].start + 4;
--		int reg;
--		__le32 *val;
- 
- 		(*data)->type = cpu_to_le32(IWL_FW_ERROR_DUMP_PRPH);
- 		(*data)->len = cpu_to_le32(sizeof(*prph) +
- 					num_bytes_in_chunk);
- 		prph = (void *)(*data)->data;
- 		prph->prph_start = cpu_to_le32(iwl_prph_dump_addr[i].start);
--		val = (void *)prph->data;
- 
--		for (reg = iwl_prph_dump_addr[i].start;
--		     reg <= iwl_prph_dump_addr[i].end;
--		     reg += 4)
--			*val++ = cpu_to_le32(iwl_read_prph_no_grab(trans,
--								   reg));
-+		_iwl_read_prph_block(trans, iwl_prph_dump_addr[i].start,
-+				     /* our range is inclusive, hence + 4 */
-+				     iwl_prph_dump_addr[i].end -
-+				     iwl_prph_dump_addr[i].start + 4,
-+				     (void *)prph->data);
- 
- 		*data = iwl_fw_error_next_data(*data);
- 	}
-@@ -716,16 +737,36 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 	for (i = 0; i < mvm->fw->n_dbg_mem_tlv; i++) {
- 		u32 len = le32_to_cpu(fw_dbg_mem[i].len);
- 		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
-+		bool success;
- 
- 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
- 		dump_data->len = cpu_to_le32(len + sizeof(*dump_mem));
- 		dump_mem = (void *)dump_data->data;
- 		dump_mem->type = fw_dbg_mem[i].data_type;
- 		dump_mem->offset = cpu_to_le32(ofs);
--		iwl_trans_read_mem_bytes(mvm->trans, ofs,
--					 dump_mem->data,
--					 len);
--		dump_data = iwl_fw_error_next_data(dump_data);
-+
-+		switch (dump_mem->type & cpu_to_le32(FW_DBG_MEM_TYPE_MASK)) {
-+		case cpu_to_le32(FW_DBG_MEM_TYPE_REGULAR):
-+			iwl_trans_read_mem_bytes(mvm->trans, ofs,
-+						 dump_mem->data,
-+						 len);
-+			success = true;
-+			break;
-+		case cpu_to_le32(FW_DBG_MEM_TYPE_PRPH):
-+			success = iwl_read_prph_block(mvm->trans, ofs, len,
-+						      (void *)dump_mem->data);
-+			break;
-+		default:
-+			/*
-+			 * shouldn't get here, we ignored this kind
-+			 * of TLV earlier during the TLV parsing?!
-+			 */
-+			WARN_ON(1);
-+			success = false;
-+		}
-+
-+		if (success)
-+			dump_data = iwl_fw_error_next_data(dump_data);
- 	}
- 
- 	if (smem_len) {
--- 
-2.11.0
+My point is "brcmf_bus_start" name doesn't seem to make much sense. If
+you have any better suggestion than "brcmf_bus_start" and
+"brcmf_attach_phase2", I'll be happy to use it. What could it be?
+brcmf_attach_after_bus_started would be more accurate but too long.
+
+--=20
+Rafa=C5=82
