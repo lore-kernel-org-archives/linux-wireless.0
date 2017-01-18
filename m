@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35823 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750903AbdAXNgY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751157AbdARIDv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 08:36:24 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/2] mwifiex: use pci_dma_sync_single* APIs
-Date: Tue, 24 Jan 2017 19:05:45 +0530
-Message-ID: <1485264945-1248-2-git-send-email-akarwar@marvell.com> (sfid-20170124_143626_617942_520D3D91)
-In-Reply-To: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
-References: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
+        Wed, 18 Jan 2017 03:03:51 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH] brcmfmac: use wiphy_read_of_freq_limits to respect limits from DT
+References: <20170117223550.12114-1-zajec5@gmail.com>
+Date: Wed, 18 Jan 2017 10:03:45 +0200
+In-Reply-To: <20170117223550.12114-1-zajec5@gmail.com> (=?utf-8?Q?=22Rafa?=
+ =?utf-8?Q?=C5=82_Mi=C5=82ecki=22's?=
+        message of "Tue, 17 Jan 2017 23:35:50 +0100")
+Message-ID: <87wpdsn6am.fsf@kamboji.qca.qualcomm.com> (sfid-20170118_090354_477688_FE4FD42F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some platforms, driver is unable read sleep cookie signature even
-if firmware has written it through DMA. The problem is fixed by using
-pci_dma_sync_single* APIs while reading DMA buffer shared with firmware.
+Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>
+> This new helper reads extra frequency limits specified in DT and
+> disables unavailable chanels. This is useful for devices (like home
+> routers) with chipsets limited e.g. by board design.
+>
+> In order to respect info read from DT we simply need to check for
+> IEEE80211_CHAN_DISABLED bit when constructing channel info.
+>
+> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+> ---
+> This patch requires e691ac2f75b6 ("cfg80211: support ieee80211-freq-limit=
+ DT
+> property") that is currently in net-next.
+>
+> Kalle: feel free to postpone this until merging net-next one day.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 3f4ca28..a0d9180 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -439,9 +439,14 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- 	struct pcie_service_card *card = adapter->card;
- 	u8 *buffer;
- 	u32 sleep_cookie, count;
-+	struct sk_buff *cmdrsp = card->cmdrsp_buf;
- 
- 	for (count = 0; count < max_delay_loop_cnt; count++) {
--		buffer = card->cmdrsp_buf->data;
-+		pci_dma_sync_single_for_cpu(card->dev,
-+					    MWIFIEX_SKB_DMA_ADDR(cmdrsp),
-+					    sizeof(sleep_cookie),
-+					    PCI_DMA_FROMDEVICE);
-+		buffer = cmdrsp->data;
- 		sleep_cookie = READ_ONCE(*(u32 *)buffer);
- 
- 		if (sleep_cookie == MWIFIEX_DEF_SLEEP_COOKIE) {
-@@ -449,6 +454,10 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
- 				    "sleep cookie found at count %d\n", count);
- 			break;
- 		}
-+		pci_dma_sync_single_for_device(card->dev,
-+					       MWIFIEX_SKB_DMA_ADDR(cmdrsp),
-+					       sizeof(sleep_cookie),
-+					       PCI_DMA_FROMDEVICE);
- 		usleep_range(20, 30);
- 	}
- 
--- 
-1.9.1
+Thanks for documenting the dependency perfectly, makes my work a lot
+easier. I'm expecting to merge net-next after my next pull request, most
+likely early next week.
+
+--=20
+Kalle Valo
