@@ -1,126 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:57511 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751071AbdAaJmk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 04:42:40 -0500
-Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k
- is 20% worse than net80211/madwifi
-To: Klaus Kinski <jpo234@outlook.de>
-References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
- <87lgtsjz6o.fsf@toke.dk>
- <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
- <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
- <87o9yo2v0s.fsf@toke.dk> <d23a5b33-9ec5-a3c3-81ed-91d8e9abe67a@neratec.com>
- <HE1PR0701MB18031C6DF4DF46865EBF9E87FC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
- <f5adadba-2764-a7cc-c661-7061545341a7@neratec.com>
- <HE1PR0701MB1803911A9D8B8CF7813C6EACFC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
-Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        Dave Taht <dave.taht@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
-Message-ID: <905917fe-f8a8-9ec7-5f3e-03c7b65891dd@neratec.com> (sfid-20170131_104341_882715_E8D50E3F)
-Date: Tue, 31 Jan 2017 10:42:37 +0100
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:33577 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752228AbdARMqe (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 07:46:34 -0500
+Received: by mail-lf0-f53.google.com with SMTP id k86so10489468lfi.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 04:46:33 -0800 (PST)
+Subject: Re: [PATCH v3] brcmfmac: fix incorrect event channel deduction
+To: gavinli@thegavinli.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com
+References: <20170117232405.7672-1-gavinli@thegavinli.com>
+Cc: stable@vger.kernel.org, Gavin Li <git@thegavinli.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bab86bb5-7815-e5ea-053d-ed6b18af6677@broadcom.com> (sfid-20170118_134638_282317_29B8BEF6)
+Date: Wed, 18 Jan 2017 13:38:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <HE1PR0701MB1803911A9D8B8CF7813C6EACFC4A0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170117232405.7672-1-gavinli@thegavinli.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Then you need to use CONFIG debug flag. WMM parameters are not set when
+On 18-1-2017 0:24, gavinli@thegavinli.com wrote:
+> From: Gavin Li <git@thegavinli.com>
+> 
+> brcmf_sdio_fromevntchan() was being called on the the data frame
+> rather than the software header, causing some frames to be
+> mischaracterized as on the event channel rather than the data channel.
+> 
+> This fixes a major performance regression (due to dropped packets).
+> 
+> Fixes: c56caa9db8ab ("brcmfmac: screening firmware event packet")
 
-MESH compile flag is enabled. At least I have had once such problem.
+Actually would prefer Franky to chime in as well as he made the change
+and confirm correctness. It was introduced a couple of kernel versions
+back and only a performance regression so seems ok to let this go in
+4.11 for now and backport as needed for stable later.
 
-Wojtek
-
-PS It would be actually nice to have sth like madwifi's wlanconfig ... 
-list wme to
-
-print QoS settings in current systems.
-
-
-On 31/01/17 10:38, Klaus Kinski wrote:
-> I'm mostly interested in Ad-Hoc mode, e.g. IBSS.
->
-> Wojciech Dubowik <wojciech.dubowik@neratec.com 
-> <mailto:wojciech.dubowik@neratec.com>> schrieb am Di., 31. Jan. 2017 
-> um 10:35 Uhr:
->
->     That's tricky but look at
->     http://w1.fi/cgit/hostap/tree/hostapd/hostapd.conf
->     <http://w1.fi/cgit/hostap/tree/hostapd/hostapd.conf>
->
->     tx_queue... are for AP and wmm_... for STA (over beacons).
->
->     These should be default parameters. You can also enable CONFIG
->     debug flag
->
->     for ath9k and it prints wme parameters when it starts.
->
->     Wojtek
->
->
->     On 31/01/17 10:18, Klaus Kinski wrote:
->>     It seems that bursting can be controlled over nl80211 (see ,
->>     specifically with NL80211_ATTR_WIPHY_TXQ_PARAMS. Unfortunately
->>     this seems not to be exposed in iw. It's an attribute of
->>     NL80211_CMD_SET_WIPHY.
->>     Is there another tool that exposes txq params? If not, has
->>     anybody thought about exposing it in iw? I might take a stab at it...
->>
->>     Regards
->>       Joerg
->>
->>     Wojciech Dubowik <wojciech.dubowik@neratec.com
->>     <mailto:wojciech.dubowik@neratec.com>> schrieb am Di., 31. Jan.
->>     2017 um 08:55 Uhr:
->>
->>         Madwifi has default best effort queue "tuned" for throughout
->>
->>         and its parameters are different from mac80211 defaults when
->>
->>         qos  (WME) is disabled.
->>
->>         You would have to dump qos settings for both systems before
->>
->>         comparing them. I guess the easiest way is to make sure QoS
->>
->>         is enabled and send video type of packets with iperf ... -S 0xa0
->>
->>         Wojtek
->>
->>
->>         On 30/01/17 20:43, Toke Høiland-Jørgensen wrote:
->>         > Klaus Kinski <jpo234@outlook.de <mailto:jpo234@outlook.de>>
->>         writes:
->>         >
->>         >> The captures I used to create the statistics are here:
->>         >> https://drive.google.com/open?id=0ByFGz3ZH6JcYMGp0a05lYzBPNzA
->>         >>
->>         >> An obvious difference is, that Madwifi sends 5 packets in
->>         a row
->>         >> without waiting for an ACK whereas ath9k/mac80211 always
->>         seems to wait
->>         >> for an ACK. This seems to point to the "net80211
->>         aggressive mode
->>         >> theory" https://wiki.freebsd.org/WifiAggressiveMode
->>         <https://wiki.freebsd.org/WifiAggressiveMode>, IMHO.
->>         > I'm not too familiar with that part of the stack, but that
->>         seems
->>         > reasonable, yeah. AFAIK the "aggresive mode" is a
->>         pre-802.11n feature,
->>         > though, which is why you won't see that in ath9k. In
->>         802.11n this kind
->>         > of bursting was replaced by aggregation, which you're not
->>         getting any of
->>         > since you're running in 802.11a mode, obviously.
->>         >
->>         > The lack of bursting will translate to slightly lower
->>         throughput, which
->>         > will be why you see fewer packets transmitted by ath9k. Of
->>         course, if
->>         > your receiver supported aggregation, the numbers would look
->>         dramatically
->>         > better in ath9k's favour... ;)
->>         >
->>         > -Toke
->>
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Gavin Li <git@thegavinli.com>
+> Cc: <stable@vger.kernel.org> [4.7+]
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index dfb0658713d9..d2219885071f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
+>  					   pfirst->len, pfirst->next,
+>  					   pfirst->prev);
+>  			skb_unlink(pfirst, &bus->glom);
+> -			if (brcmf_sdio_fromevntchan(pfirst->data))
+> +			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
+>  				brcmf_rx_event(bus->sdiodev->dev, pfirst);
+>  			else
+>  				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
+> 
