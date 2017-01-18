@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53861 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28274 "EHLO
         wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750817AbdALK5a (ORCPT
+        with ESMTP id S1751984AbdARN4a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 05:57:30 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 18 Jan 2017 08:56:30 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+CC: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "johannes.berg@intel.com" <johannes.berg@intel.com>,
+        "hofrat@osadl.org" <hofrat@osadl.org>,
+        "xypron.glpk@gmx.de" <xypron.glpk@gmx.de>
+Subject: Re: [PATCH 1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
+Date: Wed, 18 Jan 2017 13:56:24 +0000
+Message-ID: <87o9z4mpyw.fsf@kamboji.qca.qualcomm.com> (sfid-20170118_145634_912026_F4096574)
+References: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com>
+        <eeeaa63e-b179-be38-afbb-03c3bf9a0158@redpinesignals.com>
+        <87eg0brv2f.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87eg0brv2f.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Tue, 10 Jan 2017 13:52:24 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: ath5k: drop bogus warning on drv_set_key with unsupported cipher
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161227111609.11113-1-nbd@nbd.name>
-References: <20161227111609.11113-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
-Message-ID: <c74b45b76a9d4e6696fb58a55580f86c@euamsexm01a.eu.qualcomm.com> (sfid-20170112_115734_701188_25C3451B)
-Date: Thu, 12 Jan 2017 11:56:55 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
-> Simply return -EOPNOTSUPP instead.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-Patch applied to ath-next branch of ath.git, thanks.
+> Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com> writes:
+>
+>> Can you please review these patches. You slipped through these patches =
+=20
+>> and reviewing resent patches. Is there a specific reason?=20
+>
+> As you are new, your patches just take more time to review than others
+> and haven't had a good slot to look at those yet.
 
-a70e1d6fd6b5 ath5k: drop bogus warning on drv_set_key with unsupported cipher
+Prameela, I noticed that patchwork seems to drop your emails for some
+reason. For example, in this patch I do not see your mail above, only my
+reply:
 
--- 
-https://patchwork.kernel.org/patch/9489183/
+https://patchwork.kernel.org/patch/9465833/
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+That might create problems because I usually check the discussion from
+patchwork, not from my own mail archives. Keep this in mind then
+commenting.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+--=20
+Kalle Valo=
