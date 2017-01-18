@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44250 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44310 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754040AbdA3TKX (ORCPT
+        with ESMTP id S1751607AbdAROth (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 14:10:23 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, Jurij Smakov <jurij@wooyd.org>,
-        Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8192ce: Fix loading of incorrect firmware
-References: <20170130174057.7681-1-Larry.Finger@lwfinger.net>
-Date: Mon, 30 Jan 2017 21:10:14 +0200
-In-Reply-To: <20170130174057.7681-1-Larry.Finger@lwfinger.net> (Larry Finger's
-        message of "Mon, 30 Jan 2017 11:40:57 -0600")
-Message-ID: <87k29cqs89.fsf@kamboji.qca.qualcomm.com> (sfid-20170130_201041_515850_8F75A465)
+        Wed, 18 Jan 2017 09:49:37 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [3/3] rtlwifi: Enable debug mask to be set from sysfs
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170101010706.13234-4-Larry.Finger@lwfinger.net>
+References: <20170101010706.13234-4-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20170118144936.91B3E6080C@smtp.codeaurora.org> (sfid-20170118_154939_807479_D2EFE43B)
+Date: Wed, 18 Jan 2017 14:49:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-
-> In commit cf4747d7535a ("rtlwifi: Fix regression caused by commit
-> d86e64768859, an error in the edit results in the wrong firmware
-> being loaded for some models of the RTL8188/8192CE.
->
-> Fixes: cf4747d7535a ("rtlwifi: Fix regression caused by commit d86e64768859")
-> Signed-off-by: Jurij Smakov <jurij@wooyd.org>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The previous commit changes the debug system to use a mask to select
+> which components are to be debugged. Now, we add the necessary code
+> to change the mask from sysfs.
+> 
 > Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-This patch is written by Jurij, right? So then there should be a From
-line in the commit log making him the author. An example here from Luca
-where Sara is the author:
-
-https://patchwork.kernel.org/patch/9544763/
-
-> Cc: Stable <stable@vger.kernel.org>
-
-You could add "# 4.9" here to make Greg's life easier. And no need to CC
-stable in the email headers, having it in the commit log is enough.
-
-> Kalle,
->
-> This patch should be pushed upstream as soon as possible. Note that it
-> does not cause a kernel panic. It does, however, reduce the reliability
-> of the wireless connection.
-
-Yeah, this looks like to be valid for 4.10 still. But please mention in
-the commit log about the bug symptoms (reliability problems etc).
+There's already a generic sysfs interface to change module parameters in
+/sys/module/<driver>/parameters, drivers should not have a private interface for
+that.
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9492849/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
