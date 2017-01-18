@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51138 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752661AbdAEQfJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 11:35:09 -0500
+Received: from smtp.codeaurora.org ([198.145.29.96]:41346 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751649AbdAROnr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 09:43:47 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1483617089.4394.13.camel@sipsolutions.net>
-References: <20170104175832.25996-1-zajec5@gmail.com> <CAL_JsqLg5YkC-YUHg6mQ35nmGaG7SC33VJB++fgtZsu1fRV-7Q@mail.gmail.com>
- <1483617089.4394.13.camel@sipsolutions.net>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 5 Jan 2017 10:34:42 -0600
-Message-ID: <CAL_JsqKYpTZFRJpPR1V9MmA-JW5ntoKzbkjwnYBp9HMWLObG3A@mail.gmail.com> (sfid-20170105_173513_116968_AE3BBBDA)
-Subject: Re: [PATCH V6 1/3] dt-bindings: document common IEEE 802.11 frequency
- limit property
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/1] net: wireless: marvell: fix improper return value
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1480760857-4549-1-git-send-email-bianpan2016@163.com>
+References: <1480760857-4549-1-git-send-email-bianpan2016@163.com>
+To: Pan Bian <bianpan2016@163.com>
+Cc: Andreas Kemnade <andreas@kemnade.info>,
+        Johannes Berg <johannes.berg@intel.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Pan Bian <bianpan2016@163.com>
+Message-Id: <20170118144346.8E91760818@smtp.codeaurora.org> (sfid-20170118_154403_555612_FA87AFA7)
+Date: Wed, 18 Jan 2017 14:43:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 5, 2017 at 5:51 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> Acked-by: Rob Herring <robh@kernel.org>
->
-> Do I take that to mean that we'll merge it through the subsystem tree,
-> and not go through some common DT tree?
+Pan Bian <bianpan2016@163.com> wrote:
+> Function lbs_cmd_802_11_sleep_params() always return 0, even if the call
+> to lbs_cmd_with_response() fails. In this case, the parameter @sp will
+> keep uninitialized. Because the return value is 0, its caller (say
+> lbs_sleepparams_read()) will not detect the error, and will copy the
+> uninitialized stack memory to user sapce, resulting in stack information
+> leak. To avoid the bug, this patch returns variable ret (which takes
+> the return value of lbs_cmd_with_response()) instead of 0.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188451
+> 
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
 
-Yes, that's generally the case when bindings are in a series with
-driver changes.
+The prefix should be "libertas:", I'll fix that.
 
-Rob
+-- 
+https://patchwork.kernel.org/patch/9459597/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
