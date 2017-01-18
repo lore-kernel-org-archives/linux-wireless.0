@@ -1,47 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55386 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752529AbdASMty (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:33030 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752459AbdARV7t (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 07:49:54 -0500
-Content-Type: text/plain; charset="utf-8"
+        Wed, 18 Jan 2017 16:59:49 -0500
+Date: Wed, 18 Jan 2017 15:59:47 -0600
+From: Rob Herring <robh@kernel.org>
+To: Matt Ranostay <matt@ranostay.consulting>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org,
+        tony@atomide.com
+Subject: Re: [PATCH v2 1/2] devicetree: document vmmc-supply and mmc-pwrseq
+ options
+Message-ID: <20170118215947.dhukolmrst5vwroi@rob-hp-laptop> (sfid-20170118_230004_333559_7677CA9A)
+References: <20170113052218.10534-1-matt@ranostay.consulting>
+ <20170113052218.10534-2-matt@ranostay.consulting>
 MIME-Version: 1.0
-Subject: Re: [v2,10/14] rt2x00: rt2800lib: correctly set HT20/HT40 filter
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170116030820.GA32255@makrotopia.org>
-References: <20170116030820.GA32255@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Message-Id: <20170119124947.9086460960@smtp.codeaurora.org> (sfid-20170119_134958_654074_4FC710D3)
-Date: Thu, 19 Jan 2017 12:49:47 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170113052218.10534-2-matt@ranostay.consulting>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> From: Serge Vasilugin <vasilugin@yandex.ru>
-> 
-> Simple patch to correct HT20/HT40 filter setting.
-> Tested with Rt3290, Rt3352 and Rt5350
-> 
-> Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On Thu, Jan 12, 2017 at 09:22:17PM -0800, Matt Ranostay wrote:
+> Cc: devicetree@vger.kernel.org
+> Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
+> ---
+>  Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
 
-3 patches applied to wireless-drivers-next.git, thanks.
-
-e974f3acafe3 rt2x00: rt2800lib: correctly set HT20/HT40 filter
-b8c2db58d5a1 rt2x00: rt2800lib: fix rf id for RT3352
-dab38e7d251d rt2x00: rt2800lib: support for for RT3352 with external PA
-
--- 
-https://patchwork.kernel.org/patch/9518017/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Acked-by: Rob Herring <robh@kernel.org>
