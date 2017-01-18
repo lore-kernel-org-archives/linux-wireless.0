@@ -1,52 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:33035 "EHLO
-        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932771AbdA0MiQ (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35788 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751928AbdARKt0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:38:16 -0500
-Received: by mail-pf0-f179.google.com with SMTP id y143so73320544pfb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 04:38:16 -0800 (PST)
-Subject: Re: [PATCH 1/5] nl80211: fix validation of scheduled scan info for
- wowlan netdetect
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
- <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com>
- <1485520288.5851.8.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <abafc8a5-1138-7c4f-66a3-d606700440cb@broadcom.com> (sfid-20170127_133830_836347_70A79917)
-Date: Fri, 27 Jan 2017 13:38:03 +0100
+        Wed, 18 Jan 2017 05:49:26 -0500
+Received: by mail-lf0-f66.google.com with SMTP id v186so1176817lfa.2
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 02:49:25 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH V2 4/4] brcmfmac: rename brcmf_bus_start function to brcmf_bus_started
+Date: Wed, 18 Jan 2017 11:48:54 +0100
+Message-Id: <20170118104854.32231-4-zajec5@gmail.com> (sfid-20170118_114928_855448_9C0D1688)
+In-Reply-To: <20170118104854.32231-1-zajec5@gmail.com>
+References: <20170118104854.32231-1-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1485520288.5851.8.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-1-2017 13:31, Johannes Berg wrote:
-> On Fri, 2017-01-27 at 12:09 +0000, Arend van Spriel wrote:
->> For wowlan netdetect a separate limit is defined for the number of
->> matchsets. Currently, this limit is ignored and the regular limit
->> for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
->> used for the net-detect case as well.
->>
-> 
-> But .. this patch shouldn't be first in the series, should it? That
-> leaves brcmfmac broken inbetween.
-> 
-> Also, since you fix the brcmfmac value in patch 2, and it's the same in
-> both cases, I don't really see a dependency of anything *on* the
-> nl80211 patch? The brcmfmac changes can go in without it entirely, and
-> have no effect whatsoever, no?
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Patch 4 depends on patch 2. Patch 1 and 2 were a single patch, but I
-decided to separate them. So yeah, now patch 1 actually depends on patch
-2 in order not to break brcmfmac.
+This intends to make init/attach process slightly easier to follow.
 
-> IOW, I think Kalle can merge 2-5, and I can then pick up this one when
-> they hit net-next and I've synchronized, no?
+What driver was doing in brcmf_bus_start wasn't bus specific at all and
+function brcmf_bus_stop wasn't undoing things done there. This function
+is supposed to be called by bus specific code when the bus is ready.
 
-Agree.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+V2: Use "brcmf_bus_started" name instead of "brcmf_attach_phase2", don't rename
+    brcmf_attach.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h    | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c   | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 2 +-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c    | 2 +-
+ 6 files changed, 6 insertions(+), 6 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index b5bb971..76693df 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -238,7 +238,7 @@ void brcmf_txcomplete(struct device *dev, struct sk_buff *txp, bool success);
+ /* Configure the "global" bus state used by upper layers */
+ void brcmf_bus_change_state(struct brcmf_bus *bus, enum brcmf_bus_state state);
+ 
+-int brcmf_bus_start(struct device *dev);
++int brcmf_bus_started(struct device *dev);
+ s32 brcmf_iovar_data_set(struct device *dev, char *name, void *data, u32 len);
+ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 3e15d64..5fb4a14 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -74,7 +74,7 @@ module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
+ MODULE_PARM_DESC(roamoff, "Do not use internal roaming engine");
+ 
+ #ifdef DEBUG
+-/* always succeed brcmf_bus_start() */
++/* always succeed brcmf_bus_started() */
+ static int brcmf_ignore_probe_fail;
+ module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
+ MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 372d2c4..b73a55b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -966,7 +966,7 @@ static int brcmf_revinfo_read(struct seq_file *s, void *data)
+ 	return 0;
+ }
+ 
+-int brcmf_bus_start(struct device *dev)
++int brcmf_bus_started(struct device *dev)
+ {
+ 	int ret = -1;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 048027f..19db8f2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -1572,7 +1572,7 @@ static int brcmf_pcie_attach_bus(struct brcmf_pciedev_info *devinfo)
+ 	if (ret) {
+ 		brcmf_err("brcmf_attach failed\n");
+ 	} else {
+-		ret = brcmf_bus_start(&devinfo->pdev->dev);
++		ret = brcmf_bus_started(&devinfo->pdev->dev);
+ 		if (ret)
+ 			brcmf_err("dongle is not responding\n");
+ 	}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index dfb0658..5298582 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4065,7 +4065,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
+ 
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+-	err = brcmf_bus_start(dev);
++	err = brcmf_bus_started(dev);
+ 	if (err != 0) {
+ 		brcmf_err("dongle is not responding\n");
+ 		goto fail;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 2f978a3..d93ebbd 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1148,7 +1148,7 @@ static int brcmf_usb_bus_setup(struct brcmf_usbdev_info *devinfo)
+ 	if (ret)
+ 		goto fail;
+ 
+-	ret = brcmf_bus_start(devinfo->dev);
++	ret = brcmf_bus_started(devinfo->dev);
+ 	if (ret)
+ 		goto fail;
+ 
+-- 
+2.10.1
