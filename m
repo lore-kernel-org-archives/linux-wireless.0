@@ -1,77 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36294 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751546AbdAWWSx (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:33189 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751566AbdARI4d (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:18:53 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Kirtika Ruchandani <kirtika.ruchandani@gmail.com>,
-        Kirtika Ruchandani <kirtika@google.com>,
-        Sara Sharon <sara.sharon@intel.com>,
-        Liad Kaufman <liad.kaufman@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Date: Tue, 24 Jan 2017 00:03:43 +0200
-Message-Id: <20170123220350.25305-19-luca@coelho.fi> (sfid-20170123_231856_241764_A38E9FF1)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
+        Wed, 18 Jan 2017 03:56:33 -0500
+Received: by mail-pg0-f43.google.com with SMTP id 204so3077487pge.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 00:56:32 -0800 (PST)
+Subject: Re: [PATCH 1/2] brcmfmac: drop unneeded function declarations from
+ headers
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170117163419.1184-1-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <69bf3e19-67a3-c5ad-aca4-62ae6b475210@broadcom.com> (sfid-20170118_095636_800296_D0371E47)
+Date: Wed, 18 Jan 2017 09:56:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Subject: [PATCH 18/25] iwlwifi: pcie: trans: Remove unused 'shift_param'
+In-Reply-To: <20170117163419.1184-1-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+On 17-1-2017 17:34, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> Functions brcmf_c_prec_enq and brcmf_sdio_init don't exist so we
+> really don't need their declarations. Function brcmf_parse_tlvs is used
+> in cfg80211.c only so make it static and drop from header as well.
 
-shift_param is defined and set in iwl_pcie_load_cpu_sections but not
-used. Fix this to avoid -Wunused-but-set-variable warning.
+brcmf_c_prec_enq has been long gone (3.18 or so). Thanks for the cleanup.
 
-The code using it turned into dead code with commit dcab8ecd5617
-("iwlwifi: mvm: support ucode load for family_8000 B0 only") which
-added a separate function iwl_pcie_load_given_ucode_8000 (then 8000b)
-for IWL_DEVICE_FAMILY_8000. Commit 76f8c0e17edc ("iwlwifi: pcie:
-remove dead code") removed the dead code but left shift_param as is.
-
-iwlwifi/pcie/trans.c: In function ‘iwl_pcie_load_cpu_sections’:
-iwlwifi/pcie/trans.c:871:6: warning: variable ‘shift_param’ set but not used [-Wunused-but-set-variable]
-
-Fixes: dcab8ecd5617 ("iwlwifi: mvm: support ucode load for family_8000 B0 only")
-Fixes: 76f8c0e17edc ("iwlwifi: pcie: remove dead code")
-Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
-Cc: Sara Sharon <sara.sharon@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Liad Kaufman <liad.kaufman@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-[removed some unnecessary braces]
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index bf0ecdcf7402..16790db650c1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -868,17 +868,13 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
- 				      int cpu,
- 				      int *first_ucode_section)
- {
--	int shift_param;
- 	int i, ret = 0;
- 	u32 last_read_idx = 0;
- 
--	if (cpu == 1) {
--		shift_param = 0;
-+	if (cpu == 1)
- 		*first_ucode_section = 0;
--	} else {
--		shift_param = 16;
-+	else
- 		(*first_ucode_section)++;
--	}
- 
- 	for (i = *first_ucode_section; i < image->num_sec; i++) {
- 		last_read_idx = i;
--- 
-2.11.0
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h      | 4 ----
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 2 --
+>  3 files changed, 1 insertion(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> index e21f760..b5bb971 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+> @@ -218,9 +218,6 @@ int brcmf_bus_get_memdump(struct brcmf_bus *bus, void *data, size_t len)
+>   * interface functions from common layer
+>   */
+>  
+> -bool brcmf_c_prec_enq(struct device *dev, struct pktq *q, struct sk_buff *pkt,
+> -		      int prec);
+> -
+>  /* Receive frame for delivery to OS.  Callee disposes of rxp. */
+>  void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
+>  /* Receive async event packet from firmware. Callee disposes of rxp. */
+> @@ -247,7 +244,6 @@ void brcmf_bus_add_txhdrlen(struct device *dev, uint len);
+>  
+>  #ifdef CONFIG_BRCMFMAC_SDIO
+>  void brcmf_sdio_exit(void);
+> -void brcmf_sdio_init(void);
+>  void brcmf_sdio_register(void);
+>  #endif
+>  #ifdef CONFIG_BRCMFMAC_USB
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 729bf33..ec1171c 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -326,7 +326,7 @@ u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+>   * triples, returning a pointer to the substring whose first element
+>   * matches tag
+>   */
+> -const struct brcmf_tlv *
+> +static const struct brcmf_tlv *
+>  brcmf_parse_tlvs(const void *buf, int buflen, uint key)
+>  {
+>  	const struct brcmf_tlv *elt = buf;
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+> index 0c9a708..8f19d95 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+> @@ -396,8 +396,6 @@ void brcmf_free_vif(struct brcmf_cfg80211_vif *vif);
+>  s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+>  			  const u8 *vndr_ie_buf, u32 vndr_ie_len);
+>  s32 brcmf_vif_clear_mgmt_ies(struct brcmf_cfg80211_vif *vif);
+> -const struct brcmf_tlv *
+> -brcmf_parse_tlvs(const void *buf, int buflen, uint key);
+>  u16 channel_to_chanspec(struct brcmu_d11inf *d11inf,
+>  			struct ieee80211_channel *ch);
+>  bool brcmf_get_vif_state_any(struct brcmf_cfg80211_info *cfg,
+> 
