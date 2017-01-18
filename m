@@ -1,98 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50186 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750763AbdAEN6q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 08:58:46 -0500
-Message-ID: <1483624722.4394.21.camel@sipsolutions.net> (sfid-20170105_145850_537039_09ECB8FF)
-Subject: Re: [PATCH v9] Add new mac80211 driver mwlwifi.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Lin <dlin@marvell.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Chor Teck Law <ctlaw@marvell.com>,
-        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
-Date: Thu, 05 Jan 2017 14:58:42 +0100
-In-Reply-To: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
-References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:40066 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752100AbdAROiE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 09:38:04 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/5] ath10k: Remove unused 'buf_len' variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <196e46eee00fd3ebb56da1373c36f3dff66f2ae1.1479974100.git.kirtika@chromium.org>
+References: <196e46eee00fd3ebb56da1373c36f3dff66f2ae1.1479974100.git.kirtika@chromium.org>
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, Arnd Bergmann <arnd@arndb.de>,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Raja Mani <rmani@qti.qualcomm.com>,
+        Michal Kazior <michal.kazior@tieto.com>
+Message-Id: <20170118143724.7A5FA6080C@smtp.codeaurora.org> (sfid-20170118_153848_669462_EA9CA9D7)
+Date: Wed, 18 Jan 2017 14:37:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-12-21 at 04:11 +0000, David Lin wrote:
-> This patch provides the mwlwifi driver for Marvell 8863, 8864 and
-> 8897
-> chipsets.
-> This driver was developed as part of the openwrt.org project to
-> support
-> Linksys WRT1900AC and is maintained on https://github.com/kaloz/mwlwi
-> fi.
+Kirtika Ruchandani <kirtika.ruchandani@gmail.com> wrote:
+> Commit 32653cf19554 removed the call to 'skb_trim(skb, buf_len)'
+> in ath10k_wmi_event_mgmt_rx(), leaving the buf_len variable set but
+> unused. Compiling with W=1 gives the following warning, fix it.
+> drivers/net/wireless/ath/ath10k/wmi.c: In function ‘ath10k_wmi_event_mgmt_rx’:
+> drivers/net/wireless/ath/ath10k/wmi.c:2280:6: warning: variable ‘buf_len’ set but not used [-Wunused-but-set-variable]
+> 
+> This is a harmless warning, and is only being fixed to reduce the
+> noise with W=1 in the kernel.
+> 
+> Fixes: 32653cf19554 ("ath10k: implement intermediate event args")
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Signed-off-by: Kirtika Ruchandani <kirtika@chromium.org>
 
-I found some minor things:
+These patches seem to be corrupted:
 
- * using kmalloc/memset instead of kzalloc
- * mwl_fwcmd_get_80m_pri_chnl() could use some arithmetic or at least
-   switch case consolidation - if it shouldn't even go away entirely
-   since mac80211 doesn't really limit you to the primary channel as
-   the spec requires it - so the whole purpose of the function seems a
-   bit questionable
- * wiphy_err(hw->wiphy, "failed execution\n"); seems like a bit too
-   generic (you have that many times - how are you going to tell which
-   happened?)
- * rates = sta->supp_rates[NL80211_BAND_5GHZ] << 5;
-   is a bit questionable - that 5 should probably be defined (also,
-   does that mean you support 1,2, 5.5, 11 and *22MBps*? curious,
-   almost nobody does that afaict)
- * a lot of initializations like
-   struct mwl_vif *mwl_vif;
-   [...]
-   mwl_vif = mwl_dev_get_vif(vif);
+Applying: ath10k: Remove unused 'buf_len' variable
+fatal: corrupt patch at line 13
+error: could not build fake ancestor
+Patch failed at 0001 ath10k: Remove unused 'buf_len' variable
 
-   could be rolled into a single line of code (which you sometimes do,
-   apparently always for "priv" but never for "mwl_vif" or "pcmd"?)
- * "celcius" isn't really spelled that way - and you probably mean
-   "temperature" anyway since Celsius is a unit :)
- * typo: firware
- * a bunch of your IE handling structs seem duplicate with ieee80211.h
- * and partially wrong - something with a vendor OUI can't be RSN
-   (maybe you meant WPA? though it's not quite clear to me why you need
-   this at all!)
- * +#ifdef CONFIG_OF
-   +#include <linux/of.h>
-   +#endif
-   I don't think you have to guard that include ...
- * +#ifdef CONFIG_DEBUG_FS
-   +#include "debugfs.h"
-   +#endif
-   likewise
- * git am also complained about a blank line at EOF
+When resending please also cc ath10k list:
 
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/sources#submitting_patches
 
-The only thing that really seems questionable to me is the whole beacon
-parsing (and apparent rebuilding in firmware?). It's very odd that you
-could do that, with a softmac device where all the authentication and
-association is handled by hostapd anyway, and you can't possibly
-pretend to handle everything hostapd might throw at you - this will
-mean that you'll have features hostapd and every other mac80211
-supports that you will silently drop afaict - which is rather
-unexpected.
+4 patches set to Changes Requested.
 
-First, you're parsing the data obtained from hostapd, in
-mwl_fwcmd_parse_beacon(), and then you send them all to the firmware in
-mwl_fwcmd_set_ies(), but only the things you actually understood. New
-higher-level features you don't understand, or vendor beacon IEs that
-aren't WMM, would be completely dropped.
+9444973 [1/5] ath10k: Remove unused 'buf_len' variable
+9444935 [2/5] ath10k: Remove unused 'num_vdev_stats' variable
+9444971 [4/5] ath10k: Removed unused 'dev' in ath10k_ahb_clock_enable()
+9444975 [5/5] ath10k: Removed unused 'dev' in ath10k_ahb_resource_init
 
-I'm not very happy with that behaviour.
+-- 
+https://patchwork.kernel.org/patch/9444973/
 
-Why does the firmware require this? Why not just pack all IEs into the
-pcmd->ie_list_len_proprietary, and leave everything else 0? Or - if
-perhaps firmware for some reason requires HT/VHT to be treated
-specially, only parse out the ones that are really needed specially and
-leave everything else in the ie_list_len_proprietary?
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-Also, this is dropping all the encryption stuff - even those are
-extensible btw, and hostapd might do so. Having the firmware rebuild
-those out of out-of-band information is very unexpected for a mac80211
-driver.
-
-johannes
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
