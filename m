@@ -1,176 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49800 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751825AbdAaTMF (ORCPT
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:36268 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751196AbdARDDb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:12:05 -0500
-Subject: Re: [PATCH v2 1/2] cfg80211: Add support to set tx power for a
- station associated
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        linux-wireless@vger.kernel.org
-References: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
-Cc: johannes@sipsolutions.net, arnagara@codeaurora.org,
-        ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <12efc3d8-2274-a6e8-6d74-c06bf89762fb@candelatech.com> (sfid-20170131_201209_230890_64E4674D)
-Date: Tue, 31 Jan 2017 11:06:17 -0800
+        Tue, 17 Jan 2017 22:03:31 -0500
+Received: by mail-ot0-f195.google.com with SMTP id 36so41107otx.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 19:02:29 -0800 (PST)
+Subject: Re: Clarifying rtl8188ee's channel wifi changing code
+To: Farhan Khan <farhan@offmail.us>, linux-wireless@vger.kernel.org
+References: <20170118054001.GA88602@offmail.us>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <1c751468-a3f8-19ff-4fc3-d426fb5cb8e0@lwfinger.net> (sfid-20170118_040336_150127_DBFC17A5)
+Date: Tue, 17 Jan 2017 21:02:26 -0600
 MIME-Version: 1.0
-In-Reply-To: <1485888101-23454-1-git-send-email-arnagara@qti.qualcomm.com>
+In-Reply-To: <20170118054001.GA88602@offmail.us>
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2017 10:41 AM, Ashok Raj Nagarajan wrote:
-> This patch adds support to set transmit power setting type and transmit
-> power level attributes to NL80211_CMD_SET_STATION in order to facilitate
-> adjusting the transmit power level of a station associated to the AP.
+On 01/17/2017 11:40 PM, Farhan Khan wrote:
+> Hi all,
 >
-> The added attributes allow selection of automatic and limited transmit
-> power level, with the level defined in mBm format.
+> I am having a bit of trouble understanding the rtl8188ee source,
+> specifically how its switch_channel function (rtl88e_phy_sw_chnl) works. I
+> gather that this function calls rtl88ee_phy_sw_chnl_callback, which in turn
+> calls _rtl88_phy_sw_chnl_step_by_step (
+> https://github.com/torvalds/linux/blob/master/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c#L1253
+> ).
 >
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-> ---
-> v2:
-> 	- refactor the shared code
-> 	- "keep what you had" using STATION_PARAM_APPLY_* BIT
-> 	- feature flag to let the user know if this feature is supported or not (Johannes)
+> This is where I get lost. Where is the 'channel' variable used, other than
+> to change the TX power? I presume it has something to do with case
+> CMDID_RF_WRITEREG, but I am not certain.
 >
->  include/net/cfg80211.h       |  6 ++++++
->  include/uapi/linux/nl80211.h | 15 +++++++++++++
->  net/wireless/nl80211.c       | 50 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 71 insertions(+)
->
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 814be4b..c989fbd 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -808,6 +808,7 @@ enum station_parameters_apply_mask {
->  	STATION_PARAM_APPLY_UAPSD = BIT(0),
->  	STATION_PARAM_APPLY_CAPABILITY = BIT(1),
->  	STATION_PARAM_APPLY_PLINK_STATE = BIT(2),
-> +	STATION_PARAM_APPLY_STA_TXPOWER = BIT(3),
->  };
->
->  /**
-> @@ -849,6 +850,10 @@ enum station_parameters_apply_mask {
->   * @opmode_notif: operating mode field from Operating Mode Notification
->   * @opmode_notif_used: information if operating mode field is used
->   * @support_p2p_ps: information if station supports P2P PS mechanism
-> + * @txpwr: tx power (in mBm) to be used for sending data traffic. If tx power
-> + *	is not provided, the default per-interface tx power setting will be
-> + *	overriding. Driver should be picking up the lowest tx power, either tx
-> + *	power per-interface or per-station.
->   */
->  struct station_parameters {
->  	const u8 *supported_rates;
-> @@ -876,6 +881,7 @@ struct station_parameters {
->  	u8 opmode_notif;
->  	bool opmode_notif_used;
->  	int support_p2p_ps;
-> +	unsigned int txpwr;
->  };
->
->  /**
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-> index 6b76e3b..de2f72c 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1980,6 +1980,15 @@ enum nl80211_commands {
->   * @NL80211_ATTR_BSSID: The BSSID of the AP. Note that %NL80211_ATTR_MAC is also
->   *	used in various commands/events for specifying the BSSID.
->   *
-> + * @NL80211_ATTR_STA_TX_POWER_SETTING: Transmit power setting type (u32) for
-> + *	station associated with the AP. See &enum nl80211_tx_power_setting for
-> + *	possible values.
-> + * @NL80211_ATTR_STA_TX_POWER: Transmit power level (u32) in mBm units. This
-> + *	allows to set Tx power for a station. If this attribute is not included,
-> + *	the default per-interface tx power setting will be overriding. Driver
-> + *	should be picking up the lowest tx power, either tx power per-interface
-> + *	or per-station.
-> + *
->   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
-> @@ -2386,6 +2395,9 @@ enum nl80211_attrs {
->
->  	NL80211_ATTR_BSSID,
->
-> +	NL80211_ATTR_STA_TX_POWER_SETTING,
-> +	NL80211_ATTR_STA_TX_POWER,
-> +
->  	/* add attributes here, update the policy in nl80211.c */
->
->  	__NL80211_ATTR_AFTER_LAST,
-> @@ -4697,6 +4709,8 @@ enum nl80211_feature_flags {
->   *	configuration (AP/mesh) with VHT rates.
->   * @NL80211_EXT_FEATURE_FILS_STA: This driver supports Fast Initial Link Setup
->   *	with user space SME (NL80211_CMD_AUTHENTICATE) in station mode.
-> + * @NL80211_EXT_FEATURE_STA_TX_PWR: This driver supports controlling tx power
-> + *	to a station.
->   *
->   * @NUM_NL80211_EXT_FEATURES: number of extended features.
->   * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-> @@ -4712,6 +4726,7 @@ enum nl80211_ext_feature_index {
->  	NL80211_EXT_FEATURE_BEACON_RATE_HT,
->  	NL80211_EXT_FEATURE_BEACON_RATE_VHT,
->  	NL80211_EXT_FEATURE_FILS_STA,
-> +	NL80211_EXT_FEATURE_STA_TX_PWR,
->
->  	/* add new features before the definition below */
->  	NUM_NL80211_EXT_FEATURES,
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index ef5eff93..ace87de 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -246,6 +246,8 @@ enum nl80211_multicast_groups {
->  	[NL80211_ATTR_STA_SUPPORTED_RATES] = { .type = NLA_BINARY,
->  					       .len = NL80211_MAX_SUPP_RATES },
->  	[NL80211_ATTR_STA_PLINK_ACTION] = { .type = NLA_U8 },
-> +	[NL80211_ATTR_STA_TX_POWER_SETTING] = { .type = NLA_U32 },
-> +	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_U32 },
->  	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
->  	[NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
->  	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
-> @@ -4548,6 +4550,8 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
->  			return -EINVAL;
->  		if (params->sta_modify_mask & STATION_PARAM_APPLY_CAPABILITY)
->  			return -EINVAL;
-> +		if (params->sta_modify_mask & STATION_PARAM_APPLY_STA_TXPOWER)
-> +			return -EINVAL;
+> Please explain what is going on. Thank you!
 
-Does this mean that we cannot change the tx-power after the station is associated?
+I have no idea where you are getting those routine names, but my source does not 
+have them, unless something has broken grep on my system.
 
-Seems like that would be a good limitation to remove if possible!
-
-
-
->  		if (params->supported_rates)
->  			return -EINVAL;
->  		if (params->ext_capab || params->ht_capa || params->vht_capa)
-> @@ -4755,6 +4759,40 @@ static int nl80211_set_station_tdls(struct genl_info *info,
->  	return nl80211_parse_sta_wme(info, params);
->  }
->
-> +static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
-> +					     struct station_parameters *params)
-> +{
-> +	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-> +	enum nl80211_tx_power_setting type;
-> +	int idx;
-> +
-> +	if (!rdev->ops->set_tx_power ||
-> +	    !wiphy_ext_feature_isset(&rdev->wiphy,
-> +				     NL80211_EXT_FEATURE_STA_TX_PWR))
-> +		return -EOPNOTSUPP;
-
-Maybe always let a user set to default value even if the driver does not
-support setting specific values?
-
-
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Larry
