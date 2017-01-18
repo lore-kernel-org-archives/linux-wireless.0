@@ -1,76 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:36643 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751153AbdAMV0p (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37206 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754082AbdARO2a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:26:45 -0500
-Received: by mail-lf0-f65.google.com with SMTP id h65so7028062lfi.3
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:45 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v3 0/8] ath10k sdio support
-Date: Fri, 13 Jan 2017 22:26:03 +0100
-Message-Id: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222736_252899_50B13143)
+        Wed, 18 Jan 2017 09:28:30 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com>
+References: <1481173676-18808-1-git-send-email-prameela.j04cs@gmail.com>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
+        hofrat@osadl.org, xypron.glpk@gmx.de,
+        prameela.garnepudi@redpinesignals.com,
+        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Message-Id: <20170118142829.2F5C96080C@smtp.codeaurora.org> (sfid-20170118_152834_367640_2BF8BEE1)
+Date: Wed, 18 Jan 2017 14:28:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the third version of the sdio RFC patch series.
-The actual sdio code (patch 6) has been subject to a massive overhaul,
-mainly as a result of Kalle's review comments.
-It no longer has any strong resemblance of the original ath6kl code from
-which it was originally based upon.
+Prameela Rani Garnepudi <prameela.j04cs@gmail.com> wrote:
+> The file 'rsi_91x_hal.c' is going to contain device specific
+> code like firmware loading etc. As the file 'rsi_91x_pkt.c'
+> contains code for preparing device (frimware understandable)
+> specific descriptors for the transmit frames, it is moved to
+> 'rsi_91x_hal.c'
+> 
+> Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 
-Previous pathes 6 to 10 have been merged into one single patch.
+These patches break endianess support again, at least in struct bl_header. And
+also I see this AGAIN:
 
-The previous series had a rework of the "HTC fake service" connect
-(ep 0 connect) that introduced a race between the actual endpoint
-connect and the HTC ready message. This issue has been addressed,
-and the current patches (3 and 4) has been rewritten accordingly.
++/**
++ * bl_cmd() - This function initiates the BL command
++ *
++ * @adapter: Pointer to the hardware structure.
++ * @cmd: Command to write
++ * @exp_resp: Expected Response
++ * @str: Command string
++ *
++ * Return: 0 on success, -1 on failure.
++ */
++static int bl_cmd(struct rsi_hw *adapter, u8 cmd, u8 exp_resp, char *str)
++{
 
-* overview of patches *
+[...]
 
-Patches 1 to 4 are more or less identical to the previous RFC, with an
-exception for patch 3 that changes the "HTC fake service" connect
-(mentioned above).
++fail:
++	return -EINVAL;
++}
 
-Patch 5 is a squashed version of previous patches 6 to 10.
+If you insist keeping these, in my opinion useless, function documentation at
+least make sure they are valid. How many times have I mentioned about this? If
+you don't bother to follow this minor, but easy to fix, detail I'm starting to
+wonder why I bother to use my time to review these patches and provide these
+same comments over and over again.
 
-Patch 6 is the actual sdio patch
+Really, start with small patches and once you get more familiar start making
+more complex patches. Or ask someone to help with reviewing the patches. And
+LISTEN to feedback, just don't ignore it.
 
-Patches 7 to 8 are new and adds special sdio versions of BMI get
-target info and HTC ready.
+3 patches set to Changes Requested.
 
-The new version was built and tested against:
-tag: ath-201701121109
-
-Erik Stromdahl (8):
-  ath10k: htc: made static function public
-  ath10k: htc: rx trailer lookahead support
-  ath10k: htc: move htc ctrl ep connect to htc_init
-  ath10k: htc: refactorization
-  ath10k: various sdio related definitions
-  ath10k: sdio support
-  ath10k: sdio get target info
-  ath10k: htc: ready_ext msg support
-
- drivers/net/wireless/ath/ath10k/Kconfig     |    6 +
- drivers/net/wireless/ath/ath10k/Makefile    |    3 +
- drivers/net/wireless/ath/ath10k/bmi.c       |   70 +
- drivers/net/wireless/ath/ath10k/bmi.h       |    2 +
- drivers/net/wireless/ath/ath10k/core.c      |    5 +-
- drivers/net/wireless/ath/ath10k/core.h      |    3 +
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +
- drivers/net/wireless/ath/ath10k/htc.c       |  241 ++-
- drivers/net/wireless/ath/ath10k/htc.h       |   39 +-
- drivers/net/wireless/ath/ath10k/hw.h        |   53 +
- drivers/net/wireless/ath/ath10k/sdio.c      | 2105 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/sdio.h      |  259 ++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |   24 +
- 13 files changed, 2737 insertions(+), 75 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.c
- create mode 100644 drivers/net/wireless/ath/ath10k/sdio.h
+9465833 [1/3] rsi: Renamed the file rsi_91x_pkt.c to rsi_91x_hal.c
+9465835 [2/3] rsi: Add new firmware loading method for RS9113 chip set
+9465837 [3/3] rsi: Remove old firmware loading method for RS9113 chip set
 
 -- 
-2.7.4
+https://patchwork.kernel.org/patch/9465833/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
