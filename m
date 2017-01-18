@@ -1,126 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36254 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdAMVf2 (ORCPT
+Received: from mail-ot0-f196.google.com ([74.125.82.196]:33301 "EHLO
+        mail-ot0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751427AbdARJHL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:35:28 -0500
-Received: by mail-lf0-f67.google.com with SMTP id h65so7043275lfi.3
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:27 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 05/10] ath10k: htt: RX ring config HL support
-Date: Fri, 13 Jan 2017 22:35:04 +0100
-Message-Id: <1484343309-6327-6-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223531_526334_E9F174CF)
-In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+        Wed, 18 Jan 2017 04:07:11 -0500
+Received: by mail-ot0-f196.google.com with SMTP id f9so620008otd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 01:06:47 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <d1aca4b7-3493-5935-befb-af1b2dadc7d1@broadcom.com>
+References: <20170117163419.1184-1-zajec5@gmail.com> <20170117163419.1184-2-zajec5@gmail.com>
+ <d1aca4b7-3493-5935-befb-af1b2dadc7d1@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Wed, 18 Jan 2017 10:06:46 +0100
+Message-ID: <CACna6rz9_vxEvDs7OoWALxat0XSEW3E4V0idrjZWAbiSmQvRAw@mail.gmail.com> (sfid-20170118_100728_850028_9CE55B7D)
+Subject: Re: [PATCH 2/2] brcmfmac: move function declarations to proper headers
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Special HTT RX ring config message used by high latency
-devices.
+On 18 January 2017 at 09:58, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 17-1-2017 17:34, Rafa=C5=82 Mi=C5=82ecki wrote:
+>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>
+>> Function brcmf_c_set_joinpref_default is in common.c, so move it to the
+>> related header. All other (touched) ones are in core.c so take them out
+>> of the bus.h.
+>> I just needed to include bus.h to have enum brcmf_bus_state defined.
+>
+> I prefer to keep the bus api in separate include file so please leave
+> those. That leaves the move of brcmf_c_set_joinpref_default(). Please
+> send a v2 and consider it acked by me.
 
-The main difference between HL and LL is that HL devices
-do not use shared memory between device and host and thus,
-no host paddr's are added to the RX config message.
+Oh, I just realized there isn't bus.c! Would that make sense to move
+these functions from core.c to new bus.c then?
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htt.c    |  5 +++-
- drivers/net/wireless/ath/ath10k/htt.h    |  1 +
- drivers/net/wireless/ath/ath10k/htt_tx.c | 51 ++++++++++++++++++++++++++++++++
- 3 files changed, 56 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index cd160b1..29ed4af 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -258,7 +258,10 @@ int ath10k_htt_setup(struct ath10k_htt *htt)
- 	if (status)
- 		return status;
- 
--	status = ath10k_htt_send_rx_ring_cfg_ll(htt);
-+	if (ar->is_high_latency)
-+		status = ath10k_htt_send_rx_ring_cfg_hl(htt);
-+	else
-+		status = ath10k_htt_send_rx_ring_cfg_ll(htt);
- 	if (status) {
- 		ath10k_warn(ar, "failed to setup rx ring: %d\n",
- 			    status);
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 44b25cf..3d1bd6f 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1797,6 +1797,7 @@ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
- int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
- int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
- int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt);
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt);
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 86b427f..505d3ed 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -692,6 +692,57 @@ int ath10k_htt_send_rx_ring_cfg_ll(struct ath10k_htt *htt)
- 	return 0;
- }
- 
-+int ath10k_htt_send_rx_ring_cfg_hl(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	struct sk_buff *skb;
-+	struct htt_cmd *cmd;
-+	struct htt_rx_ring_setup_ring *ring;
-+	const int num_rx_ring = 1;
-+	u16 flags;
-+	int len;
-+	int ret;
-+
-+	/*
-+	 * the HW expects the buffer to be an integral number of 4-byte
-+	 * "words"
-+	 */
-+	BUILD_BUG_ON(!IS_ALIGNED(HTT_RX_BUF_SIZE, 4));
-+	BUILD_BUG_ON((HTT_RX_BUF_SIZE & HTT_MAX_CACHE_LINE_SIZE_MASK) != 0);
-+
-+	len = sizeof(cmd->hdr) + sizeof(cmd->rx_setup.hdr)
-+	    + (sizeof(*ring) * num_rx_ring);
-+	skb = ath10k_htc_alloc_skb(ar, len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	skb_put(skb, len);
-+
-+	cmd = (struct htt_cmd *)skb->data;
-+	ring = &cmd->rx_setup.rings[0];
-+
-+	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_RX_RING_CFG;
-+	cmd->rx_setup.hdr.num_rings = 1;
-+
-+	flags = 0;
-+	flags |= HTT_RX_RING_FLAGS_MSDU_PAYLOAD;
-+	flags |= HTT_RX_RING_FLAGS_UNICAST_RX;
-+	flags |= HTT_RX_RING_FLAGS_MULTICAST_RX;
-+
-+	memset(ring, 0, sizeof(*ring));
-+	ring->rx_ring_len = __cpu_to_le32(HTT_RX_RING_SIZE_MIN);
-+	ring->rx_ring_bufsize = __cpu_to_le32(HTT_RX_BUF_SIZE);
-+	ring->flags = __cpu_to_le16(flags);
-+
-+	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
-+	if (ret) {
-+		dev_kfree_skb_any(skb);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_ampdu,
- 				u8 max_subfrms_amsdu)
--- 
-2.7.4
+--=20
+Rafa=C5=82
