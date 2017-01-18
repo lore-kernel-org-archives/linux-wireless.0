@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60764 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754802AbdA0MnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:43:20 -0500
-Message-ID: <1485520942.5851.9.camel@sipsolutions.net> (sfid-20170127_134618_548760_DBC13873)
-Subject: Re: [PATCH 1/5] nl80211: fix validation of scheduled scan info for
- wowlan netdetect
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jan 2017 13:42:22 +0100
-In-Reply-To: <abafc8a5-1138-7c4f-66a3-d606700440cb@broadcom.com> (sfid-20170127_133812_465827_35DBEB56)
-References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com>
-         <1485520288.5851.8.camel@sipsolutions.net>
-         <abafc8a5-1138-7c4f-66a3-d606700440cb@broadcom.com>
-         (sfid-20170127_133812_465827_35DBEB56)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:36182 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751319AbdARIBp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 18 Jan 2017 03:01:45 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        kbuild-all@01.org, Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: Re: [PATCH] brcmfmac: use wiphy_read_of_freq_limits to respect limits from DT
+References: <201701181250.KMcvYlf0%fengguang.wu@intel.com>
+Date: Wed, 18 Jan 2017 10:01:22 +0200
+In-Reply-To: <201701181250.KMcvYlf0%fengguang.wu@intel.com> (kbuild test
+        robot's message of "Wed, 18 Jan 2017 12:55:16 +0800")
+Message-ID: <871sw0okz1.fsf@kamboji.qca.qualcomm.com> (sfid-20170118_090151_696227_8DF1BD00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-01-27 at 13:38 +0100, Arend Van Spriel wrote:
-> 
-> > IOW, I think Kalle can merge 2-5, and I can then pick up this one
-> > when they hit net-next and I've synchronized, no?
-> 
-> Agree.
+kbuild test robot <lkp@intel.com> writes:
 
-Alright. I see you submitted another version, I'll assign 2-5 to Kalle,
-and keep 1 for myself, and not worry about the ordering since I'm the
-one to have to remember to actually apply it later :)
+> Hi Rafa=C5=82,
+>
+> [auto build test ERROR on wireless-drivers-next/master]
+> [cannot apply to v4.10-rc4 next-20170117]
+> [if your patch is applied to the wrong git tree, please drop us a note to=
+ help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-us=
+e-wiphy_read_of_freq_limits-to-respect-limits-from-DT/20170118-122222
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-dr=
+ivers-next.git master
+> config: x86_64-randconfig-x013-201703 (attached as .config)
+> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=3Dx86_64=20
+>
+> All errors (new ones prefixed by >>):
+>
+>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c: In functi=
+on 'brcmf_setup_wiphy':
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:6484:2: err=
+or: implicit declaration of function 'wiphy_read_of_freq_limits' [-Werror=
+=3Dimplicit-function-declaration]
+>      wiphy_read_of_freq_limits(wiphy);
+>      ^~~~~~~~~~~~~~~~~~~~~~~~~
 
-johannes
+The compiler error is expected as this depends on a cfg80211 patch not
+yet in wireless-drivers-next.
+
+--=20
+Kalle Valo
