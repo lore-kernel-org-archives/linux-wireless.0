@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from venema.h4ckr.net ([217.24.1.135]:53953 "EHLO venema.h4ckr.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751373AbdANHPR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jan 2017 02:15:17 -0500
-Message-ID: <49460.217.24.3.26.1484376490.squirrel@webmail.madwifi-project.org> (sfid-20170114_081520_810222_CCFA29D7)
-In-Reply-To: <87y3yfi78t.fsf@purkki.adurom.net>
-References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
-    <87y3yfi78t.fsf@purkki.adurom.net>
-Date: Sat, 14 Jan 2017 07:48:10 +0100 (CET)
-Subject: Re: Searching new home for ath[59]k-devel mailing lists
-From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
-To: "Kalle Valo" <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-        ath9k-devel@lists.ath9k.org
+Received: from smtp.codeaurora.org ([198.145.29.96]:49444 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752402AbdASMgK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 07:36:10 -0500
+Subject: Re: [PATCH v2 01/13] wil6210: add sysfs file for FTM calibration
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        qca_merez <qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1484226365-10433-2-git-send-email-qca_merez@qca.qualcomm.com>
+ <871svzp79p.fsf@kamboji.qca.qualcomm.com>
+Cc: qca_liord <qca_liord@qca.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        wil6210 <wil6210@qca.qualcomm.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <c066ef7d-f61b-3b3e-1a6c-e2b89de812e9@codeaurora.org> (sfid-20170119_133613_540463_CF6EAFF2)
+Date: Thu, 19 Jan 2017 14:36:05 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <871svzp79p.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle.
+On 1/19/2017 2:24 PM, Valo, Kalle wrote:
+> Maya Erez <qca_merez@qca.qualcomm.com> writes:
+> 
+>> From: Lior David <qca_liord@qca.qualcomm.com>
+>>
+>> In fine timing measurements, the calculation is affected by
+>> 2 parts: timing of packets over the air, which is platform
+>> independent, and platform-specific delays, which are dependent
+>> on things like antenna cable length and type.
+>> Add a sysfs file which allows to get/set these platform specific
+>> delays, separated into the TX and RX components.
+>> There are 2 key scenarios where the file can be used:
+>> 1. Calibration - start with some initial values (for example,
+>> the default values at startup), make measurements at a known
+>> distance, then iteratively change the values until the
+>> measurement results match the known distance.
+>> 2. Adjust the delays when platform starts up, based on known
+>> values.
+>>
+>> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> 
+> Can't this go via nl80211? sysfs is not really supposed to be used for
+> something like this.
+> 
+There is no nl80211 API for this (yet?).
+Will it be ok to put this in debugfs? Normally this will be in the board
+file (as part of RF configuration) but it will be useful to play
+with these values for debugging/diagnostics.
 
-Thanks for your response.
-
-Kalle Valo wrote:
-> So feel free to close both of the lists and thanks for the heads up.
-
-Ok. I will send a shutdown notice to both lists during the next few days,
-then unsubscribe all subscribers, and close the lists for new
-subscriptions. I intend to keep the mailing list archives online, for
-reference purpose.
-
-> Are you planning to update the MAINTAINERS file or should I?
-
-It would be great if you could take care of that.
-
-Someone should also update the "Mailing list" section of [1] accordingly.
-I guess one needs to have a valid user account for that to do, and I don't
-have one atm.
-
-[1] https://wireless.wiki.kernel.org/en/users/Drivers/ath9k
-
-Bye, Mike
+Thanks,
+Lior
