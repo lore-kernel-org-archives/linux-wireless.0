@@ -1,63 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43112 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbdA1Isp (ORCPT
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:34872 "EHLO
+        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdASJyi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 28 Jan 2017 03:48:45 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 19 Jan 2017 04:54:38 -0500
+Received: by mail-lf0-f49.google.com with SMTP id n124so31836167lfd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 01:54:00 -0800 (PST)
+Subject: Re: [PATCH net-next v4] bridge: multicast to unicast
+To: =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
+        netdev@vger.kernel.org
+References: <20170119024510.3284-1-linus.luessing@c0d3.blue>
+Cc: "David S . Miller" <davem@davemloft.net>,
+        Stephen Hemminger <stephen@networkplumber.org>,
+        Felix Fietkau <nbd@nbd.name>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+From: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
+Message-ID: <253b73f3-0db0-4515-8787-2ff87d1e8256@cumulusnetworks.com> (sfid-20170119_105451_834855_04D5988A)
+Date: Thu, 19 Jan 2017 10:53:56 +0100
 MIME-Version: 1.0
-Subject: Re: [v2,
- 01/14] rt2x00: rt2800lib: move rt2800_drv_data declaration into
- rt2800lib.h
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170116025444.GA32156@makrotopia.org>
-References: <20170116025444.GA32156@makrotopia.org>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Message-Id: <20170128084836.95F1660A4F@smtp.codeaurora.org> (sfid-20170128_094849_336097_E5806611)
-Date: Sat, 28 Jan 2017 08:48:36 +0000 (UTC)
+In-Reply-To: <20170119024510.3284-1-linus.luessing@c0d3.blue>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Golle <daniel@makrotopia.org> wrote:
-> From: Gabor Juhos <juhosg@openwrt.org>
+On 19/01/17 03:45, Linus Lüssing wrote:
+> From: Felix Fietkau <nbd@nbd.name>
 > 
-> The rt2800_drv_data structure contains driver specific
-> information. Move the declaration into the rt2800lib.h
-> header which is a more logical place for it. Also fix
-> the comment style to avoid checkpatch warning.
+> Implements an optional, per bridge port flag and feature to deliver
+> multicast packets to any host on the according port via unicast
+> individually. This is done by copying the packet per host and
+> changing the multicast destination MAC to a unicast one accordingly.
 > 
-> The patch contains no functional changes, it is in
-> preparation for the next patch.
+> multicast-to-unicast works on top of the multicast snooping feature of
+> the bridge. Which means unicast copies are only delivered to hosts which
+> are interested in it and signalized this via IGMP/MLD reports
+> previously.
 > 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+> This feature is intended for interface types which have a more reliable
+> and/or efficient way to deliver unicast packets than broadcast ones
+> (e.g. wifi).
+> 
+> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
+> report suppression takes place. This feature is disabled by default.
+> 
+> The initial patch and idea is from Felix Fietkau.
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> [linus.luessing@c0d3.blue: various bug + style fixes, commit message]
+> Signed-off-by: Linus Lüssing <linus.luessing@c0d3.blue>
+> 
+> ---
+> 
+> This feature is used and enabled by default in OpenWRT and LEDE for AP
+> interfaces for more than a year now to allow both a more robust multicast
+> delivery and multicast at higher rates (e.g. multicast streaming).
+> 
+> In OpenWRT/LEDE the IGMP/MLD report suppression issue is overcome by
+> the network daemon enabling AP isolation and by that separating all STAs.
+> Delivery of STA-to-STA IP mulitcast is made possible again by
+> enabling and utilizing the bridge hairpin mode, which considers the
+> incoming port as a potential outgoing port, too.
+> 
+> Hairpin-mode is performed after multicast snooping, therefore leading to
+> only deliver reports to STAs running a multicast router.
+> 
+> Changes in v4:
+> * readd "From: Felix Fietkau [...]" (missed it again in v3)
+> 
+> Changes in v3:
+> * fix an uninitialized variable bug introduced in br_multicast_flood()
+>   in v2, found by kbuild test bot
+> 
+> Changes in v2:
+> * netlink support (thanks Nik!)
+> * fixed switching between multicast_to_unicast on/off
+>   -> even after toggling an already existing entry would
+>      stale in its mode and would never be replaced
+>   -> new extra check in br_port_group_equal)
+> * reduced checks in br_multicast_flood() from two to one
+>   to address fast-path concerns (thanks Nik!)
+> * rev-christmas tree ordering (thanks Nik!)
+> * removed "net_bridge_port_group::unicast", using
+>   ::flags instead (thanks Nik!)
+> * BR_MULTICAST_TO_UCAST -> BR_MULTICAST_TO_UNICAST
+>   (BR_MULTICAST_FLAST_LEAVE has the same length anyway)
+> * simplified maybe_deliver_addr()
+>   (no return, no "prev" paramater -> was a NOP anyway)
+> * added "From: Felix Fietkau [...]"
+> * added "Signed-off-by: Felix Fietkau [...]"
+> ---
+>  include/linux/if_bridge.h    |  1 +
+>  include/uapi/linux/if_link.h |  1 +
+>  net/bridge/br_forward.c      | 37 ++++++++++++++++-
+>  net/bridge/br_mdb.c          |  2 +-
+>  net/bridge/br_multicast.c    | 96 ++++++++++++++++++++++++++++++++------------
+>  net/bridge/br_netlink.c      |  5 +++
+>  net/bridge/br_private.h      |  8 ++--
+>  net/bridge/br_sysfs_if.c     |  2 +
+>  8 files changed, 121 insertions(+), 31 deletions(-)
+> 
 
-I didn't quite get what patches (if any) I should take, so I'm dropping
-the ones below. Please resend the patches which are ok as a new
-pathchset.
-
-9 patches set to Changes Requested.
-
-9517997 [v2,01/14] rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
-9518001 [v2,02/14] rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM flag
-9518003 [v2,03/14] rt2x00: rt2800: serialize shared memory access
-9518005 [v2,04/14] rt2x00: rt2800lib: fix beacon generation on RT3593
-9518007 [v2,05/14] rt2x00: rt2800lib: add hw_beacon_count field to struct rt2800_drv_data
-9518009 [v2,06/14] rt2x00: rt2800lib: init additional beacon offset registers
-9518011 [v2,07/14] rt2x00: rt2800lib: fix max supported beacon count for RT3593
-9518013 [v2,08/14] rt2x00: rt2800mmio: add a workaround for spurious TX_FIFO_STATUS interrupts
-9518015 [v2,09/14] rt2x00: rt2x00pci: set PCI MWI only if supported
-
--- 
-https://patchwork.kernel.org/patch/9517997/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Looks good to me,
+Reviewed-by: Nikolay Aleksandrov <nikolay@cumulusnetworks.com>
