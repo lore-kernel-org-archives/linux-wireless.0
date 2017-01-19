@@ -1,52 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38376 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754256AbdASUac (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:36292 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754266AbdASTMh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 15:30:32 -0500
-Received: by mail-wm0-f52.google.com with SMTP id r144so11677913wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 12:30:31 -0800 (PST)
+        Thu, 19 Jan 2017 14:12:37 -0500
+Received: by mail-pg0-f43.google.com with SMTP id t6so16368588pgt.3
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 11:12:36 -0800 (PST)
+Date: Thu, 19 Jan 2017 11:05:20 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Linus =?UTF-8?B?TMO8c3Npbmc=?= <linus.luessing@c0d3.blue>
+Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
+        Felix Fietkau <nbd@nbd.name>,
+        Nikolay Aleksandrov <nikolay@cumulusnetworks.com>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next v4] bridge: multicast to unicast
+Message-ID: <20170119110520.24dfd34d@xeon-e3> (sfid-20170119_201243_138529_A6DB3C3D)
+In-Reply-To: <20170119024510.3284-1-linus.luessing@c0d3.blue>
+References: <20170119024510.3284-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
-In-Reply-To: <87efzyhkup.fsf@purkki.adurom.net>
-References: <20170113052937.12538-1-matt@ranostay.consulting>
- <20170113052937.12538-3-matt@ranostay.consulting> <CAPDyKFpcKuybQmhqCkaAkOM5d+ubU8O8=adLm+PXwc=+N87vng@mail.gmail.com>
- <87efzyhkup.fsf@purkki.adurom.net>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Thu, 19 Jan 2017 21:30:29 +0100
-Message-ID: <CAPDyKFrHvYNOCfAjASEHz75fVcaqt5fptFaqWp5nVPFnHuHV1g@mail.gmail.com> (sfid-20170119_213224_132783_77B26D7B)
-Subject: Re: [PATCH v3 2/2] mmc: pwrseq: add support for Marvell SD8787 chip
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Matt Ranostay <matt@ranostay.consulting>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 January 2017 at 21:10, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Ulf Hansson <ulf.hansson@linaro.org> writes:
->
->> Twisting my head around how this could be integrated smoothly into
->> pwrseq simple. No, I just can find a good way forward without messing
->> up pwrseq simple itself.
->>
->> So, for now I decided (once more :-), that let's keep this as separate driver!
->>
->> Perhaps, following device specific mmc pwrseq drivers will needs
->> something similar, but in such case we can look into that then.
->> Thinking about cw1200 for example.
->>
->> Let's get Rob's ack for the DT bindings, seems almost there, then I
->> will queue this.
->
-> Just to confirm, you will take the whole set (including the bindings
-> patch)?
+On Thu, 19 Jan 2017 03:45:10 +0100
+Linus L=C3=BCssing <linus.luessing@c0d3.blue> wrote:
 
-Yes, correct.
+> From: Felix Fietkau <nbd@nbd.name>
+>=20
+> Implements an optional, per bridge port flag and feature to deliver
+> multicast packets to any host on the according port via unicast
+> individually. This is done by copying the packet per host and
+> changing the multicast destination MAC to a unicast one accordingly.
+>=20
+> multicast-to-unicast works on top of the multicast snooping feature of
+> the bridge. Which means unicast copies are only delivered to hosts which
+> are interested in it and signalized this via IGMP/MLD reports
+> previously.
+>=20
+> This feature is intended for interface types which have a more reliable
+> and/or efficient way to deliver unicast packets than broadcast ones
+> (e.g. wifi).
+>=20
+> However, it should only be enabled on interfaces where no IGMPv2/MLDv1
+> report suppression takes place. This feature is disabled by default.
+>=20
+> The initial patch and idea is from Felix Fietkau.
+>=20
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> [linus.luessing@c0d3.blue: various bug + style fixes, commit message]
+> Signed-off-by: Linus L=C3=BCssing <linus.luessing@c0d3.blue>
+>=20
 
-Kind regards
-Uffe
+In general this looks good.
+
+One issue I see is how existing entries are handled when the bridge port fl=
+ags
+are changed dynamically. It might be better to always record the necessary =
+data
+in the bridge_port_group and not have a per-entry flag bit. In your current
+patch the API changes the response to future IGMP but does not take instant
+effect. Code would be simpler if there was less logic to handle per-entry f=
+lags.
+
+Also, you might want to add sysfs interface for the attribute as well.
