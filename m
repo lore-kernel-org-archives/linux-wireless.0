@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33458 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751038AbdAPKSK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54582 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751507AbdASMrW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 05:18:10 -0500
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: linux-mmc@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com,
-        linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        ulf.hansson@linaro.org
-Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH] brcmfmac: add support for BCM43455 with modalias sdio:c00v02D0dA9BF
-Date: Mon, 16 Jan 2017 11:17:57 +0100
-Message-Id: <20170116101757.20483-1-martin.blumenstingl@googlemail.com> (sfid-20170116_111814_782363_BD14C744)
+        Thu, 19 Jan 2017 07:47:22 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] rtlwifi: Download firmware as bytes rather than as dwords
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170109230058.22758-2-Larry.Finger@lwfinger.net>
+References: <20170109230058.22758-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20170119124721.74AD860912@smtp.codeaurora.org> (sfid-20170119_134725_241731_8D3C698B)
+Date: Thu, 19 Jan 2017 12:47:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BCM43455 is a more recent revision of the BCM4345. Some of the BCM43455
-got a dedicated SDIO device ID which is currently not supported by
-brcmfmac.
-Adding the new sdio_device_id to brcmfmac is enough to get the BCM43455
-supported because the chip itself is already supported (due to BCM4345
-support in the driver).
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The firmware is read from disk as a little-endian byte string. The code
+> that loads the firmware into the device transfers it as 4-byte quantities.
+> The routines that write multi-byte quantities on BE hardware assume that
+> the data are in CPU order, and automatically do the conversion to the LE
+> order required by the device. As a result, the firmware is transmitted
+> incorrectly. Rather than do multiple byte swaps on the data, the download
+> routine is revised to transmit bytes rather than dwords. Although the
+> number of I/O operations is increased, the firmware is not often loaded.
+> 
+> All drivers have the same bug, and use essentially the same code to
+> download firmware. These routines have been moved into rtlwifi.
+> 
+> Some CamelCase variables have been renamed.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
-This is the proper patch following the (short) discussion from [0]
+Failed to apply:
 
-[0] https://marc.info/?l=linux-wireless&m=148455981002310&w=2
+fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/efuse.c).
+error: could not build fake ancestor
+Applying: rtlwifi: Download firmware as bytes rather than as dwords
+Patch failed at 0001 rtlwifi: Download firmware as bytes rather than as dwords
+The copy of the patch that failed is found in: .git/rebase-apply/patch
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
- include/linux/mmc/sdio_ids.h                              | 1 +
- 2 files changed, 2 insertions(+)
+3 patches set to Changes Requested.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 72139b579b18..5bc2ba214735 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1104,6 +1104,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4339),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43430),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4345),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43455),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356),
- 	{ /* end: all zeroes */ }
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index d43ef96bf075..71b113e1223f 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -36,6 +36,7 @@
- #define SDIO_DEVICE_ID_BROADCOM_43362		0xa962
- #define SDIO_DEVICE_ID_BROADCOM_43430		0xa9a6
- #define SDIO_DEVICE_ID_BROADCOM_4345		0x4345
-+#define SDIO_DEVICE_ID_BROADCOM_43455		0xa9bf
- #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
- #define SDIO_DEVICE_ID_BROADCOM_4356		0x4356
- 
+9506051 [1/3] rtlwifi: Download firmware as bytes rather than as dwords
+9506053 [2/3] rtlwifi: rtl8192cu: Calculate descriptor checksum correctly for BE
+9506055 [3/3] rtlwifi: rtl8192cu: Convert driver to use common macros
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9506051/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
