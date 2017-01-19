@@ -1,582 +1,791 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:17549 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933387AbdAHHim (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 8 Jan 2017 02:38:42 -0500
-Date: Sun, 8 Jan 2017 15:38:03 +0800
-From: kbuild test robot <lkp@intel.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Subject: Re: [PATCH V2 1/3] cfg80211: allow passing struct device in the
- wiphy_new call
-Message-ID: <201701081551.cEnhQH0k%fengguang.wu@intel.com> (sfid-20170108_083900_247195_A144E271)
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="Nq2Wo0NMKNjxTN9z"
-In-Reply-To: <20170102132747.3491-1-zajec5@gmail.com>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:32885 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753981AbdASUgF (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 15:36:05 -0500
+Received: by mail-ot0-f194.google.com with SMTP id f9so5512018otd.0
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 12:36:05 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Subject: [PATCH v2 1/3] rtlwifi: Download firmware as bytes rather than as dwords
+Date: Thu, 19 Jan 2017 14:28:06 -0600
+Message-Id: <20170119202808.27752-2-Larry.Finger@lwfinger.net> (sfid-20170119_213610_381661_BF463DCC)
+In-Reply-To: <20170119202808.27752-1-Larry.Finger@lwfinger.net>
+References: <20170119202808.27752-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The firmware is read from disk as a little-endian byte string. The code
+that loads the firmware into the device transfers it as 4-byte quantities.
+The routines that write multi-byte quantities on BE hardware assume that
+the data are in CPU order, and automatically do the conversion to the LE
+order required by the device. As a result, the firmware is transmitted
+incorrectly. Rather than do multiple byte swaps on the data, the download
+routine is revised to transmit bytes rather than dwords. Although the
+number of I/O operations is increased, the firmware is not often loaded.
 
---Nq2Wo0NMKNjxTN9z
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
+All drivers have the same bug, and use essentially the same code to
+download firmware. These routines have been moved into rtlwifi.
 
-Hi Rafał,
+Some CamelCase variables have been renamed.
 
-[auto build test WARNING on mac80211-next/master]
-[also build test WARNING on v4.10-rc2 next-20170106]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/cfg80211-allow-passing-struct-device-in-the-wiphy_new-call/20170103-014525
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-config: x86_64-randconfig-s2-01081447 (attached as .config)
-compiler: gcc-4.4 (Debian 4.4.7-8) 4.4.7
-reproduce:
-        # save the attached .config to linux build tree
-        make ARCH=x86_64 
-
-All warnings (new ones prefixed by >>):
-
-   drivers/net/wireless/intersil/orinoco/cfg.c: In function 'orinoco_wiphy_init':
->> drivers/net/wireless/intersil/orinoco/cfg.c:26: warning: unused variable 'priv'
-   drivers/net/wireless/intersil/orinoco/cfg.o: warning: objtool: orinoco_set_wiphy_params()+0x1e: function has unreachable instruction
-
-vim +/priv +26 drivers/net/wireless/intersil/orinoco/cfg.c
-
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  10  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  11  #include "cfg.h"
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  12  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  13  /* Supported bitrates. Must agree with hw.c */
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  14  static struct ieee80211_rate orinoco_rates[] = {
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  15  	{ .bitrate = 10 },
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  16  	{ .bitrate = 20 },
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  17  	{ .bitrate = 55 },
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  18  	{ .bitrate = 110 },
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  19  };
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  20  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  21  static const void * const orinoco_wiphy_privid = &orinoco_wiphy_privid;
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  22  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  23  /* Called after orinoco_private is allocated. */
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  24  void orinoco_wiphy_init(struct wiphy *wiphy)
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  25  {
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18 @26  	struct orinoco_private *priv = wiphy_priv(wiphy);
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  27  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  28  	wiphy->privid = orinoco_wiphy_privid;
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  29  }
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  30  
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  31  /* Called after firmware is initialised */
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  32  int orinoco_wiphy_register(struct wiphy *wiphy)
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  33  {
-ea60a6aa drivers/net/wireless/orinoco/cfg.c David Kilroy 2009-06-18  34  	struct orinoco_private *priv = wiphy_priv(wiphy);
-
-:::::: The code at line 26 was first introduced by commit
-:::::: ea60a6aaf55984a13a7150568cc103d006e86ab2 orinoco: initiate cfg80211 conversion
-
-:::::: TO: David Kilroy <kilroyd@googlemail.com>
-:::::: CC: John W. Linville <linville@tuxdriver.com>
-
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Ping-Ke Shih <pkshih@realtek.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+V2 - No functional changes. Merge conflict resolved.
+---
+ drivers/net/wireless/realtek/rtlwifi/efuse.c       | 45 ++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/efuse.h       |  4 ++
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/fw.c    | 67 ++-------------------
+ .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c  | 70 +++-------------------
+ .../net/wireless/realtek/rtlwifi/rtl8192de/fw.c    | 70 +++-------------------
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/fw.c    | 68 ++-------------------
+ .../realtek/rtlwifi/rtl8723com/fw_common.c         | 69 ++-------------------
+ .../realtek/rtlwifi/rtl8723com/fw_common.h         |  6 --
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/fw.c    | 67 ++-------------------
+ 9 files changed, 85 insertions(+), 381 deletions(-)
 
---Nq2Wo0NMKNjxTN9z
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-H4sICO7qcVgAAy5jb25maWcAjDxNc+M2svf8CtVkD7uHZGzPxJmtVz5AICghIgkaAGXJF5bj
-0SSu2NasLSeZf/+6AVIEwKZ2t2qTCN0AGkB/d9Pff/f9jL0d9k93h4f7u8fHb7Pfds+7l7vD
-7vPsy8Pj7v9mmZpVys5EJu2PgFw8PL/9/f7vT5ft5cfZxx///ePZbLV7ed49zvj++cvDb28w
-92H//N3333FV5XIBaHNpr771PzduZvR7+CErY3XDrVRVmwmuMqEHoGps3dg2V7pk9urd7vHL
-5ccfgJAfLj++63GY5kuYmfufV+/uXu5/R2Lf3zviXjvC28+7L37kOLNQfJWJujVNXSsdEGws
-4yurGRdjWFk2ww+3d1myutVV1sKhTVvK6uri0ykEtrn6cEEjcFXWzA4LTawTocFy55c9XiVE
-1mYlaxEVjmHFQKyDmYUDF6Ja2OUAW4hKaMnbebMgB1stCmblWrS1kpUV2ozRljdCLpbBVekb
-I8p2w5cLlmUtKxZKS7ssxzM5K+RcA7HwjgXbJve7ZKbldeNI2FAwxpeiLWQFryVvgwMvGdBr
-hG3qthbarcG0YMmN9CBRzuFXLrWxLV821WoCr2YLQaN5iuRc6Io5fq6VMXJeiATFNKYW8IwT
-4BtW2XbZwC51CQ+2BJopDHd5rHCYtpgPKLcKbgIe+cNFMK0BWXaTR7Q4/jatqq0s4foykEi4
-S1ktpjAzgQyB18AKEKEptKbWai4CPsnlphVMF1v43ZYi4AO/olYZs8Hr1AvL4HaAV9eiMFcf
-B+y8F2BpQCu8f3z49f3T/vPb4+71/T+aipUCeUUwI97/mIg8/MurGxVysNTX7Y3SwVPOG1lk
-cCGiFRtPhYm0gF0CI+FV5Qr+0VpmcDJowO9nC6dMH2evu8Pb10EnzrVaiaqFo5uyDtUfvIuo
-1nB5eJ4S9OagHLgGDnHSLoFL3r2D1Y/ncGOtFcbOHl5nz/sDbhhoNlasQUqBC3EeMQwsYVUi
-KyvgXFG0i1tZ05A5QC5oUHFbMhqyuZ2aMbF/cYvG4njWgKrwqCnc0XYKASk8Bd/cnp6tiIuO
-KB74kzUFiLAyFpnx6t0/n/fPu38dn8HcsDo8oNmataw5sTxoCBCa8roRTaADwlGczG0RLue5
-BgRM6W3LLNiyJbF0vmRV5nTPcWJjBOhh8hKc/iBWcc/m5N5hIDGgFHpRALmavb79+vrt9bB7
-GkShV/sodk5JjC0CgsxS3dAQvgwZFEcyVTKwl8QYKGRQk0DhdrxWaSRiTgJOLet0VgwBN4WD
-/vS6IVKgpmbaiHgvju6HUQ3MAYVu+TJTqcoNUWLdGELWYD0zNJ4FQ5u05QVxoU6XrYf3SS0w
-rgd6trKEYQ+AqMZYxmGj02jgvLQs+6Uh8UqF1iHzzoljFPvwtHt5pXjFSr4CpSmAGYKllrdo
-jqXKJA8ZuFIIkcDWBKs6YLAE+CpgJoy7GWcMHCVg4d/bu9c/ZgcgaXb3/Hn2erg7vM7u7u/3
-b8+Hh+ffBtrWUlvvVXCumsr6Jz9S40iPwQRZxCJ4UzFnudejd5mbDIWIC5B5wLCk+KJ9Qm/Q
-hFB3Xs2bmRlfe62FKGvbAjjcDH6CQYSrp3SBSZDdpjiFwMWFgKCiQEtWquC48C8LNrdF93uV
-nDWFeYmjTwwHcLs4N55E6Q8Deku0c6WoMzk/ABzt6iLwc+SqizVGI+4lhuFC4Qo5aDKZ26vz
-n4+sWMoU9iHSqA14Kd7rANc285I15WdVDfjzc1awip9w2sBpP7/4FFzzQqumNuHtgsXgC/Km
-5sWqm0CCPcjTegqhlpk5Bc/hzW6FplFqsE725PRMrOXEU3cYsMikiPQ0Cp2f3gTUPo2wFHzl
-oiNUK+BgkkoI/AEwBjz0ixt8xNAbrbn/HRpmDUPktnCpCegYtNhkGc9M6PdNvyVYiBxdfFAA
-HBQ0/Z4YiW0paQE+gVdwTq3OYidXsxIW9iYrcEl1lribMJB4mTASO5cwEPqUDq6S35EHyfkx
-vEGV4R4ZUwoVp94oxY6DyqO/1YtZBb60rFQWPqkXYpmdX6YTQeNwUbvo0GmmZE7NTb0CAiHY
-RgqDgKTOhx9eBQccFO9UgvcpkWeCzSFGLEEft4MHkDx5B5hiCiSdQOndYBg22zK4gX6kTTYb
-xudGFQ1oXjgKyOWJRUG5GXFMQARusAZZW6W/UbmGcVxkQESRgxEhJXP65nH3vAm9phzoDjIR
-olYh1MhFxYo84H/nYriBgRL0k/KMEqI6b0d+mllGATOTAb+zbC2N6OeMFIcLRsidai7b60bq
-VWoG5kxrOaGIXZokE9R6noNhxzb1JN0gENOuyz5n4LyPLo1Y716+7F+e7p7vdzPx5+4Z/C0G
-nhdHjwv8wsAtoRbv8hHjLXoPq/RTWuc+eV8vCqQxlaZXNOcXjA6ITNHMKR+oUPNEtqwonfPe
-QuAtc8ldaoh6Da1yWUQmfCU2gjuGDVKiHi8K3Pqx7pxO/utCbKbeKFgjXQFdE8euARVpIueX
-pqwh2JiLWI2Afwne/UpsQZmAoKWpiYEp/XokzJHn0segOECO0F5x9G2njiJyuFKJp26qeEbi
-CSFroDcH/jP4zD4C7w+ohU3P6BaXcPOYSAWgTUCjS/GjUyuBQaEn+FFMC+WUPYiU2RBsO9Sl
-UqsEiKlddJLlolENEckZeDgMj7oYlUgrgu3fgpOCEaMzFy5ZluyixQL0d5X5PHl33S2rU1J5
-QdEHeGnw7GDLG5BCwbwLlcBKuYF3HcDG0ZDaW/SS4AEaXUGwZ0HWQi5OlRNxtQ5KLNyrFt0d
-OGvKND/m7i+Si/Bi+6dsDcvhWsoac+LpZflRn6ObgGWqmUgXd2oMXUefauiTfwSuKrIAnzqI
-ERwRWtAINvIiJsbdzAX4TXXRLGTsdAbDUzIMGO5iUcwEpmYT3y0G0h5bjAPvX4mTq+A7NwWb
-CDZG2CAHigzfh0u7kXYJusWzSK7R0U+fcRzahuD/mgnwOolMB1AaosKsk+hqCZiup/BcnQFM
-JsnQRuW2zYCsIHdWqqwpQGOhPkV3Cv0ygkSxARWOnjEm8vBKRiJh/HTQI6ocl23GhbMEwW1A
-qrF41lCLI9YNCmlTi4Qon5LnrLd9IcAWKX2eD7rcnJfE2Mr110AlZ6WBkL5JdCrKLfiWXfXo
-Q5gycSR2cMbT7ZCnKhWYyjyflEVH1bqrHoavFo35QgdX6x9+vXvdfZ794f24ry/7Lw+PUY4M
-kbosOcEBDtq7HkmkkMIIih2KLw67sDYTKK6jRTqMD+1HUtpDnI/tz9N+SW9FvZVdChQuKreF
-HhgIeij/Logw6JlenSWSlIqWT2qBHQgZuwM1VTc8eOvhHA8mDwB4nUmgHa9uHaP5sT40EQz2
-mJJShx0QOVJ7Hyyd14NG9ZwJNBfpB2k9WcIxQflk7QqDw8kVjE8BFuAkNYFym8eptD5jMTcL
-crCQ8/E4FsAXWoZa0WXIyswVoZ0B1r2U1Hcvhwdsj5jZb193YSzDtJUuEQABHKYiQj0GPn81
-YIQ3kIBa3pSsYsQ1pIhCGLWZ3KKV3EwDWZabU0TU6kZokD26dpQga2m4pGITJjfRmXu9Z3Jq
-GJzUBZu4I8u0HEAUjzBOrVmaTBl6TcyzZ9KsnH9HrSgrIN80c3K2UeBrSONaYUi6hugIlrkB
-u01vdkQrsvLkAc1CUgeEyFDTt2yaihpeMdCL9I2IfOKOo8Lm5aeTdAZCk27tRLUzbrGkldeY
-u+glTKqZuf99h/X/MFcglc93VkqFxcJuNAOrjRtfPQ3k9jCeXxOU9mXdeL1+tJt79e55v/86
-9CaZ6jy4/Mq1VoDurMFRRGU9ndVnVmEQpsubBAP9Llf5zdwyrg44jaJvEoQux37UTi/7+93r
-6/5ldgDt5OpdX3Z3h7cXp6mON9O3lNCvXFJ6HDk9FwyiMeGz3gMNDoS1yh6OqYIEvrkA34fH
-Y2XtVGtk38HpyWXsQx2BOAf8bXCWsH2nS+xNkIo6vWiL2iR0sHKY2lUYImbK23IuxyNphItL
-Hd+2K83nTBaNjo7j+Q9e3voIou+2ory1LYSla2kgOFk0IqyzwiUxjCXChfuxE/WLjaDkc7Uu
-j+sPSdx12WXd8omiRL9dEqlQaa8eNSlygcOKNTmf9hyciNUn2impDW18Ssye0W0hJcoY5VX2
-deq6iR/QPQVm+ruWM1+6uwxRivNpmDUJP3dhfdIaifXxdcL4YFvKpnSOfA52r9heXX4MEdxj
-cFuUJojKu6owRq+iEGEWB9cBbvRMn0YKCACup3R1B+Xg97ImjP9rYdOsoRsTJcTYVoBLHBw9
-CxMvnBULBsIgVdRYGQ23osJiKAR0217fBnbrRqqo/c1PWYqiDsmpXPOeuToPmLSrcWOugObi
-DmGtCmBfIIfM2jqc8Nb9JMfyge7HzBDcBJbC4sd1CZ92rO2kIga10AqLJliX6jrKUEowzE4U
-Vxkqqm7g+ODJMDz3eBAjW7ME/Uot80vET467IR6C+KZd9xkcb1+CzP7T/vnhsH/x4eFwyUFK
-zivhppoq0YxQNauD44zh3LfABjZ+XX66nDABfXdMx7WRLyI/rSI1JDkIF2iCSbsDkjgJA0aU
-lHw5410vt2D9s0y3Nu2j9p3OmEIlwU4RSA333y7mmO9J/QLfhQQatROoSfBIyLqsIGqR3npB
-lDUK6TtQ0tMli0IsgDM6W4Y5kUZcnf39eXf3+Sz435BlPLHPQCSEPQ2jIEki5kiUMCKUyOA2
-NhAqloICreEfmPhIL2zAcMWm1hNUt1YtBEpCZNTT1aZyL1h5i41gNNw60xOl6jxHQDzFdEZM
-744uMfqI+dkt3NlX38WKi49mLpXF3O3UeHe0q7h6GCL07rFyji8VNh3x4QnUOrriAtyg2voo
-AHX3x+jY/kl6NHTTbHx6FznwJMCTC51cxQmB8y6MwlRc5P4Yym3oj+r4xfe/Zfrq49m/L2Mp
-+u9eYAwhtppI7gZZkjEcGPWGbal8CYld+qrycBcplmsAd75OYGTDPvlV5LjxQrDKoVO9qFqB
-zo5qcjxs+IAfR4d6WLEfJJOZCMVmf3N17Lq6jXe4rZWKnJ/beUNp5dsPuTeCA6LxJeYTvqPr
-c+/rh1MxHnCM0BoDOVdl818WxA7C/4Di6nlufFxX8EHE0SQHhqJGwUe9zLejsCaBJ94ptjm1
-cwh0sDCtmzpNCyASahZ07MuelwdUv8CECUYdrdeYtbtBD3eQCKtpc+ou1NcQJpY0ZdxsPQR7
-4H1PmugO42jPMK+MxGN1m26LyCWVhfEFs3D/5W17fnZGJ5lv24ufzijrcNt+ODsbr0LjXn0I
-bKkLKJcae1EjFYadBWQ/O3YcxL0Bfsx1L2wx7RvIpWZmmZRDUZ1K9GjB9YIY9Ozv8866h91j
-4PK6/kbKyevnu2o+zL9IpnfVjnVmFHmLHVMfvbnKtQ1RH0kkiF2wEl7TaK2pUKFPYwHjT2bN
-8fqKzJ5oo3JWuQBqa+wHT9RGZ++mLDONczSq3hvf/7V7mYE3fvfb7mn3fHD5HsZrOdt/xRR1
-kD0bfcu0FCz6NK8rQ40GggxTAjArWcPhq7Dk3G2AEXVRzFmUqgp2D9irBMbKgnTh0EqIoEKI
-SNpgDAtDbpyO8cr2hq2Ey5JR3Fgmq43yJwMoane4ufZJ8aDqNvaqeVjew189wznhMKPihXey
-8SO7rliHU+qMJ4t0TUd+fxcBmfF3jA7TnWYRu6sRwLU9kMUF3Ce9bU8PREa58btPzdRi3QJf
-ai0zEX4GF68EWocw8DEOm6o5AGzOLMQbVNTuwY21wEBPyaw10ER96uOAORtPyBRpzxzMZWy0
-AGaIGpL6e/LpGZ58qJmAZVZMAoEYehJbLDTwkh2hdHF6MsobYxVwtwH9lKcfm6UYU6ErVnT9
-Hk4LNTX42llK+inYyMfzh+LIamR7vvdUjqmnhGJwKhko5Uku7IMUry4TWnqgVHEWxnP+PH1N
-zP2TV1pCPKiyEXHg0zX4sdASIjdX7oEIaZJT4b/ssPog+qwWo/awfrzrb0qkBQCkvGS1zU+L
-LATJhVqEzF9jgUJBXL2Yqv/0zwD/TTrpJj8WcbAFOH/Z/edt93z/bfZ6f/eY5Il6SQqXOc6U
-nx93g+1C1Fho+pF2odZtAYFZaJ8iYCmq6CMWx9gY15gBj6umLiZa473jmH6C5Agtd0/7l2+z
-r84Iv979CQeMiizyZ3Dc6Knzt9feRM/+CfIw2x3uf/xXUEvmAR+gvPg8UGS7YLQs/Y+JXmD/
-ZZuJV+LV/OKsEL5ROAIJNChJaNxLDc5EFNrmAoCRnOYgJjG63di06R0QegM7nux427D1CYoc
-2skvAxANI6N0BxAf8utNh27L+EJdXw+ZbnBPZORoIP4UMXrRE3cCKsbnpjqnMP7e1ylV2wR5
-86WNv09EDGYTbpBhacI9sk7orZmRWTw0ahXGQV+/opzggYUC4gK+6twmkuecxpHzknzlEJGj
-FJ3cvDXL+tiojti/718Ps/v98+Fl//gIIvz55eHPuDvdscKNqxfGkgKjIcVrsrzSNX2FiDjU
-9cxO8C1m/qgeJJiRhR8JdAOtNfLni/PBmPTjmER0dlQ1FgLIFNzxkN60dtO67MV4aSRUVAsZ
-d14eoROcOuzQlNgmBbb2aTybL0EmySvoMUqkquWZWI+0p777+vAZuwT+ejjc/z5+t+Bufvp5
-QxHPa9Nu6GxBOPny04kD4hoLUV2M715vHORDmqbAD3Pmo9OIv3f3b4e7Xx937q+1zFx95fA6
-ez8TT2+Pd0kcN5dVXlpstUwSo5YEwY/4c4MOyXAt60izem8DuIX6hMVPKoGnhtPiunGqQLIP
-F2SxBcdx6fRCNh8uiN3SDpHueFgiay4/+jxCGaX+3TcK6TRfR107NlZ1qPdK7toxwjzneDsY
-K2S1AgfCmK724p6r2h3+2r/8AcZ+HGTXEPCKwLPzv0EW2WIYxIag8CLwt0Oh/OE8/HIJf7k/
-uxJKlBs0zRykuJB8S/K0w/GpcvIjRqARrjBctRuiJgWukaCYBUbxb29grqxkOvqrK5j+ryGu
-ZhAg5tsI4qbUy63TWRA/lXXyrTDg+DZ12jO1VL7Q2LBTEILTUc800pQZFinzglXtp7OL82ty
-p0xw+txFEX27Dj/pNgU5kaZklhX0R0ubi5+o/VgdWPt6qaqQ9aQQAg/xU9CMMIy1VdH9h/v0
-UKI4hbW3ANMox9NDxYXxbt2n8GF9t1QnI9dvu7cdSMj7ro8r6iDusFs+vx4tAU7LPHl0P5xP
-tIP0COC2UDF+D3ZfUF2nDI4QTX751kNBX49pNDlBuBXXRczqbnSej1EhkM/GqJkZS4txsYoV
-JYGuNXWc8jq9iREKX6rVlBZA+HV+Pd6Od1Xb0Wr5tYedWJC6ruUyH29SSzHG7LKiPrB6vHt9
-ffjycJ/8fTLE5WHHfjdw9D+SYctllYnNGJDfpJeKow1ppnqoNut6vDOOXhIbYCWE2OLE1/jH
-s9T5CSpwYTFiCYSUmHueav6uXFMPYpzcm/EJTe+gsiL4OZd54K5mPJLrrMIvvozCP15E+Rug
-zpnrow4nDaNtRYVnAbxLM07Mnu6ZW3ttR+cne48gtdVB01ox8RXkRPOIcaXw7g8RgP6nSxEe
-7qznlGwHON66Tik1cPghJNm28RfO8+tItvGL5V/iPw8Uuj6zw+71kGRzlqzULJuibsLVlzqj
-Gt3nNmTjOX7MKzKSTWwbZ5ndwMTfpADYya9Y55ZKTvtszePb7rDfHyDU2P35cL8bRxwwecnl
-3BqM0WLiYbxh5N9X8cA1/H/QEzBW6nWRrIFDrZm6XmO1YGX3mQKxz43Ev54W5qv7EUwCBqP4
-LVscLbih+G+guCFTb0dIMsgk8HyBTkIQl/4/Y0/W2ziO9F/x04dpYBtjy3ZiP8wDrcNmR1dE
-2Zb7RcgkGXSwSTpI0tjef/+xSEoqUkV7G0gnqirxEo+qYh2a4Zgp0+BMm6YM88NQA7sepwUY
-HBxZBSHrPPFBOvowrureBbst8v0F+s6koyQtDAaq0ebR47TJKEvB3TCiHMaHtsnJPb6l6dFH
-a+gtMPBk1ksp3+jRHEFkLaeylm+VXlwYZn5kfcOtC58e7d8iDf83o2x/DAruqJQnHASz1OE2
-0H3vkUsoJVcnNzxF9xj6WS1opJvQQJ6XtjRp4NoJlHYqNSTb0l6isCuuKROukPEEE8KzV+uh
-kLIoOYORhAzAvcAsZBJaD/Is2fIa394AMFc7wtBCDWrdbcQi2NnqL7Nf371PkqfHZwi98PLy
-69UwTpM/5BtfzGZmqayhJMFpbRvgkogaKcCU+XI+t7uhQC0PnC6L2nRwBDO0dsebElDeFol5
-cqzyJbxKWw8c632ee5xuIoiv5rFhUpJhfIATf2hrxk7KG2OE0C6s5uDs2NVInxZRf1oM8SSf
-7g14UrhKhL0O+uAaPFtgudnXO3RVLttTZ6W9Z3WwNgPLZc/JwfKIpQVpyVdWusaEV5m60VKx
-s4YGJUfl02hf1PXEPDdeokTJYJ/JelLUjb5I7Z3vDgGJbhNjaYAOJKZu5w+Eigo06EcPzoGi
-gQTPiEgecOTxatDxoYrF+DU478y7rTbeoL/ESSAPEJIEuTEYCy/qFMNUcEPg2O7KDdIyYNPP
-9iI1sCyz9M2GEN8ogGZNhbONIPJZ4syEOA/jM9HalNOt7YHUX40NO1O3kxZyDbuRBIAvMebh
-1GFUY3fbOjJOSS8YJFuurO3B+kTY1B1KX7yB9Y22xf068xagIpYoU6g4ogvTZOBgDrfDuC9A
-hV3nPD1qWXXdt1YN1/5D7iGZDparguzU73evH1ptPEnv/muxqVDCJr2Rs8fpre7bywjUVtZZ
-mdSknJ/Y8Urhua2O1I2IIe1P5AiKHOoVIomsE0BknjqhhYWl1QWIG4g1w5ZFcpZmTDgKRH2f
-wLI/qyL7M3m++/gxuf/x9IY4fPsTkVaBgPkWR3GoF5s1jHI9tgRYFqRE0ULZUIrRVJDovIDu
-eKoDgo3ckk91TPYa8CnC06ycIdzGRRbXpGENkMC63zAp+B55VO/amT3mDjY4i1247XTwHmcw
-ohFX/yslqbvpes6dzihYQA0mp2MN9GjqpkhN0pr8NsqsQJ6DZ9rGMsmeRHg1dBh5bFNyc4fe
-1zx19jmWOQB8+6H2lY1ypngxlg13b29wwWFWAVxJ6WVxdw/epfaGAvclsisw7qCzd5YkmH/C
-ieN0w4DNZYt3aOUYXF81VUFzpEDBw52LR9hYbALoqzuIN6vp4sxrItwEbZJKCcYeNskTfj4+
-u6Wli8V0S0k0qqOY1VUbQgmOYOBK4BSjLU0OEOuGYjNUYVK2GX3LFLR3ukRzJojH53++wsX2
-3dPr48NEEnkVF6rULFwunYWgYRBuL+ENiXIcYtWwpaPGlbsRSP4ADL8JhuV1UYORMQiL2MfC
-YONKBdwA7GyIANOfU0GmVormup8+/v21eP0awoQdseDozagItyjqykapuXPJrmV/zRZjaP3X
-wv5guWSefas+jwHrrnwD7myvjxUn7+MwqeHnfCXJ7cW7NDqaoIETaCuHcXTypaWcNpP/07+D
-SRlmkxdt1UTOFEVmf81b5WxEnHAC7Nywl4L+9qvZ798GbjXWkCvpaqEuDyGkv2dw9thF2wDa
-Y4pcHJ0ppAg28cZE5A+mLg7c17PxMQqobbqPN75jX5Vr3JT6NwtKUe/a+urIXraipwO8OABJ
-bBnqGagUgjijJdvhRaWIp8S7gULsVfBti7c22K3n3q3Ds2a1ul5THpgdhVyu6AqyzEvrwUhJ
-7iV7+f7z8+f9z2d8t56Xtn21id5i6X9NQJd8n6bw4Gs6j6hl170NBj5CwGTl5TxoGrvKsLxt
-Qy5EGzFLOwQgEQowiC1piacrP2Lh+or2GOlI9llMH3kdQSilWB1p+0xHUohs8UJBlT+b9mhe
-uXilGSzMu3pHrTbyBHn6ABuVh8nfj/d3vz4eJ0r8SsRE8gbKEkA34vnx/vPxAWnGu0+yicZN
-ETcR9flEQ3FTHdY6UBDQ9GfInYNxw7kyfLFIMgBteVOH0YH03q2ZsmlvY5xYB1wI5QEuyx43
-YheNZmdbiQbfMx6y2FGx9wN0yDxQNa3QBRuAErapIMKPXXLNqi02AkDAFn/Q7OnjnlL/SR5Q
-yF0X8rDM08M0IIclWgbLpo3KAlWEgK4SL9pn2Qn0BpQ8uMlaJiz2rNyxvPbwexADhxfhgiip
-5kmmBxaVpYDXTUPpquXgreeBWEzRHUWch2khIIAJeK3x0Nbn7MqWp6QjQRmJ9WoasBR9Dy7S
-YD2dzq14NAoWUF5e3cjXkmS5nCKR2CA2u9n1NQFXla+nDa5nl4VX8yUl90RidrVCFmsHo9kD
-vYXt9bcXGwjFAKxlIth6saI3LOFwFf0eC/HhXqzH/nSbOmATu3aJt2hAhHIqgOeqPhvom50A
-ShyxNXFcAnP/8evt7ef757AZabhc2cECj5cBa18dsh5DkbHmanVNGeMYgvU8bFDg7nBzPZuO
-pqWGem8SBqxcG2Kf9RoCnVnj8ffdx4S/fny+/3pRkZU/fty9y235E/Q+0N3Js+T6Ybu+f3qD
-P/ECr0F4pD8kWvquMl2VwJ4/H9/vJkm5ZZN/nt5f/iNrnTz8/M/r88+7h4lO14TczcBSi4Gk
-WqJ50HlhcgIkf6y10sPrhjqszcw9ZChu1KsUziYZD5UOUbP8KHyULlClPxPdRihCntjUw4BI
-FJCOBuJQlGQFEo6LHlqzAzvjntpBhnfvDw5SNcpL//OtD/EkPu8+H6Ww3rv//REWIvviXjhA
-g4nGol0AMhu1FRjc9TApdxxvY/d5CJ0UV5UKuhrCEXka1nQc7iyVYdikKlgivXwlkiX7Tj9e
-kPeyOgSpfWPsMHBm2ATv5NzRylecWVYgHqRiPIJsShXatNVBaz2BmhpXrGDGEITaxlU1t0RU
-G0AYjqkX06HBpqU6XNcfctX++1+Tz7u3x39Nwuir3FK+jFkpYSmFwl2loZQuqUMWQtRjfkVU
-FExKp3nkxOzt6iA3rA4Z7pyx689TBx6CPM10zHd7ZNNiu3XCStkEIgQbHnA6pb9/3e2CH863
-B/my+9p2kUmoEb7PydX/xExpBfjHeeAp38hfo8oApVabE2TNoarK821Ki6PKoocsNhVc3TKo
-/A9OkzZ5E2gay7QkDhTsrKgxP7aN/KcWjK89u1Iwp0b52rrBvG8HpYaFuW4PDpqFbu0OAQ8l
-n0fb1fYE64ZS0nXo9aKxmCgD8p7TeqkfqN4o6P/wogrJnsb1aBlkh31GfxS9J5XAZVOsqO4M
-hB+Vk2A8ylXoC2Ok16tsU0DqHiVnpPbLPD7qCNaDlqRDZaQytcOayBMvxIuyUu8olfVcD7AD
-DWD0lHHJ1lII4rcsvDO+ugRftWCJW5e37lGwT8QujEigrebtEG10DNs6pJHqrS45if9VmmIH
-TKGlVDf8UHlw13N3iqrL5RbyGEFwmdG+lHNa0WMOwWY+W8/OLMBkrwI/aqc2PxlEivXus6X7
-oSEuijLWcYBsNp2OelCWnmiW6iVyduqe13EzHo5TtpyHK7n8KSlKkdzKs0oyk3JyTZ0W3qas
-32qtUQzn6+VvB8igovX1wgEfo+vZetyus3tKmald0impzFZTLOQqoNZiuO3bjTaiaNdWEaOM
-bTu0lIrFcdzOXRtn515j6d49MAoR6S9unNztEgG7T70HEKAjlTBISTJy0Y/RI2f0mrxFI5Q4
-GJZFdmjyAQyX9wyrxyN1Zk4tIoDMRjQzaz4b4GJJ6VUlUueDAQsgXI7iOE+Io3OCOeln997G
-QA2jJsaj1GstqRVkdEtGwu2AYdbyzqJgED0lFOR8jxEroEsvLwJYsPmhViMotsD+Z6T94kYd
-a0OTvXACHGkIcIhE6R0Sn0IGRp4vBhfWtF7eoAk+V8t5cRxPZvP1YvJH8vT+eJQ/X5Awg82s
-YjDipRpsUGA/gGZDxkK5OAoI76OELdvkgIXgt5cVcow3NaVS1qaN3Mpzl3HLbTc3E4Faovt8
-CwFMdnYq8NxmfTRE7qjTGTl2HX66pBR6BluxI1FmSBpSdMgiW09//7aYPwtDuhZ19XE52d1e
-wYvBdBpMvQgc7xrMRJH6hjA9UYakdU0ZaCiUUMFbpJw8sldVmBPpLqHwO3xKKUh/NHSXqZ/v
-T3//+nx86Nxt2fv9j6fPx3sIKj2+JlTREi1/yizCJw0MghYw23lYWIEBDkVVkzmu6lO5c9ST
-qBgWsbImg19hom2Mle5xPZvPGrJVLJXCBpcF2qdhysOCzFplvVrHVkT7MM7tq1sN0QGha76F
-MP3U1NLKs1pY3xNXlLHvnhAdFhXNsGGS6tK4wecscHCUOg2slVKn5GqUYHQkwCOyMGRp4+vZ
-vpIMqqdNIYvAqBBNLRZuyI+osxpjI5fNArFY8kFHF4BQUk4sZYODnewc3joiwwyu6UkfDyl3
-owWWY280NQGQzTTQNs5jKyorRIMEWnsmPGsaWoYHdBTSKe/s8YLBPT8XQnbgezSk9W6fgzEu
-zOgS+Tli+MED32wbGlFt0X1rym/3dtiDDgIF09uB5GZS4XUG7Ygkb4BKdZdp2LSQLZUctcj5
-0FQbokvbUaSsxwdD2jRA14nytIyYnufD/mNgyir3UvXggh/TyhBM9R3Srp9vZ9wwHPgtwJ/i
-0GzRCoenzuQZbH5bK90lKnKHM1OVs+mUpBpFMo9nZHREACP5Sz3G7nO7O2LzXr5Fm4Z8kGgr
-YzWAotBS+0rQgU4jzJst5QYEYNQO9TiqRwHdmgyQXrIK62vJYurx05cIzztJNptSemz8JVbB
-EttAfMti8otlrDrE+JtnhyyyjUrEzZbkDm9OaI+EJ1dIwdXIOlheWBEUsrRZtDF9Hiqchy2V
-uOXodq4HtmT+BIkWR+olA9Uf2deUjsgEbTtDVnp8XjTWuaAjhomHFVYP34jVahHYz8uZLM2i
-+S6JGvd0S2KW5hd3k5xJdiWjuBlMFEPavcKaQYlyW3W2cw30qjtwkQd5HKDQwipxVhQr2Zhq
-Z3FDjytEdfOHGDCBPHQ0nPMN0nqhoUG3KZtbevDbNMxtAnh2D3oDdfymDXQ0x3r01mUZmzhv
-Hd1eR4wj3N1CSGLTgqG22BMQH3d3z1IwRLpEB8Gr6pi2yLLI8tjRzJJkkf9bdSTgyU0psxGN
-YBmIpuiEU7uvf/aIOKbsWDAFl9sTvvdbB9P5zMOrCE73VCQeZSy44MF4X+T9RSYu7BCiVkkP
-rP25zpQmoKZSGOJX9072w7I8ZTGj/DS05I8sIsA5PbfdGzmVLBxXd8qLEu4zqPOgjnf7Ggng
-7jMmxWQQMUxupCy1LYZSj6s6KubAffKJITjy75YArJ/b49Jidnro3FZmGzhEldO+R0RliIbn
-49CACM1ySmmQRBES+6M4sa++FMDPaYqbxMc2io3ix1BUmpOVcU8ctQ6oLwuywNQVV6FpJWqk
-EAMWYvJ37xJG+uWAOLABBWHOM1JXrSl4vWHYwkFBXZlGAY2LMAYVoS3aK6CRWzo9Tsb5BPrg
-s7VXqacsFZjcPPOaMwVFsvJqOm9smOwe3G+OgKtrAqhPLD3y+LLXyMTuOHcrk0sJsGvKMBXk
-+PjficrVfLVYtc5HVeCra89Licr9bDWah2UqJ6s1ONpepzmykw1P4aKynk1ns9BtbNrUbp1I
-xanYU0+bslgUebttUrtdmotyu6eTxUjZyVcY4IEZshuuI1+z1Ibe9oQ4Sp4+LL2dgd3dU7mo
-pczTlHhDrJicEDwUdt8OvI6FiG1gAwnrm3Yrp3JQbR0Fb5mS4mJZIlMi+QCZFVWQfAso95RU
-p+5BQDfvNMCysrS2ZAWDCw/X5AZTFJ4woPLdkbGIhQWkq1nFSj+qwyLdhZ1+FGy7vn48PTxO
-9mLTG/PAO4+PD48PynMKMF3oFPZw9/YJ4WJdA6WjxTb0ATqOOPgB0Axaz0zOEGvXx1jyCLcp
-MlvAVoALLxFqtSrMbH8zgCRyHx5DVN4F2KpxgHMHmYntZp8QaGGpgYa3Qh7bYKV+sJJmADTa
-bOlxdDRBGOUk1+LlMZhhZYMBtJIX545rcofyCTCAD+xz34C60vwvtbdYH9sBHYlZ7v0SM7RV
-P7tUbm8ryb0i7UwB5psWp6cgvec+ZWagKcoUCTwdDFtBgPwbC/cZosgI607AwPUlZXJUGchz
-TvFEsspRqbU8cV1YDrcM6QisQti6MGgNDnSHx2uk70ghvUFtmwN1sFHwHhc/unbtMbJF1FrO
-jjzhOISZAbTCum7poGqd0P2Ipfx8ZiupmHfjtcjOyHcWHWmdgins1JQYU1969fspYr15Zfyq
-YqoenyDczB/jsJ1fJp8/ZUGPk88fHdWIZTsyS9KRVanhoiZ+lKItD57UVSS2yjcwj3yl0Ho3
-sotJqlEp8uTyldAES2tSy71BnnGWgMHyxuM0FkpZpC6oiZqwSmX6wKyhCElXDNkKLFykEPOa
-NYOfkdjkSBCDp/58x0nmhgiU3YX1C4FLINeHxeYm+2+8Fvs29oRi03ZQ9G0NF5H1veG55Qvq
-WFSokNmRq+H5TMiL/h31n+0HYm6CSz75cff+oI3rqYtgMGM90NoWhYwlu+6Jtga1R7LvW75l
-wnOJsTtJKpKn1UODH+UMsB0mFTCdFTbXpNr/Ajiqa9a7uyS0/aU7qJogbvVyHJKK199duCjj
-OEpY48K5/DuPVYYQC368uloH447IKfKNnCWmtJKFoxoEs9iA/DB2ueWvb78+vXbqXWAr/KhD
-YL3YsCSBNBcqrJuDgdB+OgzV8OkVQif3u6ETFmqSjEE68RvtsN/HF3mGtEJPr5Jv/efOCsti
-XgKzEbLGDtOWgu2pm32HTEhxK87b5q/ZNFicpzn9dX21skm+FScr/JaGxgeyafHB4czQx/E5
-jes3b+LTpmCV5bnYwSRbXi6XKzqMhUO0JsZjIKlvNnQNt1L2vaadsRBNMPN4mPY06Y2s4TwJ
-6EEuU6gJ58me0RPWIbtaeIJ2YKLVYnZh8PQUvdC3bDUP5pdp5hdo5Ll1PV+uLxCF9EkzEJTV
-LKBNmnqaPD7Wnn27pynKWGXSvVCdUWpfIKqLIzsyWu4dqPb5xUnS1A7JeNmibRIe5W4QEKCW
-pVY8nx6+OUUUGO5Z5O+ypJCSWWElKD0oZHiC5LEkKuVJvCmKGwqn0jGqpLfWYdHjY8kegt0Q
-rX8amhaDXMk96c2H2op9uLshRZ2BKIFc066t0oA+ZOrvMzWdCSGgCVhZprFqyxmiTZgt19ee
-CDmKIjwxj322xsPYeWP4aZKDaJqGnSvEu1+ZvnZz4kJFAx1obkhWqjtvBORhPEOikmPRnJYh
-gJHVR9oZKki8QMyDKuMLx/ZWgexobgAJIuPgOcxrBU9wUFEDCVzIfOpCVFB5rf/qODr+ZzFx
-/a5MUAnzSATAcCjUY8tXU3xTrYHyfxMqY9DOKURYr4Lwekb7VAOBZHpuNpbHnIGHsHt4X5Py
-t7VNaagW6SyQMdYDYgcjQcC3jquWI9E6dbvySbe9Eu3b61EbPDNZFttRQzpImwvJZxDw1HJ/
-7sFxtp9Nbyhzvp4kyVbKmUALJZKfv7sHdeYoYF9dWyrzA7WNQeKL9aota3y1ZxIm+oAmyEOw
-vLIHlalcnjqepceTLC++Fx6vqrzdClqm0rZMgvb2lIyllZ5cPt9ogAnD9P509zyWdUx7VUrh
-EF8qGcQqWE5JoKxAHlwqviAKHEfQ6Sgr7gApVAJ6PtJ1FRFJkCis9Oi4ETiTs1UrTvCEEXml
-YteihN8YW8kPyrO4JyGbHTd1nEceLtPqn6BPM6sHx4skVR2sVqS7ICJKrSSQGJPxyPcBsqIZ
-B73Mf75+BayEqDmjbhEIu39TEAxVSseOMhR2jBEERN/WLfWbZw0YtAjDvPE4rXYUsysurn1+
-mJrI7Jffarb1BjS2SS+SVR5rCY2uSnqnNWg5YeSHvFRHJkXO77P5kt4kasgpLReW536qUrp1
-8urMkU1NdBnzjWiOoMy4PEDzKCWL3B1N+mykx+9AOq8mL6xNa8Dq+46XMYJh/6cBfOBWBCSM
-gF7Qx9vQlpJyKMoPOrzPcBU6X1/RjCVwpnA3TXNyR19qQNDAjmP5Dg0sfZoxlm91rnQ1ikTb
-63ALvcKOUGBoIkbuUQo6JpNsm7mWI1FIfTXMPITP94eiJs3CgCrHqbsAQNTkqyGsKBNXwBxq
-yLFYFc1p3GZRz+ffy2Dhx9iMqpx8oYmkNpyndny0hqfpScfY6BvYwUbpKbVCR3L6YyUbrhaG
-TrFaEMgOad4kuM8oNiw+gEKK15jKdAjYbN907FH26/nz6e3/Wbuy5rZxZf1X9HRrpu5JhTup
-WzUPFEnJHJMih6BkOS8qja1MXMe2UrZzJvn3pxsgRSwNOXVrHrKovybQaGyNrfvx+B0MJJSD
-OySkhMGPtEsnI7XN0nkYuMr+lQJ9t8uxb8t11neVmWpXrPQUB2fa+OLBkiKrZe8mUJ708a/T
-y8Pbl6dXtTQYoWxR9noOSG4zyjXehKZy+ue1BXpbmfQ2xG+cgTxAfzeIo0i8dEM/VBXBiZFP
-EHc6sc7jMKJoexYksj+lAUlcOfQF77zCbFYUAos66iBIQLWhv7Ysd9R5C+/7/NqrJshABBnn
-iVZ2VsLKYG4SI98xaPNop9LEuK8S2u78ZIzHnyergWV1KVfw64/Xt+OTuN41eJr95Qnq8/HH
-7Pj05/EeL1B8HLg+gIWELmh/VSLsYnfEvq+v/CU8L1i5WvPH8eo4rIHmS3udQY3KoKGL9BbW
-CiVtfCJvURdbS0A4QC8U4Lqo2ypXxWr4PqBKg94jF0JtO7vUeqNcVHNNP6FDUFwKGiuu+A4L
-vmewUQH6KPrgYbjUQhxY8cyF3y9r5qOnyAr3BqxcfdqwfUEcqDRvX8QAO0gjNSddEgyQaxvd
-+PPJHwZp8Oxl1jy+dNHfFRAsOK69w7KwhK2hHySzVo0DfsXMwB9ty8yJpm2VN7/w036/vm8H
-9nNyd48PwtsYkew+q0qMFHEt4rY/qZkMYJWXNl+iExPRVEymYaY8i/YXBtQ4vJ1ezFmib0Hw
-092/CbGhiG6YJPtM996KtxejwLHcrxvn1FE1D8/S7CO7Ky3XaAr8kL+D/02EMVCDAYhGMeUz
-6UmQrO86R/ziUDQygSnbdbfbsqD89I9M2orgnAEYfL1qJo4Q26y7khV8l5zaR4KqUy4EC2/Y
-il/XgQddRuIlS10xvPbV74XDI5U2+U2WqfxAx5ksNOHr+Onw9StMNXwMNiYuIWGdt72WVn6D
-ATjlfTQp3/NIbFEC+i2XNuaQUt3C8no4XVBkLtafXC/WuGtotRtll4eTt7skpBepHP60M8cK
-6BYfBg3gJu4FLbhOsMd7z0FSaNIgwp9lupEm/YDANxqwjN0k2em1xotWa9SyT/TiC2djauGA
-5rsutWnD4RvmRlmQyAYIL+vx+9fD8702Wwxe2o3DXLMxOYYcnO5Z5eB2u7/TCgSWcYLBqlVq
-35aZl7hmHj0YdY55gaRe5u8V6vd0/Wnfk0E1OK6bG6Jttv488A1iEvs7U7SWRaGTUL5LJnzu
-elpqN3UynwfncR2MlfdqR9jZtmwWfbIzhathUGvooyyOd3nme67ZS3AuPr3QjWb4/kYx8G9c
-3MUx0nE//P0wrGjqA9i1arngIxGihJ9yN/Q+2sSUMy9IqCMMmcW9qTW5Bkg3OWX52OPhP0el
-bIM1xB8uaukJhGkuq3UchXWkwwgN4FFxhjBOZuLI4/rvJh9Zkvd8C+C7NsAnCymgfUa6TZC5
-4sihU44TK2CRJSmcgBRm8YcXO+Sr6BZjwe7TrWrwcSIsG8hLTQLFeIVqYCKZfiEqYItPR5CV
-2ijCEFgclBNepD20wttBWcRnMoOsNIXuWuieSWcLZhJRh8rrTA1Q94rOWaRzNyREgpHfjZ3A
-jiiuM3Ajib97ypahE1nuooxMkEAyd6guMHLgcCybCSNdD3g4pbhGryjv5eoGYRxfyBYUFbjh
-jsqBQ3OqbmUOL4xtH8c+5WtZ4ghBJ2aJYR3oB4Qm+MzjubFZPat0syr2VZ95c3Wzbfy06+dB
-SAmjvennP/fbMtdJw4JRGLTizOfwBkYWtVQ9+/ZelP1mtemo95EGjzTEnbE8Dlxl7FAQ+qLV
-xFK7juXakspDqUXliCjZEJhbAN+lpa7nMMpfzK6Pdy7lJh2AQLWjVIiyIxSOyLOkGttTJV2F
-nzlYFkeea6Z6nfSF/HzqTHedATBzw1s6jPa4d85uobxeOdP7XUtqO2fRRVf16EueEj/HZ3ZM
-NuJHpAyvwWpTHrSPEK4GnJB2UiHzJN7S4h34zBT6cUi69hw46sz148SHGsqoYi9hGVGTfgYH
-hlUVugmrzYID4DkkABNcSpKJNiUWR+maku2qvIpc/1KllGHoOKbmcaPK1nZwdXUhxd8zddYa
-6TChd653sYVwh4ias9ER4kPtpe7BOeZk3wIIppxLPRY5PDc0tcsBj1A7BwLbF5FVDi+6PETi
-DBo50aWSchaXGAo5ECU0MI/Nasb4BJFPpxRFAVFsDlDxJjgwj0nAd+M59UnW+o5HjiV1sV56
-7qK2u64467SOiJmsqmOaGpL1UpMWiwQTOq3qhK7kOqEtM4nhYjuuk5hOl7SMJJhqpfWc1MM8
-9PzAAgTEGC0AorW3GazpI6JyEQg8os2t+0ysCkumPYI8c2Q9tOLLSkSeOKZ3riQeWAjYLnNM
-PHOHvjAwFWWZhHO627a1dTd++Jpd9e6l+gacmhWB7H8nyRnFrZ/PnSfXunBjn+iWBUxrgUM0
-DgA81wJEN55D9ld8YB7E9aUhdmShmqnAFj4fo8zEs6swgqWVGb+KkKOOLo6dMIm7XpInLtGj
-U7BQHGoSAABWiNQXoJKEHsHKdeo59EsAmYV2MT8x+B7VOPosJnpvf1Vn1NDc1y2YzhY6UdFA
-V8IcyXRKmm2ZYvhom70AcJREFmfbI0/vehdN6m2feD6R900Ctpmb08DczSmBOETGqlI4CM1w
-OjmFCATtMDzWuJx0FSdhzyypABitSZfdE0/kxVdLUjpAiqvluGLUTtbNVQDg1l2Yyd6/dlx5
-iTT4IpN76kC64Mts5MAQlnjHHZ24tPTAObIOMVH2qwbd0Bft/qa0PE2gvlimZSeCjVM7TMQH
-PEQ8a1PVjyLFOeyWidDdluDr43d2UUhWspwEH3qm4X9JfjskWCkLgWsloAqMPiG5AxLq/Ju7
-WuGJZFWq9vpdEu3ba9zEq1vKbZ2SBGuyfd7DQNewpeEjT2UhkpraOLD6gbPDl9kvT9QV6oHh
-3HbPjZl3gbHMXWHEnmqzK+mjaU8VY+jmDdlP2QJUw1i54JdmxWnA6fnh7nXGHh4f7k7Ps8Xh
-7t9fHw/PUvwr+EoylTCWWqvEXOapZiUPBSOlbqLKBArkReBzXwWLrswtQdF4dmVVrC03WgG2
-xhFATARjGn3g0tKpTCSmHtQusjo19Lh4OR3u705Ps9evx7uHzw93s7RepFLEI/hI2qzDJITG
-slJOa9pTljnIwk8crKF2Szg+Fc5IfCwb+h7JanpsVBhtT5IEk14N073Bz9+e79BNgT1y8zLX
-bnkjhb/EctSDL6Snu9ZzdvaHT5hYhxds7Hiezp2IDKY+gtIMO9DELrmSTLG7XUNGVZuS7rSR
-BXdolE15iahuyF9hiJSUlZmvPIBbjtG0/9ik3fWlC1ZVm6lH8Uhg2ZWqVZGYet1fpWt3GDRQ
-eRmBGD+EzepGcWqDgH76irQk4TE8dEUKMmUcc3UNO/f6V3g4HUdzejU2MCRzh1o/c7SPfHlX
-gNPGxb1K7op+o1LGg46JOlL0zbgz3dp/NtkC1juO1bUrCiDOcjWpemZ4OBX00PGp4xUEWRnE
-0c70+opQHTqUocux69sEKkH1l77YhZfFZrcsU53dI7XHUDG+H8Kcx7I0J93cLXPjoB6PPFxH
-PZ4RB/TkkzkBxZrOxhN9gqqcpgxymvcCJHbqNsUZVm4FyFQ9qCxiN5Xrxf4lTVa1H6oHuTxN
-m19DBO33Z/go2pWfmnVqcb/LhRpvMQy0rlih3aU8vBxJujemCRAu8rZN1aeyj+2JAV9YbPiL
-njXb1AWZOhqN3Ga8yDUNLgaUZn2SRCEJ5aE/T0hkDf8o95ImbJycSP1KauFzCaFghcVTT3M0
-jOqSkn7TdeiHIVk0/bh0QkpWzX1ywFV4YM3mpnQK2Dvjy6JxFo8SjJ/v7mxIGFqy7DOf9jWh
-8kRxRCdw4QhYZQrlAUKBkiiYW6HIUo18HiKDGEs8g02gD8wqR5xcbkzIk8xJneN057qWpAHz
-3klZmy0nxJwKJWy5+VS4dJ9st0niRHYosWiTg3PaJYjEdUO/ppo4/kBnoHgF+WK5qYlvQmFQ
-D13Q3cUkpImLxDyf1oKYqzzfmjWf394pJXWFzcYGM+DPsMEkdrG8+sTB/Yzxezfiafe0Mng6
-3j8cZnenlyP1QlR8l6U1D78sPqfmKs4Gg3XVwKy/PWf0Q2XIy1XZwzxj5+hSvPY5gZogLO8o
-KTSuLvsJJvjRd+hqhtrd2pZ50ewV9z+CtA0qT6el+VafewUg5t26XHO/d+uVHO1KcPSbddFp
-6S02S7z2S1BzWOOxlQl42lOUiV4XdSPHQZyQbc33dyhIzybfLvQ3hz0umc9PGSQ+DGImIih1
-7Dc3kqH8dp1ivGyuj/NjgJo3P3M5yusIc5nagsR/d/iK8aI+Hp4Pj6e/Zv3WvJEvFHxV7MpN
-DfqsNTfhCtx0pWVjUrDVO9pxx9BMet9VrTyrpB+//Pjz5eH+gsDZzgu1MwMF2KcVozfLBRtL
-09j1qYddEh6dL8YO6n/46+Ht8Ihi4U7H4FVWqg6sv3Qbu66zLyW7byLL8krMDaP20ZFhscnN
-UH8TQNEgUZLc4m6bhniZt19WxS5rWv2lFYVfuIqI7G216Rv6pJDDPX36JzB6bYzYGm/3W9E8
-NzflFJmG0OlTAD6xmSja1fF+VtfZR+4o9GDUJ6uFD1F04KdMbXz4HTuwdaAXR22S0wie893p
-6Ql3mHhfHt1i6u2731LDhlwf+vDKW2wQWcj7rdQoeLHKdA09Nu+3ahs/PN89PD4eXn5MjwPf
-vj3Dv/+C8j2/nvA/D94d/Pr68K/Z55fT89vx+f71V31MYpsFej2kYnkNs2Dfp3zHR2xAf7t/
-OM3uj3ene57X15fT3fEVs5uhG7ynh++iYjhzl7Mz60jbPtwfTxYqpnBQMlDx47NKzQ5Px5fD
-UF7JywoHl4+H1y86UaTz8ARi/+f4dHx+m+GryTPMS/dRMEH1f32BouEuo8JUP7zeHR9xQ/uE
-L2yPj1+heSgcTFTA7NsrNFv4/PV0t78TsorK0itBmzclIr49bKuCxvo8TTz5rokBKnsVKugC
-6lrReSI/KlHAIg3jyPYlBy1f1r3n7CwC7TLPkc+cVSxUwlipWGDF6iwIWMLPfCf78PUNWtnh
-5X72y+vhDarx4e3469Q91CmC9QsH7E61b7N+C0uF7wYxggniuyWrO+5r939nMGpBk3pDJyZq
-piKa5Hbxgf2MXDB3Bq58a5+bKjBte5pU4ZUbeI4pv6cXChuLk/gGEdZZ8rp1ZPXk+kfitmDu
-bq5/z2uh7HM1CtkE8XK4Zq6Q/k7nTyNXT0SowRl1jurrYRS06VjWQQvNW0utigLlwvykgWBn
-aDr0SMbEsBuY68BMYJ8VV23SsmuN41ycbGg61oKg3hO9hoUwHlkWvdWI1hCPOkx7BnmuYcL9
-MkthwHq4Ozx/vIbF1OF51k+K/ZjxBg2TklWy9Q56u6NpbpHVfujqil+BxenrrLztumdnWiXL
-L9fuxKV2of/5yU/zwWaUuGDofvwxE7Pqx7aq1AICYRSOFdn4zHWccHhoA96h1a+q9aLVawZ3
-xQKaeB67+tPp8RVdckP6x8fT19nz8W+lEKqttanrW6pRrV4OX7/g4axhrqcr6S0p/ND9+yOJ
-lco9DiTR4X7E4c6ql4yJ7QpMiW5hEPgSa9Vu5OUVQuym7PEVbqPEYMo784V7mrWzX4Rdkp3a
-0R75FX48f37469vLAQ23s1XwAvPw7M9vnz/DpJ3rftmWUujD0Y3/HmYU6b3CEsadOle9cQNt
-3fTlUnkatESTlz4vBGjRNBgRiV3ahcCs4M+yrCoew+hJA8C4vAUBUwMo63RVLCrVyciAdehv
-GBbyFV642i9uSTdZwMduGZ0zAmTOCNhyBsu+KFfrfbGG6Zm6ZDHmqCzvUYXFsui6It/LR4HI
-DG1Ei+CzxLaEp4YWF7Co9TS7NvwoSJ/Dt4OrF6bk1pcVL1UvImeYLcnuuhvVXnbdRi1WW3v6
-b9D2EhYw6OJ+vdZCVmEit4ui8+gHbQCnXabpAhRk8SgM4Aabng1c0+89ALlaqVV+9rmr5c3c
-nG89W3PgYQltKCwArVgZky9cAKmKxAnjRG/yaQeNGF1Tri0+WjFRHK5s4IW3pihrCos3eq8F
-a6W/dT36IZFAbRCjV9mIpNvUcrMF0ZJa5WJrKNWa2/LtS+zc6KAqWzKtuSG+G1w8lYsS2j4Z
-rAqqsmigz8uBm4F4fds1WkX4+ZK6/IlZNU3eNK4qXp9E6i419sIOVsprS99Nu2uNva2p4wfR
-Jmocv42WglSYYtJ6X2zJe1wKT7ZhvXxpCRvSot6vdn0QyqYq1yY/kFRo9TnapzaGLaDo9q7D
-gwyxq4J8pop62DT7a3cum1MS1dEyG+m2/s7draqjfB27yvPRYUTdV1lu7oIjMatShu+etqV8
-QQ+Rsz+eH2Zy2lfTzaAzx+BLgrqmNAk1nnGb6csDA8XQ3tQUmb8lI/nrZB64+5uqyGl5WXqV
-ksHbpcRzWJjIJzcaFJOQeVqmKCDyHeXAVQOpw0+JpU1C9X6EVKDhHOtiAtI9CKoOrRfAJgm2
-oefEFe1ac2Jb5LBApI5hYR5kvRJb7SpXfQRVzYq6/MSazVoy/PjPfcPYeK9sujKoIHt0Qlul
-JfXcnykJrnPhLFEltVltEPZFpX2Y16kIt8v5n2To6iYvWpW7S29qmHFVIg7u6Oh93yyXFQwq
-aiq/p7KvwZEyeNzGkyQFY8UfGzAFVPdGAyBWI7Q2UGt491ZNrQb7tENITw1V0TDLC5QBN/xP
-6vIIQfV0ZAV2hqemsSgDNF6QtiRgHA3JZYPlDow9OfvN97T0xeC5b6p8n9LOrbCIMFvvl1qi
-26JbNOjV3pjKVdTqhJVLbbv1ikkIrxhGG9xrAemkxob6UptU01Y+eg4fECVzwIIRs1feIr0p
-LnIMPrp1Hln/7SZwXO41VxV7lE6lptk8hp6SF5mu1eGcwlZNmdbb0txNkrle7JSVV9aqBsur
-3Gk9WdD4SqXWJUo3SUK7eh9AzzHyByr9YhbBG0/PYtEnMfmGB8eT1HGdSP8iq0vttrGs890t
-zOKm1gXdSIoFXmJ5TyrgiH5ghGC/W5Zqc8zTrkrlvTMkrvhLJl1NVXqLrPauw5OyvKsbU6UO
-MafEA22YaNapKlktx3HnbT27avyVLipGPKanszNYNrpmBT3//Z3PdqpE41c7Ta41c/3Y0KEg
-26uP+863jcgYS+tJpxgdAExFN75QDXydl+zs9TgyWDx9A8d1061cz7U8s8TabCrL4y8Ed1EQ
-BYVt0IB5zxiW1rUXRuY8uLsiXzHh8Fu2PayT9E+6uiDvFA3YPNIGcSSpV5T4PFCmiW1xIuFi
-fLLNJbgYalhjpL3zPJuEt/VSjKh86+Uq/8D3+6QDYN4ktA4ChPMuppITAtxKsja3dA9GHCdQ
-3wojaFFcTIAf4+/RsNLnTUT5lDKGhTzvIx/fcIsXbKXPsx+nb7O/D89vs8O3t9OHx9PhHoMz
-YjBGPAO9Mw4S1YTF1aV/Pl1WrupUeD38/6ds6FOkvbXsCKlcaLz/BJvYc7tQPQNbsy526br/
-5zWFs6Hr2CoeUd+YXXUcQwi+XwR+5GnLiJW+Ewb/ZPEM15HnBi98YXG/XMI8/s0xhVKeQw1U
-KKa1oxQ7/VbNOT/sPVWDZfxU/BYFynpEvgo2EIQth166f+jI6JZSXVUZbOOKyUT6pm2gw92a
-CIa1TzNt9uLe5QchNRv87DK59JTmO7ysy4YbGHi8tHw5Hl/vDo/HWdZupksR4trKxDrcXCE+
-+T+1dhlfWVRglHaGYCPGUpstd+Zgpal6DrR5ubSlW2gJG0xlvQNrNa/JQIkT08qsASCiMmHU
-NuUasWbT02CbdtDIoLKsHLxYInFC6BGHz98pHnqJZXjVBl16YkSMNT7ETUmnRfgR6/f1ssoJ
-z9wjDIY3SRSvsczCiBeojCrnCL33Ke6Wq75HVZarlN2gA6Q6tezGq+wL6Px5GnvuHNfN88QP
-49T41vpl13vzhLPbBVrc9hn6LwvRp/HPpXz+InTfSTzDfSl2w5lj7+eSl78JwjGDi6xcNc7c
-wddFl/jZNSw0rgs7XP2XsSdrbuNG+q+o8pRUfdnlIR56yMMcIIlwLg8wIpWXKa/DOCrbkkuS
-a9f//utuzAFgGnQefLC7cQ7QaDT6oMQ+6x+MCukKvDhmixV88/wWBvdPP6hTNvxJJ6XPelft
-I58n+k1gegH8fzXE0adDkMkxZZ8I5nY/PS3SqJlvnMgQFmYzc2JM9Jjj7crOiG7B17adiw2/
-ZetZLW27mwGeJav1gqko1q2TGns4sdRylS2ZFgyCqQkv2dmKGXWHcD1MXSTbDiKYoRBiE+iA
-7VZlwzezADzQ382V7p7P2yAiWGppu+qM8NUyWzJdA1GVqUao7XLBtL3X+ZpbbiDrGLGX27hF
-2dbH5WzJzHDPFgKY1YxZqIRZM0VAHpqvt0zvELG5OwcR/FQCcgn1RWFMsNxqvvhfEMGXqrO1
-G05lhC9vN0wniA2y4DvmwyGrnrPkqzXbLLF2Hs7tPISvncdQG7PZhFIhdERqrzPXgHLA4G1u
-olqxMfx8KlnvUBijXFws8+xlPR+s8sWaY5wdItCcOWMYhI6WC2bpIXzFjRcOSBWpKUJHarHi
-2BcgXNdeG7GZM20TwtcqEmIX3W03DPvQ2f1yMYtkwjF2C8lPzkCwnJ+57gxoDqmW0WKxYSSC
-U7517PRsONdNhG95+s2cWdII53ggwrktQ3BmBSD8NkDPrQCC8/3fbJjPDPAtxycNnP8i6Ks2
-49u441grwZm1h/AN3/bdhp87J5NRDy/MuwDz+asI42VGfttkcU6PVG2jZebvlxFtIegJtKpl
-bl3vrfu2UdvJdGp3eHBzQcLPMSS1ruE2rnnJEAjriM9U2WBDU36IVY/KC3OfxsAq7z9Tz5jI
-UVgiug0mrSZ0Uje8OpSwaCwQxjaowQiiY5EdJW9ahGiTouQKWsKvML6qy1QexQP/mEo1kGIp
-jDZpwoN4+Dz7ktKdBElErtodH9WW0JkIJTAk9B/Q/SB2L/JYBnLdEn5Xh6uGisNJvYngITyq
-U5TpkjdXoIYf6kmkKYdAJlEarl2fZHGIwqWPolASds2VBrJkEgXNxQcSyRpcUd4HklciutzL
-q/uFbMXCadeJRGKsnXIXSDQp6XEMGMSVj4+JpeX1L1jWXqJfd3dEBcbBysorK6gSOsKsNGEC
-2IFZcqWCLEKf3UIm4V2ELDUKN6EieW0YKspVU/COgISvhEBb5is1aCEyzPIaMKolmqaoskBc
-UMTXAY097QbM7R6pK3ymS/l9fc2oPKr17+XD1X5oeWXlwpZV4srC1wfYVWGOoQ91o7SxkrjC
-Ga7xs5OUeanDYzzLIg/3/w9Rl1dH/8cD3CPrK2zBhEBsDw3vHEwnVlZNldKUjNI52ocylDrT
-PYxNkae3y+cbqQ7BgqQtAgK/eH/Eq7gtD4ls0SgbpBFjVz6KHoifGCMiMKqTA2oh20PiyB2A
-m/QSYZRqehQNBnj19/fXxw8gOmTvv/O5/bA1L0nagCvKivDnRMh7lgKxJmVVKOIuUUToMRxE
-AyNHo1l+/yNBk1XST7DXo0+WTQb8aE+HxNJA5LkbcShPQuHayGvXOO4m6AyXTnzjoWxMaea+
-TEC9CdV2iolB5HRNQ8kD2E9VbZXDTCu9YtDu1gGTpCZjktR0+jGxuEoPrCELVS13ORD4U5LE
-G9YgB3H3FP+BmccGGpLrusxCJbtXY98RnPpRqoOMw9kskSYP2IDlII5pmRyZVgtxwsVkPXzh
-L2Ojy8HaHfx96Oca5QlmgxA5GehyAx2xjuajB69vOVMBwpoMYtalxob2cRfdCoNmqKY5jBrG
-We8M2JXfWlatVkMMZwZne3uNwCUDXE+r3q5m0+Kd3bDb8yQT95hxTXLG7OO0uAa+A3y95N7a
-DPqUe999DOXl9ixOF9vZYlJ//2J0u5jx5jhmWHq5uuOs+AnbRS/yGtRJhEFsJi3qLFndzQO2
-K8NqW3EZo01rVhw/b1nT0+p/Pj8+ffp5/gsdD/U+vunE6G+YCI27ad78PMoVllu+mTUUynJv
-ZHl2TioyBB7a1y+PHz863NSMFZj+3jgxeZNgEMEk7Q5RWQh1KLX3oXtsrtMA5iCAB8ci0tNv
-0FFc88NyCJOqCY4hFLPSpukDGdMmpFl7/PqGvquvN29m6sZPVFze/nr8jJl6P5Dn4M3POMNv
-718+Xt5+mTCuYSbrCC5cvFuKOxQKOhScErhxSO6tN0oSgaFcyQVnnHCBjwKw3dDMWCV1E3so
-JuSQ4B+Ta524BpgIwHD56+18O8X0PH+oFoGHBA6eB06MQCxgNAhrbj0dsPfw+Onl7cPsJ5ug
-D0FkIklo6DoIjS9/vXccNpEQWMnOT3I6wNEimgE7Buw2tG2kaDuLdGeIGCQDBQhW/MXuMSdc
-X85EEQyE1epoojhe/SECfl8j0dmrxyNI1Xw5s0OqOfAhHdek4g6fwDpuAkolm3TDnYYWwXrj
-BjfrMJg15Y71YOwparVKlnxhqbL5YsYFyHQp7PQ1PeYM8BVXKSW74MPU2RRO8F4HE0RsGUR+
-O9e2ltyFt6dUc98mfrdc8BJbT6FASrqb8VfonmaXL73cSBOSGhbX/Ickqy0botGqY8FOtciX
-s0UgGFxfGMPwLSc7DJ+33B1mb9zpoz/SYyiZf7AzU7VcLHljXutrLuY/7DiM7S5ZTLpefX7/
-BsLBl3D/sXiSlx7v6vaR8wppwVfzOUu/Wi0Du3u9xXQNucx+uLk3rGQ9EixuZ7dM416E62Fp
-6uN8o6PttER+u9Xc8BC+XPH0qzuWrah8vbja6/jdLQqhzNTU1SqZ8UbpPQl+22s8y3K/o2/+
-/PQriC3Xv/gkhveA6GNiDi8mJpgQX12aR+b8tJbPCBuO0GFIFu6ev64DxTQsAjr6GLtIp5kx
-zu4hKgqRuZ3wYn53Gh1ArG8n0DLSqR3L3oBRtjnPZ7PWwVGMzQNW1Ob7XHMIqx8nLJxMXPY6
-OPNV+xKOA89BNa2pd5ik5PPj5enNmqRIPRRwAT93hPac+3LDZFrbOpKpVXvc7KYBx6j+nXRy
-DZwIao03cSTMqDmnUlVZxLnfNW4k3wZf8+WOJ2wrXJx7UcjacupCRJqLnEVEIvGrV6JOSsWd
-ttREIof3OaemQuizX1VVN6z/HuLyHbADuwCu0yv+WoimuehChL28YQSy6aFh6IK6lQ4do1Fy
-MPwikZD/QLAjbZ5Ly5TLAvaRR9px03cRyT68PL8+//V2c/j+9fLy6/3Nx2+X1zfmsdX4c9vv
-rUa7Tu+8vNrXEDCj6tegjvbSTs0C21CklqrQ/PZDig5Qc0HDeKBox90e498Ws9vtFTKQIm3K
-2djXjjiXKuE+t08nVfRPyCie4o/JtovVqlWcf3dHcDT/mqglA9vPvCgmBtIm9UOl4YMnOecB
-4BLpo6zCVZxYLxWg2c7vFm5caK1WvIRt/P5XfvSA815OhbWvl/efvn3FO/Tr8+cL5i65fPjb
-4mJmubS914KlfqRQjIJlyhTtK13MKG6Zifrz9OfL8+Of9v6M1IHPsg7yYV3S6+SJQsjWD+1R
-Yqhcu/3Qk2y6L7gu7VWLJqkYx8da1GbK1VFI+zGikHA9VVVU+zDY3KqsjYnEyN4slKcTYGlC
-3MSmOcTOuQDyJlfiqDYz21BkX4uH2I5c0wGM7ZddYY/A6agDb1w9Df+i02NJLTRt0XgzTeoC
-nlShMulKhSa1+qTCOjpNgfcyrjsd5nRoFL00Db7pUCqoIYipYdA8vzjADImBljuRkuyIuggY
-3bGxHIAP6FsDOHR9gdUkHG6KEUwB158JnRtI8vn5wycTq+i/zy+f7O0ylgHOu1qyGWMtmiRN
-xGbmuCLaWIWxidqEt3uwCIszx44sAhN3gytanfkrrk0ik+X0FnboozOpr49PNCHei56ZJfX8
-7YXLJQQVi3vdSuDwS0t0xZ8tvVt9tyjjLB0oR85E/j6VDPiAHIw+Fo73HxDkugl4nvYUOm9Y
-AtEFRkAbSP71J5JZXHK6JQnT2/hxq/eXJ4wOeEPIm+r9xwupVftwvQ5bzlNTBy8CQ58jL1FV
-fyvgy4Ck2dYij4ZU8fXly/PbBSPRsun/tDDuqHDXq92sVqb01y+vH/0FoYDwZ/X99e3y5aaE
-XfT349dfxjRcqUs85OlCnyuuB01xlq2qo4BbMZricQ+LFfGRXS3eDVcD8/Nm/wxtPD07V0GD
-Mnn1jIleWcCo4eyzt5NNBoIdMqCoSNigzDYl8lD07BtZpo0ecqlYFxG7dKQUiE/+IJhn1nHE
-rbgPZWgTZ52wkqg52p2FFHjWK3QgADrwZf453Hnwgh++whlBQ3ahcTwENSmu2AZHgu404Js2
-z3G2cWcEh8xeksF+W9S/zYfNUWGUFsfJMS7RkhND3C8o+fm48OCqBbd3WZWJZsNd1UJRTPM+
-s4CjQCFcpA8bPu2rwceizgI2jIYgq5L5NpjzBilyoQKSmcEPXnNXaGCLobB2jULnIT2gweMe
-ZqYILcopI5Whc8RpKvjHQ8GHK9nlU16EsoX69p9XYjzj3u7dUwFtfwL4iWdiu9gWeXtQAVHR
-oWpUzI8yTvL2iMmbkCIo45gkmBF3gueJc42Bn/6itzBZNbyiVpcXVJC+f4KTFwSWx7fnl+m9
-tY6s9awPDTC2Oi4zPb0MuBK/ZYvcXQFiiWXJNXJ8vJRxcZ/K3IknEYM0gTJY5V0pRh6SIg1n
-LEEhz6Qd1cwOhIqVppEVM6OoB9hysVkPV98CuJHthKwduQh+TgMrOVhVNnWX3qrMOA5vEdlP
-ts4hrA/Tg1kfgvxsIPDMtn200odpS22uGl81iG3piRoRoM7zIG1uJ94rJ4j4LMAUfXz5QrIh
-cxyJlLupDIFh4fMYKWT4slnWwm3O0f4laRxxB0qaS3t9wk//SCFQEhXkHYlanwK4jNjJdhdl
-WWzCc40TrxIlWxnvNPSv4M0Yd6c22e1NM/wNrSz3IDf0A+TulNh+UtFR0E0f3vGJX9nCSAJd
-Fu2prNPuAXsc1g4T4Jp5s4/0RRvoFOCWHm7E3GIorC8OAIQRDDdLdVqP4oYW86LKM/Qp85on
-pBJJU8tAVE4iEgVd8UO6AqIJxdH6PU6tp0n85evEoAt5TFNnaYiEhHMaMM7zdg8EUncdDBiK
-EyaLXehYHGptz5HWnC3I76ZRi+f8bk9goEQ/h3anEB7OSEKldKQlWp9x3/ncd8T6/a4ptaM+
-Oof65lAEUighClY8/1HPV3u/3yl/6XYYDMW2cDreQ9pykcQMGGfBUQUZDDUOXEAds5LvhE3H
-9iXW9eRr9rCrn3QgopVG7Hfvf96Bpm6KVkUFoMlUItwRb90bINwShG2uW8ism8Bxgyy8jUAA
-nLbWi2C7CKxtl8IMKsB4TB2kdpbF7yIJ7nocUMQGt3X5zcAk8CJtj6KHdJatGAN7HKEEjoxg
-o2O37utFiqqqB4eC78TItcZFt1PTkOWpAbEHN2HopufMcxQs0u9Q+yc+5aBlmwlwsfOyz1N8
-wo4Qd6MMeC4YihCbNVhdC4uJvtvlur2f+wCLHVOpRGdehwHSBUG2RMlGlzt16+2mHZ07/Eoq
-7+EaFD14aCNpvP/wtxOBXvX831pe5jQl7hBYgIbiACy03If0DD1VmJf1FGWMyx3kYsWzS6LC
-ZceMJ/21LvN/p/cpiQajZGBJKuXdej3j+VST7hyOib+LbHjoSkv1712k/11or/ZhOfqMIFdQ
-hm/rfqC2SvcPTejXXGF62dvlhsPLMjlENd74fnp8fd5uV3e/zn+y98VI2ugd96ZS6J6XWWqJ
-q0cNoevTZM6r18u3P59v/uJmZAwXam0zAB0DiYEJeZ+7cZoIiNdce38QEKcI3bGkyeHrtgFS
-a5bWglPVHEVdOEFMXdFX55XbZwL84Hw3NGGOf2j2wH3iwB7tsDQi7gmp9xvZy31UaGmGbivg
-8Z/JGUtPkbRTHpQWOd80MEWQlI8hup7Ktq+AH0OQLXYBIkG/hltYw3yFI4njXe1iNqsAZmt7
-WHsYx4TPw3E5gj2SjTvUEbMONrmeh5tc80oPj4gzTPBIbq+0wSfG9ojWP27jLjDCu+U6MCt3
-q1kIs1yEMLd3Dutx+sDadyIJMG9cau02WHa+WHHGUj7N3B1kpBIp3Z72TXmUPXjBUy958OS7
-9YjQWuzxa76+Tag+XhnqjIc38XVIfjT985XbrWMpt23NwBq/n2jaBAc0m4Olxyci03aAvxEO
-UltTlwymLuH+ZjvgDZgHDLNvW/T0mH0keDhIbkd/eSFCQr+igtPIDBRFI/W0DzRe7N2kLd3U
-R6kOfmv+iU2n7PHy8nT5fPP3+w+fHp8+jiesrjGJvKzf7bJor/x3sq8vj09vn8gc9c8vl9eP
-U7MuE5WbXufGrudCKdwpGSpk7kU2MPtb69qFKYS60qnwbLxGmb6LRc6b+yXPX76C2PAr5k2+
-AUn0wyeTx/GDgdtpL60nJLxmBlULosDnPBLggRSD4Uc64FfbkeaN0uYqxl1fQJw1tRm7IEvF
-WcsKGAc+xbAHZi2ilOoHGte+AkT1FEvFZca+9eDMl6fCDkfZ362tx3iBASsZFYwhVebCiBIA
-xcTj1bQekZm1ssi4CxWJICcQPro5qUq6RdkCrA23Ncf4JnQfZTKlyAPTzu5KVAKfRHTER0H0
-uuEU9+i6j5Ja/c5aqCNwEHjNZ/1t9r+5O3so9FEwXmO0dvny/PL9Jr3859vHj86OovkXZ42R
-DLjeIp4if4a+HcyAKgvHKM2Ft0XZKSqCFOhPPW3a3Iy4RXMwcU9pnLnIM5jLafEew+9Us27o
-YzUqlOTHUN1zD4Udqss1M2m8s3ySheRTnhOWrvMS1oCo67LuFB8j47RGSR3Fm+0uK0/M+rfR
-ofmiJY2T0m8iX9qGa4pjroi/r03eAfjwhMnRErvJnj98+vbVsLfD+6ePts9cmRybCurQMNjS
-2jlwxUuDSOS/GB40t8kqdOP6JzS4HxsxPtyOlBj64ke1+TR+baa3cKmBlawjdbQZmdmkA4pO
-HoxuOl/MmG4PZOGRuSR+V07vgGkBb0tLZzsiJeZcdpRdDtivyCD73o6hhWHtpFNTdwMOnlKE
-nmhUnLJmJ4oiDbF47MpRiCqkp+oNbkJqm46bgbyTV1O/MlyvI3e8+fm1s116/b+bL9/eLv+7
-wH8ubx/+9a9//TI9nWsNp6oWZzbUfLdXoN+u9VLHJkw5H3w6GUyrYD9XEb0LOgSkuiS27CkC
-7q9pJxHjpKuhanDOpvPd0QZH1LtDZkJUXO+QrUcVJibJdqSftpugdmF/g0goJo5+9kFK8h7D
-2s3REOwc/OnysDADk7x/gFkfkvD+gNR+Wk/PvMMfPakFplCT0ahTq5PGOYS9T4dodgNVqP5C
-dC9w8HsgMKPjSxRWAKfEdYoffBgkAaEFP1CWDSxiMfcqwS8XbEK8Y3Rv7hZ41wlK9cQxufvG
-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
-P1HE1+CRkQEA
-
---Nq2Wo0NMKNjxTN9z--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.c b/drivers/net/wireless/realtek/rtlwifi/efuse.c
+index afc7550..eb58633 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/efuse.c
++++ b/drivers/net/wireless/realtek/rtlwifi/efuse.c
+@@ -31,6 +31,9 @@ static const u8 MAX_PGPKT_SIZE = 9;
+ static const u8 PGPKT_DATA_SIZE = 8;
+ static const int EFUSE_MAX_SIZE = 512;
+ 
++#define START_ADDRESS		0x1000
++#define REG_MCUFWDL		0x0080
++
+ static const struct efuse_map RTL8712_SDIO_EFUSE_TABLE[] = {
+ 	{0, 0, 0, 2},
+ 	{0, 1, 0, 2},
+@@ -1320,3 +1323,45 @@ int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(rtl_get_hwinfo);
++
++void rtl_fw_block_write(struct ieee80211_hw *hw, const u8 *buffer, u32 size)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 *pu4byteptr = (u8 *)buffer;
++	u32 i;
++
++	for (i = 0; i < size; i++)
++		rtl_write_byte(rtlpriv, (START_ADDRESS + i), *(pu4byteptr + i));
++}
++EXPORT_SYMBOL_GPL(rtl_fw_block_write);
++
++void rtl_fw_page_write(struct ieee80211_hw *hw, u32 page, const u8 *buffer,
++		       u32 size)
++{
++	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	u8 value8;
++	u8 u8page = (u8)(page & 0x07);
++
++	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
++
++	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
++	rtl_fw_block_write(hw, buffer, size);
++}
++EXPORT_SYMBOL_GPL(rtl_fw_page_write);
++
++void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
++{
++	u32 fwlen = *pfwlen;
++	u8 remain = (u8)(fwlen % 4);
++
++	remain = (remain == 0) ? 0 : (4 - remain);
++
++	while (remain > 0) {
++		pfwbuf[fwlen] = 0;
++		fwlen++;
++		remain--;
++	}
++
++	*pfwlen = fwlen;
++}
++EXPORT_SYMBOL_GPL(rtl_fill_dummy);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/efuse.h b/drivers/net/wireless/realtek/rtlwifi/efuse.h
+index 51aa121..1338ae6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/efuse.h
++++ b/drivers/net/wireless/realtek/rtlwifi/efuse.h
+@@ -111,5 +111,9 @@ void efuse_force_write_vendor_Id(struct ieee80211_hw *hw);
+ void efuse_re_pg_section(struct ieee80211_hw *hw, u8 section_idx);
+ int rtl_get_hwinfo(struct ieee80211_hw *hw, struct rtl_priv *rtlpriv,
+ 		   int max_size, u8 *hwinfo, int *params);
++void rtl_fill_dummy(u8 *pfwbuf, u32 *pfwlen);
++void rtl_fw_page_write(struct ieee80211_hw *hw, u32 page, const u8 *buffer,
++		       u32 size);
++void rtl_fw_block_write(struct ieee80211_hw *hw, const u8 *buffer, u32 size);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+index afa784a..21ed9ad 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
+@@ -27,6 +27,7 @@
+ #include "../pci.h"
+ #include "../base.h"
+ #include "../core.h"
++#include "../efuse.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+@@ -53,63 +54,6 @@ static void _rtl88e_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ 	}
+ }
+ 
+-static void _rtl88e_fw_block_write(struct ieee80211_hw *hw,
+-				   const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *)buffer;
+-	u32 *pu4BytePtr = (u32 *)buffer;
+-	u32 i, offset, blockcount, remainsize;
+-
+-	blockcount = size / blocksize;
+-	remainsize = size % blocksize;
+-
+-	for (i = 0; i < blockcount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
+-				*(pu4BytePtr + i));
+-	}
+-
+-	if (remainsize) {
+-		offset = blockcount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainsize; i++) {
+-			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
+-						 offset + i), *(bufferptr + i));
+-		}
+-	}
+-}
+-
+-static void _rtl88e_fw_page_write(struct ieee80211_hw *hw,
+-				  u32 page, const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8) (page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-	_rtl88e_fw_block_write(hw, buffer, size);
+-}
+-
+-static void _rtl88e_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8) (fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-
+-	*pfwlen = fwlen;
+-}
+-
+ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
+ 			     enum version_8188e version, u8 *buffer, u32 size)
+ {
+@@ -120,7 +64,7 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
+ 
+-	_rtl88e_fill_dummy(bufferptr, &size);
++	rtl_fill_dummy(bufferptr, &size);
+ 
+ 	pagenums = size / FW_8192C_PAGE_SIZE;
+ 	remainsize = size % FW_8192C_PAGE_SIZE;
+@@ -130,15 +74,14 @@ static void _rtl88e_write_fw(struct ieee80211_hw *hw,
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+-		_rtl88e_fw_page_write(hw, page, (bufferptr + offset),
+-				      FW_8192C_PAGE_SIZE);
++		rtl_fw_page_write(hw, page, (bufferptr + offset),
++				  FW_8192C_PAGE_SIZE);
+ 	}
+ 
+ 	if (remainsize) {
+ 		offset = pagenums * FW_8192C_PAGE_SIZE;
+ 		page = pagenums;
+-		_rtl88e_fw_page_write(hw, page, (bufferptr + offset),
+-				      remainsize);
++		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+index 433ab7f..c7a7746 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
+@@ -27,6 +27,7 @@
+ #include "../pci.h"
+ #include "../base.h"
+ #include "../core.h"
++#include "../efuse.h"
+ #include "../rtl8192ce/reg.h"
+ #include "../rtl8192ce/def.h"
+ #include "fw_common.h"
+@@ -68,63 +69,6 @@ static void _rtl92c_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ 	}
+ }
+ 
+-static void _rtl92c_fw_block_write(struct ieee80211_hw *hw,
+-				   const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *)buffer;
+-	u32 *pu4byteptr = (u32 *)buffer;
+-	u32 i, offset, blockcount, remainsize;
+-
+-	blockcount = size / blocksize;
+-	remainsize = size % blocksize;
+-
+-	for (i = 0; i < blockcount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
+-				*(pu4byteptr + i));
+-	}
+-
+-	if (remainsize) {
+-		offset = blockcount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainsize; i++) {
+-			rtl_write_byte(rtlpriv, (FW_8192C_START_ADDRESS +
+-						 offset + i), *(bufferptr + i));
+-		}
+-	}
+-}
+-
+-static void _rtl92c_fw_page_write(struct ieee80211_hw *hw,
+-				  u32 page, const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8) (page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-	_rtl92c_fw_block_write(hw, buffer, size);
+-}
+-
+-static void _rtl92c_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8) (fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-
+-	*pfwlen = fwlen;
+-}
+-
+ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 			     enum version_8192c version, u8 *buffer, u32 size)
+ {
+@@ -140,7 +84,7 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 		u32 page, offset;
+ 
+ 		if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192CE)
+-			_rtl92c_fill_dummy(bufferptr, &size);
++			rtl_fill_dummy(bufferptr, &size);
+ 
+ 		pageNums = size / FW_8192C_PAGE_SIZE;
+ 		remainsize = size % FW_8192C_PAGE_SIZE;
+@@ -150,18 +94,18 @@ static void _rtl92c_write_fw(struct ieee80211_hw *hw,
+ 
+ 		for (page = 0; page < pageNums; page++) {
+ 			offset = page * FW_8192C_PAGE_SIZE;
+-			_rtl92c_fw_page_write(hw, page, (bufferptr + offset),
+-					      FW_8192C_PAGE_SIZE);
++			rtl_fw_page_write(hw, page, (bufferptr + offset),
++					  FW_8192C_PAGE_SIZE);
+ 		}
+ 
+ 		if (remainsize) {
+ 			offset = pageNums * FW_8192C_PAGE_SIZE;
+ 			page = pageNums;
+-			_rtl92c_fw_page_write(hw, page, (bufferptr + offset),
+-					      remainsize);
++			rtl_fw_page_write(hw, page, (bufferptr + offset),
++					  remainsize);
+ 		}
+ 	} else {
+-		_rtl92c_fw_block_write(hw, buffer, size);
++		rtl_fw_block_write(hw, buffer, size);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+index 569d572..88faeab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../pci.h"
+ #include "../base.h"
++#include "../efuse.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+@@ -59,84 +60,31 @@ static void _rtl92d_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ 	}
+ }
+ 
+-static void _rtl92d_fw_block_write(struct ieee80211_hw *hw,
+-				   const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *) buffer;
+-	u32 *pu4BytePtr = (u32 *) buffer;
+-	u32 i, offset, blockCount, remainSize;
+-
+-	blockCount = size / blocksize;
+-	remainSize = size % blocksize;
+-	for (i = 0; i < blockCount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8192D_START_ADDRESS + offset),
+-				*(pu4BytePtr + i));
+-	}
+-	if (remainSize) {
+-		offset = blockCount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainSize; i++) {
+-			rtl_write_byte(rtlpriv, (FW_8192D_START_ADDRESS +
+-						 offset + i), *(bufferptr + i));
+-		}
+-	}
+-}
+-
+-static void _rtl92d_fw_page_write(struct ieee80211_hw *hw,
+-				  u32 page, const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8) (page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-	_rtl92d_fw_block_write(hw, buffer, size);
+-}
+-
+-static void _rtl92d_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8) (fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-	*pfwlen = fwlen;
+-}
+-
+ static void _rtl92d_write_fw(struct ieee80211_hw *hw,
+ 			     enum version_8192d version, u8 *buffer, u32 size)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u8 *bufferPtr = buffer;
+-	u32 pagenums, remainSize;
++	u8 *bufferptr = buffer;
++	u32 pagenums, remainsize;
+ 	u32 page, offset;
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW size is %d bytes,\n", size);
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192DE)
+-		_rtl92d_fill_dummy(bufferPtr, &size);
++		rtl_fill_dummy(bufferptr, &size);
+ 	pagenums = size / FW_8192D_PAGE_SIZE;
+-	remainSize = size % FW_8192D_PAGE_SIZE;
++	remainsize = size % FW_8192D_PAGE_SIZE;
+ 	if (pagenums > 8)
+ 		pr_err("Page numbers should not greater then 8\n");
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192D_PAGE_SIZE;
+-		_rtl92d_fw_page_write(hw, page, (bufferPtr + offset),
+-				      FW_8192D_PAGE_SIZE);
++		rtl_fw_page_write(hw, page, (bufferptr + offset),
++				  FW_8192D_PAGE_SIZE);
+ 	}
+-	if (remainSize) {
++	if (remainsize) {
+ 		offset = pagenums * FW_8192D_PAGE_SIZE;
+ 		page = pagenums;
+-		_rtl92d_fw_page_write(hw, page, (bufferPtr + offset),
+-				      remainSize);
++		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+index 78ee6e1..9d7a16c 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
+@@ -27,6 +27,7 @@
+ #include "../pci.h"
+ #include "../base.h"
+ #include "../core.h"
++#include "../efuse.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+@@ -48,64 +49,6 @@ static void _rtl92ee_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ 	}
+ }
+ 
+-static void _rtl92ee_fw_block_write(struct ieee80211_hw *hw,
+-				    const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *)buffer;
+-	u32 *pu4byteptr = (u32 *)buffer;
+-	u32 i, offset, blockcount, remainsize;
+-
+-	blockcount = size / blocksize;
+-	remainsize = size % blocksize;
+-
+-	for (i = 0; i < blockcount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
+-				*(pu4byteptr + i));
+-	}
+-
+-	if (remainsize) {
+-		offset = blockcount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainsize; i++) {
+-			rtl_write_byte(rtlpriv,
+-				       (FW_8192C_START_ADDRESS + offset + i),
+-				       *(bufferptr + i));
+-		}
+-	}
+-}
+-
+-static void _rtl92ee_fw_page_write(struct ieee80211_hw *hw, u32 page,
+-				   const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8)(page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-
+-	_rtl92ee_fw_block_write(hw, buffer, size);
+-}
+-
+-static void _rtl92ee_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8)(fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-
+-	*pfwlen = fwlen;
+-}
+-
+ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
+ 			      enum version_8192e version,
+ 			      u8 *buffer, u32 size)
+@@ -117,7 +60,7 @@ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD , "FW size is %d bytes,\n", size);
+ 
+-	_rtl92ee_fill_dummy(bufferptr, &size);
++	rtl_fill_dummy(bufferptr, &size);
+ 
+ 	pagenums = size / FW_8192C_PAGE_SIZE;
+ 	remainsize = size % FW_8192C_PAGE_SIZE;
+@@ -127,16 +70,15 @@ static void _rtl92ee_write_fw(struct ieee80211_hw *hw,
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+-		_rtl92ee_fw_page_write(hw, page, (bufferptr + offset),
+-				       FW_8192C_PAGE_SIZE);
++		rtl_fw_page_write(hw, page, (bufferptr + offset),
++				  FW_8192C_PAGE_SIZE);
+ 		udelay(2);
+ 	}
+ 
+ 	if (remainsize) {
+ 		offset = pagenums * FW_8192C_PAGE_SIZE;
+ 		page = pagenums;
+-		_rtl92ee_fw_page_write(hw, page, (bufferptr + offset),
+-				       remainsize);
++		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+index 8e0d038..ac573d6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.c
+@@ -26,6 +26,7 @@
+ #include "../wifi.h"
+ #include "../pci.h"
+ #include "../base.h"
++#include "../efuse.h"
+ #include "fw_common.h"
+ #include <linux/module.h>
+ 
+@@ -53,65 +54,6 @@ void rtl8723_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ }
+ EXPORT_SYMBOL_GPL(rtl8723_enable_fw_download);
+ 
+-void rtl8723_fw_block_write(struct ieee80211_hw *hw,
+-			    const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *)buffer;
+-	u32 *pu4byteptr = (u32 *)buffer;
+-	u32 i, offset, blockcount, remainsize;
+-
+-	blockcount = size / blocksize;
+-	remainsize = size % blocksize;
+-
+-	for (i = 0; i < blockcount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8192C_START_ADDRESS + offset),
+-				*(pu4byteptr + i));
+-	}
+-	if (remainsize) {
+-		offset = blockcount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainsize; i++) {
+-			rtl_write_byte(rtlpriv,
+-				       (FW_8192C_START_ADDRESS + offset + i),
+-				       *(bufferptr + i));
+-		}
+-	}
+-}
+-EXPORT_SYMBOL_GPL(rtl8723_fw_block_write);
+-
+-void rtl8723_fw_page_write(struct ieee80211_hw *hw,
+-			   u32 page, const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8) (page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-	rtl8723_fw_block_write(hw, buffer, size);
+-}
+-EXPORT_SYMBOL_GPL(rtl8723_fw_page_write);
+-
+-void rtl8723_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8) (fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-	*pfwlen = fwlen;
+-}
+-EXPORT_SYMBOL(rtl8723_fill_dummy);
+-
+ void rtl8723_write_fw(struct ieee80211_hw *hw,
+ 		      enum version_8723e version,
+ 		      u8 *buffer, u32 size, u8 max_page)
+@@ -123,7 +65,7 @@ void rtl8723_write_fw(struct ieee80211_hw *hw,
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW size is %d bytes,\n", size);
+ 
+-	rtl8723_fill_dummy(bufferptr, &size);
++	rtl_fill_dummy(bufferptr, &size);
+ 
+ 	page_nums = size / FW_8192C_PAGE_SIZE;
+ 	remain_size = size % FW_8192C_PAGE_SIZE;
+@@ -134,15 +76,14 @@ void rtl8723_write_fw(struct ieee80211_hw *hw,
+ 	}
+ 	for (page = 0; page < page_nums; page++) {
+ 		offset = page * FW_8192C_PAGE_SIZE;
+-		rtl8723_fw_page_write(hw, page, (bufferptr + offset),
+-				      FW_8192C_PAGE_SIZE);
++		rtl_fw_page_write(hw, page, (bufferptr + offset),
++				  FW_8192C_PAGE_SIZE);
+ 	}
+ 
+ 	if (remain_size) {
+ 		offset = page_nums * FW_8192C_PAGE_SIZE;
+ 		page = page_nums;
+-		rtl8723_fw_page_write(hw, page, (bufferptr + offset),
+-				      remain_size);
++		rtl_fw_page_write(hw, page, (bufferptr + offset), remain_size);
+ 	}
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_TRACE, "FW write done.\n");
+ }
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
+index 8ea372d..77c25a9 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723com/fw_common.h
+@@ -28,7 +28,6 @@
+ 
+ #define REG_SYS_FUNC_EN				0x0002
+ #define REG_MCUFWDL				0x0080
+-#define FW_8192C_START_ADDRESS			0x1000
+ #define FW_8192C_PAGE_SIZE			4096
+ #define FW_8723A_POLLING_TIMEOUT_COUNT		1000
+ #define FW_8723B_POLLING_TIMEOUT_COUNT		6000
+@@ -84,10 +83,6 @@ enum rtl8723be_cmd {
+ void rtl8723ae_firmware_selfreset(struct ieee80211_hw *hw);
+ void rtl8723be_firmware_selfreset(struct ieee80211_hw *hw);
+ void rtl8723_enable_fw_download(struct ieee80211_hw *hw, bool enable);
+-void rtl8723_fw_block_write(struct ieee80211_hw *hw,
+-			    const u8 *buffer, u32 size);
+-void rtl8723_fw_page_write(struct ieee80211_hw *hw,
+-			   u32 page, const u8 *buffer, u32 size);
+ void rtl8723_write_fw(struct ieee80211_hw *hw,
+ 		      enum version_8723e version,
+ 		      u8 *buffer, u32 size, u8 max_page);
+@@ -95,6 +90,5 @@ int rtl8723_fw_free_to_go(struct ieee80211_hw *hw, bool is_8723be, int count);
+ int rtl8723_download_fw(struct ieee80211_hw *hw, bool is_8723be, int count);
+ bool rtl8723_cmd_send_packet(struct ieee80211_hw *hw,
+ 			     struct sk_buff *skb);
+-void rtl8723_fill_dummy(u8 *pfwbuf, u32 *pfwlen);
+ 
+ #endif
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+index 94e97dc..328c64d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
+@@ -27,6 +27,7 @@
+ #include "../pci.h"
+ #include "../base.h"
+ #include "../core.h"
++#include "../efuse.h"
+ #include "reg.h"
+ #include "def.h"
+ #include "fw.h"
+@@ -51,63 +52,6 @@ static void _rtl8821ae_enable_fw_download(struct ieee80211_hw *hw, bool enable)
+ 	}
+ }
+ 
+-static void _rtl8821ae_fw_block_write(struct ieee80211_hw *hw,
+-				      const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u32 blocksize = sizeof(u32);
+-	u8 *bufferptr = (u8 *)buffer;
+-	u32 *pu4byteptr = (u32 *)buffer;
+-	u32 i, offset, blockcount, remainsize;
+-
+-	blockcount = size / blocksize;
+-	remainsize = size % blocksize;
+-
+-	for (i = 0; i < blockcount; i++) {
+-		offset = i * blocksize;
+-		rtl_write_dword(rtlpriv, (FW_8821AE_START_ADDRESS + offset),
+-				*(pu4byteptr + i));
+-	}
+-
+-	if (remainsize) {
+-		offset = blockcount * blocksize;
+-		bufferptr += offset;
+-		for (i = 0; i < remainsize; i++) {
+-			rtl_write_byte(rtlpriv, (FW_8821AE_START_ADDRESS +
+-					offset + i), *(bufferptr + i));
+-		}
+-	}
+-}
+-
+-static void _rtl8821ae_fw_page_write(struct ieee80211_hw *hw,
+-				     u32 page, const u8 *buffer, u32 size)
+-{
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+-	u8 value8;
+-	u8 u8page = (u8)(page & 0x07);
+-
+-	value8 = (rtl_read_byte(rtlpriv, REG_MCUFWDL + 2) & 0xF8) | u8page;
+-
+-	rtl_write_byte(rtlpriv, (REG_MCUFWDL + 2), value8);
+-	_rtl8821ae_fw_block_write(hw, buffer, size);
+-}
+-
+-static void _rtl8821ae_fill_dummy(u8 *pfwbuf, u32 *pfwlen)
+-{
+-	u32 fwlen = *pfwlen;
+-	u8 remain = (u8)(fwlen % 4);
+-
+-	remain = (remain == 0) ? 0 : (4 - remain);
+-
+-	while (remain > 0) {
+-		pfwbuf[fwlen] = 0;
+-		fwlen++;
+-		remain--;
+-	}
+-
+-	*pfwlen = fwlen;
+-}
+-
+ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
+ 				enum version_8821ae version,
+ 				u8 *buffer, u32 size)
+@@ -119,7 +63,7 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
+ 
+ 	RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD, "FW size is %d bytes,\n", size);
+ 
+-	_rtl8821ae_fill_dummy(bufferptr, &size);
++	rtl_fill_dummy(bufferptr, &size);
+ 
+ 	pagenums = size / FW_8821AE_PAGE_SIZE;
+ 	remainsize = size % FW_8821AE_PAGE_SIZE;
+@@ -129,15 +73,14 @@ static void _rtl8821ae_write_fw(struct ieee80211_hw *hw,
+ 
+ 	for (page = 0; page < pagenums; page++) {
+ 		offset = page * FW_8821AE_PAGE_SIZE;
+-		_rtl8821ae_fw_page_write(hw, page, (bufferptr + offset),
+-					 FW_8821AE_PAGE_SIZE);
++		rtl_fw_page_write(hw, page, (bufferptr + offset),
++				  FW_8821AE_PAGE_SIZE);
+ 	}
+ 
+ 	if (remainsize) {
+ 		offset = pagenums * FW_8821AE_PAGE_SIZE;
+ 		page = pagenums;
+-		_rtl8821ae_fw_page_write(hw, page, (bufferptr + offset),
+-					 remainsize);
++		rtl_fw_page_write(hw, page, (bufferptr + offset), remainsize);
+ 	}
+ }
+ 
+-- 
+2.10.2
