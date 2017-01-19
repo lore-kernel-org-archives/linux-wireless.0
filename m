@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:62392 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752826AbdASOgB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 09:36:01 -0500
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:33363 "EHLO
+        mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751507AbdASNGV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 08:06:21 -0500
+Received: by mail-yw0-f173.google.com with SMTP id l75so31889823ywb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 05:05:30 -0800 (PST)
+Subject: Re: [PATCH] nl80211: fix validation of scheduled scan info for wowlan
+ netdetect
+To: Luca Coelho <luca@coelho.fi>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <1484820088-24448-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1484827206.2774.12.camel@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bde55d09-6f3e-1f90-4aef-0e1169c11cf6@broadcom.com> (sfid-20170119_140624_769549_F97FC8DD)
+Date: Thu, 19 Jan 2017 14:08:44 +0100
 MIME-Version: 1.0
-Message-ID: <trinity-12e38a0e-85af-457b-9d4e-3c40ab1f6fd1-1484836538110@3capp-gmx-bs75> (sfid-20170119_154224_129688_181F4A2F)
-From: "Lino Sanfilippo" <LinoSanfilippo@gmx.de>
-To: "Bharat Kumar Gogada" <bharat.kumar.gogada@xilinx.com>
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvalo@codeaurora.org, netdev@vger.kernel.org, rgummal@xilinx.com,
-        "Bharat Kumar Gogada" <bharatku@xilinx.com>
-Subject: Re: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
- interrupts after enabling local irq flags
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 19 Jan 2017 15:35:38 +0100
-In-Reply-To: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
-References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1484827206.2774.12.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-altek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-> index a47be73..143766c4 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-> @@ -1306,9 +1306,9 @@ void rtl92ce_enable_interrupt(struct ieee80211_hw *hw)
->  	struct rtl_priv *rtlpriv = rtl_priv(hw);
->  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
->  
-> +	rtlpci->irq_enabled = true;
->  	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
->  	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
-> -	rtlpci->irq_enabled = true;
->  }
->  
->  void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
-> @@ -1316,9 +1316,9 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
->  	struct rtl_priv *rtlpriv = rtl_priv(hw);
->  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
->  
-> +	rtlpci->irq_enabled = false;
->  	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
->  	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
-> -	rtlpci->irq_enabled = false;
->  }
->  
 
-AFAIK you also have to use memory barriers here to ensure that
-the concerning instructions are not reordered, and both irq handler
-and process have a consistent perception of irq_enabled, e.g:
+On 19-1-2017 13:00, Luca Coelho wrote:
+> On Thu, 2017-01-19 at 10:01 +0000, Arend van Spriel wrote:
+>> For wowlan netdetect a separate limit is defined for the number of
+>> matchsets. Currently, this limit is ignored and the regular limit
+>> for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
+>> used for the net-detect case as well.
+>>
+>> Cc: Luciano Coelho <luciano.coelho@intel.com>
+>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>> ---
+> 
+> What?! You don't have the same number of matchsets for both? :P
 
-rtlpci->irq_enabled = true;
-smp_wmb();
-rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
-
-and in the irq handler
-
-if (rtlpci->irq_enabled == 0) {
-        smp_rmb();
-	return ret;
-}
-
+Actually I have, but your comment mentioned they do not have to be the
+same. brcmfmac actually did not set max_nd_match_sets so I was surprised
+it worked. That said this patch will result in regression in brcmfmac
+:-p Not sure about other drivers supporting net-detect.
 
 Regards,
-Lino
+Arend
+
+> Looks good.
+> 
+> Reviewed-by: Luca Coelho <luciano.coelho@intel.com>
+> 
+> --
+> Luca.
+> 
