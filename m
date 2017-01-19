@@ -1,70 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35115 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757925AbdACLD7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47044 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754041AbdASSIj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 06:03:59 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
+        Thu, 19 Jan 2017 13:08:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: David Arcari <darcari@redhat.com>,
+        David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
         linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V4 3/2] brcmfmac: use wiphy_read_of_freq_limits to respect extra limits
-Date: Tue,  3 Jan 2017 12:03:40 +0100
-Message-Id: <20170103110340.23249-3-zajec5@gmail.com> (sfid-20170103_120405_538517_B63BE491)
-In-Reply-To: <20170103110340.23249-1-zajec5@gmail.com>
-References: <20170103110340.23249-1-zajec5@gmail.com>
+Subject: Re: [PATCH] net: ethtool: avoid allocation failure for dump_regs
+References: <1484746445-97920-1-git-send-email-darcari@redhat.com>
+        <20170118.114505.1855687422610394730.davem@davemloft.net>
+        <e88b01a6-dae8-a97e-9a8b-8aab030ad099@redhat.com>
+        <20170119141508.GA6245@tuxdriver.com>
+        <20170119155620.GD6245@tuxdriver.com>
+Date: Thu, 19 Jan 2017 20:08:30 +0200
+In-Reply-To: <20170119155620.GD6245@tuxdriver.com> (John W. Linville's message
+        of "Thu, 19 Jan 2017 10:56:21 -0500")
+Message-ID: <87h94uorc1.fsf@kamboji.qca.qualcomm.com> (sfid-20170119_190921_093720_56B97246)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+"John W. Linville" <linville@tuxdriver.com> writes:
 
-There are some devices (e.g. Netgear R8000 home router) with one chipset
-model used for different radios, some of them limited to subbands. NVRAM
-entries don't contain any extra info on such limitations and firmware
-reports full list of channels to us. We need to store extra limitation
-info on DT to support such devices properly.
+> I forgot to Cc Johannes and Kalle...
 
-This patch adds check for channel being disabled with orig_flags which
-is how this wiphy helper works.
+Also adding linux-wireless.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-This patch should probably go through wireless-driver-next, I'm sending
-it just as a proof of concept. It was succesfully tested on SmartRG
-SR400ac with BCM43602.
+> On Thu, Jan 19, 2017 at 09:15:09AM -0500, John W. Linville wrote:
+>> On Thu, Jan 19, 2017 at 07:35:22AM -0500, David Arcari wrote:
+>> > On 01/18/2017 11:45 AM, David Miller wrote:
+>> > > From: David Arcari <darcari@redhat.com>
+>> > > Date: Wed, 18 Jan 2017 08:34:05 -0500
+>> > >
+>> > >> If the user executes 'ethtool -d' for an interface and the associated
+>> > >> get_regs_len() function returns 0, the user will see a call trace from
+>> > >> the vmalloc() call in ethtool_get_regs().  This patch modifies
+>> > >> ethtool_get_regs() to avoid the call to vmalloc when the size is zero.
+>> > >>
+>> > >> Signed-off-by: David Arcari <darcari@redhat.com>
+>> > > I think when the driver indicates this, it is equivalent to saying that
+>> > > the operation isn't supported.
+>> > >
+>> > > Also, this guards us against ->get_regs() methods that don't handle
+>> > > zero length requests properly.  I see many which are going to do
+>> > > really terrible things in that situation.
+>> > >
+>> > > Therefore, if get_regs_len() returns zero, treat it the safe as if the
+>> > > ethtool operations were NULL.
+>> > >
+>> > > Thanks.
+>> > 
+>> > That was actually the fix that I was originally considering, but it
+>> > turns out
+>> > there is a problem with it.
+>> > 
+>> > I found that the vmalloc error was occurring because
+>> > ieee80211_get_regs_len() in
+>> > net/mac80211/ethtool.c was returning zero.  The ieee80211_get_regs in
+>> > the same
+>> > file returns the hw version. It turns out that this information is used
+>> > by the
+>> > at76c50x-usb driver in the user space ethtool to report which HW variant
+>> > is in
+>> > use.  Returning an error when regs_len() returns zero would break this
+>> > functionality.
+>> > 
+>> > -Dave
+>> 
+>> I'm responsible for this mess. The original idea was for various
+>> mac80211-based drivers to override the ethtool operation and provide
+>> their own dump operation, but the mac80211 crowd never embraced
+>> the idea.
+>> 
+>> In the meantime, I added the default implementation which just
+>> passed-up wdev->wiphy->hw_version as the version info for a 0-length
+>> register dump. I then implemented a driver-specific regiser dump
+>> handler for userland ethtool that would interpret the hardware version
+>> information for the at76c50x-usb driver.
+>> 
+>> So the net of it is, if we treat a return of 0 from get_regs_len()
+>> as "not supported", we break this one driver-specific feature for
+>> userland ethtool. Realistically, there are probably very few users
+>> to care. But I can't guarantee that the number is zero.
 
-V4: Respect IEEE80211_CHAN_DISABLED in orig_flags
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
- 1 file changed, 4 insertions(+)
+I know the number is not zero, because I remember using it years back
+with something else than at76c50x-usb. But is the number more than one,
+I don't know :)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index ccae3bb..f95e316 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_cfg80211_info *cfg,
- 						       band->band);
- 		channel[index].hw_value = ch.control_ch_num;
- 
-+		if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
-+			continue;
-+
- 		/* assuming the chanspecs order is HT20,
- 		 * HT40 upper, HT40 lower, and VHT80.
- 		 */
-@@ -6477,6 +6480,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 			wiphy->bands[NL80211_BAND_5GHZ] = band;
- 		}
- 	}
-+	wiphy_read_of_freq_limits(wiphy);
- 	err = brcmf_setup_wiphybands(wiphy);
- 	return err;
- }
+>> Possible solutions:
+>> 
+>> 	-- break userland ethtool for at76c50x-usb
+>> 	-- avoid 0-len allocation attempt (David Arcari's patch)
+>> 	-- make allocator accept a 0 length value w/o oops'ing
+>> 	-- change mac8011 code to return non-zero from get_regs_len()
+>> 
+>> Thoughts? The last option holds a certain attraction, but I'm not
+>> sure how to make it useful...?
+
+If it were only about at76c50x-usb I would say go for it, nobody sane
+should use that device anymore. But on the other hand I'm worried that
+this interface might be used by other (proprietary) user space tools
+with other, more important, drivers. A difficult situation.
+
 -- 
-2.10.1
+Kalle Valo
