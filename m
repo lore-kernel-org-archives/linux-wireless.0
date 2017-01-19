@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57758 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751510AbdALNPO (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34635 "EHLO
+        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751160AbdASJvf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 08:15:14 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
+        Thu, 19 Jan 2017 04:51:35 -0500
+Received: by mail-lf0-f67.google.com with SMTP id q89so4684611lfi.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 01:51:35 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 00/13] wil6210 patches
-Date: Thu, 12 Jan 2017 15:05:52 +0200
-Message-Id: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141631_856514_32B59ADD)
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+        Hante Meuleman <meuleman@broadcom.com>
+Subject: [PATCH] brcmfmac: drop duplicated core selection from brcmf_pcie_attach
+Date: Thu, 19 Jan 2017 10:51:25 +0100
+Message-Id: <20170119095125.12276-1-zajec5@gmail.com> (sfid-20170119_105144_644350_29B6C32D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The following set of patches include various wil6210 fixes
-Changes from V1:
-- Fix copyright year to 2017
-- Add a patch to convert symbolic permissions to octal permissions to fix checkpatch
-  errors and align to latest kernel preference
-- Fix "set dma mask to reflect device capability" commit text
+From: Rafał Miłecki <rafal@milecki.pl>
 
+It was left after reworking PCIe reset in commit 07fe2e38c7fd
+("brcmfmac: Reset PCIE devices after recognition.").
 
-Dedy Lansky (2):
-  wil6210: add disable_ap_sme module parameter
-  wil6210: support new WMI-only FW capability
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Hamad Kadmany (2):
-  wil6210: protect against false interrupt during reset sequence
-  wil6210: set dma mask to reflect device capability
-
-Lazar Alexei (2):
-  wil6210: support loading dedicated image for sparrow-plus devices
-  wil6210: remove __func__ from debug printouts
-
-Lior David (6):
-  wil6210: add sysfs file for FTM calibration
-  wil6210: missing reinit_completion in wmi_call
-  wil6210: fix for broadcast workaround in PBSS
-  wil6210: align to latest auto generated wmi.h
-  wil6210: report association ID (AID) per station in debugfs
-  wil6210: option to override A-BFT length in start AP/PCP
-
-Maya Erez (1):
-  wil6210: convert symbolic permissions to octal permissions
-
- drivers/net/wireless/ath/wil6210/Makefile         |   1 +
- drivers/net/wireless/ath/wil6210/cfg80211.c       | 172 ++++++++++++++++------
- drivers/net/wireless/ath/wil6210/debugfs.c        | 136 ++++++++---------
- drivers/net/wireless/ath/wil6210/ethtool.c        |  10 +-
- drivers/net/wireless/ath/wil6210/fw.c             |   7 +-
- drivers/net/wireless/ath/wil6210/fw_inc.c         |  21 ++-
- drivers/net/wireless/ath/wil6210/interrupt.c      |  30 ++--
- drivers/net/wireless/ath/wil6210/main.c           |  87 +++++------
- drivers/net/wireless/ath/wil6210/netdev.c         |  17 ++-
- drivers/net/wireless/ath/wil6210/p2p.c            |  36 ++---
- drivers/net/wireless/ath/wil6210/pcie_bus.c       |  77 +++++++---
- drivers/net/wireless/ath/wil6210/pm.c             |  17 +--
- drivers/net/wireless/ath/wil6210/pmc.c            |  79 +++++-----
- drivers/net/wireless/ath/wil6210/rx_reorder.c     |   8 +-
- drivers/net/wireless/ath/wil6210/sysfs.c          | 126 ++++++++++++++++
- drivers/net/wireless/ath/wil6210/txrx.c           |  75 +++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h        |  33 ++++-
- drivers/net/wireless/ath/wil6210/wil_crash_dump.c |  18 +--
- drivers/net/wireless/ath/wil6210/wmi.c            | 131 ++++++++++------
- drivers/net/wireless/ath/wil6210/wmi.h            |  67 ++++++++-
- 20 files changed, 768 insertions(+), 380 deletions(-)
- create mode 100644 drivers/net/wireless/ath/wil6210/sysfs.c
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 19db8f2..6fae4cf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -601,7 +601,6 @@ static void brcmf_pcie_attach(struct brcmf_pciedev_info *devinfo)
+ {
+ 	u32 config;
+ 
+-	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+ 	/* BAR1 window may not be sized properly */
+ 	brcmf_pcie_select_core(devinfo, BCMA_CORE_PCIE2);
+ 	brcmf_pcie_write_reg32(devinfo, BRCMF_PCIE_PCIE2REG_CONFIGADDR, 0x4e0);
 -- 
-1.9.1
+2.10.1
