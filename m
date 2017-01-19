@@ -1,67 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33772 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932970AbdABN2e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54848 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752194AbdASMsE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 08:28:34 -0500
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 2/3] dt-bindings: document common IEEE 802.11 frequency limit property
-Date: Mon,  2 Jan 2017 14:27:46 +0100
-Message-Id: <20170102132747.3491-2-zajec5@gmail.com> (sfid-20170102_142837_037283_B0E9AFBD)
-In-Reply-To: <20170102132747.3491-1-zajec5@gmail.com>
-References: <20170102132747.3491-1-zajec5@gmail.com>
+        Thu, 19 Jan 2017 07:48:04 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: mwifiex: remove redundant dma padding in AMSDU
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1484151084-7241-1-git-send-email-akarwar@marvell.com>
+References: <1484151084-7241-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20170119124804.2F9E5607F6@smtp.codeaurora.org> (sfid-20170119_134808_187510_E5B69BBB)
+Date: Thu, 19 Jan 2017 12:48:04 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> We already ensure 64 bytes alignment and add padding if required
+> during skb_aggr allocation.
+> 
+> Alignment and padding in mwifiex_11n_form_amsdu_txpd() is redundant.
+> We may end up accessing more data than allocated size with this.
+> 
+> This patch fixes following issue by removing redundant padding.
+> 
+> [  370.241338] skbuff: skb_over_panic: text:ffffffffc046946a len:3550
+> put:72 head:ffff880000110000 data:ffff8800001100e4 tail:0xec2 end:0xec0 dev:<NULL>
+> [  370.241374] ------------[ cut here ]------------
+> [  370.241382] kernel BUG at net/core/skbuff.c:104!
+>   370.244032] Call Trace:
+> [  370.244041]  [<ffffffff8c3df5ec>] skb_put+0x44/0x45
+> [  370.244055]  [<ffffffffc046946a>]
+> mwifiex_11n_aggregate_pkt+0x1e9/0xa50 [mwifiex]
+> [  370.244067]  [<ffffffffc0467c16>] mwifiex_wmm_process_tx+0x44a/0x6b7
+> [mwifiex]
+> [  370.244074]  [<ffffffffc0411eb8>] ? 0xffffffffc0411eb8
+> [  370.244084]  [<ffffffffc046116b>] mwifiex_main_process+0x476/0x5a5
+> [mwifiex]
+> [  370.244098]  [<ffffffffc0461298>] mwifiex_main_process+0x5a3/0x5a5
+> [mwifiex]
+> [  370.244113]  [<ffffffff8be7e9ff>] process_one_work+0x1a4/0x309
+> [  370.244123]  [<ffffffff8be7f4ca>] worker_thread+0x20c/0x2ee
+> [  370.244130]  [<ffffffff8be7f2be>] ? rescuer_thread+0x383/0x383
+> [  370.244136]  [<ffffffff8be7f2be>] ? rescuer_thread+0x383/0x383
+> [  370.244143]  [<ffffffff8be83742>] kthread+0x11c/0x124
+> [  370.244150]  [<ffffffff8be83626>] ? kthread_parkme+0x24/0x24
+> [  370.244157]  [<ffffffff8c4da1ef>] ret_from_fork+0x3f/0x70
+> [  370.244168]  [<ffffffff8be83626>] ? kthread_parkme+0x24/0x24
+> 
+> Fixes: 84b313b35f8158d ("mwifiex: make tx packet 64 byte DMA aligned")
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-This new file should be used for properties that apply to all wireless
-devices.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-V2: Switch to a single ieee80211-freq-limit property that allows specifying
-    *multiple* ranges. This resolves problem with more complex rules as pointed
-    by Felx.
-    Make description implementation agnostic as pointed by Arend.
-    Rename node to wifi as suggested by Martin.
----
- .../devicetree/bindings/net/wireless/ieee80211.txt     | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ieee80211.txt
+5f0a221f59ad mwifiex: remove redundant dma padding in AMSDU
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ieee80211.txt b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-new file mode 100644
-index 0000000..658c721
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ieee80211.txt
-@@ -0,0 +1,18 @@
-+Common IEEE 802.11 properties
-+
-+This provides documentation of common properties that are valid for all wireless
-+devices.
-+
-+Optional properties:
-+ - ieee80211-freq-limit : list of supported frequency ranges in KHz
-+
-+Example:
-+
-+pcie@0,0 {
-+	reg = <0x0000 0 0 0 0>;
-+	wifi@0,0 {
-+		reg = <0x0000 0 0 0 0>;
-+		ieee80211-freq-limit = <2402000 2432000>,
-+				       <2432000 2462000>;
-+	};
-+};
 -- 
-2.10.1
+https://patchwork.kernel.org/patch/9510541/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
