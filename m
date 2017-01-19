@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37736 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdAaH00 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38863 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752707AbdASNh6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 02:26:26 -0500
+        Thu, 19 Jan 2017 08:37:58 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [V2, 2/5] brcmfmac: provide a value for struct
- wowlan_support::max_nd_match_sets
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com>
-References: <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20170131072526.7A02160A54@smtp.codeaurora.org> (sfid-20170131_082652_241326_1FEED879)
-Date: Tue, 31 Jan 2017 07:25:26 +0000 (UTC)
+Subject: Re: [net-next] ath6kl: fix warning for using 0 as NULL
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170111163130.19087-1-weiyj.lk@gmail.com>
+References: <20170111163130.19087-1-weiyj.lk@gmail.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+CC: Wei Yongjun <weiyongjun1@huawei.com>,
+        <linux-wireless@vger.kernel.org>
+Message-ID: <166215fed69146dba83ce26649da9bfa@euamsexm01a.eu.qualcomm.com> (sfid-20170119_143806_925904_D8438206)
+Date: Thu, 19 Jan 2017 14:15:19 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> The driver advertises support for WOWLAN_NETDETECT but did not specify
-> maximum amount of netdetect match sets. This was no issue due to a bug
-> in nl80211. As that has been fixed, brcmfmac also needs fixing.
+Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
 > 
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Fixes the following sparse warning:
+> 
+> drivers/net/wireless/ath/ath6kl/sdio.c:716:55: warning:
+>  Using plain integer as NULL pointer
+> 
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
-4 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to ath-next branch of ath.git, thanks.
 
-2ef0359031b9 brcmfmac: provide a value for struct wowlan_support::max_nd_match_sets
-d29afe91af59 brcmfmac: fix handling firmware results for wowl netdetect
-0b57010fc18e brcmfmac: allow wowlan support to be per device
-2a2a5d1835b6 brcmfmac: add .update_connect_params() callback
+96d179b517a9 ath6kl: fix warning for using 0 as NULL
 
 -- 
-https://patchwork.kernel.org/patch/9541755/
+https://patchwork.kernel.org/patch/9510615/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
