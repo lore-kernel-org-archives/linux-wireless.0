@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27109 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764089AbdAKQN6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59240 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751078AbdASJHN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 11:13:58 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 07/12] wil6210: protect against false interrupt during reset sequence
-Date: Wed, 11 Jan 2017 18:12:43 +0200
-Message-Id: <1484151168-894-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170111_171433_192173_6D672B42)
-In-Reply-To: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Thu, 19 Jan 2017 04:07:13 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>
+Subject: Re: [3/3] rtlwifi: Enable debug mask to be set from sysfs
+References: <20170101010706.13234-4-Larry.Finger@lwfinger.net>
+        <20170118144936.91B3E6080C@smtp.codeaurora.org>
+        <5aefd440-1b6f-1791-d85b-e71464c47620@lwfinger.net>
+Date: Thu, 19 Jan 2017 10:57:23 +0200
+In-Reply-To: <5aefd440-1b6f-1791-d85b-e71464c47620@lwfinger.net> (Larry
+        Finger's message of "Wed, 18 Jan 2017 10:38:01 -0600")
+Message-ID: <87h94vpguk.fsf@kamboji.qca.qualcomm.com> (sfid-20170119_100738_045232_430391BD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-During reset sequence it is seen that device is generating an
-interrupt eventhough interrupts are masked at device level.
+> On 01/18/2017 08:49 AM, Kalle Valo wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> The previous commit changes the debug system to use a mask to select
+>>> which components are to be debugged. Now, we add the necessary code
+>>> to change the mask from sysfs.
+>>>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> Cc: Ping-Ke Shih <pkshih@realtek.com>
+>>
+>> There's already a generic sysfs interface to change module parameters in
+>> /sys/module/<driver>/parameters, drivers should not have a private interface for
+>> that.
+>
+> Kalle,
+>
+> I was not aware of that part of sysfs. I will respin the patch as well
+> as remove the old code that set the debug level.
 
-Add workaround to disable the interrupts from host side during
-reset and clear any pending interrupts before re-enabling
-the interrupt.
+Good, thanks. I dropped the whole series now and assume that you will
+send v2.
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 6584960..8135283 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -918,7 +918,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	flush_workqueue(wil->wmi_wq);
- 
- 	wil_bl_crash_info(wil, false);
-+	wil_disable_irq(wil);
- 	rc = wil_target_reset(wil);
-+	wil6210_clear_irq(wil);
-+	wil_enable_irq(wil);
- 	wil_rx_fini(wil);
- 	if (rc) {
- 		wil_bl_crash_info(wil, true);
 -- 
-1.9.1
+Kalle Valo
