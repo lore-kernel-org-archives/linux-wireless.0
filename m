@@ -1,105 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36261 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754457AbdA0Jnv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 04:43:51 -0500
-Date: Fri, 27 Jan 2017 10:43:42 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170127094342.GC24223@pali> (sfid-20170127_104429_207427_B731BDDE)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org>
+Received: from mail-bn3nam01on0077.outbound.protection.outlook.com ([104.47.33.77]:36295
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750894AbdASKah (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 05:30:37 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <kvalo@codeaurora.org>, <netdev@vger.kernel.org>,
+        <rgummal@xilinx.com>, Bharat Kumar Gogada <bharatku@xilinx.com>
+Subject: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware interrupts after enabling local irq flags
+Date: Thu, 19 Jan 2017 15:44:14 +0530
+Message-ID: <1484820854-16719-1-git-send-email-bharatku@xilinx.com> (sfid-20170119_113110_241957_F043DC72)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87tw8lnei3.fsf@codeaurora.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
-> Pali Rohár <pali.rohar@gmail.com> writes:
-> 
-> > NVS calibration data for wl1251 are model specific. Every one device with
-> > wl1251 chip has different and calibrated in factory.
-> >
-> > Not all wl1251 chips have own EEPROM where are calibration data stored. And
-> > in that case there is no "standard" place. Every device has stored them on
-> > different place (some in rootfs file, some in dedicated nand partition,
-> > some in another proprietary structure).
-> >
-> > Kernel wl1251 driver cannot support every one different storage decided by
-> > device manufacture so it will use request_firmware_prefer_user() call for
-> > loading NVS calibration data and userspace helper will be responsible to
-> > prepare correct data.
-> >
-> > In case userspace helper fails request_firmware_prefer_user() still try to
-> > load data file directly from VFS as fallback mechanism.
-> >
-> > On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
-> > in CAL nand partition. CAL is proprietary Nokia key/value format for nand
-> > devices.
-> >
-> > With this patch it is finally possible to load correct model specific NVS
-> > calibration data for Nokia N900.
-> >
-> > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> > ---
-> >  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
-> >  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
-> >  2 files changed, 2 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
-> > index 7142ccf..affe154 100644
-> > --- a/drivers/net/wireless/ti/wl1251/Kconfig
-> > +++ b/drivers/net/wireless/ti/wl1251/Kconfig
-> > @@ -2,6 +2,7 @@ config WL1251
-> >  	tristate "TI wl1251 driver support"
-> >  	depends on MAC80211
-> >  	select FW_LOADER
-> > +	select FW_LOADER_USER_HELPER
-> >  	select CRC7
-> >  	---help---
-> >  	  This will enable TI wl1251 driver support. The drivers make
-> > diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-> > index 208f062..24f8866 100644
-> > --- a/drivers/net/wireless/ti/wl1251/main.c
-> > +++ b/drivers/net/wireless/ti/wl1251/main.c
-> > @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
-> >  	struct device *dev = wiphy_dev(wl->hw->wiphy);
-> >  	int ret;
-> >  
-> > -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
-> > +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
-> 
-> I don't see the need for this. Just remove the default nvs file from
-> filesystem and the fallback user helper will be always used, right?
+-Realtek 8192CE chipset maintains local irq flags after enabling/disabling
+hardware interrupts. 
+-Hardware interrupts are enabled before enabling the local irq 
+flags(these flags are being checked in interrupt handler), 
+leading to race condition on some RP, where the irq line between 
+bridge and GIC goes high at ASSERT_INTx and goes low only 
+at DEASSERT_INTx. In this kind of RP by the time ASSERT_INTx is seen
+irq_enable flag is still set to false, resulting in continuous 
+interrupts seen by CPU as DEASSERT_INTx cannot be sent since 
+flag is still false and making CPU stall.
+-Changing the sequence of setting these irq flags.
 
-It is part of linux-firmware repository. And already part of all
-previous versions of linux-firmware packages in lot of linux
-distributions. So removing it is not possible...
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> Like we discussed earlier, the default nvs file should not be used by
-> normal users.
-
-But already is and we need to deal with this fact.
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+index a47be73..143766c4 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+@@ -1306,9 +1306,9 @@ void rtl92ce_enable_interrupt(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
++	rtlpci->irq_enabled = true;
+ 	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+-	rtlpci->irq_enabled = true;
+ }
+ 
+ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+@@ -1316,9 +1316,9 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 
++	rtlpci->irq_enabled = false;
+ 	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
+ 	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
+-	rtlpci->irq_enabled = false;
+ }
+ 
+ static void _rtl92ce_poweroff_adapter(struct ieee80211_hw *hw)
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+2.1.1
