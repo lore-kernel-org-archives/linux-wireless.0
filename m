@@ -1,150 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33670 "EHLO
-        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754861AbdAABHQ (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32847 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754112AbdASSIh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 31 Dec 2016 20:07:16 -0500
-Received: by mail-oi0-f65.google.com with SMTP id f201so62677901oib.0
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2016 17:07:16 -0800 (PST)
+        Thu, 19 Jan 2017 13:08:37 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
+ interrupts after enabling local irq flags
+To: Lino Sanfilippo <LinoSanfilippo@gmx.de>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+ <trinity-12e38a0e-85af-457b-9d4e-3c40ab1f6fd1-1484836538110@3capp-gmx-bs75>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+        netdev@vger.kernel.org, rgummal@xilinx.com,
+        Bharat Kumar Gogada <bharatku@xilinx.com>
 From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Subject: [PATCH 1/3] rtlwifi: Redo debugging macros RTPRINT and RT_PRINT_DATA
-Date: Sat, 31 Dec 2016 19:07:04 -0600
-Message-Id: <20170101010706.13234-2-Larry.Finger@lwfinger.net> (sfid-20170101_020728_995547_E2F4759D)
-In-Reply-To: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
-References: <20170101010706.13234-1-Larry.Finger@lwfinger.net>
+Message-ID: <294d2858-2554-1b51-3142-b0470423537a@lwfinger.net> (sfid-20170119_190857_542148_46EC2CFA)
+Date: Thu, 19 Jan 2017 12:08:34 -0600
+MIME-Version: 1.0
+In-Reply-To: <trinity-12e38a0e-85af-457b-9d4e-3c40ab1f6fd1-1484836538110@3capp-gmx-bs75>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two debugging formss implement debugging using rather complicated
-macro constructions. These are replaced with compiled code that is easier
-to understand.
+On 01/19/2017 08:35 AM, Lino Sanfilippo wrote:
+> Hi,
+>
+> altek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>> index a47be73..143766c4 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>> @@ -1306,9 +1306,9 @@ void rtl92ce_enable_interrupt(struct ieee80211_hw *hw)
+>>  	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+>>
+>> +	rtlpci->irq_enabled = true;
+>>  	rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+>>  	rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 0xFFFFFFFF);
+>> -	rtlpci->irq_enabled = true;
+>>  }
+>>
+>>  void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+>> @@ -1316,9 +1316,9 @@ void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+>>  	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>  	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+>>
+>> +	rtlpci->irq_enabled = false;
+>>  	rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
+>>  	rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
+>> -	rtlpci->irq_enabled = false;
+>>  }
+>>
+>
+> AFAIK you also have to use memory barriers here to ensure that
+> the concerning instructions are not reordered, and both irq handler
+> and process have a consistent perception of irq_enabled, e.g:
+>
+> rtlpci->irq_enabled = true;
+> smp_wmb();
+> rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
+>
+> and in the irq handler
+>
+> if (rtlpci->irq_enabled == 0) {
+>         smp_rmb();
+> 	return ret;
+> }
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Ping-Ke Shih <pkshih@realtek.com>
----
- drivers/net/wireless/realtek/rtlwifi/debug.c | 42 ++++++++++++++++++++++++----
- drivers/net/wireless/realtek/rtlwifi/debug.h | 33 ++++++++++------------
- 2 files changed, 51 insertions(+), 24 deletions(-)
+I can see the potential race condition between setting interrupts and setting 
+the flag, and I will likely accept Bharat's patch after testing.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-index 33905bb..cd2efac 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-@@ -51,7 +51,7 @@ EXPORT_SYMBOL_GPL(rtl_dbgp_flag_init);
- 
- #ifdef CONFIG_RTLWIFI_DEBUG
- void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
--		    const char *modname, const char *fmt, ...)
-+		    const char *fmt, ...)
- {
- 	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
- 		     (level <= rtlpriv->dbg.global_debuglevel))) {
-@@ -63,13 +63,45 @@ void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
- 		vaf.fmt = fmt;
- 		vaf.va = &args;
- 
--		printk(KERN_DEBUG "%s:%ps:<%lx-%x> %pV",
--		       modname, __builtin_return_address(0),
--		       in_interrupt(), in_atomic(),
--		       &vaf);
-+		pr_debug(":<%lx> %pV", in_interrupt(), &vaf);
- 
- 		va_end(args);
- 	}
- }
- EXPORT_SYMBOL_GPL(_rtl_dbg_trace);
-+
-+void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
-+		    const char *fmt, ...)
-+{
-+	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
-+		     (level <= rtlpriv->dbg.global_debuglevel))) {
-+		struct va_format vaf;
-+		va_list args;
-+
-+		va_start(args, fmt);
-+
-+		vaf.fmt = fmt;
-+		vaf.va = &args;
-+
-+		pr_debug("%pV", &vaf);
-+
-+		va_end(args);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(_rtl_dbg_print);
-+
-+void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
-+			 const char *titlestring,
-+			 const void *hexdata, int hexdatalen)
-+{
-+	if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) &&
-+		     ((level) <= rtlpriv->dbg.global_debuglevel))) {
-+		pr_debug("In process \"%s\" (pid %i): %s\n",
-+			 current->comm, current->pid, titlestring);
-+		print_hex_dump_bytes("", DUMP_PREFIX_NONE,
-+				     hexdata, hexdatalen);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(_rtl_dbg_print_data);
-+
- #endif
-diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-index a6cc3ca..90c670b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-@@ -168,34 +168,29 @@ enum dbgp_flag_e {
- 
- struct rtl_priv;
- 
--__printf(5, 6)
-+__printf(4, 5)
- void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
--		    const char *modname, const char *fmt, ...);
-+		    const char *fmt, ...);
-+
-+__printf(4, 5)
-+void _rtl_dbg_print(struct rtl_priv *rtlpriv, u64 comp, int level,
-+		    const char *fmt, ...);
-+
-+void _rtl_dbg_print_data(struct rtl_priv *rtlpriv, u64 comp, int level,
-+			 const char *titlestring,
-+			 const void *hexdata, int hexdatalen);
- 
- #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
- 	_rtl_dbg_trace(rtlpriv, comp, level,				\
--		       KBUILD_MODNAME, fmt, ##__VA_ARGS__)
-+		       fmt, ##__VA_ARGS__)
- 
- #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
--do {									\
--	if (unlikely(rtlpriv->dbg.dbgp_type[dbgtype] & dbgflag)) {	\
--		printk(KERN_DEBUG KBUILD_MODNAME ": " fmt,		\
--		       ##__VA_ARGS__);					\
--	}								\
--} while (0)
-+	_rtl_dbg_print(rtlpriv, dbgtype, dbgflag, fmt, ##__VA_ARGS__)
- 
- #define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata,	\
- 		      _hexdatalen)					\
--do {									\
--	if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&	\
--		     (_level <= rtlpriv->dbg.global_debuglevel))) {	\
--		printk(KERN_DEBUG "%s: In process \"%s\" (pid %i): %s\n", \
--		       KBUILD_MODNAME, current->comm, current->pid,	\
--		       _titlestring);					\
--		print_hex_dump_bytes("", DUMP_PREFIX_NONE,		\
--				     _hexdata, _hexdatalen);		\
--	}								\
--} while (0)
-+	_rtl_dbg_print_data(rtlpriv, _comp, _level,			\
-+			    _titlestring, _hexdata, _hexdatalen)
- 
- #else
- 
--- 
-2.10.2
+I am likely displaying my ignorance regarding instruction reordering, but what 
+compiler/cpu combination is likely to move a simple set operation after a call 
+to an external routine? Is the smp_wmb() operation really needed? I am also 
+unsure of the smp_rmb() call in the interrupt handler. Neither instruction 
+should cause any problems, but I'm not sure they are needed.
+
+Larry
