@@ -1,208 +1,321 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:43345 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbdAMHRR (ORCPT
+Received: from fudo.makrotopia.org ([185.142.180.71]:55658 "EHLO
+        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752669AbdASOBK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 02:17:17 -0500
-Subject: Re: [PATCH v3 2/2] mmc: pwrseq: add support for Marvell SD8787 chip
-To: Matt Ranostay <matt@ranostay.consulting>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
-References: <20170113052937.12538-1-matt@ranostay.consulting>
- <20170113052937.12538-3-matt@ranostay.consulting>
-Cc: shawn.lin@rock-chips.com, tony@atomide.com,
-        Ulf Hansson <ulf.hansson@linaro.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <cd669d08-0db4-57e4-478b-2b200ccef6f1@rock-chips.com> (sfid-20170113_081740_632501_DA0E2CB6)
-Date: Fri, 13 Jan 2017 15:16:25 +0800
+        Thu, 19 Jan 2017 09:01:10 -0500
+Date: Thu, 19 Jan 2017 14:38:45 +0100
+From: Daniel Golle <daniel@makrotopia.org>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
+        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
+        Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH v3] rt2x00: add support for RT5350 WiSoC
+Message-ID: <20170119133834.GA17398@makrotopia.org> (sfid-20170119_150114_188954_B8E339B6)
+References: <20170118144719.GB22837@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20170113052937.12538-3-matt@ranostay.consulting>
-Content-Type: text/plain; charset=gbk; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170118144719.GB22837@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017/1/13 13:29, Matt Ranostay wrote:
-> Allow power sequencing for the Marvell SD8787 Wifi/BT chip.
-> This can be abstracted to other chipsets if needed in the future.
->
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
-> ---
->  drivers/mmc/core/Kconfig         |  10 ++++
->  drivers/mmc/core/Makefile        |   1 +
->  drivers/mmc/core/pwrseq_sd8787.c | 117 +++++++++++++++++++++++++++++++++++++++
->  3 files changed, 128 insertions(+)
->  create mode 100644 drivers/mmc/core/pwrseq_sd8787.c
->
-> diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
-> index cdfa8520a4b1..fc1ecdaaa9ca 100644
-> --- a/drivers/mmc/core/Kconfig
-> +++ b/drivers/mmc/core/Kconfig
-> @@ -12,6 +12,16 @@ config PWRSEQ_EMMC
->  	  This driver can also be built as a module. If so, the module
->  	  will be called pwrseq_emmc.
->
-> +config PWRSEQ_SD8787
-> +	tristate "HW reset support for SD8787 BT + Wifi module"
-> +	depends on OF && (MWIFIEX || BT_MRVL_SDIO)
-> +	help
-> +	  This selects hardware reset support for the SD8787 BT + Wifi
-> +	  module. By default this option is set to n.
-> +
-> +	  This driver can also be built as a module. If so, the module
-> +	  will be called pwrseq_sd8787.
-> +
+From: Michel Stempin <michel.stempin@wanadoo.fr>
 
-I don't like this way, as we have a chance to list lots
-configure options here. wifi A,B,C,D...Z, all of them need a
-new section here if needed?
+Support for the RT5350 WiSoC was added to OpenWrt after having a
+lengthy debate about the legality of the original submission, see
+https://lists.openwrt.org/pipermail/openwrt-devel/2013-January/018224.html
+MTK/Ralink Acked replied and says we can merge this patch under the GPL.
+https://dev.openwrt.org/changeset/36177
 
-Instead, could you just extent pwrseq_simple.c and add you
-.compatible = "mmc-pwrseq-sd8787", "mmc-pwrseq-simple"?
+Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
+Tested-by: Michel Stempin <michel.stempin@wanadoo.fr>
+Acked-by: John Crispin <blogic@openwrt.org>
+[daniel@makrotopia.org: added commit message, cleaned up code]
 
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+---
+v2: reordered patches to breakout RT3883 from the original series
+v3: remove superflus EEPROM_NIC_CONF0 mangeling from RT5350 patch
 
->  config PWRSEQ_SIMPLE
->  	tristate "Simple HW reset support for MMC"
->  	default y
-> diff --git a/drivers/mmc/core/Makefile b/drivers/mmc/core/Makefile
-> index b2a257dc644f..0f81464fa824 100644
-> --- a/drivers/mmc/core/Makefile
-> +++ b/drivers/mmc/core/Makefile
-> @@ -10,6 +10,7 @@ mmc_core-y			:= core.o bus.o host.o \
->  				   quirks.o slot-gpio.o
->  mmc_core-$(CONFIG_OF)		+= pwrseq.o
->  obj-$(CONFIG_PWRSEQ_SIMPLE)	+= pwrseq_simple.o
-> +obj-$(CONFIG_PWRSEQ_SD8787)	+= pwrseq_sd8787.o
->  obj-$(CONFIG_PWRSEQ_EMMC)	+= pwrseq_emmc.o
->  mmc_core-$(CONFIG_DEBUG_FS)	+= debugfs.o
->  obj-$(CONFIG_MMC_BLOCK)		+= mmc_block.o
-> diff --git a/drivers/mmc/core/pwrseq_sd8787.c b/drivers/mmc/core/pwrseq_sd8787.c
-> new file mode 100644
-> index 000000000000..f4080fe6439e
-> --- /dev/null
-> +++ b/drivers/mmc/core/pwrseq_sd8787.c
-> @@ -0,0 +1,117 @@
-> +/*
-> + * pwrseq_sd8787.c - power sequence support for Marvell SD8787 BT + Wifi chip
-> + *
-> + * Copyright (C) 2016 Matt Ranostay <matt@ranostay.consulting>
-> + *
-> + * Based on the original work pwrseq_simple.c
-> + *  Copyright (C) 2014 Linaro Ltd
-> + *  Author: Ulf Hansson <ulf.hansson@linaro.org>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-> + * GNU General Public License for more details.
-> + *
-> + */
-> +
-> +#include <linux/delay.h>
-> +#include <linux/init.h>
-> +#include <linux/kernel.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/module.h>
-> +#include <linux/slab.h>
-> +#include <linux/device.h>
-> +#include <linux/err.h>
-> +#include <linux/gpio/consumer.h>
-> +
-> +#include <linux/mmc/host.h>
-> +
-> +#include "pwrseq.h"
-> +
-> +struct mmc_pwrseq_sd8787 {
-> +	struct mmc_pwrseq pwrseq;
-> +	struct gpio_desc *reset_gpio;
-> +	struct gpio_desc *pwrdn_gpio;
-> +};
-> +
-> +#define to_pwrseq_sd8787(p) container_of(p, struct mmc_pwrseq_sd8787, pwrseq)
-> +
-> +static void mmc_pwrseq_sd8787_pre_power_on(struct mmc_host *host)
-> +{
-> +	struct mmc_pwrseq_sd8787 *pwrseq = to_pwrseq_sd8787(host->pwrseq);
-> +
-> +	gpiod_set_value_cansleep(pwrseq->reset_gpio, 1);
-> +
-> +	msleep(300);
-> +	gpiod_set_value_cansleep(pwrseq->pwrdn_gpio, 1);
-> +}
-> +
-> +static void mmc_pwrseq_sd8787_power_off(struct mmc_host *host)
-> +{
-> +	struct mmc_pwrseq_sd8787 *pwrseq = to_pwrseq_sd8787(host->pwrseq);
-> +
-> +	gpiod_set_value_cansleep(pwrseq->pwrdn_gpio, 0);
-> +	gpiod_set_value_cansleep(pwrseq->reset_gpio, 0);
-> +}
-> +
-> +static const struct mmc_pwrseq_ops mmc_pwrseq_sd8787_ops = {
-> +	.pre_power_on = mmc_pwrseq_sd8787_pre_power_on,
-> +	.power_off = mmc_pwrseq_sd8787_power_off,
-> +};
-> +
-> +static const struct of_device_id mmc_pwrseq_sd8787_of_match[] = {
-> +	{ .compatible = "mmc-pwrseq-sd8787",},
-> +	{/* sentinel */},
-> +};
-> +MODULE_DEVICE_TABLE(of, mmc_pwrseq_sd8787_of_match);
-> +
-> +static int mmc_pwrseq_sd8787_probe(struct platform_device *pdev)
-> +{
-> +	struct mmc_pwrseq_sd8787 *pwrseq;
-> +	struct device *dev = &pdev->dev;
-> +
-> +	pwrseq = devm_kzalloc(dev, sizeof(*pwrseq), GFP_KERNEL);
-> +	if (!pwrseq)
-> +		return -ENOMEM;
-> +
-> +	pwrseq->pwrdn_gpio = devm_gpiod_get(dev, "pwrdn", GPIOD_OUT_LOW);
-> +	if (IS_ERR(pwrseq->pwrdn_gpio))
-> +		return PTR_ERR(pwrseq->pwrdn_gpio);
-> +
-> +	pwrseq->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
-> +	if (IS_ERR(pwrseq->reset_gpio))
-> +		return PTR_ERR(pwrseq->reset_gpio);
-> +
-> +	pwrseq->pwrseq.dev = dev;
-> +	pwrseq->pwrseq.ops = &mmc_pwrseq_sd8787_ops;
-> +	pwrseq->pwrseq.owner = THIS_MODULE;
-> +	platform_set_drvdata(pdev, pwrseq);
-> +
-> +	return mmc_pwrseq_register(&pwrseq->pwrseq);
-> +}
-> +
-> +static int mmc_pwrseq_sd8787_remove(struct platform_device *pdev)
-> +{
-> +	struct mmc_pwrseq_sd8787 *pwrseq = platform_get_drvdata(pdev);
-> +
-> +	mmc_pwrseq_unregister(&pwrseq->pwrseq);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct platform_driver mmc_pwrseq_sd8787_driver = {
-> +	.probe = mmc_pwrseq_sd8787_probe,
-> +	.remove = mmc_pwrseq_sd8787_remove,
-> +	.driver = {
-> +		.name = "pwrseq_sd8787",
-> +		.of_match_table = mmc_pwrseq_sd8787_of_match,
-> +	},
-> +};
-> +
-> +module_platform_driver(mmc_pwrseq_sd8787_driver);
-> +MODULE_LICENSE("GPL v2");
->
+ drivers/net/wireless/ralink/rt2x00/rt2800.h    |   1 +
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 125 +++++++++++++++++++++++--
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    |   1 +
+ 3 files changed, 120 insertions(+), 7 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+index 18096903e20f..256496bfbafb 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
+@@ -72,6 +72,7 @@
+ #define RF5592				0x000f
+ #define RF3070				0x3070
+ #define RF3290				0x3290
++#define RF5350				0x5350
+ #define RF5360				0x5360
+ #define RF5362				0x5362
+ #define RF5370				0x5370
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index c33298baecc3..b4b28caff39d 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -2759,6 +2759,13 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
+ 
+ 				rt2800_rfcsr_write(rt2x00dev, 59,
+ 						   r59_non_bt[idx]);
++			} else if (rt2x00_rt(rt2x00dev, RT5350)) {
++				static const char r59_non_bt[] = {0x0b, 0x0b,
++					0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0a,
++					0x0a, 0x09, 0x08, 0x07, 0x07, 0x06};
++
++				rt2800_rfcsr_write(rt2x00dev, 59,
++						   r59_non_bt[idx]);
+ 			}
+ 		}
+ 	}
+@@ -3196,6 +3203,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 		rt2800_config_channel_rf3322(rt2x00dev, conf, rf, info);
+ 		break;
+ 	case RF3070:
++	case RF5350:
+ 	case RF5360:
+ 	case RF5362:
+ 	case RF5370:
+@@ -3214,6 +3222,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	if (rt2x00_rf(rt2x00dev, RF3070) ||
+ 	    rt2x00_rf(rt2x00dev, RF3290) ||
+ 	    rt2x00_rf(rt2x00dev, RF3322) ||
++	    rt2x00_rf(rt2x00dev, RF5350) ||
+ 	    rt2x00_rf(rt2x00dev, RF5360) ||
+ 	    rt2x00_rf(rt2x00dev, RF5362) ||
+ 	    rt2x00_rf(rt2x00dev, RF5370) ||
+@@ -3471,7 +3480,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
+ 	/*
+ 	 * Clear update flag
+ 	 */
+-	if (rt2x00_rt(rt2x00dev, RT3352)) {
++	if (rt2x00_rt(rt2x00dev, RT3352) ||
++	    rt2x00_rt(rt2x00dev, RT5350)) {
+ 		rt2800_bbp_read(rt2x00dev, 49, &bbp);
+ 		rt2x00_set_field8(&bbp, BBP49_UPDATE_FLAG, 0);
+ 		rt2800_bbp_write(rt2x00dev, 49, bbp);
+@@ -4352,6 +4362,7 @@ void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
+ 	case RF3053:
+ 	case RF3070:
+ 	case RF3290:
++	case RF5350:
+ 	case RF5360:
+ 	case RF5362:
+ 	case RF5370:
+@@ -4734,6 +4745,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
++	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
++		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
+ 	} else {
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000000);
+ 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
+@@ -5379,9 +5392,13 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
+ 
+-	rt2800_bbp_write(rt2x00dev, 83, 0x6a);
+-
+-	rt2800_bbp_write(rt2x00dev, 84, 0x99);
++	if (rt2x00_rt(rt2x00dev, RT5350)) {
++		rt2800_bbp_write(rt2x00dev, 83, 0x7a);
++		rt2800_bbp_write(rt2x00dev, 84, 0x9a);
++	} else {
++		rt2800_bbp_write(rt2x00dev, 83, 0x6a);
++		rt2800_bbp_write(rt2x00dev, 84, 0x99);
++	}
+ 
+ 	rt2800_bbp_write(rt2x00dev, 86, 0x38);
+ 
+@@ -5395,9 +5412,13 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 
+ 	rt2800_bbp_write(rt2x00dev, 104, 0x92);
+ 
+-	rt2800_bbp_write(rt2x00dev, 105, 0x34);
+-
+-	rt2800_bbp_write(rt2x00dev, 106, 0x05);
++	if (rt2x00_rt(rt2x00dev, RT5350)) {
++		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
++		rt2800_bbp_write(rt2x00dev, 106, 0x03);
++	} else {
++		rt2800_bbp_write(rt2x00dev, 105, 0x34);
++		rt2800_bbp_write(rt2x00dev, 106, 0x05);
++	}
+ 
+ 	rt2800_bbp_write(rt2x00dev, 120, 0x50);
+ 
+@@ -5422,6 +5443,16 @@ static void rt2800_init_bbp_3352(struct rt2x00_dev *rt2x00dev)
+ 	rt2800_bbp_write(rt2x00dev, 143, 0xa2);
+ 
+ 	rt2800_bbp_write(rt2x00dev, 148, 0xc8);
++
++	if (rt2x00_rt(rt2x00dev, RT5350)) {
++		/* Antenna Software OFDM */
++		rt2800_bbp_write(rt2x00dev, 150, 0x40);
++		/* Antenna Software CCK */
++		rt2800_bbp_write(rt2x00dev, 151, 0x30);
++		rt2800_bbp_write(rt2x00dev, 152, 0xa3);
++		/* Clear previously selected antenna */
++		rt2800_bbp_write(rt2x00dev, 154, 0);
++	}
+ }
+ 
+ static void rt2800_init_bbp_3390(struct rt2x00_dev *rt2x00dev)
+@@ -5722,6 +5753,7 @@ static void rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_init_bbp_3290(rt2x00dev);
+ 		break;
+ 	case RT3352:
++	case RT5350:
+ 		rt2800_init_bbp_3352(rt2x00dev);
+ 		break;
+ 	case RT3390:
+@@ -6532,6 +6564,76 @@ static void rt2800_init_rfcsr_3593(struct rt2x00_dev *rt2x00dev)
+ 	/* TODO: enable stream mode support */
+ }
+ 
++static void rt2800_init_rfcsr_5350(struct rt2x00_dev *rt2x00dev)
++{
++	rt2800_rfcsr_write(rt2x00dev, 0, 0xf0);
++	rt2800_rfcsr_write(rt2x00dev, 1, 0x23);
++	rt2800_rfcsr_write(rt2x00dev, 2, 0x50);
++	rt2800_rfcsr_write(rt2x00dev, 3, 0x08);
++	rt2800_rfcsr_write(rt2x00dev, 4, 0x49);
++	rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
++	rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
++	rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 8, 0xf1);
++	rt2800_rfcsr_write(rt2x00dev, 9, 0x02);
++	rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
++	rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
++	rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
++	if (rt2x00dev->spec.clk_is_20mhz)
++		rt2800_rfcsr_write(rt2x00dev, 13, 0x1f);
++	else
++		rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
++	rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 16, 0xc0);
++	rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
++	rt2800_rfcsr_write(rt2x00dev, 19, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 21, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
++	rt2800_rfcsr_write(rt2x00dev, 23, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 24, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 26, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 27, 0x03);
++	rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 29, 0xd0);
++	rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
++	rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 32, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 33, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
++	rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
++	rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
++	rt2800_rfcsr_write(rt2x00dev, 38, 0x85);
++	rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
++	rt2800_rfcsr_write(rt2x00dev, 40, 0x0b);
++	rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
++	rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
++	rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
++	rt2800_rfcsr_write(rt2x00dev, 44, 0x0c);
++	rt2800_rfcsr_write(rt2x00dev, 45, 0xa6);
++	rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
++	rt2800_rfcsr_write(rt2x00dev, 47, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
++	rt2800_rfcsr_write(rt2x00dev, 49, 0x80);
++	rt2800_rfcsr_write(rt2x00dev, 50, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 51, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 52, 0x38);
++	rt2800_rfcsr_write(rt2x00dev, 53, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
++	rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
++	rt2800_rfcsr_write(rt2x00dev, 56, 0x82);
++	rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
++	rt2800_rfcsr_write(rt2x00dev, 59, 0x0b);
++	rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
++	rt2800_rfcsr_write(rt2x00dev, 61, 0xd1);
++	rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
++	rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
++}
++
+ static void rt2800_init_rfcsr_5390(struct rt2x00_dev *rt2x00dev)
+ {
+ 	rt2800_rf_init_calibration(rt2x00dev, 2);
+@@ -6769,6 +6871,9 @@ static void rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 	case RT3593:
+ 		rt2800_init_rfcsr_3593(rt2x00dev);
+ 		break;
++	case RT5350:
++		rt2800_init_rfcsr_5350(rt2x00dev);
++		break;
+ 	case RT5390:
+ 		rt2800_init_rfcsr_5390(rt2x00dev);
+ 		break;
+@@ -7148,6 +7253,8 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 		rt2800_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &rf);
+ 	else if (rt2x00_rt(rt2x00dev, RT3352))
+ 		rf = RF3322;
++	else if (rt2x00_rt(rt2x00dev, RT5350))
++		rf = RF5350;
+ 	else
+ 		rf = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
+ 
+@@ -7166,6 +7273,7 @@ static int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	case RF3290:
+ 	case RF3320:
+ 	case RF3322:
++	case RF5350:
+ 	case RF5360:
+ 	case RF5362:
+ 	case RF5370:
+@@ -7669,6 +7777,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	case RF3290:
+ 	case RF3320:
+ 	case RF3322:
++	case RF5350:
+ 	case RF5360:
+ 	case RF5362:
+ 	case RF5370:
+@@ -7805,6 +7914,7 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
+ 	case RF3053:
+ 	case RF3070:
+ 	case RF3290:
++	case RF5350:
+ 	case RF5360:
+ 	case RF5362:
+ 	case RF5370:
+@@ -7845,6 +7955,7 @@ static int rt2800_probe_rt(struct rt2x00_dev *rt2x00dev)
+ 	case RT3390:
+ 	case RT3572:
+ 	case RT3593:
++	case RT5350:
+ 	case RT5390:
+ 	case RT5392:
+ 	case RT5592:
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 4b3dd1163653..7ac265fd879e 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -169,6 +169,7 @@ struct rt2x00_chip {
+ #define RT3572		0x3572
+ #define RT3593		0x3593
+ #define RT3883		0x3883	/* WSOC */
++#define RT5350		0x5350  /* WSOC 2.4GHz */
+ #define RT5390		0x5390  /* 2.4GHz */
+ #define RT5392		0x5392  /* 2.4GHz */
+ #define RT5592		0x5592
 -- 
-Best Regards
-Shawn Lin
+2.11.0
