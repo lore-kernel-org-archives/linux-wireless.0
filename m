@@ -1,148 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:33260 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762940AbdAJSYi (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 13:24:38 -0500
+Received: from mout.gmx.net ([212.227.17.20]:55136 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752047AbdASWU1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 17:20:27 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
+ interrupts after enabling local irq flags
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+ <trinity-12e38a0e-85af-457b-9d4e-3c40ab1f6fd1-1484836538110@3capp-gmx-bs75>
+ <294d2858-2554-1b51-3142-b0470423537a@lwfinger.net>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+        netdev@vger.kernel.org, rgummal@xilinx.com,
+        Bharat Kumar Gogada <bharatku@xilinx.com>
+From: Lino Sanfilippo <LinoSanfilippo@gmx.de>
+Message-ID: <03a8a9e8-7a9e-b05e-97e5-32ab87be58ba@gmx.de> (sfid-20170119_232039_348001_21B9548B)
+Date: Thu, 19 Jan 2017 23:13:12 +0100
 MIME-Version: 1.0
-In-Reply-To: <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net> <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net> <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de> <20170109212345.GA5513@otheros>
- <20170109133032.221f8669@xeon-e3> <20170110041816.GJ5513@otheros>
- <1484045763.1014.0.camel@sipsolutions.net> <CAA93jw6+P8um7TxDCYgJ=SJfFzpskboR7njgudMb3NR4JZ34BA@mail.gmail.com>
- <99c01ce6-d80c-790e-25e5-157be31aee9a@nbd.name>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Tue, 10 Jan 2017 10:24:36 -0800
-Message-ID: <CAA93jw7jBCFLGgMbBbDcUGwSRS5uWnLQU0w-T4UxEQOyQdiUgA@mail.gmail.com> (sfid-20170110_192808_447951_D5D2F5F3)
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?Q?Linus_L=C3=BCssing?= <linus.luessing@c0d3.blue>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        "M. Braun" <michael-dev@fami-braun.de>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "David S . Miller" <davem@davemloft.net>,
-        bridge@lists.linux-foundation.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <294d2858-2554-1b51-3142-b0470423537a@lwfinger.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 10, 2017 at 9:23 AM, Felix Fietkau <nbd@nbd.name> wrote:
-> On 2017-01-10 18:17, Dave Taht wrote:
->> In the case of wifi I have 3 issues with this line of thought.
+
+Hi,
+
+On 19.01.2017 19:08, Larry Finger wrote:
+> On 01/19/2017 08:35 AM, Lino Sanfilippo wrote:
+>> Hi,
 >>
->> multicast in wifi has generally supposed to be unreliable. This makes
->> it reliable. reliability comes at a cost -
+>> altek/rtlwifi/rtl8192ce/hw.c 
+>> b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>>> index a47be73..143766c4 100644
+>>> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>>> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+>>> @@ -1306,9 +1306,9 @@ void rtl92ce_enable_interrupt(struct 
+>>> ieee80211_hw *hw)
+>>>      struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>>      struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+>>>
+>>> +    rtlpci->irq_enabled = true;
+>>>      rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 
+>>> 0xFFFFFFFF);
+>>>      rtl_write_dword(rtlpriv, REG_HIMRE, rtlpci->irq_mask[1] & 
+>>> 0xFFFFFFFF);
+>>> -    rtlpci->irq_enabled = true;
+>>>  }
+>>>
+>>>  void rtl92ce_disable_interrupt(struct ieee80211_hw *hw)
+>>> @@ -1316,9 +1316,9 @@ void rtl92ce_disable_interrupt(struct 
+>>> ieee80211_hw *hw)
+>>>      struct rtl_priv *rtlpriv = rtl_priv(hw);
+>>>      struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+>>>
+>>> +    rtlpci->irq_enabled = false;
+>>>      rtl_write_dword(rtlpriv, REG_HIMR, IMR8190_DISABLED);
+>>>      rtl_write_dword(rtlpriv, REG_HIMRE, IMR8190_DISABLED);
+>>> -    rtlpci->irq_enabled = false;
+>>>  }
+>>>
 >>
->> multicast is typically set at a fixed low rate today. unicast is
->> retried at different rates until it succeeds - for every station
->> listening. If one station is already at the lowest rate, the total
->> cost of the transmit increases, rather than decreases.
+>> AFAIK you also have to use memory barriers here to ensure that
+>> the concerning instructions are not reordered, and both irq handler
+>> and process have a consistent perception of irq_enabled, e.g:
 >>
->> unicast gets block acks until it succeeds. Again, more delay.
+>> rtlpci->irq_enabled = true;
+>> smp_wmb();
+>> rtl_write_dword(rtlpriv, REG_HIMR, rtlpci->irq_mask[0] & 0xFFFFFFFF);
 >>
->> I think there is something like 31 soft-retries in the ath9k driver....
-> If I remember correctly, hardware retries are counted here as well.
-
-I chopped this to something more reasonable but never got around to
-quantifying it, so never pushed the patch. I figured I'd measure ATF
-in a noisy environment (which I'd be doing now if it weren't for
-https://bugs.lede-project.org/index.php?do=3Ddetails&task_id=3D368 )
-first.
-
->> what happens to diffserv markings here? for unicast CS1 goes into the
->> BE queue, CS6, the VO queue. Do we go from one flat queue for all of
->> multicast to punching it through one of the hardware queues based on
->> the diffserv mark now with this patch?
-
-I meant CS1=3DBK here. Tracing the path through the bridge code made my
-head hurt, I can go look at some aircaps to see if the mcast->unicast
-conversion respects those markings or not (my vote is *not*).
-
->> I would like it if there was a way to preserve the unreliability
->> (which multiple mesh protocols depend on), send stuff with QoSNoack,
->> etc - or dynamically choose (based on the rates of the stations)
->> between conventional multicast and unicast.
+>> and in the irq handler
 >>
->> Or - better, IMHO, keep sending multicast as is but pick the best of
->> the rates available to all the listening stations for it.
-
-> The advantage of the multicast-to-unicast conversion goes beyond simply
-> selecting a better rate - aggregation matters a lot as well, and that is
-> simply incompatible with normal multicast.
-
-Except for the VO queue which cannot aggregate. And for that matter,
-using any other hardware queue than BE tends to eat a txop that would
-otherwise possibly be combined with an aggregate.
-
-(and the VI queue has always misbehaved, long on my todo list)
-
-> Some multicast streams use lots of small-ish packets, the airtime impact
-> of those is vastly reduced, even if the transmission has to be
-> duplicated for a few stations.
-
-The question was basically how far up does it scale. Arguably, for a
-very few, well connected stations, this patch would help. For a
-network with more - and more badly connected stations, I think it
-would hurt.
-
-What sorts of multicast traffic are being observed that flood the
-network sufficiently to be worth optimizing out? arp? nd? upnp? mdns?
-uftp? tv?
-
-(my questions above are related to basically trying to setup a sane
-a/b test, I've been building up a new testbed in noisy environment to
-match the one I have in a quiet one, and don't have any "good" mcast
-tests defined. Has anyone done an a/b test of this code with some
-repeatable test already?)
-
-(In my observations... The only truly heavy creator of a multicast
-"burp" has tended to be upnp and mdns on smaller networks. Things like
-nd and arp get more problematic as the number of stations go up also.
-I can try things like abusing vlc or uftp to see what happens?)
-
-I certainly agree multicast is a "problem" (I've seen 20-80% or more
-of a given wifi network eaten by multicast) but I'm not convinced that
-making it reliable, aggregatable unicast scales much past
-basement-level testing of a few "good" stations, and don't know which
-protocols are making it worse, the worst, in typical environments.
-Certainly apple gear puts out a lot of multicast.
-
-...
-
-As best as I recall a recommendation in the 802.11-2012 standard was
-that multicast packets be rate-limited so that you'd have a fixed
-amount of crap after each beacon sufficient to keep the rest of the
-unicast traffic flowing rapidly, instead of dumping everything into a
-given beacon transmit.
-
-That, combined with (maybe) picking the "best" union of known rates
-per station, was essentially the strategy I'd intended[1] to pursue
-for tackling the currently infinite wifi multicast queue - fq the
-entries, have a fairly short queue (codel is not the best choice here)
-drop from head, and limit the number of packets transmitted per beacon
-to spread them out. That would solve the issue for sparse multicast
-(dhcp etc), and smooth out the burps from bigger chunks while
-impacting conventional unicast minimally.
-
-There's also the pursuit of less multicast overall at least in some protoco=
-ls
-
-https://tools.ietf.org/html/draft-ietf-dnssd-hybrid-05
-
-
+>> if (rtlpci->irq_enabled == 0) {
+>>         smp_rmb();
+>>     return ret;
+>> }
 >
-> - Felix
+> I can see the potential race condition between setting interrupts and 
+> setting the flag, and I will likely accept Bharat's patch after testing.
+>
+> I am likely displaying my ignorance regarding instruction reordering, 
+> but what compiler/cpu combination is likely to move a simple set 
+> operation after a call to an external routine? Is the smp_wmb() 
+> operation really needed?
 
+I dont know if and when a specific compiler would actually do such a 
+reordering. But the thing is, that you simply cant be sure
+that it does not. As I wrote it is also not only reordering that could 
+cause trouble, but also a different perception of the
+flag value on different CPUs.
+We guard against those issues in other drivers, too. See
 
-[1] but make-wifi-fast has been out of funding since august
+http://lxr.free-electrons.com/source/drivers/net/ethernet/3com/typhoon.c#L1935
 
---=20
-Dave T=C3=A4ht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+for example.
+
+> I am also unsure of the smp_rmb() call in the interrupt handler. 
+> Neither instruction should cause any problems, but I'm not sure they 
+> are needed
+
+The smp_rmb() is needed to ensure that the irq handler actually "sees" 
+the most recent value of  irq_enabled even if the irq handler is
+running on another CPU than the one that set this flag.
+
+Regards,
+Lino
