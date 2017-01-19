@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43044 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932183AbdAASyu (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38376 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754256AbdASUac (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 1 Jan 2017 13:54:50 -0500
-Content-Type: text/plain; charset="utf-8"
+        Thu, 19 Jan 2017 15:30:32 -0500
+Received: by mail-wm0-f52.google.com with SMTP id r144so11677913wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 12:30:31 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [V3] rtlwifi: fix spelling mistake: "encrypiton" -> "encryption"
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20161230145027.14090-1-colin.king@canonical.com>
-References: <20161230145027.14090-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <20170101185449.852306145C@smtp.codeaurora.org> (sfid-20170101_195512_698053_69143B89)
-Date: Sun,  1 Jan 2017 18:54:49 +0000 (UTC)
+In-Reply-To: <87efzyhkup.fsf@purkki.adurom.net>
+References: <20170113052937.12538-1-matt@ranostay.consulting>
+ <20170113052937.12538-3-matt@ranostay.consulting> <CAPDyKFpcKuybQmhqCkaAkOM5d+ubU8O8=adLm+PXwc=+N87vng@mail.gmail.com>
+ <87efzyhkup.fsf@purkki.adurom.net>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 19 Jan 2017 21:30:29 +0100
+Message-ID: <CAPDyKFrHvYNOCfAjASEHz75fVcaqt5fptFaqWp5nVPFnHuHV1g@mail.gmail.com> (sfid-20170119_213224_132783_77B26D7B)
+Subject: Re: [PATCH v3 2/2] mmc: pwrseq: add support for Marvell SD8787 chip
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Matt Ranostay <matt@ranostay.consulting>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> trivial fix to spelling mistake in RT_TRACE message
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+On 19 January 2017 at 21:10, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Ulf Hansson <ulf.hansson@linaro.org> writes:
+>
+>> Twisting my head around how this could be integrated smoothly into
+>> pwrseq simple. No, I just can find a good way forward without messing
+>> up pwrseq simple itself.
+>>
+>> So, for now I decided (once more :-), that let's keep this as separate driver!
+>>
+>> Perhaps, following device specific mmc pwrseq drivers will needs
+>> something similar, but in such case we can look into that then.
+>> Thinking about cw1200 for example.
+>>
+>> Let's get Rob's ack for the DT bindings, seems almost there, then I
+>> will queue this.
+>
+> Just to confirm, you will take the whole set (including the bindings
+> patch)?
 
-Patch applied to wireless-drivers-next.git, thanks.
+Yes, correct.
 
-e16e558e83ed rtlwifi: fix spelling mistake: "encrypiton" -> "encryption"
-
--- 
-https://patchwork.kernel.org/patch/9492215/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Kind regards
+Uffe
