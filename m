@@ -1,71 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:35513 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757597AbdADKfA (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:35214 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751822AbdASTas (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 05:35:00 -0500
-Received: by mail-pg0-f42.google.com with SMTP id i5so161289363pgh.2
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 02:34:42 -0800 (PST)
-Subject: Re: [RFC] nl80211: allow multiple active scheduled scan requests
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1481645071.20412.30.camel@sipsolutions.net>
- <1482315616-4721-1-git-send-email-arend.vanspriel@broadcom.com>
- <1483353841.4596.2.camel@sipsolutions.net>
- <ba1cb1a1-3d27-7421-47ea-a5625a886518@broadcom.com>
- <1483523988.15591.9.camel@sipsolutions.net>
- <5ad9a594-29b3-8c52-a88f-c4186511fe4f@broadcom.com>
- <1483525836.7312.1.camel@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Dmitry Shmidt <dimitrysh@google.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <03009c4d-f1a2-1979-4cc3-4f9798e06703@broadcom.com> (sfid-20170104_113504_662674_AAE39C53)
-Date: Wed, 4 Jan 2017 11:34:37 +0100
-MIME-Version: 1.0
-In-Reply-To: <1483525836.7312.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+        Thu, 19 Jan 2017 14:30:48 -0500
+Date: Thu, 19 Jan 2017 14:22:30 -0500 (EST)
+Message-Id: <20170119.142230.1012416564568457058.davem@davemloft.net> (sfid-20170119_203052_427194_71030870)
+To: kvalo@codeaurora.org
+Cc: linville@tuxdriver.com, darcari@redhat.com, netdev@vger.kernel.org,
+        johannes.berg@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: ethtool: avoid allocation failure for dump_regs
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87h94uorc1.fsf@kamboji.qca.qualcomm.com>
+References: <20170119141508.GA6245@tuxdriver.com>
+        <20170119155620.GD6245@tuxdriver.com>
+        <87h94uorc1.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4-1-2017 11:30, Johannes Berg wrote:
->> However, we need to prefer something
->>> -
->>> always preferring the new sched scan could lead to bounces, so we
->>> can
->>> prefer (1) existing, (2) legacy-single type or (3) new-multi type,
->>> but
->>> not (4) new sched scan.
->>
->> Not sure I can follow. What is the difference between (1) and (2). 
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Thu, 19 Jan 2017 20:08:30 +0200
+
+> "John W. Linville" <linville@tuxdriver.com> writes:
 > 
-> (1) would never cancel any existing sched scan, regardless of type
-> (legacy vs. multi-capable)
+>> I forgot to Cc Johannes and Kalle...
 > 
-> (2) would cancel an existing sched scan (in favour of a new one) if the
-> existing one is multi-capable
+> Also adding linux-wireless.
 > 
-> (3) would cancel an existing sched scan (in favour of a new one) if the
-> existing one is legacy type
-
-yes, yes. sinking in :-p
-
->> Also
->> what do you consider (4) new sched scan. You mean the additional
->> parameterization of the scheduled scan?
+>> On Thu, Jan 19, 2017 at 09:15:09AM -0500, John W. Linville wrote:
+>>> On Thu, Jan 19, 2017 at 07:35:22AM -0500, David Arcari wrote:
+>>> > On 01/18/2017 11:45 AM, David Miller wrote:
+>>> > > From: David Arcari <darcari@redhat.com>
+>>> > > Date: Wed, 18 Jan 2017 08:34:05 -0500
+>>> > >
+>>> > >> If the user executes 'ethtool -d' for an interface and the associated
+>>> > >> get_regs_len() function returns 0, the user will see a call trace from
+>>> > >> the vmalloc() call in ethtool_get_regs().  This patch modifies
+>>> > >> ethtool_get_regs() to avoid the call to vmalloc when the size is zero.
+>>> > >>
+>>> > >> Signed-off-by: David Arcari <darcari@redhat.com>
+>>> > > I think when the driver indicates this, it is equivalent to saying that
+>>> > > the operation isn't supported.
+>>> > >
+>>> > > Also, this guards us against ->get_regs() methods that don't handle
+>>> > > zero length requests properly.  I see many which are going to do
+>>> > > really terrible things in that situation.
+>>> > >
+>>> > > Therefore, if get_regs_len() returns zero, treat it the safe as if the
+>>> > > ethtool operations were NULL.
+>>> > >
+>>> > > Thanks.
+>>> > 
+>>> > That was actually the fix that I was originally considering, but it
+>>> > turns out
+>>> > there is a problem with it.
+>>> > 
+>>> > I found that the vmalloc error was occurring because
+>>> > ieee80211_get_regs_len() in
+>>> > net/mac80211/ethtool.c was returning zero.  The ieee80211_get_regs in
+>>> > the same
+>>> > file returns the hw version. It turns out that this information is used
+>>> > by the
+>>> > at76c50x-usb driver in the user space ethtool to report which HW variant
+>>> > is in
+>>> > use.  Returning an error when regs_len() returns zero would break this
+>>> > functionality.
+>>> > 
+>>> > -Dave
+>>> 
+>>> I'm responsible for this mess. The original idea was for various
+>>> mac80211-based drivers to override the ethtool operation and provide
+>>> their own dump operation, but the mac80211 crowd never embraced
+>>> the idea.
+>>> 
+>>> In the meantime, I added the default implementation which just
+>>> passed-up wdev->wiphy->hw_version as the version info for a 0-length
+>>> register dump. I then implemented a driver-specific regiser dump
+>>> handler for userland ethtool that would interpret the hardware version
+>>> information for the at76c50x-usb driver.
+>>> 
+>>> So the net of it is, if we treat a return of 0 from get_regs_len()
+>>> as "not supported", we break this one driver-specific feature for
+>>> userland ethtool. Realistically, there are probably very few users
+>>> to care. But I can't guarantee that the number is zero.
 > 
-> No, I just meant any new request.
+> I know the number is not zero, because I remember using it years back
+> with something else than at76c50x-usb. But is the number more than one,
+> I don't know :)
 
-Yeah, so there is already an existing/active sched scan. Clear.
+I'm trying to dig down and figure out why this problem is showing up now.
+ethtool_get_regs() has been using vzalloc() since 2011, and before that it
+used plain vmalloc().
 
->>> I think preferring the existing would probably be best, i.e. refuse
->>> legacy if any sched scan is running, and refuse multi if legacy is
->>> running?
->>
->> Whatever the response above, I can understand this and it seems most
->> straightforward. So I tend agree this is our best option although
->> maybe for the wrong reason.
-> 
-> :)
+This code has therefore been using v{m,z}alloc() forever.  What changed?
 
-Thanks for clarifying it.
+The zero size check has been in the vmalloc implementation since at least
+2009.
 
-Gr. AvS
+I don't understand why this is all triggering and being noticed now.  The
+whole ieee80211 "return zero length regs and return hw version in get_regs"
+thing should have been failing for at least 7 years now.
