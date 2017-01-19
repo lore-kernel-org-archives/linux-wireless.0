@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33164 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752041AbdAKOit (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 09:38:49 -0500
-Message-ID: <1484145522.29931.13.camel@sipsolutions.net> (sfid-20170111_153912_164760_562CE4FF)
-Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point
- better
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Wed, 11 Jan 2017 15:38:42 +0100
-In-Reply-To: <20170111143532.485827-1-arnd@arndb.de>
-References: <20170111143532.485827-1-arnd@arndb.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:53380 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752434AbdASMpi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 07:45:38 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: make brcmf_of_probe more generic
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170107224345.3079-1-zajec5@gmail.com>
+References: <20170107224345.3079-1-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Message-Id: <20170119124532.D22F7608C5@smtp.codeaurora.org> (sfid-20170119_134611_327664_A295A39B)
+Date: Thu, 19 Jan 2017 12:45:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2017-01-11 at 15:35 +0100, Arnd Bergmann wrote:
-> gcc-7 complains that wl3501_cs passes NULL into a function that
-> then uses the argument as the input for memcpy:
+Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
 > 
-> drivers/net/wireless/wl3501_cs.c: In function 'wl3501_get_scan':
-> include/net/iw_handler.h:559:3: error: argument 2 null where non-null 
-> expected [-Werror=nonnull]
->    memcpy(stream + point_len, extra, iwe->u.data.length);
+> We may want to use Open Firmware for other devices than just SDIO ones.
+> In future we may want to support more Broadcom properties so there is
+> really no reason for such limitation.
+> 
+> Call brcmf_of_probe for all kind of devices & move extra conditions to
+> the body of that funcion.
+> 
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 
-I love wext ;-)
+Patch applied to wireless-drivers-next.git, thanks.
 
-> This works fine here because iwe->u.data.length is guaranteed to be
-> NULL, and the memcpy doesn't actually have an effect.
+e457a8a01a19 brcmfmac: make brcmf_of_probe more generic
 
-I think you mean 0, not NULL, but I can fix that when I apply it.
+-- 
+https://patchwork.kernel.org/patch/9503295/
 
-johannes
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
