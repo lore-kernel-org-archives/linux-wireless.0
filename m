@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35940 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752594AbdACNTU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44216 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752611AbdASOBv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 08:19:20 -0500
-Received: by mail-wm0-f51.google.com with SMTP id c85so199212187wmi.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 05:19:19 -0800 (PST)
-Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20170103083858.6981-1-zajec5@gmail.com>
- <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com>
- <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com> (sfid-20170103_155543_096697_3AA33D74)
-Date: Tue, 3 Jan 2017 14:19:14 +0100
+        Thu, 19 Jan 2017 09:01:51 -0500
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Thu, 19 Jan 2017 19:22:25 +0530
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath10k@lists.infradead.org
+Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
+ support BTCOEX
+In-Reply-To: <1483958190.17582.15.camel@sipsolutions.net>
+References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
+ <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
+ <1480949353.31788.27.camel@sipsolutions.net>
+ <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
+ <1481645351.20412.34.camel@sipsolutions.net>
+ <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
+ <1481881024.27953.14.camel@sipsolutions.net>
+ <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
+ <1483354130.4596.5.camel@sipsolutions.net>
+ <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
+ <1483623500.4394.18.camel@sipsolutions.net>
+ <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org>
+ <1483958190.17582.15.camel@sipsolutions.net>
+Message-ID: <53738f0ff79f0cf32026b9c700059fb1@codeaurora.org> (sfid-20170119_150223_256239_935F4885)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3-1-2017 12:31, Rafał Miłecki wrote:
->>> +             if (!channel) {
->>> +                     brcmf_err("Firmware reported unexpected channel %d\n",
->>> +                               ch.control_ch_num);
->>> +                     continue;
->>> +             }
->> As stated above something is really off when this happens so should we
->> continue and try to make sense of what firmware provides or simply fail.
-> Well, I could image something like this happening and not being critical.
-> The simplest case: Broadcom team releases a new firmware which
-> supports extra 5 GHz channels (e.g. due to the IEEE standard change).
-> Why should we refuse to run & support all "old" channel just because of that?
+Hi Johannes,
 
-Fair enough. I was assuming we keep __wl_{2,5}ghz_channels up to date
-with IEEE standard.
+Sorry for the late response:(
 
-> What do you mean by "make sense of what firmware provides"? Would kind
-> of solution would you suggest?
+On 2017-01-09 16:06, Johannes Berg wrote:
+>> Is it fine to have something like this
+>> 
+>> 1) We can have this btcoex_priority value as a optional value in
+>> btcoex enable command like below
+>> 
+>> iw phyX btcoex_state <enable| disable> [prirority(vendor spcific
+>> value)]
+>> 
+>> 2) Or we can have seperate command for btcoex_priority as below
+>> 
+>> iw phyX set btcoex_priority <priority (vendor spcific value)>
+>> 
+>> Hopefully this will get rid off all the nl80211 bits.
+> 
+> That makes no sense.
+> 
+> If the bits are vendor specific, then there's no value in having this
+> as an nl80211 command (rather than a vendor command) to start with.
+> 
+> You need to understand that I'm differentiating between *capability*
+> bits and actual *priority setting* bits - please re-read the thread
+> with that in mind.
+> 
+Those are for priority and not for capability purpose. Hardware is 
+capable of
+transmitting all the frames when there is a bt traffic. This is just 
+setting priority for the wlan
+frame, when there is a contention with BT traffic which one has to go 
+out first.
+Other than that hardware has the capability of sending all the frames.
 
-When the above assumption can be assured (by us) the only other scenario
-would be a change in the firmware API where we wrongly interpret the
-information retrieved. In this case all subsequent channels will likely
-result in bogus or accidental matches hence it seems better to bail out
-early.
+This priority field is optional, if users does not want to set any 
+priority then driver will force the
+default priorities when bt_coex is enabled
 
-Regards,
-Arend
+iw phyX btcoex_state <enable| disable> [prirority]
