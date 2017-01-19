@@ -1,65 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47058 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935288AbdAIKK7 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58725 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751183AbdASCAZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 05:10:59 -0500
+        Wed, 18 Jan 2017 21:00:25 -0500
+From: David Lin <dlin@marvell.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Chor Teck Law" <ctlaw@marvell.com>,
+        James Lin <jamesl@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v9] Add new mac80211 driver mwlwifi.
+Date: Thu, 19 Jan 2017 01:22:53 +0000
+Message-ID: <ba07f755b839421ab4e0487ed1d9ea6c@SC-EXCH02.marvell.com> (sfid-20170119_030040_799191_EAA9E3F3)
+References: <260962939eeb4dbbb6e462cc010aac21@SC-EXCH02.marvell.com>
+         <1483624722.4394.21.camel@sipsolutions.net>
+         <5b561668eb5b4804b0007d03bc723f9d@SC-EXCH02.marvell.com>
+ <1484126730.23671.5.camel@sipsolutions.net>
+In-Reply-To: <1484126730.23671.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 09 Jan 2017 15:40:57 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
- support BTCOEX
-In-Reply-To: <1483623500.4394.18.camel@sipsolutions.net>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
- <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
- <1480949353.31788.27.camel@sipsolutions.net>
- <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
- <1481645351.20412.34.camel@sipsolutions.net>
- <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
- <1481881024.27953.14.camel@sipsolutions.net>
- <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
- <1483354130.4596.5.camel@sipsolutions.net>
- <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
- <1483623500.4394.18.camel@sipsolutions.net>
-Message-ID: <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org> (sfid-20170109_111109_678226_B4156143)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-Thank you for the reply.
-
-On 2017-01-05 19:08, Johannes Berg wrote:
->> > IOW - why have all these bits rather than just one?
->> 
->> Hardware supports data across all the access categories, this is
->> just  meant for prioritising the traffic. f.e, If the fw/target has
->> both wlan and bt traffic queued and if VO is  set as priority, then
->> wlan VO packets will be pushed out of the radio first and then the bt
->> traffic.
-> 
-> Exactly. So as far as *capabilities* are concerned, why do we need so
-> many bits?
-> 
-Is it fine to have something like this
-
-1) We can have this btcoex_priority value as a optional value in btcoex 
-enable command like below
-
-iw phyX btcoex_state <enable| disable> [prirority(vendor spcific value)]
-
-2) Or we can have seperate command for btcoex_priority as below
-
-iw phyX set btcoex_priority <priority (vendor spcific value)>
-
-Hopefully this will get rid off all the nl80211 bits.
-
-Kindly suggest your thoughts.
-
-Thanks,
-Tamizh.
+PiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0gd3JvdGU6
+DQo+IE9uIFR1ZSwgMjAxNy0wMS0xMCBhdCAwMTozMiArMDAwMCwgRGF2aWQgTGluIHdyb3RlOg0K
+PiANCj4gPiA+IFRoZSBvbmx5IHRoaW5nIHRoYXQgcmVhbGx5IHNlZW1zIHF1ZXN0aW9uYWJsZSB0
+byBtZSBpcyB0aGUgd2hvbGUNCj4gPiA+IGJlYWNvbiBwYXJzaW5nIChhbmQgYXBwYXJlbnQgcmVi
+dWlsZGluZyBpbiBmaXJtd2FyZT8pLiBJdCdzIHZlcnkgb2RkDQo+ID4gPiB0aGF0IHlvdSBjb3Vs
+ZCBkbyB0aGF0LCB3aXRoIGEgc29mdG1hYyBkZXZpY2Ugd2hlcmUgYWxsIHRoZQ0KPiA+ID4gYXV0
+aGVudGljYXRpb24gYW5kIGFzc29jaWF0aW9uIGlzIGhhbmRsZWQgYnkgaG9zdGFwZCBhbnl3YXks
+IGFuZCB5b3UNCj4gPiA+IGNhbid0IHBvc3NpYmx5IHByZXRlbmQgdG8gaGFuZGxlIGV2ZXJ5dGhp
+bmcgaG9zdGFwZCBtaWdodCB0aHJvdyBhdA0KPiA+ID4geW91IC0gdGhpcyB3aWxsIG1lYW4gdGhh
+dCB5b3UnbGwgaGF2ZSBmZWF0dXJlcyBob3N0YXBkIGFuZCBldmVyeQ0KPiA+ID4gb3RoZXIgbWFj
+ODAyMTEgc3VwcG9ydHMgdGhhdCB5b3Ugd2lsbCBzaWxlbnRseSBkcm9wIGFmYWljdCAtIHdoaWNo
+DQo+ID4gPiBpcyByYXRoZXIgdW5leHBlY3RlZC4NCj4gPiA+DQo+ID4gPiBGaXJzdCwgeW91J3Jl
+IHBhcnNpbmcgdGhlIGRhdGEgb2J0YWluZWQgZnJvbSBob3N0YXBkLCBpbg0KPiA+ID4gbXdsX2Z3
+Y21kX3BhcnNlX2JlYWNvbigpLCBhbmQgdGhlbiB5b3Ugc2VuZCB0aGVtIGFsbCB0byB0aGUgZmly
+bXdhcmUNCj4gPiA+IGluIG13bF9md2NtZF9zZXRfaWVzKCksIGJ1dCBvbmx5IHRoZSB0aGluZ3Mg
+eW91IGFjdHVhbGx5IHVuZGVyc3Rvb2QuDQo+ID4gPiBOZXcgaGlnaGVyLWxldmVsIGZlYXR1cmVz
+IHlvdSBkb24ndCB1bmRlcnN0YW5kLCBvciB2ZW5kb3IgYmVhY29uIElFcw0KPiA+ID4gdGhhdCBh
+cmVuJ3QgV01NLCB3b3VsZCBiZSBjb21wbGV0ZWx5IGRyb3BwZWQuDQo+ID4gPg0KPiA+ID4gSSdt
+IG5vdCB2ZXJ5IGhhcHB5IHdpdGggdGhhdCBiZWhhdmlvdXIuDQo+ID4gPg0KPiA+ID4gV2h5IGRv
+ZXMgdGhlIGZpcm13YXJlIHJlcXVpcmUgdGhpcz8gV2h5IG5vdCBqdXN0IHBhY2sgYWxsIElFcyBp
+bnRvDQo+ID4gPiB0aGUgcGNtZC0+aWVfbGlzdF9sZW5fcHJvcHJpZXRhcnksIGFuZCBsZWF2ZSBl
+dmVyeXRoaW5nIGVsc2UgMD8gT3INCj4gPiA+IC0gaWYgcGVyaGFwcyBmaXJtd2FyZSBmb3Igc29t
+ZSByZWFzb24gcmVxdWlyZXMgSFQvVkhUIHRvIGJlIHRyZWF0ZWQNCj4gPiA+IHNwZWNpYWxseSwg
+b25seSBwYXJzZSBvdXQgdGhlIG9uZXMgdGhhdCBhcmUgcmVhbGx5IG5lZWRlZCBzcGVjaWFsbHkN
+Cj4gPiA+IGFuZCBsZWF2ZSBldmVyeXRoaW5nIGVsc2UgaW4gdGhlIGllX2xpc3RfbGVuX3Byb3By
+aWV0YXJ5Pw0KPiA+ID4NCj4gPiA+IEFsc28sIHRoaXMgaXMgZHJvcHBpbmcgYWxsIHRoZSBlbmNy
+eXB0aW9uIHN0dWZmIC0gZXZlbiB0aG9zZSBhcmUNCj4gPiA+IGV4dGVuc2libGUgYnR3LCBhbmQg
+aG9zdGFwZCBtaWdodCBkbyBzby4gSGF2aW5nIHRoZSBmaXJtd2FyZSByZWJ1aWxkDQo+ID4gPiB0
+aG9zZSBvdXQgb2Ygb3V0LW9mLWJhbmQgaW5mb3JtYXRpb24gaXMgdmVyeSB1bmV4cGVjdGVkIGZv
+ciBhDQo+ID4gPiBtYWM4MDIxMSBkcml2ZXIuDQo+ID4gPg0KPiA+DQo+ID4gVGhpcyBkcml2ZXIg
+anVzdCBleHRyYWN0cyBuZWVkZWQgSUVzIHdoaWNoIGlzIHVzZWQgZm9yIHRoZSBob3N0DQo+ID4g
+Y29tbWFuZCBvZiBmaXJtd2FyZS4gSSB0aGluayB3ZSB3aWxsIG5vdCBzdXBwb3J0IG90aGVyIHZl
+bmRvciBJRXMuDQo+ID4gQW5kIGlmIG5lZWRlZCwgd2UgY2FuIGFkZCB0aGVtIHRvIHBjbWQtPmll
+X2xpc3RfcHJvcHJpZXRhcnkuDQo+IA0KPiBTdXJlLCBJIHNlZSB0aGF0IHlvdSdyZSBkb2luZyB0
+aGlzLiBJdCBzdGlsbCBtYWtlcyBubyBzZW5zZSB0aG91Z2gsIHNpbmNlIGFsbA0KPiBtYW5hZ2Vt
+ZW50IGZyYW1lcyBhcmUgaGFuZGxlZCBieSBob3N0YXBkIGFueXdheS4gSXQgd291bGQgbWFrZSBz
+b21lDQo+IHNlbnNlIGlmIHlvdSBhY3R1YWxseSB3ZXJlIGdvaW5nIHRvIGhhbmRsZSBhc3NvY2lh
+dGlvbiBpbiB0aGUgZmlybXdhcmUsIGJ1dCBpdA0KPiBtYWtlcyBubyBzZW5zZSBoZXJlLCBhcyBm
+YXIgYXMgSSBjYW4gdGVsbC4NCj4gDQo+IEknbSBub3Qgc3VyZSBob3cgaGFyZCBhIGxpbmUgSSBz
+aG91bGQgZHJhdyBoZXJlLCBidXQgSSdsbCB3YXJuIHlvdSBub3cgdGhhdCBJDQo+IHdvbid0IHRh
+a2UgdGhpcyBpbnRvIGNvbnNpZGVyYXRpb24gd2hlbiBhZGRpbmcgbmV3IGZlYXR1cmVzIHRvIG1h
+YzgwMjExLCBhbmQNCj4gY2VydGFpbmx5IEpvdW5pIHdvbid0IHRha2UgaXQgaW50byBhY2NvdW50
+IHdoZW4gYWRkaW5nIG5ldyBmZWF0dXJlcyB0byBob3N0YXBkLA0KPiBzbyB0aGF0IHN1Y2ggbmV3
+IGZlYXR1cmVzIHdpbGwgdGhlbiBTSUxFTlRMWSBhbmQgVU5FWFBFQ1RFRExZIChkdWUgdG8NCj4g
+bWFjODAyMTEpIG5vdCB3b3JrIHdpdGggeW91ciBkcml2ZXIuDQo+IA0KPiBJIHN0cm9uZ2x5IGFk
+dmlzZSB5b3UgdG8gcmVjb25zaWRlciB0aGlzIGFuZCB0cnkgdG8gcGFzcyB0aHJvdWdoIGFsbCB0
+aGUgSUVzIHNvDQo+IHRoYXQgbmV3bHkgYWRkZWQgZmVhdHVyZXMgdGhhdCBzaG91bGRuJ3QgcmVx
+dWlyZSBmaXJtd2FyZSBpbnRlcmFjdGlvbiAoc2luY2UNCj4gaG9zdGFwZCBpcyBoYW5kbGluZyBh
+bGwgdGhlIGFzc29jaWF0aW9uIGhhbmRzaGFrZSBhbmQgSUVzIHRvIGFkdmVydGlzZSB0aGUNCj4g
+ZmVhdHVyZSkgd2lsbCBhdXRvbWF0aWNhbGx5IGFuZCBjbGVhbmx5IHdvcmsuDQo+IA0KPiBJZiB5
+b3UgcmVhbGx5IGNhbid0IGRvIHRoYXQsIGZvciBzb21lIHJlYXNvbiwgdGhlbiBmb3IgbXkgYmVu
+ZWZpdCBhcyB0aGUNCj4gbWFjODAyMTEgbWFpbnRhaW5lciBhbmQgZnV0dXJlIG1haW50YWluZXJz
+IG9mIHlvdXIgZHJpdmVyLCBJJ2QgbGlrZSB0byBoYXZlDQo+IGRvY3VtZW50YXRpb24gaW4gdGhl
+IGRyaXZlciBhcyB0byB3aHkgdGhlIGZpcm13YXJlIG5lZWRzIHRoZSBkcml2ZXIgdG8gc3BsaXQN
+Cj4gdXAgYWxsIHRob3NlIElFcyBhbmQgd2hhdCBpdCBkb2VzIHdpdGggdGhlbS4gQWZ0ZXIgYWxs
+LCBhIGNvbW1vbi1zZW5zZSBhbmFseXNpcw0KPiB3b3VsZCBzdWdnZXN0IHRoYXQgdGhlIGZpcm13
+YXJlIGhhcyBubyBuZWVkIGZvciBpdCwgc2luY2UgYWxsIGNvbmZpZ3VyYXRpb24NCj4gc2hvdWxk
+IGNvbWUgdGhyb3VnaCBvdGhlciBwbGFjZXMgYW5kIGFsbCBJRXMgYXJlIGp1c3QgZm9yIGdvaW5n
+IG91dCBvbiB0aGUgYWlyLg0KPiANCg0KLSBUaGUgb2JqZWN0aXZlIGlzIHRvIHVzZSB0aGUgc2Ft
+ZSBwcm9kdWN0aW9uIGZpcm13YXJlIGJpbmFyeSBmb3IgYm90aCB0aGUgb3BlbiBzb3VyY2UgYW5k
+IHByb3ByaWV0YXJ5IGRyaXZlci4gU2FtZSBpbnRlcmZhY2UgaXMgY3VycmVudGx5IHVzZWQgYnkg
+cHJvcHJpZXRhcnkgZHJpdmVyIGZvciBoaXN0b3JpY2FsbHkgcmVhc29uLCB3aGlsZSB0aGUgb3Bl
+biBzb3VyY2UgSEFMIGlzIGFkYXB0aW5nIHRvIGl0IGZvciB0aGUgZXhpc3Rpbmcgc2hpcHBpbmcg
+cHJvZHVjdC4NCi0gV2Ugd2lsbCBtYWtlIGNoYW5nZXMgYW5kIGNsZWFuIHRoaW5ncyB1cCBpbiBm
+dXR1cmUuIEkgd2lsbCBzcGVuZCBlZmZvcnQgdG8gY29udGludWUgaXRzIG1haW50ZW5hbmNlIGFu
+ZCBjbGVhbi11cC4NCg0KVGhhbmtzLA0KRGF2aWQNCg0KPiBqb2hhbm5lcw0K
