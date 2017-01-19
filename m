@@ -1,88 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33488 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751869AbdAKPlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 10:41:13 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>
-Subject: [PATCH] mac80211: Add RX flag to indicate ICV stripped
-Date: Wed, 11 Jan 2017 16:41:10 +0100
-Message-Id: <20170111154110.1150-1-johannes@sipsolutions.net> (sfid-20170111_164244_865377_BE7410E4)
+Received: from smtp.codeaurora.org ([198.145.29.96]:53404 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752436AbdASMpi (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 19 Jan 2017 07:45:38 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: libertas: fix improper return value
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1480760857-4549-1-git-send-email-bianpan2016@163.com>
+References: <1480760857-4549-1-git-send-email-bianpan2016@163.com>
+To: Pan Bian <bianpan2016@163.com>
+Cc: Andreas Kemnade <andreas@kemnade.info>,
+        Johannes Berg <johannes.berg@intel.com>,
+        libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Pan Bian <bianpan2016@163.com>
+Message-Id: <20170119123913.B75AE60911@smtp.codeaurora.org> (sfid-20170119_134608_271164_5A665106)
+Date: Thu, 19 Jan 2017 12:39:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Pan Bian <bianpan2016@163.com> wrote:
+> Function lbs_cmd_802_11_sleep_params() always return 0, even if the call
+> to lbs_cmd_with_response() fails. In this case, the parameter @sp will
+> keep uninitialized. Because the return value is 0, its caller (say
+> lbs_sleepparams_read()) will not detect the error, and will copy the
+> uninitialized stack memory to user sapce, resulting in stack information
+> leak. To avoid the bug, this patch returns variable ret (which takes
+> the return value of lbs_cmd_with_response()) instead of 0.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188451
+> 
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
 
-Add a flag that indicates that the WEP ICV was stripped from an
-RX packet, allowing the device to not transfer that if it's
-already checked.
+Patch applied to wireless-drivers-next.git, thanks.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h | 5 ++++-
- net/mac80211/wep.c     | 3 ++-
- net/mac80211/wpa.c     | 3 ++-
- 3 files changed, 8 insertions(+), 3 deletions(-)
+259010c509b6 libertas: fix improper return value
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 5f5cb194cd78..86967b85dfd0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1017,7 +1017,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_DECRYPTED: This frame was decrypted in hardware.
-  * @RX_FLAG_MMIC_STRIPPED: the Michael MIC is stripped off this frame,
-  *	verification has been done by the hardware.
-- * @RX_FLAG_IV_STRIPPED: The IV/ICV are stripped from this frame.
-+ * @RX_FLAG_IV_STRIPPED: The IV and ICV are stripped from this frame.
-  *	If this flag is set, the stack cannot do any replay detection
-  *	hence the driver or hardware will have to do that.
-  * @RX_FLAG_PN_VALIDATED: Currently only valid for CCMP/GCMP frames, this
-@@ -1088,6 +1088,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_ALLOW_SAME_PN: Allow the same PN as same packet before.
-  *	This is used for AMSDU subframes which can have the same PN as
-  *	the first subframe.
-+ * @RX_FLAG_ICV_STRIPPED: The ICV is stripped from this frame. CRC checking must
-+ *	be done in the hardware.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -1123,6 +1125,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
- 	RX_FLAG_MIC_STRIPPED		= BIT_ULL(32),
- 	RX_FLAG_ALLOW_SAME_PN		= BIT_ULL(33),
-+	RX_FLAG_ICV_STRIPPED		= BIT_ULL(34),
- };
- 
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index efa3f48f1ec5..73e8f347802e 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -293,7 +293,8 @@ ieee80211_crypto_wep_decrypt(struct ieee80211_rx_data *rx)
- 			return RX_DROP_UNUSABLE;
- 		ieee80211_wep_remove_iv(rx->local, rx->skb, rx->key);
- 		/* remove ICV */
--		if (pskb_trim(rx->skb, rx->skb->len - IEEE80211_WEP_ICV_LEN))
-+		if (!(status->flag & RX_FLAG_ICV_STRIPPED) &&
-+		    pskb_trim(rx->skb, rx->skb->len - IEEE80211_WEP_ICV_LEN))
- 			return RX_DROP_UNUSABLE;
- 	}
- 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 8af6dd388d11..c1ef22df865f 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -294,7 +294,8 @@ ieee80211_crypto_tkip_decrypt(struct ieee80211_rx_data *rx)
- 		return RX_DROP_UNUSABLE;
- 
- 	/* Trim ICV */
--	skb_trim(skb, skb->len - IEEE80211_TKIP_ICV_LEN);
-+	if (!(status->flag & RX_FLAG_ICV_STRIPPED))
-+		skb_trim(skb, skb->len - IEEE80211_TKIP_ICV_LEN);
- 
- 	/* Remove IV */
- 	memmove(skb->data + IEEE80211_TKIP_IV_LEN, skb->data, hdrlen);
 -- 
-2.9.3
+https://patchwork.kernel.org/patch/9459597/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
