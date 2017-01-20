@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:33056 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752083AbdAaTWk (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:40 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Jeff Layton <jlayton@poochiereds.net>,
-        Trond Myklebust <trond.myklebust@primarydata.com>,
-        Anna Schumaker <anna.schumaker@netapp.com>
-Subject: [PATCH 4.10-rc3 01/13] net: sunrpc: fix build errors when
- linux/phy*.h is removed from net/dsa.h
+Received: from mail.neratec.com ([46.140.151.2]:15787 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752328AbdATPfH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jan 2017 10:35:07 -0500
+Subject: Re: [RFC 0/1] ath9k: Frame corruption simulator
+To: Ben Greear <greearb@candelatech.com>
+References: <1484922570-23659-1-git-send-email-Wojciech.Dubowik@neratec.com>
+ <58822285.30008@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Message-ID: <86f1a341-f1f4-7d49-9cf2-88aa815b0890@neratec.com> (sfid-20170120_163511_465907_9256FBD4)
+Date: Fri, 20 Jan 2017 16:26:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdwi-0000Vs-97@rmk-PC.armlinux.org.uk> (sfid-20170131_202400_230162_150AD8F8)
-Date: Tue, 31 Jan 2017 19:18:28 +0000
+In-Reply-To: <58822285.30008@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing linux/phy.h from net/dsa.h reveals a build error in the sunrpc
-code:
 
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_rdma_bc_put':
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c:277:2: error: implicit declaration of function 'module_put' [-Werror=implicit-function-declaration]
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_setup_rdma_bc':
-net/sunrpc/xprtrdma/svc_rdma_backchannel.c:348:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
 
-Fix this by adding linux/module.h to svc_rdma_backchannel.c
+On 20/01/17 15:45, Ben Greear wrote:
+>
+>
+> On 01/20/2017 06:29 AM, Wojciech Dubowik wrote:
+>> I have been debugging customer reported timeout and loss of
+>> communication and I have relaized that I don't have such a lossy
+>> environment available in the lab. To speed up debugging I have
+>> written frame corruption simulator which will allow me to
+>> totally loose specific types of packets. I have been mostly
+>> using it with the mask 0x5000 which drops some EAPOL
+>> and deauthentication frames. This way I was able to test better
+>> timeouts and fail paths.
+>> At the moment only management, null function and EAPOL frames
+>> are supported. One can add more if necessary.
+>
+> Would it be worth having a unique percentage configurable for each
+> of the selected packet types?
+I wanted to keep it simple. I have been just repeating test when I 
+didn't have
+luck with specific frame loss sequence. In real life conditions frame 
+are not lost
+more or less depending on the type. Unless there is a hacker behind;o)
+>
+> How about moving this up into mac80211 so other drivers could
+> be supported as well?  Couldn't you just drop the frames instead
+> of corrupting their checksum?  That would work with things like ath10k
+> as well.
+I have started so but then:
+  1) no more tx flags available
+  2) how other drivers can handle tx frame corruption in HW so it is 
+eqivalent
+   to frame corruption in the air
+  3) info.control.flags are being freed at some point in ath9k and I 
+don't know
+    how it works in other drivers
+  4) dropping is not equal tx failed with no ack as status for tx drop 
+status is always ok
+seen from mac layer.
+   For example it makes a difference for hostapd with EAPOL TX Status. 
+There, mlme
+  sends an event when no ack is received and whole series failed. 
+Actually one could
+specify whether to drop, to corrupt or just add random data.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
----
- net/sunrpc/xprtrdma/svc_rdma_backchannel.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-index 288e35c2d8f4..cb1e48e54eb1 100644
---- a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-+++ b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
-@@ -4,6 +4,7 @@
-  * Support for backward direction RPCs on RPC/RDMA (server-side).
-  */
- 
-+#include <linux/module.h>
- #include <linux/sunrpc/svc_rdma.h>
- #include "xprt_rdma.h"
- 
--- 
-2.7.4
+Wojtek
+>
+> I would like to have something like this, but with the added ability
+> to corrupt specific things like information-elements in management
+> frames to better test the receiver's packet parsing and error checking
+> logic.  For this feature, checksum would not be corrupted.
+>
+> Thanks,
+> Ben
