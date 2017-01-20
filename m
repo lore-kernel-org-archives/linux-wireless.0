@@ -1,47 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60450 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdALKsN (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34556 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751323AbdATIzT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 05:48:13 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v5,1/5] soc: qcom: smem_state: Fix include for ERR_PTR()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1479190014-11297-1-git-send-email-bjorn.andersson@linaro.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-CC: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Andy Gross <andy.gross@linaro.org>,
-        <wcn36xx@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>
-Message-ID: <3591936e6ea64d71a1e5fadc33f43dd3@euamsexm01a.eu.qualcomm.com> (sfid-20170112_114833_483161_A2BADEE5)
-Date: Thu, 12 Jan 2017 11:47:40 +0100
+        Fri, 20 Jan 2017 03:55:19 -0500
+Received: by mail-wm0-f67.google.com with SMTP id c85so5062248wmi.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 00:55:19 -0800 (PST)
+Received: from localhost.localdomain ([92.176.165.227])
+        by smtp.gmail.com with ESMTPSA id d14sm4619205wmd.19.2017.01.20.00.55.16
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 20 Jan 2017 00:55:17 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v3 1/4] mac80211: Pass new RSSI level in CQM RSSI notification
+Date: Fri, 20 Jan 2017 09:55:06 +0100
+Message-Id: <20170120085509.13222-1-andrew.zaborowski@intel.com> (sfid-20170120_095523_600816_98BC7840)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> wrote:
-> The correct include file for getting errno constants and ERR_PTR() is
-> linux/err.h, rather than linux/errno.h, so fix the include.
-> 
-> Fixes: e8b123e60084 ("soc: qcom: smem_state: Add stubs for disabled smem_state")
-> Acked-by: Andy Gross <andy.gross@linaro.org>
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Extend ieee80211_cqm_rssi_notify with a rssi_level parameter so that
+this information can be passed to netlink clients in the next patch, if
+available.  Most drivers will have this value at hand.  wl1251 receives
+events from the firmware that only tell it whether latest measurement
+is above or below threshold so we don't pass any value at this time
+(parameter is 0).
 
-5 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c        |  2 +-
+ drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
+ drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
+ include/net/mac80211.h                      |  2 ++
+ net/mac80211/mlme.c                         |  7 ++++---
+ net/mac80211/trace.h                        | 11 +++++++----
+ 8 files changed, 21 insertions(+), 12 deletions(-)
 
-6c0b2e833f14 soc: qcom: smem_state: Fix include for ERR_PTR()
-f303a9311065 wcn36xx: Transition driver to SMD client
-886039036c20 wcn36xx: Implement firmware assisted scan
-43efa3c0f241 wcn36xx: Implement print_reg indication
-d53628882255 wcn36xx: Don't use the destroyed hal_mutex
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 0e60e38..e06a2e3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++			sig,
+ 			GFP_KERNEL);
+ 	} else if (sig > thold &&
+ 		   (last_event == 0 || sig > last_event + hyst)) {
+@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++			sig,
+ 			GFP_KERNEL);
+ 	}
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dadaa73..e321647 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -877,7 +877,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
+ 
+ 	common->cqm_info.last_cqm_event_rssi = rssi;
+ 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
+-	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
++	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
+ 
+ 	return;
+ }
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index daf06a4..a522248 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
+ 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
+-			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
++			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
+ 						  GFP_KERNEL);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
+index d0593bc..f5acd24 100644
+--- a/drivers/net/wireless/ti/wl1251/event.c
++++ b/drivers/net/wireless/ti/wl1251/event.c
+@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
+ 		}
+ 
+ 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
+@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 4b59f67..f2e90d2 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
+ 
+ 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 		if (event != wlvif->last_rssi_event)
+-			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
++			ieee80211_cqm_rssi_notify(vif, event, metric,
++						  GFP_KERNEL);
+ 		wlvif->last_rssi_event = event;
+ 	}
+ }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5345d35..8810ae7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5260,6 +5260,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @rssi_event: the RSSI trigger event type
++ * @rssi_level: new RSSI level value or 0 if not available
+  * @gfp: context flags
+  *
+  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
+@@ -5268,6 +5269,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  */
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp);
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 098ce9b..a40b90b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3423,14 +3423,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		} else if (sig > thold &&
+ 			   (last_event == 0 || sig > last_event + hyst)) {
+ 			ifmgd->last_cqm_event_signal = sig;
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		}
+ 	}
+ 
+@@ -5045,11 +5045,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	trace_api_cqm_rssi_notify(sdata, rssi_event);
++	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
+ 
+ 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
+ }
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 92a47af..f78d9f4 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
+ 
+ TRACE_EVENT(api_cqm_rssi_notify,
+ 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
+-		 enum nl80211_cqm_rssi_threshold_event rssi_event),
++		 enum nl80211_cqm_rssi_threshold_event rssi_event,
++		 s32 rssi_level),
+ 
+-	TP_ARGS(sdata, rssi_event),
++	TP_ARGS(sdata, rssi_event, rssi_level),
+ 
+ 	TP_STRUCT__entry(
+ 		VIF_ENTRY
+ 		__field(u32, rssi_event)
++		__field(s32, rssi_level)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		VIF_ASSIGN;
+ 		__entry->rssi_event = rssi_event;
++		__entry->rssi_level = rssi_level;
+ 	),
+ 
+ 	TP_printk(
+-		VIF_PR_FMT " event:%d",
+-		VIF_PR_ARG, __entry->rssi_event
++		VIF_PR_FMT " event:%d rssi:%d",
++		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
+ 	)
+ );
+ 
 -- 
-https://patchwork.kernel.org/patch/9429045/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.9.3
