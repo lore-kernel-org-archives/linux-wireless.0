@@ -1,54 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34698 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751670AbdAMMkL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44166 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751590AbdATKG5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:40:11 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Jan 2017 14:39:15 +0200
-Message-Id: <20170113123919.30384-3-luca@coelho.fi> (sfid-20170113_134100_029903_CE9A86DE)
-In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
-References: <20170113123919.30384-1-luca@coelho.fi>
-Subject: [PATCH 2/6] iwlwifi: mvm: properly check for transport data in dump
+        Fri, 20 Jan 2017 05:06:57 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,
+ 1/3] rtlwifi: Download firmware as bytes rather than as dwords
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170119202808.27752-2-Larry.Finger@lwfinger.net>
+References: <20170119202808.27752-2-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Ping-Ke Shih <pkshih@realtek.com>
+Message-Id: <20170120100648.A7F5F609FD@smtp.codeaurora.org> (sfid-20170120_110711_598294_7170C732)
+Date: Fri, 20 Jan 2017 10:06:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> The firmware is read from disk as a little-endian byte string. The code
+> that loads the firmware into the device transfers it as 4-byte quantities.
+> The routines that write multi-byte quantities on BE hardware assume that
+> the data are in CPU order, and automatically do the conversion to the LE
+> order required by the device. As a result, the firmware is transmitted
+> incorrectly. Rather than do multiple byte swaps on the data, the download
+> routine is revised to transmit bytes rather than dwords. Although the
+> number of I/O operations is increased, the firmware is not often loaded.
+> 
+> All drivers have the same bug, and use essentially the same code to
+> download firmware. These routines have been moved into rtlwifi.
+> 
+> Some CamelCase variables have been renamed.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Ping-Ke Shih <pkshih@realtek.com>
 
-When copying from vmalloc'ed memory to the SG list, don't crash
-if the transport didn't provide any data.
+3 patches applied to wireless-drivers-next.git, thanks.
 
-Fixes: 7e62a699aafb ("iwlwifi: mvm: use dev_coredumpsg()")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+89d32c9071aa rtlwifi: Download firmware as bytes rather than as dwords
+69d8597e9fe5 rtlwifi: rtl8192cu: Calculate descriptor checksum correctly for BE
+106e0deca1ac rtlwifi: rtl8192cu: Convert driver to use common macros
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 2e8e3e8e30a3..067f67f74698 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -816,11 +816,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
- 				     sg_nents(sg_dump_data),
- 				     fw_error_dump->op_mode_ptr,
- 				     fw_error_dump->op_mode_len, 0);
--		sg_pcopy_from_buffer(sg_dump_data,
--				     sg_nents(sg_dump_data),
--				     fw_error_dump->trans_ptr->data,
--				     fw_error_dump->trans_ptr->len,
--				     fw_error_dump->op_mode_len);
-+		if (fw_error_dump->trans_ptr)
-+			sg_pcopy_from_buffer(sg_dump_data,
-+					     sg_nents(sg_dump_data),
-+					     fw_error_dump->trans_ptr->data,
-+					     fw_error_dump->trans_ptr->len,
-+					     fw_error_dump->op_mode_len);
- 		dev_coredumpsg(mvm->trans->dev, sg_dump_data, file_len,
- 			       GFP_KERNEL);
- 	}
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9526749/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
