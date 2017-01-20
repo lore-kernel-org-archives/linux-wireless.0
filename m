@@ -1,95 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35513 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751307AbdAMV0q (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36789 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751642AbdATK6Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:26:46 -0500
-Received: by mail-lf0-f67.google.com with SMTP id v186so7057057lfa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:26:45 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC v3 1/8] ath10k: htc: made static function public
-Date: Fri, 13 Jan 2017 22:26:04 +0100
-Message-Id: <1484342771-6160-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_222657_622823_D250A4C0)
-In-Reply-To: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484342771-6160-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 20 Jan 2017 05:58:25 -0500
+Received: by mail-oi0-f66.google.com with SMTP id u143so5223282oif.3
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 02:58:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <52453214-bab2-dc0b-c684-2389fe028442@broadcom.com>
+References: <20170118142703.9824-1-zajec5@gmail.com> <da843f98-cd01-17f7-45cc-4530e8b87bfe@broadcom.com>
+ <52453214-bab2-dc0b-c684-2389fe028442@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 20 Jan 2017 11:58:24 +0100
+Message-ID: <CACna6rwhe+Vupq=7CxQAQfRce2_gH7kNj1QwRyoCpTLms+mn5Q@mail.gmail.com> (sfid-20170120_115828_334543_46A7884B)
+Subject: Re: [PATCH RFC 1/2] brcmfmac: merge two brcmf_err macros into one
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changed ath10k_htc_notify_tx_completion and
-ath10k_htc_process_trailer from static to non static.
+On 20 January 2017 at 11:14, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 20-1-2017 11:13, Arend Van Spriel wrote:
+>> On 18-1-2017 15:27, Rafa=C5=82 Mi=C5=82ecki wrote:
+>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
+>>>
+>>> This allows simplifying the code by adding a simple IS_ENABLED check fo=
+r
+>>> CONFIG_BRCMDB symbol.
+>
+> Actually it should be CONFIG_BRCMDBG above.
+>
+> Kalle,
+>
+> Can you fix that in the commit message?
 
-These functions are needed by SDIO/mbox.
+It's only RFC, I'll make sure to fix that in final version
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.c | 14 ++++++++------
- drivers/net/wireless/ath/ath10k/htc.h |  6 ++++++
- 2 files changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.c b/drivers/net/wireless/ath/ath10k/htc.c
-index 9f6a915..35e67c4 100644
---- a/drivers/net/wireless/ath/ath10k/htc.c
-+++ b/drivers/net/wireless/ath/ath10k/htc.c
-@@ -57,8 +57,8 @@ static inline void ath10k_htc_restore_tx_skb(struct ath10k_htc *htc,
- 	skb_pull(skb, sizeof(struct ath10k_htc_hdr));
- }
- 
--static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
--					    struct sk_buff *skb)
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb)
- {
- 	struct ath10k *ar = ep->htc->ar;
- 
-@@ -75,6 +75,7 @@ static void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
- 
- 	ep->ep_ops.ep_tx_complete(ep->htc->ar, skb);
- }
-+EXPORT_SYMBOL(ath10k_htc_notify_tx_completion);
- 
- static void ath10k_htc_prepare_tx_skb(struct ath10k_htc_ep *ep,
- 				      struct sk_buff *skb)
-@@ -227,10 +228,10 @@ ath10k_htc_process_credit_report(struct ath10k_htc *htc,
- 	spin_unlock_bh(&htc->tx_lock);
- }
- 
--static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
--				      u8 *buffer,
--				      int length,
--				      enum ath10k_htc_ep_id src_eid)
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid)
- {
- 	struct ath10k *ar = htc->ar;
- 	int status = 0;
-@@ -291,6 +292,7 @@ static int ath10k_htc_process_trailer(struct ath10k_htc *htc,
- 
- 	return status;
- }
-+EXPORT_SYMBOL(ath10k_htc_process_trailer);
- 
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb)
- {
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index 6ababa3..f728ce7 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -351,5 +351,11 @@ int ath10k_htc_send(struct ath10k_htc *htc, enum ath10k_htc_ep_id eid,
- struct sk_buff *ath10k_htc_alloc_skb(struct ath10k *ar, int size);
- void ath10k_htc_tx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
- void ath10k_htc_rx_completion_handler(struct ath10k *ar, struct sk_buff *skb);
-+void ath10k_htc_notify_tx_completion(struct ath10k_htc_ep *ep,
-+				     struct sk_buff *skb);
-+int ath10k_htc_process_trailer(struct ath10k_htc *htc,
-+			       u8 *buffer,
-+			       int length,
-+			       enum ath10k_htc_ep_id src_eid);
- 
- #endif
--- 
-2.7.4
+--=20
+Rafa=C5=82
