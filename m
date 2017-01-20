@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:36652 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757698AbdACOOQ (ORCPT
+Received: from mail-yb0-f169.google.com ([209.85.213.169]:32981 "EHLO
+        mail-yb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752096AbdATNEf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 09:14:16 -0500
-Received: by mail-oi0-f43.google.com with SMTP id v84so508187433oie.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 06:14:16 -0800 (PST)
+        Fri, 20 Jan 2017 08:04:35 -0500
+Received: by mail-yb0-f169.google.com with SMTP id w194so52624421ybe.0
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 05:04:34 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com>
-References: <20170103083858.6981-1-zajec5@gmail.com> <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com>
- <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com> <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 3 Jan 2017 15:14:15 +0100
-Message-ID: <CACna6rzBr0Co2o4Ym-7coVk1v5g1nvgDv6099oJVFr9drgU_Rw@mail.gmail.com> (sfid-20170103_151454_987730_025BC282)
-Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+In-Reply-To: <6e5d0596c4af46668c02356ba17a4e5f@euamsexm01a.eu.qualcomm.com>
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <6e5d0596c4af46668c02356ba17a4e5f@euamsexm01a.eu.qualcomm.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 20 Jan 2017 13:56:09 +0100
+Message-ID: <CA+BoTQkutepRAGwE0xLiaGVqg5mXKFdjS26jDdxajkAsQRPuLA@mail.gmail.com> (sfid-20170120_140438_481445_9CC9D2CB)
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 January 2017 at 14:19, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 3-1-2017 12:31, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>> +             if (!channel) {
->>>> +                     brcmf_err("Firmware reported unexpected channel =
-%d\n",
->>>> +                               ch.control_ch_num);
->>>> +                     continue;
->>>> +             }
->>> As stated above something is really off when this happens so should we
->>> continue and try to make sense of what firmware provides or simply fail=
-.
->> Well, I could image something like this happening and not being critical=
-.
->> The simplest case: Broadcom team releases a new firmware which
->> supports extra 5 GHz channels (e.g. due to the IEEE standard change).
->> Why should we refuse to run & support all "old" channel just because of =
-that?
+On 20 January 2017 at 13:51, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> wrote:
+>> Firmware files are versioned to prevent older
+>> driver instances to load unsupported firmware
+>> blobs. This is reflected with a fallback logic
+>> which attempts to load several firmware files.
+>>
+>> This however produced a lot of unnecessary
+>> warnings sometimes confusing users and leading
+>> them to rename firmware files making things even
+>> more confusing.
+>>
+>> Hence use request_firmware_direct() which does not
+>> produce extra warnings. This shouldn't really
+>> break anything because most modern systems don't
+>> rely on udev/hotplug helpers to load firmware
+>> files anymore.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 >
-> Fair enough. I was assuming we keep __wl_{2,5}ghz_channels up to date
-> with IEEE standard.
+> This ended into a rather long discussion, see the full thread from the pa=
+tchwork link
+> below, but I'll try to summarise it here:
 >
->> What do you mean by "make sense of what firmware provides"? Would kind
->> of solution would you suggest?
+> * Nobody stepped up and mentioned that they need/use the user fallback he=
+lper with ath10k.
 >
-> When the above assumption can be assured (by us) the only other scenario
-> would be a change in the firmware API where we wrongly interpret the
-> information retrieved. In this case all subsequent channels will likely
-> result in bogus or accidental matches hence it seems better to bail out
-> early.
+> * Felix confirmed that LEDE creates the calibration file before loading a=
+th10k
+>   so this should not break LEDE.
+>
+> * This also fixes a 60 second delay per _each_ unexistent firmware/calibr=
+ation
+>   file with distros which have CONFIG_FW_LOADER_USER_HELPER_FALLBACK enab=
+led,
+>   RHEL being a notable example. Using ath10k with firmware-2.bin this mig=
+ht
+>   end up into a five minute delay in boot.
+>
+> * Luis is working on new drvdata interface for kernel, but that's not mer=
+ged yet.
+>
+> Based on this I think the right approach is to apply this patch. Any conc=
+erns?
+>
+> While writing this I started to suspect is it just by accident that
+> request_firmware_direct() does not print any error messages and
+> request_firmware() again does print those? Let's hope nobody decides to c=
+hange
+> that.  And at least Luis' drvdata interface has a documented 'optional' f=
+lag,
+> so we can always switch to using that (once it's merged):
+>
+> * struct drvdata_req_params - driver data request parameters
+> * @optional: if true it is not a hard requirement by the caller that this
+> *       file be present. An error will not be recorded if the file is not
+> *       found.
+>
+> Michal, do you mind if I'll add more info to the commit log and submit th=
+is RFC
+> as a proper patch? It still seems to apply and work just fine.
 
-Good point, this actually gave me an idea for a small nice
-improvement. I remember I saw something like WL_VER in wl ioctl
-protocol, it was already bumped at some point by Broadcom, when
-chanspec format has changed. We should probably read this number from
-firmware and maybe refuse to run if version is newer than the one we
-know.
+I don't mind :)
 
---=20
-Rafa=C5=82
+
+Micha=C5=82
