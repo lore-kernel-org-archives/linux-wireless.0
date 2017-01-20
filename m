@@ -1,135 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35319 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751476AbdAMMbm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54650 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752124AbdATPHe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:31:42 -0500
-Received: by mail-lf0-f45.google.com with SMTP id m78so36195386lfg.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 04:31:41 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        mohammed@qti.qualcomm.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] mac80211: prevent skb/txq mismatch
-Date: Fri, 13 Jan 2017 13:32:51 +0100
-Message-Id: <1484310771-28359-1-git-send-email-michal.kazior@tieto.com> (sfid-20170113_133146_202179_4EEB066E)
-In-Reply-To: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
+        Fri, 20 Jan 2017 10:07:34 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC 2/2] ath9k: Add frame corruption simulator
+References: <1484922570-23659-1-git-send-email-Wojciech.Dubowik@neratec.com>
+        <1484922570-23659-3-git-send-email-Wojciech.Dubowik@neratec.com>
+Date: Fri, 20 Jan 2017 17:07:29 +0200
+In-Reply-To: <1484922570-23659-3-git-send-email-Wojciech.Dubowik@neratec.com>
+        (Wojciech Dubowik's message of "Fri, 20 Jan 2017 15:29:30 +0100")
+Message-ID: <8760l9n51q.fsf@kamboji.qca.qualcomm.com> (sfid-20170120_160738_128042_373C48F1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Station structure is considered as not uploaded
-(to driver) until drv_sta_state() finishes. This
-call is however done after the structure is
-attached to mac80211 internal lists and hashes.
-This means mac80211 can lookup (and use) station
-structure before it is uploaded to a driver.
+Wojciech Dubowik <Wojciech.Dubowik@neratec.com> writes:
 
-If this happens (structure exists, but
-sta->uploaded is false) fast_tx path can still be
-taken. Deep in the fastpath call the sta->uploaded
-is checked against to derive "pubsta" argument for
-ieee80211_get_txq(). If sta->uploaded is false
-(and sta is actually non-NULL) ieee80211_get_txq()
-effectively downgraded to vif->txq.
+> Add debugfs entries to corrupt specified frame types
+> by invering fcs field upon transmissionm with given probability.
+>
+> Select frames to be corrupted.
+> <ath9k_debugs>/corrupt_fcs_fram_mask:
+>  Bit 16 - Null function
+>  Bit 15 - QoS Null function
+>  Bit 14 - EAPOL
+>  Bit 13 - Action
+>  Bit 12 - Deauthentication
+>  Bit 11 - Authentication
+>  Bit 10 - Disassociation
+>  Bit 9  - ATIM
+>  Bit 8  - Beacon
+>  Bit 5  - Probe response
+>  Bit 4  - Probe request
+>  Bit 3  - Reassociation response
+>  Bit 2  - Reassociation request
+>  Bit 1  - Association response
+>  Bit 0  - Association request
+>
+> Select corruption probability:
+> <ath9k_debugs>/corrupt_fcs_prob: 0(0%) to 255(100%)
+>
+> Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/Kconfig |  15 +++++
+>  drivers/net/wireless/ath/ath9k/ath9k.h |   7 ++
+>  drivers/net/wireless/ath/ath9k/debug.c |  51 ++++++++++++++
+>  drivers/net/wireless/ath/ath9k/xmit.c  | 117 +++++++++++++++++++++++++++++++++
+>  4 files changed, 190 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+> index 8f231c6..ca50f0f 100644
+> --- a/drivers/net/wireless/ath/ath9k/Kconfig
+> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
+> @@ -95,6 +95,21 @@ config ATH9K_TX99
+>  	  be evaluated to meet the RF exposure limits set forth in the
+>  	  governmental SAR regulations.
+>  
+> +config ATH9K_FRAME_LOSS_SIMULATOR
+> +	bool "Atheros ath9k frame loss simulator"
+> +	depends on ATH9K && ATH9K_DEBUGFS && DEBUG_FS
+> +	default n
+> +	---help---
+> +	  Say N. This option should be used only to test fail paths
+> +          and timeouts by inverting fcs field of selected frames to
+> +	  be transmitted.
+> +	  Which frames are corrupted is marked by bitfield in
+> +	  corrupt_fcs_frame_mask debug entry and probability of
+> +	  of corruption in corrupt_fcs_prob (0-255). Zero means
+> +	  disabled and writing 255 makes all selected frames fail.
+> +	  Management, EAPOL, and Null function frames are
+> +	  supported.
 
-At first glance this may look innocent but coerces
-mac80211 into a state that is almost guaranteed
-(codel may drop offending skb) to crash because a
-station-oriented skb gets queued up on
-vif-oriented txq. The ieee80211_tx_dequeue() ends
-up looking at info->control.flags and tries to use
-txq->sta which in the fail case is NULL.
+Why a separate Kconfig option? Does this significantly increase memory
+consumption or something? I ask because we should be conservative when
+adding new Kconfig options.
 
-It's probably pointless to pretend one can
-downgrade skb from sta-txq to vif-txq.
-
-Since downgrading unicast traffic to vif->txq must
-not be done there's no txq to put a frame on if
-sta->uploaded is false. Therefore the code is made
-to fall back to regular tx() op path if the
-described condition is hit.
-
-Only drivers using wake_tx_queue were affected.
-
-Example crash dump before fix:
-
- Unable to handle kernel paging request at virtual address ffffe26c
- PC is at ieee80211_tx_dequeue+0x204/0x690 [mac80211]
- [<bf4252a4>] (ieee80211_tx_dequeue [mac80211]) from
- [<bf4b1388>] (ath10k_mac_tx_push_txq+0x54/0x1c0 [ath10k_core])
- [<bf4b1388>] (ath10k_mac_tx_push_txq [ath10k_core]) from
- [<bf4bdfbc>] (ath10k_htt_txrx_compl_task+0xd78/0x11d0 [ath10k_core])
- [<bf4bdfbc>] (ath10k_htt_txrx_compl_task [ath10k_core])
- [<bf51c5a4>] (ath10k_pci_napi_poll+0x54/0xe8 [ath10k_pci])
- [<bf51c5a4>] (ath10k_pci_napi_poll [ath10k_pci]) from
- [<c0572e90>] (net_rx_action+0xac/0x160)
-
-Reported-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
-
-Notes:
-    v2:
-     * move sta->uploaded check to if (sta) {} block [johannes]
-     * explain how the change fixes the bug [johannes]
-
- net/mac80211/tx.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 4dea18be385c..2076d62207ee 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1244,7 +1244,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
- 
- static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 					  struct ieee80211_vif *vif,
--					  struct ieee80211_sta *pubsta,
-+					  struct sta_info *sta,
- 					  struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-@@ -1258,10 +1258,13 @@ static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
- 	if (!ieee80211_is_data(hdr->frame_control))
- 		return NULL;
- 
--	if (pubsta) {
-+	if (sta) {
- 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
- 
--		txq = pubsta->txq[tid];
-+		if (!sta->uploaded)
-+			return NULL;
-+
-+		txq = sta->sta.txq[tid];
- 	} else if (vif) {
- 		txq = vif->txq;
- 	}
-@@ -1504,23 +1507,17 @@ static bool ieee80211_queue_skb(struct ieee80211_local *local,
- 	struct fq *fq = &local->fq;
- 	struct ieee80211_vif *vif;
- 	struct txq_info *txqi;
--	struct ieee80211_sta *pubsta;
- 
- 	if (!local->ops->wake_tx_queue ||
- 	    sdata->vif.type == NL80211_IFTYPE_MONITOR)
- 		return false;
- 
--	if (sta && sta->uploaded)
--		pubsta = &sta->sta;
--	else
--		pubsta = NULL;
--
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		sdata = container_of(sdata->bss,
- 				     struct ieee80211_sub_if_data, u.ap);
- 
- 	vif = &sdata->vif;
--	txqi = ieee80211_get_txq(local, vif, pubsta, skb);
-+	txqi = ieee80211_get_txq(local, vif, sta, skb);
- 
- 	if (!txqi)
- 		return false;
 -- 
-2.1.4
+Kalle Valo
