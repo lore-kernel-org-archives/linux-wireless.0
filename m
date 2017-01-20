@@ -1,62 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32882 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932102AbdAKNeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:34:25 -0500
-Message-ID: <1484141660.29931.11.camel@sipsolutions.net> (sfid-20170111_143428_912564_167C32B8)
-Subject: Re: [REGRESSION, bisect] mesh: SAE connection causes kernel crash
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Cedric Izoard <Cedric.Izoard@ceva-dsp.com>,
-        Masashi Honma <masashi.honma@gmail.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 11 Jan 2017 14:34:20 +0100
-In-Reply-To: <2b0df84e78434d11af1089e82485704b@ceva-dsp.com>
-References: <b72bc51c-1873-6178-9990-7d9e99ee4b88@gmail.com>
-         <1484121737.23671.0.camel@sipsolutions.net>
-         <aa60ffb2-b756-b807-4976-20f2eca6665d@gmail.com>
-         <1484125220.23671.1.camel@sipsolutions.net>
-         <12d8a797-6c51-4a79-2820-1f9e2e72b2f5@gmail.com>
-         <1484128809.23671.11.camel@sipsolutions.net>
-         <670a7439-50b9-4f07-1d7d-cb915547562e@gmail.com>
-         <1484132519.23671.12.camel@sipsolutions.net>
-         <1dd6e9f3-5ad2-1138-8017-c0ab208d9f88@gmail.com>
-         <927a79f16e8c429da7a0d06f1bfb2567@ceva-dsp.com>
-         <1484136355.29931.1.camel@sipsolutions.net>
-         <2b0df84e78434d11af1089e82485704b@ceva-dsp.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:36414 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752069AbdATL0w (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jan 2017 06:26:52 -0500
+Received: by mail-lf0-f65.google.com with SMTP id h65so8237191lfi.3
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 03:26:52 -0800 (PST)
+Subject: Re: [PATCH RFC 2/2] brcmfmac: add brcmf_err_pub macro for better
+ error messages
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170118142703.9824-1-zajec5@gmail.com>
+ <20170118142703.9824-2-zajec5@gmail.com>
+ <8819000f-f70f-e8b3-ca52-eebf10a431ac@broadcom.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <e67a5583-8a1b-b370-5dcb-8717197542fb@gmail.com> (sfid-20170120_122656_822893_C0E1E180)
+Date: Fri, 20 Jan 2017 12:17:47 +0100
+MIME-Version: 1.0
+In-Reply-To: <8819000f-f70f-e8b3-ca52-eebf10a431ac@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 01/20/2017 11:26 AM, Arend Van Spriel wrote:
+> On 18-1-2017 15:27, Rafał Miłecki wrote:
+>> From: Rafał Miłecki <rafal@milecki.pl>
+>>
+>> This macro accepts an extra argument of struct brcmf_pub pointer. It
+>> allows referencing struct device and printing error using dev_err. This
+>> is very useful on devices with more than one wireless card suppored by
+>> brcmfmac. Thanks for dev_err it's possible to identify device that error
+>> is related to.
+>>
+>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+>> ---
+>> I could convert few more brcmf_err calls to this new brcmf_err_pub but I don't
+>> want to spent too much time on this in case someone has a better idea.
+>>
+>> If you do, comment! :)
+>
+> I do not, but still comment ;-). Like the idea. Was on our list because
+> it is damn convenient when testing on router with multiple devices. I
+> would prefer to replace the existing brcmf_err() rather than introducing
+> a new one and would like to do the same for brcmf_dbg(). However, not
+> all call sites have a struct brcmf_pub instance available. Everywhere
+> before completing brcmf_attach() that is.
 
-> When calling drv_tx() the headroom is not big enough for the driver.
+I decided to try new macro because:
+1) I was too lazy to convert all calls at once
+2) I could stick to brcmf_err when struct brcmf_pub isn't available yet
 
-Ok.
+In theory we could pass NULL to dev_err, I'd result in something like:
+[   14.746754] (NULL device *): brcmf_c_preinit_dcmds: Firmware version = wl0: Sep 18 2015 03:30:01 version 7.35.177.56 (r587209) FWID 01-6cb8e269
 
-> > 
-> > Maybe we're adding something else to this skb?
-> > 
-> > I can't find anything in the ath9k_htc driver that's adding more
-> > than
-> > 23 bytes (it's advertising 24) but clearly the last 8 bytes here
-> > are
-> > failing:
-> > 
-> > > [   83.200346] skbuff: skb_under_panic: text:ffffffffa034c028
-> > > len:154
-> > > put:8 head:ffff880213422e00 data:ffff880213422dfa tail:0x94
-> > > end:0xc0
-> > > dev:<NULL>
-> > 
-> > Maybe mac80211 is putting something else? It'd have to be
-> 
-> yes mac80211 is adding the security header.
-> headroom asked to skb_copy_expand should also take sdata-
-> >encrypt_headroom into account.
+Unfortunately AFAIK it's not possible to handle
+brcmf_err(NULL "Foo\n");
+calls while keeping brcmf_err a macro.
 
-I suspected that, since it was about the only place that was adding
-anything, but I couldn't test it :)
+I was thinking about something like:
+#define brcmf_err(pub, fmt, ...)					\
+	do {								\
+		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
+			dev_err(pub ? pub->bus_if->dev : NULL,		\
+				"%s: " fmt, __func__,			\
+				##__VA_ARGS__);				\
+	} while (0)
 
-Can you send a patch?
+but this wouldn't compile because for brcmf_err(NULL "Foo\n"); it would roll
+out to:
+dev_err(NULL ? NULL->bus_if->dev : NULL, "Foo\n");
 
-johannes
+I *can* support brcmf_err(NULL "Foo\n"); calls if I change brcmf_err from
+macro to a function (inline probably). Do you think it's a good idea?
