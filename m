@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33327 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751022AbdAXPGk (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33822 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751597AbdATKaI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 24 Jan 2017 10:06:40 -0500
-Received: by mail-lf0-f65.google.com with SMTP id x1so17837888lff.0
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 07:06:34 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 6/6] brcmfmac: use dev_err to print errors
-Date: Tue, 24 Jan 2017 16:06:12 +0100
-Message-Id: <20170124150612.25138-6-zajec5@gmail.com> (sfid-20170124_160644_684046_9E1F8A44)
-In-Reply-To: <20170124150612.25138-1-zajec5@gmail.com>
-References: <20170124150612.25138-1-zajec5@gmail.com>
+        Fri, 20 Jan 2017 05:30:08 -0500
+Received: by mail-wm0-f53.google.com with SMTP id f73so12891050wmf.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 02:29:42 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20170116101757.20483-1-martin.blumenstingl@googlemail.com>
+References: <20170116101757.20483-1-martin.blumenstingl@googlemail.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Fri, 20 Jan 2017 11:29:38 +0100
+Message-ID: <CAPDyKFom-LpjqRWcP_43wwH0BqS1CNH8Mf6QCLnBohmmwBR_Gg@mail.gmail.com> (sfid-20170120_113016_369009_2EC952D5)
+Subject: Re: [PATCH] brcmfmac: add support for BCM43455 with modalias sdio:c00v02D0dA9BF
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        brcm80211-dev-list.pdl@broadcom.com,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On 16 January 2017 at 11:17, Martin Blumenstingl
+<martin.blumenstingl@googlemail.com> wrote:
+> BCM43455 is a more recent revision of the BCM4345. Some of the BCM43455
+> got a dedicated SDIO device ID which is currently not supported by
+> brcmfmac.
+> Adding the new sdio_device_id to brcmfmac is enough to get the BCM43455
+> supported because the chip itself is already supported (due to BCM4345
+> support in the driver).
+>
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 
-This adds a nice prefix to all error messages making it possible to
-identify device they are related to. It's really useful for e.g. home
-routers commonly having 2 or even 3 wireless devices.
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 3 ++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+Kind regards
+Uffe
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 9ad9bd652ca2..28b08cba7dbe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -223,6 +223,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- #ifndef CONFIG_BRCM_TRACING
- void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
- {
-+	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
- 	struct va_format vaf;
- 	va_list args;
- 
-@@ -233,7 +234,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
--	pr_err("%s: %pV", func, &vaf);
-+	dev_err(dev, "%s: %pV", func, &vaf);
- 
- 	va_end(args);
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-index 329cb65eb78b..393c1b31ed28 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-@@ -25,6 +25,7 @@
- 
- void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
- {
-+	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
- 	struct va_format vaf = {
- 		.fmt = fmt,
- 	};
-@@ -32,7 +33,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	pr_err("%s: %pV", func, &vaf);
-+	dev_err(dev, "%s: %pV", func, &vaf);
- 	trace_brcmf_err(func, &vaf);
- 	va_end(args);
- }
--- 
-2.11.0
+> ---
+> This is the proper patch following the (short) discussion from [0]
+>
+> [0] https://marc.info/?l=linux-wireless&m=148455981002310&w=2
+>
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
+>  include/linux/mmc/sdio_ids.h                              | 1 +
+>  2 files changed, 2 insertions(+)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index 72139b579b18..5bc2ba214735 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -1104,6 +1104,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
+>         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4339),
+>         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43430),
+>         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4345),
+> +       BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43455),
+>         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
+>         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356),
+>         { /* end: all zeroes */ }
+> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
+> index d43ef96bf075..71b113e1223f 100644
+> --- a/include/linux/mmc/sdio_ids.h
+> +++ b/include/linux/mmc/sdio_ids.h
+> @@ -36,6 +36,7 @@
+>  #define SDIO_DEVICE_ID_BROADCOM_43362          0xa962
+>  #define SDIO_DEVICE_ID_BROADCOM_43430          0xa9a6
+>  #define SDIO_DEVICE_ID_BROADCOM_4345           0x4345
+> +#define SDIO_DEVICE_ID_BROADCOM_43455          0xa9bf
+>  #define SDIO_DEVICE_ID_BROADCOM_4354           0x4354
+>  #define SDIO_DEVICE_ID_BROADCOM_4356           0x4356
+>
+> --
+> 2.11.0
+>
