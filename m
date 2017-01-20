@@ -1,75 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:34489 "EHLO
-        mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751822AbdA3Q4X (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44940 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751719AbdATLoo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 11:56:23 -0500
-Received: by mail-qk0-f171.google.com with SMTP id l126so2647921qkc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 08:56:23 -0800 (PST)
+        Fri, 20 Jan 2017 06:44:44 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, darcari@redhat.com, netdev@vger.kernel.org,
+        johannes.berg@intel.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] net: ethtool: avoid allocation failure for dump_regs
+References: <20170119141508.GA6245@tuxdriver.com>
+        <20170119155620.GD6245@tuxdriver.com>
+        <87h94uorc1.fsf@kamboji.qca.qualcomm.com>
+        <20170119.142230.1012416564568457058.davem@davemloft.net>
+Date: Fri, 20 Jan 2017 13:44:37 +0200
+In-Reply-To: <20170119.142230.1012416564568457058.davem@davemloft.net> (David
+        Miller's message of "Thu, 19 Jan 2017 14:22:30 -0500 (EST)")
+Message-ID: <87y3y6lzve.fsf@kamboji.qca.qualcomm.com> (sfid-20170120_124449_914773_33E2EB4B)
 MIME-Version: 1.0
-In-Reply-To: <87lgtsjz6o.fsf@toke.dk>
-References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
- <87lgtsjz6o.fsf@toke.dk>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Mon, 30 Jan 2017 08:49:30 -0800
-Message-ID: <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com> (sfid-20170130_175927_292910_977A55AD)
-Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k
- is 20% worse than net80211/madwifi
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: Klaus Kinski <jpo234@outlook.de>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 8:17 AM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
-> Klaus Kinski <jpo234-1ViLX0X+lBKELgA04lAiVw@public.gmane.org> writes:
+David Miller <davem@davemloft.net> writes:
+
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 19 Jan 2017 20:08:30 +0200
 >
->> Hello all,
->>
->> this is a blast from the past, but something that still bothers me.
->> I have two systems with Atheros/QCA cards:
->>
->> System A:
->>   OS and driver: Linux 3.18.36 with last Madwifi/sample code from trunk
->>
->>   WLAN card: AR5413 (Senao EMP-8602 PLUS-S)
->>
->> System B:
->>   OS and driver: Linux 3.18.36 with mac80211/minstrel and ath9k from bac=
-kports-4.2
->>
->>   WLAN card: AR9280 (Compex WLE200NX)
->>
->> While doing the performance measurements both systems are connected to a=
- reference system
->>
->> with a HF cable, so there should be no outside influences.
->>
->> Both systems are running in 802.11a mode on channel 40.
->> The following table shows 802.11 data packets sent from system A and B g=
-enerated by
->>
->> iperf in UDP mode over a 2s interval:
+>> "John W. Linville" <linville@tuxdriver.com> writes:
+>> 
+>>> I forgot to Cc Johannes and Kalle...
+>> 
+>> Also adding linux-wireless.
+>> 
+>>> On Thu, Jan 19, 2017 at 09:15:09AM -0500, John W. Linville wrote:
+>>>
+>>>> I'm responsible for this mess. The original idea was for various
+>>>> mac80211-based drivers to override the ethtool operation and provide
+>>>> their own dump operation, but the mac80211 crowd never embraced
+>>>> the idea.
+>>>> 
+>>>> In the meantime, I added the default implementation which just
+>>>> passed-up wdev->wiphy->hw_version as the version info for a 0-length
+>>>> register dump. I then implemented a driver-specific regiser dump
+>>>> handler for userland ethtool that would interpret the hardware version
+>>>> information for the at76c50x-usb driver.
+>>>> 
+>>>> So the net of it is, if we treat a return of 0 from get_regs_len()
+>>>> as "not supported", we break this one driver-specific feature for
+>>>> userland ethtool. Realistically, there are probably very few users
+>>>> to care. But I can't guarantee that the number is zero.
+>> 
+>> I know the number is not zero, because I remember using it years back
+>> with something else than at76c50x-usb. But is the number more than one,
+>> I don't know :)
 >
-> What version of iperf, and configured to which rate? Some versions of
-> iperf will send its traffic in very large bursts (see
-> http://burntchrome.blogspot.se/2016/09/iperf3-and-microbursts.html?m=3D1)
-> which could cause the queue inside ath9k to overflow (it is only 123
-> packets pre-4.10).
+> I'm trying to dig down and figure out why this problem is showing up now.
+> ethtool_get_regs() has been using vzalloc() since 2011, and before that it
+> used plain vmalloc().
 >
-> Did you try the latest mac80211/ath9k from 4.10? The queueing structure
-> changed dramatically, which would impact this, at least if it's a queue
-> overflow problem...
+> This code has therefore been using v{m,z}alloc() forever.  What changed?
+>
+> The zero size check has been in the vmalloc implementation since at least
+> 2009.
+>
+> I don't understand why this is all triggering and being noticed now.  The
+> whole ieee80211 "return zero length regs and return hw version in get_regs"
+> thing should have been failing for at least 7 years now.
 
-Packet captures would be helpful. Aircaps, if possible, also.
+Maybe just nobody hasn't used it since? If my memory serves me right
+(too often it does not) It's 6-7 years since I used this, and if the
+kernel I worked on at the time was a year or two old, I might have used
+a version without the zero size check.
 
-> -Toke
+But I'm just hand-waving here, I cannot be sure what's the last kernel I
+used.
 
-
-
---=20
-Dave T=C3=A4ht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+-- 
+Kalle Valo
