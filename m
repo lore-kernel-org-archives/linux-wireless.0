@@ -1,96 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:59512 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751573AbdAPCzO (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:36460 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750765AbdATCtf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 21:55:14 -0500
-Date: Mon, 16 Jan 2017 03:55:01 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 01/14] rt2x00: rt2800lib: move rt2800_drv_data declaration
- into rt2800lib.h
-Message-ID: <20170116025444.GA32156@makrotopia.org> (sfid-20170116_035516_550175_CCB4931C)
-References: <874m114lwq.fsf@codeaurora.org>
+        Thu, 19 Jan 2017 21:49:35 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
+ interrupts after enabling local irq flags
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+Cc: kvalo@codeaurora.org, netdev@vger.kernel.org, rgummal@xilinx.com,
+        Bharat Kumar Gogada <bharatku@xilinx.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net> (sfid-20170120_034952_148442_AAF456C1)
+Date: Thu, 19 Jan 2017 20:41:27 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+In-Reply-To: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+On 01/19/2017 04:14 AM, Bharat Kumar Gogada wrote:
+> -Realtek 8192CE chipset maintains local irq flags after enabling/disabling
+> hardware interrupts.
+> -Hardware interrupts are enabled before enabling the local irq
+> flags(these flags are being checked in interrupt handler),
+> leading to race condition on some RP, where the irq line between
+> bridge and GIC goes high at ASSERT_INTx and goes low only
+> at DEASSERT_INTx. In this kind of RP by the time ASSERT_INTx is seen
+> irq_enable flag is still set to false, resulting in continuous
+> interrupts seen by CPU as DEASSERT_INTx cannot be sent since
+> flag is still false and making CPU stall.
+> -Changing the sequence of setting these irq flags.
+>
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> ---
 
-The rt2800_drv_data structure contains driver specific
-information. Move the declaration into the rt2800lib.h
-header which is a more logical place for it. Also fix
-the comment style to avoid checkpatch warning.
+This patch should be enhanced with the smb_xx() calls as suggested by by Lino.
 
-The patch contains no functional changes, it is in
-preparation for the next patch.
+The subject should be changed. I would suggest something like "rtlwifi: 
+rtl8192ce: Prevent race condition when enabling interrupts", as it explains the 
+condition you are preventing.
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800.h    | 16 ----------------
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h | 16 ++++++++++++++++
- 2 files changed, 16 insertions(+), 16 deletions(-)
+The other PCI drivers also have the same problem. Do you want to prepare the 
+patches, or should I do it?
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index ec622a08a486..2371896c1e99 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -2969,20 +2969,4 @@ enum rt2800_eeprom_word {
- #define WCID_END	222
- #define STA_IDS_SIZE	(WCID_END - WCID_START + 2)
- 
--/*
-- * RT2800 driver data structure
-- */
--struct rt2800_drv_data {
--	u8 calibration_bw20;
--	u8 calibration_bw40;
--	u8 bbp25;
--	u8 bbp26;
--	u8 txmixer_gain_24g;
--	u8 txmixer_gain_5g;
--	u8 max_psdu;
--	unsigned int tbtt_tick;
--	unsigned int ampdu_factor_cnt[4];
--	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
--};
--
- #endif /* RT2800_H */
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-index 0a8b4df665fe..256928f0ea6a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.h
-@@ -20,6 +20,22 @@
- #ifndef RT2800LIB_H
- #define RT2800LIB_H
- 
-+#include "rt2800.h"
-+
-+/* RT2800 driver data structure */
-+struct rt2800_drv_data {
-+	u8 calibration_bw20;
-+	u8 calibration_bw40;
-+	u8 bbp25;
-+	u8 bbp26;
-+	u8 txmixer_gain_24g;
-+	u8 txmixer_gain_5g;
-+	u8 max_psdu;
-+	unsigned int tbtt_tick;
-+	unsigned int ampdu_factor_cnt[4];
-+	DECLARE_BITMAP(sta_ids, STA_IDS_SIZE);
-+};
-+
- struct rt2800_ops {
- 	void (*register_read)(struct rt2x00_dev *rt2x00dev,
- 			      const unsigned int offset, u32 *value);
--- 
-2.11.0
+Larry
