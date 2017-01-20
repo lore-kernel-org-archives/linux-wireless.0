@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55332 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751308AbdA0Uke (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 15:40:34 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: fix kernel crash when unregistering thermal zone
-References: <b6a2209c-1343-cbda-c6c2-ae5eb93148d3@kernel.dk>
-        <20170121125917.2E08F609D0@smtp.codeaurora.org>
-        <1e6ae9d2-fef7-1ce0-53fc-4948f81ae27d@kernel.dk>
-Date: Fri, 27 Jan 2017 21:54:04 +0200
-In-Reply-To: <1e6ae9d2-fef7-1ce0-53fc-4948f81ae27d@kernel.dk> (Jens Axboe's
-        message of "Fri, 27 Jan 2017 12:48:11 -0700")
-Message-ID: <874m0k46ub.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_214042_139634_73A0B97B)
+Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:61733
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752422AbdATOOY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 20 Jan 2017 09:14:24 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
+ interrupts after enabling local irq flags
+Date: Fri, 20 Jan 2017 14:14:10 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263CA86D@XAP-PVEXMBX02.xlnx.xilinx.com> (sfid-20170120_151441_420878_7F228CE3)
+References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+ <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net>
+In-Reply-To: <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jens Axboe <axboe@kernel.dk> writes:
+ > On 01/19/2017 04:14 AM, Bharat Kumar Gogada wrote:
+> > -Realtek 8192CE chipset maintains local irq flags after enabling/disabl=
+ing
+> > hardware interrupts.
+> > -Hardware interrupts are enabled before enabling the local irq
+> > flags(these flags are being checked in interrupt handler),
+> > leading to race condition on some RP, where the irq line between
+> > bridge and GIC goes high at ASSERT_INTx and goes low only
+> > at DEASSERT_INTx. In this kind of RP by the time ASSERT_INTx is seen
+> > irq_enable flag is still set to false, resulting in continuous
+> > interrupts seen by CPU as DEASSERT_INTx cannot be sent since
+> > flag is still false and making CPU stall.
+> > -Changing the sequence of setting these irq flags.
+> >
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > ---
+>=20
+> This patch should be enhanced with the smb_xx() calls as suggested by by =
+Lino.
+>=20
+> The subject should be changed. I would suggest something like "rtlwifi:
+> rtl8192ce: Prevent race condition when enabling interrupts", as it explai=
+ns the
+> condition you are preventing.
+>=20
+> The other PCI drivers also have the same problem. Do you want to prepare =
+the
+> patches, or should I do it?
+>=20
+Thanks Larry. Please send out the patches adding the above enhancements sug=
+gested by Lino.
 
-> On 01/21/2017 05:59 AM, Kalle Valo wrote:
->> Jens Axboe <axboe@kernel.dk> wrote:
->>> A recent firmware change seems to have enabled thermal zones on the
->>> iwlwifi driver. Unfortunately, my device fails when registering the
->>> thermal zone. This doesn't stop the driver from attempting to unregister
->>> the thermal zone at unload time, triggering a NULL pointer deference in
->>> strlen() off the thermal_zone_device_unregister() path.
->>>
->>> Don't unregister if name is NULL, for that case we failed registering.
->>> Do the same for the cooling zone.
->>>
->>> Signed-off-by: Jens Axboe <axboe@fb.com>
->> 
->> Patch applied to wireless-drivers.git, thanks.
->> 
->> 92549cdc288f iwlwifi: fix kernel crash when unregistering thermal zone
->
-> When is this going out?
-
-Trying to send a pull request to Dave tomorrow.
-
--- 
-Kalle Valo
+Bharat
