@@ -1,51 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5659 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751734AbdALNPV (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34249 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752049AbdATV1Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 08:15:21 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 07/13] wil6210: protect against false interrupt during reset sequence
-Date: Thu, 12 Jan 2017 15:05:59 +0200
-Message-Id: <1484226365-10433-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170112_141533_325488_F665C48A)
-In-Reply-To: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 20 Jan 2017 16:27:25 -0500
+Received: by mail-oi0-f68.google.com with SMTP id w144so6503854oiw.1
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 13:27:25 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Ping-Ke Shih <pkshih@realtek.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 03/11] rtlwifi: Add a new enumeration value to btc_set_type
+Date: Fri, 20 Jan 2017 15:27:08 -0600
+Message-Id: <20170120212716.29887-4-Larry.Finger@lwfinger.net> (sfid-20170120_223043_118377_F0396FD4)
+In-Reply-To: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
+References: <20170120212716.29887-1-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+From: Ping-Ke Shih <pkshih@realtek.com>
 
-During reset sequence it is seen that device is generating an
-interrupt eventhough interrupts are masked at device level.
+The new value is needed for future capability.
 
-Add workaround to disable the interrupts from host side during
-reset and clear any pending interrupts before re-enabling
-the interrupt.
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Ping-Ke Shih <pkshih@realtek.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 9b8fa6a..85a795a 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -918,7 +918,10 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	flush_workqueue(wil->wmi_wq);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 3d308eb..eb89011 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -263,6 +263,7 @@ enum btc_set_type {
+ 	/* type trigger some action */
+ 	BTC_SET_ACT_GET_BT_RSSI,
+ 	BTC_SET_ACT_AGGREGATE_CTRL,
++	BTC_SET_ACT_ANTPOSREGRISTRY_CTRL,
  
- 	wil_bl_crash_info(wil, false);
-+	wil_disable_irq(wil);
- 	rc = wil_target_reset(wil);
-+	wil6210_clear_irq(wil);
-+	wil_enable_irq(wil);
- 	wil_rx_fini(wil);
- 	if (rc) {
- 		wil_bl_crash_info(wil, true);
+ 	/********* for 1Ant **********/
+ 	/* type bool */
 -- 
-1.9.1
+2.10.2
