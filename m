@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:38852 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751339AbdAPO6u (ORCPT
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:33025 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753084AbdATQaI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 09:58:50 -0500
-Received: by mail-it0-f49.google.com with SMTP id c7so23002184itd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2017 06:58:50 -0800 (PST)
+        Fri, 20 Jan 2017 11:30:08 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8192x: Enabling and disabling hardware
+ interrupts after enabling local irq flags
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        "chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <1484820854-16719-1-git-send-email-bharatku@xilinx.com>
+ <b2e783f6-fa09-e287-8119-266299cdae22@lwfinger.net>
+ <8520D5D51A55D047800579B094147198263CA86D@XAP-PVEXMBX02.xlnx.xilinx.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <07fff87e-4dc2-f7b1-76f1-263be2410905@lwfinger.net> (sfid-20170120_173012_702244_B09CE471)
+Date: Fri, 20 Jan 2017 10:30:05 -0600
 MIME-Version: 1.0
-In-Reply-To: <201701150241.yCa5lXiT%fengguang.wu@intel.com>
-References: <20170113111022.5570-1-ext.waldemar.rymarkiewicz@tieto.com> <201701150241.yCa5lXiT%fengguang.wu@intel.com>
-From: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-Date: Mon, 16 Jan 2017 15:58:24 +0100
-Message-ID: <CAJ2u5D++qAhQZObmw_P_d8AsWWmi-v0AK+dRjo96j+gXgk2rVg@mail.gmail.com> (sfid-20170116_155855_265033_E2ECBE9A)
-Subject: Re: [PATCH] ath10k: Search SMBIOS for OEM board file extension
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        ath10k@lists.infradead.org,
-        Bartosz Markowski <bartosz.markowski@tieto.com>,
-        "Chang, Robert" <rwchang@qti.qualcomm.com>,
-        "Liu, Alan" <alanliu@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <8520D5D51A55D047800579B094147198263CA86D@XAP-PVEXMBX02.xlnx.xilinx.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14 January 2017 at 19:09, kbuild test robot <lkp@intel.com> wrote:
-> Hi Waldemar,
->
-> [auto build test WARNING on ath6kl/ath-next]
-> [also build test WARNING on v4.10-rc3 next-20170113]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Waldemar-Rymarkiewicz/ath10k-Search-SMBIOS-for-OEM-board-file-extension/20170115-005232
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git ath-next
-> config: xtensa-allmodconfig (attached as .config)
-> compiler: xtensa-linux-gcc (GCC) 4.9.0
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=xtensa
->
-> All warnings (new ones prefixed by >>):
->
->    drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_check_bdfext':
->>> drivers/net/wireless/ath/ath10k/core.c:754:2: warning: ignoring return value of 'strscpy', declared with attribute warn_unused_result [-Wunused-result]
->      strscpy(ar->id.bdf_ext, bdf_ext + strlen(magic),
->      ^
+On 01/20/2017 08:14 AM, Bharat Kumar Gogada wrote:
+>  > On 01/19/2017 04:14 AM, Bharat Kumar Gogada wrote:
+>>> -Realtek 8192CE chipset maintains local irq flags after enabling/disabling
+>>> hardware interrupts.
+>>> -Hardware interrupts are enabled before enabling the local irq
+>>> flags(these flags are being checked in interrupt handler),
+>>> leading to race condition on some RP, where the irq line between
+>>> bridge and GIC goes high at ASSERT_INTx and goes low only
+>>> at DEASSERT_INTx. In this kind of RP by the time ASSERT_INTx is seen
+>>> irq_enable flag is still set to false, resulting in continuous
+>>> interrupts seen by CPU as DEASSERT_INTx cannot be sent since
+>>> flag is still false and making CPU stall.
+>>> -Changing the sequence of setting these irq flags.
+>>>
+>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>>> ---
+>>
+>> This patch should be enhanced with the smb_xx() calls as suggested by by Lino.
+>>
+>> The subject should be changed. I would suggest something like "rtlwifi:
+>> rtl8192ce: Prevent race condition when enabling interrupts", as it explains the
+>> condition you are preventing.
+>>
+>> The other PCI drivers also have the same problem. Do you want to prepare the
+>> patches, or should I do it?
+>>
+> Thanks Larry. Please send out the patches adding the above enhancements suggested by Lino.
 
-I will fix and send v2.
+I have prepared a patch fixing all the drivers. By the way, what CPU hardware 
+showed this problem?
 
-Thanks,
-/Waldek
+Larry
