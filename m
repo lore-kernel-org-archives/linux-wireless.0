@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:44004 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752317AbdAESTz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36022 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750726AbdAWL4u (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 13:19:55 -0500
-Date: Thu, 05 Jan 2017 13:18:45 -0500 (EST)
-Message-Id: <20170105.131845.1605952043383659916.davem@davemloft.net> (sfid-20170105_192140_649525_C9D20611)
-To: stephen@networkplumber.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-rdma@vger.kernel.org, oss-drivers@netronome.com,
-        devel@linuxdriverproject.org, linux-ppp@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        dev@openvswitch.org, sthemmin@microsoft.com
-Subject: Re: [PATCH net-next] net: make ndo_get_stats64 a void function
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170105173136.2817-1-sthemmin@microsoft.com>
-References: <20170105173136.2817-1-sthemmin@microsoft.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
+        Mon, 23 Jan 2017 06:56:50 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 23 Jan 2017 13:56:22 +0200
+Message-Id: <20170123115622.23587-3-luca@coelho.fi> (sfid-20170123_125653_037628_7B3A9E7D)
+In-Reply-To: <20170123115622.23587-1-luca@coelho.fi>
+References: <20170123115622.23587-1-luca@coelho.fi>
+Subject: [PATCH 2/2] iwlwifi: mvm: avoid crash on restart w/o reserved queues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogU3RlcGhlbiBIZW1taW5nZXIgPHN0ZXBoZW5AbmV0d29ya3BsdW1iZXIub3JnPg0KRGF0
-ZTogVGh1LCAgNSBKYW4gMjAxNyAwOTozMTozNiAtMDgwMA0KDQo+IFRoZSBuZXR3b3JrIGRldmlj
-ZSBvcGVyYXRpb24gZm9yIHJlYWRpbmcgc3RhdGlzdGljcyBpcyBvbmx5IGNhbGxlZA0KPiBpbiBv
-bmUgcGxhY2UsIGFuZCBpdCBpZ25vcmVzIHRoZSByZXR1cm4gdmFsdWUuIEhhdmluZyBhIHN0cnVj
-dHVyZQ0KPiByZXR1cm4gdmFsdWUgaXMgcG90ZW50aWFsbHkgY29uZnVzaW5nIGJlY2F1c2Ugc29t
-ZSBmdXR1cmUgZHJpdmVyIGNvdWxkDQo+IGluY29ycmVjdGx5IGFzc3VtZSB0aGF0IHRoZSByZXR1
-cm4gdmFsdWUgd2FzIHVzZWQuDQo+IA0KPiBGaXggYWxsIGRyaXZlcnMgd2l0aCBuZG9fZ2V0X3N0
-YXRzNjQgdG8gaGF2ZSBhIHZvaWQgZnVuY3Rpb24uDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBTdGVw
-aGVuIEhlbW1pbmdlciA8c3RoZW1taW5AbWljcm9zb2Z0LmNvbT4NCg0KWW91IG1pc3NlZCBhdCBs
-ZWFzdCBvbmUgbmV3IHdhcm5pbmcsIHBsZWFzZSBkbyBhIGZyZXNoIGFsbG1vZGNvbmZpZyBidWls
-ZA0KYW5kIHdhdGNoIHRoZSBsb2dzLg0KDQpkcml2ZXJzL25ldC9ldGhlcm5ldC9icm9hZGNvbS9i
-bngyLmM6IEluIGZ1bmN0aW9uIKFibngyX2dldF9zdGF0czY0ojoNCmRyaXZlcnMvbmV0L2V0aGVy
-bmV0L2Jyb2FkY29tL2JueDIuYzo2ODMwOjEwOiB3YXJuaW5nOiChcmV0dXJuoiB3aXRoIGEgdmFs
-dWUsIGluIGZ1bmN0aW9uIHJldHVybmluZyB2b2lkDQoNClRoYW5rcy4NCg==
+From: Johannes Berg <johannes.berg@intel.com>
+
+When the firmware restarts in a situation in which any station
+has no queue reserved anymore because that queue was used, the
+code will crash trying to access the queue_info array at the
+offset 255, which is far too big. Fix this by checking that a
+queue is actually reserved before writing its status.
+
+Fixes: 8d98ae6eb0d5 ("iwlwifi: mvm: re-assign old queues after hw restart in dqa mode")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 636c8b03e318..09e9e2e3ed04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1164,9 +1164,10 @@ static void iwl_mvm_realloc_queues_after_restart(struct iwl_mvm *mvm,
+ 		.frame_limit = IWL_FRAME_LIMIT,
+ 	};
+ 
+-	/* Make sure reserved queue is still marked as such (or allocated) */
+-	mvm->queue_info[mvm_sta->reserved_queue].status =
+-		IWL_MVM_QUEUE_RESERVED;
++	/* Make sure reserved queue is still marked as such (if allocated) */
++	if (mvm_sta->reserved_queue != IEEE80211_INVAL_HW_QUEUE)
++		mvm->queue_info[mvm_sta->reserved_queue].status =
++			IWL_MVM_QUEUE_RESERVED;
+ 
+ 	for (i = 0; i <= IWL_MAX_TID_COUNT; i++) {
+ 		struct iwl_mvm_tid_data *tid_data = &mvm_sta->tid_data[i];
+-- 
+2.11.0
