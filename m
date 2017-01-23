@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39660 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934986AbdADIMf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36336 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751757AbdAWWTV (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 03:12:35 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
-References: <20170103083858.6981-1-zajec5@gmail.com>
-        <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com>
-        <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com>
-        <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com>
-        <CACna6rzBr0Co2o4Ym-7coVk1v5g1nvgDv6099oJVFr9drgU_Rw@mail.gmail.com>
-        <CACna6rxYPFWfvA4TyQTjGCrduefiCU-j4vR8PrfbCnN3P8-iyg@mail.gmail.com>
-Date: Wed, 04 Jan 2017 10:12:28 +0200
-In-Reply-To: <CACna6rxYPFWfvA4TyQTjGCrduefiCU-j4vR8PrfbCnN3P8-iyg@mail.gmail.com>
-        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Tue, 3 Jan 2017
- 16:49:17 +0100")
-Message-ID: <87shozi6qb.fsf@kamboji.qca.qualcomm.com> (sfid-20170104_091239_569438_C2291246)
+        Mon, 23 Jan 2017 17:19:21 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>
+Date: Tue, 24 Jan 2017 00:03:39 +0200
+Message-Id: <20170123220350.25305-15-luca@coelho.fi> (sfid-20170123_233339_485271_D71B1A75)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 14/25] iwlwifi: fix MODULE_FIRMWARE for 6030
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+From: Jürg Billeter <j@bitron.ch>
 
-> On 3 January 2017 at 15:14, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
-ote:
->> On 3 January 2017 at 14:19, Arend Van Spriel
->> <arend.vanspriel@broadcom.com> wrote:
->>> On 3-1-2017 12:31, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>>>> +             if (!channel) {
->>>>>> +                     brcmf_err("Firmware reported unexpected channe=
-l %d\n",
->>>>>> +                               ch.control_ch_num);
->>>>>> +                     continue;
->>>>>> +             }
->>>>> As stated above something is really off when this happens so should we
->>>>> continue and try to make sense of what firmware provides or simply fa=
-il.
->>>> Well, I could image something like this happening and not being critic=
-al.
->>>> The simplest case: Broadcom team releases a new firmware which
->>>> supports extra 5 GHz channels (e.g. due to the IEEE standard change).
->>>> Why should we refuse to run & support all "old" channel just because o=
-f that?
->>>
->>> Fair enough. I was assuming we keep __wl_{2,5}ghz_channels up to date
->>> with IEEE standard.
->>>
->>>> What do you mean by "make sense of what firmware provides"? Would kind
->>>> of solution would you suggest?
->>>
->>> When the above assumption can be assured (by us) the only other scenario
->>> would be a change in the firmware API where we wrongly interpret the
->>> information retrieved. In this case all subsequent channels will likely
->>> result in bogus or accidental matches hence it seems better to bail out
->>> early.
->>
->> Good point, this actually gave me an idea for a small nice
->> improvement. I remember I saw something like WL_VER in wl ioctl
->> protocol, it was already bumped at some point by Broadcom, when
->> chanspec format has changed. We should probably read this number from
->> firmware and maybe refuse to run if version is newer than the one we
->> know.
->
-> I was thinking about WLC_GET_VERSION and you seem to already have it
-> in brcmfmac under nam BRCMF_C_GET_VERSION. If you wish to be prepared
-> for firmware API change, I guess you should check version. It seems
-> brcmfmac supports 1 and 2.
->
-> On the other hand if adding firmware with incompatible API you may
-> want to have different directory or file names. I think this is what
-> Intel does. This allows one to have multiple firmwares in
-> /lib/firmware/ and switching between kernels freely.
+IWL6000G2B_UCODE_API_MAX is not defined. ucode_api_max of
+IWL_DEVICE_6030 uses IWL6000G2_UCODE_API_MAX. Use this also for
+MODULE_FIRMWARE.
 
-ath10k does something similar. IIRC we currently support four different,
-and incompatible, firmware releases now.
+Fixes: 9d9b21d1b616 ("iwlwifi: remove IWL_*_UCODE_API_OK")
+Signed-off-by: Jürg Billeter <j@bitron.ch>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-6000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---=20
-Kalle Valo
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+index 0b9f6a7bc834..39335b7b0c16 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-6000.c
+@@ -371,4 +371,4 @@ const struct iwl_cfg iwl6000_3agn_cfg = {
+ MODULE_FIRMWARE(IWL6000_MODULE_FIRMWARE(IWL6000_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6050_MODULE_FIRMWARE(IWL6050_UCODE_API_MAX));
+ MODULE_FIRMWARE(IWL6005_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2B_UCODE_API_MAX));
++MODULE_FIRMWARE(IWL6030_MODULE_FIRMWARE(IWL6000G2_UCODE_API_MAX));
+-- 
+2.11.0
