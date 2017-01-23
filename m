@@ -1,83 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36822 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752702AbdACPtS (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:17817 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751136AbdAWWEH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 10:49:18 -0500
-Received: by mail-oi0-f68.google.com with SMTP id u15so70728279oie.3
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 07:49:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzBr0Co2o4Ym-7coVk1v5g1nvgDv6099oJVFr9drgU_Rw@mail.gmail.com>
-References: <20170103083858.6981-1-zajec5@gmail.com> <f74a07d7-94a6-f9c6-ba12-adec6f708c3a@broadcom.com>
- <CACna6rzGRHLCdzxS_+MHXeZwF=BW4S52pDb9g9MuanNGyToEOw@mail.gmail.com>
- <0c0c9680-2cc8-ad0a-3aa0-ba406a838ab8@broadcom.com> <CACna6rzBr0Co2o4Ym-7coVk1v5g1nvgDv6099oJVFr9drgU_Rw@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 3 Jan 2017 16:49:17 +0100
-Message-ID: <CACna6rxYPFWfvA4TyQTjGCrduefiCU-j4vR8PrfbCnN3P8-iyg@mail.gmail.com> (sfid-20170103_164958_164865_2D993ABA)
-Subject: Re: [PATCH] brcmfmac: avoid writing channel out of allocated array
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 23 Jan 2017 17:04:07 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
+Date: Tue, 24 Jan 2017 00:03:32 +0200
+Message-Id: <20170123220350.25305-8-luca@coelho.fi> (sfid-20170123_230424_278037_5A58B36D)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 07/25] iwlwifi: mvm: bump max API to 28
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 January 2017 at 15:14, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wrot=
-e:
-> On 3 January 2017 at 14:19, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 3-1-2017 12:31, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>>> +             if (!channel) {
->>>>> +                     brcmf_err("Firmware reported unexpected channel=
- %d\n",
->>>>> +                               ch.control_ch_num);
->>>>> +                     continue;
->>>>> +             }
->>>> As stated above something is really off when this happens so should we
->>>> continue and try to make sense of what firmware provides or simply fai=
-l.
->>> Well, I could image something like this happening and not being critica=
-l.
->>> The simplest case: Broadcom team releases a new firmware which
->>> supports extra 5 GHz channels (e.g. due to the IEEE standard change).
->>> Why should we refuse to run & support all "old" channel just because of=
- that?
->>
->> Fair enough. I was assuming we keep __wl_{2,5}ghz_channels up to date
->> with IEEE standard.
->>
->>> What do you mean by "make sense of what firmware provides"? Would kind
->>> of solution would you suggest?
->>
->> When the above assumption can be assured (by us) the only other scenario
->> would be a change in the firmware API where we wrongly interpret the
->> information retrieved. In this case all subsequent channels will likely
->> result in bogus or accidental matches hence it seems better to bail out
->> early.
->
-> Good point, this actually gave me an idea for a small nice
-> improvement. I remember I saw something like WL_VER in wl ioctl
-> protocol, it was already bumped at some point by Broadcom, when
-> chanspec format has changed. We should probably read this number from
-> firmware and maybe refuse to run if version is newer than the one we
-> know.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I was thinking about WLC_GET_VERSION and you seem to already have it
-in brcmfmac under nam BRCMF_C_GET_VERSION. If you wish to be prepared
-for firmware API change, I guess you should check version. It seems
-brcmfmac supports 1 and 2.
+We skipped one release, so bump twice, to 28.
 
-On the other hand if adding firmware with incompatible API you may
-want to have different directory or file names. I think this is what
-Intel does. This allows one to have multiple firmwares in
-/lib/firmware/ and switching between kernels freely.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
---=20
-Rafa=C5=82
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
+index d4b73dedf89b..a72e58623d3a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
+@@ -73,8 +73,8 @@
+ /* Highest firmware API version supported */
+ #define IWL7260_UCODE_API_MAX	17
+ #define IWL7265_UCODE_API_MAX	17
+-#define IWL7265D_UCODE_API_MAX	26
+-#define IWL3168_UCODE_API_MAX	26
++#define IWL7265D_UCODE_API_MAX	28
++#define IWL3168_UCODE_API_MAX	28
+ 
+ /* Lowest firmware API version supported */
+ #define IWL7260_UCODE_API_MIN	17
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index d02ca1491d16..df0fc24e99e1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -70,8 +70,8 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	26
+-#define IWL8265_UCODE_API_MAX	26
++#define IWL8000_UCODE_API_MAX	28
++#define IWL8265_UCODE_API_MAX	28
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	17
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index ff850410d897..a5f0c0bf85ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	26
++#define IWL9000_UCODE_API_MAX	28
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	17
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index ea1618525878..82f18d967c40 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_A000_UCODE_API_MAX	26
++#define IWL_A000_UCODE_API_MAX	28
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_A000_UCODE_API_MIN	24
+-- 
+2.11.0
