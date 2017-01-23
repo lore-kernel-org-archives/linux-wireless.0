@@ -1,54 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35336 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759531AbdADOxk (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36112 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751269AbdAWWED (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 09:53:40 -0500
+        Mon, 23 Jan 2017 17:04:03 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
+Date: Tue, 24 Jan 2017 00:03:25 +0200
+Message-Id: <20170123220350.25305-1-luca@coelho.fi> (sfid-20170123_230414_132169_93D9210C)
 MIME-Version: 1.0
-In-Reply-To: <874m1ej3oz.fsf@kamboji.qca.qualcomm.com>
-References: <20161228155955.25518-1-zajec5@gmail.com> <20170103195514.vf4psb6qw2bd2lcw@rob-hp-laptop>
- <CACna6rxmgN2zz-Fc1-Uu02oqMQreNkMJt0jGjLOMrXM=6iujFw@mail.gmail.com> <874m1ej3oz.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 4 Jan 2017 15:53:38 +0100
-Message-ID: <CACna6rxx-8499ZQKekdORF0UWQQazwGu2On1aq-fwA4oCX7pgw@mail.gmail.com> (sfid-20170104_155503_093676_B033A2F9)
-Subject: Re: [PATCH 1/2] dt-bindings: document common IEEE 802.11 frequency properties
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Rob Herring <robh@kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>, Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
 Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 00/25] iwlwifi: updates intended for v4.11 2017-01-23
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 January 2017 at 15:32, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
->
->> On 3 January 2017 at 20:55, Rob Herring <robh@kernel.org> wrote:
->>> On Wed, Dec 28, 2016 at 04:59:54PM +0100, Rafa=C5=82 Mi=C5=82ecki wrote=
-:
->>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>
->>>> This new file should be used for properties handled at higher level an=
-d
->>>> so usable with all drivers.
->>>
->>> Why is this needed? Where would this data normally come from?
->>
->> Vendors limit choice of channels at their web user interface level. I
->> want to do better and report proper channels directly at kernel level
->> instead of masking them in every possible configuration tool.
->
-> Why do vendors limit the channels? Is it because of a hardware
-> limitation (antenna does not support, or not calibrated, for a certain
-> band etc) or something else?
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Please review & comment on the latest version, currently V5:
-https://patchwork.kernel.org/patch/9495795/
-"This can be used to specify extra hardware limitations caused by e.g.
-used antennas or power amplifiers."
+Hi,
 
---=20
-Rafa=C5=82
+Here's my first series for v4.11.  These are the changes:
+
+* A bunch of cleanups here and there;
+* A few simple bugfixes;
+* Some more work in preparation for A000 family support;
+* Add support for radiotap timestamps;
+* Some work on our firmware debugging capabilities;
+
+As usual, I'm pushing this to a pending branch, for kbuild bot, and
+will send a pull-request later.
+
+Please review.
+
+Cheers,
+Luca.
+
+Johannes Berg (5):
+  iwlwifi: mvm: expose device timestamp in radiotap
+  iwlwifi: mvm: accept arbitrary memory dump TLVs
+  iwlwifi: mvm: make iwl_dump_prph() void
+  iwlwifi: allow memory debug TLV to specify the memory type
+  iwlwifi: mvm: properly check for transport data in dump
+
+Jürg Billeter (1):
+  iwlwifi: fix MODULE_FIRMWARE for 6030
+
+Kirtika Ruchandani (3):
+  iwlwifi: mvm: rs: Remove unused 'mvmvif'/'mvmsta' variables
+  iwlwifi: mvm: rs: Remove unused 'mcs' variable
+  iwlwifi: pcie: trans: Remove unused 'shift_param'
+
+Luca Coelho (7):
+  iwlwifi: mvm: don't restart HW if suspend fails with unified image
+  iwlwifi: mvm: bump max API to 28
+  iwlwifi: mvm: remove unused variable in iwl_mvm_handle_statistics()
+  iwlwifi: dvm: make rs_tl_get_load() return void
+  iwlwifi: mvm: remove unused sta_id variable in
+    iwl_mvm_change_queue_owner()
+  iwlwifi: dvm: remove unused variable compiler warning in debugfs.c
+  iwlwifi: mvm: mark ret as maybe_unused in iwl_dbgfs_fw_restart_write()
+
+Sara Sharon (9):
+  iwlwifi: mvm: simplify paging allocation code
+  iwlwifi: mvm: replace the number of blocks calculation
+  iwlwifi: enlarge number of ucode sections
+  iwlwifi: mvm: change iwl_mvm_tx_csum to return value
+  iwlwifi: mvm: separate rate calculation to a new function
+  iwlwifi: mvm: support version 2 of stored beacon notification
+  iwlwifi: pcie: cleanup rfkill checks
+  iwlwifi: mvm: use mvm_disable_queue instead of sharing logic
+  iwlwifi: mvm: cleanup redundant assignment
+
+ drivers/net/wireless/intel/iwlwifi/dvm/debugfs.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c |   2 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/rs.c       |  11 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/ucode.c    |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-6000.c     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c     |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c     |   4 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c     |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c      |  98 +++++++++--------
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  |  24 ++---
+ drivers/net/wireless/intel/iwlwifi/iwl-fw.h       |   7 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       |  13 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c   | 123 ++++++++++++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       |  69 ++++--------
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c |   2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      |   4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c       |  10 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c       |   2 -
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  24 ++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 107 ++++++++++---------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c    |  14 ++-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c   |  51 ++++-----
+ 26 files changed, 299 insertions(+), 297 deletions(-)
+
+-- 
+2.11.0
