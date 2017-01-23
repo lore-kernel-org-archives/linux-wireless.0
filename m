@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exsmtp03.microchip.com ([198.175.253.49]:57840 "EHLO
-        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935352AbdAIFul (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36234 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751699AbdAWWSE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 00:50:41 -0500
-Date: Mon, 9 Jan 2017 11:20:33 +0530
-From: Aditya Shankar <aditya.shankar@microchip.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: wilc1000: Connect to highest RSSI value for
- required SSID
-Message-ID: <20170109112033.6f287e6d@aditya-ubuntu> (sfid-20170109_065045_476160_C6220835)
-In-Reply-To: <20170105121450.GF13756@mwanda>
-References: <1483601621-27545-1-git-send-email-aditya.shankar@microchip.com>
-        <20170105121450.GF13756@mwanda>
+        Mon, 23 Jan 2017 17:18:04 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
+Date: Tue, 24 Jan 2017 00:03:46 +0200
+Message-Id: <20170123220350.25305-22-luca@coelho.fi> (sfid-20170123_231806_885688_458EF83B)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 21/25] iwlwifi: mvm: remove unused sta_id variable in iwl_mvm_change_queue_owner()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 5 Jan 2017 15:14:50 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+From: Luca Coelho <luciano.coelho@intel.com>
 
-> On Thu, Jan 05, 2017 at 01:03:41PM +0530, Aditya Shankar wrote:
-> > Connect to the highest rssi with the required SSID in the shadow
-> > table if the connection criteria is based only on the SSID.
-> > For the first matching SSID, an index to the table is saved.
-> > Later the index is updated if matching SSID has a higher
-> > RSSI value than the last saved index.
-> > 
-> > However if decision is made based on BSSID, there is only one match
-> > in the table and corresponding index is used.
-> > 
-> > Signed-off-by: Aditya Shankar <aditya.shankar@microchip.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 20 ++++++++++++++------
-> >  1 file changed, 14 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > index c1a24f7..32206b8 100644
-> > --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-> > @@ -665,6 +665,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
-> >  {
-> >  	s32 s32Error = 0;
-> >  	u32 i;
-> > +	u32 sel_bssi_idx = last_scanned_cnt + 1;  
-> 
-> 
-> My understanding from reading the code is that "last_scanned_cnt + 1"
-> is a randomly chosen invalid value.  Just saying:
-> 
-> 	sel_bssi_idx = last_scanned_cnt;
-> 
-> would  also work because it's also invalid and slightly shorter to type.
-> But I suggest that you go with something like UINT_MAX because that's
-> more clearly invalid.
+Remove the sta_id variable, to avoid this compile warning when
+compiling with W=1:
 
-Thanks. Will change this.
-> 
-> >  	u8 u8security = NO_ENCRYPT;
-> >  	enum AUTHTYPE tenuAuth_type = ANY;
-> >  
-> > @@ -688,18 +689,25 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
-> >  		    memcmp(last_scanned_shadow[i].ssid,
-> >  			   sme->ssid,
-> >  			   sme->ssid_len) == 0) {
-> > -			if (!sme->bssid)
-> > -				break;
-> > -			else
-> > +			if (!sme->bssid) {
-> > +				if (sel_bssi_idx == (last_scanned_cnt + 1))
-> > +					sel_bssi_idx = i;
-> > +				else if (last_scanned_shadow[i].rssi >
-> > +					 last_scanned_shadow[sel_bssi_idx].rssi)
-> > +					sel_bssi_idx = i;  
-> 
-> Combine these with an ||.
-> 
-> 			if (!sme->bssid) {
-> 				if (sel_bssi_idx == UINT_MAX ||
-> 				    last_scanned_shadow[i].rssi >
-> 				    last_scanned_shadow[sel_bssi_idx].rssi)
-> 					sel_bssi_idx = i;
->
->
-> 
-> In a separate patch, you can reverse the if statement at the start of
-> the loop:
-> 
-> 		if (sme->ssid_len != last_scanned_shadow[i].ssid_len ||
-> 		    memcmp(last_scanned_shadow[i].ssid, sme->ssid,
-> 			   sme->ssid_len) != 0)
-> 			continue;
-> 
-> That way you can pull these lines in a tab.
-> 
-> 
-> > +			} else {
-> >  				if (memcmp(last_scanned_shadow[i].bssid,
-> >  					   sme->bssid,
-> > -					   ETH_ALEN) == 0)
-> > +					   ETH_ALEN) == 0){  
-> 
-> Add a space before the curly brace.
-> 
-> regards,
-> dan carpenter
-> 
-> 
+/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/sta.c: In function ‘iwl_mvm_change_queue_owner’:
+/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/sta.c:871:5: warning: variable ‘sta_id’ set but not used [-Wunused-but-set-variable]
+  s8 sta_id;
+     ^
 
-I shall send an updated patch with the suggested changes and a separate
-patch for the change at the beginning of the loop. 
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks for your review!
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 636c8b03e318..cf8222a8b588 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -868,7 +868,6 @@ static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
+ 		.scd_queue = queue,
+ 		.action = SCD_CFG_UPDATE_QUEUE_TID,
+ 	};
+-	s8 sta_id;
+ 	int tid;
+ 	unsigned long tid_bitmap;
+ 	int ret;
+@@ -876,7 +875,6 @@ static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+ 	spin_lock_bh(&mvm->queue_info_lock);
+-	sta_id = mvm->queue_info[queue].ra_sta_id;
+ 	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
+ 	spin_unlock_bh(&mvm->queue_info_lock);
+ 
 -- 
-adiTya
+2.11.0
