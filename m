@@ -1,35 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38762 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751074AbdAPKOe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 05:14:34 -0500
-Date: Mon, 16 Jan 2017 11:12:18 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH v2 10/14] rt2x00: rt2800lib: correctly set HT20/HT40
- filter
-Message-ID: <20170116101218.GC6968@redhat.com> (sfid-20170116_111438_154778_E8D9E5B8)
-References: <874m114lwq.fsf@codeaurora.org>
- <20170116030820.GA32255@makrotopia.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170116030820.GA32255@makrotopia.org>
+Received: from mail-wj0-f174.google.com ([209.85.210.174]:33155 "EHLO
+        mail-wj0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdAWPFW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jan 2017 10:05:22 -0500
+Received: by mail-wj0-f174.google.com with SMTP id un2so265168wjb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2017 07:04:46 -0800 (PST)
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH 1/3] ath10k: remove multiple defines of DIAG_TRANSFER_LIMIT
+Date: Mon, 23 Jan 2017 15:04:34 +0000
+Message-Id: <1485183876-27080-1-git-send-email-srinivas.kandagatla@linaro.org> (sfid-20170123_160652_192700_1D137703)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 16, 2017 at 04:08:38AM +0100, Daniel Golle wrote:
-> From: Serge Vasilugin <vasilugin@yandex.ru>
-> 
-> Simple patch to correct HT20/HT40 filter setting.
-> Tested with Rt3290, Rt3352 and Rt5350
-> 
-> Signed-off-by: Serge Vasilugin <vasilugin@yandex.ru>
-> Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+DIAG_TRANSFER_LIMIT is redefined with same value and comments
+just below this entry, remove this duplicate entry.
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+---
+ drivers/net/wireless/ath/ath10k/pci.h | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
+index 9854ad5..c76789d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.h
++++ b/drivers/net/wireless/ath/ath10k/pci.h
+@@ -25,11 +25,6 @@
+ #include "ahb.h"
+ 
+ /*
+- * maximum number of bytes that can be handled atomically by DiagRead/DiagWrite
+- */
+-#define DIAG_TRANSFER_LIMIT 2048
+-
+-/*
+  * maximum number of bytes that can be
+  * handled atomically by DiagRead/DiagWrite
+  */
+-- 
+2.10.1
