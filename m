@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43514 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbdALOvZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:51:25 -0500
-Message-ID: <1484232680.5391.8.camel@sipsolutions.net> (sfid-20170112_155128_341181_D5E9AA0F)
-Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
-        Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, greearb@candelatech.com,
-        mohammed@qti.qualcomm.com
-Date: Thu, 12 Jan 2017 15:51:20 +0100
-In-Reply-To: <20170112144527.GA10941@atheros-ThinkPad-T61>
-References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-         <20170112144527.GA10941@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:36354 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751780AbdAWWTg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jan 2017 17:19:36 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Tue, 24 Jan 2017 00:03:50 +0200
+Message-Id: <20170123220350.25305-26-luca@coelho.fi> (sfid-20170123_231945_398906_3ECA2678)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 25/25] iwlwifi: mvm: cleanup redundant assignment
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-12 at 20:15 +0530, Mohammed Shafi Shajakhan wrote:
-> 
-> > Reported-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> > Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-That makes no sense, you're not handling the patch in any way. You can
-say Tested-by, or Acked-by if you like, but not S-o-b. See the DCO
-(Documentation/SubmittingPatches)
+This set of station id is redundant - it is being initialised
+above.
 
-johannes
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 2beea3b98e52..26b853ef195f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -693,10 +693,6 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			.tid = cfg->tid,
+ 		};
+ 
+-		/* Set sta_id in the command, if it exists */
+-		if (iwl_mvm_is_dqa_supported(mvm))
+-			cmd.sta_id = cfg->sta_id;
+-
+ 		iwl_trans_txq_enable_cfg(mvm->trans, queue, ssn, NULL,
+ 					 wdg_timeout);
+ 		WARN(iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd),
+-- 
+2.11.0
