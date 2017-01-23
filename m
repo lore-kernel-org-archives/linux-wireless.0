@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53302 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033945AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:36098 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751136AbdAWWED (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jan 2017 17:04:03 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 6/9] rt2800: fallback from mcs8 to mcs7
-Date: Fri,  6 Jan 2017 14:05:15 +0100
-Message-Id: <1483707918-31480-7-git-send-email-sgruszka@redhat.com> (sfid-20170106_141117_378554_98E24EE0)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 24 Jan 2017 00:03:26 +0200
+Message-Id: <20170123220350.25305-2-luca@coelho.fi> (sfid-20170123_230410_411614_40D9038C)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 01/25] iwlwifi: mvm: expose device timestamp in radiotap
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we do not fallback to lower rate, we are unable to calculate
-correctly number of retries in TX status code.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Set the relevant fields to export the 32-bit device timestamp to
+radiotap using the new mac80211 infrastructure. This will be useful
+to allow synchronising monitor captures taken on different hardware
+simultaneously.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 1f4a120..6cac311 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4968,7 +4968,7 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, HT_FBK_CFG0, reg);
- 
- 	rt2800_register_read(rt2x00dev, HT_FBK_CFG1, &reg);
--	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS8FBK, 8);
-+	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS8FBK, 7);
- 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS9FBK, 8);
- 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS10FBK, 9);
- 	rt2x00_set_field32(&reg, HT_FBK_CFG1_HTMCS11FBK, 10);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 45122dafe922..039cb2ad2d3e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -463,6 +463,13 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 				    IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+ 	hw->radiotap_vht_details |= IEEE80211_RADIOTAP_VHT_KNOWN_STBC |
+ 		IEEE80211_RADIOTAP_VHT_KNOWN_BEAMFORMED;
++
++	hw->radiotap_timestamp.units_pos =
++		IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US |
++		IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ;
++	/* this is the case for CCK frames, it's better (only 8) for OFDM */
++	hw->radiotap_timestamp.accuracy = 22;
++
+ 	hw->rate_control_algorithm = "iwl-mvm-rs";
+ 	hw->uapsd_queues = IWL_MVM_UAPSD_QUEUES;
+ 	hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
 -- 
-2.7.4
+2.11.0
