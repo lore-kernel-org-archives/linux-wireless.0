@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37548 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750884AbdAQMBo (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36320 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751757AbdAWWTM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 07:01:44 -0500
-Content-Type: text/plain; charset="utf-8"
+        Mon, 23 Jan 2017 17:19:12 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com
+Date: Tue, 24 Jan 2017 00:03:48 +0200
+Message-Id: <20170123220350.25305-24-luca@coelho.fi> (sfid-20170123_233339_786784_23AB2972)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
 MIME-Version: 1.0
-Subject: Re: [1/2] brcmfmac: don't preset all channels as disabled
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170107203605.24866-1-zajec5@gmail.com>
-References: <20170107203605.24866-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Message-Id: <20170117120128.6050E6079B@smtp.codeaurora.org> (sfid-20170117_130147_642775_55B0F79E)
-Date: Tue, 17 Jan 2017 12:01:28 +0000 (UTC)
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 23/25] iwlwifi: mvm: mark ret as maybe_unused in iwl_dbgfs_fw_restart_write()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
-> 
-> During init we take care of regulatory stuff by disabling all
-> unavailable channels (see brcmf_construct_chaninfo) so this predisabling
-> them is not really required (and this patch won't change any behavior).
-> It will on the other hand allow more detailed runtime control over
-> channels which is the main reason for this change.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-2 patches applied to wireless-drivers-next.git, thanks.
+The value returned from iwl_mvm_send_cmd_pdu() in this function is not
+used and always returns an error (which is the whole point of the
+call).  Tag the ret variable with __maybe_unused to avoid this compile
+warning when W=1 is used:
 
-9ea0c307609f brcmfmac: don't preset all channels as disabled
-ab99063f8737 brcmfmac: setup wiphy bands after registering it first
+/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c: In function ‘iwl_dbgfs_fw_restart_write’:
+/home/luca/iwlwifi/stack-dev/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:875:6: warning: variable ‘ret’ set but not used [-Wunused-but-set-variable]
+  int ret;
+      ^
 
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 7b7d2a146e30..a260cd503200 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -798,7 +798,7 @@ static ssize_t iwl_dbgfs_drv_rx_stats_read(struct file *file,
+ static ssize_t iwl_dbgfs_fw_restart_write(struct iwl_mvm *mvm, char *buf,
+ 					  size_t count, loff_t *ppos)
+ {
+-	int ret;
++	int __maybe_unused ret;
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
 -- 
-https://patchwork.kernel.org/patch/9503277/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.11.0
