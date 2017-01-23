@@ -1,78 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:33822 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751597AbdATKaI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56200 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbdAWOzb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 05:30:08 -0500
-Received: by mail-wm0-f53.google.com with SMTP id f73so12891050wmf.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 02:29:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20170116101757.20483-1-martin.blumenstingl@googlemail.com>
-References: <20170116101757.20483-1-martin.blumenstingl@googlemail.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Fri, 20 Jan 2017 11:29:38 +0100
-Message-ID: <CAPDyKFom-LpjqRWcP_43wwH0BqS1CNH8Mf6QCLnBohmmwBR_Gg@mail.gmail.com> (sfid-20170120_113016_369009_2EC952D5)
-Subject: Re: [PATCH] brcmfmac: add support for BCM43455 with modalias sdio:c00v02D0dA9BF
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        brcm80211-dev-list.pdl@broadcom.com,
+        Mon, 23 Jan 2017 09:55:31 -0500
+Subject: Re: [PATCH v2 01/13] wil6210: add sysfs file for FTM calibration
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+        qca_merez <qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1484226365-10433-2-git-send-email-qca_merez@qca.qualcomm.com>
+ <871svzp79p.fsf@kamboji.qca.qualcomm.com>
+ <c066ef7d-f61b-3b3e-1a6c-e2b89de812e9@codeaurora.org>
+ <b7a8f918-7d3c-de53-d657-8e2d1c1da4b2@broadcom.com>
+Cc: qca_liord <qca_liord@qca.qualcomm.com>,
         "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+        wil6210 <wil6210@qca.qualcomm.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <7da1de20-8040-fc3b-0c1d-77c5fa98d0f5@codeaurora.org> (sfid-20170123_155534_058858_D42DE626)
+Date: Mon, 23 Jan 2017 16:55:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <b7a8f918-7d3c-de53-d657-8e2d1c1da4b2@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 January 2017 at 11:17, Martin Blumenstingl
-<martin.blumenstingl@googlemail.com> wrote:
-> BCM43455 is a more recent revision of the BCM4345. Some of the BCM43455
-> got a dedicated SDIO device ID which is currently not supported by
-> brcmfmac.
-> Adding the new sdio_device_id to brcmfmac is enough to get the BCM43455
-> supported because the chip itself is already supported (due to BCM4345
-> support in the driver).
->
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+On 1/19/2017 3:14 PM, Arend Van Spriel wrote:
+> On 19-1-2017 13:36, Lior David wrote:
+>> On 1/19/2017 2:24 PM, Valo, Kalle wrote:
+>>> Maya Erez <qca_merez@qca.qualcomm.com> writes:
+>>>
+>>>> From: Lior David <qca_liord@qca.qualcomm.com>
+>>>>
+>>>> In fine timing measurements, the calculation is affected by
+>>>> 2 parts: timing of packets over the air, which is platform
+>>>> independent, and platform-specific delays, which are dependent
+>>>> on things like antenna cable length and type.
+>>>> Add a sysfs file which allows to get/set these platform specific
+>>>> delays, separated into the TX and RX components.
+>>>> There are 2 key scenarios where the file can be used:
+>>>> 1. Calibration - start with some initial values (for example,
+>>>> the default values at startup), make measurements at a known
+>>>> distance, then iteratively change the values until the
+>>>> measurement results match the known distance.
+>>>> 2. Adjust the delays when platform starts up, based on known
+>>>> values.
+>>>>
+>>>> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+>>>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+>>>
+>>> Can't this go via nl80211? sysfs is not really supposed to be used for
+>>> something like this.
+>>>
+>> There is no nl80211 API for this (yet?).
+> 
+> So come up with one...?
+I checked this further and had some more internal discussion.
+This change is only about FTM calibration which is highly vendor specific so I
+don't think NL80211 API is appropriate for it. Since it is needed in production
+(to calibrate the platform after boot using pre-computed values), I think sysfs
+is a reasonable place for it.
 
-Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+> 
+>> Will it be ok to put this in debugfs? Normally this will be in the board
+>> file (as part of RF configuration) but it will be useful to play
+>> with these values for debugging/diagnostics.
+> 
+> What is doing the FTM measurements? Is it all done in user-space? That
+> would mean you also need measurement data exported to user-space. How is
+> that done? Intel has a FTM api proposal, but it has not been submitted
+> upstream (yet?).
+> 
+Our plan is to use the FTM API from intel once it is submitted upstream, but as
+I said this change is about FTM calibration which is separate from the generic
+FTM API.
 
-Kind regards
-Uffe
-
-> ---
-> This is the proper patch following the (short) discussion from [0]
->
-> [0] https://marc.info/?l=linux-wireless&m=148455981002310&w=2
->
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
->  include/linux/mmc/sdio_ids.h                              | 1 +
->  2 files changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> index 72139b579b18..5bc2ba214735 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-> @@ -1104,6 +1104,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
->         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4339),
->         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43430),
->         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4345),
-> +       BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43455),
->         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
->         BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356),
->         { /* end: all zeroes */ }
-> diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-> index d43ef96bf075..71b113e1223f 100644
-> --- a/include/linux/mmc/sdio_ids.h
-> +++ b/include/linux/mmc/sdio_ids.h
-> @@ -36,6 +36,7 @@
->  #define SDIO_DEVICE_ID_BROADCOM_43362          0xa962
->  #define SDIO_DEVICE_ID_BROADCOM_43430          0xa9a6
->  #define SDIO_DEVICE_ID_BROADCOM_4345           0x4345
-> +#define SDIO_DEVICE_ID_BROADCOM_43455          0xa9bf
->  #define SDIO_DEVICE_ID_BROADCOM_4354           0x4354
->  #define SDIO_DEVICE_ID_BROADCOM_4356           0x4356
->
-> --
-> 2.11.0
->
+Thanks,
+Lior
