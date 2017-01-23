@@ -1,96 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:49837 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754191AbdAKMVk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 07:21:40 -0500
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-To: IgorMitsyanko <igor.mitsyanko.os@quantenna.com>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        =?UTF-8?Q?Linus_L=c3=bcssing?= <linus.luessing@c0d3.blue>,
-        Stephen Hemminger <stephen@networkplumber.org>
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net>
- <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros> <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
- <20170109212345.GA5513@otheros> <20170109133032.221f8669@xeon-e3>
- <20170110041816.GJ5513@otheros> <1484045763.1014.0.camel@sipsolutions.net>
- <73f29777-cf95-de99-f7a9-9d82e94c298d@nbd.name>
- <058f2afd-2502-e2e5-6427-1536fcd5851f@quantenna.com>
- <015bf651-7584-13c0-16b9-d4e29e23c96b@nbd.name>
- <ee946686-699c-da64-4932-f58e3f1a83ad@quantenna.com>
-Cc: netdev@vger.kernel.org, bridge@lists.linux-foundation.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        "M. Braun" <michael-dev@fami-braun.de>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <8d3f0bd9-8b66-ce49-ab1d-56e8c73764fc@nbd.name> (sfid-20170111_132205_106654_047D1D19)
-Date: Wed, 11 Jan 2017 13:21:34 +0100
+Received: from paleale.coelho.fi ([176.9.41.70]:36306 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751677AbdAWWTJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jan 2017 17:19:09 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Kirtika Ruchandani <kirtika.ruchandani@gmail.com>,
+        Kirtika Ruchandani <kirtika@google.com>,
+        Eyal Shapira <eyal@wizery.com>
+Date: Tue, 24 Jan 2017 00:03:42 +0200
+Message-Id: <20170123220350.25305-18-luca@coelho.fi> (sfid-20170123_231911_477151_89F2EB1F)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
 MIME-Version: 1.0
-In-Reply-To: <ee946686-699c-da64-4932-f58e3f1a83ad@quantenna.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 17/25] iwlwifi: mvm: rs: Remove unused 'mcs' variable
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017-01-11 13:15, IgorMitsyanko wrote:
-> On 01/11/2017 02:30 PM, Felix Fietkau wrote:
->> On 2017-01-11 12:26, IgorMitsyanko wrote:
->>> On 01/11/2017 12:27 AM, Felix Fietkau wrote:
->>>> On 2017-01-10 11:56, Johannes Berg wrote:
->>>>> On Tue, 2017-01-10 at 05:18 +0100, Linus Lüssing wrote:
->>>>>> On Mon, Jan 09, 2017 at 01:30:32PM -0800, Stephen Hemminger wrote:
->>>>>>> I wonder if MAC80211 should be doing IGMP snooping and not bridge
->>>>>>> in this environment.
->>>>>> In the long term, yes. For now, not quite sure.
->>>>> There's no "for now" in the kernel. Code added now will have to be
->>>>> maintained essentially forever.
->>>> I'm not sure that putting the IGMP snooping code in mac80211 is a good
->>>> idea, that would be quite a bit of code duplication.
->>>> This implementation works, it's very simple, and it's quite flexible for
->>>> a number of use cases.
->>>>
->>>> Is there any remaining objection to merging this in principle (aside
->>>> from potential issues with the code)?
->>>>
->>>> - Felix
->>>>
->>>
->>> Hi Felix, can we consider two examples configurations with multicast
->>> traffic:
->>>
->>> 1. AP is a source of multicast traffic itself, no bridge on AP. For
->>> example, wireless video server streaming to several clients.
->>> In this situation, we can not make use of possible advantages given by
->>> mc-to-uc conversion?
->> You could simply put the AP interface in a bridge, no need to have any
->> other bridge members present.
->>
->>> 2. A configuration with AP + STA + 3 client devices behind STA.
->>>                               ----|client 1|
->>>                              |
->>> |  mc  |----|AP|----|STA|---|---|client 2|
->>> |server|                    |
->>>                               ----|client 3|
->>>
->>> Multicast server behind AP streams MC video traffic. All 3 clients
->>> behind the STA have joined the multicast group.
->>> I'm not sure if this case will be handled correctly with mc-to-uc
->>> conversion in bridge on AP?
->> What do you mean by "3 client devices behind STA"? Are you using a
->> 4-addr STA, multicast routing, or some kind of vendor specific "client
->> bridge" hackery?
-> 
-> 3 client devices connected by backbone Ethernet network. Generic
-> case is probably STA/AP operating in 4-addr mode (more or less standard
-> solution as far as I know).
-If the AP is running in 4-addr mode, it will need to have a bridge
-interface anyway, because the link to the STA will be split out into a
-separate virtual interface (AP_VLAN iftype).
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 
-In this case you don't actually need any multicast-to-unicast
-conversion, because the multicast traffic will be unicast on 802.11
-already (due to use of 4-addr mode).
+Commit 5fc0f76c4 introduced Rx stats from debugfs, the function
+iwl_mvm_reset_frame_stats from that commit defines and sets mcs but
+does not use it. Compiling iwlwifi with W=1 gives this warning -
 
-- Felix
+iwlwifi/mvm/rs.c: In function ‘iwl_mvm_update_frame_stats’:
+iwlwifi/mvm/rs.c:3074:14: warning: variable ‘mcs’ set but not used [-Wunused-but-set-variable]
+
+Fixes: 5fc0f76c43bd (iwlwifi: mvm: add Rx frames statistics via debugfs)
+Signed-off-by: Kirtika Ruchandani <kirtika@google.com>
+Cc: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 0b79f4a43eaf..80f99c365b6a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -3065,7 +3065,7 @@ static void iwl_mvm_reset_frame_stats(struct iwl_mvm *mvm)
+ 
+ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
+ {
+-	u8 nss = 0, mcs = 0;
++	u8 nss = 0;
+ 
+ 	spin_lock(&mvm->drv_stats_lock);
+ 
+@@ -3093,11 +3093,9 @@ void iwl_mvm_update_frame_stats(struct iwl_mvm *mvm, u32 rate, bool agg)
+ 
+ 	if (rate & RATE_MCS_HT_MSK) {
+ 		mvm->drv_rx_stats.ht_frames++;
+-		mcs = rate & RATE_HT_MCS_RATE_CODE_MSK;
+ 		nss = ((rate & RATE_HT_MCS_NSS_MSK) >> RATE_HT_MCS_NSS_POS) + 1;
+ 	} else if (rate & RATE_MCS_VHT_MSK) {
+ 		mvm->drv_rx_stats.vht_frames++;
+-		mcs = rate & RATE_VHT_MCS_RATE_CODE_MSK;
+ 		nss = ((rate & RATE_VHT_MCS_NSS_MSK) >>
+ 		       RATE_VHT_MCS_NSS_POS) + 1;
+ 	} else {
+-- 
+2.11.0
