@@ -1,77 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25749 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750736AbdALOaK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36160 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751545AbdAWWEI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:30:10 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Subject: Re: [PATCH 3/3] cfg80211: Specify the reason for connect timeout
-Date: Thu, 12 Jan 2017 14:29:28 +0000
-Message-ID: <20170112142926.GA19489@jouni.qca.qualcomm.com> (sfid-20170112_153014_338037_C8403431)
-References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
- <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
- <1484141491.29931.10.camel@sipsolutions.net>
- <20170112135843.GB17983@jouni.qca.qualcomm.com>
- <1484229979.5391.5.camel@sipsolutions.net>
-In-Reply-To: <1484229979.5391.5.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Mon, 23 Jan 2017 17:04:08 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Tue, 24 Jan 2017 00:03:33 +0200
+Message-Id: <20170123220350.25305-9-luca@coelho.fi> (sfid-20170123_230421_930950_BB0398F7)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 08/25] iwlwifi: mvm: simplify paging allocation code
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 12, 2017 at 03:06:19PM +0100, Johannes Berg wrote:
-> On Thu, 2017-01-12 at 13:58 +0000, Malinen, Jouni wrote:
-> >=20
-> > > I think this description is misleading - one could easily
-> > > understand
-> > > "for other cases" to indicate for the cases that the AP did
-> > > explicitly
-> > > reject it, but that's obviously not true.
-> >=20
-> > Well, the expectation here really was that the reason for the timeout
-> > would be known if there was a timeout and the unspecified value would
-> > be used in all other cases, i.e., in cases where the AP did indeed
-> > explicitly reject the connection.
->=20
-> Hmm. It doesn't really make sense to include the attribute in that case
-> at all though, does it?
+From: Sara Sharon <sara.sharon@intel.com>
 
-We don't.. This discussion here is about the C API where we cannot
-remove the argument from the call without adding yet another inline
-wrapper, but the actual function that generates the netlink message does
-not add the timeout reason attribute for success or explicit rejection
-cases.
+Some of the code there is duplicate while the only change is
+the block size. Unifying it shortens the code and make the
+difference clearer.
 
-> > Sure, I can say that NL80211_TIMEOUT_UNSPECIFIED is used when the
-> > reason for the timeout is not known or there was an explicit
-> > rejection instead of a timeout.
->=20
-> See above - why even think about this attribute in the successful case?
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 61 +++++++----------------------
+ 1 file changed, 15 insertions(+), 46 deletions(-)
 
-See above.. C API. Or do you want yet another wrapper for
-cfg80211_connect_bss() to be added while trying to hide
-cfg80211_connect_bss() from drivers somehow?
-
-> Fair enough. I still think we should not include the
-> ATTR_TIMEOUT_REASON for the successful or explicit rejection case at
-> all though. We can really even distinguish that in the low-level
-> function, I think?
-
-nl80211_send_connect_result() already does this:
-
-        (status < 0 &&
-         (nla_put_flag(msg, NL80211_ATTR_TIMED_OUT) ||
-          nla_put_u32(msg, NL80211_ATTR_TIMEOUT_REASON, timeout_reason))) |=
-|
-
-That status =3D=3D -1 special case used to be internal special value within
-cfg80211, but it gets exposed to drivers since we use
-cfg80211_connect_bss() both internally and from drivers instead of
-having separate wrappers for drivers for cases where the bss entry is
-explicitly specified.
-
---=20
-Jouni Malinen                                            PGP id EFC895FA=
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 872066317fa5..04fe1051b1e5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -259,9 +259,7 @@ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ {
+ 	struct page *block;
+ 	dma_addr_t phys = 0;
+-	int blk_idx = 0;
+-	int order, num_of_pages;
+-	int dma_enabled;
++	int blk_idx, order, num_of_pages, size, dma_enabled;
+ 
+ 	if (mvm->fw_paging_db[0].fw_paging_block)
+ 		return 0;
+@@ -274,7 +272,6 @@ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ 	num_of_pages = image->paging_mem_size / FW_PAGING_SIZE;
+ 	mvm->num_of_paging_blk = ((num_of_pages - 1) /
+ 				    NUM_OF_PAGE_PER_GROUP) + 1;
+-
+ 	mvm->num_of_pages_in_last_blk =
+ 		num_of_pages -
+ 		NUM_OF_PAGE_PER_GROUP * (mvm->num_of_paging_blk - 1);
+@@ -284,46 +281,13 @@ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ 		     mvm->num_of_paging_blk,
+ 		     mvm->num_of_pages_in_last_blk);
+ 
+-	/* allocate block of 4Kbytes for paging CSS */
+-	order = get_order(FW_PAGING_SIZE);
+-	block = alloc_pages(GFP_KERNEL, order);
+-	if (!block) {
+-		/* free all the previous pages since we failed */
+-		iwl_free_fw_paging(mvm);
+-		return -ENOMEM;
+-	}
+-
+-	mvm->fw_paging_db[blk_idx].fw_paging_block = block;
+-	mvm->fw_paging_db[blk_idx].fw_paging_size = FW_PAGING_SIZE;
+-
+-	if (dma_enabled) {
+-		phys = dma_map_page(mvm->trans->dev, block, 0,
+-				    PAGE_SIZE << order, DMA_BIDIRECTIONAL);
+-		if (dma_mapping_error(mvm->trans->dev, phys)) {
+-			/*
+-			 * free the previous pages and the current one since
+-			 * we failed to map_page.
+-			 */
+-			iwl_free_fw_paging(mvm);
+-			return -ENOMEM;
+-		}
+-		mvm->fw_paging_db[blk_idx].fw_paging_phys = phys;
+-	} else {
+-		mvm->fw_paging_db[blk_idx].fw_paging_phys = PAGING_ADDR_SIG |
+-			blk_idx << BLOCK_2_EXP_SIZE;
+-	}
+-
+-	IWL_DEBUG_FW(mvm,
+-		     "Paging: allocated 4K(CSS) bytes (order %d) for firmware paging.\n",
+-		     order);
+-
+ 	/*
+-	 * allocate blocks in dram.
+-	 * since that CSS allocated in fw_paging_db[0] loop start from index 1
++	 * Allocate CSS and paging blocks in dram.
+ 	 */
+-	for (blk_idx = 1; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
+-		/* allocate block of PAGING_BLOCK_SIZE (32K) */
+-		order = get_order(PAGING_BLOCK_SIZE);
++	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
++		/* For CSS allocate 4KB, for others PAGING_BLOCK_SIZE (32K) */
++		size = blk_idx ? PAGING_BLOCK_SIZE : FW_PAGING_SIZE;
++		order = get_order(size);
+ 		block = alloc_pages(GFP_KERNEL, order);
+ 		if (!block) {
+ 			/* free all the previous pages since we failed */
+@@ -332,7 +296,7 @@ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ 		}
+ 
+ 		mvm->fw_paging_db[blk_idx].fw_paging_block = block;
+-		mvm->fw_paging_db[blk_idx].fw_paging_size = PAGING_BLOCK_SIZE;
++		mvm->fw_paging_db[blk_idx].fw_paging_size = size;
+ 
+ 		if (dma_enabled) {
+ 			phys = dma_map_page(mvm->trans->dev, block, 0,
+@@ -353,9 +317,14 @@ static int iwl_alloc_fw_paging_mem(struct iwl_mvm *mvm,
+ 				blk_idx << BLOCK_2_EXP_SIZE;
+ 		}
+ 
+-		IWL_DEBUG_FW(mvm,
+-			     "Paging: allocated 32K bytes (order %d) for firmware paging.\n",
+-			     order);
++		if (!blk_idx)
++			IWL_DEBUG_FW(mvm,
++				     "Paging: allocated 4K(CSS) bytes (order %d) for firmware paging.\n",
++				     order);
++		else
++			IWL_DEBUG_FW(mvm,
++				     "Paging: allocated 32K bytes (order %d) for firmware paging.\n",
++				     order);
+ 	}
+ 
+ 	return 0;
+-- 
+2.11.0
