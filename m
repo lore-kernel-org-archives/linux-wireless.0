@@ -1,67 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38196 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754297AbdA0Iei (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 03:34:38 -0500
-From: Felix Fietkau <nbd@nbd.name>
+Received: from paleale.coelho.fi ([176.9.41.70]:36140 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751445AbdAWWEL (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 23 Jan 2017 17:04:11 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, sgruszka@redhat.com, vishalthanki@gmail.com
-Subject: [PATCH] rt2x00: avoid introducing a USB dependency in the rt2x00lib module
-Date: Fri, 27 Jan 2017 09:34:26 +0100
-Message-Id: <20170127083426.22655-1-nbd@nbd.name> (sfid-20170127_093629_879152_5F0C16B3)
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 24 Jan 2017 00:03:31 +0200
+Message-Id: <20170123220350.25305-7-luca@coelho.fi> (sfid-20170123_230415_564613_AEED4675)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: mvm: properly check for transport data in dump
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Though protected by an ifdef, introducing an usb symbol dependency in
-the rt2x00lib module is a major inconvenience for distributions that
-package kernel modules split into individual packages.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Get rid of this unnecessary dependency by calling the usb related
-function from a more suitable place
+When copying from vmalloc'ed memory to the SG list, don't crash
+if the transport didn't provide any data.
 
-Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Fixes: 7e62a699aafb ("iwlwifi: mvm: use dev_coredumpsg()")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 3 ---
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 2 ++
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 8fcbc8dc94c1..75f838405344 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -1436,14 +1436,11 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
- 	cancel_work_sync(&rt2x00dev->sleep_work);
--#if IS_ENABLED(CONFIG_RT2X00_LIB_USB)
- 	if (rt2x00_is_usb(rt2x00dev)) {
--		usb_kill_anchored_urbs(rt2x00dev->anchor);
- 		hrtimer_cancel(&rt2x00dev->txstatus_timer);
- 		cancel_work_sync(&rt2x00dev->rxdone_work);
- 		cancel_work_sync(&rt2x00dev->txdone_work);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 10f2c6e4056a..36f79953c7a1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -848,11 +848,12 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 				     sg_nents(sg_dump_data),
+ 				     fw_error_dump->op_mode_ptr,
+ 				     fw_error_dump->op_mode_len, 0);
+-		sg_pcopy_from_buffer(sg_dump_data,
+-				     sg_nents(sg_dump_data),
+-				     fw_error_dump->trans_ptr->data,
+-				     fw_error_dump->trans_ptr->len,
+-				     fw_error_dump->op_mode_len);
++		if (fw_error_dump->trans_ptr)
++			sg_pcopy_from_buffer(sg_dump_data,
++					     sg_nents(sg_dump_data),
++					     fw_error_dump->trans_ptr->data,
++					     fw_error_dump->trans_ptr->len,
++					     fw_error_dump->op_mode_len);
+ 		dev_coredumpsg(mvm->trans->dev, sg_dump_data, file_len,
+ 			       GFP_KERNEL);
  	}
--#endif
- 	if (rt2x00dev->workqueue)
- 		destroy_workqueue(rt2x00dev->workqueue);
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 838ca58d2dd6..be5beaacf4f0 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -858,11 +858,13 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf)
- {
- 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
-+	struct usb_anchor *anchor = rt2x00dev->anchor;
- 
- 	/*
- 	 * Free all allocated data.
- 	 */
- 	rt2x00lib_remove_dev(rt2x00dev);
-+	usb_kill_anchored_urbs(anchor);
- 	rt2x00usb_free_reg(rt2x00dev);
- 	ieee80211_free_hw(hw);
- 
 -- 
 2.11.0
