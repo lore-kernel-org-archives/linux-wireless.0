@@ -1,93 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38195 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750907AbdALXNb (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36124 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751183AbdAWWEF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 18:13:31 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>
-Subject: [PATCH 4/4] cfg80211: Fix documentation for connect result
-Date: Fri, 13 Jan 2017 01:12:22 +0200
-Message-ID: <1484262742-3927-4-git-send-email-jouni@qca.qualcomm.com> (sfid-20170113_001334_590072_3135DD1C)
-In-Reply-To: <1484262742-3927-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1484262742-3927-1-git-send-email-jouni@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 23 Jan 2017 17:04:05 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Johannes Berg <johannes.berg@intel.com>
+Date: Tue, 24 Jan 2017 00:03:28 +0200
+Message-Id: <20170123220350.25305-4-luca@coelho.fi> (sfid-20170123_230415_022909_32A5A2E5)
+In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
+References: <20170123220350.25305-1-luca@coelho.fi>
+Subject: [PATCH 03/25] iwlwifi: mvm: accept arbitrary memory dump TLVs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function documentation for cfg80211_connect_bss() and
-cfg80211_connect_result() was still claiming that they are used only for
-a success case while these functions can now be used to report both
-success and various failure cases. The actual use cases were already
-described in the connect() documentation.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Update the function specific comments to note the failure cases and also
-describe how the special status == -1 case is used in
-cfg80211_connect_bss() to indicate a connection timeout based on the
-internal implementation in cfg80211_connect_timeout().
+There's no reason to be validating the memory dump types, or
+checking them for duplication, or anything, since we really
+just pass them through from the TLV to the dump.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Thus, change the way we handle memory dump TLVs to let the
+driver just blindly use anything specified there, dumping it
+into the memory dump output file.
+
+This makes the system extensible without driver changes.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h | 25 ++++++++++++++++---------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 57 +++++++++---------------
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 18 +-------
+ drivers/net/wireless/intel/iwlwifi/iwl-fw.h      |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c  | 47 +++++++++----------
+ 4 files changed, 46 insertions(+), 80 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9b3427c..ed3d595 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5086,9 +5086,14 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
-  * @req_ie_len: association request IEs length
-  * @resp_ie: association response IEs (may be %NULL)
-  * @resp_ie_len: assoc response IEs length
-- * @status: status code, 0 for successful connection, use
-+ * @status: status code, %WLAN_STATUS_SUCCESS for successful connection, use
-  *      %WLAN_STATUS_UNSPECIFIED_FAILURE if your device cannot give you
-- *      the real status code for failures.
-+ *	the real status code for failures. If this call is used to report a
-+ *	failure due to a timeout (e.g., not receiving an Authentication frame
-+ *	from the AP) instead of an explicit rejection by the AP, -1 is used to
-+ *	indicate that this is a failure, but without a status code.
-+ *	@timeout_reason is used to report the reason for the timeout in that
-+ *	case.
-  * @gfp: allocation flags
-  * @timeout_reason: reason for connection timeout. This is used when the
-  *	connection fails due to a timeout instead of an explicit rejection from
-@@ -5097,10 +5102,10 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
-  *	failure is due to a timeout and not due to explicit rejection by the AP.
-  *	This value is ignored in other cases (@status >= 0).
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 45b2f679e4d8..431581229948 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -179,8 +179,7 @@ static void iwl_dealloc_ucode(struct iwl_drv *drv)
+ 		kfree(drv->fw.dbg_conf_tlv[i]);
+ 	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_trigger_tlv); i++)
+ 		kfree(drv->fw.dbg_trigger_tlv[i]);
+-	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_mem_tlv); i++)
+-		kfree(drv->fw.dbg_mem_tlv[i]);
++	kfree(drv->fw.dbg_mem_tlv);
+ 
+ 	for (i = 0; i < IWL_UCODE_TYPE_MAX; i++)
+ 		iwl_free_fw_img(drv, drv->fw.img + i);
+@@ -276,7 +275,8 @@ struct iwl_firmware_pieces {
+ 	size_t dbg_conf_tlv_len[FW_DBG_CONF_MAX];
+ 	struct iwl_fw_dbg_trigger_tlv *dbg_trigger_tlv[FW_DBG_TRIGGER_MAX];
+ 	size_t dbg_trigger_tlv_len[FW_DBG_TRIGGER_MAX];
+-	struct iwl_fw_dbg_mem_seg_tlv *dbg_mem_tlv[FW_DBG_MEM_MAX];
++	struct iwl_fw_dbg_mem_seg_tlv *dbg_mem_tlv;
++	size_t n_dbg_mem_tlv;
+ };
+ 
+ /*
+@@ -1009,31 +1009,25 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 			struct iwl_fw_dbg_mem_seg_tlv *dbg_mem =
+ 				(void *)tlv_data;
+ 			u32 type;
++			size_t size;
++			struct iwl_fw_dbg_mem_seg_tlv *n;
+ 
+ 			if (tlv_len != (sizeof(*dbg_mem)))
+ 				goto invalid_tlv_len;
+ 
+ 			type = le32_to_cpu(dbg_mem->data_type);
+-			drv->fw.dbg_dynamic_mem = true;
+-
+-			if (type >= ARRAY_SIZE(drv->fw.dbg_mem_tlv)) {
+-				IWL_ERR(drv,
+-					"Skip unknown dbg mem segment: %u\n",
+-					dbg_mem->data_type);
+-				break;
+-			}
+-
+-			if (pieces->dbg_mem_tlv[type]) {
+-				IWL_ERR(drv,
+-					"Ignore duplicate mem segment: %u\n",
+-					dbg_mem->data_type);
+-				break;
+-			}
+ 
+ 			IWL_DEBUG_INFO(drv, "Found debug memory segment: %u\n",
+ 				       dbg_mem->data_type);
+ 
+-			pieces->dbg_mem_tlv[type] = dbg_mem;
++			size = sizeof(*pieces->dbg_mem_tlv) *
++			       (pieces->n_dbg_mem_tlv + 1);
++			n = krealloc(pieces->dbg_mem_tlv, size, GFP_KERNEL);
++			if (!n)
++				return -ENOMEM;
++			pieces->dbg_mem_tlv = n;
++			pieces->dbg_mem_tlv[pieces->n_dbg_mem_tlv] = *dbg_mem;
++			pieces->n_dbg_mem_tlv++;
+ 			break;
+ 			}
+ 		default:
+@@ -1345,19 +1339,12 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 		}
+ 	}
+ 
+-	for (i = 0; i < ARRAY_SIZE(drv->fw.dbg_mem_tlv); i++) {
+-		if (pieces->dbg_mem_tlv[i]) {
+-			drv->fw.dbg_mem_tlv[i] =
+-				kmemdup(pieces->dbg_mem_tlv[i],
+-					sizeof(*drv->fw.dbg_mem_tlv[i]),
+-					GFP_KERNEL);
+-			if (!drv->fw.dbg_mem_tlv[i])
+-				goto out_free_fw;
+-		}
+-	}
+-
+ 	/* Now that we can no longer fail, copy information */
+ 
++	drv->fw.dbg_mem_tlv = pieces->dbg_mem_tlv;
++	pieces->dbg_mem_tlv = NULL;
++	drv->fw.n_dbg_mem_tlv = pieces->n_dbg_mem_tlv;
++
+ 	/*
+ 	 * The (size - 16) / 12 formula is based on the information recorded
+ 	 * for each event, which is of mode 1 (including timestamp) for all
+@@ -1441,25 +1428,25 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 				op->name, err);
+ #endif
+ 	}
+-	kfree(pieces);
+-	return;
++	goto free;
+ 
+  try_again:
+ 	/* try next, if any */
+ 	release_firmware(ucode_raw);
+ 	if (iwl_request_firmware(drv, false))
+ 		goto out_unbind;
+-	kfree(pieces);
+-	return;
++	goto free;
+ 
+  out_free_fw:
+ 	IWL_ERR(drv, "failed to allocate pci memory\n");
+ 	iwl_dealloc_ucode(drv);
+ 	release_firmware(ucode_raw);
+  out_unbind:
+-	kfree(pieces);
+ 	complete(&drv->request_firmware_complete);
+ 	device_release_driver(drv->trans->dev);
++ free:
++	kfree(pieces->dbg_mem_tlv);
++	kfree(pieces);
+ }
+ 
+ struct iwl_drv *iwl_drv_start(struct iwl_trans *trans,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 84813b550ef1..11245b9117c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -489,25 +489,9 @@ enum iwl_fw_dbg_monitor_mode {
+ };
+ 
+ /**
+- * enum iwl_fw_mem_seg_type - data types for dumping on error
+- *
+- * @FW_DBG_MEM_SMEM: the data type is SMEM
+- * @FW_DBG_MEM_DCCM_LMAC: the data type is DCCM_LMAC
+- * @FW_DBG_MEM_DCCM_UMAC: the data type is DCCM_UMAC
+- */
+-enum iwl_fw_dbg_mem_seg_type {
+-	FW_DBG_MEM_DCCM_LMAC = 0,
+-	FW_DBG_MEM_DCCM_UMAC,
+-	FW_DBG_MEM_SMEM,
+-
+-	/* Must be last */
+-	FW_DBG_MEM_MAX,
+-};
+-
+-/**
+  * struct iwl_fw_dbg_mem_seg_tlv - configures the debug data memory segments
   *
-- * It should be called by the underlying driver whenever connect() has
-- * succeeded. This is similar to cfg80211_connect_result(), but with the
-- * option of identifying the exact bss entry for the connection. Only one of
-- * these functions should be called.
-+ * It should be called by the underlying driver once execution of the connection
-+ * request from connect() has been completed. This is similar to
-+ * cfg80211_connect_result(), but with the option of identifying the exact bss
-+ * entry for the connection. Only one of these functions should be called.
-  */
- void cfg80211_connect_bss(struct net_device *dev, const u8 *bssid,
- 			  struct cfg80211_bss *bss, const u8 *req_ie,
-@@ -5117,13 +5122,15 @@ void cfg80211_connect_bss(struct net_device *dev, const u8 *bssid,
-  * @req_ie_len: association request IEs length
-  * @resp_ie: association response IEs (may be %NULL)
-  * @resp_ie_len: assoc response IEs length
-- * @status: status code, 0 for successful connection, use
-+ * @status: status code, %WLAN_STATUS_SUCCESS for successful connection, use
-  *	%WLAN_STATUS_UNSPECIFIED_FAILURE if your device cannot give you
-  *	the real status code for failures.
-  * @gfp: allocation flags
+- * @data_type: enum %iwl_fw_mem_seg_type
++ * @data_type: the memory segment type to record
+  * @ofs: the memory segment offset
+  * @len: the memory segment length, in bytes
   *
-- * It should be called by the underlying driver whenever connect() has
-- * succeeded.
-+ * It should be called by the underlying driver once execution of the connection
-+ * request from connect() has been completed. This is similar to
-+ * cfg80211_connect_bss() which allows the exact bss entry to be specified. Only
-+ * one of these functions should be called.
-  */
- static inline void
- cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
+index 5f229556339a..710ecb490bfc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
+@@ -295,8 +295,8 @@ struct iwl_fw {
+ 	struct iwl_fw_dbg_conf_tlv *dbg_conf_tlv[FW_DBG_CONF_MAX];
+ 	size_t dbg_conf_tlv_len[FW_DBG_CONF_MAX];
+ 	struct iwl_fw_dbg_trigger_tlv *dbg_trigger_tlv[FW_DBG_TRIGGER_MAX];
+-	struct iwl_fw_dbg_mem_seg_tlv *dbg_mem_tlv[FW_DBG_MEM_MAX];
+-	bool dbg_dynamic_mem;
++	struct iwl_fw_dbg_mem_seg_tlv *dbg_mem_tlv;
++	size_t n_dbg_mem_tlv;
+ 	size_t dbg_trigger_tlv_len[FW_DBG_TRIGGER_MAX];
+ 	u8 dbg_dest_reg_num;
+ 	struct iwl_gscan_capabilities gscan_capa;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 2e8e3e8e30a3..46ab6b9f680b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -495,11 +495,10 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	struct iwl_mvm_dump_ptrs *fw_error_dump;
+ 	struct scatterlist *sg_dump_data;
+ 	u32 sram_len, sram_ofs;
+-	struct iwl_fw_dbg_mem_seg_tlv * const *fw_dbg_mem =
+-		mvm->fw->dbg_mem_tlv;
++	const struct iwl_fw_dbg_mem_seg_tlv *fw_dbg_mem = mvm->fw->dbg_mem_tlv;
+ 	u32 file_len, fifo_data_len = 0, prph_len = 0, radio_len = 0;
+-	u32 smem_len = mvm->fw->dbg_dynamic_mem ? 0 : mvm->cfg->smem_len;
+-	u32 sram2_len = mvm->fw->dbg_dynamic_mem ? 0 : mvm->cfg->dccm2_len;
++	u32 smem_len = mvm->fw->n_dbg_mem_tlv ? 0 : mvm->cfg->smem_len;
++	u32 sram2_len = mvm->fw->n_dbg_mem_tlv ? 0 : mvm->cfg->dccm2_len;
+ 	bool monitor_dump_only = false;
+ 	int i;
+ 
+@@ -624,10 +623,9 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 		file_len += sizeof(*dump_data) + sizeof(*dump_mem) + sram2_len;
+ 
+ 	/* Make room for MEM segments */
+-	for (i = 0; i < ARRAY_SIZE(mvm->fw->dbg_mem_tlv); i++) {
+-		if (fw_dbg_mem[i])
+-			file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
+-				le32_to_cpu(fw_dbg_mem[i]->len);
++	for (i = 0; i < mvm->fw->n_dbg_mem_tlv; i++) {
++		file_len += sizeof(*dump_data) + sizeof(*dump_mem) +
++			    le32_to_cpu(fw_dbg_mem[i].len);
+ 	}
+ 
+ 	/* Make room for fw's virtual image pages, if it exists */
+@@ -656,7 +654,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 		file_len += sizeof(*dump_data) + sizeof(*dump_trig) +
+ 			    mvm->fw_dump_desc->len;
+ 
+-	if (!mvm->fw->dbg_dynamic_mem)
++	if (!mvm->fw->n_dbg_mem_tlv)
+ 		file_len += sram_len + sizeof(*dump_mem);
+ 
+ 	dump_file = vzalloc(file_len);
+@@ -708,7 +706,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	if (monitor_dump_only)
+ 		goto dump_trans_data;
+ 
+-	if (!mvm->fw->dbg_dynamic_mem) {
++	if (!mvm->fw->n_dbg_mem_tlv) {
+ 		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+ 		dump_data->len = cpu_to_le32(sram_len + sizeof(*dump_mem));
+ 		dump_mem = (void *)dump_data->data;
+@@ -719,22 +717,19 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+-	for (i = 0; i < ARRAY_SIZE(mvm->fw->dbg_mem_tlv); i++) {
+-		if (fw_dbg_mem[i]) {
+-			u32 len = le32_to_cpu(fw_dbg_mem[i]->len);
+-			u32 ofs = le32_to_cpu(fw_dbg_mem[i]->ofs);
+-
+-			dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
+-			dump_data->len = cpu_to_le32(len +
+-					sizeof(*dump_mem));
+-			dump_mem = (void *)dump_data->data;
+-			dump_mem->type = fw_dbg_mem[i]->data_type;
+-			dump_mem->offset = cpu_to_le32(ofs);
+-			iwl_trans_read_mem_bytes(mvm->trans, ofs,
+-						 dump_mem->data,
+-						 len);
+-			dump_data = iwl_fw_error_next_data(dump_data);
+-		}
++	for (i = 0; i < mvm->fw->n_dbg_mem_tlv; i++) {
++		u32 len = le32_to_cpu(fw_dbg_mem[i].len);
++		u32 ofs = le32_to_cpu(fw_dbg_mem[i].ofs);
++
++		dump_data->type = cpu_to_le32(IWL_FW_ERROR_DUMP_MEM);
++		dump_data->len = cpu_to_le32(len + sizeof(*dump_mem));
++		dump_mem = (void *)dump_data->data;
++		dump_mem->type = fw_dbg_mem[i].data_type;
++		dump_mem->offset = cpu_to_le32(ofs);
++		iwl_trans_read_mem_bytes(mvm->trans, ofs,
++					 dump_mem->data,
++					 len);
++		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+ 	if (smem_len) {
 -- 
-2.7.4
+2.11.0
