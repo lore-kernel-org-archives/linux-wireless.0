@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44216 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752611AbdASOBv (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36010 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751041AbdAWL4h (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 09:01:51 -0500
+        Mon, 23 Jan 2017 06:56:37 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?J=C3=BCrg=20Billeter?= <j@bitron.ch>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 23 Jan 2017 13:56:21 +0200
+Message-Id: <20170123115622.23587-2-luca@coelho.fi> (sfid-20170123_125639_910685_AA53A9E9)
+In-Reply-To: <20170123115622.23587-1-luca@coelho.fi>
+References: <20170123115622.23587-1-luca@coelho.fi>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Thu, 19 Jan 2017 19:22:25 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY to
- support BTCOEX
-In-Reply-To: <1483958190.17582.15.camel@sipsolutions.net>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
- <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
- <1480949353.31788.27.camel@sipsolutions.net>
- <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
- <1481645351.20412.34.camel@sipsolutions.net>
- <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
- <1481881024.27953.14.camel@sipsolutions.net>
- <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
- <1483354130.4596.5.camel@sipsolutions.net>
- <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
- <1483623500.4394.18.camel@sipsolutions.net>
- <6f9711ed6f6fe170b915b67a054b985b@codeaurora.org>
- <1483958190.17582.15.camel@sipsolutions.net>
-Message-ID: <53738f0ff79f0cf32026b9c700059fb1@codeaurora.org> (sfid-20170119_150223_256239_935F4885)
+Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH 1/2] iwlwifi: fix double hyphen in MODULE_FIRMWARE for 8000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+From: Jürg Billeter <j@bitron.ch>
 
-Sorry for the late response:(
+Mistakenly, the driver is trying to load the 8000C firmware with an
+incorrect name (i.e. with two hyphens where there should be only one)
+and that fails.  Fix that by removing the hyphen from the format
+macro.
 
-On 2017-01-09 16:06, Johannes Berg wrote:
->> Is it fine to have something like this
->> 
->> 1) We can have this btcoex_priority value as a optional value in
->> btcoex enable command like below
->> 
->> iw phyX btcoex_state <enable| disable> [prirority(vendor spcific
->> value)]
->> 
->> 2) Or we can have seperate command for btcoex_priority as below
->> 
->> iw phyX set btcoex_priority <priority (vendor spcific value)>
->> 
->> Hopefully this will get rid off all the nl80211 bits.
-> 
-> That makes no sense.
-> 
-> If the bits are vendor specific, then there's no value in having this
-> as an nl80211 command (rather than a vendor command) to start with.
-> 
-> You need to understand that I'm differentiating between *capability*
-> bits and actual *priority setting* bits - please re-read the thread
-> with that in mind.
-> 
-Those are for priority and not for capability purpose. Hardware is 
-capable of
-transmitting all the frames when there is a bt traffic. This is just 
-setting priority for the wlan
-frame, when there is a contention with BT traffic which one has to go 
-out first.
-Other than that hardware has the capability of sending all the frames.
+Fixes: e1ba684f762b ("iwlwifi: 8000: fix MODULE_FIRMWARE input")
+Signed-off-by: Jürg Billeter <j@bitron.ch>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This priority field is optional, if users does not want to set any 
-priority then driver will force the
-default priorities when bt_coex is enabled
-
-iw phyX btcoex_state <enable| disable> [prirority]
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index d02ca1491d16..8d3e53fac1da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -91,7 +91,7 @@
+ 
+ #define IWL8000_FW_PRE "iwlwifi-8000C-"
+ #define IWL8000_MODULE_FIRMWARE(api) \
+-	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
++	IWL8000_FW_PRE __stringify(api) ".ucode"
+ 
+ #define IWL8265_FW_PRE "iwlwifi-8265-"
+ #define IWL8265_MODULE_FIRMWARE(api) \
+-- 
+2.11.0
