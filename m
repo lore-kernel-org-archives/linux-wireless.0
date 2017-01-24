@@ -1,40 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42697 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750904AbdALLBY (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35809 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750765AbdAXNgO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 06:01:24 -0500
-Content-Type: text/plain; charset="utf-8"
+        Tue, 24 Jan 2017 08:36:14 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: mwifiex_unmap_pci_memory() handling for sleep confirm
+Date: Tue, 24 Jan 2017 19:05:44 +0530
+Message-ID: <1485264945-1248-1-git-send-email-akarwar@marvell.com> (sfid-20170124_143617_068915_A57568D3)
 MIME-Version: 1.0
-Subject: Re: ath9k: fix spelling mistake: "meaurement" -> "measurement"
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20161230140647.12945-1-colin.king@canonical.com>
-References: <20161230140647.12945-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-CC: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-ID: <b06e4d8f8c004ab5977d5269ef71a9c1@euamsexm01a.eu.qualcomm.com> (sfid-20170112_120146_639705_866D5094)
-Date: Thu, 12 Jan 2017 12:01:15 +0100
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Trivial fix to spelling mistake in ath_err message
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Sleep confirm is a special command for which "adapter->cur_cmd" pointer
+is not set. When it's response is received, host writes SLEEP confirm done
+to a register. Firmware will perform DMA for writing sleep cookie signature
+on same buffer after this.
 
-Patch applied to ath-next branch of ath.git, thanks.
+Let's not immediately call mwifiex_unmap_pci_memory() for this special
+command. Unmapping will be done when firmware completes writing sleep
+cookie signature.
 
-714ee339ff90 ath9k: fix spelling mistake: "meaurement" -> "measurement"
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 19 ++++++++++++++++---
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  1 +
+ 2 files changed, 17 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index ca51411..3f4ca28 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -441,7 +441,7 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
+ 	u32 sleep_cookie, count;
+ 
+ 	for (count = 0; count < max_delay_loop_cnt; count++) {
+-		buffer = card->cmdrsp_buf->data - INTF_HEADER_LEN;
++		buffer = card->cmdrsp_buf->data;
+ 		sleep_cookie = READ_ONCE(*(u32 *)buffer);
+ 
+ 		if (sleep_cookie == MWIFIEX_DEF_SLEEP_COOKIE) {
+@@ -1690,7 +1690,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 	mwifiex_dbg(adapter, CMD,
+ 		    "info: Rx CMD Response\n");
+ 
+-	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
++	if (adapter->curr_cmd)
++		mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
++	else
++		pci_dma_sync_single_for_cpu(card->dev,
++					    MWIFIEX_SKB_DMA_ADDR(skb),
++					    MWIFIEX_UPLD_SIZE,
++					    PCI_DMA_FROMDEVICE);
+ 
+ 	/* Unmap the command as a response has been received. */
+ 	if (card->cmd_buf) {
+@@ -1703,10 +1709,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 	rx_len = le16_to_cpu(pkt_len);
+ 	skb_put(skb, MWIFIEX_UPLD_SIZE - skb->len);
+ 	skb_trim(skb, rx_len);
+-	skb_pull(skb, INTF_HEADER_LEN);
+ 
+ 	if (!adapter->curr_cmd) {
+ 		if (adapter->ps_state == PS_STATE_SLEEP_CFM) {
++			pci_dma_sync_single_for_device(card->dev,
++						MWIFIEX_SKB_DMA_ADDR(skb),
++						MWIFIEX_SLEEP_COOKIE_SIZE,
++						PCI_DMA_FROMDEVICE);
+ 			if (mwifiex_write_reg(adapter,
+ 					      PCIE_CPU_INT_EVENT,
+ 					      CPU_INTR_SLEEP_CFM_DONE)) {
+@@ -1716,6 +1725,9 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 			}
+ 			mwifiex_delay_for_sleep_cookie(adapter,
+ 						       MWIFIEX_MAX_DELAY_COUNT);
++			mwifiex_unmap_pci_memory(adapter, skb,
++						 PCI_DMA_FROMDEVICE);
++			skb_pull(skb, INTF_HEADER_LEN);
+ 			while (reg->sleep_cookie && (count++ < 10) &&
+ 			       mwifiex_pcie_ok_to_access_hw(adapter))
+ 				usleep_range(50, 60);
+@@ -1733,6 +1745,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 					   PCI_DMA_FROMDEVICE))
+ 			return -1;
+ 	} else if (mwifiex_pcie_ok_to_access_hw(adapter)) {
++		skb_pull(skb, INTF_HEADER_LEN);
+ 		adapter->curr_cmd->resp_skb = skb;
+ 		adapter->cmd_resp_received = true;
+ 		/* Take the pointer and set it to CMD node and will
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 21ba5e6..00e8ee5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -116,6 +116,7 @@
+ /* FW awake cookie after FW ready */
+ #define FW_AWAKE_COOKIE						(0xAA55AA55)
+ #define MWIFIEX_DEF_SLEEP_COOKIE			0xBEEFBEEF
++#define MWIFIEX_SLEEP_COOKIE_SIZE			4
+ #define MWIFIEX_MAX_DELAY_COUNT				100
+ 
+ struct mwifiex_pcie_card_reg {
 -- 
-https://patchwork.kernel.org/patch/9492191/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.9.1
