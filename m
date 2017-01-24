@@ -1,53 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:32908 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751580AbdAaTW1 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33327 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751022AbdAXPGk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:27 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Woojung Huh <woojung.huh@microchip.com>,
-        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>
-Subject: [PATCH 4.10-rc3 04/13] net: lan78xx: fix build errors when
- linux/phy*.h is removed from net/dsa.h
+        Tue, 24 Jan 2017 10:06:40 -0500
+Received: by mail-lf0-f65.google.com with SMTP id x1so17837888lff.0
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 07:06:34 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 6/6] brcmfmac: use dev_err to print errors
+Date: Tue, 24 Jan 2017 16:06:12 +0100
+Message-Id: <20170124150612.25138-6-zajec5@gmail.com> (sfid-20170124_160644_684046_9E1F8A44)
+In-Reply-To: <20170124150612.25138-1-zajec5@gmail.com>
+References: <20170124150612.25138-1-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdwx-0000WG-L9@rmk-PC.armlinux.org.uk> (sfid-20170131_202439_825101_0556476B)
-Date: Tue, 31 Jan 2017 19:18:43 +0000
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-drivers/net/usb/lan78xx.c:394:33: sparse: expected ; at end of declaration
-drivers/net/usb/lan78xx.c:394:33: sparse: Expected } at end of struct-union-enum-specifier
-drivers/net/usb/lan78xx.c:394:33: sparse: got interface
-drivers/net/usb/lan78xx.c:403:1: sparse: Expected ; at the end of type declaration
-drivers/net/usb/lan78xx.c:403:1: sparse: got }
+From: Rafał Miłecki <rafal@milecki.pl>
 
-Add linux/phy.h to lan78xx.c
+This adds a nice prefix to all error messages making it possible to
+identify device they are related to. It's really useful for e.g. home
+routers commonly having 2 or even 3 wireless devices.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/usb/lan78xx.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c     | 3 ++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/usb/lan78xx.c b/drivers/net/usb/lan78xx.c
-index 08f8703e4d54..9889a70ff4f6 100644
---- a/drivers/net/usb/lan78xx.c
-+++ b/drivers/net/usb/lan78xx.c
-@@ -35,6 +35,7 @@
- #include <linux/irq.h>
- #include <linux/irqchip/chained_irq.h>
- #include <linux/microchipphy.h>
-+#include <linux/phy.h>
- #include "lan78xx.h"
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index 9ad9bd652ca2..28b08cba7dbe 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -223,6 +223,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ #ifndef CONFIG_BRCM_TRACING
+ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ {
++	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
+ 	struct va_format vaf;
+ 	va_list args;
  
- #define DRIVER_AUTHOR	"WOOJUNG HUH <woojung.huh@microchip.com>"
+@@ -233,7 +234,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	dev_err(dev, "%s: %pV", func, &vaf);
+ 
+ 	va_end(args);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+index 329cb65eb78b..393c1b31ed28 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+@@ -25,6 +25,7 @@
+ 
+ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ {
++	struct device *dev = pub && pub->bus_if ? pub->bus_if->dev : NULL;
+ 	struct va_format vaf = {
+ 		.fmt = fmt,
+ 	};
+@@ -32,7 +33,7 @@ void __brcmf_err(struct brcmf_pub *pub, const char *func, const char *fmt, ...)
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	pr_err("%s: %pV", func, &vaf);
++	dev_err(dev, "%s: %pV", func, &vaf);
+ 	trace_brcmf_err(func, &vaf);
+ 	va_end(args);
+ }
 -- 
-2.7.4
+2.11.0
