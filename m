@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33460 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S937331AbdAKPhw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 10:37:52 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Beni Lev <beni.lev@intel.com>
-Subject: [PATCH 1/3] cfg80211: consider VHT opmode on station update
-Date: Wed, 11 Jan 2017 16:37:46 +0100
-Message-Id: <20170111153748.797-1-johannes@sipsolutions.net> (sfid-20170111_163802_456597_258D962F)
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:35394 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750763AbdAXL2T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jan 2017 06:28:19 -0500
+Received: by mail-qt0-f181.google.com with SMTP id x49so175983557qtc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 03:28:19 -0800 (PST)
+Subject: Re: [PATCH] nl80211: fix validation of scheduled scan info for wowlan
+ netdetect
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Luca Coelho <luca@coelho.fi>
+References: <1484820088-24448-1-git-send-email-arend.vanspriel@broadcom.com>
+ <1484827206.2774.12.camel@coelho.fi>
+ <bde55d09-6f3e-1f90-4aef-0e1169c11cf6@broadcom.com>
+ <1485248251.7244.3.camel@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <13d1e654-6928-39e7-4751-fb90d3da7a54@broadcom.com> (sfid-20170124_122823_352510_3E3A43A8)
+Date: Tue, 24 Jan 2017 12:28:16 +0100
+MIME-Version: 1.0
+In-Reply-To: <1485248251.7244.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Beni Lev <beni.lev@intel.com>
+On 24-1-2017 9:57, Johannes Berg wrote:
+> On Thu, 2017-01-19 at 14:08 +0100, Arend Van Spriel wrote:
+>>
+>> On 19-1-2017 13:00, Luca Coelho wrote:
+>>> On Thu, 2017-01-19 at 10:01 +0000, Arend van Spriel wrote:
+>>>> For wowlan netdetect a separate limit is defined for the number
+>>>> of
+>>>> matchsets. Currently, this limit is ignored and the regular limit
+>>>> for scheduled scan matchsets, ie. struct wiphy::max_match_sets,
+>>>> is
+>>>> used for the net-detect case as well.
+>>>>
+>>>> Cc: Luciano Coelho <luciano.coelho@intel.com>
+>>>> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+>>>> ---
+>>>
+>>> What?! You don't have the same number of matchsets for both? :P
+>>
+>> Actually I have, but your comment mentioned they do not have to be
+>> the
+>> same. brcmfmac actually did not set max_nd_match_sets so I was
+>> surprised
+>> it worked. That said this patch will result in regression in brcmfmac
+>> :-p Not sure about other drivers supporting net-detect.
+> 
+> So do you want to submit a patch to brcmfmac first, and then I'll apply
+> this later? I can apply it and break it, but now that we already know
+> ...?
 
-Currently, this attribute is only fetched on station addition, but
-not on station change. Since this info is only present in the assoc
-request, with full station state support in the driver it cannot be
-present when the station is added.
+I have a brcmfmac patch in the queue. I will look at the other scheduled
+scan supporting drivers.
 
-Thus, add support for changing the VHT opmode on station update if
-done before (or while) the station is marked as associated. After
-this, ignore it, since it used to be ignored.
-
-Signed-off-by: Beni Lev <beni.lev@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/uapi/linux/nl80211.h |  4 +++-
- net/wireless/nl80211.c       | 15 +++++++++++++++
- 2 files changed, 18 insertions(+), 1 deletion(-)
-
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6b76e3b0c18e..bea982af9cfb 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1772,7 +1772,9 @@ enum nl80211_commands {
-  *
-  * @NL80211_ATTR_OPMODE_NOTIF: Operating mode field from Operating Mode
-  *	Notification Element based on association request when used with
-- *	%NL80211_CMD_NEW_STATION; u8 attribute.
-+ *	%NL80211_CMD_NEW_STATION or %NL80211_CMD_SET_STATION (only when
-+ *	%NL80211_FEATURE_FULL_AP_CLIENT_STATE is supported, or with TDLS);
-+ *	u8 attribute.
-  *
-  * @NL80211_ATTR_VENDOR_ID: The vendor ID, either a 24-bit OUI or, if
-  *	%NL80211_VENDOR_ID_IS_LINUX is set, a special Linux ID (not used yet)
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ef5eff93a8b8..5c1b267e22be 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4615,6 +4615,15 @@ int cfg80211_check_station_change(struct wiphy *wiphy,
- 		break;
- 	}
- 
-+	/*
-+	 * Older kernel versions ignored this attribute entirely, so don't
-+	 * reject attempts to update it but mark it as unused instead so the
-+	 * driver won't look at the data.
-+	 */
-+	if (statype != CFG80211_STA_AP_CLIENT_UNASSOC &&
-+	    statype != CFG80211_STA_TDLS_PEER_SETUP)
-+		params->opmode_notif_used = false;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(cfg80211_check_station_change);
-@@ -4854,6 +4863,12 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		params.local_pm = pm;
- 	}
- 
-+	if (info->attrs[NL80211_ATTR_OPMODE_NOTIF]) {
-+		params.opmode_notif_used = true;
-+		params.opmode_notif =
-+			nla_get_u8(info->attrs[NL80211_ATTR_OPMODE_NOTIF]);
-+	}
-+
- 	/* Include parameters for TDLS peer (will check later) */
- 	err = nl80211_set_station_tdls(info, &params);
- 	if (err)
--- 
-2.9.3
+Regards,
+Arend
