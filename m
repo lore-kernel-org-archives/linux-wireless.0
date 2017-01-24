@@ -1,59 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49076 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S970497AbdAELiZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 06:38:25 -0500
-Message-ID: <1483616301.4394.6.camel@sipsolutions.net> (sfid-20170105_123829_384904_A229747D)
-Subject: Re: SIOCSIWFREQ while in NL80211_IFTYPE_STATION
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jorge Ramirez <jorge.ramirez-ortiz@linaro.org>,
-        netdev@vger.kernel.org, Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 05 Jan 2017 12:38:21 +0100
-In-Reply-To: <685811c3-6247-77fd-8c70-617951886451@linaro.org> (sfid-20170105_120230_642426_9BEC69AB)
-References: <685811c3-6247-77fd-8c70-617951886451@linaro.org>
-         (sfid-20170105_120230_642426_9BEC69AB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33233 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750869AbdAXPGZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jan 2017 10:06:25 -0500
+Received: by mail-lf0-f66.google.com with SMTP id x1so17836922lff.0
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 07:06:24 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 1/6] brcmfmac: switch to C function (__brcmf_err) for printing errors
+Date: Tue, 24 Jan 2017 16:06:07 +0100
+Message-Id: <20170124150612.25138-1-zajec5@gmail.com> (sfid-20170124_160634_886612_A727DC00)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+linux-wireless, where this should've gone
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> I am running a single wlan0 interface in managed mode (no aliases,
-> no  other wireless interfaces).
-> The association with the AP still hasn't happened.
-> 
-> I noticed that if trying to change the frequency to one of the valid 
-> values, the driver returns EBUSY.
-> 
-> The call stack is
-> cfg80211_wext_siwfreq
-> -->cfg80211_mgd_wext_siwfreq
-> --->cfg80211_set_monitor_channel (notice call to set 'monitor'
-> channel 
-> in managed mode)
-> ----> fails with EBUSY
-> 
-> Is therefore the expected behavior to fail under the above
-> circumstances 
-> (managed mode && single wlan0 interface && no association)?
-> And if it is, please could you clarify when would it be valid to
-> change the frequency in managed mode?
+This will allow extending code and using more detailed messages e.g.
+with the help of dev_err. Note that *two separated* brcmf_err macros
+were replaced thanks to using a simple CONFIG_BRCMDBG symbol check in
+the body.
 
-Frankly, I don't remember - all of this is plastered all over with
-backward compatibility hooks etc.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/common.c | 19 +++++++++++++++++++
+ .../net/wireless/broadcom/brcm80211/brcmfmac/debug.h  | 16 ----------------
+ 2 files changed, 19 insertions(+), 16 deletions(-)
 
-How are you running into this? Why are you even trying to do this? You
-really shouldn't use wireless extensions any more.
-
-Also, there shouldn't be much reason to be setting the channel anyway,
-unless you want to trigger a connection specifically on that channel,
-but then when you use nl80211 you get that included in the CONNECT
-command there.
-
-Finally, I suspect that this particular backward compatibility hook
-can't really work anyway and could be removed, but I'm not sure that
-would have the effect you want either.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+index f7c8c2e80349..05fb778ddd0f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+@@ -218,6 +218,25 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 	return err;
+ }
+ 
++#ifndef CONFIG_BRCM_TRACING
++void __brcmf_err(const char *func, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	if (!net_ratelimit() && !IS_ENABLED(CONFIG_BRCMDBG))
++		return;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++	pr_err("%s: %pV", func, &vaf);
++
++	va_end(args);
++}
++#endif
++
+ #if defined(CONFIG_BRCM_TRACING) || defined(CONFIG_BRCMDBG)
+ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
+ {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+index 6687812770cc..5fef79473c87 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+@@ -45,26 +45,10 @@
+ #undef pr_fmt
+ #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ 
+-/* Macro for error messages. net_ratelimit() is used when driver
+- * debugging is not selected. When debugging the driver error
+- * messages are as important as other tracing or even more so.
+- */
+-#ifndef CONFIG_BRCM_TRACING
+-#ifdef CONFIG_BRCMDBG
+-#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
+-#else
+-#define brcmf_err(fmt, ...)						\
+-	do {								\
+-		if (net_ratelimit())					\
+-			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
+-	} while (0)
+-#endif
+-#else
+ __printf(2, 3)
+ void __brcmf_err(const char *func, const char *fmt, ...);
+ #define brcmf_err(fmt, ...) \
+ 	__brcmf_err(__func__, fmt, ##__VA_ARGS__)
+-#endif
+ 
+ #if defined(DEBUG) || defined(CONFIG_BRCM_TRACING)
+ __printf(3, 4)
+-- 
+2.11.0
