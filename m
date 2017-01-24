@@ -1,51 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:50016 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbdAPDEM (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44178 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750795AbdAXMaW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 22:04:12 -0500
-Date: Mon, 16 Jan 2017 04:03:53 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 07/14] rt2x00: rt2800lib: fix max supported beacon count
- for RT3593
-Message-ID: <20170116030339.GA32218@makrotopia.org> (sfid-20170116_040417_806994_E21A990A)
-References: <874m114lwq.fsf@codeaurora.org>
+        Tue, 24 Jan 2017 07:30:22 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: pull-request: iwlwifi 2017-01-23
+References: <1485204642.2774.60.camel@coelho.fi>
+Date: Tue, 24 Jan 2017 14:30:17 +0200
+In-Reply-To: <1485204642.2774.60.camel@coelho.fi> (Luca Coelho's message of
+        "Mon, 23 Jan 2017 22:50:42 +0200")
+Message-ID: <87inp48wti.fsf@kamboji.qca.qualcomm.com> (sfid-20170124_133026_017322_0358122A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+Luca Coelho <luca@coelho.fi> writes:
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> Hi Kalle,
+>
+> After a long time (too long time, I admit), here comes a pull request
+> with two fixes intended for v4.10.  Nothing major, just two small fixes
+> that were pending in our internal trees.  I have some more, but I'm
+> keeping this small for the -rc series.  More details in the tag
+> description.
+>
+> I have sent this out before and kbuildbot didn't find any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+>
+> The following changes since commit 92549cdc288f47f3a98cf80ac5890c91f5876a=
+06:
+>
+> =C2=A0 iwlwifi: fix kernel crash when unregistering thermal zone
+> (2017-01-21 14:58:37 +0200)
+>
+> are available in the git repository at:
+>
+> =C2=A0
+> git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git
+> tags/iwlwifi-for-kalle-2017-01-23
+>
+> for you to fetch changes up to 03c902bff524e0cf664737a33f2365f7837040bf:
+>
+> =C2=A0 iwlwifi: mvm: avoid crash on restart w/o reserved queues (2017-01-=
+23 12:55:32 +0200)
+>
+> ----------------------------------------------------------------
+> * Remove an extra hyphen from a string that was preventing the firmware t=
+o load
+> * Avoid a crash when the firmware is restarted in certain scenarios with =
+DQA
+>
+> ----------------------------------------------------------------
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 5058494d6c27..ff653f0d43d2 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7899,7 +7899,10 @@ int rt2800_probe_hw(struct rt2x00_dev *rt2x00dev)
- 	if (rt2x00_rt(rt2x00dev, RT3593))
- 		__set_bit(RT2800_HAS_HIGH_SHARED_MEM, &drv_data->rt2800_flags);
- 
--	drv_data->hw_beacon_count = 8;
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		drv_data->hw_beacon_count = 16;
-+	else
-+		drv_data->hw_beacon_count = 8;
- 
- 	/*
- 	 * Allocate eeprom data.
--- 
-2.11.0
+Pulled, thanks.
+
+--=20
+Kalle Valo
