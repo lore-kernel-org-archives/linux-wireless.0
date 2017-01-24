@@ -1,71 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50194 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751363AbdAMKUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 05:20:20 -0500
-Message-ID: <1484302817.27366.2.camel@sipsolutions.net> (sfid-20170113_112023_768697_85997793)
-Subject: Re: [PATCH] mac80211: initialize SMPS field in HT capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Cc: onelektra@gmx.net
-Date: Fri, 13 Jan 2017 11:20:17 +0100
-In-Reply-To: <ba04d61c-3f80-573f-3108-c94a9c991404@nbd.name>
-References: <20170111223322.14698-1-nbd@nbd.name>
-         <1484295655.19860.9.camel@sipsolutions.net>
-         <ba04d61c-3f80-573f-3108-c94a9c991404@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:35823 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750903AbdAXNgY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jan 2017 08:36:24 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: use pci_dma_sync_single* APIs
+Date: Tue, 24 Jan 2017 19:05:45 +0530
+Message-ID: <1485264945-1248-2-git-send-email-akarwar@marvell.com> (sfid-20170124_143626_617942_520D3D91)
+In-Reply-To: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
+References: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-01-13 at 09:54 +0100, Felix Fietkau wrote:
+On some platforms, driver is unable read sleep cookie signature even
+if firmware has written it through DMA. The problem is fixed by using
+pci_dma_sync_single* APIs while reading DMA buffer shared with firmware.
 
-> > Additionally, ath10k appears to be setting this to
-> > WLAN_HT_CAP_SM_PS_DYNAMIC already, so apparently it's expecting
-> > something to happen with that value? Is it really correct then to
-> > be overwriting it?
-> 
-> Actually, that code seems to leave the value at 
-> WLAN_HT_CAP_SM_PS_DISABLED, because it sets that first and doesn't
-> mask out the field before trying to set it to
-> WLAN_HT_CAP_SM_PS_DYNAMIC.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Hah, that's funny.
-
-> I don't think it even makes sense to set WLAN_HT_CAP_SM_PS_DYNAMIC at
-> this point, since it's up to mac80211 to deal with the SMPS state.
-> 
-> Either way, WLAN_HT_CAP_SM_PS_STATIC is a really bad default to have
-> at init time. If you want, I can change the patch to check for that
-> value before changing it, but I don't really see the point.
-
-No, I think I agree. But please add a comment that OR'ing in the two
-bits will not result in it having strange values - it's a bit
-unexpected to see this here and then one has to remember (or look up)
-the value of DISABLED to understand the code is fine.
-
-> Additionally, I found this ath10k commit:
-> 
-> 
-> commit e33a99e227e430a788467e5a85dc29f6df16b983
-> Author: Peter Oh <poh@qca.qualcomm.com>
-> Date:   Thu Dec 31 15:26:20 2015 +0200
-> 
->     ath10k: set SM power save disabled to default value
->     
->     Use SMPS disabled as default because FW does not indicate
->     any support of SMPS.
->     
->     This change will help STAs out that don’t support SMPS from
->     sticking on 1SS, since they don’t have method to change it
->     back to multiple chains.
->     
->     This change also should not affect power consumption of STAs
->     supporting SMPS, because they are capable to switch the mode
->     to dynamic or static either at the end of frame sequence or
->     by using SMPS action frame.
-
-Fun. Though I'd argue that this whole thing should then just be removed
-from ath10k.
-
-johannes
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 3f4ca28..a0d9180 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -439,9 +439,14 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
+ 	struct pcie_service_card *card = adapter->card;
+ 	u8 *buffer;
+ 	u32 sleep_cookie, count;
++	struct sk_buff *cmdrsp = card->cmdrsp_buf;
+ 
+ 	for (count = 0; count < max_delay_loop_cnt; count++) {
+-		buffer = card->cmdrsp_buf->data;
++		pci_dma_sync_single_for_cpu(card->dev,
++					    MWIFIEX_SKB_DMA_ADDR(cmdrsp),
++					    sizeof(sleep_cookie),
++					    PCI_DMA_FROMDEVICE);
++		buffer = cmdrsp->data;
+ 		sleep_cookie = READ_ONCE(*(u32 *)buffer);
+ 
+ 		if (sleep_cookie == MWIFIEX_DEF_SLEEP_COOKIE) {
+@@ -449,6 +454,10 @@ static void mwifiex_delay_for_sleep_cookie(struct mwifiex_adapter *adapter,
+ 				    "sleep cookie found at count %d\n", count);
+ 			break;
+ 		}
++		pci_dma_sync_single_for_device(card->dev,
++					       MWIFIEX_SKB_DMA_ADDR(cmdrsp),
++					       sizeof(sleep_cookie),
++					       PCI_DMA_FROMDEVICE);
+ 		usleep_range(20, 30);
+ 	}
+ 
+-- 
+1.9.1
