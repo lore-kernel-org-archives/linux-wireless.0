@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33254 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750764AbdAaHJ7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 02:09:59 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: rt2x00: fix clk_get call
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170129114052.GB7489@redhat.com>
-References: <20170129114052.GB7489@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Daniel Golle <daniel@makrotopia.org>,
-        Felix Fietkau <nbd@nbd.name>
-Message-Id: <20170131070948.CC9D06071B@smtp.codeaurora.org> (sfid-20170131_081002_287563_027A8634)
-Date: Tue, 31 Jan 2017 07:09:48 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:53612 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750708AbdAXPfA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jan 2017 10:35:00 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2017-01-24
+Date: Tue, 24 Jan 2017 16:34:52 +0100
+Message-Id: <20170124153453.15776-1-johannes@sipsolutions.net> (sfid-20170124_163512_028244_E6072745)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> clk_get() takes two arguments and might return ERR_PTR(), so we
-> have to nullify pointer on that case, to do not break further call
-> to clk_get_rate().
-> 
-> Reported-by: Felix Fietkau <nbd@nbd.name>
-> Fixes: 34db70b92fae ("rt2x00: add copy of clk for soc devices")
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Hi Dave,
 
-Patch applied to wireless-drivers-next.git, thanks.
+LTP found a problem last week, but I couldn't fix it since I
+was travelling, so here's the fix now.
 
-33e962c8871f rt2x00: fix clk_get call
+Please pull and let me know if there's any problem.
 
--- 
-https://patchwork.kernel.org/patch/9543961/
+Thanks,
+johannes
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+
+The following changes since commit 4078b76cac68e50ccf1f76a74e7d3d5788aec3fe:
+
+  net: dsa: Check return value of phy_connect_direct() (2017-01-23 15:43:35 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2017-01-24
+
+for you to fetch changes up to 115865fa0826ed18ca04717cf72d0fe874c0fe7f:
+
+  mac80211: don't try to sleep in rate_control_rate_init() (2017-01-24 16:31:54 +0100)
+
+----------------------------------------------------------------
+A single fix, for a sleeping context problem found by LTP.
+
+----------------------------------------------------------------
+Johannes Berg (1):
+      mac80211: don't try to sleep in rate_control_rate_init()
+
+ net/mac80211/rate.c | 2 --
+ 1 file changed, 2 deletions(-)
