@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:34594 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759475AbdAJIfa (ORCPT
+Received: from mail-pg0-f43.google.com ([74.125.83.43]:35716 "EHLO
+        mail-pg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751141AbdAXSMZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 10 Jan 2017 03:35:30 -0500
-Received: by mail-yw0-f195.google.com with SMTP id a10so13027794ywa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2017 00:35:30 -0800 (PST)
+        Tue, 24 Jan 2017 13:12:25 -0500
+Received: by mail-pg0-f43.google.com with SMTP id 194so56788731pgd.2
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 10:12:20 -0800 (PST)
+Date: Tue, 24 Jan 2017 10:12:15 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Linus =?UTF-8?B?TMO8c3Npbmc=?= <linus.luessing@c0d3.blue>
+Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
+        Felix Fietkau <nbd@nbd.name>,
+        Nikolay Aleksandrov <nikolay@cumulusnetworks.com>,
+        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next v5] bridge: multicast to unicast
+Message-ID: <20170124101215.4e3017b2@xeon-e3> (sfid-20170124_191229_855228_3C3D27F5)
+In-Reply-To: <20170121200133.1864-1-linus.luessing@c0d3.blue>
+References: <20170121200133.1864-1-linus.luessing@c0d3.blue>
 MIME-Version: 1.0
-In-Reply-To: <CAC8mBSUHhwjdWAduhGt4qarV139JW2ERC-8CvRXAM3eMxvBLuA@mail.gmail.com>
-References: <CAC8mBSUHhwjdWAduhGt4qarV139JW2ERC-8CvRXAM3eMxvBLuA@mail.gmail.com>
-From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-Date: Tue, 10 Jan 2017 11:35:09 +0300
-Message-ID: <CAHNKnsSriTXASs+qieBPk-2vEk4gT7QniVCjRzPi80=bm522XQ@mail.gmail.com> (sfid-20170110_093534_169306_6AA793C7)
-Subject: Re: [ath5k-devel] ath5k keep-alive
-To: =?UTF-8?Q?Denis_Peri=C5=A1a?= <denis@denis.in>
-Cc: "open list:ATHEROS ATH5K WIR..." <ath5k-devel@lists.ath5k.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Denis.
+On Sat, 21 Jan 2017 21:01:32 +0100
+Linus L=C3=BCssing <linus.luessing@c0d3.blue> wrote:
 
-CC linux-wireless since ath5k-devel not so active for a long time.
+> +static bool br_port_group_equal(struct net_bridge_port_group *p,
+> +				struct net_bridge_port *port,
+> +				const unsigned char *src)
+> +{
+> +	if (p->port !=3D port)
+> +		return false;
+> +
+> +	if (!(port->flags & BR_MULTICAST_TO_UNICAST))
+> +		return true;
+> +
+> +	return ether_addr_equal(src, p->eth_addr);
+> +}
+> +
 
-On Tue, Sep 13, 2016 at 10:30 AM, Denis Peri=C5=A1a <denis@denis.in> wrote:
-> I have issue with frequent disconnects so I have to add watchdog scripts =
-in
-> cron which is really pain in..
-> Is there any chance I can add some code to keep alive connection?
-
-Did you try to use wpa_supplicant? It could take care about reconnection.
-
---=20
-Sergey
+I prefer that argument to functions like this be const.
