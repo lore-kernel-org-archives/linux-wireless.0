@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50010 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53362 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935113AbdAENj2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 08:39:28 -0500
-Message-ID: <1483623500.4394.18.camel@sipsolutions.net> (sfid-20170105_143932_349232_8BD81BED)
-Subject: Re: [PATCH 2/4] cfg80211: Add new NL80211_CMD_SET_BTCOEX_PRIORITY
- to support BTCOEX
+        id S1750897AbdAXPSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 24 Jan 2017 10:18:22 -0500
+Message-ID: <1485271099.1236.3.camel@sipsolutions.net> (sfid-20170124_161825_929294_B25FA18A)
+Subject: Re: [PATCH v3 4/4] mac80211: Add set_cqm_rssi_range_config
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Cc: c_traja@qti.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Date: Thu, 05 Jan 2017 14:38:20 +0100
-In-Reply-To: <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
-References: <1478610932-21954-1-git-send-email-c_traja@qti.qualcomm.com>
-         <1478610932-21954-3-git-send-email-c_traja@qti.qualcomm.com>
-         <1480949353.31788.27.camel@sipsolutions.net>
-         <5e5e8971c96293a81e7cb37bcdfbd593@codeaurora.org>
-         <1481645351.20412.34.camel@sipsolutions.net>
-         <134cc8e58ecb804b6dda0137c4c37be8@codeaurora.org>
-         <1481881024.27953.14.camel@sipsolutions.net>
-         <ae82112880d55451342e7a6e5a47c33f@codeaurora.org>
-         <1483354130.4596.5.camel@sipsolutions.net>
-         <a5521b4e246de90ed8526891c84a97e5@codeaurora.org>
+To: Andrew Zaborowski <andrew.zaborowski@intel.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 24 Jan 2017 16:18:19 +0100
+In-Reply-To: <20170120085509.13222-4-andrew.zaborowski@intel.com> (sfid-20170120_095528_786571_157085EA)
+References: <20170120085509.13222-1-andrew.zaborowski@intel.com>
+         <20170120085509.13222-4-andrew.zaborowski@intel.com>
+         (sfid-20170120_095528_786571_157085EA)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, 2017-01-20 at 09:55 +0100, Andrew Zaborowski wrote:
+> Support .set_cqm_rssi_range_config if the beacons are available for
+> processing in mac80211.  There's no reason that this couldn't be
+> offloaded by mac80211-based drivers but there's no driver method for
+> that added in this patch as I don't have the hardware.
 
-> > IOW - why have all these bits rather than just one?
+I thought you only required now that the level was given or something
+like that, so most HW should support it?
+
+> The NL80211_EXT_FEATURE_CQM_RSSI_LIST feature is automatically set
+> during ieee80211_register_hw if the default interface being created
+> doesn't indicate beacon filtering enabled.  For drivers that don't
+> want a default interface but want to support this feature the flag
+> needs to be set explicitly in the driver.
 > 
-> Hardware supports data across all the access categories, this is
-> just  meant for prioritising the traffic. f.e, If the fw/target has
-> both wlan and bt traffic queued and if VO is  set as priority, then
-> wlan VO packets will be pushed out of the radio first and then the bt
-> traffic.
+> Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
+> ---
+> changes in v3:
+>  - set NL80211_EXT_FEATURE_CQM_RSSI_LIST automatically in
+>    ieee80211_register_hw based on the default interface's
+>    IEEE80211_VIF_BEACON_FILTER flag.  This is a bit of an RFC as I'm
+>    not sure how practical it is for a driver to allow creation of
+>    additional interfaces that also implement CQM, but which filter
+>    beacons in the firmware.  In any case userspace would only
+>    receive EOPNOTSUPP on those addiitonal interfaces when trying to
+>    use the feature.
 
-Exactly. So as far as *capabilities* are concerned, why do we need so
-many bits?
+That can't possibly work, since the flag can't be set by a driver at
+this point - the interface isn't brought up yet, so the driver knows
+nothing about it.
+
+Therefore, you'd always set the flag (in a convoluted way) and be wrong
+about it if filtering is actually done.
 
 johannes
