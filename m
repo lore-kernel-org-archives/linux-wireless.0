@@ -1,157 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:33551 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751246AbdAPDBf (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33432 "EHLO
+        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750911AbdAXPm3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 22:01:35 -0500
-Date: Mon, 16 Jan 2017 04:01:14 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 04/14] rt2x00: rt2800lib: fix beacon generation on RT3593
-Message-ID: <20170116030054.GA32187@makrotopia.org> (sfid-20170116_040138_285370_BE9F9C7A)
-References: <874m114lwq.fsf@codeaurora.org>
+        Tue, 24 Jan 2017 10:42:29 -0500
+Received: by mail-lf0-f42.google.com with SMTP id x1so26528298lff.0
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2017 07:42:28 -0800 (PST)
+From: =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+To: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        =?UTF-8?q?Amadeusz=20S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>
+Subject: [PATCH 1/2] mac80211: use helper function to access ieee802_1d_to_ac[]
+Date: Tue, 24 Jan 2017 16:42:10 +0100
+Message-Id: <1485272531-11587-1-git-send-email-amadeusz.slawinski@tieto.com> (sfid-20170124_164318_596290_092A71F3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+cleanup patch to make use of ieee80211_ac_from_tid() to retrieve ac from
+ieee802_1d_to_ac[]
 
-On the RT3593 chipset, the beacon registers are located
-in the high 8KB part of the shared memory.
-
-The high part of the shared memory is only accessible
-if it is explicitly selected. Add a helper function
-in order to be able to control the SHR_MSEL bit in
-the PBF_SYS_CTRL register. Also add a few more helper
-functions and use those to select the correct part of
-the shared memory before and after accessing the beacon
-registers.
-
-The base addresses of the beacon registers are also
-different from the actually used values, so fix the
-'rt2800_hw_beacon_base' function to return the correct
-values.
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Signed-off-by: Amadeusz Sławiński <amadeusz.slawinski@tieto.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800.h    |  3 ++
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 44 ++++++++++++++++++++++++++
- 2 files changed, 47 insertions(+)
+ net/mac80211/rx.c     | 2 +-
+ net/mac80211/status.c | 2 +-
+ net/mac80211/tx.c     | 4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800.h b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-index 2371896c1e99..a81852cfb4f9 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800.h
-@@ -574,6 +574,7 @@
- #define PBF_SYS_CTRL			0x0400
- #define PBF_SYS_CTRL_READY		FIELD32(0x00000080)
- #define PBF_SYS_CTRL_HOST_RAM_WRITE	FIELD32(0x00010000)
-+#define PBF_SYS_CTRL_SHR_MSEL		FIELD32(0x00080000)
- 
- /*
-  * HOST-MCU shared memory
-@@ -2026,6 +2027,8 @@ struct mac_iveiv_entry {
- 	  (((__index) < 6) ? (HW_BEACON_BASE4 + ((__index - 4) * 0x0200)) : \
- 	  (HW_BEACON_BASE6 - ((__index - 6) * 0x0200))))
- 
-+#define HW_BEACON_BASE_HIGH(__index)	(0x4000 + (__index) * 512)
-+
- #define BEACON_BASE_TO_OFFSET(_base)	(((_base) - 0x4000) / 64)
- 
- /*
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 0fd67026f806..dcacfa54b3d6 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -82,6 +82,39 @@ static inline bool rt2800_is_305x_soc(struct rt2x00_dev *rt2x00dev)
- 	return false;
- }
- 
-+static inline void rt2800_shared_mem_select(struct rt2x00_dev *rt2x00dev,
-+					    bool high)
-+{
-+	u32 reg;
-+
-+	if (WARN_ON_ONCE(!rt2800_has_high_shared_mem(rt2x00dev)))
-+		return;
-+
-+	rt2800_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
-+	rt2x00_set_field32(&reg, PBF_SYS_CTRL_SHR_MSEL, high);
-+	rt2800_register_write(rt2x00dev, PBF_SYS_CTRL, reg);
-+}
-+
-+static inline bool rt2800_beacon_uses_high_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return true;
-+
-+	return false;
-+}
-+
-+static inline void rt2800_select_beacon_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2800_beacon_uses_high_mem(rt2x00dev))
-+		rt2800_shared_mem_select(rt2x00dev, true);
-+}
-+
-+static inline void rt2800_deselect_beacon_mem(struct rt2x00_dev *rt2x00dev)
-+{
-+	if (rt2800_beacon_uses_high_mem(rt2x00dev))
-+		rt2800_shared_mem_select(rt2x00dev, false);
-+}
-+
- static void rt2800_bbp_write(struct rt2x00_dev *rt2x00dev,
- 			     const unsigned int word, const u8 value)
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3e289a6..cf8ed1c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1391,7 +1391,7 @@ void ieee80211_sta_pspoll(struct ieee80211_sta *pubsta)
+ void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
  {
-@@ -948,6 +981,9 @@ EXPORT_SYMBOL_GPL(rt2800_txdone_entry);
- static unsigned int rt2800_hw_beacon_base(struct rt2x00_dev *rt2x00dev,
- 					  unsigned int index)
- {
-+	if (rt2x00_rt(rt2x00dev, RT3593))
-+		return HW_BEACON_BASE_HIGH(index);
-+
- 	return HW_BEACON_BASE(index);
- }
+ 	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
+-	u8 ac = ieee802_1d_to_ac[tid & 7];
++	int ac = ieee80211_ac_from_tid(tid);
  
-@@ -1046,8 +1082,12 @@ void rt2800_write_beacon(struct queue_entry *entry, struct txentry_desc *txdesc)
- 	beacon_base = rt2800_hw_beacon_base(rt2x00dev, entry->entry_idx);
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
-+
-+	rt2800_select_beacon_mem(rt2x00dev);
- 	rt2800_register_multiwrite(rt2x00dev, beacon_base, entry->skb->data,
- 				   entry->skb->len + padding_len);
-+	rt2800_deselect_beacon_mem(rt2x00dev);
-+
- 	rt2800_shared_mem_unlock(rt2x00dev);
- 	__set_bit(ENTRY_BCN_ENABLED, &entry->flags);
- 
-@@ -1080,6 +1120,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 
- 	rt2800_shared_mem_lock(rt2x00dev);
- 
-+	rt2800_select_beacon_mem(rt2x00dev);
-+
  	/*
- 	 * For the Beacon base registers we only need to clear
- 	 * the whole TXWI which (when set to 0) will invalidate
-@@ -1088,6 +1130,8 @@ static inline void rt2800_clear_beacon_register(struct rt2x00_dev *rt2x00dev,
- 	for (i = 0; i < txwi_desc_size; i += sizeof(__le32))
- 		rt2800_register_write(rt2x00dev, beacon_base + i, 0);
+ 	 * If this AC is not trigger-enabled do nothing unless the
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index ddf71c6..dd48de0 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -95,7 +95,7 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
+ 		 */
+ 		if (*p & IEEE80211_QOS_CTL_EOSP)
+ 			*p &= ~IEEE80211_QOS_CTL_EOSP;
+-		ac = ieee802_1d_to_ac[tid & 7];
++		ac = ieee80211_ac_from_tid(tid);
+ 	} else {
+ 		ac = IEEE80211_AC_BE;
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 0d8b716..009eb36 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1410,7 +1410,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_data *sdata,
+ 		txqi->txq.sta = &sta->sta;
+ 		sta->sta.txq[tid] = &txqi->txq;
+ 		txqi->txq.tid = tid;
+-		txqi->txq.ac = ieee802_1d_to_ac[tid & 7];
++		txqi->txq.ac = ieee80211_ac_from_tid(tid);
+ 	} else {
+ 		sdata->vif.txq = &txqi->txq;
+ 		txqi->txq.tid = 0;
+@@ -4542,7 +4542,7 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 				 struct sk_buff *skb, int tid,
+ 				 enum nl80211_band band)
+ {
+-	int ac = ieee802_1d_to_ac[tid & 7];
++	int ac = ieee80211_ac_from_tid(tid);
  
-+	rt2800_deselect_beacon_mem(rt2x00dev);
-+
- 	rt2800_shared_mem_unlock(rt2x00dev);
- }
- 
+ 	skb_reset_mac_header(skb);
+ 	skb_set_queue_mapping(skb, ac);
 -- 
-2.11.0
+1.9.1
