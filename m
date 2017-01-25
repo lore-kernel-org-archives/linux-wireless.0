@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.aperture-lab.de ([138.201.29.205]:34753 "EHLO
-        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1030994AbdAIVXt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59065 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751385AbdAYN3r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 16:23:49 -0500
-Date: Mon, 9 Jan 2017 22:23:45 +0100
-From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
-To: "M. Braun" <michael-dev@fami-braun.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Felix Fietkau <nbd@nbd.name>, netdev@vger.kernel.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-Message-ID: <20170109212345.GA5513@otheros> (sfid-20170109_222414_863109_E4B7C50B)
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <8836daaa-9638-4502-d079-fd428595f822@nbd.name>
- <1483710841.12677.1.camel@sipsolutions.net>
- <22fad045-57c6-7789-d19f-f47bd0faf441@fami-braun.de>
- <20170107145516.GE3134@otheros>
- <1483949336.17582.3.camel@sipsolutions.net>
- <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
+        Wed, 25 Jan 2017 08:29:47 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+        <mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: Fix crash during rmmod when probe firmware
+ fails
+Date: Wed, 25 Jan 2017 13:29:41 +0000
+Message-ID: <8760l38dz0.fsf@kamboji.qca.qualcomm.com> (sfid-20170125_142951_389160_069C1859)
+References: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1482221351-24029-1-git-send-email-mohammed@qca.qualcomm.com>
+        (Mohammed Shafi Shajakhan's message of "Tue, 20 Dec 2016 13:39:11       +0530")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <6f5ec9f1-800a-2bc4-2f41-9d803343bb22@fami-braun.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 09, 2017 at 12:44:19PM +0100, M. Braun wrote:
-> Am 09.01.2017 um 09:08 schrieb Johannes Berg:
-> > Does it make sense to implement the two in separate layers though?
-> > 
-> > Clearly, this part needs to be implemented in the bridge layer due to
-> > the snooping knowledge, but the code is very similar to what mac80211
-> > has now.
-> 
-> Does the bridge always know about all stations connected?
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-The bridge does not always know about all stations, especially the
-silent ones like in your DVB-T example.
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> This fixes the below crash when ath10k probe firmware fails,
+> NAPI polling tries to access a rx ring resource which was never
+> allocated, fix this by disabling NAPI right away once the probe
+> firmware fails by calling 'ath10k_hif_stop'. Its good to note
+> that the error is never propogated to 'ath10k_pci_probe' when
+> ath10k_core_register fails, so calling 'ath10k_hif_stop' to cleanup
+> PCI related things seems to be ok
+>
+> BUG: unable to handle kernel NULL pointer dereference at (null)
+> IP:  __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+> __ath10k_htt_rx_ring_fill_n+0x19/0x230 [ath10k_core]
+>
+> Call Trace:
+>
+> [<ffffffffa113ec62>] ath10k_htt_rx_msdu_buff_replenish+0x42/0x90
+> [ath10k_core]
+> [<ffffffffa113f393>] ath10k_htt_txrx_compl_task+0x433/0x17d0
+> [ath10k_core]
+> [<ffffffff8114406d>] ? __wake_up_common+0x4d/0x80
+> [<ffffffff811349ec>] ? cpu_load_update+0xdc/0x150
+> [<ffffffffa119301d>] ? ath10k_pci_read32+0xd/0x10 [ath10k_pci]
+> [<ffffffffa1195b17>] ath10k_pci_napi_poll+0x47/0x110 [ath10k_pci]
+> [<ffffffff817863af>] net_rx_action+0x20f/0x370
+>
+> Reported-by: Ben Greear <greearb@candelatech.com>
+> Fixes: 3c97f5de1f28 ("ath10k: implement NAPI support")
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-However, concerning IP multicast, there is IGMP/MLD. So the bridge
-does know about all stations which are interested in a specific IP
-multicast stream.
+Is there an easy way to reproduce this bug? I don't see it on my x86
+laptop with qca988x and I call rmmod all the time. I would like to test
+this myself.
 
-(As long as there is a querier on the link, which periodically
-queriers for IGMP/MLD reports from any listener. If there is no
-querier then the bridge multicast snooping, including the bridge
-multicast-to-unicast will fall back to flooding)
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -2164,6 +2164,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+>  	ath10k_core_free_firmware_files(ar);
+> =20
+>  err_power_down:
+> +	ath10k_hif_stop(ar);
+>  	ath10k_hif_power_down(ar);
+> =20
+>  	return ret;
 
+This breaks the symmetry, we should not be calling ath10k_hif_stop() if
+we haven't called ath10k_hif_start() from the same function. This can
+just create a bigger mess later, for example with other bus support like
+sdio or usb. In theory it should enough that we call
+ath10k_hif_power_down() and pci.c does the rest correctly "behind the
+scenes".
 
-So if your television example uses IP multicast properly, it is
-completely doable with the bridge multicast-to-unicast, thanks to
-IGMP/MLD.
+I investigated this a bit and I think the real cause is that we call
+napi_enable() from ath10k_pci_hif_power_up() and napi_disable() from
+ath10k_pci_hif_stop(). Does anyone remember why?
+
+I was expecting that we would call napi_enable()/napi_disable() either
+in ath10k_hif_power_up/down() or ath10k_hif_start()/stop(), but not
+mixed like it's currently.
+
+--=20
+Kalle Valo=
