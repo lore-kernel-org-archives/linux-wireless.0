@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34444 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdAQW3U (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51743 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbdAYLb2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 17:29:20 -0500
-Received: by mail-pg0-f68.google.com with SMTP id t6so4895793pgt.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 14:29:18 -0800 (PST)
-From: gavinli@thegavinli.com
-To: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
-        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com
-Cc: Gavin Li <git@thegavinli.com>
-Subject: [PATCH] brcmfmac: fix incorrect event channel deduction
-Date: Tue, 17 Jan 2017 14:29:09 -0800
-Message-Id: <20170117222909.2880-1-gavinli@thegavinli.com> (sfid-20170117_232924_275305_575DD926)
+        Wed, 25 Jan 2017 06:31:28 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFC 0/3] Pre-CAC and sharing DFS state across multiple radios
+Date: Wed, 25 Jan 2017 17:01:07 +0530
+Message-ID: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170125_123132_354784_9BDB9180)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gavin Li <git@thegavinli.com>
+Currently irrespective of dfs domain and radar detection activity
+pre-CAC results for a wiphy are retained till the wiphy is detroyed.
+This may not be preferred in non-ETSI dfs domain where pre-CAC is not
+explicitly mentioned in the respective DFS requirement spec. This patch
+set modifies the current behaviour of pre-CAC for non-ETSI domain by
+giving 2 seconds grace period for dfs master interface to start operating
+on the CAC completed channel.
 
-brcmf_sdio_fromevntchan() was being called on the the hardware header
-rather than the software header, causing some frames to be
-mischaracterized as on the event channel rather than the data channel.
-This fixes the performance regression introduced in commit c56caa9d
-where event processing is done separately.
+This patch set also adds support to share dfs channel state across
+multiple radios of the same regulatory configuration.
 
-Signed-off-by: Gavin Li <git@thegavinli.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Vasanthakumar Thiagarajan (3):
+  cfg80211: Make pre-CAC results valid only for ETSI domain
+  cfg80211: Disallow moving out of operating DFS channel in non-ETSI
+  cfg80211: Share Channel DFS state across wiphys of same DFS domain
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index dfb0658713d9..d2219885071f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1661,7 +1661,7 @@ static u8 brcmf_sdio_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 					   pfirst->len, pfirst->next,
- 					   pfirst->prev);
- 			skb_unlink(pfirst, &bus->glom);
--			if (brcmf_sdio_fromevntchan(pfirst->data))
-+			if (brcmf_sdio_fromevntchan(&dptr[SDPCM_HWHDR_LEN]))
- 				brcmf_rx_event(bus->sdiodev->dev, pfirst);
- 			else
- 				brcmf_rx_frame(bus->sdiodev->dev, pfirst,
+ include/uapi/linux/nl80211.h |   5 ++
+ net/wireless/ap.c            |   5 ++
+ net/wireless/chan.c          | 112 ++++++++++++++++++++++++++++++
+ net/wireless/core.c          |  37 ++++++++++
+ net/wireless/core.h          |  13 ++++
+ net/wireless/ibss.c          |   1 +
+ net/wireless/mesh.c          |   1 +
+ net/wireless/mlme.c          |  52 +++++++++++---
+ net/wireless/nl80211.c       |  38 +++++++++++
+ net/wireless/reg.c           | 159 +++++++++++++++++++++++++++++++++++++++++++
+ net/wireless/reg.h           |  36 ++++++++++
+ 11 files changed, 449 insertions(+), 10 deletions(-)
+
 -- 
-2.11.0
+1.9.1
