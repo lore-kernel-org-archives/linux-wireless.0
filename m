@@ -1,69 +1,214 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34716 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751681AbdAMMkL (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34165 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbdAYLnx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 07:40:11 -0500
-From: Luca Coelho <luca@coelho.fi>
+        Wed, 25 Jan 2017 06:43:53 -0500
+Received: by mail-wm0-f66.google.com with SMTP id c85so41880413wmi.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2017 03:43:53 -0800 (PST)
+Received: from localhost.localdomain ([92.176.165.227])
+        by smtp.gmail.com with ESMTPSA id l9sm31033784wmf.18.2017.01.25.03.43.50
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 25 Jan 2017 03:43:51 -0800 (PST)
+From: Andrew Zaborowski <andrew.zaborowski@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 13 Jan 2017 14:39:18 +0200
-Message-Id: <20170113123919.30384-6-luca@coelho.fi> (sfid-20170113_134132_517586_16EB3DA6)
-In-Reply-To: <20170113123919.30384-1-luca@coelho.fi>
-References: <20170113123919.30384-1-luca@coelho.fi>
-Subject: [PATCH 5/6] iwlwifi: mvm: fix PS-Poll enablement
+Subject: [PATCH v4 1/5] mac80211: Pass new RSSI level in CQM RSSI notification
+Date: Wed, 25 Jan 2017 12:43:40 +0100
+Message-Id: <20170125114344.8179-1-andrew.zaborowski@intel.com> (sfid-20170125_124401_122152_393890BE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Extend ieee80211_cqm_rssi_notify with a rssi_level parameter so that
+this information can be passed to netlink clients in the next patch, if
+available.  Most drivers will have this value at hand.  wl1251 receives
+events from the firmware that only tell it whether latest measurement
+is above or below threshold so we don't pass any value at this time
+(parameter is 0).
 
-We added the uAPSD enabled ACs and that made the
-firmware choose to pull frames with uAPSD trigger
-frames instead of PS-Poll.
-Fix that.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Andrew Zaborowski <andrew.zaborowski@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/power.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c |  2 ++
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c |  2 +-
+ drivers/net/wireless/st/cw1200/sta.c        |  2 +-
+ drivers/net/wireless/ti/wl1251/event.c      |  4 ++--
+ drivers/net/wireless/ti/wlcore/event.c      |  3 ++-
+ include/net/mac80211.h                      |  2 ++
+ net/mac80211/mlme.c                         |  7 ++++---
+ net/mac80211/trace.h                        | 11 +++++++----
+ 8 files changed, 21 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index af6d10c23e5a..3a8e9379da2f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -174,6 +174,14 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 	enum ieee80211_ac_numbers ac;
- 	bool tid_found = false;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 0e60e38..e06a2e3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -571,6 +571,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
++			sig,
+ 			GFP_KERNEL);
+ 	} else if (sig > thold &&
+ 		   (last_event == 0 || sig > last_event + hyst)) {
+@@ -580,6 +581,7 @@ static void iwl_mvm_stat_iterator(void *_data, u8 *mac,
+ 		ieee80211_cqm_rssi_notify(
+ 			vif,
+ 			NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
++			sig,
+ 			GFP_KERNEL);
+ 	}
+ }
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dadaa73..e321647 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -877,7 +877,7 @@ static void rsi_perform_cqm(struct rsi_common *common,
  
-+#ifdef CONFIG_IWLWIFI_DEBUGFS
-+	/* set advanced pm flag with no uapsd ACs to enable ps-poll */
-+	if (mvmvif->dbgfs_pm.use_ps_poll) {
-+		cmd->flags |= cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
-+		return;
-+	}
-+#endif
-+
- 	for (ac = IEEE80211_AC_VO; ac <= IEEE80211_AC_BK; ac++) {
- 		if (!mvmvif->queue_params[ac].uapsd)
- 			continue;
-@@ -204,16 +212,6 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
+ 	common->cqm_info.last_cqm_event_rssi = rssi;
+ 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
+-	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
++	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, rssi, GFP_KERNEL);
+ 
+ 	return;
+ }
+diff --git a/drivers/net/wireless/st/cw1200/sta.c b/drivers/net/wireless/st/cw1200/sta.c
+index daf06a4..a522248 100644
+--- a/drivers/net/wireless/st/cw1200/sta.c
++++ b/drivers/net/wireless/st/cw1200/sta.c
+@@ -1019,7 +1019,7 @@ void cw1200_event_handler(struct work_struct *work)
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW :
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH;
+ 			pr_debug("[CQM] RSSI event: %d.\n", rcpi_rssi);
+-			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt,
++			ieee80211_cqm_rssi_notify(priv->vif, cqm_evt, rcpi_rssi,
+ 						  GFP_KERNEL);
+ 			break;
+ 		}
+diff --git a/drivers/net/wireless/ti/wl1251/event.c b/drivers/net/wireless/ti/wl1251/event.c
+index d0593bc..f5acd24 100644
+--- a/drivers/net/wireless/ti/wl1251/event.c
++++ b/drivers/net/wireless/ti/wl1251/event.c
+@@ -150,7 +150,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_LOW_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
+ 		}
+ 
+ 		if (vector & ROAMING_TRIGGER_REGAINED_RSSI_EVENT_ID) {
+@@ -158,7 +158,7 @@ static int wl1251_event_process(struct wl1251 *wl, struct event_mailbox *mbox)
+ 				     "ROAMING_TRIGGER_REGAINED_RSSI_EVENT");
+ 			ieee80211_cqm_rssi_notify(wl->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				0, GFP_KERNEL);
  		}
  	}
  
--	if (!(cmd->flags & cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK))) {
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--		/* set advanced pm flag with no uapsd ACs to enable ps-poll */
--		if (mvmvif->dbgfs_pm.use_ps_poll)
--			cmd->flags |=
--				cpu_to_le16(POWER_FLAGS_ADVANCE_PM_ENA_MSK);
--#endif
--		return;
--	}
--
- 	cmd->flags |= cpu_to_le16(POWER_FLAGS_UAPSD_MISBEHAVING_ENA_MSK);
+diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
+index 4b59f67..f2e90d2 100644
+--- a/drivers/net/wireless/ti/wlcore/event.c
++++ b/drivers/net/wireless/ti/wlcore/event.c
+@@ -129,7 +129,8 @@ void wlcore_event_rssi_trigger(struct wl1271 *wl, s8 *metric_arr)
  
- 	if (cmd->uapsd_ac_flags == (BIT(IEEE80211_AC_VO) |
+ 		vif = wl12xx_wlvif_to_vif(wlvif);
+ 		if (event != wlvif->last_rssi_event)
+-			ieee80211_cqm_rssi_notify(vif, event, GFP_KERNEL);
++			ieee80211_cqm_rssi_notify(vif, event, metric,
++						  GFP_KERNEL);
+ 		wlvif->last_rssi_event = event;
+ 	}
+ }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5345d35..8810ae7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5260,6 +5260,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+  * @rssi_event: the RSSI trigger event type
++ * @rssi_level: new RSSI level value or 0 if not available
+  * @gfp: context flags
+  *
+  * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
+@@ -5268,6 +5269,7 @@ void ieee80211_resume_disconnect(struct ieee80211_vif *vif);
+  */
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp);
+ 
+ /**
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 098ce9b..a40b90b 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3423,14 +3423,14 @@ static void ieee80211_rx_mgmt_beacon(struct ieee80211_sub_if_data *sdata,
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_LOW,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		} else if (sig > thold &&
+ 			   (last_event == 0 || sig > last_event + hyst)) {
+ 			ifmgd->last_cqm_event_signal = sig;
+ 			ieee80211_cqm_rssi_notify(
+ 				&sdata->vif,
+ 				NL80211_CQM_RSSI_THRESHOLD_EVENT_HIGH,
+-				GFP_KERNEL);
++				sig, GFP_KERNEL);
+ 		}
+ 	}
+ 
+@@ -5045,11 +5045,12 @@ void ieee80211_mgd_stop(struct ieee80211_sub_if_data *sdata)
+ 
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
++			       s32 rssi_level,
+ 			       gfp_t gfp)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 
+-	trace_api_cqm_rssi_notify(sdata, rssi_event);
++	trace_api_cqm_rssi_notify(sdata, rssi_event, rssi_level);
+ 
+ 	cfg80211_cqm_rssi_notify(sdata->dev, rssi_event, gfp);
+ }
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 92a47af..f78d9f4 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1996,23 +1996,26 @@ TRACE_EVENT(api_connection_loss,
+ 
+ TRACE_EVENT(api_cqm_rssi_notify,
+ 	TP_PROTO(struct ieee80211_sub_if_data *sdata,
+-		 enum nl80211_cqm_rssi_threshold_event rssi_event),
++		 enum nl80211_cqm_rssi_threshold_event rssi_event,
++		 s32 rssi_level),
+ 
+-	TP_ARGS(sdata, rssi_event),
++	TP_ARGS(sdata, rssi_event, rssi_level),
+ 
+ 	TP_STRUCT__entry(
+ 		VIF_ENTRY
+ 		__field(u32, rssi_event)
++		__field(s32, rssi_level)
+ 	),
+ 
+ 	TP_fast_assign(
+ 		VIF_ASSIGN;
+ 		__entry->rssi_event = rssi_event;
++		__entry->rssi_level = rssi_level;
+ 	),
+ 
+ 	TP_printk(
+-		VIF_PR_FMT " event:%d",
+-		VIF_PR_ARG, __entry->rssi_event
++		VIF_PR_FMT " event:%d rssi:%d",
++		VIF_PR_ARG, __entry->rssi_event, __entry->rssi_level
+ 	)
+ );
+ 
 -- 
-2.11.0
+2.9.3
