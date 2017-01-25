@@ -1,235 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:46465 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751106AbdATCye (ORCPT
+Received: from smtp07.msg.oleane.net ([62.161.4.7]:54514 "EHLO
+        smtp07.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751513AbdAYSUh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 21:54:34 -0500
-Subject: Re: [PATCH v3 2/2] mmc: pwrseq: add support for Marvell SD8787 chip
-To: Ulf Hansson <ulf.hansson@linaro.org>,
-        Matt Ranostay <matt@ranostay.consulting>
-References: <20170113052937.12538-1-matt@ranostay.consulting>
- <20170113052937.12538-3-matt@ranostay.consulting>
- <CAPDyKFpcKuybQmhqCkaAkOM5d+ubU8O8=adLm+PXwc=+N87vng@mail.gmail.com>
-Cc: shawn.lin@rock-chips.com,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Tony Lindgren <tony@atomide.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <68de9e67-a7f2-2cc4-26e6-0d3c0afd95db@rock-chips.com> (sfid-20170120_035453_562874_77767638)
-Date: Fri, 20 Jan 2017 10:42:26 +0800
+        Wed, 25 Jan 2017 13:20:37 -0500
+From: "Jean-Pierre Tosoni" <jp.tosoni@acksys.fr>
+To: "'Vasanthakumar Thiagarajan'" <vthiagar@qti.qualcomm.com>
+Cc: <linux-wireless@vger.kernel.org>
+References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com> <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com>
+In-Reply-To: <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com>
+Subject: RE: [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel in non-ETSI
+Date: Wed, 25 Jan 2017 19:20:31 +0100
+Message-ID: <014301d27737$b693eca0$23bbc5e0$@acksys.fr> (sfid-20170125_192040_109942_1BE23184)
 MIME-Version: 1.0
-In-Reply-To: <CAPDyKFpcKuybQmhqCkaAkOM5d+ubU8O8=adLm+PXwc=+N87vng@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain;
+        charset="iso-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2017/1/19 22:13, Ulf Hansson wrote:
-> +Shawn
->
-> On 13 January 2017 at 06:29, Matt Ranostay <matt@ranostay.consulting> wrote:
->> Allow power sequencing for the Marvell SD8787 Wifi/BT chip.
->> This can be abstracted to other chipsets if needed in the future.
->>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Cc: Ulf Hansson <ulf.hansson@linaro.org>
->> Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
->> ---
->>  drivers/mmc/core/Kconfig         |  10 ++++
->>  drivers/mmc/core/Makefile        |   1 +
->>  drivers/mmc/core/pwrseq_sd8787.c | 117 +++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 128 insertions(+)
->>  create mode 100644 drivers/mmc/core/pwrseq_sd8787.c
->>
->> diff --git a/drivers/mmc/core/Kconfig b/drivers/mmc/core/Kconfig
->> index cdfa8520a4b1..fc1ecdaaa9ca 100644
->> --- a/drivers/mmc/core/Kconfig
->> +++ b/drivers/mmc/core/Kconfig
->> @@ -12,6 +12,16 @@ config PWRSEQ_EMMC
->>           This driver can also be built as a module. If so, the module
->>           will be called pwrseq_emmc.
->>
->> +config PWRSEQ_SD8787
->> +       tristate "HW reset support for SD8787 BT + Wifi module"
->> +       depends on OF && (MWIFIEX || BT_MRVL_SDIO)
->> +       help
->> +         This selects hardware reset support for the SD8787 BT + Wifi
->> +         module. By default this option is set to n.
->> +
->> +         This driver can also be built as a module. If so, the module
->> +         will be called pwrseq_sd8787.
->> +
->>  config PWRSEQ_SIMPLE
->>         tristate "Simple HW reset support for MMC"
->>         default y
->> diff --git a/drivers/mmc/core/Makefile b/drivers/mmc/core/Makefile
->> index b2a257dc644f..0f81464fa824 100644
->> --- a/drivers/mmc/core/Makefile
->> +++ b/drivers/mmc/core/Makefile
->> @@ -10,6 +10,7 @@ mmc_core-y                    := core.o bus.o host.o \
->>                                    quirks.o slot-gpio.o
->>  mmc_core-$(CONFIG_OF)          += pwrseq.o
->>  obj-$(CONFIG_PWRSEQ_SIMPLE)    += pwrseq_simple.o
->> +obj-$(CONFIG_PWRSEQ_SD8787)    += pwrseq_sd8787.o
->>  obj-$(CONFIG_PWRSEQ_EMMC)      += pwrseq_emmc.o
->>  mmc_core-$(CONFIG_DEBUG_FS)    += debugfs.o
->>  obj-$(CONFIG_MMC_BLOCK)                += mmc_block.o
->> diff --git a/drivers/mmc/core/pwrseq_sd8787.c b/drivers/mmc/core/pwrseq_sd8787.c
->> new file mode 100644
->> index 000000000000..f4080fe6439e
->> --- /dev/null
->> +++ b/drivers/mmc/core/pwrseq_sd8787.c
->> @@ -0,0 +1,117 @@
->> +/*
->> + * pwrseq_sd8787.c - power sequence support for Marvell SD8787 BT + Wifi chip
->> + *
->> + * Copyright (C) 2016 Matt Ranostay <matt@ranostay.consulting>
->> + *
->> + * Based on the original work pwrseq_simple.c
->> + *  Copyright (C) 2014 Linaro Ltd
->> + *  Author: Ulf Hansson <ulf.hansson@linaro.org>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License as published by
->> + * the Free Software Foundation; either version 2 of the License, or
->> + * (at your option) any later version.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
->> + * GNU General Public License for more details.
->> + *
->> + */
->> +
->> +#include <linux/delay.h>
->> +#include <linux/init.h>
->> +#include <linux/kernel.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/module.h>
->> +#include <linux/slab.h>
->> +#include <linux/device.h>
->> +#include <linux/err.h>
->> +#include <linux/gpio/consumer.h>
->> +
->> +#include <linux/mmc/host.h>
->> +
->> +#include "pwrseq.h"
->> +
->> +struct mmc_pwrseq_sd8787 {
->> +       struct mmc_pwrseq pwrseq;
->> +       struct gpio_desc *reset_gpio;
->> +       struct gpio_desc *pwrdn_gpio;
->> +};
->> +
->> +#define to_pwrseq_sd8787(p) container_of(p, struct mmc_pwrseq_sd8787, pwrseq)
->> +
->> +static void mmc_pwrseq_sd8787_pre_power_on(struct mmc_host *host)
->> +{
->> +       struct mmc_pwrseq_sd8787 *pwrseq = to_pwrseq_sd8787(host->pwrseq);
->> +
->> +       gpiod_set_value_cansleep(pwrseq->reset_gpio, 1);
->> +
->> +       msleep(300);
->> +       gpiod_set_value_cansleep(pwrseq->pwrdn_gpio, 1);
->> +}
->> +
->> +static void mmc_pwrseq_sd8787_power_off(struct mmc_host *host)
->> +{
->> +       struct mmc_pwrseq_sd8787 *pwrseq = to_pwrseq_sd8787(host->pwrseq);
->> +
->> +       gpiod_set_value_cansleep(pwrseq->pwrdn_gpio, 0);
->> +       gpiod_set_value_cansleep(pwrseq->reset_gpio, 0);
->> +}
->> +
->> +static const struct mmc_pwrseq_ops mmc_pwrseq_sd8787_ops = {
->> +       .pre_power_on = mmc_pwrseq_sd8787_pre_power_on,
->> +       .power_off = mmc_pwrseq_sd8787_power_off,
->> +};
->> +
->> +static const struct of_device_id mmc_pwrseq_sd8787_of_match[] = {
->> +       { .compatible = "mmc-pwrseq-sd8787",},
->> +       {/* sentinel */},
->> +};
->> +MODULE_DEVICE_TABLE(of, mmc_pwrseq_sd8787_of_match);
->> +
->> +static int mmc_pwrseq_sd8787_probe(struct platform_device *pdev)
->> +{
->> +       struct mmc_pwrseq_sd8787 *pwrseq;
->> +       struct device *dev = &pdev->dev;
->> +
->> +       pwrseq = devm_kzalloc(dev, sizeof(*pwrseq), GFP_KERNEL);
->> +       if (!pwrseq)
->> +               return -ENOMEM;
->> +
->> +       pwrseq->pwrdn_gpio = devm_gpiod_get(dev, "pwrdn", GPIOD_OUT_LOW);
->> +       if (IS_ERR(pwrseq->pwrdn_gpio))
->> +               return PTR_ERR(pwrseq->pwrdn_gpio);
->> +
->> +       pwrseq->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
->> +       if (IS_ERR(pwrseq->reset_gpio))
->> +               return PTR_ERR(pwrseq->reset_gpio);
->> +
->> +       pwrseq->pwrseq.dev = dev;
->> +       pwrseq->pwrseq.ops = &mmc_pwrseq_sd8787_ops;
->> +       pwrseq->pwrseq.owner = THIS_MODULE;
->> +       platform_set_drvdata(pdev, pwrseq);
->> +
->> +       return mmc_pwrseq_register(&pwrseq->pwrseq);
->> +}
->> +
->> +static int mmc_pwrseq_sd8787_remove(struct platform_device *pdev)
->> +{
->> +       struct mmc_pwrseq_sd8787 *pwrseq = platform_get_drvdata(pdev);
->> +
->> +       mmc_pwrseq_unregister(&pwrseq->pwrseq);
->> +
->> +       return 0;
->> +}
->> +
->> +static struct platform_driver mmc_pwrseq_sd8787_driver = {
->> +       .probe = mmc_pwrseq_sd8787_probe,
->> +       .remove = mmc_pwrseq_sd8787_remove,
->> +       .driver = {
->> +               .name = "pwrseq_sd8787",
->> +               .of_match_table = mmc_pwrseq_sd8787_of_match,
->> +       },
->> +};
->> +
->> +module_platform_driver(mmc_pwrseq_sd8787_driver);
->> +MODULE_LICENSE("GPL v2");
->> --
->> 2.10.2
->>
->
-> Twisting my head around how this could be integrated smoothly into
-> pwrseq simple. No, I just can find a good way forward without messing
-> up pwrseq simple itself.
->
-> So, for now I decided (once more :-), that let's keep this as separate driver!
+> -----Message d'origine-----
+> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de Vasanthakumar Thiagarajan
+> Envoyé : mercredi 25 janvier 2017 12:31
+> À : johannes@sipsolutions.net
+> Cc : linux-wireless@vger.kernel.org; Vasanthakumar Thiagarajan
+> Objet : [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel
+> in non-ETSI
+> 
+> For non-ETSI regulatory domain, CAC result on DFS channel may not be valid
+> once moving out of that channel (as done during remain-on-channel,
+> scannning and off-channel tx).
+> Running CAC on an operating DFS channel after every off-channel operation
+> will only add complexity and disturb the current link. Better do not allow
+> any off-channel switch from a DFS operating channel in non-ETSI domain.
+> 
 
-I still worry about if there will be more and more seperate drivers. :)
+Moving out should be forbidden only to "master" devices i.e. AP, mesh,
+ad-hoc.
+"Slave" devices i.e. client stations, are not responsible for detecting
+radars, hence, they can do an off-channel scan and go back to a "DFS
+operating channel" without waiting for CAC.
 
-IIRC Peter Chen was trying to move pwrseq out of mmc and use it
-for USB stuff. It seems there is no follow-up plan there but should
-we invent a new directory to fold in all the pweseq stuff there,
-for instance, drivers/mmc/pweseqs/.
-
->
-> Perhaps, following device specific mmc pwrseq drivers will needs
-> something similar, but in such case we can look into that then.
-> Thinking about cw1200 for example.
->
-> Let's get Rob's ack for the DT bindings, seems almost there, then I
-> will queue this.
->
-> Kind regards
-> Uffe
->
->
->
+It looks like your patch would forbid multichannel scan ?
 
 
--- 
-Best Regards
-Shawn Lin
+
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> ---
+>  net/wireless/nl80211.c | 38 ++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c index
+> 63dfa60..c614af4 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -6506,6 +6506,17 @@ static int nl80211_parse_random_mac(struct nlattr
+> **attrs,
+>  	return 0;
+>  }
+> 
+> +static bool cfg80211_off_channel_oper_allowed(struct wireless_dev
+> +*wdev) {
+> +	if (!cfg80211_beaconing_iface_active(wdev))
+> +		return true;
+> +
+> +	if (!(wdev->chandef.chan->flags & IEEE80211_CHAN_RADAR))
+> +		return true;
+> +
+> +	return regulatory_pre_cac_allowed(wdev->wiphy);
+> +}
+> +
+>  static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info
+> *info)  {
+>  	struct cfg80211_registered_device *rdev = info->user_ptr[0]; @@ -
+> 6631,6 +6642,21 @@ static int nl80211_trigger_scan(struct sk_buff *skb,
+> struct genl_info *info)
+> 
+>  	request->n_channels = i;
+> 
+> +	if (!cfg80211_off_channel_oper_allowed(wdev)) {
+> +		struct ieee80211_channel *chan;
+> +
+> +		if (request->n_channels != 1) {
+> +			err = -EBUSY;
+> +			goto out_free;
+> +		}
+> +
+> +		chan = request->channels[0];
+> +		if (chan->center_freq != wdev->chandef.chan->center_freq) {
+> +			err = -EBUSY;
+> +			goto out_free;
+> +		}
+> +	}
+> +
+>  	i = 0;
+>  	if (n_ssids) {
+>  		nla_for_each_nested(attr, info-
+> >attrs[NL80211_ATTR_SCAN_SSIDS], tmp) { @@ -9053,6 +9079,7 @@ static int
+> nl80211_remain_on_channel(struct sk_buff *skb,
+>  	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>  	struct wireless_dev *wdev = info->user_ptr[1];
+>  	struct cfg80211_chan_def chandef;
+> +	const struct cfg80211_chan_def *compat_chandef;
+>  	struct sk_buff *msg;
+>  	void *hdr;
+>  	u64 cookie;
+> @@ -9081,6 +9108,14 @@ static int nl80211_remain_on_channel(struct sk_buff
+> *skb,
+>  	if (err)
+>  		return err;
+> 
+> +	if (!(cfg80211_off_channel_oper_allowed(wdev) ||
+> +	      cfg80211_chandef_identical(&wdev->chandef, &chandef))) {
+> +		compat_chandef = cfg80211_chandef_compatible(&wdev->chandef,
+> +							     &chandef);
+> +		if (compat_chandef != &chandef)
+> +			return -EBUSY;
+> +	}
+> +
+>  	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+>  	if (!msg)
+>  		return -ENOMEM;
+> @@ -9256,6 +9291,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb,
+> struct genl_info *info)
+>  	if (!chandef.chan && params.offchan)
+>  		return -EINVAL;
+> 
+> +	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev))
+> +		return -EBUSY;
+> +
+>  	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
+>  	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
+> 
+> --
+> 1.9.1
