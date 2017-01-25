@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43878 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751112AbdALPqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 10:46:44 -0500
-Message-ID: <1484235986.19860.1.camel@sipsolutions.net> (sfid-20170112_164647_857564_7351E442)
-Subject: Re: [PATCH] ath10k: prevent sta pointer rcu violation
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>, kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        greearb@candelatech.com, mohammed@qti.qualcomm.com
-Date: Thu, 12 Jan 2017 16:46:26 +0100
-In-Reply-To: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com> (sfid-20170112_161320_723424_362B312F)
-References: <1484234070-7431-1-git-send-email-michal.kazior@tieto.com>
-         (sfid-20170112_161320_723424_362B312F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:34671 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751242AbdAYX4Z (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Jan 2017 18:56:25 -0500
+Received: by mail-pg0-f42.google.com with SMTP id 14so68262434pgg.1
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2017 15:56:25 -0800 (PST)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] nl80211: Fix mesh HT operation check
+Date: Thu, 26 Jan 2017 08:56:13 +0900
+Message-Id: <1485388573-4264-1-git-send-email-masashi.honma@gmail.com> (sfid-20170126_005634_579432_E21360A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-12 at 16:14 +0100, Michal Kazior wrote:
-> Station pointers are RCU protected so driver must
-> be extra careful if it tries to store them
-> internally for later use outside of the RCU
-> section it obtained it in.
-> 
-> It was possible for station teardown to race with
-> some htt events. The possible outcome could be a
-> use-after-free and a crash.
-> 
-> Only peer-flow-control capable firmware was
-> affected (so hardware-wise qca99x0 and qca4019).
-> 
-> This could be done in sta_state() itself via
-> explicit synchronize_net() call but there's
-> already a convenient sta_pre_rcu_remove() op that
-> can be hooked up to avoid extra rcu stall.
+commit 9757235f451c27deaa88925399f070ff6fcea832 ('nl80211: correct
+checks for NL80211_MESHCONF_HT_OPMODE value') missed to mask a flag
+when replacing FILL_IN_MESH_PARAM_IF_SET with checking codes. This
+could drop the received HT operation value when called by
+nl80211_update_mesh_config().
 
-I don't think this makes sense. You're not using RCU-protected pointers
-to the stations yourself, all accesses to them are locked under the
-&ar->data_lock. As a consequence, you can't have any need for waiting
-for a grace period. Since you also remove the pointer (under lock) when
-the station gets removed, I don't think RCU can be the problem?
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/wireless/nl80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-johannes
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index e6ed8dc..006c147 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5924,6 +5924,7 @@ do {									    \
+ 			break;
+ 		}
+ 		cfg->ht_opmode = ht_opmode;
++		mask |= (1 << (NL80211_MESHCONF_HT_OPMODE - 1));
+ 	}
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+ 				  1, 65535, mask,
+-- 
+2.7.4
