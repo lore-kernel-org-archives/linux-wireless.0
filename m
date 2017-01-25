@@ -1,120 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:33084 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751372AbdAaP7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 10:59:24 -0500
-Date: Tue, 31 Jan 2017 07:59:18 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pavel Machek <pavel@ucw.cz>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170131155918.GD7403@atomide.com> (sfid-20170131_170017_835424_E4D10D58)
-References: <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
- <20170127103408.GG24223@pali>
- <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
- <20170127115706.GH24223@pali>
- <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
- <20170127131146.GI24223@pali>
- <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
- <20170127194012.GE20571@amd>
- <20170130175309.GY7403@atomide.com>
- <8737fzrb36.fsf@kamboji.qca.qualcomm.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53560 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbdAYLcN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Jan 2017 06:32:13 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+        Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel in non-ETSI
+Date: Wed, 25 Jan 2017 17:01:09 +0530
+Message-ID: <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20170125_123215_700934_81463119)
+In-Reply-To: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <8737fzrb36.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Kalle Valo <kvalo@codeaurora.org> [170130 22:36]:
-> Tony Lindgren <tony@atomide.com> writes:
-> 
-> > * Pavel Machek <pavel@ucw.cz> [170127 11:41]:
-> >> On Fri 2017-01-27 17:23:07, Kalle Valo wrote:
-> >> > Pali Rohár <pali.rohar@gmail.com> writes:
-> >> > 
-> >> > > On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
-> >> > >> Pali Rohár <pali.rohar@gmail.com> writes:
-> >> > >> 
-> >> > >> > 2) It was already tested that example NVS data can be used for N900 e.g.
-> >> > >> > for SSH connection. If real correct data are not available it is better
-> >> > >> > to use at least those example (and probably log warning message) so user
-> >> > >> > can connect via SSH and start investigating where is problem.
-> >> > >> 
-> >> > >> I disagree. Allowing default calibration data to be used can be
-> >> > >> unnoticed by user and left her wondering why wifi works so badly.
-> >> > >
-> >> > > So there are only two options:
-> >> > >
-> >> > > 1) Disallow it and so these users will have non-working wifi.
-> >> > >
-> >> > > 2) Allow those data to be used as fallback mechanism.
-> >> > >
-> >> > > And personally I'm against 1) because it will break wifi support for
-> >> > > *all* Nokia N900 devices right now.
-> >> > 
-> >> > All two of them? :)
-> >> 
-> >> Umm. You clearly want a flock of angry penguins at your doorsteps :-).
-> >
-> > Well this silly issue of symlinking and renaming nvs files in a standard
-> > Linux distro was also hitting me on various devices with wl12xx/wl18xx
-> > trying to use the same rootfs.
-> >
-> > Why don't we just set a custom compatible property for n900 that then
-> > picks up some other nvs file instead of the default?
-> 
-> Please don't. An ugly kernel workaround in kernel because of user space
-> problems is a bad idea. wl1251 should just ask for NVS file from user
-> space, it shouldn't care if it's a "default" file or something else.
-> That's a user space policy decision.
+For non-ETSI regulatory domain, CAC result on DFS channel
+may not be valid once moving out of that channel (as done
+during remain-on-channel, scannning and off-channel tx).
+Running CAC on an operating DFS channel after every off-channel
+operation will only add complexity and disturb the current
+link. Better do not allow any off-channel switch from a DFS
+operating channel in non-ETSI domain.
 
-Grr I keep forgetting it needs to be for each device manufactured so
-yeah that won't work.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ net/wireless/nl80211.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-The names of standard distro files are hardcoded into the kernel
-driver so it's also a kernel problem though :p
-
-How about a custom devices tree property saying "needs-custom-firmware"?
-
-Something that would prevent anything being loaded until user space
-loads the firmware. It could also be set in the driver automatically
-based on the compatible flag if we always want it enabled. And we could
-have some cmdline option to ignore it. Or the other way around whatever
-makes sense.
-
-> Why can't you do something like this:
-> 
-> * rename the NVS file linux-firmware to wl1251-nvs.bin.example
-
-As that name is hardcoded in the kernel and that file is provided by
-all standard distros, let's assume we just have to deal with that ABI
-forever.
-
-> * before distro updates linux-firmware create yours own deb/rpm/whatever
->   package "wl1251-firmware" which installs your flavor of nvs file (or
->   the user fallback helper if more dynamic functionality is preferred)
-
-And that won't work when using the same file system on other machines.
-
-Think NFSroot for example. At least I'm using the same NFSroot across
-about 15 different machines including one n900 macro board with smc91x
-Ethernet.
-
-Regards,
-
-Tony
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 63dfa60..c614af4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6506,6 +6506,17 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
+ 	return 0;
+ }
+ 
++static bool cfg80211_off_channel_oper_allowed(struct wireless_dev *wdev)
++{
++	if (!cfg80211_beaconing_iface_active(wdev))
++		return true;
++
++	if (!(wdev->chandef.chan->flags & IEEE80211_CHAN_RADAR))
++		return true;
++
++	return regulatory_pre_cac_allowed(wdev->wiphy);
++}
++
+ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+@@ -6631,6 +6642,21 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	request->n_channels = i;
+ 
++	if (!cfg80211_off_channel_oper_allowed(wdev)) {
++		struct ieee80211_channel *chan;
++
++		if (request->n_channels != 1) {
++			err = -EBUSY;
++			goto out_free;
++		}
++
++		chan = request->channels[0];
++		if (chan->center_freq != wdev->chandef.chan->center_freq) {
++			err = -EBUSY;
++			goto out_free;
++		}
++	}
++
+ 	i = 0;
+ 	if (n_ssids) {
+ 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
+@@ -9053,6 +9079,7 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct wireless_dev *wdev = info->user_ptr[1];
+ 	struct cfg80211_chan_def chandef;
++	const struct cfg80211_chan_def *compat_chandef;
+ 	struct sk_buff *msg;
+ 	void *hdr;
+ 	u64 cookie;
+@@ -9081,6 +9108,14 @@ static int nl80211_remain_on_channel(struct sk_buff *skb,
+ 	if (err)
+ 		return err;
+ 
++	if (!(cfg80211_off_channel_oper_allowed(wdev) ||
++	      cfg80211_chandef_identical(&wdev->chandef, &chandef))) {
++		compat_chandef = cfg80211_chandef_compatible(&wdev->chandef,
++							     &chandef);
++		if (compat_chandef != &chandef)
++			return -EBUSY;
++	}
++
+ 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+ 	if (!msg)
+ 		return -ENOMEM;
+@@ -9256,6 +9291,9 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	if (!chandef.chan && params.offchan)
+ 		return -EINVAL;
+ 
++	if (params.offchan && !cfg80211_off_channel_oper_allowed(wdev))
++		return -EBUSY;
++
+ 	params.buf = nla_data(info->attrs[NL80211_ATTR_FRAME]);
+ 	params.len = nla_len(info->attrs[NL80211_ATTR_FRAME]);
+ 
+-- 
+1.9.1
