@@ -1,94 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f47.google.com ([209.85.214.47]:35286 "EHLO
-        mail-it0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936425AbdAEUpd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 5 Jan 2017 15:45:33 -0500
-Received: by mail-it0-f47.google.com with SMTP id c20so925963itb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 05 Jan 2017 12:45:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1483616763.4394.8.camel@sipsolutions.net>
-References: <94eb2c110db85c2379054172dad0@google.com> <1480948100.31788.15.camel@sipsolutions.net>
- <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
- <1481093061.4092.17.camel@sipsolutions.net> <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
- <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com> <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
- <1481645205.20412.32.camel@sipsolutions.net> <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
- <1483536510.7312.5.camel@sipsolutions.net> <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
- <1483616763.4394.8.camel@sipsolutions.net>
-From: Dmitry Shmidt <dimitrysh@google.com>
-Date: Thu, 5 Jan 2017 12:45:31 -0800
-Message-ID: <CAH7ZN-w6KF2ReeU2=a7qafQBknEDqR1KLvv3gmgOY2tf70MM2w@mail.gmail.com> (sfid-20170105_214537_566195_7CA30366)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:33762 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750938AbdAYQg5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 25 Jan 2017 11:36:57 -0500
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4/4] ath9k: fix race condition in enabling/disabling IRQs
+Date: Wed, 25 Jan 2017 17:36:54 +0100
+Message-Id: <20170125163654.66431-4-nbd@nbd.name> (sfid-20170125_173708_880538_D9168E94)
+In-Reply-To: <20170125163654.66431-1-nbd@nbd.name>
+References: <20170125163654.66431-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 5, 2017 at 3:46 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
->> If we go with approach to use parameters and let FW or MAC80211
->> layer to decide what type of scan to do,
->
-> At that point though, is it even meaningful to ask "what type of scan
-> is this"? Or put another way - what does "scan type" even mean?
+The code currently relies on refcounting to disable IRQs from within the
+IRQ handler and re-enabling them again after the tasklet has run.
 
-Probably not - if we focus on actions and results then type of
-scan is meaningless - at the end it is scan + after actions.
+However, due to race conditions sometimes the IRQ handler might be
+called twice, or the tasklet may not run at all (if interrupted in the
+middle of a reset).
 
->> then in general the only
->> difference between different types of scan is what to do with result:
->> - Normal scan: ssid list, channel list, dwell params, etc...
->> - Sched scan: ssid list, channel list, interval
->> - BSSID scan: bssid list, channel list, interval
->> Action: Report when suitable results are found (in case of Normal
->> scan it will be at the end of scan)
->>
->> - Roaming / Autojoin: ssid list, channel list, interval
->> Action: Connect when suitable results are found
->>
->> - History scan: bssid list, channel list, interval
->> Action: Report when buffer is full / almost full
->
-> Exactly. But the type of action is something set by the entity that
-> triggered the scan, right? normal and roam would be equivalent anyway,
-> no? wpa_supplicant would make a decision to connect - after the results
-> are coming in.
+This can cause nasty imbalances in the irq-disable refcount which will
+get the driver permanently stuck until the entire radio has been stopped
+and started again (ath_reset will not recover from this).
 
-> Oh, then again, maybe you're thinking of full-MAC devices - does a
-> roam/autojoin scan really already *imply* a new connection? And if so,
-> do we have to do it that way, or can we remove that type of action and
-> make a connection decision in higher layers, so it's really the same as
-> "report when suitable results are found"?
+Instead of using this fragile logic, change the code to ensure that
+running the irq handler during tasklet processing is safe, and leave the
+refcount untouched.
 
-We need to consider case when FW may do some actions like connection
-during roaming/autojoin.
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |  1 +
+ drivers/net/wireless/ath/ath9k/init.c  |  1 +
+ drivers/net/wireless/ath/ath9k/mac.c   | 44 ++++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/mac.h   |  1 +
+ drivers/net/wireless/ath/ath9k/main.c  | 15 ++++++++----
+ 5 files changed, 48 insertions(+), 14 deletions(-)
 
->> So we can literally distinguish scan types by final action.
->
-> Actually I think I'm just misinterpreting your wording - you mean that
-> we can use the different final actions for the different scan types,
-> not that we should actually say - in driver/firmware/... - "this is a
-> history scan because the action is to report buffer full", right?
-
-It depends how we want to make it flexible. For example we
-may allow to FW to report even usual scan results not one by one
-but as a chunk.
-
->> And for History scan we need new get_scan_results() command.
->>
->> Does it sound reasonable?
->
-> I think it does.
->
-> There's a bit more complication wrt. the level of detail in results
-> though - sometimes the result may include all IEs (normal/sched scan),
-> sometimes it may not ("history scan") - are we sure we really only need
-> one new get_scan_results()?
-
-Maybe not - it is possible I missed something. Also looking at our
-conversation I think we should consider separate command pair
-for history scan.
-
-> johannes
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index a396c99ee84d..46dfca522be3 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -998,6 +998,7 @@ struct ath_softc {
+ 	struct survey_info *cur_survey;
+ 	struct survey_info survey[ATH9K_NUM_CHANNELS];
+ 
++	spinlock_t intr_lock;
+ 	struct tasklet_struct intr_tq;
+ 	struct tasklet_struct bcon_tasklet;
+ 	struct ath_hw *sc_ah;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index a2f7f48bbb92..fa4b3cc1ba22 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -669,6 +669,7 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 		common->bt_ant_diversity = 1;
+ 
+ 	spin_lock_init(&common->cc_lock);
++	spin_lock_init(&sc->intr_lock);
+ 	spin_lock_init(&sc->sc_serial_rw);
+ 	spin_lock_init(&sc->sc_pm_lock);
+ 	spin_lock_init(&sc->chan_lock);
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index f79587570af6..c059dfcaca22 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -810,21 +810,12 @@ void ath9k_hw_disable_interrupts(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_disable_interrupts);
+ 
+-void ath9k_hw_enable_interrupts(struct ath_hw *ah)
++static void __ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 sync_default = AR_INTR_SYNC_DEFAULT;
+ 	u32 async_mask;
+ 
+-	if (!(ah->imask & ATH9K_INT_GLOBAL))
+-		return;
+-
+-	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
+-		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
+-			atomic_read(&ah->intr_ref_cnt));
+-		return;
+-	}
+-
+ 	if (AR_SREV_9340(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+ 	    AR_SREV_9561(ah))
+ 		sync_default &= ~AR_INTR_SYNC_HOST1_FATAL;
+@@ -846,6 +837,39 @@ void ath9k_hw_enable_interrupts(struct ath_hw *ah)
+ 	ath_dbg(common, INTERRUPT, "AR_IMR 0x%x IER 0x%x\n",
+ 		REG_READ(ah, AR_IMR), REG_READ(ah, AR_IER));
+ }
++
++void ath9k_hw_resume_interrupts(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (!(ah->imask & ATH9K_INT_GLOBAL))
++		return;
++
++	if (atomic_read(&ah->intr_ref_cnt) != 0) {
++		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
++			atomic_read(&ah->intr_ref_cnt));
++		return;
++	}
++
++	__ath9k_hw_enable_interrupts(ah);
++}
++EXPORT_SYMBOL(ath9k_hw_resume_interrupts);
++
++void ath9k_hw_enable_interrupts(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (!(ah->imask & ATH9K_INT_GLOBAL))
++		return;
++
++	if (!atomic_inc_and_test(&ah->intr_ref_cnt)) {
++		ath_dbg(common, INTERRUPT, "Do not enable IER ref count %d\n",
++			atomic_read(&ah->intr_ref_cnt));
++		return;
++	}
++
++	__ath9k_hw_enable_interrupts(ah);
++}
+ EXPORT_SYMBOL(ath9k_hw_enable_interrupts);
+ 
+ void ath9k_hw_set_interrupts(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 3bab01435a86..770fc11b41d1 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -744,6 +744,7 @@ void ath9k_hw_set_interrupts(struct ath_hw *ah);
+ void ath9k_hw_enable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_disable_interrupts(struct ath_hw *ah);
+ void ath9k_hw_kill_interrupts(struct ath_hw *ah);
++void ath9k_hw_resume_interrupts(struct ath_hw *ah);
+ 
+ void ar9002_hw_attach_mac_ops(struct ath_hw *ah);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 985b1cade4a4..d8ea087bdd07 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -375,9 +375,14 @@ void ath9k_tasklet(unsigned long data)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	enum ath_reset_type type;
+ 	unsigned long flags;
+-	u32 status = sc->intrstatus;
++	u32 status;
+ 	u32 rxmask;
+ 
++	spin_lock_irqsave(&sc->intr_lock, flags);
++	status = sc->intrstatus;
++	sc->intrstatus = 0;
++	spin_unlock_irqrestore(&sc->intr_lock, flags);
++
+ 	ath9k_ps_wakeup(sc);
+ 	spin_lock(&sc->sc_pcu_lock);
+ 
+@@ -480,7 +485,7 @@ void ath9k_tasklet(unsigned long data)
+ 	ath9k_btcoex_handle_interrupt(sc, status);
+ 
+ 	/* re-enable hardware interrupt */
+-	ath9k_hw_enable_interrupts(ah);
++	ath9k_hw_resume_interrupts(ah);
+ out:
+ 	spin_unlock(&sc->sc_pcu_lock);
+ 	ath9k_ps_restore(sc);
+@@ -544,7 +549,9 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 		return IRQ_NONE;
+ 
+ 	/* Cache the status */
+-	sc->intrstatus = status;
++	spin_lock(&sc->intr_lock);
++	sc->intrstatus |= status;
++	spin_unlock(&sc->intr_lock);
+ 
+ 	if (status & SCHED_INTR)
+ 		sched = true;
+@@ -590,7 +597,7 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 
+ 	if (sched) {
+ 		/* turn off every interrupt */
+-		ath9k_hw_disable_interrupts(ah);
++		ath9k_hw_kill_interrupts(ah);
+ 		tasklet_schedule(&sc->intr_tq);
+ 	}
+ 
+-- 
+2.11.0
