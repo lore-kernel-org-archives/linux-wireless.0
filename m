@@ -1,107 +1,216 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36724 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934156AbdADVUD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 16:20:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <3fc87224-7f08-e365-7bbb-a4b8b5746e4f@broadcom.com>
-References: <20170104175832.25996-1-zajec5@gmail.com> <20170104175832.25996-4-zajec5@gmail.com>
- <3fc87224-7f08-e365-7bbb-a4b8b5746e4f@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Wed, 4 Jan 2017 22:19:57 +0100
-Message-ID: <CACna6rxay9sC+QT2G4AfjWT1ERsNDzFQ620hNhVhr0FRHXJu=w@mail.gmail.com> (sfid-20170104_222011_976745_A36E0AB4)
-Subject: Re: [PATCH V6 4/3] brcmfmac: use wiphy_read_of_freq_limits to respect
- extra limits
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:47966 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751774AbdAZJeH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 04:34:07 -0500
+Message-ID: <1485423244.11038.4.camel@sipsolutions.net> (sfid-20170126_103412_359228_62B31662)
+Subject: Re: [RFC 1/3] cfg80211: Make pre-CAC results valid only for ETSI
+ domain
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 26 Jan 2017 10:34:04 +0100
+In-Reply-To: <1485343870-23601-2-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1485343870-23601-2-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 January 2017 at 21:07, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 4-1-2017 18:58, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> There are some devices (e.g. Netgear R8000 home router) with one chipset
->> model used for different radios, some of them limited to subbands. NVRAM
->> entries don't contain any extra info on such limitations and firmware
->> reports full list of channels to us. We need to store extra limitation
->> info in DT to support such devices properly.
->>
->> Now there is a cfg80211 helper for reading such info use it in brcmfmac.
->> This patch adds check for channel being disabled with orig_flags which
->> is how this wiphy helper and wiphy_register work.
->>
->> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->> ---
->> This patch should probably go through wireless-driver-next which is why
->> it got weird number 4/3. I'm sending it just as a proof of concept.
->> It was succesfully tested on SmartRG SR400ac with BCM43602.
->>
->> V4: Respect IEEE80211_CHAN_DISABLED in orig_flags
->> V5: Update commit message
->> V6: Call wiphy_read_of_freq_limits after brcmf_setup_wiphybands to make =
-it work
->>     with helper setting "flags" instead of "orig_flags".
->> ---
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++=
-+-
->>  1 file changed, 8 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c=
- b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> index ccae3bb..a008ba5 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> @@ -5886,6 +5886,9 @@ static int brcmf_construct_chaninfo(struct brcmf_c=
-fg80211_info *cfg,
->>                                                      band->band);
->>               channel[index].hw_value =3D ch.control_ch_num;
->>
->> +             if (channel->orig_flags & IEEE80211_CHAN_DISABLED)
->> +                     continue;
->> +
->
-> So to be clear this is still needed for subsequent calls to
-> brcmf_setup_wiphybands(). The subsequent calls are done from the
-> regulatory notifier. So I think we have an issue with this approach. Say
-> the device comes up with US. That would set DISABLED flags for channels
-> 12 to 14. With a country update to PL we would want to enable channels
-> 12 and 13, right? The orig_flags are copied from the initial flags
-> during wiphy_register() so it seems we will skip enabling 12 and 13. I
-> think we should remove the check above and call
-> wiphy_read_of_freq_limits() as a last step within
-> brcmf_setup_wiphybands(). It means it is called every time, but it
-> safeguards that the limits in DT are always applied.
 
-I'm not exactly happy with channels management in brcmfmac. Before
-calling wiphy_register it already disables channels unavailable for
-current country. This results in setting IEEE80211_CHAN_DISABLED in
-orig_flags of channels that may become available later, after country
-change. Please note it happens even right now, without this patch.
-Maybe you can workaround this by ignoring orig_flags in custom
-regulatory code, but I'd just prefer to have it nicely handled in the
-first place.
+> +		/* Should we apply the grace period during beaconing
+> interface
+> +		 * shutdown also?
+> +		 */
+> +		cfg80211_sched_dfs_chan_update(rdev);
 
-This is the next feature I'm going to work on. AFAIU this patch won't
-be applied for now (it's for wireless-drivers-next and we first need
-to get wiphy_read_of_freq_limits in that tree). By the time that
-happens I may have another patchset cleaning brcmfmac ready. And FWIW
-this patch wouldn't make things worse *at this point* as we don't
-really support country switching for any device yet.
+It might make some sense, say if hostapd crashes and you restart it
+automatically or something?
 
-So I hope problem with channels in brcmfmac doesn't mean we need to
-postpone patches 1-3.
+>  	return err;
+> diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+> index 5497d022..090309a 100644
+> --- a/net/wireless/chan.c
+> +++ b/net/wireless/chan.c
+> @@ -456,6 +456,102 @@ bool cfg80211_chandef_dfs_usable(struct wiphy
+> *wiphy,
+>  	return (r1 + r2 > 0);
+>  }
+>  
+> +static bool cfg80211_5ghz_sub_chan(struct cfg80211_chan_def
+> *chandef,
+> +				   struct ieee80211_channel *chan)
 
---=20
-Rafa=C5=82
+This could use some explanation, and I don't see anything that's really
+5 GHz specific in here, so why that in the function name?
+
+> +	u32 start_freq_seg0 = 0, end_freq_seg0 = 0;
+> +	u32 start_freq_seg1 = 0, end_freq_seg1 = 0;
+> +
+> +	if (chandef->chan->center_freq == chan->center_freq)
+> +		return true;
+> +
+> +	switch (chandef->width) {
+> +	case NL80211_CHAN_WIDTH_40:
+> +		start_freq_seg0 = chandef->center_freq1 - 20;
+> +		end_freq_seg0 = chandef->center_freq1 + 20;
+> +		break;
+> +	case NL80211_CHAN_WIDTH_80P80:
+> +		start_freq_seg1 = chandef->center_freq2 - 40;
+> +		end_freq_seg1 = chandef->center_freq2 + 40;
+> +		/* fall through */
+> +	case NL80211_CHAN_WIDTH_80:
+> +		start_freq_seg0 = chandef->center_freq1 - 40;
+> +		end_freq_seg0 = chandef->center_freq1 + 40;
+> +		break;
+> +	case NL80211_CHAN_WIDTH_160:
+> +		start_freq_seg0 = chandef->center_freq1 - 80;
+> +		end_freq_seg0 = chandef->center_freq1 + 80;
+> +		break;
+> +	case NL80211_CHAN_WIDTH_20_NOHT:
+> +	case NL80211_CHAN_WIDTH_20:
+> +	case NL80211_CHAN_WIDTH_5:
+> +	case NL80211_CHAN_WIDTH_10:
+> +		break;
+> +	}
+> +
+> +	if (chan->center_freq > start_freq_seg0 &&
+> +	    chan->center_freq < end_freq_seg0)
+> +		return true;
+> +
+> +	return chan->center_freq > start_freq_seg1 &&
+> +		chan->center_freq < end_freq_seg1;
+> +}
+
+It's also written pretty oddly... The 5/10/20 cases could return
+immediately, the start/end could be replaced by width, and the
+initializations wouldn't be needed at all ... I think we can do better
+here.
+
+> +bool cfg80211_5ghz_any_wiphy_oper_chan(struct wiphy *wiphy,
+> +				       struct ieee80211_channel
+> *chan)
+
+Again, nothing 5 GHz specific.
+
+> +	struct wireless_dev *wdev;
+> +
+> +	ASSERT_RTNL();
+> +
+> +	if (!(chan->flags & IEEE80211_CHAN_RADAR))
+> +		return false;
+> +
+> +	list_for_each_entry(wdev, &wiphy->wdev_list, list) {
+> +		if (!cfg80211_beaconing_iface_active(wdev))
+> +			continue;
+> +
+> +		if (cfg80211_5ghz_sub_chan(&wdev->chandef, chan))
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
+>  
+>  static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
+>  					     u32 center_freq,
+> diff --git a/net/wireless/core.h b/net/wireless/core.h
+> index 58ca206..327fe95 100644
+> --- a/net/wireless/core.h
+> +++ b/net/wireless/core.h
+> @@ -459,6 +459,13 @@ void cfg80211_set_dfs_state(struct wiphy *wiphy,
+>  cfg80211_chandef_dfs_cac_time(struct wiphy *wiphy,
+>  			      const struct cfg80211_chan_def
+> *chandef);
+>  
+> +void cfg80211_sched_dfs_chan_update(struct
+> cfg80211_registered_device *rdev);
+> +
+> +bool cfg80211_5ghz_any_wiphy_oper_chan(struct wiphy *wiphy,
+> +				       struct ieee80211_channel
+> *chan);
+> +
+> +bool cfg80211_beaconing_iface_active(struct wireless_dev *wdev);
+> +
+>  static inline unsigned int elapsed_jiffies_msecs(unsigned long
+> start)
+>  {
+>  	unsigned long end = jiffies;
+> diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+> index 364f900..10bf040 100644
+> --- a/net/wireless/ibss.c
+> +++ b/net/wireless/ibss.c
+> @@ -190,6 +190,7 @@ static void __cfg80211_clear_ibss(struct
+> net_device *dev, bool nowext)
+>  	if (!nowext)
+>  		wdev->wext.ibss.ssid_len = 0;
+>  #endif
+> +	cfg80211_sched_dfs_chan_update(rdev);
+>  }
+>  
+>  void cfg80211_clear_ibss(struct net_device *dev, bool nowext)
+> diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+> index 2d8518a..ec0b1c2 100644
+> --- a/net/wireless/mesh.c
+> +++ b/net/wireless/mesh.c
+> @@ -262,6 +262,7 @@ int __cfg80211_leave_mesh(struct
+> cfg80211_registered_device *rdev,
+>  		wdev->beacon_interval = 0;
+>  		memset(&wdev->chandef, 0, sizeof(wdev->chandef));
+>  		rdev_set_qos_map(rdev, dev, NULL);
+> +		cfg80211_sched_dfs_chan_update(rdev);
+>  	}
+>  
+>  	return err;
+> diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+> index 22b3d99..3c7e155 100644
+> --- a/net/wireless/mlme.c
+> +++ b/net/wireless/mlme.c
+> @@ -745,6 +745,12 @@ bool cfg80211_rx_mgmt(struct wireless_dev *wdev,
+> int freq, int sig_mbm,
+>  }
+>  EXPORT_SYMBOL(cfg80211_rx_mgmt);
+>  
+> +void cfg80211_sched_dfs_chan_update(struct
+> cfg80211_registered_device *rdev)
+> +{
+> +	cancel_delayed_work(&rdev->dfs_update_channels_wk);
+> +	queue_delayed_work(cfg80211_wq, &rdev-
+> >dfs_update_channels_wk, 0);
+> +}
+
+This uses 0.
+
+> @@ -820,9 +844,7 @@ void cfg80211_radar_event(struct wiphy *wiphy,
+>  	 */
+>  	cfg80211_set_dfs_state(wiphy, chandef,
+> NL80211_DFS_UNAVAILABLE);
+>  
+> -	timeout = msecs_to_jiffies(IEEE80211_DFS_MIN_NOP_TIME_MS);
+> -	queue_delayed_work(cfg80211_wq, &rdev-
+> >dfs_update_channels_wk,
+> -			   timeout);
+> +	cfg80211_sched_dfs_chan_update(rdev);
+
+But this didn't - why does that change?
+
+> +unsigned long regulatory_get_pre_cac_timeout(struct wiphy *wiphy)
+> +{
+> +	if (!regulatory_pre_cac_allowed(wiphy))
+> +		return REG_PRE_CAC_EXPIRY_GRACE_MS;
+> +
+> +	/*
+> +	 * Return the maximum pre-CAC timeout when pre-CAC is
+> allowed
+> +	 * in the current dfs domain (ETSI).
+> +	 */
+> +	return -1;
+> +}
+
+Don't ever return -1, that's -EPERM and not really what you want
+anyway.
+
+In fact, this doesn't even make sense, since the only caller already
+checks regulatory_pre_cac_allowed() before calling this.
+
+johannes
