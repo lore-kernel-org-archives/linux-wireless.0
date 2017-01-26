@@ -1,60 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58205 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdA0Ta1 (ORCPT
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:32868 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752208AbdAZNpB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 14:30:27 -0500
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] ath10k: Search SMBIOS for OEM board file extension
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20170117150334.8859-1-ext.waldemar.rymarkiewicz@tieto.com>
-References: <20170117150334.8859-1-ext.waldemar.rymarkiewicz@tieto.com>
-To: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
-CC: <ath10k@lists.infradead.org>, <alanliu@qca.qualcomm.com>,
-        <rwchang@qti.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-        "Waldemar Rymarkiewicz" <ext.waldemar.rymarkiewicz@tieto.com>,
-        <bartosz.markowski@tieto.com>
-Message-ID: <c57e3b178364400c914677dc577753ae@eusanexr01a.eu.qualcomm.com> (sfid-20170127_203140_039020_ABDF16C0)
-Date: Fri, 27 Jan 2017 11:30:21 -0800
+        Thu, 26 Jan 2017 08:45:01 -0500
+Message-ID: <1485438299.5145.117.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170126_144616_973604_80C39640)
+Subject: Re: IPv6-UDP 0x0000 checksum
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 26 Jan 2017 05:44:59 -0800
+In-Reply-To: <1485437276.14760.3.camel@sipsolutions.net>
+References: <1485437276.14760.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com> wrote:
-> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
-> board data file is identified, among others, by device and sybsystem ids.
+On Thu, 2017-01-26 at 14:27 +0100, Johannes Berg wrote:
+> Hi,
 > 
-> The problem, however, can occur when the (default) board data file cannot
-> fulfill with the vendor requirements and it is necessary to use a different
-> board data file.
+> It looks like right now we may have a hardware bug and accept 0x0000 as
+> valid, when the outcome of the calculation is 0xffff.
 > 
-> To solve the issue QCA uses SMBIOS type 0xF8 to store Board Data File Name
-> Extension to specify the extension/variant name. The driver will take the
-> extension suffix into consideration and will load the right (non-default)
-> board data file if necessary.
+> What do you think we should do about this?
 > 
-> If it is unnecessary to use extension board data file, please leave the
-> SMBIOS field blank and default configuration will be used.
+> We could ignore the issue entirely, since 0 wasn't ever supposed to be
+> sent anyway - but then we don't drop frames that we should drop. I
+> didn't manage to find the code in the IPv6/UDP stack that even does
+> that, but I assume it's there somewhere.
 > 
-> Example:
-> If a default board data file for a specific board is identified by a string
->       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
->        subsystem-device=0310"
-> then the OEM specific data file, if used, could be identified by variant
-> suffix:
->       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
->        subsystem-device=0310,variant=DE_1AB"
+> Alternatively, we could parse the packet to find the checksum inside,
+> and if it's 0 then don't report CHECKSUM_UNNECESSARY, but that seems
+> rather expensive/difficult due to the IPv6 variable header and all
+> that. If we wanted to go this route, are there any helper functions for
+> this?
 > 
-> Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+> Unfortunately, in the current devices, we neither have a complete
+> indication that the packet was even UDP-IPv6, nor do we have the raw
+> csum or anything like that. I think they're adding that to the next
+> hardware spin, but we probably need to address this issue now.
+> 
+> johannes
 
-Patch applied to ath-next branch of ath.git, thanks.
+Hi Johannes
 
-f2593cb1b291 ath10k: Search SMBIOS for OEM board file extension
+I am afraid information is missing.
 
--- 
-https://patchwork.kernel.org/patch/9521307/
+Is this a xmit or rcv problem ?
 
-Documentation about submitting wireless patches and checking status
-from patchwork:
+I recently fixed an issue, could this be this ?
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+commit 4f2e4ad56a65f3b7d64c258e373cb71e8d2499f4
+Author: Eric Dumazet <edumazet@google.com>
+Date:   Sat Oct 29 11:02:36 2016 -0700
+
+    net: mangle zero checksum in skb_checksum_help()
+    
+    Sending zero checksum is ok for TCP, but not for UDP.
+    
+    UDPv6 receiver should by default drop a frame with a 0 checksum,
+    and UDPv4 would not verify the checksum and might accept a corrupted
+    packet.
+    
+    Simply replace such checksum by 0xffff, regardless of transport.
+    
+    This error was caught on SIT tunnels, but seems generic.
+    
+    Signed-off-by: Eric Dumazet <edumazet@google.com>
+    Cc: Maciej Żenczykowski <maze@google.com>
+    Cc: Willem de Bruijn <willemb@google.com>
+    Acked-by: Maciej Żenczykowski <maze@google.com>
+    Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 820bac239738eb021354ac95ca5bbdff1840cb8e..eaad4c28069ff523ac784bf2dffd0acff82341a0 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -2484,7 +2484,7 @@ int skb_checksum_help(struct sk_buff *skb)
+                        goto out;
+        }
+ 
+-       *(__sum16 *)(skb->data + offset) = csum_fold(csum);
++       *(__sum16 *)(skb->data + offset) = csum_fold(csum) ?: CSUM_MANGLED_0;
+ out_set_summed:
+        skb->ip_summed = CHECKSUM_NONE;
+ out:
