@@ -1,54 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:60273 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751311AbdAMV1m (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:36672 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752505AbdAZHeN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:27:42 -0500
-Date: Fri, 13 Jan 2017 22:27:34 +0100
-From: Daniel Golle <daniel@makrotopia.org>
+        Thu, 26 Jan 2017 02:34:13 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 21/40] rt2x00: rt2800lib: fix txpower_to_dev function for
- RT3883
-Message-ID: <20170113212729.GA3514@makrotopia.org> (sfid-20170113_222744_867609_D100A20E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Thu, 26 Jan 2017 09:34:01 +0200
+Message-Id: <20170126073401.20600-1-luca@coelho.fi> (sfid-20170126_083418_387955_2EAC0110)
+In-Reply-To: <20170123220350.25305-25-luca@coelho.fi>
+References: <20170123220350.25305-25-luca@coelho.fi>
+Subject: [PATCH v2] iwlwifi: mvm: use mvm_disable_queue instead of sharing logic
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+When removing inactive queue - use the central disable queue
+function. This is needed due to a000 changes to come, but is
+a proper cleanup anyway.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 62ac5aa0f016..6df2c240d756 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3428,13 +3428,15 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
- 				  unsigned int channel,
- 				  char txpower)
+In v2:
+
+iwl_mvm_disable_txq() returns early if the hw_ref_count is
+zeroed, with the result of the queue not being properly disabled.
+Avoid zeroing it and other queue information in remove_sta_marking().
+iwl_mvm_disable_txq() which is called later in the flow will zero
+it.
+
+drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 29 +++++++-------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 10 +++++----
+ 3 files changed, 16 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 4a9cb76b7611..a672aa71c656 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1657,8 +1657,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+  * Disable a TXQ.
+  * Note that in non-DQA mode the %mac80211_queue and %tid params are ignored.
+  */
+-void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+-			 u8 tid, u8 flags);
++int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
++			u8 tid, u8 flags);
+ int iwl_mvm_find_free_queue(struct iwl_mvm *mvm, u8 sta_id, u8 minq, u8 maxq);
+ 
+ /* Return a bitmask with all the hw supported queues, except for the
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index cf8222a8b588..40e7fc5f1f1f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -454,13 +454,6 @@ static int iwl_mvm_remove_sta_queue_marking(struct iwl_mvm *mvm, int queue)
+ 
+ 	rcu_read_unlock();
+ 
+-	spin_lock_bh(&mvm->queue_info_lock);
+-	/* Unmap MAC queues and TIDs from this queue */
+-	mvm->queue_info[queue].hw_queue_to_mac80211 = 0;
+-	mvm->queue_info[queue].hw_queue_refcount = 0;
+-	mvm->queue_info[queue].tid_bitmap = 0;
+-	spin_unlock_bh(&mvm->queue_info_lock);
+-
+ 	return disable_agg_tids;
+ }
+ 
+@@ -755,28 +748,22 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	 * first
+ 	 */
+ 	if (using_inactive_queue) {
+-		struct iwl_scd_txq_cfg_cmd cmd = {
+-			.scd_queue = queue,
+-			.action = SCD_CFG_DISABLE_QUEUE,
+-		};
+-		u8 txq_curr_ac;
+-
+-		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
++		u8 txq_curr_ac, sta_id;
+ 
+ 		spin_lock_bh(&mvm->queue_info_lock);
+ 		txq_curr_ac = mvm->queue_info[queue].mac80211_ac;
+-		cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
+-		cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[txq_curr_ac];
+-		cmd.tid = mvm->queue_info[queue].txq_tid;
++		sta_id = mvm->queue_info[queue].ra_sta_id;
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 
++		disable_agg_tids = iwl_mvm_remove_sta_queue_marking(mvm, queue);
+ 		/* Disable the queue */
+ 		if (disable_agg_tids)
+ 			iwl_mvm_invalidate_sta_queue(mvm, queue,
+ 						     disable_agg_tids, false);
+-		iwl_trans_txq_disable(mvm->trans, queue, false);
+-		ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd),
+-					   &cmd);
++
++		ret = iwl_mvm_disable_txq(mvm, queue,
++					  mvmsta->vif->hw_queue[txq_curr_ac],
++					  tid, 0);
+ 		if (ret) {
+ 			IWL_ERR(mvm,
+ 				"Failed to free inactive queue %d (ret=%d)\n",
+@@ -791,7 +778,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 		}
+ 
+ 		/* If TXQ is allocated to another STA, update removal in FW */
+-		if (cmd.sta_id != mvmsta->sta_id)
++		if (sta_id != mvmsta->sta_id)
+ 			iwl_mvm_invalidate_sta_queue(mvm, queue, 0, true);
+ 	}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index d04babd99b53..2beea3b98e52 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -706,8 +706,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	}
+ }
+ 
+-void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+-			 u8 tid, u8 flags)
++int iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
++			u8 tid, u8 flags)
  {
--	if (rt2x00_rt(rt2x00dev, RT3593))
-+	if (rt2x00_rt(rt2x00dev, RT3593) ||
-+	    rt2x00_rt(rt2x00dev, RT3883))
- 		txpower = rt2x00_get_field8(txpower, EEPROM_TXPOWER_ALC);
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+@@ -720,7 +720,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
  
- 	if (channel <= 14)
- 		return clamp_t(char, txpower, MIN_G_TXPOWER, MAX_G_TXPOWER);
+ 	if (WARN_ON(mvm->queue_info[queue].hw_queue_refcount == 0)) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+-		return;
++		return 0;
+ 	}
  
--	if (rt2x00_rt(rt2x00dev, RT3593))
-+	if (rt2x00_rt(rt2x00dev, RT3593) ||
-+	    rt2x00_rt(rt2x00dev, RT3883))
- 		return clamp_t(char, txpower, MIN_A_TXPOWER_3593,
- 			       MAX_A_TXPOWER_3593);
- 	else
+ 	mvm->queue_info[queue].tid_bitmap &= ~BIT(tid);
+@@ -760,7 +760,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	/* If the queue is still enabled - nothing left to do in this func */
+ 	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+-		return;
++		return 0;
+ 	}
+ 
+ 	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
+@@ -791,6 +791,8 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	if (ret)
+ 		IWL_ERR(mvm, "Failed to disable queue %d (ret=%d)\n",
+ 			queue, ret);
++
++	return ret;
+ }
+ 
+ /**
 -- 
 2.11.0
