@@ -1,55 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40540 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033956AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:36662 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752770AbdAZHYa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 02:24:30 -0500
+From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 9/9] rt2800: set max_psdu to 3 on usb devices
-Date: Fri,  6 Jan 2017 14:05:18 +0100
-Message-Id: <1483707918-31480-10-git-send-email-sgruszka@redhat.com> (sfid-20170106_141134_885981_069E7D6D)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+        Sara Sharon <sara.sharon@intel.com>
+Date: Thu, 26 Jan 2017 09:24:17 +0200
+Message-Id: <20170126072417.19802-1-luca@coelho.fi> (sfid-20170126_082434_594107_9C7B7D13)
+In-Reply-To: <20170123220350.25305-12-luca@coelho.fi>
+References: <20170123220350.25305-12-luca@coelho.fi>
+Subject: [PATCH v2] iwlwifi: mvm: change iwl_mvm_tx_csum to return value
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All Ralink USB devices I have, including old ones, work well with
-max_psdu = 3 (64kB tx AMPDUs).
+From: Sara Sharon <sara.sharon@intel.com>
 
-Fix indent on the way.
+Currently the function changes the TX cmd itself.
+Make it more generic by returning a value, as preperation
+to the new TX cmd.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 6cac311..de7a564 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4743,15 +4743,16 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
+In v2:
+
+   * Fix compilation warning when CONFIG_INET is not set
+
+drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 23 ++++++++++++-----------
+ 1 file changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 66957ac12ca4..73a90d4a43eb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -102,14 +102,13 @@ iwl_mvm_bar_check_trigger(struct iwl_mvm *mvm, const u8 *addr,
+ #define OPT_HDR(type, skb, off) \
+ 	(type *)(skb_network_header(skb) + (off))
  
- 	rt2800_register_read(rt2x00dev, MAX_LEN_CFG, &reg);
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_MPDU, AGGREGATION_SIZE);
--	if (rt2x00_rt_rev_gte(rt2x00dev, RT2872, REV_RT2872E) ||
--	    rt2x00_rt(rt2x00dev, RT2883) ||
--	    rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E)) {
-+	if (rt2x00_is_usb(rt2x00dev)) {
-+		drv_data->max_psdu = 3;
-+	} else if (rt2x00_rt_rev_gte(rt2x00dev, RT2872, REV_RT2872E) ||
-+		   rt2x00_rt(rt2x00dev, RT2883) ||
-+		   rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070E)) {
- 		drv_data->max_psdu = 2;
--		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 2);
- 	} else {
- 		drv_data->max_psdu = 1;
--		rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, 1);
+-static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+-			    struct ieee80211_hdr *hdr,
+-			    struct ieee80211_tx_info *info,
+-			    struct iwl_tx_cmd *tx_cmd)
++static u16 iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
++			   struct ieee80211_hdr *hdr,
++			   struct ieee80211_tx_info *info)
+ {
++	u16 offload_assist = 0;
+ #if IS_ENABLED(CONFIG_INET)
+ 	u16 mh_len = ieee80211_hdrlen(hdr->frame_control);
+-	u16 offload_assist = le16_to_cpu(tx_cmd->offload_assist);
+ 	u8 protocol = 0;
+ 
+ 	/*
+@@ -117,7 +116,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	 * compute it
+ 	 */
+ 	if (skb->ip_summed != CHECKSUM_PARTIAL || IWL_MVM_SW_TX_CSUM_OFFLOAD)
+-		return;
++		goto out;
+ 
+ 	/* We do not expect to be requested to csum stuff we do not support */
+ 	if (WARN_ONCE(!(mvm->hw->netdev_features & IWL_TX_CSUM_NETIF_FLAGS) ||
+@@ -125,7 +124,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		       skb->protocol != htons(ETH_P_IPV6)),
+ 		      "No support for requested checksum\n")) {
+ 		skb_checksum_help(skb);
+-		return;
++		goto out;
  	}
-+	rt2x00_set_field32(&reg, MAX_LEN_CFG_MAX_PSDU, drv_data->max_psdu);
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_PSDU, 10);
- 	rt2x00_set_field32(&reg, MAX_LEN_CFG_MIN_MPDU, 10);
- 	rt2800_register_write(rt2x00dev, MAX_LEN_CFG, reg);
+ 
+ 	if (skb->protocol == htons(ETH_P_IP)) {
+@@ -145,7 +144,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			    protocol != NEXTHDR_HOP &&
+ 			    protocol != NEXTHDR_DEST) {
+ 				skb_checksum_help(skb);
+-				return;
++				goto out;
+ 			}
+ 
+ 			hp = OPT_HDR(struct ipv6_opt_hdr, skb, off);
+@@ -159,7 +158,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP) {
+ 		WARN_ON_ONCE(1);
+ 		skb_checksum_help(skb);
+-		return;
++		goto out;
+ 	}
+ 
+ 	/* enable L4 csum */
+@@ -191,8 +190,9 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	mh_len /= 2;
+ 	offload_assist |= mh_len << TX_CMD_OFFLD_MH_SIZE;
+ 
+-	tx_cmd->offload_assist = cpu_to_le16(offload_assist);
++out:
+ #endif
++	return offload_assist;
+ }
+ 
+ /*
+@@ -295,7 +295,8 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	    !(tx_cmd->offload_assist & cpu_to_le16(BIT(TX_CMD_OFFLD_AMSDU))))
+ 		tx_cmd->offload_assist |= cpu_to_le16(BIT(TX_CMD_OFFLD_PAD));
+ 
+-	iwl_mvm_tx_csum(mvm, skb, hdr, info, tx_cmd);
++	tx_cmd->offload_assist |=
++		cpu_to_le16(iwl_mvm_tx_csum(mvm, skb, hdr, info));
+ }
+ 
+ /*
 -- 
-2.7.4
+2.11.0
