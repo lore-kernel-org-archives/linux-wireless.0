@@ -1,79 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ot0-f193.google.com ([74.125.82.193]:33846 "EHLO
-        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754386AbdA3VmF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 16:42:05 -0500
-Received: by mail-ot0-f193.google.com with SMTP id 73so39821414otj.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 13:41:39 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, Jurij Smakov <jurij@wooyd.org>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH V2] rtlwifi: rtl8192ce: Fix loading of incorrect firmware
-Date: Mon, 30 Jan 2017 15:41:36 -0600
-Message-Id: <20170130214136.28170-1-Larry.Finger@lwfinger.net> (sfid-20170130_224209_347659_65B70805)
+Received: from s3.sipsolutions.net ([5.9.151.49]:47728 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752852AbdAZIva (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 03:51:30 -0500
+Message-ID: <1485420684.11038.2.camel@sipsolutions.net> (sfid-20170126_095152_179718_74BAA6F5)
+Subject: Re: [PATCH 1/2] mac80211: use helper function to access
+ ieee802_1d_to_ac[]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Amadeusz =?UTF-8?Q?S=C5=82awi=C5=84ski?=
+        <amadeusz.slawinski@tieto.com>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Thu, 26 Jan 2017 09:51:24 +0100
+In-Reply-To: <1485272531-11587-1-git-send-email-amadeusz.slawinski@tieto.com> (sfid-20170124_164227_980319_47DCDD4D)
+References: <1485272531-11587-1-git-send-email-amadeusz.slawinski@tieto.com>
+         (sfid-20170124_164227_980319_47DCDD4D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jurij Smakov <jurij@wooyd.org>
+On Tue, 2017-01-24 at 16:42 +0100, Amadeusz Sławiński wrote:
+> cleanup patch to make use of ieee80211_ac_from_tid() to retrieve ac
+> from
+> ieee802_1d_to_ac[]
 
-In commit cf4747d7535a ("rtlwifi: Fix regression caused by commit
-d86e64768859, an error in the edit results in the wrong firmware
-being loaded for some models of the RTL8188/8192CE. In this condition,
-the connection suffered from high ping latency, slow transfer rates,
- and required higher signal strengths to work at all
+Applied.
 
-See https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=853073,
-https://bugzilla.opensuse.org/show_bug.cgi?id=1017471, and
-https://github.com/lwfinger/rtlwifi_new/issues/203 for descriptions
-of the problems. This patch fixes all of those problems.
-
-Fixes: cf4747d7535a ("rtlwifi: Fix regression caused by commit d86e64768859")
-Signed-off-by: Jurij Smakov <jurij@wooyd.org>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> # 4.9+
----
-V2 - answer the comments of Kalle
----
-Kalle,
-
-This patch should be pushed upstream as soon as possible. Note that it
-does not cause a kernel panic. It does, however, reduce the reliability
-of the wireless connection.
-
-Larry
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-index b875a72..9a94e45 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c
-@@ -96,7 +96,7 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	char *fw_name = "rtlwifi/rtl8192cfwU.bin";
-+	char *fw_name;
- 
- 	rtl8192ce_bt_reg_init(hw);
- 
-@@ -167,8 +167,13 @@ int rtl92c_init_sw_vars(struct ieee80211_hw *hw)
- 	}
- 
- 	/* request fw */
--	if (IS_81XXC_VENDOR_UMC_B_CUT(rtlhal->version))
-+	if (IS_VENDOR_UMC_A_CUT(rtlhal->version) &&
-+	    !IS_92C_SERIAL(rtlhal->version))
-+		fw_name = "rtlwifi/rtl8192cfwU.bin";
-+	else if (IS_81XXC_VENDOR_UMC_B_CUT(rtlhal->version))
- 		fw_name = "rtlwifi/rtl8192cfwU_B.bin";
-+	else
-+		fw_name = "rtlwifi/rtl8192cfw.bin";
- 
- 	rtlpriv->max_fw_size = 0x4000;
- 	pr_info("Using firmware %s\n", fw_name);
--- 
-2.10.2
+johannes
