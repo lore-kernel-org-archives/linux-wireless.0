@@ -1,81 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58370 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750907AbdARPSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 10:18:02 -0500
-Date: Wed, 18 Jan 2017 16:13:24 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH v2 08/14] rt2x00: rt2800mmio: add a workaround for
- spurious TX_FIFO_STATUS interrupts
-Message-ID: <20170118151324.GC22837@redhat.com> (sfid-20170118_161805_470073_E0038BC4)
-References: <874m114lwq.fsf@codeaurora.org>
- <20170116030535.GA32238@makrotopia.org>
- <20170118144446.GA22837@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170118144446.GA22837@redhat.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35505 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753570AbdAZP17 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 10:27:59 -0500
+Message-ID: <1485444476.5145.136.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20170126_162809_981029_3C220424)
+Subject: Re: IPv6-UDP 0x0000 checksum
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 26 Jan 2017 07:27:56 -0800
+In-Reply-To: <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
+References: <1485437276.14760.3.camel@sipsolutions.net>
+         <1485438299.5145.117.camel@edumazet-glaptop3.roam.corp.google.com>
+         (sfid-20170126_144502_343976_16232A6D) <1485438546.14760.7.camel@sipsolutions.net>
+         <1485441942.5145.131.camel@edumazet-glaptop3.roam.corp.google.com>
+         (sfid-20170126_154545_190303_B1FB80BF) <1485442164.14760.11.camel@sipsolutions.net>
+         <1485444276.5145.133.camel@edumazet-glaptop3.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 18, 2017 at 03:44:46PM +0100, Stanislaw Gruszka wrote:
-> On Mon, Jan 16, 2017 at 04:05:47AM +0100, Daniel Golle wrote:
-> >  irqreturn_t rt2800mmio_interrupt(int irq, void *dev_instance)
-> >  {
-> >  	struct rt2x00_dev *rt2x00dev = dev_instance;
-> >  	u32 reg, mask;
-> > +	u32 txstatus = 0;
-> >  
-> > -	/* Read status and ACK all interrupts */
-> > +	/* Read status */
-> >  	rt2x00mmio_register_read(rt2x00dev, INT_SOURCE_CSR, &reg);
-> > +
-> > +	if (rt2x00_get_field32(reg, INT_SOURCE_CSR_TX_FIFO_STATUS)) {
-> > +		/* Due to unknown reason the hardware generates a
-> > +		 * TX_FIFO_STATUS interrupt before the TX_STA_FIFO
-> > +		 * register contain valid data. Read the TX status
-> > +		 * here to see if we have to process the actual
-> > +		 * request.
-> > +		 */
-> > +		rt2x00mmio_register_read(rt2x00dev, TX_STA_FIFO, &txstatus);
-> > +		if (rt2800mmio_txstatus_is_spurious(rt2x00dev, txstatus)) {
-> > +			/* Remove the TX_FIFO_STATUS bit so it won't be
-> > +			 * processed in this turn. The hardware will
-> > +			 * generate another IRQ for us.
-> > +			 */
-> > +			rt2x00_set_field32(&reg,
-> > +					   INT_SOURCE_CSR_TX_FIFO_STATUS, 0);
-> > +		}
-> > +	}
-> > +
-> > +	/* ACK interrupts */
-> >  	rt2x00mmio_register_write(rt2x00dev, INT_SOURCE_CSR, reg);
+On Thu, 2017-01-26 at 07:24 -0800, Eric Dumazet wrote:
+> On Thu, 2017-01-26 at 15:49 +0100, Johannes Berg wrote:
 > 
-> I think spurious TX_STA_FIFO problem happen because we first ACK
-> interrupt and then read in bulk all statuses from TX_STA_FIFO
-> register, while hardware generate new interrupt (as previous
-> was ACKed), then in new interrupt we have no more statues to
-> read.
+> > Unfortunately, I haven't been able to actually test this yet. I also
+> > didn't find the code that would drop frames with CSUM 0 either, so I'm
+> > thinking - for now - that if all the csum handling is skipped, dropping
+> > 0 csum frames would also be, and then we'd accept a frame we should
+> > actually have dropped.
+> > 
+> > I'll go test this I guess :)
+> > 
+> > Any pointers to where 0 csum frames are dropped?
 > 
-> This is inherently racy situation and first ACK interrupt and
-> then read statuses is safer than reverse order which make risk we
-> will have pending status and not get interrupt about that.
-> 
-> Hence I think we should not apply this patch.
+> Probably in udp6_csum_init()
 
-Actually patch is safe in regard that we first ACK interrupt
-and then read all statuses TX_STA_FIFO. We only do not ACK 
-interrupt if we do not have valid status in TX_STA_FIFO .
+vi +804 net/ipv6/udp.c
 
-However I don't really see point of the patch, we should get
-next interrupt when new status will be places in TX_STA_FIFO
-regardless we ACK this interrupt or don't and if we don't 
-ACK we possibly can get series of spurious interrupts.
-
-Stanislaw
+                if (!uh->check && !udp_sk(sk)->no_check6_rx) {
+                        udp6_csum_zero_error(skb);
+                        goto csum_error;
+                }
