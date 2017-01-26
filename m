@@ -1,43 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49660 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750881AbdAaUP4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 15:15:56 -0500
-Subject: Re: [PATCH 4.10-rc3 08/13] net: emac: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-To: Russell King <rmk+kernel@armlinux.org.uk>,
-        linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
- <E1cYdxI-0000Wk-5w@rmk-PC.armlinux.org.uk>
-From: Timur Tabi <timur@codeaurora.org>
-Message-ID: <c7dd612a-fa69-12ca-fd53-44649a18dd11@codeaurora.org> (sfid-20170131_211602_977025_70BE3F05)
-Date: Tue, 31 Jan 2017 14:15:50 -0600
+Received: from nbd.name ([46.4.11.11]:47697 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753367AbdAZKC5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 05:02:57 -0500
+Subject: Re: [PATCH 3/4] ath9k: check for deaf rx path state
+To: Simon Wunderlich <sw@simonwunderlich.de>
+References: <20170125163654.66431-1-nbd@nbd.name>
+ <20170125163654.66431-3-nbd@nbd.name> <4839692.lfma8z9lJt@prime>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <809a5011-4361-0459-2937-5dd5b0d619c2@nbd.name> (sfid-20170126_110302_141032_78E53862)
+Date: Thu, 26 Jan 2017 11:02:53 +0100
 MIME-Version: 1.0
-In-Reply-To: <E1cYdxI-0000Wk-5w@rmk-PC.armlinux.org.uk>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4839692.lfma8z9lJt@prime>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2017 01:19 PM, Russell King wrote:
-> drivers/net/ethernet/qualcomm/emac/emac-sgmii.c:58:12: error: dereferencing pointer to incomplete type 'struct phy_device'
->
-> Add linux/phy.h to emac-sgmii.c
->
-> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
-> ---
->  drivers/net/ethernet/qualcomm/emac/emac-sgmii.c | 1 +
+On 2017-01-26 10:50, Simon Wunderlich wrote:
+> Hey Felix,
+> 
+> 
+> On Wednesday, January 25, 2017 5:36:53 PM CET Felix Fietkau wrote:
+>> Various chips occasionally run into a state where the tx path still
+>> appears to be working normally, but the rx path is deaf.
+>> 
+>> There is no known register signature to check for this state explicitly,
+>> so use the lack of rx interrupts as an indicator.
+>> 
+>> This detection is prone to false positives, since a device could also
+>> simply be in an environment where there are no frames on the air.
+>> However, in this case doing a reset should be harmless since it's
+>> obviously not interrupting any real activity. To avoid confusion, call
+>> the reset counters in this case "Rx path inactive" instead of something
+>> like "Rx path deaf", since it may not be an indication of a real
+>> hardware failure.
+>> 
+>> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+> 
+> As we observed in the field, it may happen that there are still RX interrupts 
+> triggered, but just a very low number - in which case I believe your version 
+> wouldn't fix the problem. Therefore we had a threshold in our original patch 
+> [1].
+It seems that you were seeing something different than what I was seeing
+in my tests. Though it could be that my issues were actually caused by
+something else. I had queued up these changes a while back before I
+finally found and fixed the IRQ issue.
 
-The version of emac-sgmii.c on net-next does not need this fixed.  I already 
-removed all references to phy_device in commit "net: qcom/emac: always use 
-autonegotiation to configure the SGMII link".
+> We would also appreciate if you can at least briefly mention our work if you 
+> resend/rework our stuff.
+Sorry about that. I rebased this from older experimental patches and
+forgot to put in all the relevant context.
 
--- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm
-Technologies, Inc.  Qualcomm Technologies, Inc. is a member of the
-Code Aurora Forum, a Linux Foundation Collaborative Project.
+Kalle, please drop this change for now.
+
+- Felix
