@@ -1,89 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:45943 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756379AbdACFrw (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 00:47:52 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH resend 2/4] nfc: Send same info for both of NFC_CMD_GET_DEVICE and NFC_EVENT_DEVICE_ADDED
-References: <87ful0lmop.fsf@mail.parknet.co.jp>
-Date: Tue, 03 Jan 2017 14:47:50 +0900
-In-Reply-To: <87ful0lmop.fsf@mail.parknet.co.jp> (OGAWA Hirofumi's message of
-        "Tue, 03 Jan 2017 14:47:18 +0900")
-Message-ID: <87bmvolmnt.fsf@mail.parknet.co.jp> (sfid-20170103_064820_434667_0BE3DB2C)
+Received: from nbd.name ([46.4.11.11]:48048 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753730AbdAZK0G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 26 Jan 2017 05:26:06 -0500
+Subject: Re: [PATCH 3/4] ath9k: check for deaf rx path state
+To: Simon Wunderlich <sw@simonwunderlich.de>
+References: <20170125163654.66431-1-nbd@nbd.name> <4839692.lfma8z9lJt@prime>
+ <809a5011-4361-0459-2937-5dd5b0d619c2@nbd.name> <2448336.mzt5URIzpg@prime>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <8306f20d-ca2a-60fd-b0d9-5155f3bbd094@nbd.name> (sfid-20170126_112610_258768_20CAC347)
+Date: Thu, 26 Jan 2017 11:26:03 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <2448336.mzt5URIzpg@prime>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2017-01-26 11:15, Simon Wunderlich wrote:
+> Hey,
+> 
+> On Thursday, January 26, 2017 11:02:53 AM CET Felix Fietkau wrote:
+>> On 2017-01-26 10:50, Simon Wunderlich wrote:
+>> > Hey Felix,
+>> > 
+>> > On Wednesday, January 25, 2017 5:36:53 PM CET Felix Fietkau wrote:
+>> >> Various chips occasionally run into a state where the tx path still
+>> >> appears to be working normally, but the rx path is deaf.
+>> >> 
+>> >> There is no known register signature to check for this state explicitly,
+>> >> so use the lack of rx interrupts as an indicator.
+>> >> 
+>> >> This detection is prone to false positives, since a device could also
+>> >> simply be in an environment where there are no frames on the air.
+>> >> However, in this case doing a reset should be harmless since it's
+>> >> obviously not interrupting any real activity. To avoid confusion, call
+>> >> the reset counters in this case "Rx path inactive" instead of something
+>> >> like "Rx path deaf", since it may not be an indication of a real
+>> >> hardware failure.
+>> >> 
+>> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+>> > 
+>> > As we observed in the field, it may happen that there are still RX
+>> > interrupts triggered, but just a very low number - in which case I
+>> > believe your version wouldn't fix the problem. Therefore we had a
+>> > threshold in our original patch [1].
+>> 
+>> It seems that you were seeing something different than what I was seeing
+>> in my tests. Though it could be that my issues were actually caused by
+>> something else. I had queued up these changes a while back before I
+>> finally found and fixed the IRQ issue.
+> 
+> What we found a good threshold was to check for less than 1 RX interrupt per 
+> second, and check the mean average (about) every 30 seconds. If there is any 
+> other AP or a station connected, it will not reset the chip, and also there 
+> will be no reset on short outages.
+But if there's less than 1 Rx interrupt per second, then my patch should
+also trigger, right?
 
-Now, NFC_EVENT_DEVICE_ADDED doesn't send NFC_ATTR_RF_MODE. But
-NFC_CMD_GET_DEVICE send.
-
-To get NFC_ATTR_RF_MODE, we have to call NFC_CMD_GET_DEVICE just for
-NFC_ATTR_RF_MODE when get NFC_EVENT_DEVICE_ADDED.
-
-This fixes those inconsistent.
-
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
----
-
- net/nfc/netlink.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff -puN net/nfc/netlink.c~nfc-send-same-info net/nfc/netlink.c
---- linux/net/nfc/netlink.c~nfc-send-same-info	2016-12-18 22:16:55.805686290 +0900
-+++ linux-hirofumi/net/nfc/netlink.c	2016-12-18 22:16:55.806686296 +0900
-@@ -311,6 +311,17 @@ free_msg:
- 	return -EMSGSIZE;
- }
- 
-+static int nfc_genl_setup_device_added(struct nfc_dev *dev, struct sk_buff *msg)
-+{
-+	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
-+	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
-+	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
-+	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
-+	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+		return -1;
-+	return 0;
-+}
-+
- int nfc_genl_device_added(struct nfc_dev *dev)
- {
- 	struct sk_buff *msg;
-@@ -325,10 +336,7 @@ int nfc_genl_device_added(struct nfc_dev
- 	if (!hdr)
- 		goto free_msg;
- 
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-@@ -604,11 +612,7 @@ static int nfc_genl_send_device(struct s
- 	if (cb)
- 		genl_dump_check_consistent(cb, hdr, &nfc_genl_family);
- 
--	if (nla_put_string(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev)) ||
--	    nla_put_u32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx) ||
--	    nla_put_u32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols) ||
--	    nla_put_u8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up) ||
--	    nla_put_u8(msg, NFC_ATTR_RF_MODE, dev->rf_mode))
-+	if (nfc_genl_setup_device_added(dev, msg))
- 		goto nla_put_failure;
- 
- 	genlmsg_end(msg, hdr);
-_
-
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+- Felix
