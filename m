@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:33064 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751675AbdAaTW2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47948 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933893AbdA0Lal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:28 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@savoirfairelinux.com>
-Subject: [PATCH 4.10-rc3 13/13] net: dsa: remove unnecessary phy*.h includes
+        Fri, 27 Jan 2017 06:30:41 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org, linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2017-01-26
+References: <1485462650.26003.11.camel@coelho.fi>
+Date: Fri, 27 Jan 2017 13:24:19 +0200
+In-Reply-To: <1485462650.26003.11.camel@coelho.fi> (Luca Coelho's message of
+        "Thu, 26 Jan 2017 22:30:50 +0200")
+Message-ID: <87lgtw7nks.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_123152_697955_304AD531)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdxh-0000XJ-RN@rmk-PC.armlinux.org.uk> (sfid-20170131_202358_560410_769051D8)
-Date: Tue, 31 Jan 2017 19:19:29 +0000
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Including phy.h and phy_fixed.h into net/dsa.h causes phy*.h to be an
-unnecessary dependency for quite a large amount of the kernel.  There's
-very little which actually requires definitions from phy.h in net/dsa.h
-- the include itself only wants the declaration of a couple of
-structures and IFNAMSIZ.
+Luca Coelho <luca@coelho.fi> writes:
 
-Add linux/if.h for IFNAMSIZ, declarations for the structures, phy.h to
-mv88e6xxx.h as it needs it for phy_interface_t, and remove both phy.h
-and phy_fixed.h from net/dsa.h.
+> Hi Kalle,
+>
+> Here's my first pull-request intended for v4.11.  It has a bunch of
+> fixes, cleanups and improvements here and there, as well as a few new
+> features.  More details in the tag description.
+>
+> I have sent this out before and kbuildbot didn't find any issues.
+>
+> Please let me know if there are any issues.
+>
+> Cheers,
+> Luca.
+>
+>
+> The following changes since commit 106e0deca1ac6ac627a10617fe77a95200cb01a7:
+>
+>   rtlwifi: rtl8192cu: Convert driver to use common macros (2017-01-20 12:06:10 +0200)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2017-01-26
+>
+> for you to fetch changes up to 758c98e089389e90732fe45087fdee3177493a81:
+>
+>   iwlwifi: mvm: cleanup redundant assignment (2017-01-26 09:39:02 +0200)
+>
+> ----------------------------------------------------------------
+> Some improvements, bugfixes and new features:
+>  * A bunch of cleanups here and there;
+>  * A few simple bugfixes;
+>  * Some more work in preparation for A000 family support;
+>  * Add support for radiotap timestamps;
+>  * Some work on our firmware debugging capabilities;
+>
+> ----------------------------------------------------------------
 
-This patch reduces from around 800 files rebuilt to around 40 - even
-with ccache, the time difference is noticable.
+Pulled, thanks.
 
-Tested-by: Vivien Didelot <vivien.didelot@savoirfairelinux.com>
-Reviewed-by: Florian Fainelli <f.fainelli@gmail.com>
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
----
- drivers/net/dsa/mv88e6xxx/mv88e6xxx.h | 1 +
- include/net/dsa.h                     | 6 ++++--
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-index af54baea47cf..3a949095068a 100644
---- a/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-+++ b/drivers/net/dsa/mv88e6xxx/mv88e6xxx.h
-@@ -15,6 +15,7 @@
- #include <linux/if_vlan.h>
- #include <linux/irq.h>
- #include <linux/gpio/consumer.h>
-+#include <linux/phy.h>
- 
- #ifndef UINT64_MAX
- #define UINT64_MAX		(u64)(~((u64)0))
-diff --git a/include/net/dsa.h b/include/net/dsa.h
-index b122196d5a1f..887b2f98f9ea 100644
---- a/include/net/dsa.h
-+++ b/include/net/dsa.h
-@@ -11,15 +11,17 @@
- #ifndef __LINUX_NET_DSA_H
- #define __LINUX_NET_DSA_H
- 
-+#include <linux/if.h>
- #include <linux/if_ether.h>
- #include <linux/list.h>
- #include <linux/timer.h>
- #include <linux/workqueue.h>
- #include <linux/of.h>
--#include <linux/phy.h>
--#include <linux/phy_fixed.h>
- #include <linux/ethtool.h>
- 
-+struct phy_device;
-+struct fixed_phy_status;
-+
- enum dsa_tag_protocol {
- 	DSA_TAG_PROTO_NONE = 0,
- 	DSA_TAG_PROTO_DSA,
 -- 
-2.7.4
+Kalle Valo
