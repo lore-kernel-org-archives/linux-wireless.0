@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41142 "EHLO mx2.suse.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60764 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751835AbdA2RL2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2017 12:11:28 -0500
-Date: Sun, 29 Jan 2017 18:10:01 +0100
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
- loading NVS calibration data
-Message-ID: <20170129171001.GE24047@wotan.suse.de> (sfid-20170129_181305_246491_6F76B7E5)
-References: <87tw8lnei3.fsf@codeaurora.org>
- <20170127094342.GC24223@pali>
- <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
- <20170127101043.GD24223@pali>
- <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
- <20170127103408.GG24223@pali>
- <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
- <20170127115706.GH24223@pali>
- <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
- <20170127131146.GI24223@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170127131146.GI24223@pali>
+        id S1754802AbdA0MnU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:43:20 -0500
+Message-ID: <1485520942.5851.9.camel@sipsolutions.net> (sfid-20170127_134618_548760_DBC13873)
+Subject: Re: [PATCH 1/5] nl80211: fix validation of scheduled scan info for
+ wowlan netdetect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Jan 2017 13:42:22 +0100
+In-Reply-To: <abafc8a5-1138-7c4f-66a3-d606700440cb@broadcom.com> (sfid-20170127_133812_465827_35DBEB56)
+References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com>
+         <1485520288.5851.8.camel@sipsolutions.net>
+         <abafc8a5-1138-7c4f-66a3-d606700440cb@broadcom.com>
+         (sfid-20170127_133812_465827_35DBEB56)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 27, 2017 at 02:11:46PM +0100, Pali Rohár wrote:
-> So there are only two options:
+On Fri, 2017-01-27 at 13:38 +0100, Arend Van Spriel wrote:
 > 
-> 1) Disallow it and so these users will have non-working wifi.
+> > IOW, I think Kalle can merge 2-5, and I can then pick up this one
+> > when they hit net-next and I've synchronized, no?
 > 
-> 2) Allow those data to be used as fallback mechanism.
+> Agree.
 
-There is one "custom fallback" user in kernel which we recently
-determined was a total mistake. A sysfs interface should have
-been defined to enable custom LED settings. Can't a series of
-sysfs interfaces be used to enable override ? So is that not a
-third option worth consideration?
+Alright. I see you submitted another version, I'll assign 2-5 to Kalle,
+and keep 1 for myself, and not worry about the ordering since I'm the
+one to have to remember to actually apply it later :)
 
-  Luis
+johannes
