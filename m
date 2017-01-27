@@ -1,54 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:53735 "EHLO
-        smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754315AbdADQEq (ORCPT
+Received: from mail-wj0-f194.google.com ([209.85.210.194]:36791 "EHLO
+        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754584AbdA0NQl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 11:04:46 -0500
-Received: from smtp5-g21.free.fr (smtp5-g21.free.fr [212.27.42.5])
-        by smtpfb2-g21.free.fr (Postfix) with ESMTP id D3064D1B9BE
-        for <linux-wireless@vger.kernel.org>; Wed,  4 Jan 2017 17:04:18 +0100 (CET)
-Message-ID: <1483545757.8560.79.camel@free.fr> (sfid-20170104_170450_607753_DE94D5EA)
-Subject: Re: Can't authenticate to WPA network with rt2800usb driver
-From: Xavier Bestel <xavier.bestel@free.fr>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 04 Jan 2017 17:02:37 +0100
-In-Reply-To: <20170104150243.GA11582@redhat.com>
-References: <1483526270.8560.70.camel@free.fr>
-         <20170104150243.GA11582@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        Fri, 27 Jan 2017 08:16:41 -0500
+Date: Fri, 27 Jan 2017 14:16:37 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170127131637.GJ24223@pali> (sfid-20170127_141839_864408_DDBAB9FF)
+References: <87tw8lnei3.fsf@codeaurora.org>
+ <20170127094342.GC24223@pali>
+ <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+ <20170127101043.GD24223@pali>
+ <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+ <20170127103408.GG24223@pali>
+ <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+ <20170127115706.GH24223@pali>
+ <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+ <bc26f6a5-2865-356f-7f19-f3a316257759@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <bc26f6a5-2865-356f-7f19-f3a316257759@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mercredi 04 janvier 2017 à 16:02 +0100, Stanislaw Gruszka a écrit :
-> On Wed, Jan 04, 2017 at 11:37:50AM +0100, Xavier Bestel wrote:
-> > Jan  4 11:22:29 pcxav wpa_supplicant[13666]: wlx7cdd90463ef8: SME: Trying to authenticate with 5c:33:8e:56:78:d3 (SSID='MySecretSSID' freq=2437 MHz) 
-> > Jan  4 11:22:29 pcxav kernel: [2921135.972360] wlx7cdd90463ef8: authenticate with 5c:33:8e:56:78:d3 
-> > Jan  4 11:22:29 pcxav NetworkManager[15150]: <info>  [1483525349.3774] device (wlx7cdd90463ef8): supplicant interface state: inactive -> authenticating 
-> > Jan  4 11:22:29 pcxav kernel: [2921135.990588] wlx7cdd90463ef8: send auth to 5c:33:8e:56:78:d3 (try 1/3) 
-> > Jan  4 11:22:29 pcxav kernel: [2921135.999983] wlx7cdd90463ef8: authenticated 
-> > Jan  4 11:22:34 pcxav kernel: [2921140.991625] wlx7cdd90463ef8: aborting authentication with 5c:33:8e:56:78:d3 by local choice (Reason: 3=DEAUTH_LEAVING) 
+On Friday 27 January 2017 13:53:28 Arend Van Spriel wrote:
+> On 27-1-2017 13:26, Kalle Valo wrote:
+> > Pali Rohár <pali.rohar@gmail.com> writes:
+> > 
+> >> On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
+> >>> Pali Rohár <pali.rohar@gmail.com> writes:
+> >>>
+> >>>>> So
+> >>>>> for those other platforms there will be a delay waiting for user-mode
+> >>>>> helper to fail, before trying to get nvs file from /lib/firmware.
+> >>>>
+> >>>> Yes, there will be. But there is no easy way to fix this problem that
+> >>>> kernel is trying to use default/example NVS data...
+> >>>
+> >>> Kernel is doing correctly and requesting NVS data as expected, the
+> >>> problem here is that linux-firmware claims that the example NVS data is
+> >>> real calibration data (which it is not). Distros should not use that,
+> >>> only developers for testing purposes. We should not courage users using
+> >>> example calibration data.
+> >>>
+> >>> The simple fix is to rename the NVS file in linux-firmware to something
+> >>> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
+> >>> you send a patch to linux-firmware I'm happy to ack that.
+> >>
+> >> I agree with rename and fact that default/example data should not be
+> >> used.
+> >>
+> >> But...
+> >>
+> >> 1) Kernel should not read device/model specific data from VFS where
+> >> are stored not-device-specific files preinstalled by linux
+> >> distributions.
+> >>
+> >> And linux distributions are already putting files into VFS and kernel
+> >> cannot enforce userspace to not do that (as they are already doing it).
+> > 
+> > I'm having problems to understand what you are saying here.
 > 
-> This looks like problem when wpa_supplicant do not talk to correct
-> kernel socket when cfg80211 module was removed and then loaded again.
-> This can happen when you remove wireless device driver using
-> modprobe -r  i.e:
+> This is a personal opinion. I read it as: /lib/firmware can only contain
+> files for from linux-firmware.
 > 
-> modprobe -r rt2800usb
-> modprobe rt2800pci
-> 
-> This problem is fixed in current version of wpa_supplicant or maybe
-> in kernel.
-> 
-> > Does anyone have a hint to make it work ?
-> 
-> "systemctl restart wpa_supplicant.service" recovers from bad state.
+> At least the device-specific vs. non-device-specific does not seem to
+> hold. The firmware files that we have in the linux-firmware repository
+> are very device-specific. Unless you mean the 'platform' when talking
+> about 'device'.
 
-I just upgraded wpa_supplicant from 2.5 to 2.6 (latest version AFAIK)
-and restarted it but still no luck:
-Jan  4 17:01:19 pcxav kernel: [2941466.617276] wlx7cdd90463ef8: aborting authentication with 5c:33:8e:56:78:d3 by local choice (Reason: 3=DEAUTH_LEAVING) 
-Do you know which kernel should I run to have the fix ?
+Here I'm talking about files which are specific per unit. Every one N900
+has different NVS file (stored in CAL) and so every one N900 device
+needs its own NVS file. And we cannot store thousands of NVS files into
+linux-firmware repository for each N900 which was ever produced in
+factory.
 
-Regards,
-	Xav
+Firmware files in linux-firmware repository are "device" specific, but
+"filename" of that file describe exactly for which "device" it is
+specific.
+
+But there are thousands of different NVS files for one filename
+"wl1251-nvs.bin" and we cannot use one particular for another device. In
+linux-firmware is stored "wl1251-nvs.bin" file with example data.
+
+-- 
+Pali Rohár
+pali.rohar@gmail.com
