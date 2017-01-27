@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48560 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752422AbdARAGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 19:06:23 -0500
-From: Jes.Sorensen@gmail.com
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/5] rtl8xxxu: Mark 8192eu device 0x0bda:0x818b as tested
-Date: Tue, 17 Jan 2017 18:18:52 -0500
-Message-Id: <20170117231856.5075-2-Jes.Sorensen@gmail.com> (sfid-20170118_010626_358392_6818308C)
-In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
-References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37013 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932712AbdA0MUj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:20:39 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/5] brcmfmac: provide a value for struct wowlan_support::max_nd_match_sets
+Date: Fri, 27 Jan 2017 12:09:28 +0000
+Message-Id: <1485518971-28183-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132240_811847_30119414)
+In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+The driver advertises support for WOWLAN_NETDETECT but did not specify
+maximum amount of netdetect match sets. This was no issue due to a bug
+in nl80211. As that has been fixed, brcmfmac also needs fixing.
 
-Device reported as working fine, so tell the driver not to warn about
-it being untested.
-
-Reported-by: Aex Aey <aexaey@gmail.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 3a86675..99cfd2b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6000,6 +6000,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 		case 0x8176:
- 		case 0x8178:
- 		case 0x817f:
-+		case 0x818b:
- 			untested = 0;
- 			break;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ec1171c..302a78d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6358,6 +6358,8 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
+ 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
+ 			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
++			brcmf_wowlan_support.max_nd_match_sets =
++				BRCMF_PNO_MAX_PFN_COUNT;
+ 			init_waitqueue_head(&cfg->wowl.nd_data_wait);
  		}
+ 	}
 -- 
-2.7.4
+1.9.1
