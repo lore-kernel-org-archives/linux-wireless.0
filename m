@@ -1,74 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47540 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033938AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 2/9] rt2800: increase TX timeout
-Date: Fri,  6 Jan 2017 14:05:11 +0100
-Message-Id: <1483707918-31480-3-git-send-email-sgruszka@redhat.com> (sfid-20170106_141121_216239_0D5C2300)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37023 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932118AbdA0Nvl (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 08:51:41 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix boot failure in UTF mode/testmode
+Date: Fri, 27 Jan 2017 19:21:38 +0530
+Message-ID: <1485525098-11548-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170127_145244_259832_BA7396D2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When medium is busy or frames have to be resend, it takes time to send
-the frames and get TX status from hardware. For some really bad medium
-conditions it can take seconds. Patch change TX status timeout to give
-HW more time to provide it, however 500ms is not enough for bad
-conditions. In the future this timeout should be removed and replaced
-with proper watchdog mechanism.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Increase flush timeout accordingly as well.
+Rx filter reset and the dynamic tx switch mode (EXT_RESOURCE_CFG)
+configuration are causing the following errors when UTF firmware
+is loaded to the target.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Error message 1:
+[ 598.015629] ath10k_pci 0001:01:00.0: failed to ping firmware: -110
+[ 598.020828] ath10k_pci 0001:01:00.0: failed to reset rx filter: -110
+[ 598.141556] ath10k_pci 0001:01:00.0: failed to start core (testmode): -110
+
+Error message 2:
+[ 668.615839] ath10k_ahb a000000.wifi: failed to send ext resource cfg command : -95
+[ 668.618902] ath10k_ahb a000000.wifi: failed to start core (testmode): -95
+
+Avoiding these configurations while bringing the target in
+testmode is solving the problem.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c  | 2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c | 2 +-
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c  | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-index 8ec22c0..400f074 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
-@@ -123,7 +123,7 @@ static inline bool rt2800usb_entry_txstatus_timeout(struct queue_entry *entry)
- 	if (!test_bit(ENTRY_DATA_STATUS_PENDING, &entry->flags))
- 		return false;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 874c2a7..0d12761 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1922,7 +1922,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "firmware %s booted\n",
+ 		   ar->hw->wiphy->fw_version);
  
--	tout = time_after(jiffies, entry->last_action + msecs_to_jiffies(100));
-+	tout = time_after(jiffies, entry->last_action + msecs_to_jiffies(500));
- 	if (unlikely(tout))
- 		rt2x00_dbg(entry->queue->rt2x00dev,
- 			   "TX status timeout for entry %d in queue %d\n",
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
-index f0178fd..da38d25 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mmio.c
-@@ -101,7 +101,7 @@ void rt2x00mmio_flush_queue(struct data_queue *queue, bool drop)
- 	unsigned int i;
- 
- 	for (i = 0; !rt2x00queue_empty(queue) && i < 10; i++)
--		msleep(10);
-+		msleep(50);
- }
- EXPORT_SYMBOL_GPL(rt2x00mmio_flush_queue);
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 6005e14..838ca58 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -517,7 +517,7 @@ void rt2x00usb_flush_queue(struct data_queue *queue, bool drop)
- 		 * Wait for a little while to give the driver
- 		 * the oppurtunity to recover itself.
- 		 */
--		msleep(10);
-+		msleep(50);
+-	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map)) {
++	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map) &&
++	    mode == ATH10K_FIRMWARE_MODE_NORMAL) {
+ 		val = 0;
+ 		if (ath10k_peer_stats_enabled(ar))
+ 			val = WMI_10_4_PEER_STATS;
+@@ -1975,10 +1976,13 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	 * possible to implicitly make it correct by creating a dummy vdev and
+ 	 * then deleting it.
+ 	 */
+-	status = ath10k_core_reset_rx_filter(ar);
+-	if (status) {
+-		ath10k_err(ar, "failed to reset rx filter: %d\n", status);
+-		goto err_hif_stop;
++	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
++		status = ath10k_core_reset_rx_filter(ar);
++		if (status) {
++			ath10k_err(ar,
++				   "failed to reset rx filter: %d\n", status);
++			goto err_hif_stop;
++		}
  	}
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_flush_queue);
+ 
+ 	/* If firmware indicates Full Rx Reorder support it must be used in a
 -- 
-2.7.4
+1.7.9.5
