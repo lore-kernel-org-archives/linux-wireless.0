@@ -1,66 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37536 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751279AbdABLeR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 06:34:17 -0500
-Message-ID: <1483356854.4596.14.camel@sipsolutions.net> (sfid-20170102_123420_172460_2B63D726)
-Subject: Re: [PATCH] cfg80211: Random local address for Public Action frame
- exchange
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org,
-        vamsi krishna <vamsin@qti.qualcomm.com>
-Date: Mon, 02 Jan 2017 12:34:14 +0100
-In-Reply-To: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1482266379-9723-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37852 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932676AbdA0M14 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:27:56 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH V2 1/5] nl80211: fix validation of scheduled scan info for wowlan netdetect
+Date: Fri, 27 Jan 2017 12:27:44 +0000
+Message-Id: <1485520068-5807-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_133123_894768_6A64B23F)
+In-Reply-To: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For wowlan netdetect a separate limit is defined for the number of
+matchsets. Currently, this limit is ignored and the regular limit
+for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
+used for the net-detect case as well.
 
-> + * @random_sa: indicates whether the source address is randomized.
-> When this is
-> + *	true, the driver needs to transmit the management frame
-> using the
-> + *	address specified in the SA field (Address 2) in the
-> buffer and the
-> + *	driver needs to receive and acknowledge the response frame
-> to this
-> + *	address instead of its permanent MAC address.
->   */
->  struct cfg80211_mgmt_tx_params {
->  	struct ieee80211_channel *chan;
-> 
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/nl80211.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Is this really of much value to the driver - rather than comparing the
-addresses?
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ef5eff93..90833a4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6850,7 +6850,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
 
-> + * @NL80211_ATTR_MGMT_TX_RANDOM_SA: A flag attribute indicating
-> whether the
-> + *	source address is randomized in frames sent using
-> %NL80211_CMD_FRAME.
-> + *	If this flag is not set, the source address field is
-> verified to match
-> + *	local MAC address. Random SA can be used only with Public
-> Action frames
-> + *	(e.g., GAS/ANQP).
+ static struct cfg80211_sched_scan_request *
+ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+-			 struct nlattr **attrs)
++			 struct nlattr **attrs, int max_match_sets)
+ {
+ 	struct cfg80211_sched_scan_request *request;
+ 	struct nlattr *attr;
+@@ -6915,7 +6915,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 	if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
+ 		n_match_sets = 1;
 
-Likewise here, is this really of much value?
+-	if (n_match_sets > wiphy->max_match_sets)
++	if (n_match_sets > max_match_sets)
+ 		return ERR_PTR(-EINVAL);
 
-Or is the intent to make sure that userspace *really* intended things
-to be randomized, and didn't just have a bug?
+ 	if (attrs[NL80211_ATTR_IE])
+@@ -7189,7 +7189,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		return -EINPROGRESS;
 
-What I mean is more like this: if the driver supports "random SA", that
-basically means it supports "arbitrary SA". The driver could thus
-(unconditionally even, or after comparing to the iface address)
-configure the RX filters appropriately.
+ 	sched_scan_req = nl80211_parse_sched_scan(&rdev->wiphy, wdev,
+-						  info->attrs);
++						  info->attrs,
++						  rdev->wiphy.max_match_sets);
 
-Therefore, the only thing that would really be needed is the nl80211
-extended feature flag to bypass the address check in
-cfg80211_mlme_mgmt_tx().
+ 	err = PTR_ERR_OR_ZERO(sched_scan_req);
+ 	if (err)
+@@ -9966,7 +9967,8 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		goto out;
 
-What extra value do we get from having the "yes I really did intend it
-to be random" attribute?
-
-johannes
+-	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb);
++	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb,
++						   wowlan->max_nd_match_sets);
+ 	err = PTR_ERR_OR_ZERO(trig->nd_config);
+ 	if (err)
+ 		trig->nd_config = NULL;
+--
+1.9.1
