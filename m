@@ -1,83 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34883 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbdAMT6W (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754202AbdA0H4Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 14:58:22 -0500
-Received: by mail-io0-f196.google.com with SMTP id m98so6632803iod.2
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 11:58:22 -0800 (PST)
-From: Jamal Hadi Salim <jhs@mojatatu.com>
-Subject: ANNOUNCE: Netdev 2.1 in Montreal
-To: netdev@vger.kernel.org
-Cc: netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-        info@netdevconf.org, linux-wireless@vger.kernel.org,
-        tech-committee@netdevconf.org, David Miller <davem@davemloft.net>,
-        Stephen Jaworski <jaws@mojatatu.com>,
-        Rob Echlin <rob@echlin.ca>, lwn@lwn.net
-Message-ID: <1a7b6b2c-38bc-7c6f-e3bf-ab913b163dba@mojatatu.com> (sfid-20170113_205829_482689_8F157291)
-Date: Fri, 13 Jan 2017 14:58:19 -0500
+        Fri, 27 Jan 2017 02:56:25 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
+Date: Fri, 27 Jan 2017 09:56:09 +0200
+In-Reply-To: <1482598381-16513-7-git-send-email-pali.rohar@gmail.com> ("Pali
+        \=\?utf-8\?Q\?Roh\=C3\=A1r\=22's\?\= message of "Sat, 24 Dec 2016 17:53:01 +0100")
+Message-ID: <87inp1ndgm.fsf@codeaurora.org> (sfid-20170127_085640_506878_61E0E73E)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-Folks,
+> In case there is no valid MAC address kernel generates random one. This
+> patch propagate this generated MAC address back to NVS data which will be
+> uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
+> uses.
+>
+> Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
 
-We are pleased to announce Netdev 2.1 (year 2, conference 1)
-in the beautiful city of Montreal, Canada on the 6th to 8th of April.
-The website is now online: http://www.netdevconf.org/2.1/
-Netdev 2.1 will be held back to back with netconf2017.1
-(http://vger.kernel.org/netconf2017.html)
+Why? What issue does this fix?
 
-Netdev 2.1 is a  community-driven conference geared towards Linux
-netheads. Linux kernel networking and user space utilization of the
-interfaces to the Linux kernel networking subsystem are the central
-theme.
-If you are using Linux as a boot system for proprietary networking,
-then this conference _may not be for you_.
-
-Registration costs
-------------------
-Very Cheap.
-$CAN 300 if you register before Feb 27. $360 after.
-$CAN 150 if you are a student. $180 after Feb 27
-
-Why you should register
------------------------
-If you yearn for the old community tech driven conferences where
-you mingle with fellow geeks (only these would be Linux networking
-geeks) then this would be it. There will be no marketing flashing
-light openings or loud bad music. Just a pure feed of Linux
-networking. Gurus and magicians of all sorts will be there mingling,
-juggling and giving talks.
-
-While there will be heavy Linux kernel influence we expect a lot
-of user space presence as well.
-
-Exact Location:
------------------
-Tentative: LE WESTIN MONTRÉAL
-
-Sponsorship
-------------
-
-If you can help us organize this event by sponsoring, please drop us a 
-line to: sponsor@netdevconf.org and we'll send you our sponsorship policy.
-
-Important dates
-----------------
-January 18, 2017 Call for proposals open
-January 23, 2017 Registration opens
-February 20, 2017 Call for proposals close
-February 27, 2017 Early Registration close
-March 13, 2017 Conference schedule announced
-March 27, 2017 Paper submission
-March 31, 2017 Online Registration close
-April 3, 2017 Slides submission
-April 6-8, 2017 Conference days
-May 1, 2017 Slides release
-June 1, 2017 Paper release
-
-cheers,
-jamal
+--=20
+Kalle Valo
