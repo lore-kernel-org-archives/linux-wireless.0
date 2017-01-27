@@ -1,69 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f178.google.com ([209.85.213.178]:35634 "EHLO
-        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751507AbdASNNV (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36261 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754457AbdA0Jnv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 08:13:21 -0500
-Received: by mail-yb0-f178.google.com with SMTP id l23so17438307ybj.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2017 05:11:45 -0800 (PST)
-Subject: Re: [PATCH v2 01/13] wil6210: add sysfs file for FTM calibration
-To: Lior David <liord@codeaurora.org>,
-        "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        qca_merez <qca_merez@qca.qualcomm.com>
-References: <1484226365-10433-1-git-send-email-qca_merez@qca.qualcomm.com>
- <1484226365-10433-2-git-send-email-qca_merez@qca.qualcomm.com>
- <871svzp79p.fsf@kamboji.qca.qualcomm.com>
- <c066ef7d-f61b-3b3e-1a6c-e2b89de812e9@codeaurora.org>
-Cc: qca_liord <qca_liord@qca.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        wil6210 <wil6210@qca.qualcomm.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <b7a8f918-7d3c-de53-d657-8e2d1c1da4b2@broadcom.com> (sfid-20170119_141324_712160_B1D0DF2E)
-Date: Thu, 19 Jan 2017 14:14:18 +0100
+        Fri, 27 Jan 2017 04:43:51 -0500
+Date: Fri, 27 Jan 2017 10:43:42 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170127094342.GC24223@pali> (sfid-20170127_104429_207427_B731BDDE)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <87tw8lnei3.fsf@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <c066ef7d-f61b-3b3e-1a6c-e2b89de812e9@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87tw8lnei3.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-1-2017 13:36, Lior David wrote:
-> On 1/19/2017 2:24 PM, Valo, Kalle wrote:
->> Maya Erez <qca_merez@qca.qualcomm.com> writes:
->>
->>> From: Lior David <qca_liord@qca.qualcomm.com>
->>>
->>> In fine timing measurements, the calculation is affected by
->>> 2 parts: timing of packets over the air, which is platform
->>> independent, and platform-specific delays, which are dependent
->>> on things like antenna cable length and type.
->>> Add a sysfs file which allows to get/set these platform specific
->>> delays, separated into the TX and RX components.
->>> There are 2 key scenarios where the file can be used:
->>> 1. Calibration - start with some initial values (for example,
->>> the default values at startup), make measurements at a known
->>> distance, then iteratively change the values until the
->>> measurement results match the known distance.
->>> 2. Adjust the delays when platform starts up, based on known
->>> values.
->>>
->>> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
->>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
->>
->> Can't this go via nl80211? sysfs is not really supposed to be used for
->> something like this.
->>
-> There is no nl80211 API for this (yet?).
+On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > NVS calibration data for wl1251 are model specific. Every one device with
+> > wl1251 chip has different and calibrated in factory.
+> >
+> > Not all wl1251 chips have own EEPROM where are calibration data stored. And
+> > in that case there is no "standard" place. Every device has stored them on
+> > different place (some in rootfs file, some in dedicated nand partition,
+> > some in another proprietary structure).
+> >
+> > Kernel wl1251 driver cannot support every one different storage decided by
+> > device manufacture so it will use request_firmware_prefer_user() call for
+> > loading NVS calibration data and userspace helper will be responsible to
+> > prepare correct data.
+> >
+> > In case userspace helper fails request_firmware_prefer_user() still try to
+> > load data file directly from VFS as fallback mechanism.
+> >
+> > On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
+> > in CAL nand partition. CAL is proprietary Nokia key/value format for nand
+> > devices.
+> >
+> > With this patch it is finally possible to load correct model specific NVS
+> > calibration data for Nokia N900.
+> >
+> > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> > ---
+> >  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+> >  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+> > index 7142ccf..affe154 100644
+> > --- a/drivers/net/wireless/ti/wl1251/Kconfig
+> > +++ b/drivers/net/wireless/ti/wl1251/Kconfig
+> > @@ -2,6 +2,7 @@ config WL1251
+> >  	tristate "TI wl1251 driver support"
+> >  	depends on MAC80211
+> >  	select FW_LOADER
+> > +	select FW_LOADER_USER_HELPER
+> >  	select CRC7
+> >  	---help---
+> >  	  This will enable TI wl1251 driver support. The drivers make
+> > diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+> > index 208f062..24f8866 100644
+> > --- a/drivers/net/wireless/ti/wl1251/main.c
+> > +++ b/drivers/net/wireless/ti/wl1251/main.c
+> > @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+> >  	struct device *dev = wiphy_dev(wl->hw->wiphy);
+> >  	int ret;
+> >  
+> > -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
+> > +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+> 
+> I don't see the need for this. Just remove the default nvs file from
+> filesystem and the fallback user helper will be always used, right?
 
-So come up with one...?
+It is part of linux-firmware repository. And already part of all
+previous versions of linux-firmware packages in lot of linux
+distributions. So removing it is not possible...
 
-> Will it be ok to put this in debugfs? Normally this will be in the board
-> file (as part of RF configuration) but it will be useful to play
-> with these values for debugging/diagnostics.
+> Like we discussed earlier, the default nvs file should not be used by
+> normal users.
 
-What is doing the FTM measurements? Is it all done in user-space? That
-would mean you also need measurement data exported to user-space. How is
-that done? Intel has a FTM api proposal, but it has not been submitted
-upstream (yet?).
+But already is and we need to deal with this fact.
 
-Regards,
-Arend
+-- 
+Pali Rohár
+pali.rohar@gmail.com
