@@ -1,14 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34389 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdA0TrG (ORCPT
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:36109 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934748AbdA0L5o (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 14:47:06 -0500
-Date: Fri, 27 Jan 2017 20:40:12 +0100
-From: Pavel Machek <pavel@ucw.cz>
+        Fri, 27 Jan 2017 06:57:44 -0500
+Date: Fri, 27 Jan 2017 12:57:06 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
-        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
         Ming Lei <ming.lei@canonical.com>,
         "Luis R. Rodriguez" <mcgrof@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -17,6 +16,7 @@ Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
         Daniel Wagner <wagi@monom.org>,
         Tony Lindgren <tony@atomide.com>,
         Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
         Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
         Aaro Koskinen <aaro.koskinen@iki.fi>,
         Grazvydas Ignotas <notasas@gmail.com>,
@@ -24,93 +24,62 @@ Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
         netdev@vger.kernel.org
 Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
  loading NVS calibration data
-Message-ID: <20170127194012.GE20571@amd> (sfid-20170127_204923_053011_56A101BB)
-References: <20170127094342.GC24223@pali>
+Message-ID: <20170127115706.GH24223@pali> (sfid-20170127_125831_963144_1E3F32EB)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <87tw8lnei3.fsf@codeaurora.org>
+ <20170127094342.GC24223@pali>
  <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
  <20170127101043.GD24223@pali>
  <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
  <20170127103408.GG24223@pali>
  <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
- <20170127115706.GH24223@pali>
- <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
- <20170127131146.GI24223@pali>
- <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="wTWi5aaYRw9ix9vO"
-In-Reply-To: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---wTWi5aaYRw9ix9vO
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri 2017-01-27 17:23:07, Kalle Valo wrote:
-> Pali Roh=E1r <pali.rohar@gmail.com> writes:
->=20
-> > On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
-> >> Pali Roh=E1r <pali.rohar@gmail.com> writes:
-> >>=20
-> >> > 2) It was already tested that example NVS data can be used for N900 =
-e.g.
-> >> > for SSH connection. If real correct data are not available it is bet=
-ter
-> >> > to use at least those example (and probably log warning message) so =
-user
-> >> > can connect via SSH and start investigating where is problem.
-> >>=20
-> >> I disagree. Allowing default calibration data to be used can be
-> >> unnoticed by user and left her wondering why wifi works so badly.
+On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> >> So
+> >> for those other platforms there will be a delay waiting for user-mode
+> >> helper to fail, before trying to get nvs file from /lib/firmware.
 > >
-> > So there are only two options:
-> >
-> > 1) Disallow it and so these users will have non-working wifi.
-> >
-> > 2) Allow those data to be used as fallback mechanism.
-> >
-> > And personally I'm against 1) because it will break wifi support for
-> > *all* Nokia N900 devices right now.
->=20
-> All two of them? :)
+> > Yes, there will be. But there is no easy way to fix this problem that
+> > kernel is trying to use default/example NVS data...
+> 
+> Kernel is doing correctly and requesting NVS data as expected, the
+> problem here is that linux-firmware claims that the example NVS data is
+> real calibration data (which it is not). Distros should not use that,
+> only developers for testing purposes. We should not courage users using
+> example calibration data.
+> 
+> The simple fix is to rename the NVS file in linux-firmware to something
+> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
+> you send a patch to linux-firmware I'm happy to ack that.
 
-Umm. You clearly want a flock of angry penguins at your doorsteps :-).
+I agree with rename and fact that default/example data should not be
+used.
 
-> But not working is exactly my point, if correct calibration data is not
-> available wifi should not work. And it's not only about functionality
-> problems, there's also the regulatory aspect.
+But...
 
-If you break existing configuration that's called "regression".
+1) Kernel should not read device/model specific data from VFS where
+are stored not-device-specific files preinstalled by linux
+distributions.
 
-> >> > 3) If we do rename *now* we will totally break wifi support on Nokia
-> >> > N900.
-> >>=20
-> >> Then the distro should fix that when updating the linux-firmware
-> >> packages. Can you provide details about the setup, what distro etc?
-> >
-> > Debian stable, Ubuntu LTSs 14.04, 16.04.=20
->=20
-> You can run these out of box on N900?
+And linux distributions are already putting files into VFS and kernel
+cannot enforce userspace to not do that (as they are already doing it).
 
-Debian stable does.
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+2) It was already tested that example NVS data can be used for N900 e.g.
+for SSH connection. If real correct data are not available it is better
+to use at least those example (and probably log warning message) so user
+can connect via SSH and start investigating where is problem.
 
---wTWi5aaYRw9ix9vO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+3) If we do rename *now* we will totally break wifi support on Nokia
+N900.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAliLohwACgkQMOfwapXb+vIMowCfafqFiiWLUvCz/ObElhmeZ2MC
-OP0An0zg74gU6k3v3GVikgkzmVssYyUa
-=Pi8Z
------END PGP SIGNATURE-----
-
---wTWi5aaYRw9ix9vO--
+-- 
+Pali Rohár
+pali.rohar@gmail.com
