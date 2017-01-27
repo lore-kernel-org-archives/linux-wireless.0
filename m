@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:33544 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdAMVfZ (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36077 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754536AbdA0KHv (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:35:25 -0500
-Received: by mail-lf0-f68.google.com with SMTP id x1so1724451lff.0
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2017 13:35:24 -0800 (PST)
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath10k@lists.infradead.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [RFC 01/10] ath10k: various usb related definitions
-Date: Fri, 13 Jan 2017 22:35:00 +0100
-Message-Id: <1484343309-6327-2-git-send-email-erik.stromdahl@gmail.com> (sfid-20170113_223544_625719_4E394082)
-In-Reply-To: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
-References: <1484343309-6327-1-git-send-email-erik.stromdahl@gmail.com>
+        Fri, 27 Jan 2017 05:07:51 -0500
+Date: Fri, 27 Jan 2017 10:05:38 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
+Message-ID: <20170127090538.GB24223@pali> (sfid-20170127_110813_349628_B4D8CD86)
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
+ <87inp1ndgm.fsf@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87inp1ndgm.fsf@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Definitions for USB based chipsets
+On Friday 27 January 2017 09:56:09 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > In case there is no valid MAC address kernel generates random one. This
+> > patch propagate this generated MAC address back to NVS data which will be
+> > uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
+> > uses.
+> >
+> > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> 
+> Why? What issue does this fix?
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
----
- drivers/net/wireless/ath/ath10k/core.h  | 3 +++
- drivers/net/wireless/ath/ath10k/debug.h | 2 ++
- 2 files changed, 5 insertions(+)
+Send permanent MAC address to wl1251 chip, same what is doing wl12xx
+driver.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 1ffef90..3f865c0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -75,6 +75,7 @@ enum ath10k_bus {
- 	ATH10K_BUS_PCI,
- 	ATH10K_BUS_AHB,
- 	ATH10K_BUS_SDIO,
-+	ATH10K_BUS_USB,
- };
- 
- static inline const char *ath10k_bus_str(enum ath10k_bus bus)
-@@ -86,6 +87,8 @@ static inline const char *ath10k_bus_str(enum ath10k_bus bus)
- 		return "ahb";
- 	case ATH10K_BUS_SDIO:
- 		return "sdio";
-+	case ATH10K_BUS_USB:
-+		return "usb";
- 	}
- 
- 	return "unknown";
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 257d109..548ad54 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -40,6 +40,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_AHB		= 0x00008000,
- 	ATH10K_DBG_SDIO		= 0x00010000,
- 	ATH10K_DBG_SDIO_DUMP	= 0x00020000,
-+	ATH10K_DBG_USB		= 0x00040000,
-+	ATH10K_DBG_USB_BULK	= 0x00080000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
- 
 -- 
-2.7.4
+Pali Rohár
+pali.rohar@gmail.com
