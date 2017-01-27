@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53093 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932655AbdA0MhG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:37:06 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Michael Renzmann <mrenzmann@madwifi-project.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Searching new home for ath[59]k-devel mailing lists
-Date: Fri, 27 Jan 2017 12:37:03 +0000
-Message-ID: <87y3xw65n6.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_133716_748993_6B85DD48)
-References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
-        <87y3yfi78t.fsf@purkki.adurom.net>
-        <49460.217.24.3.26.1484376490.squirrel@webmail.madwifi-project.org>
-        <877f5g7lwd.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877f5g7lwd.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-        of "Fri, 27 Jan 2017 14:00:34 +0200")
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from nbd.name ([46.4.11.11]:43266 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754837AbdA0NLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 08:11:05 -0500
+Subject: Re: [PATCH 4/4] ath9k: fix race condition in enabling/disabling IRQs
+To: linux-wireless@vger.kernel.org
+References: <20170125163654.66431-1-nbd@nbd.name>
+ <20170125163654.66431-4-nbd@nbd.name>
+Cc: kvalo@codeaurora.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <ca32601f-81f1-aec0-9ab4-02631b226900@nbd.name> (sfid-20170127_141147_018290_2F6BB7EE)
+Date: Fri, 27 Jan 2017 13:47:06 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170125163654.66431-4-nbd@nbd.name>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On 2017-01-25 17:36, Felix Fietkau wrote:
+> The code currently relies on refcounting to disable IRQs from within the
+> IRQ handler and re-enabling them again after the tasklet has run.
+> 
+> However, due to race conditions sometimes the IRQ handler might be
+> called twice, or the tasklet may not run at all (if interrupted in the
+> middle of a reset).
+> 
+> This can cause nasty imbalances in the irq-disable refcount which will
+> get the driver permanently stuck until the entire radio has been stopped
+> and started again (ath_reset will not recover from this).
+> 
+> Instead of using this fragile logic, change the code to ensure that
+> running the irq handler during tasklet processing is safe, and leave the
+> refcount untouched.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Please don't apply this yet, it looks like it might cause some
+regressions on other devices. I will investigate.
 
-> (dropping ath5k-devel and ath9k-devel, I assume they are closed now)
->
-> "Michael Renzmann" <mrenzmann@madwifi-project.org> writes:
->
->> Kalle Valo wrote:
->>> So feel free to close both of the lists and thanks for the heads up.
->>
->> Ok. I will send a shutdown notice to both lists during the next few days=
-,
->> then unsubscribe all subscribers, and close the lists for new
->> subscriptions. I intend to keep the mailing list archives online, for
->> reference purpose.
->>
->>> Are you planning to update the MAINTAINERS file or should I?
->>
->> It would be great if you could take care of that.
->
-> Ok, I'll send a patch.
-
-MAINTAINERS: ath9k-devel is closed
-
-https://patchwork.kernel.org/patch/9541737/
-
---=20
-Kalle Valo=
+- Felix
