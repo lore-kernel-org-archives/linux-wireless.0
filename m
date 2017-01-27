@@ -1,34 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36150 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750775AbdAMFWW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58205 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdA0Ta1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 00:22:22 -0500
-Received: by mail-pf0-f173.google.com with SMTP id 189so25195037pfu.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:22:22 -0800 (PST)
-From: Matt Ranostay <matt@ranostay.consulting>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
-Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
-Subject: [PATCH v2 0/2] mmc: pwrseq: add support for Marvell SD8787 chip
-Date: Thu, 12 Jan 2017 21:22:16 -0800
-Message-Id: <20170113052218.10534-1-matt@ranostay.consulting> (sfid-20170113_062251_299229_407BABDE)
+        Fri, 27 Jan 2017 14:30:27 -0500
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] ath10k: Search SMBIOS for OEM board file extension
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20170117150334.8859-1-ext.waldemar.rymarkiewicz@tieto.com>
+References: <20170117150334.8859-1-ext.waldemar.rymarkiewicz@tieto.com>
+To: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
+CC: <ath10k@lists.infradead.org>, <alanliu@qca.qualcomm.com>,
+        <rwchang@qti.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+        "Waldemar Rymarkiewicz" <ext.waldemar.rymarkiewicz@tieto.com>,
+        <bartosz.markowski@tieto.com>
+Message-ID: <c57e3b178364400c914677dc577753ae@eusanexr01a.eu.qualcomm.com> (sfid-20170127_203140_039020_ABDF16C0)
+Date: Fri, 27 Jan 2017 11:30:21 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes from v1:
-* split devictree docs from pwrseq changes
-* rebase devicetree documents due to filename change
-* rebase pwrseq patchset
+Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com> wrote:
+> Board Data File (BDF) is loaded upon driver boot-up procedure. The right
+> board data file is identified, among others, by device and sybsystem ids.
+> 
+> The problem, however, can occur when the (default) board data file cannot
+> fulfill with the vendor requirements and it is necessary to use a different
+> board data file.
+> 
+> To solve the issue QCA uses SMBIOS type 0xF8 to store Board Data File Name
+> Extension to specify the extension/variant name. The driver will take the
+> extension suffix into consideration and will load the right (non-default)
+> board data file if necessary.
+> 
+> If it is unnecessary to use extension board data file, please leave the
+> SMBIOS field blank and default configuration will be used.
+> 
+> Example:
+> If a default board data file for a specific board is identified by a string
+>       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
+>        subsystem-device=0310"
+> then the OEM specific data file, if used, could be identified by variant
+> suffix:
+>       "bus=pci,vendor=168c,device=003e,subsystem-vendor=1028,
+>        subsystem-device=0310,variant=DE_1AB"
+> 
+> Signed-off-by: Waldemar Rymarkiewicz <ext.waldemar.rymarkiewicz@tieto.com>
 
-Matt Ranostay (2):
-  devicetree: document vmmc-supply and mmc-pwrseq options
-  mmc: pwrseq: add support for Marvell SD8787 chip
+Patch applied to ath-next branch of ath.git, thanks.
 
- .../devicetree/bindings/net/wireless/marvell-8xxx.txt          |  7 ++++++-
- drivers/mmc/core/Kconfig                                       | 10 ++++++++++
- drivers/mmc/core/Makefile                                      |  1 +
- 3 files changed, 17 insertions(+), 1 deletion(-)
+f2593cb1b291 ath10k: Search SMBIOS for OEM board file extension
 
 -- 
-2.10.2
+https://patchwork.kernel.org/patch/9521307/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
