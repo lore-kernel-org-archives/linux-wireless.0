@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50980 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750800AbdAUH4k (ORCPT
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:35535 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754817AbdA0Mxf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 21 Jan 2017 02:56:40 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jens Axboe <axboe@kernel.dk>,
-        Luca Coelho <luciano.coelho@intel.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: iwlwifi: fix kernel crash when unregistering thermal zone
-References: <b6a2209c-1343-cbda-c6c2-ae5eb93148d3@kernel.dk>
-Date: Sat, 21 Jan 2017 09:56:34 +0200
-In-Reply-To: <b6a2209c-1343-cbda-c6c2-ae5eb93148d3@kernel.dk> (Jens Axboe's
-        message of "Tue, 17 Jan 2017 14:22:24 -0800")
-Message-ID: <87a8akhmml.fsf@purkki.adurom.net> (sfid-20170121_085659_894354_88CEA330)
+        Fri, 27 Jan 2017 07:53:35 -0500
+Received: by mail-pg0-f42.google.com with SMTP id 194so81236799pgd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 04:53:35 -0800 (PST)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+To: Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
+ <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+ <20170127101043.GD24223@pali>
+ <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+ <20170127103408.GG24223@pali> <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+ <20170127115706.GH24223@pali> <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <bc26f6a5-2865-356f-7f19-f3a316257759@broadcom.com> (sfid-20170127_135441_933030_D80C0E5C)
+Date: Fri, 27 Jan 2017 13:53:28 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jens Axboe <axboe@kernel.dk> writes:
+On 27-1-2017 13:26, Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+>> On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
+>>> Pali Rohár <pali.rohar@gmail.com> writes:
+>>>
+>>>>> So
+>>>>> for those other platforms there will be a delay waiting for user-mode
+>>>>> helper to fail, before trying to get nvs file from /lib/firmware.
+>>>>
+>>>> Yes, there will be. But there is no easy way to fix this problem that
+>>>> kernel is trying to use default/example NVS data...
+>>>
+>>> Kernel is doing correctly and requesting NVS data as expected, the
+>>> problem here is that linux-firmware claims that the example NVS data is
+>>> real calibration data (which it is not). Distros should not use that,
+>>> only developers for testing purposes. We should not courage users using
+>>> example calibration data.
+>>>
+>>> The simple fix is to rename the NVS file in linux-firmware to something
+>>> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
+>>> you send a patch to linux-firmware I'm happy to ack that.
+>>
+>> I agree with rename and fact that default/example data should not be
+>> used.
+>>
+>> But...
+>>
+>> 1) Kernel should not read device/model specific data from VFS where
+>> are stored not-device-specific files preinstalled by linux
+>> distributions.
+>>
+>> And linux distributions are already putting files into VFS and kernel
+>> cannot enforce userspace to not do that (as they are already doing it).
+> 
+> I'm having problems to understand what you are saying here.
 
-> A recent firmware change seems to have enabled thermal zones on the
-> iwlwifi driver. Unfortunately, my device fails when registering the
-> thermal zone. This doesn't stop the driver from attempting to unregister
-> the thermal zone at unload time, triggering a NULL pointer deference in
-> strlen() off the thermal_zone_device_unregister() path.
->
-> Don't unregister if name is NULL, for that case we failed registering.
-> Do the same for the cooling zone.
->
-> Signed-off-by: Jens Axboe <axboe@fb.com>
->
-> ---
->
-> Would be great if this could go into the current series, as sometimes I
-> have to reload the driver. Right now I can't, since it crashes...
+This is a personal opinion. I read it as: /lib/firmware can only contain
+files for from linux-firmware.
 
-Luca, can I take this directly to wireless-drivers? This is an important
-fix and we should get it to Linus' tree ASAP.
+At least the device-specific vs. non-device-specific does not seem to
+hold. The firmware files that we have in the linux-firmware repository
+are very device-specific. Unless you mean the 'platform' when talking
+about 'device'.
 
--- 
-Kalle Valo
+Regards,
+Arend
