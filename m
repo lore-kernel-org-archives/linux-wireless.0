@@ -1,94 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37011 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932499AbdA0MUe (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:20:34 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 4/5] brcmfmac: allow wowlan support to be per device
-Date: Fri, 27 Jan 2017 12:09:30 +0000
-Message-Id: <1485518971-28183-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132230_705410_DB7DE08E)
-In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:60872 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754426AbdA0Mwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:52:33 -0500
+Message-ID: <1485520288.5851.8.camel@sipsolutions.net> (sfid-20170127_135448_782332_5E72604A)
+Subject: Re: [PATCH 1/5] nl80211: fix validation of scheduled scan info for
+ wowlan netdetect
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Jan 2017 13:31:28 +0100
+In-Reply-To: <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132234_218655_59FDFD26)
 References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+         <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com>
+         (sfid-20170127_132234_218655_59FDFD26)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wowlan support is (partially) determined dynamic by checking the
-device/firmware capabilities. So they can differ per device. So it
-is not possible to use a static global. Instead use the global as a
-template and use kmemdup(). When kmemdup() fails the template is used
-unmodified.
+On Fri, 2017-01-27 at 12:09 +0000, Arend van Spriel wrote:
+> For wowlan netdetect a separate limit is defined for the number of
+> matchsets. Currently, this limit is ignored and the regular limit
+> for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
+> used for the net-detect case as well.
+> 
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 26 ++++++++++++++++------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+But .. this patch shouldn't be first in the series, should it? That
+leaves brcmfmac broken inbetween.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index c81d78f..9d5a561 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6339,7 +6339,7 @@ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
- }
- 
- #ifdef CONFIG_PM
--static struct wiphy_wowlan_support brcmf_wowlan_support = {
-+static const struct wiphy_wowlan_support brcmf_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
- 	.n_patterns = BRCMF_WOWL_MAXPATTERNS,
- 	.pattern_max_len = BRCMF_WOWL_MAXPATTERNSIZE,
-@@ -6352,21 +6352,29 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
- {
- #ifdef CONFIG_PM
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct wiphy_wowlan_support *wowlan_support;
-+
-+	wowlan_support = kmemdup(&brcmf_wowlan_support,
-+				 sizeof(brcmf_wowlan_support), GFP_KERNEL);
-+	if (!wowlan_support) {
-+		brcmf_err("only support basic wowlan features\n");
-+		wiphy->wowlan = &brcmf_wowlan_support;
-+		return;
-+	}
- 
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
--			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
--			brcmf_wowlan_support.max_nd_match_sets =
--				BRCMF_PNO_MAX_PFN_COUNT;
-+			wowlan_support->flags |= WIPHY_WOWLAN_NET_DETECT;
-+			wowlan_support->max_nd_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
- 			init_waitqueue_head(&cfg->wowl.nd_data_wait);
- 		}
- 	}
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK)) {
--		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
--		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
-+		wowlan_support->flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
-+		wowlan_support->flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
- 	}
- 
--	wiphy->wowlan = &brcmf_wowlan_support;
-+	wiphy->wowlan = wowlan_support;
- #endif
- }
- 
-@@ -6747,6 +6755,10 @@ static void brcmf_free_wiphy(struct wiphy *wiphy)
- 		kfree(wiphy->bands[NL80211_BAND_5GHZ]->channels);
- 		kfree(wiphy->bands[NL80211_BAND_5GHZ]);
- 	}
-+#if IS_ENABLED(CONFIG_PM)
-+	if (wiphy->wowlan != &brcmf_wowlan_support)
-+		kfree(wiphy->wowlan);
-+#endif
- 	wiphy_free(wiphy);
- }
- 
--- 
-1.9.1
+Also, since you fix the brcmfmac value in patch 2, and it's the same in
+both cases, I don't really see a dependency of anything *on* the
+nl80211 patch? The brcmfmac changes can go in without it entirely, and
+have no effect whatsoever, no?
+
+IOW, I think Kalle can merge 2-5, and I can then pick up this one when
+they hit net-next and I've synchronized, no?
+
+johannes
