@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32794 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968160AbdADPHN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 10:07:13 -0500
-Date: Wed, 4 Jan 2017 16:02:44 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Xavier Bestel <xavier.bestel@free.fr>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Can't authenticate to WPA network with rt2800usb driver
-Message-ID: <20170104150243.GA11582@redhat.com> (sfid-20170104_160716_383654_FD5E7F6B)
-References: <1483526270.8560.70.camel@free.fr>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48894 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754244AbdA0SIS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 13:08:18 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1483526270.8560.70.camel@free.fr>
+Subject: Re: [1/3] ath10k: remove multiple defines of DIAG_TRANSFER_LIMIT
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1485183876-27080-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1485183876-27080-1-git-send-email-srinivas.kandagatla@linaro.org>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+CC: <netdev@vger.kernel.org>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ath10k@lists.infradead.org>
+Message-ID: <10e75338551b4824b607cd630521b2f0@eusanexr01a.eu.qualcomm.com> (sfid-20170127_191143_493129_099FC8C0)
+Date: Fri, 27 Jan 2017 10:04:54 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 04, 2017 at 11:37:50AM +0100, Xavier Bestel wrote:
-> Jan  4 11:22:29 pcxav wpa_supplicant[13666]: wlx7cdd90463ef8: SME: Trying to authenticate with 5c:33:8e:56:78:d3 (SSID='MySecretSSID' freq=2437 MHz) 
-> Jan  4 11:22:29 pcxav kernel: [2921135.972360] wlx7cdd90463ef8: authenticate with 5c:33:8e:56:78:d3 
-> Jan  4 11:22:29 pcxav NetworkManager[15150]: <info>  [1483525349.3774] device (wlx7cdd90463ef8): supplicant interface state: inactive -> authenticating 
-> Jan  4 11:22:29 pcxav kernel: [2921135.990588] wlx7cdd90463ef8: send auth to 5c:33:8e:56:78:d3 (try 1/3) 
-> Jan  4 11:22:29 pcxav kernel: [2921135.999983] wlx7cdd90463ef8: authenticated 
-> Jan  4 11:22:34 pcxav kernel: [2921140.991625] wlx7cdd90463ef8: aborting authentication with 5c:33:8e:56:78:d3 by local choice (Reason: 3=DEAUTH_LEAVING) 
+Srinivas Kandagatla <srinivas.kandagatla@linaro.org> wrote:
+> DIAG_TRANSFER_LIMIT is redefined with same value and comments
+> just below this entry, remove this duplicate entry.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 
-This looks like problem when wpa_supplicant do not talk to correct
-kernel socket when cfg80211 module was removed and then loaded again.
-This can happen when you remove wireless device driver using
-modprobe -r  i.e:
+3 patches applied to ath-next branch of ath.git, thanks.
 
-modprobe -r rt2800usb
-modprobe rt2800pci
+dd51fa3d8a1d ath10k: remove multiple defines of DIAG_TRANSFER_LIMIT
+0de4df5ba2ad ath10k: use dma_zalloc_coherent()
+1ad38fd719da ath10k: fix typo in addr calculation
 
-This problem is fixed in current version of wpa_supplicant or maybe
-in kernel.
+-- 
+https://patchwork.kernel.org/patch/9532691/
 
-> Does anyone have a hint to make it work ?
+Documentation about submitting wireless patches and checking status
+from patchwork:
 
-"systemctl restart wpa_supplicant.service" recovers from bad state.
-
-Stanislaw
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
