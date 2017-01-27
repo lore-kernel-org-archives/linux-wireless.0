@@ -1,56 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31421 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751084AbdAaJPx (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35001 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932619AbdA0K10 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 04:15:53 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel
- in non-ETSI
-Date: Tue, 31 Jan 2017 09:12:38 +0000
-Message-ID: <589054CB.3050106@qti.qualcomm.com> (sfid-20170131_101723_841534_77BEA498)
-References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
-         <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com>
- <1485423406.11038.6.camel@sipsolutions.net>
-In-Reply-To: <1485423406.11038.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 27 Jan 2017 05:27:26 -0500
+Received: by mail-pf0-f171.google.com with SMTP id f144so72607612pfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 02:27:12 -0800 (PST)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+To: =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
+ <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+ <20170127101043.GD24223@pali>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com> (sfid-20170127_112802_768561_D67230D2)
+Date: Fri, 27 Jan 2017 11:19:25 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170127101043.GD24223@pali>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMjYgSmFudWFyeSAyMDE3IDAzOjA2IFBNLCBKb2hhbm5lcyBCZXJnIHdyb3Rl
-Og0KPg0KPj4gK3N0YXRpYyBib29sIGNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxsb3dlZChz
-dHJ1Y3Qgd2lyZWxlc3NfZGV2DQo+PiAqd2RldikNCj4+ICt7DQo+PiArCWlmICghY2ZnODAyMTFf
-YmVhY29uaW5nX2lmYWNlX2FjdGl2ZSh3ZGV2KSkNCj4+ICsJCXJldHVybiB0cnVlOw0KPj4gKw0K
-Pj4gKwlpZiAoISh3ZGV2LT5jaGFuZGVmLmNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fUkFE
-QVIpKQ0KPj4gKwkJcmV0dXJuIHRydWU7DQo+DQo+IFRoYXQgY291bGQgdXNlIHNvbWUgbG9ja2lu
-ZyBhc3NlcnRpb25zLiBNYXliZSBhbHNvIGluIHRoZQ0KPiBjZmc4MDIxMV9iZWFjb25pbmdfaWZh
-Y2VfYWN0aXZlKCkgZnVuY3Rpb24geW91IGludHJvZHVjZWQgaW4gdGhlDQo+IHByZXZpb3VzIHBh
-dGNoLg0KDQpPay4NCg0KPg0KPj4gKwlpZiAoIWNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxs
-b3dlZCh3ZGV2KSkgew0KPj4gKwkJc3RydWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFuOw0KPj4g
-Kw0KPj4gKwkJaWYgKHJlcXVlc3QtPm5fY2hhbm5lbHMgIT0gMSkgew0KPj4gKwkJCWVyciA9IC1F
-QlVTWTsNCj4+ICsJCQlnb3RvIG91dF9mcmVlOw0KPj4gKwkJfQ0KPj4gKw0KPj4gKwkJY2hhbiA9
-IHJlcXVlc3QtPmNoYW5uZWxzWzBdOw0KPj4gKwkJaWYgKGNoYW4tPmNlbnRlcl9mcmVxICE9IHdk
-ZXYtPmNoYW5kZWYuY2hhbi0NCj4+PiBjZW50ZXJfZnJlcSkgew0KPj4gKwkJCWVyciA9IC1FQlVT
-WTsNCj4+ICsJCQlnb3RvIG91dF9mcmVlOw0KPj4gKwkJfQ0KPj4gKwl9DQo+DQo+IEknbSBub3Qg
-Y29udmluY2VkIHlvdSBldmVuIGhvbGQgdGhlIHJlbGV2YW50IGxvY2tzIGhlcmUsIHRob3VnaCBv
-ZmYgdGhlDQo+IHRvcCBvZiBteSBoZWFkIEknbSBub3QgZXZlbiBzdXJlIHdoaWNoIGFyZSBuZWVk
-ZWQuDQoNClRoYW5rcyBmb3IgcG9pbnRpbmcgaXQsIGl0IHNob3VsZCBiZSB3aXRoaW4gd2Rldl9s
-b2NrKCkuDQoNCj4NCj4+ICAgCWkgPSAwOw0KPj4gICAJaWYgKG5fc3NpZHMpIHsNCj4+ICAgCQlu
-bGFfZm9yX2VhY2hfbmVzdGVkKGF0dHIsIGluZm8tDQo+Pj4gYXR0cnNbTkw4MDIxMV9BVFRSX1ND
-QU5fU1NJRFNdLCB0bXApIHsNCj4+IEBAIC05MDUzLDYgKzkwNzksNyBAQCBzdGF0aWMgaW50IG5s
-ODAyMTFfcmVtYWluX29uX2NoYW5uZWwoc3RydWN0DQo+PiBza19idWZmICpza2IsDQo+PiAgIAlz
-dHJ1Y3QgY2ZnODAyMTFfcmVnaXN0ZXJlZF9kZXZpY2UgKnJkZXYgPSBpbmZvLT51c2VyX3B0clsw
-XTsNCj4+ICAgCXN0cnVjdCB3aXJlbGVzc19kZXYgKndkZXYgPSBpbmZvLT51c2VyX3B0clsxXTsN
-Cj4+ICAgCXN0cnVjdCBjZmc4MDIxMV9jaGFuX2RlZiBjaGFuZGVmOw0KPj4gKwljb25zdCBzdHJ1
-Y3QgY2ZnODAyMTFfY2hhbl9kZWYgKmNvbXBhdF9jaGFuZGVmOw0KPj4gICAJc3RydWN0IHNrX2J1
-ZmYgKm1zZzsNCj4+ICAgCXZvaWQgKmhkcjsNCj4+ICAgCXU2NCBjb29raWU7DQo+PiBAQCAtOTA4
-MSw2ICs5MTA4LDE0IEBAIHN0YXRpYyBpbnQgbmw4MDIxMV9yZW1haW5fb25fY2hhbm5lbChzdHJ1
-Y3QNCj4+IHNrX2J1ZmYgKnNrYiwNCj4+ICAgCWlmIChlcnIpDQo+PiAgIAkJcmV0dXJuIGVycjsN
-Cj4+DQo+PiArCWlmICghKGNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxsb3dlZCh3ZGV2KSB8
-fA0KPj4gKwkgICAgICBjZmc4MDIxMV9jaGFuZGVmX2lkZW50aWNhbCgmd2Rldi0+Y2hhbmRlZiwg
-JmNoYW5kZWYpKSkNCj4NCj4gSSdkIHByZWZlciB0byB3cml0ZSB0aGF0IGFzICFvZmZfY2hhbm5l
-bCAmJiAhY2hhbmRlZl9pZGVudGljYWwsIHNlZW1zDQo+IGVhc2llciB0byB1bmRlcnN0YW5kIGhl
-cmUuDQoNCk9rLg0KDQoNClRoYW5rcywNCg0KVmFzYW50aA0K
+On 27-1-2017 11:10, Pali Rohár wrote:
+> On Friday 27 January 2017 11:05:32 Arend Van Spriel wrote:
+>> On 27-1-2017 10:43, Pali Rohár wrote:
+>>> On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
+>>>> Pali Rohár <pali.rohar@gmail.com> writes:
+>>>>
+>>>>> NVS calibration data for wl1251 are model specific. Every one device with
+>>>>> wl1251 chip has different and calibrated in factory.
+>>>>>
+>>>>> Not all wl1251 chips have own EEPROM where are calibration data stored. And
+>>>>> in that case there is no "standard" place. Every device has stored them on
+>>>>> different place (some in rootfs file, some in dedicated nand partition,
+>>>>> some in another proprietary structure).
+>>>>>
+>>>>> Kernel wl1251 driver cannot support every one different storage decided by
+>>>>> device manufacture so it will use request_firmware_prefer_user() call for
+>>>>> loading NVS calibration data and userspace helper will be responsible to
+>>>>> prepare correct data.
+>>>>>
+>>>>> In case userspace helper fails request_firmware_prefer_user() still try to
+>>>>> load data file directly from VFS as fallback mechanism.
+>>>>>
+>>>>> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
+>>>>> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
+>>>>> devices.
+>>>>>
+>>>>> With this patch it is finally possible to load correct model specific NVS
+>>>>> calibration data for Nokia N900.
+>>>>>
+>>>>> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+>>>>> ---
+>>>>>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+>>>>>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+>>>>>  2 files changed, 2 insertions(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+>>>>> index 7142ccf..affe154 100644
+>>>>> --- a/drivers/net/wireless/ti/wl1251/Kconfig
+>>>>> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
+>>>>> @@ -2,6 +2,7 @@ config WL1251
+>>>>>  	tristate "TI wl1251 driver support"
+>>>>>  	depends on MAC80211
+>>>>>  	select FW_LOADER
+>>>>> +	select FW_LOADER_USER_HELPER
+>>>>>  	select CRC7
+>>>>>  	---help---
+>>>>>  	  This will enable TI wl1251 driver support. The drivers make
+>>>>> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+>>>>> index 208f062..24f8866 100644
+>>>>> --- a/drivers/net/wireless/ti/wl1251/main.c
+>>>>> +++ b/drivers/net/wireless/ti/wl1251/main.c
+>>>>> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+>>>>>  	struct device *dev = wiphy_dev(wl->hw->wiphy);
+>>>>>  	int ret;
+>>>>>  
+>>>>> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
+>>>>> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+>>>>
+>>>> I don't see the need for this. Just remove the default nvs file from
+>>>> filesystem and the fallback user helper will be always used, right?
+>>>
+>>> It is part of linux-firmware repository. And already part of all
+>>> previous versions of linux-firmware packages in lot of linux
+>>> distributions. So removing it is not possible...
+>>
+>> You are probably saying that on your platform you can not remove
+>> anything from /lib/firmware, right? I don't see how you come from "it is
+>> part of firmware package" to "removing is not possible". Trying to
+>> understand this and it makes no sense.
+> 
+> It is already in linux distribution packages. If I remove that file from
+> file system it will be placed there again by package management or it it
+> will throw error message about system integrity (missing file, etc...).
+> 
+> Also that file is already in linux-firmware git and so is propagated to
+> /lib/firmware by anybody who is using linux-firmware.
+> 
+>>>> Like we discussed earlier, the default nvs file should not be used by
+>>>> normal users.
+>>>
+>>> But already is and we need to deal with this fact.
+>>
+>> Why?
+> 
+> Because everybody has already installed it.
+> 
+>> Are there other platforms that use the default nvs file and have a
+>> working wifi.
+> 
+> I do not know.
+> 
+>> So your "removing is not possible" would be about
+>> regression for those?
+> 
+> Yes, that is possible.
+> 
+> Also you can use wifi on Nokia N900 with this default file. Yes it is
+> not recommended and probably has performance problems... but more people
+> use it for SSH and it is working. Pavel could confirm this.
+> 
+> So yes, if you remove that file *now* there is regression for Nokia N900
+> when you are using SSH over wifi.
+
+So you are changing the behavior for all platforms using wl1251, but the
+user-helper preference is (probably) only applicable for N900, right? So
+for those other platforms there will be a delay waiting for user-mode
+helper to fail, before trying to get nvs file from /lib/firmware.
+
+Regards,
+Arend
