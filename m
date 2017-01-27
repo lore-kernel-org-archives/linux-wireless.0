@@ -1,104 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4523 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1764126AbdAKQN6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40136 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932508AbdA0MTb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 11:13:58 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-        Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 08/12] wil6210: fix for broadcast workaround in PBSS
-Date: Wed, 11 Jan 2017 18:12:44 +0200
-Message-Id: <1484151168-894-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20170111_171425_805790_1138A330)
-In-Reply-To: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1484151168-894-1-git-send-email-qca_merez@qca.qualcomm.com>
+        Fri, 27 Jan 2017 07:19:31 -0500
+Received: from potku.adurom.net.com (a88-115-187-87.elisa-laajakaista.fi [88.115.187.87])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 385AC607A2
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 12:19:29 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH] MAINTAINERS: ath9k-devel is closed
+Date: Fri, 27 Jan 2017 14:19:25 +0200
+Message-Id: <1485519565-21402-1-git-send-email-kvalo@codeaurora.org> (sfid-20170127_132231_929154_C503F3FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+ath9k-devel list is now closed, only linux-wireless should be used.
 
-Currently we do not have full support for broadcast from
-a station inside a PBSS network.
-We have a workaround where instead of broadcast we do a
-unicast to every known station in the PBSS.
-This workaround was performed only for P2P clients.
-This fix will perform the broadcast workaround also for a
-regular station inside a PBSS.
-
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Reported-by: Michael Renzmann <mrenzmann@madwifi-project.org>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c |  1 +
- drivers/net/wireless/ath/wil6210/txrx.c     | 35 ++++++++++++++++-------------
- 2 files changed, 20 insertions(+), 16 deletions(-)
+ MAINTAINERS | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index f99596e..efc8184 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -601,6 +601,7 @@ static int wil_cfg80211_connect(struct wiphy *wiphy,
- 		goto out;
- 	}
- 	wil->privacy = sme->privacy;
-+	wil->pbss = sme->pbss;
- 
- 	if (wil->privacy) {
- 		/* For secure assoc, remove old keys */
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 9aee364..b2a5664 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -1195,17 +1195,6 @@ static struct vring *wil_find_tx_bcast_2(struct wil6210_priv *wil,
- 	return v;
- }
- 
--static struct vring *wil_find_tx_bcast(struct wil6210_priv *wil,
--				       struct sk_buff *skb)
--{
--	struct wireless_dev *wdev = wil->wdev;
--
--	if (wdev->iftype != NL80211_IFTYPE_AP)
--		return wil_find_tx_bcast_2(wil, skb);
--
--	return wil_find_tx_bcast_1(wil, skb);
--}
--
- static int wil_tx_desc_map(struct vring_tx_desc *d, dma_addr_t pa, u32 len,
- 			   int vring_index)
- {
-@@ -1905,12 +1894,26 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	pr_once_fw = false;
- 
- 	/* find vring */
--	if (wil->wdev->iftype == NL80211_IFTYPE_STATION) {
--		/* in STA mode (ESS), all to same VRING */
-+	if (wil->wdev->iftype == NL80211_IFTYPE_STATION && !wil->pbss) {
-+		/* in STA mode (ESS), all to same VRING (to AP) */
- 		vring = wil_find_tx_vring_sta(wil, skb);
--	} else { /* direct communication, find matching VRING */
--		vring = bcast ? wil_find_tx_bcast(wil, skb) :
--				wil_find_tx_ucast(wil, skb);
-+	} else if (bcast) {
-+		if (wil->pbss)
-+			/* in pbss, no bcast VRING - duplicate skb in
-+			 * all stations VRINGs
-+			 */
-+			vring = wil_find_tx_bcast_2(wil, skb);
-+		else if (wil->wdev->iftype == NL80211_IFTYPE_AP)
-+			/* AP has a dedicated bcast VRING */
-+			vring = wil_find_tx_bcast_1(wil, skb);
-+		else
-+			/* unexpected combination, fallback to duplicating
-+			 * the skb in all stations VRINGs
-+			 */
-+			vring = wil_find_tx_bcast_2(wil, skb);
-+	} else {
-+		/* unicast, find specific VRING by dest. address */
-+		vring = wil_find_tx_ucast(wil, skb);
- 	}
- 	if (unlikely(!vring)) {
- 		wil_dbg_txrx(wil, "No Tx VRING found for %pM\n", eth->h_dest);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index cfff2c9e3d94..d7699d5b5863 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10169,7 +10169,6 @@ F:	drivers/media/tuners/qt1010*
+ QUALCOMM ATHEROS ATH9K WIRELESS DRIVER
+ M:	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+ L:	linux-wireless@vger.kernel.org
+-L:	ath9k-devel@lists.ath9k.org
+ W:	http://wireless.kernel.org/en/users/Drivers/ath9k
+ S:	Supported
+ F:	drivers/net/wireless/ath/ath9k/
 -- 
-1.9.1
+2.7.4
