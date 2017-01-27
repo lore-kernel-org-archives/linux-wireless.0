@@ -1,74 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48239 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755892AbdAKHsu (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:33606 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754484AbdA0I6e (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 02:48:50 -0500
-From: "Vamsi, Krishna" <vamsin@qti.qualcomm.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH v3 1/3] cfg80211: Add support to sched scan to report
- better BSSs
-Date: Wed, 11 Jan 2017 07:48:43 +0000
-Message-ID: <54d6fd2bc55f4c9290402e692ed27005@aphydexm01b.ap.qualcomm.com> (sfid-20170111_084900_864882_D22EE636)
-References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
- <25527a43-0458-f9f4-9afb-f5986dffbae1@broadcom.com>
-In-Reply-To: <25527a43-0458-f9f4-9afb-f5986dffbae1@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 27 Jan 2017 03:58:34 -0500
+Received: by mail-pf0-f179.google.com with SMTP id y143so72129789pfb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2017 00:58:34 -0800 (PST)
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+To: Kalle Valo <kvalo@codeaurora.org>,
+        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali.rohar@gmail.com>
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+ <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+ <87tw8lnei3.fsf@codeaurora.org>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a86b620e-2404-7adf-e973-137c8a23ade8@broadcom.com> (sfid-20170127_213931_872997_BDE39E87)
+Date: Fri, 27 Jan 2017 09:58:23 +0100
 MIME-Version: 1.0
+In-Reply-To: <87tw8lnei3.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 27-1-2017 8:33, Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+>> NVS calibration data for wl1251 are model specific. Every one device with
+>> wl1251 chip has different and calibrated in factory.
+>>
+>> Not all wl1251 chips have own EEPROM where are calibration data stored. And
+>> in that case there is no "standard" place. Every device has stored them on
+>> different place (some in rootfs file, some in dedicated nand partition,
+>> some in another proprietary structure).
+>>
+>> Kernel wl1251 driver cannot support every one different storage decided by
+>> device manufacture so it will use request_firmware_prefer_user() call for
+>> loading NVS calibration data and userspace helper will be responsible to
+>> prepare correct data.
+>>
+>> In case userspace helper fails request_firmware_prefer_user() still try to
+>> load data file directly from VFS as fallback mechanism.
+>>
+>> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
+>> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
+>> devices.
+>>
+>> With this patch it is finally possible to load correct model specific NVS
+>> calibration data for Nokia N900.
+>>
+>> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+>> ---
+>>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+>>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+>>  2 files changed, 2 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
+>> index 7142ccf..affe154 100644
+>> --- a/drivers/net/wireless/ti/wl1251/Kconfig
+>> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
+>> @@ -2,6 +2,7 @@ config WL1251
+>>  	tristate "TI wl1251 driver support"
+>>  	depends on MAC80211
+>>  	select FW_LOADER
+>> +	select FW_LOADER_USER_HELPER
+>>  	select CRC7
+>>  	---help---
+>>  	  This will enable TI wl1251 driver support. The drivers make
+>> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+>> index 208f062..24f8866 100644
+>> --- a/drivers/net/wireless/ti/wl1251/main.c
+>> +++ b/drivers/net/wireless/ti/wl1251/main.c
+>> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+>>  	struct device *dev = wiphy_dev(wl->hw->wiphy);
+>>  	int ret;
+>>  
+>> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
+>> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
+> 
+> I don't see the need for this. Just remove the default nvs file from
+> filesystem and the fallback user helper will be always used, right?
 
-> -----Original Message-----
-=20
-> > + * @relative_rssi_set: Indicates whether @relative_rssi is set or not.
->=20
-> So you see a use-case for doing a scan with @relative_rssi being zero, ri=
-ght?
+Indeed. The only remaining issue would be that an error message is
+logged. Also note the fallback is only used if selected in Kconfig.
 
-Yes. Zero value for relative_rssi is also valid.
+> Like we discussed earlier, the default nvs file should not be used by
+> normal users.
 
-> > + * @relative_rssi: Relative RSSI threshold in dB to restrict scan resu=
-lt
-> > + *	reporting in connected state to cases where a matching BSS is
-> determined
-> > + *	to have better RSSI than the current connected BSS. The relative RS=
-SI
-> > + *	threshold values are ignored in disconnected state.
->=20
-> The description says "better RSSI" so I suppose it could be typed as u8.
-> The last sentence is intended driver behavior
+Yup.
 
-I like to leave this as s8 only. This will leave more flexibility to usersp=
-ace especially in case of more than two bands in future.
-=20
-> > +	if (attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI]) {
-> > +		request->relative_rssi =3D nla_get_s8(
-> > +			attrs[NL80211_ATTR_SCHED_SCAN_RELATIVE_RSSI]);
-> > +		request->relative_rssi_set =3D true;
-> > +	}
-> > +
-> > +	if (attrs[NL80211_ATTR_SCHED_SCAN_RSSI_ADJUST]) {
->=20
-> Maybe I misread but I thought this attribute to be applicable only if
-> request->relative_rssi_set is true.
-
-@relative_rssi is valid only when @relative_rssi_set is set to true and @rs=
-si_adjust is valid only when @relative_rssi is valid. I think that is under=
-standable to drivers and there is no need of explicit check here.
-
-> >
-> > -static int nl80211_send_wowlan_nd(struct sk_buff *msg,
-> > +static int nl80211_send_wowlan_nd(struct wiphy *wiphy,
->=20
-> This seems to be unrelated change. At least I do not see any reference to=
- wiphy
-> variable in the added code below.
-
-My bad, Will remove this unnecessary change and upload a patch.
-
-Thanks,
-Vamsi
+Regards,
+Arend
