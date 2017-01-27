@@ -1,64 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34252 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750975AbdAMFWX (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37011 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932499AbdA0MUe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 00:22:23 -0500
-Received: by mail-pf0-f178.google.com with SMTP id 127so24910540pfg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2017 21:22:22 -0800 (PST)
-From: Matt Ranostay <matt@ranostay.consulting>
-To: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mmc@vger.kernel.org, devicetree@vger.kernel.org
-Cc: tony@atomide.com, Matt Ranostay <matt@ranostay.consulting>
-Subject: [PATCH v2 1/2] devicetree: document vmmc-supply and mmc-pwrseq options
-Date: Thu, 12 Jan 2017 21:22:17 -0800
-Message-Id: <20170113052218.10534-2-matt@ranostay.consulting> (sfid-20170113_062238_908611_7EA1AC38)
-In-Reply-To: <20170113052218.10534-1-matt@ranostay.consulting>
-References: <20170113052218.10534-1-matt@ranostay.consulting>
+        Fri, 27 Jan 2017 07:20:34 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 4/5] brcmfmac: allow wowlan support to be per device
+Date: Fri, 27 Jan 2017 12:09:30 +0000
+Message-Id: <1485518971-28183-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132230_705410_DB7DE08E)
+In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cc: devicetree@vger.kernel.org
-Signed-off-by: Matt Ranostay <matt@ranostay.consulting>
----
- Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+The wowlan support is (partially) determined dynamic by checking the
+device/firmware capabilities. So they can differ per device. So it
+is not possible to use a static global. Instead use the global as a
+template and use kmemdup(). When kmemdup() fails the template is used
+unmodified.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-index 980b16df74c3..0854451ff91d 100644
---- a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
-@@ -1,4 +1,4 @@
--Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
-+Marvell 8787/8897/8997 (sd8787/sd8897/sd8997/pcie8997) SDIO/PCIE devices
- ------
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 26 ++++++++++++++++------
+ 1 file changed, 19 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index c81d78f..9d5a561 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6339,7 +6339,7 @@ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
+ }
  
- This node provides properties for controlling the Marvell SDIO/PCIE wireless device.
-@@ -8,6 +8,7 @@ connects the device to the system.
- Required properties:
+ #ifdef CONFIG_PM
+-static struct wiphy_wowlan_support brcmf_wowlan_support = {
++static const struct wiphy_wowlan_support brcmf_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
+ 	.n_patterns = BRCMF_WOWL_MAXPATTERNS,
+ 	.pattern_max_len = BRCMF_WOWL_MAXPATTERNSIZE,
+@@ -6352,21 +6352,29 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
+ {
+ #ifdef CONFIG_PM
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct wiphy_wowlan_support *wowlan_support;
++
++	wowlan_support = kmemdup(&brcmf_wowlan_support,
++				 sizeof(brcmf_wowlan_support), GFP_KERNEL);
++	if (!wowlan_support) {
++		brcmf_err("only support basic wowlan features\n");
++		wiphy->wowlan = &brcmf_wowlan_support;
++		return;
++	}
  
-   - compatible : should be one of the following:
-+	* "marvell,sd8787"
- 	* "marvell,sd8897"
- 	* "marvell,sd8997"
- 	* "pci11ab,2b42"
-@@ -34,6 +35,9 @@ Optional properties:
- 		 so that the wifi chip can wakeup host platform under certain condition.
- 		 during system resume, the irq will be disabled to make sure
- 		 unnecessary interrupt is not received.
-+  - vmmc-supply: a phandle of a regulator, supplying VCC to the card
-+  - mmc-pwrseq:  phandle to the MMC power sequence node. See "mmc-pwrseq-*"
-+		 for documentation of MMC power sequence bindings.
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
+ 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
+-			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
+-			brcmf_wowlan_support.max_nd_match_sets =
+-				BRCMF_PNO_MAX_PFN_COUNT;
++			wowlan_support->flags |= WIPHY_WOWLAN_NET_DETECT;
++			wowlan_support->max_nd_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
+ 			init_waitqueue_head(&cfg->wowl.nd_data_wait);
+ 		}
+ 	}
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK)) {
+-		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
+-		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
++		wowlan_support->flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
++		wowlan_support->flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
+ 	}
  
- Example:
+-	wiphy->wowlan = &brcmf_wowlan_support;
++	wiphy->wowlan = wowlan_support;
+ #endif
+ }
  
-@@ -46,6 +50,7 @@ so that firmware can wakeup host using this device side pin.
- &mmc3 {
- 	status = "okay";
- 	vmmc-supply = <&wlan_en_reg>;
-+	mmc-pwrseq = <&wifi_pwrseq>;
- 	bus-width = <4>;
- 	cap-power-off-card;
- 	keep-power-in-suspend;
+@@ -6747,6 +6755,10 @@ static void brcmf_free_wiphy(struct wiphy *wiphy)
+ 		kfree(wiphy->bands[NL80211_BAND_5GHZ]->channels);
+ 		kfree(wiphy->bands[NL80211_BAND_5GHZ]);
+ 	}
++#if IS_ENABLED(CONFIG_PM)
++	if (wiphy->wowlan != &brcmf_wowlan_support)
++		kfree(wiphy->wowlan);
++#endif
+ 	wiphy_free(wiphy);
+ }
+ 
 -- 
-2.10.2
+1.9.1
