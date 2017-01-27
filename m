@@ -1,61 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37888 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752331AbdATPwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 10:52:25 -0500
-Date: Fri, 20 Jan 2017 16:38:12 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Helmut Schaa <helmut.schaa@googlemail.com>,
-        Gabor Juhos <juhosg@openwrt.org>,
-        Serge Vasilugin <vasilugin@yandex.ru>,
-        Mathias Kresin <dev@kresin.me>,
-        Michel Stempin <michel.stempin@wanadoo.fr>
-Subject: Re: [PATCH v4 0/3] rt2x00: RT5350 support
-Message-ID: <20170120153812.GA23737@redhat.com> (sfid-20170120_165233_257551_FDDB96F2)
-References: <1484918906-21856-1-git-send-email-sgruszka@redhat.com>
- <20170120143219.GB22861@makrotopia.org>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53093 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932655AbdA0MhG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:37:06 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Michael Renzmann <mrenzmann@madwifi-project.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Searching new home for ath[59]k-devel mailing lists
+Date: Fri, 27 Jan 2017 12:37:03 +0000
+Message-ID: <87y3xw65n6.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_133716_748993_6B85DD48)
+References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
+        <87y3yfi78t.fsf@purkki.adurom.net>
+        <49460.217.24.3.26.1484376490.squirrel@webmail.madwifi-project.org>
+        <877f5g7lwd.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877f5g7lwd.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Fri, 27 Jan 2017 14:00:34 +0200")
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170120143219.GB22861@makrotopia.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-On Fri, Jan 20, 2017 at 03:32:19PM +0100, Daniel Golle wrote:
-> On Fri, Jan 20, 2017 at 02:28:23PM +0100, Stanislaw Gruszka wrote:
-> > Repost patches from Daniel with updated clock handling and
-> > correct author of RT5350 patch.
-> > 
-> > Note I did not test patches on SOC devices, but getting
-> > clock frequency is simple and should be trouble-free.
-> 
-> Thanks a lot for handling this!
-> And big thanks to everyone involved for reviewing a smelly pile of
-> patches we had rotting here for half a decade...
-> 
-> Would you like me to re-work and re-submit the remaining patches needed
-> to support RT3883 and RF3853?
+> (dropping ath5k-devel and ath9k-devel, I assume they are closed now)
+>
+> "Michael Renzmann" <mrenzmann@madwifi-project.org> writes:
+>
+>> Kalle Valo wrote:
+>>> So feel free to close both of the lists and thanks for the heads up.
+>>
+>> Ok. I will send a shutdown notice to both lists during the next few days=
+,
+>> then unsubscribe all subscribers, and close the lists for new
+>> subscriptions. I intend to keep the mailing list archives online, for
+>> reference purpose.
+>>
+>>> Are you planning to update the MAINTAINERS file or should I?
+>>
+>> It would be great if you could take care of that.
+>
+> Ok, I'll send a patch.
 
-Yes, please post them in small sets. 
+MAINTAINERS: ath9k-devel is closed
 
-> Otherwise, the next thing I'd have in mind would be to add device-tree
-> bindings to handle in-flash EEPROM loading, see the patches 60[2-9]* in
-> https://git.lede-project.org/?p=source.git;a=tree;f=package/kernel/mac80211/patches
-> 
-> Imho having only support for MTD partitions and skip support for
-> requesting firmware files from userspace for now would be the cleanest
-> way towards proper WiSoC support in vanilla kernels.
-> Obviously our existing patches need to be reworked and stuff needs to
-> be added to Documentation/devicetree/bindings.
-> Support for non-device-tree legacy platforms which need platform_data
-> and legacy EEPROM loading mechanism can remain a local patch in our
-> tree until those will no longer be needed.
-> Does everybody agree with this general direction?
+https://patchwork.kernel.org/patch/9541737/
 
-Sound ok for me.
-
-Thanks
-Stanislaw
+--=20
+Kalle Valo=
