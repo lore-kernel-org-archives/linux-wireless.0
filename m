@@ -1,26 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:50200 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932336AbdAIUjt (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 15:39:49 -0500
-Date: Mon, 09 Jan 2017 15:39:47 -0500 (EST)
-Message-Id: <20170109.153947.2037963854656947458.davem@davemloft.net> (sfid-20170109_213956_375638_34CE8909)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2017-01-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170106123721.10970-1-johannes@sipsolutions.net>
-References: <20170106123721.10970-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:42769 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932388AbdA0MlF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:41:05 -0500
+Subject: Re: [PATCH] rt2x00: avoid introducing a USB dependency in the
+ rt2x00lib module
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+References: <20170127083426.22655-1-nbd@nbd.name>
+ <20170127120959.GA28776@redhat.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        vishalthanki@gmail.com
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <cbdfab40-f775-61ef-4a4e-5e1c25042364@nbd.name> (sfid-20170127_134157_999617_1EEE61A6)
+Date: Fri, 27 Jan 2017 13:23:10 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170127120959.GA28776@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri,  6 Jan 2017 13:37:20 +0100
+On 2017-01-27 13:10, Stanislaw Gruszka wrote:
+> Hi
+> 
+> On Fri, Jan 27, 2017 at 09:34:26AM +0100, Felix Fietkau wrote:
+>> Though protected by an ifdef, introducing an usb symbol dependency in
+>> the rt2x00lib module is a major inconvenience for distributions that
+>> package kernel modules split into individual packages.
+>> 
+>> Get rid of this unnecessary dependency by calling the usb related
+>> function from a more suitable place
+> <snip>
+>>  	rt2x00lib_remove_dev(rt2x00dev);
+>> +	usb_kill_anchored_urbs(anchor);
+> 
+> At this point killing urb's is too late, because we already free
+> structures that are used by urb->callback.
+> 
+> Below patch should solve the problem and not break shutdown sequence:
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> index eb7b714..9235e03 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> @@ -1441,21 +1441,6 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>  	cancel_work_sync(&rt2x00dev->intf_work);
+>  	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+>  	cancel_work_sync(&rt2x00dev->sleep_work);
+> -#if IS_ENABLED(CONFIG_RT2X00_LIB_USB)
+> -	if (rt2x00_is_usb(rt2x00dev)) {
+> -		usb_kill_anchored_urbs(rt2x00dev->anchor);
+> -		hrtimer_cancel(&rt2x00dev->txstatus_timer);
+> -		cancel_work_sync(&rt2x00dev->rxdone_work);
+> -		cancel_work_sync(&rt2x00dev->txdone_work);
+> -	}
+> -#endif
+> -	if (rt2x00dev->workqueue)
+> -		destroy_workqueue(rt2x00dev->workqueue);
+> -
+> -	/*
+> -	 * Free the tx status fifo.
+> -	 */
+> -	kfifo_free(&rt2x00dev->txstatus_fifo);
+>  
+>  	/*
+>  	 * Kill the tx status tasklet.
+> @@ -1471,6 +1456,14 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>  	 */
+>  	rt2x00lib_uninitialize(rt2x00dev);
+>  
+> +	if (rt2x00dev->workqueue)
+> +		destroy_workqueue(rt2x00dev->workqueue);
+> +
+> +	/*
+> +	 * Free the tx status fifo.
+> +	 */
+> +	kfifo_free(&rt2x00dev->txstatus_fifo);
+> +
+>  	/*
+>  	 * Free extra components
+>  	 */
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> index 6005e14..a0a866e 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+> @@ -744,6 +744,11 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
+>  {
+>  	struct data_queue *queue;
+>  
+> +	usb_kill_anchored_urbs(rt2x00dev->anchor);
+> +	hrtimer_cancel(&rt2x00dev->txstatus_timer);
+> +	cancel_work_sync(&rt2x00dev->rxdone_work);
+> +	cancel_work_sync(&rt2x00dev->txdone_work);
+> +
 
-> Since the new patch would otherwise cause conflicts, it might be good
-> to pull net or Linus's next RC containing it into net-next, if you can.
+Looks good to me, please submit that.
 
-Well, needed or not, it is done now :-)
+- Felix
