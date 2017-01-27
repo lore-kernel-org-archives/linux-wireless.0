@@ -1,13 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33463 "EHLO
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35787 "EHLO
         mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932428AbdA0KK6 (ORCPT
+        with ESMTP id S932221AbdA0PvO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 05:10:58 -0500
-Date: Fri, 27 Jan 2017 11:10:43 +0100
+        Fri, 27 Jan 2017 10:51:14 -0500
+Date: Fri, 27 Jan 2017 16:41:25 +0100
 From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
         Ming Lei <ming.lei@canonical.com>,
         "Luis R. Rodriguez" <mcgrof@kernel.org>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -24,119 +24,97 @@ Cc: Kalle Valo <kvalo@codeaurora.org>,
         netdev@vger.kernel.org
 Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
  loading NVS calibration data
-Message-ID: <20170127101043.GD24223@pali> (sfid-20170127_111446_494099_C6234065)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
- <87tw8lnei3.fsf@codeaurora.org>
- <20170127094342.GC24223@pali>
+Message-ID: <20170127154125.GL24223@pali> (sfid-20170127_183624_503954_8F1DDE09)
+References: <20170127094342.GC24223@pali>
  <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+ <20170127101043.GD24223@pali>
+ <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+ <20170127103408.GG24223@pali>
+ <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+ <20170127115706.GH24223@pali>
+ <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+ <20170127131146.GI24223@pali>
+ <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+In-Reply-To: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 January 2017 11:05:32 Arend Van Spriel wrote:
-> On 27-1-2017 10:43, Pali Rohár wrote:
-> > On Friday 27 January 2017 09:33:40 Kalle Valo wrote:
+On Friday 27 January 2017 17:23:07 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
 > >> Pali Rohár <pali.rohar@gmail.com> writes:
-> >>
-> >>> NVS calibration data for wl1251 are model specific. Every one device with
-> >>> wl1251 chip has different and calibrated in factory.
-> >>>
-> >>> Not all wl1251 chips have own EEPROM where are calibration data stored. And
-> >>> in that case there is no "standard" place. Every device has stored them on
-> >>> different place (some in rootfs file, some in dedicated nand partition,
-> >>> some in another proprietary structure).
-> >>>
-> >>> Kernel wl1251 driver cannot support every one different storage decided by
-> >>> device manufacture so it will use request_firmware_prefer_user() call for
-> >>> loading NVS calibration data and userspace helper will be responsible to
-> >>> prepare correct data.
-> >>>
-> >>> In case userspace helper fails request_firmware_prefer_user() still try to
-> >>> load data file directly from VFS as fallback mechanism.
-> >>>
-> >>> On Nokia N900 device which has wl1251 chip, NVS calibration data are stored
-> >>> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
-> >>> devices.
-> >>>
-> >>> With this patch it is finally possible to load correct model specific NVS
-> >>> calibration data for Nokia N900.
-> >>>
-> >>> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> >>> ---
-> >>>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
-> >>>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
-> >>>  2 files changed, 2 insertions(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireless/ti/wl1251/Kconfig
-> >>> index 7142ccf..affe154 100644
-> >>> --- a/drivers/net/wireless/ti/wl1251/Kconfig
-> >>> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
-> >>> @@ -2,6 +2,7 @@ config WL1251
-> >>>  	tristate "TI wl1251 driver support"
-> >>>  	depends on MAC80211
-> >>>  	select FW_LOADER
-> >>> +	select FW_LOADER_USER_HELPER
-> >>>  	select CRC7
-> >>>  	---help---
-> >>>  	  This will enable TI wl1251 driver support. The drivers make
-> >>> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
-> >>> index 208f062..24f8866 100644
-> >>> --- a/drivers/net/wireless/ti/wl1251/main.c
-> >>> +++ b/drivers/net/wireless/ti/wl1251/main.c
-> >>> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
-> >>>  	struct device *dev = wiphy_dev(wl->hw->wiphy);
-> >>>  	int ret;
-> >>>  
-> >>> -	ret = request_firmware(&fw, WL1251_NVS_NAME, dev);
-> >>> +	ret = request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
-> >>
-> >> I don't see the need for this. Just remove the default nvs file from
-> >> filesystem and the fallback user helper will be always used, right?
-> > 
-> > It is part of linux-firmware repository. And already part of all
-> > previous versions of linux-firmware packages in lot of linux
-> > distributions. So removing it is not possible...
+> >> 
+> >> > 2) It was already tested that example NVS data can be used for N900 e.g.
+> >> > for SSH connection. If real correct data are not available it is better
+> >> > to use at least those example (and probably log warning message) so user
+> >> > can connect via SSH and start investigating where is problem.
+> >> 
+> >> I disagree. Allowing default calibration data to be used can be
+> >> unnoticed by user and left her wondering why wifi works so badly.
+> >
+> > So there are only two options:
+> >
+> > 1) Disallow it and so these users will have non-working wifi.
+> >
+> > 2) Allow those data to be used as fallback mechanism.
+> >
+> > And personally I'm against 1) because it will break wifi support for
+> > *all* Nokia N900 devices right now.
 > 
-> You are probably saying that on your platform you can not remove
-> anything from /lib/firmware, right? I don't see how you come from "it is
-> part of firmware package" to "removing is not possible". Trying to
-> understand this and it makes no sense.
+> All two of them? :)
 
-It is already in linux distribution packages. If I remove that file from
-file system it will be placed there again by package management or it it
-will throw error message about system integrity (missing file, etc...).
+Ehm...
 
-Also that file is already in linux-firmware git and so is propagated to
-/lib/firmware by anybody who is using linux-firmware.
+> But not working is exactly my point, if correct calibration data is not
+> available wifi should not work. And it's not only about functionality
+> problems, there's also the regulatory aspect.
 
-> >> Like we discussed earlier, the default nvs file should not be used by
-> >> normal users.
-> > 
-> > But already is and we need to deal with this fact.
+About functionality, Pavel confirmed too that SSH is somehow working...
+
+Regulatory aspect is different, but via iw can be manually configured
+some settings.
+
+> >> > 3) If we do rename *now* we will totally break wifi support on Nokia
+> >> > N900.
+> >> 
+> >> Then the distro should fix that when updating the linux-firmware
+> >> packages. Can you provide details about the setup, what distro etc?
+> >
+> > Debian stable, Ubuntu LTSs 14.04, 16.04. 
 > 
-> Why?
+> You can run these out of box on N900?
 
-Because everybody has already installed it.
+Out-of-box I can run Kubuntu 12.04 (which is LTS too). They had prepared
+special image for N900 and I still have it on uSD card.
 
-> Are there other platforms that use the default nvs file and have a
-> working wifi.
+I guess that new versions of Ubuntu could somehow work (maybe not
+out-of-box but with some changes) and Pavel has working Debian.
 
-I do not know.
+Also basic support needed for wifi and SSH server is probably working
+with any distribution targeting armv7-a or omap3. So yes, I can say it
+is out-of-box. We will not have GSM calls or camera support, but wifi
+breakage is there.
 
-> So your "removing is not possible" would be about
-> regression for those?
+> > And I think that other LTS distributions contains that example nvs
+> > file too (I'm not going to verify others, but list will be probably
+> > long). Upgrading linux-firmware is against policy of those
+> > distributions. So no this is not an solution.
+> 
+> So instead we should workaround distro policies in kernel? Come on.
+> 
+> Seriously, just rename the file in linux-firmware and file a bug (with a
+> patch) to distros. If they don't fix the bug you just have to do a
+> custom hack for N900. But such is life.
 
-Yes, that is possible.
+I do not see point what will be changed. I rename that file and after
+system update (or integrity check) it will be there again.
 
-Also you can use wifi on Nokia N900 with this default file. Yes it is
-not recommended and probably has performance problems... but more people
-use it for SSH and it is working. Pavel could confirm this.
-
-So yes, if you remove that file *now* there is regression for Nokia N900
-when you are using SSH over wifi.
+And if I do that, what prevents kernel to stop using NVS file from
+/lib/firmware/? Nothing, original problem (which is going solved by this
+patch series) still remains.
 
 -- 
 Pali Rohár
