@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47586 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1033941AbdAFNKE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 08:10:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-        Mathias Kresin <dev@kresin.me>
-Subject: [PATCH 4/9] rt2800: change default retry settings
-Date: Fri,  6 Jan 2017 14:05:13 +0100
-Message-Id: <1483707918-31480-5-git-send-email-sgruszka@redhat.com> (sfid-20170106_141126_448225_477FEFC4)
-In-Reply-To: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
-References: <1483707918-31480-1-git-send-email-sgruszka@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43032 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932346AbdA0Jke (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 04:40:34 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
+        <87inp1ndgm.fsf@codeaurora.org> <20170127090538.GB24223@pali>
+Date: Fri, 27 Jan 2017 11:30:47 +0200
+In-Reply-To: <20170127090538.GB24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
+ \=\?utf-8\?Q\?s\?\= message of "Fri, 27
+        Jan 2017 10:05:38 +0100")
+Message-ID: <87poj87su0.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_104101_799131_46FCB15B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We do not have option to set per frame retry count. We have only global
-TX_RTY_CFG registers which specify the number or retries. Set setting
-of that register to value that correspond rate control algorithm number
-of frame post (number of retries + 1), which is 3 for aggregated frames.
-This should help with big amount of retries on bad conditions, hence
-mitigate buffer-bloat like problems.
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+> On Friday 27 January 2017 09:56:09 Kalle Valo wrote:
+>> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+>>=20
+>> > In case there is no valid MAC address kernel generates random one. This
+>> > patch propagate this generated MAC address back to NVS data which will=
+ be
+>> > uploaded to wl1251 chip. So HW would have same MAC address as linux ke=
+rnel
+>> > uses.
+>> >
+>> > Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+>>=20
+>> Why? What issue does this fix?
+>
+> Send permanent MAC address to wl1251 chip, same what is doing wl12xx
+> driver.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 5436cdb..4833ec6 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -4769,8 +4769,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2800_register_write(rt2x00dev, PBF_MAX_PCNT, 0x1f3fbf9f);
- 
- 	rt2800_register_read(rt2x00dev, TX_RTY_CFG, &reg);
--	rt2x00_set_field32(&reg, TX_RTY_CFG_SHORT_RTY_LIMIT, 15);
--	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT, 31);
-+	rt2x00_set_field32(&reg, TX_RTY_CFG_SHORT_RTY_LIMIT, 2);
-+	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_LIMIT, 2);
- 	rt2x00_set_field32(&reg, TX_RTY_CFG_LONG_RTY_THRE, 2000);
- 	rt2x00_set_field32(&reg, TX_RTY_CFG_NON_AGG_RTY_MODE, 0);
- 	rt2x00_set_field32(&reg, TX_RTY_CFG_AGG_RTY_MODE, 0);
-@@ -7514,6 +7514,13 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	rt2x00dev->hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
- 	/*
-+	 * Change default retry settings to values corresponding more closely
-+	 * to rate[0].count setting of minstrel rate control algorithm.
-+	 */
-+	rt2x00dev->hw->wiphy->retry_short = 2;
-+	rt2x00dev->hw->wiphy->retry_long = 2;
-+
-+	/*
- 	 * Initialize all hw fields.
- 	 */
- 	ieee80211_hw_set(rt2x00dev->hw, REPORTS_TX_ACK_STATUS);
--- 
-2.7.4
+Ok, so this doesn't change functionality in any way and you are adding
+it only because wl12xx does the same? You should document that in the
+the commit log.
+
+If there's no change I don't really see the point of this. But if
+there's harm, hopefully, I guess it's ok.
+
+--=20
+Kalle Valo
