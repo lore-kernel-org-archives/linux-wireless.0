@@ -1,143 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52766 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751410AbdAQXfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 18:35:13 -0500
-From: Jes.Sorensen@gmail.com
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] rtl8xxxu: Update author/maintainer contact info
-Date: Tue, 17 Jan 2017 18:18:56 -0500
-Message-Id: <20170117231856.5075-6-Jes.Sorensen@gmail.com> (sfid-20170118_003526_425216_335C16B0)
-In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
-References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:42662 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932655AbdA0M1v (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 07:27:51 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+        <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
+        <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+        <20170127101043.GD24223@pali>
+        <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+        <20170127103408.GG24223@pali>
+        <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+        <20170127115706.GH24223@pali>
+Date: Fri, 27 Jan 2017 14:26:22 +0200
+In-Reply-To: <20170127115706.GH24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
+ \=\?utf-8\?Q\?s\?\= message of "Fri, 27
+        Jan 2017 12:57:06 +0100")
+Message-ID: <8737g47kpd.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_133052_629836_03B4CC4A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-Update copyright year and email address.
+> On Friday 27 January 2017 13:49:03 Kalle Valo wrote:
+>> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+>>=20
+>> >> So
+>> >> for those other platforms there will be a delay waiting for user-mode
+>> >> helper to fail, before trying to get nvs file from /lib/firmware.
+>> >
+>> > Yes, there will be. But there is no easy way to fix this problem that
+>> > kernel is trying to use default/example NVS data...
+>>=20
+>> Kernel is doing correctly and requesting NVS data as expected, the
+>> problem here is that linux-firmware claims that the example NVS data is
+>> real calibration data (which it is not). Distros should not use that,
+>> only developers for testing purposes. We should not courage users using
+>> example calibration data.
+>>=20
+>> The simple fix is to rename the NVS file in linux-firmware to something
+>> like wl1251-nvs.bin.example, no need to workaround this in kernel. If
+>> you send a patch to linux-firmware I'm happy to ack that.
+>
+> I agree with rename and fact that default/example data should not be
+> used.
+>
+> But...
+>
+> 1) Kernel should not read device/model specific data from VFS where
+> are stored not-device-specific files preinstalled by linux
+> distributions.
+>
+> And linux distributions are already putting files into VFS and kernel
+> cannot enforce userspace to not do that (as they are already doing it).
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
----
- MAINTAINERS                                            | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 4 ++--
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 2 +-
- 8 files changed, 9 insertions(+), 9 deletions(-)
+I'm having problems to understand what you are saying here.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c8df0e1..0b5c80e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10584,7 +10584,7 @@ F:	drivers/net/wireless/realtek/rtlwifi/
- F:	drivers/net/wireless/realtek/rtlwifi/rtl8192ce/
- 
- RTL8XXXU WIRELESS DRIVER (rtl8xxxu)
--M:	Jes Sorensen <Jes.Sorensen@redhat.com>
-+M:	Jes Sorensen <Jes.Sorensen@gmail.com>
- L:	linux-wireless@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jes/linux.git rtl8xxxu-devel
- S:	Maintained
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index df551b2..95e3993 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-index f9e2050..a41a296 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-@@ -1,7 +1,7 @@
- /*
-  * RTL8XXXU mac80211 USB driver - 8188c/8188r/8192c specific subdriver
-  *
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * Portions, notably calibration code:
-  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index a1178c5..80fee69 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1,7 +1,7 @@
- /*
-  * RTL8XXXU mac80211 USB driver - 8192e specific subdriver
-  *
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * Portions, notably calibration code:
-  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-index aef3730..1746311 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
-@@ -1,7 +1,7 @@
- /*
-  * RTL8XXXU mac80211 USB driver - 8723a specific subdriver
-  *
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * Portions, notably calibration code:
-  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index 02b8ddd..c4b86a8 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -1,7 +1,7 @@
- /*
-  * RTL8XXXU mac80211 USB driver - 8723b specific subdriver
-  *
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * Portions, notably calibration code:
-  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 3585a04..e544dd1 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -1,7 +1,7 @@
- /*
-  * RTL8XXXU mac80211 USB driver
-  *
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * Portions, notably calibration code:
-  * Copyright(c) 2007 - 2011 Realtek Corporation. All rights reserved.
-@@ -48,7 +48,7 @@ static bool rtl8xxxu_dma_aggregation;
- static int rtl8xxxu_dma_agg_timeout = -1;
- static int rtl8xxxu_dma_agg_pages = -1;
- 
--MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
-+MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@gmail.com>");
- MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
- MODULE_LICENSE("GPL");
- MODULE_FIRMWARE("rtlwifi/rtl8723aufw_A.bin");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 315ccfb..3d3e2e1 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -1,5 +1,5 @@
- /*
-- * Copyright (c) 2014 - 2016 Jes Sorensen <Jes.Sorensen@redhat.com>
-+ * Copyright (c) 2014 - 2017 Jes Sorensen <Jes.Sorensen@gmail.com>
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
--- 
-2.7.4
+> 2) It was already tested that example NVS data can be used for N900 e.g.
+> for SSH connection. If real correct data are not available it is better
+> to use at least those example (and probably log warning message) so user
+> can connect via SSH and start investigating where is problem.
+
+I disagree. Allowing default calibration data to be used can be
+unnoticed by user and left her wondering why wifi works so badly.
+
+> 3) If we do rename *now* we will totally break wifi support on Nokia
+> N900.
+
+Then the distro should fix that when updating the linux-firmware
+packages. Can you provide details about the setup, what distro etc?
+
+--=20
+Kalle Valo
