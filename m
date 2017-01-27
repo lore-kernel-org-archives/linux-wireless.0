@@ -1,54 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:33945 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965898AbdACUqB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54181 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933241AbdA0RvI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 15:46:01 -0500
-Received: by mail-io0-f169.google.com with SMTP id p42so439982971ioo.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2017 12:46:01 -0800 (PST)
+        Fri, 27 Jan 2017 12:51:08 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1481645205.20412.32.camel@sipsolutions.net>
-References: <94eb2c110db85c2379054172dad0@google.com> <1480948100.31788.15.camel@sipsolutions.net>
- <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
- <1481093061.4092.17.camel@sipsolutions.net> <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
- <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com> <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
- <1481645205.20412.32.camel@sipsolutions.net>
-From: Dmitry Shmidt <dimitrysh@google.com>
-Date: Tue, 3 Jan 2017 12:45:59 -0800
-Message-ID: <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com> (sfid-20170103_214604_828687_5EED7314)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v2,02/13] wil6210: add disable_ap_sme module parameter
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1484226365-10433-3-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1484226365-10433-3-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Dedy Lansky <qca_dlansky@qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <ac37937bc2304d6197e6112c325d1bc5@eusanexr01a.eu.qualcomm.com> (sfid-20170127_185411_536879_3664584D)
+Date: Fri, 27 Jan 2017 09:50:52 -0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2016 at 8:06 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
->> Supporting requests (or more precisely requests and results)
->> differentiated by user-space entity can be tricky. Right now we are
->> not checking current caller pid, right? Maybe it is also good idea -
->> or maybe we can just make result filtering per user-space caller?
->
-> Could be done.
->
-> You seem to be very worried about the partial results - I'm not too
-> worried about that I guess, the connection manager itself will always
-> be able to wait for the full scan to finish before making a decision,
-> but it may not even want to (see the separate discussion on per-channel
-> "done" notifications etc.)
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+> 
+> By default, AP SME is handled by driver/FW.
+> In case disable_ap_sme is true, driver doesn't turn-on
+> WIPHY_FLAG_HAVE_AP_SME and the responsibility for
+> AP SME is passed to user space.
+> 
+> With AP SME disabled, driver reports assoc request frame
+> to user space which is then responsible for sending assoc
+> response frame and for sending NL80211_CMD_NEW_STATION.
+> Driver also reports disassoc frame to user space
+> which should then send NL80211_CMD_DEL_STATION.
+> 
+> NL80211_CMD_SET_STATION with NL80211_STA_FLAG_AUTHORIZED
+> is used by user space to allow/disallow data transmit.
+> 
+> Signed-off-by: Dedy Lansky <qca_dlansky@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Probably you are right.
+11 patches applied to ath-next branch of ath.git, thanks.
 
-> I'm much more worried about the "bucket reporting" since that doesn't
-> fit into the current full BSS reporting model at all. What's your
-> suggestion for this?
->
-> johannes
+849a564b7e28 wil6210: add disable_ap_sme module parameter
+a351f2f537b7 wil6210: support loading dedicated image for sparrow-plus devices
+af3db60a3033 wil6210: remove __func__ from debug printouts
+0d2370e939ac wil6210: support new WMI-only FW capability
+4d4c4dc324b4 wil6210: missing reinit_completion in wmi_call
+3ee908dc3b48 wil6210: protect against false interrupt during reset sequence
+a895cb8b990c wil6210: fix for broadcast workaround in PBSS
+a52fb913aee9 wil6210: align to latest auto generated wmi.h
+9d865ee232ec wil6210: report association ID (AID) per station in debugfs
+c3bfea05a6fd wil6210: option to override A-BFT length in start AP/PCP
+78484c44e4b3 wil6210: convert symbolic permissions to octal permissions
 
-We can either use alternative structure in kernel wireless stack,
-or alternative structure in userspace (in wpa_supplicant), and we will
-most likely need special command for this case at least to retrieve
-results.
+-- 
+https://patchwork.kernel.org/patch/9513175/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
