@@ -1,96 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37855 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932752AbdA0M14 (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36137 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750864AbdA0TfJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:27:56 -0500
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH V2 4/5] brcmfmac: allow wowlan support to be per device
-Date: Fri, 27 Jan 2017 12:27:47 +0000
-Message-Id: <1485520068-5807-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_133137_960393_E12D28A3)
-In-Reply-To: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 27 Jan 2017 14:35:09 -0500
+Date: Fri, 27 Jan 2017 22:26:06 +0300
+From: Pichugin Dmitry <smokeman85@gmail.com>
+To: johannes@sipsolutions.net, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] cfg80211 debugfs: Cleanup some checkpatch issues
+Message-ID: <20170127192603.GA13522@gmail.com> (sfid-20170127_203712_578214_221D21FF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wowlan support is (partially) determined dynamic by checking the
-device/firmware capabilities. So they can differ per device. So it
-is not possible to use a static global. Instead use the global as a
-template and use kmemdup(). When kmemdup() fails the template is used
-unmodified.
+This fixes the checkpatch.pl warnings:
+* Macros should not use a trailing semicolon.
+* Spaces required around that '='.
+* Symbolic permissions 'S_IRUGO' are not preferred.
+* Macro argument reuse 'buflen' - possible side-effects
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Pichugin Dmitry <smokeman85@gmail.com>
 ---
- V2: fix checkpatch error, ie. line over 80 characters.
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 26 ++++++++++++++++------
- 1 file changed, 19 insertions(+), 7 deletions(-)
+ net/wireless/debugfs.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index c81d78f..ab1f9f2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6339,7 +6339,7 @@ static void brcmf_wiphy_pno_params(struct wiphy *wiphy)
- }
-
- #ifdef CONFIG_PM
--static struct wiphy_wowlan_support brcmf_wowlan_support = {
-+static const struct wiphy_wowlan_support brcmf_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
- 	.n_patterns = BRCMF_WOWL_MAXPATTERNS,
- 	.pattern_max_len = BRCMF_WOWL_MAXPATTERNSIZE,
-@@ -6352,21 +6352,29 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
+diff --git a/net/wireless/debugfs.c b/net/wireless/debugfs.c
+index 5d45391..96e3cff 100644
+--- a/net/wireless/debugfs.c
++++ b/net/wireless/debugfs.c
+@@ -17,11 +17,12 @@
+ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ 			    size_t count, loff_t *ppos)			\
+ {									\
+-	struct wiphy *wiphy= file->private_data;		\
+-	char buf[buflen];						\
++	struct wiphy *wiphy = file->private_data;			\
++	int __buflen = __builtin_constant_p(buflen) ? buflen : -1;	\
++	char buf[__buflen];						\
+ 	int res;							\
+ 									\
+-	res = scnprintf(buf, buflen, fmt "\n", ##value);		\
++	res = scnprintf(buf, __buflen, fmt "\n", ##value);		\
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);	\
+ }									\
+ 									\
+@@ -29,14 +30,14 @@ static const struct file_operations name## _ops = {			\
+ 	.read = name## _read,						\
+ 	.open = simple_open,						\
+ 	.llseek = generic_file_llseek,					\
+-};
++}
+ 
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+-		      wiphy->rts_threshold)
++		      wiphy->rts_threshold);
+ DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
+ 		      wiphy->frag_threshold);
+ DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
+-		      wiphy->retry_short)
++		      wiphy->retry_short);
+ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+ 		      wiphy->retry_long);
+ 
+@@ -103,7 +104,7 @@ static const struct file_operations ht40allow_map_ops = {
+ };
+ 
+ #define DEBUGFS_ADD(name)						\
+-	debugfs_create_file(#name, S_IRUGO, phyd, &rdev->wiphy, &name## _ops);
++	debugfs_create_file(#name, 0444, phyd, &rdev->wiphy, &name## _ops)
+ 
+ void cfg80211_debugfs_rdev_add(struct cfg80211_registered_device *rdev)
  {
- #ifdef CONFIG_PM
- 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct wiphy_wowlan_support *wowl;
-+
-+	wowl = kmemdup(&brcmf_wowlan_support, sizeof(brcmf_wowlan_support),
-+		       GFP_KERNEL);
-+	if (!wowl) {
-+		brcmf_err("only support basic wowlan features\n");
-+		wiphy->wowlan = &brcmf_wowlan_support;
-+		return;
-+	}
-
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
--			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
--			brcmf_wowlan_support.max_nd_match_sets =
--				BRCMF_PNO_MAX_PFN_COUNT;
-+			wowl->flags |= WIPHY_WOWLAN_NET_DETECT;
-+			wowl->max_nd_match_sets = BRCMF_PNO_MAX_PFN_COUNT;
- 			init_waitqueue_head(&cfg->wowl.nd_data_wait);
- 		}
- 	}
- 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK)) {
--		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
--		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
-+		wowl->flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
-+		wowl->flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
- 	}
-
--	wiphy->wowlan = &brcmf_wowlan_support;
-+	wiphy->wowlan = wowl;
- #endif
- }
-
-@@ -6747,6 +6755,10 @@ static void brcmf_free_wiphy(struct wiphy *wiphy)
- 		kfree(wiphy->bands[NL80211_BAND_5GHZ]->channels);
- 		kfree(wiphy->bands[NL80211_BAND_5GHZ]);
- 	}
-+#if IS_ENABLED(CONFIG_PM)
-+	if (wiphy->wowlan != &brcmf_wowlan_support)
-+		kfree(wiphy->wowlan);
-+#endif
- 	wiphy_free(wiphy);
- }
-
---
-1.9.1
+-- 
+2.7.4
