@@ -1,69 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:54947 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751431AbdAPCyg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38196 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932871AbdA0PXn (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 15 Jan 2017 21:54:36 -0500
-Date: Mon, 16 Jan 2017 03:53:54 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH v2 00/14] rt2x00 patches from OpenWrt.org
-Message-ID: <20170116025321.GA32148@makrotopia.org> (sfid-20170116_035440_061202_D4BAC6E1)
-References: <874m114lwq.fsf@codeaurora.org>
+        Fri, 27 Jan 2017 10:23:43 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+References: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+        <87tw8lnei3.fsf@codeaurora.org> <20170127094342.GC24223@pali>
+        <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+        <20170127101043.GD24223@pali>
+        <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+        <20170127103408.GG24223@pali>
+        <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+        <20170127115706.GH24223@pali>
+        <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+        <20170127131146.GI24223@pali>
+Date: Fri, 27 Jan 2017 17:23:07 +0200
+In-Reply-To: <20170127131146.GI24223@pali> ("Pali \=\?utf-8\?Q\?Roh\=C3\=A1r\=22'\?\=
+ \=\?utf-8\?Q\?s\?\= message of "Fri, 27
+        Jan 2017 14:11:46 +0100")
+Message-ID: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com> (sfid-20170127_162417_245384_DD4A9659)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <874m114lwq.fsf@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As requested the original series was devided so that everything except
-for Rt3883 can go first. What's left are a couple of fixes and as well
-as added support for some Rt3352 boards as well as the Rt5350 WiSoC.
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-Claudio Mignanti (1):
-  rt2x00: rt2x00pci: set PCI MWI only if supported
+> On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
+>> Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
+>>=20
+>> > 2) It was already tested that example NVS data can be used for N900 e.=
+g.
+>> > for SSH connection. If real correct data are not available it is better
+>> > to use at least those example (and probably log warning message) so us=
+er
+>> > can connect via SSH and start investigating where is problem.
+>>=20
+>> I disagree. Allowing default calibration data to be used can be
+>> unnoticed by user and left her wondering why wifi works so badly.
+>
+> So there are only two options:
+>
+> 1) Disallow it and so these users will have non-working wifi.
+>
+> 2) Allow those data to be used as fallback mechanism.
+>
+> And personally I'm against 1) because it will break wifi support for
+> *all* Nokia N900 devices right now.
 
-Daniel Golle (2):
-  rt2x00: rt2800lib: support for for RT3352 with external PA
-  rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
+All two of them? :)
 
-Felix Fietkau (1):
-  rt2x00: rt2800lib: fix rf id for RT3352
+But not working is exactly my point, if correct calibration data is not
+available wifi should not work. And it's not only about functionality
+problems, there's also the regulatory aspect.
 
-Gabor Juhos (8):
-  rt2x00: rt2800lib: move rt2800_drv_data declaration into rt2800lib.h
-  rt2x00: rt2800lib: introduce RT2800_HAS_HIGH_SHARED_MEM flag
-  rt2x00: rt2800: serialize shared memory access
-  rt2x00: rt2800lib: fix beacon generation on RT3593
-  rt2x00: rt2800lib: add hw_beacon_count field to struct rt2800_drv_data
-  rt2x00: rt2800lib: init additional beacon offset registers
-  rt2x00: rt2800lib: fix max supported beacon count for RT3593
-  rt2x00: rt2800mmio: add a workaround for spurious TX_FIFO_STATUS
-    interrupts
+>> > 3) If we do rename *now* we will totally break wifi support on Nokia
+>> > N900.
+>>=20
+>> Then the distro should fix that when updating the linux-firmware
+>> packages. Can you provide details about the setup, what distro etc?
+>
+> Debian stable, Ubuntu LTSs 14.04, 16.04.=20
 
-Michel Stempin (1):
-  rt2x00: add support for RT5350 WiSoC
+You can run these out of box on N900?
 
-Serge Vasilugin (1):
-  rt2x00: rt2800lib: correctly set HT20/HT40 filter
+> And I think that other LTS distributions contains that example nvs
+> file too (I'm not going to verify others, but list will be probably
+> long). Upgrading linux-firmware is against policy of those
+> distributions. So no this is not an solution.
 
- drivers/net/wireless/ralink/rt2x00/rt2800.h     |  60 +++-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c  | 406 ++++++++++++++++++++++--
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h  |  65 ++++
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.c |  98 +++++-
- drivers/net/wireless/ralink/rt2x00/rt2800mmio.h |   4 +
- drivers/net/wireless/ralink/rt2x00/rt2800pci.c  |  14 +
- drivers/net/wireless/ralink/rt2x00/rt2800soc.c  |   3 +
- drivers/net/wireless/ralink/rt2x00/rt2800usb.c  |  31 ++
- drivers/net/wireless/ralink/rt2x00/rt2x00.h     |  10 +
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.c  |   2 +
- 10 files changed, 640 insertions(+), 53 deletions(-)
+So instead we should workaround distro policies in kernel? Come on.
 
--- 
-2.11.0
+Seriously, just rename the file in linux-firmware and file a bug (with a
+patch) to distros. If they don't fix the bug you just have to do a
+custom hack for N900. But such is life.
+
+--=20
+Kalle Valo
