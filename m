@@ -1,92 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:36321 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750952AbdAQT5E (ORCPT
+Received: from lpdvrndsmtp01.broadcom.com ([192.19.229.170]:37012 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932708AbdA0MUe (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 14:57:04 -0500
-Received: by mail-pf0-f171.google.com with SMTP id 189so64384848pfu.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2017 11:57:03 -0800 (PST)
-Date: Tue, 17 Jan 2017 11:48:22 -0800
-From: Brian Norris <briannorris@chromium.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-kernel@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>
-Subject: Re: [PATCH v2 2/3] mwifiex: pcie: don't loop/retry interrupt status
- checks
-Message-ID: <20170117194822.GA29749@google.com> (sfid-20170117_205707_559872_8EE3564C)
-References: <20170113233538.36196-1-briannorris@chromium.org>
- <20170113233538.36196-2-briannorris@chromium.org>
- <20170116005452.GI23285@dtor-ws>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170116005452.GI23285@dtor-ws>
+        Fri, 27 Jan 2017 07:20:34 -0500
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH 1/5] nl80211: fix validation of scheduled scan info for wowlan netdetect
+Date: Fri, 27 Jan 2017 12:09:27 +0000
+Message-Id: <1485518971-28183-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_132234_218655_59FDFD26)
+In-Reply-To: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1485518971-28183-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 15, 2017 at 04:54:52PM -0800, Dmitry Torokhov wrote:
-> On Fri, Jan 13, 2017 at 03:35:37PM -0800, Brian Norris wrote:
-> > The following sequence occurs when using IEEE power-save on 8997:
-> > (a) driver sees SLEEP event
-> > (b) driver issues SLEEP CONFIRM
-> > (c) driver recevies CMD interrupt; within the interrupt processing loop,
-> >     we do (d) and (e):
-> > (d) wait for FW sleep cookie (and often time out; it takes a while), FW
-> >     is putting card into low power mode
-> > (e) re-check PCIE_HOST_INT_STATUS register; quit loop with 0 value
-> > 
-> > But at (e), no one actually signaled an interrupt (i.e., we didn't check
-> > adapter->int_status). And what's more, because the card is going to
-> > sleep, this register read appears to take a very long time in some cases
-> > -- 3 milliseconds in my case!
-> > 
-> > Now, I propose that (e) is completely unnecessary. If there were any
-> > additional interrupts signaled after the start of this loop, then the
-> > interrupt handler would have set adapter->int_status to non-zero and
-> > queued more work for the main loop -- and we'd catch it on the next
-> > iteration of the main loop.
-> > 
-> > So this patch drops all the looping/re-reading of PCIE_HOST_INT_STATUS,
-> > which avoids the problematic (and slow) register read in step (e).
-> > 
-> > Incidentally, this is a very similar issue to the one fixed in commit
-> > ec815dd2a5f1 ("mwifiex: prevent register accesses after host is
-> > sleeping"), except that the register read is just very slow instead of
-> > fatal in this case.
-> > 
-> > Tested on 8997 in both MSI and (though not technically supported at the
-> > moment) MSI-X mode.
-> 
-> Well, that kills interrupt mitigation and with PCIE that might be
-> somewhat important (SDIO is too slow to be important I think) and might
-> cost you throughput.
+For wowlan netdetect a separate limit is defined for the number of
+matchsets. Currently, this limit is ignored and the regular limit
+for scheduled scan matchsets, ie. struct wiphy::max_match_sets, is
+used for the net-detect case as well.
 
-Hmm, well I don't see us disabling interrupts in here, at least for MSI
-mode, so it doesn't actually look like a mitigation mechanism. More like
-a redundancy. But I'm not an expert on MSI, and definitely not on
-network performance.
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/nl80211.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-Also, FWIW, I did some fairly non-scientific tests of this on my
-systems, and I didn't see much difference. I can run better tests, and
-even collect data on how often we loop here vs. see new interrupts.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ef5eff93..90833a4 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6850,7 +6850,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
 
-> OTOH maybe Marvell should convert PICE to NAPI to make this more
-> obvious and probably more correct.
+ static struct cfg80211_sched_scan_request *
+ nl80211_parse_sched_scan(struct wiphy *wiphy, struct wireless_dev *wdev,
+-			 struct nlattr **attrs)
++			 struct nlattr **attrs, int max_match_sets)
+ {
+ 	struct cfg80211_sched_scan_request *request;
+ 	struct nlattr *attr;
+@@ -6915,7 +6915,7 @@ static int nl80211_abort_scan(struct sk_buff *skb, struct genl_info *info)
+ 	if (!n_match_sets && default_match_rssi != NL80211_SCAN_RSSI_THOLD_OFF)
+ 		n_match_sets = 1;
 
->From my brief reading, that sounds like a better way to make this
-configurable.
+-	if (n_match_sets > wiphy->max_match_sets)
++	if (n_match_sets > max_match_sets)
+ 		return ERR_PTR(-EINVAL);
 
-So I'm not sure which way you'd suggest then; take a patch like this,
-which makes the driver more clear and less buggy? Or write some
-different patch that isolates just the power-save related condition, so
-we break out of this look [1]?
+ 	if (attrs[NL80211_ATTR_IE])
+@@ -7189,7 +7189,8 @@ static int nl80211_start_sched_scan(struct sk_buff *skb,
+ 		return -EINPROGRESS;
 
-I'm also interested in any opinions from the Marvell side -- potentially
-testing results, rationale behind this code structure, or even a better
-alternative patch.
+ 	sched_scan_req = nl80211_parse_sched_scan(&rdev->wiphy, wdev,
+-						  info->attrs);
++						  info->attrs,
++						  rdev->wiphy.max_match_sets);
 
-Brian
+ 	err = PTR_ERR_OR_ZERO(sched_scan_req);
+ 	if (err)
+@@ -9966,7 +9967,8 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
+ 	if (err)
+ 		goto out;
 
-[1] i.e., along the lines of commit ec815dd2a5f1 ("mwifiex: prevent
-register accesses after host is sleeping").
+-	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb);
++	trig->nd_config = nl80211_parse_sched_scan(&rdev->wiphy, NULL, tb,
++						   wowlan->max_nd_match_sets);
+ 	err = PTR_ERR_OR_ZERO(trig->nd_config);
+ 	if (err)
+ 		trig->nd_config = NULL;
+--
+1.9.1
