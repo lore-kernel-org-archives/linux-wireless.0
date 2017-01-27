@@ -1,62 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:36859 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbdADUjh (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34389 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdA0TrG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 4 Jan 2017 15:39:37 -0500
-Received: by mail-io0-f172.google.com with SMTP id p127so17764805iop.3
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2017 12:39:37 -0800 (PST)
+        Fri, 27 Jan 2017 14:47:06 -0500
+Date: Fri, 27 Jan 2017 20:40:12 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pali =?iso-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for
+ loading NVS calibration data
+Message-ID: <20170127194012.GE20571@amd> (sfid-20170127_204923_053011_56A101BB)
+References: <20170127094342.GC24223@pali>
+ <def4c357-64c0-0681-a5d5-f49a6cb84a92@broadcom.com>
+ <20170127101043.GD24223@pali>
+ <f60cf2c0-bc1e-3a5f-991c-dc6c95a656af@broadcom.com>
+ <20170127103408.GG24223@pali>
+ <87bmus7mfk.fsf@kamboji.qca.qualcomm.com>
+ <20170127115706.GH24223@pali>
+ <8737g47kpd.fsf@kamboji.qca.qualcomm.com>
+ <20170127131146.GI24223@pali>
+ <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1483536510.7312.5.camel@sipsolutions.net>
-References: <94eb2c110db85c2379054172dad0@google.com> <1480948100.31788.15.camel@sipsolutions.net>
- <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
- <1481093061.4092.17.camel@sipsolutions.net> <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
- <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com> <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
- <1481645205.20412.32.camel@sipsolutions.net> <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
- <1483536510.7312.5.camel@sipsolutions.net>
-From: Dmitry Shmidt <dimitrysh@google.com>
-Date: Wed, 4 Jan 2017 12:32:36 -0800
-Message-ID: <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com> (sfid-20170104_213941_251797_2C9C50F2)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="wTWi5aaYRw9ix9vO"
+In-Reply-To: <87bmus5xyc.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 4, 2017 at 5:28 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2017-01-03 at 12:45 -0800, Dmitry Shmidt wrote:
->>
->> We can either use alternative structure in kernel wireless stack,
->> or alternative structure in userspace (in wpa_supplicant), and we
->> will most likely need special command for this case at least to
->> retrieve results.
->
-> Yes, I tend to agree - we need to have some new structure (and netlink
-> attributes etc.) to report the aggregated/partial results. But it seems
-> to me that it'll have to be very obvious which way of obtaining results
-> must be used for a given scan?
 
-If we go with approach to use parameters and let FW or MAC80211
-layer to decide what type of scan to do, then in general the only
-difference between different types of scan is what to do with result:
-- Normal scan: ssid list, channel list, dwell params, etc...
-- Sched scan: ssid list, channel list, interval
-- BSSID scan: bssid list, channel list, interval
-Action: Report when suitable results are found (in case of Normal
-scan it will be at the end of scan)
+--wTWi5aaYRw9ix9vO
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-- Roaming / Autojoin: ssid list, channel list, interval
-Action: Connect when suitable results are found
+On Fri 2017-01-27 17:23:07, Kalle Valo wrote:
+> Pali Roh=E1r <pali.rohar@gmail.com> writes:
+>=20
+> > On Friday 27 January 2017 14:26:22 Kalle Valo wrote:
+> >> Pali Roh=E1r <pali.rohar@gmail.com> writes:
+> >>=20
+> >> > 2) It was already tested that example NVS data can be used for N900 =
+e.g.
+> >> > for SSH connection. If real correct data are not available it is bet=
+ter
+> >> > to use at least those example (and probably log warning message) so =
+user
+> >> > can connect via SSH and start investigating where is problem.
+> >>=20
+> >> I disagree. Allowing default calibration data to be used can be
+> >> unnoticed by user and left her wondering why wifi works so badly.
+> >
+> > So there are only two options:
+> >
+> > 1) Disallow it and so these users will have non-working wifi.
+> >
+> > 2) Allow those data to be used as fallback mechanism.
+> >
+> > And personally I'm against 1) because it will break wifi support for
+> > *all* Nokia N900 devices right now.
+>=20
+> All two of them? :)
 
-- History scan: bssid list, channel list, interval
-Action: Report when buffer is full / almost full
+Umm. You clearly want a flock of angry penguins at your doorsteps :-).
 
-So we can literally distinguish scan types by final
-action. And for History scan we need new get_scan_results()
-command.
+> But not working is exactly my point, if correct calibration data is not
+> available wifi should not work. And it's not only about functionality
+> problems, there's also the regulatory aspect.
 
-Does it sound reasonable?
+If you break existing configuration that's called "regression".
 
-> johannes
+> >> > 3) If we do rename *now* we will totally break wifi support on Nokia
+> >> > N900.
+> >>=20
+> >> Then the distro should fix that when updating the linux-firmware
+> >> packages. Can you provide details about the setup, what distro etc?
+> >
+> > Debian stable, Ubuntu LTSs 14.04, 16.04.=20
+>=20
+> You can run these out of box on N900?
+
+Debian stable does.
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--wTWi5aaYRw9ix9vO
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAliLohwACgkQMOfwapXb+vIMowCfafqFiiWLUvCz/ObElhmeZ2MC
+OP0An0zg74gU6k3v3GVikgkzmVssYyUa
+=Pi8Z
+-----END PGP SIGNATURE-----
+
+--wTWi5aaYRw9ix9vO--
