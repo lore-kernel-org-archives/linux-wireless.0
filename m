@@ -1,39 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from coyote.holtmann.net ([212.227.132.17]:53803 "EHLO
-        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751598AbdAZFyW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45276 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754073AbdA0Hfx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 00:54:22 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 10.2 \(3259\))
-Subject: Re: [PATCH] NFC: remove TI nfcwilink driver
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20170125222307.3044-1-robh@kernel.org>
-Date: Thu, 26 Jan 2017 06:54:19 +0100
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Ilan Elias <ilane@ti.com>,
-        Samuel Ortiz <sameo@linux.intel.com>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Message-Id: <3B67FD13-A482-4BEF-B619-DD9AF9CC129F@holtmann.org> (sfid-20170126_065435_667163_C081B328)
-References: <20170125222307.3044-1-robh@kernel.org>
-To: Rob Herring <robh@kernel.org>
+        Fri, 27 Jan 2017 02:35:53 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Ming Lei <ming.lei@canonical.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Gnedt <david.gnedt@davizone.at>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Daniel Wagner <wagi@monom.org>,
+        Tony Lindgren <tony@atomide.com>,
+        Sebastian Reichel <sre@kernel.org>,
+        Pavel Machek <pavel@ucw.cz>,
+        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+        Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Grazvydas Ignotas <notasas@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org
+Subject: Re: [PATCH 2/6] wl1251: Use request_firmware_prefer_user() for loading NVS calibration data
+References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
+        <1482598381-16513-3-git-send-email-pali.rohar@gmail.com>
+Date: Fri, 27 Jan 2017 09:33:40 +0200
+In-Reply-To: <1482598381-16513-3-git-send-email-pali.rohar@gmail.com> ("Pali
+        \=\?utf-8\?Q\?Roh\=C3\=A1r\=22's\?\= message of "Sat, 24 Dec 2016 17:52:57 +0100")
+Message-ID: <87tw8lnei3.fsf@codeaurora.org> (sfid-20170127_083604_882377_C958B6F9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rob,
+Pali Roh=C3=A1r <pali.rohar@gmail.com> writes:
 
-> It appears that TI WiLink devices including NFC (WL185x/WL189x) never
-> shipped. The only information I found were announcements in Feb
-> 2012 about the parts. There's been no activity on this driver besided
-> common changes since initially added in Jan 2012. There's also no in
-> users that instantiate the platform device (nor DT bindings).
-> 
-> This is a first step in removing TI ST (shared transport) driver in
-> favor of extending the BT hci_ll driver to support WL183x chips.
+> NVS calibration data for wl1251 are model specific. Every one device with
+> wl1251 chip has different and calibrated in factory.
+>
+> Not all wl1251 chips have own EEPROM where are calibration data stored. A=
+nd
+> in that case there is no "standard" place. Every device has stored them on
+> different place (some in rootfs file, some in dedicated nand partition,
+> some in another proprietary structure).
+>
+> Kernel wl1251 driver cannot support every one different storage decided by
+> device manufacture so it will use request_firmware_prefer_user() call for
+> loading NVS calibration data and userspace helper will be responsible to
+> prepare correct data.
+>
+> In case userspace helper fails request_firmware_prefer_user() still try to
+> load data file directly from VFS as fallback mechanism.
+>
+> On Nokia N900 device which has wl1251 chip, NVS calibration data are stor=
+ed
+> in CAL nand partition. CAL is proprietary Nokia key/value format for nand
+> devices.
+>
+> With this patch it is finally possible to load correct model specific NVS
+> calibration data for Nokia N900.
+>
+> Signed-off-by: Pali Roh=C3=A1r <pali.rohar@gmail.com>
+> ---
+>  drivers/net/wireless/ti/wl1251/Kconfig |    1 +
+>  drivers/net/wireless/ti/wl1251/main.c  |    2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ti/wl1251/Kconfig b/drivers/net/wireles=
+s/ti/wl1251/Kconfig
+> index 7142ccf..affe154 100644
+> --- a/drivers/net/wireless/ti/wl1251/Kconfig
+> +++ b/drivers/net/wireless/ti/wl1251/Kconfig
+> @@ -2,6 +2,7 @@ config WL1251
+>  	tristate "TI wl1251 driver support"
+>  	depends on MAC80211
+>  	select FW_LOADER
+> +	select FW_LOADER_USER_HELPER
+>  	select CRC7
+>  	---help---
+>  	  This will enable TI wl1251 driver support. The drivers make
+> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless=
+/ti/wl1251/main.c
+> index 208f062..24f8866 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -110,7 +110,7 @@ static int wl1251_fetch_nvs(struct wl1251 *wl)
+>  	struct device *dev =3D wiphy_dev(wl->hw->wiphy);
+>  	int ret;
+>=20=20
+> -	ret =3D request_firmware(&fw, WL1251_NVS_NAME, dev);
+> +	ret =3D request_firmware_prefer_user(&fw, WL1251_NVS_NAME, dev);
 
-since the firmware files TINfcInit_* also never made it into the linux-firmware tree, I have no idea who is using this driver. I am actually fine with removing it since it would be easy enough to bring back based on hci_ll driver once there is hardware to test this on.
+I don't see the need for this. Just remove the default nvs file from
+filesystem and the fallback user helper will be always used, right?
 
-Regards
+Like we discussed earlier, the default nvs file should not be used by
+normal users.
 
-Marcel
+--=20
+Kalle Valo
