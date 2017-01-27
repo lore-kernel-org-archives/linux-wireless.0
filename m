@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46340 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751212AbdAPNth (ORCPT
+Received: from smtprelay0124.hostedemail.com ([216.40.44.124]:41474 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750839AbdA0VKo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 16 Jan 2017 08:49:37 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Michael Renzmann" <mrenzmann@madwifi-project.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Searching new home for ath[59]k-devel mailing lists
-References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
-        <87y3yfi78t.fsf@purkki.adurom.net>
-        <49460.217.24.3.26.1484376491.squirrel@webmail.madwifi-project.org>
-        <49712.217.24.3.26.1484568941.squirrel@webmail.madwifi-project.org>
-Date: Mon, 16 Jan 2017 15:49:30 +0200
-In-Reply-To: <49712.217.24.3.26.1484568941.squirrel@webmail.madwifi-project.org>
-        (Michael Renzmann's message of "Mon, 16 Jan 2017 13:15:41 +0100
-        (CET)")
-Message-ID: <8760lfnmhg.fsf@kamboji.qca.qualcomm.com> (sfid-20170116_144940_742186_6185EBB8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Fri, 27 Jan 2017 16:10:44 -0500
+Message-ID: <1485551440.12563.140.camel@perches.com> (sfid-20170127_221559_304269_BC8CD9AE)
+Subject: Re: [PATCH] cfg80211 debugfs: Cleanup some checkpatch issues
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        Pichugin Dmitry <smokeman85@gmail.com>, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Date: Fri, 27 Jan 2017 13:10:40 -0800
+In-Reply-To: <1485550820.14579.2.camel@sipsolutions.net>
+References: <20170127192603.GA13522@gmail.com>
+         (sfid-20170127_203712_578214_221D21FF) <1485550820.14579.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michael,
+On Fri, 2017-01-27 at 22:00 +0100, Johannes Berg wrote:
+> On Fri, 2017-01-27 at 22:26 +0300, Pichugin Dmitry wrote:
+> > This fixes the checkpatch.pl warnings:
+> > * Macros should not use a trailing semicolon.
+> > * Spaces required around that '='.
+> > * Symbolic permissions 'S_IRUGO' are not preferred.
+> > * Macro argument reuse 'buflen' - possible side-effects
+> 
+> I really see no point in any of this.
 
-"Michael Renzmann" <mrenzmann@madwifi-project.org> writes:
+Look at the uses of DEBUGFS_READONLY_FILE and
+see if they are consistent before and after.
 
-> Michael Renzmann wrote:
->> Someone should also update the "Mailing list" section of [1] accordingly.
->> I guess one needs to have a valid user account for that to do, and I don't
->> have one atm.
->
-> I now have an account, but am not sure how to proceed.
->
-> ath5k-devel is referenced on the ath5k driver page, and ath9k-devel is
-> referenced by the driver pages of ath9k and ath9k_htc. All three pages
-> have a section "Mailing list", that pages of other drivers (without
-> dedicated lists) don't seem to have.
->
-> Two options come to my mind:
->
->  1. Entirely remove the section "Mailing list".
->
->  2. Edit the section; point interested developers to the linux-wireless
-> list for future discussion, and also reference the list archives of the
-> old list for those who are interested in what was discussed in the past.
->
-> Opinions or other suggestions, anyone?
-
-I would go for option 2, not everyone know about linux-wireless mailing
-list so better to document that properly in the wiki.
-
--- 
-Kalle Valo
+ DEBUGFS_READONLY_FILE(rts_threshold, 20, "%d",
+-                     wiphy->rts_threshold)
++                     wiphy->rts_threshold);
+ DEBUGFS_READONLY_FILE(fragmentation_threshold, 20, "%d",
+                      wiphy->frag_threshold);
+ DEBUGFS_READONLY_FILE(short_retry_limit, 20, "%d",
+-                     wiphy->retry_short)
++                     wiphy->retry_short);
+ DEBUGFS_READONLY_FILE(long_retry_limit, 20, "%d",
+                      wiphy->retry_long);
