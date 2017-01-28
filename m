@@ -1,29 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li834-156.members.linode.com ([104.237.146.156]:48061 "EHLO
-        offmail.us" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751106AbdARA4P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 19:56:15 -0500
-Date: Wed, 18 Jan 2017 00:40:02 -0500
-From: Farhan Khan <farhan@offmail.us>
-To: linux-wireless@vger.kernel.org
-Subject: Clarifying rtl8188ee's channel wifi changing code
-Message-ID: <20170118054001.GA88602@offmail.us> (sfid-20170118_015628_468548_7E37638C)
+Received: from smtp.codeaurora.org ([198.145.29.96]:55758 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750729AbdA1HQ5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 28 Jan 2017 02:16:57 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: MAINTAINERS: ath9k-devel is closed
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1485519565-21402-1-git-send-email-kvalo@codeaurora.org>
+References: <1485519565-21402-1-git-send-email-kvalo@codeaurora.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Message-Id: <20170128071632.3D3D160A3C@smtp.codeaurora.org> (sfid-20170128_082304_007872_FC842465)
+Date: Sat, 28 Jan 2017 07:16:32 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Kalle Valo <kvalo@codeaurora.org> wrote:
+> ath9k-devel list is now closed, only linux-wireless should be used.
+> 
+> Reported-by: Michael Renzmann <mrenzmann@madwifi-project.org>
+> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 
-I am having a bit of trouble understanding the rtl8188ee source,
-specifically how its switch_channel function (rtl88e_phy_sw_chnl) works. I
-gather that this function calls rtl88ee_phy_sw_chnl_callback, which in turn
-calls _rtl88_phy_sw_chnl_step_by_step (
-https://github.com/torvalds/linux/blob/master/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c#L1253
-).
+Patch applied to wireless-drivers.git, thanks.
 
-This is where I get lost. Where is the 'channel' variable used, other than
-to change the TX power? I presume it has something to do with case
-CMDID_RF_WRITEREG, but I am not certain.
+2b1d530cb315 MAINTAINERS: ath9k-devel is closed
 
-Please explain what is going on. Thank you!
+-- 
+https://patchwork.kernel.org/patch/9541737/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
