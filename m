@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44166 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54522 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751590AbdATKG5 (ORCPT
+        with ESMTP id S1750728AbdA1HKa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 05:06:57 -0500
+        Sat, 28 Jan 2017 02:10:30 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2,
- 1/3] rtlwifi: Download firmware as bytes rather than as dwords
+Subject: Re: [1/2] mwifiex: mwifiex_unmap_pci_memory() handling for sleep
+ confirm
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170119202808.27752-2-Larry.Finger@lwfinger.net>
-References: <20170119202808.27752-2-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20170120100648.A7F5F609FD@smtp.codeaurora.org> (sfid-20170120_110711_598294_7170C732)
-Date: Fri, 20 Jan 2017 10:06:48 +0000 (UTC)
+In-Reply-To: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
+References: <1485264945-1248-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        <rajatja@google.com>, <briannorris@google.com>,
+        <dmitry.torokhov@gmail.com>, Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20170128071029.EC89D60A5F@smtp.codeaurora.org> (sfid-20170128_081203_275200_94E50590)
+Date: Sat, 28 Jan 2017 07:10:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> The firmware is read from disk as a little-endian byte string. The code
-> that loads the firmware into the device transfers it as 4-byte quantities.
-> The routines that write multi-byte quantities on BE hardware assume that
-> the data are in CPU order, and automatically do the conversion to the LE
-> order required by the device. As a result, the firmware is transmitted
-> incorrectly. Rather than do multiple byte swaps on the data, the download
-> routine is revised to transmit bytes rather than dwords. Although the
-> number of I/O operations is increased, the firmware is not often loaded.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Sleep confirm is a special command for which "adapter->cur_cmd" pointer
+> is not set. When it's response is received, host writes SLEEP confirm done
+> to a register. Firmware will perform DMA for writing sleep cookie signature
+> on same buffer after this.
 > 
-> All drivers have the same bug, and use essentially the same code to
-> download firmware. These routines have been moved into rtlwifi.
+> Let's not immediately call mwifiex_unmap_pci_memory() for this special
+> command. Unmapping will be done when firmware completes writing sleep
+> cookie signature.
 > 
-> Some CamelCase variables have been renamed.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-3 patches applied to wireless-drivers-next.git, thanks.
+2 patches applied to wireless-drivers-next.git, thanks.
 
-89d32c9071aa rtlwifi: Download firmware as bytes rather than as dwords
-69d8597e9fe5 rtlwifi: rtl8192cu: Calculate descriptor checksum correctly for BE
-106e0deca1ac rtlwifi: rtl8192cu: Convert driver to use common macros
+3e66849865ed mwifiex: mwifiex_unmap_pci_memory() handling for sleep confirm
+cc37d8efd2ba mwifiex: use pci_dma_sync_single* APIs
 
 -- 
-https://patchwork.kernel.org/patch/9526749/
+https://patchwork.kernel.org/patch/9535189/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
