@@ -1,160 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:58492 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751311AbdAMV1X (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54414 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdA1HKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:27:23 -0500
-Date: Fri, 13 Jan 2017 22:27:15 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 20/40] rt2x00: rt2800lib: add channel configuration code for
- RT3883
-Message-ID: <20170113212710.GA3508@makrotopia.org> (sfid-20170113_222726_347947_9200DE3B)
+        Sat, 28 Jan 2017 02:10:14 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [v4,1/3] rt2x00: add copy of clk for soc devices
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1484918906-21856-2-git-send-email-sgruszka@redhat.com>
+References: <1484918906-21856-2-git-send-email-sgruszka@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Gabor Juhos <juhosg@openwrt.org>,
+        Serge Vasilugin <vasilugin@yandex.ru>,
+        Mathias Kresin <dev@kresin.me>,
+        Michel Stempin <michel.stempin@wanadoo.fr>,
+        John Crispin <blogic@openwrt.org>
+Message-Id: <20170128070943.8280C60A51@smtp.codeaurora.org> (sfid-20170128_081202_854805_9E1F934F)
+Date: Sat, 28 Jan 2017 07:09:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gabor Juhos <juhosg@openwrt.org>
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Since clk_get() is not trivial add copy of clk pointer to rt2x00dev
+> for System On Chip devices and initialize it on probe routine.
+> 
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> Acked-by: Daniel Golle <daniel@makrotopia.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 72 ++++++++++++++++++++++++--
- 1 file changed, 69 insertions(+), 3 deletions(-)
+3 patches applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 005fd02c0226..62ac5aa0f016 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -3441,6 +3441,36 @@ static char rt2800_txpower_to_dev(struct rt2x00_dev *rt2x00dev,
- 		return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
- }
- 
-+static void rt3883_bbp_adjust(struct rt2x00_dev *rt2x00dev,
-+			      struct rf_channel *rf)
-+{
-+	u8 bbp;
-+
-+	bbp = (rf->channel > 14) ? 0x48 : 0x38;
-+	rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, bbp);
-+
-+	rt2800_bbp_write(rt2x00dev, 69, 0x12);
-+
-+	if (rf->channel <= 14) {
-+		rt2800_bbp_write(rt2x00dev, 70, 0x0a);
-+	} else {
-+		/* Disable CCK packet detection */
-+		rt2800_bbp_write(rt2x00dev, 70, 0x00);
-+	}
-+
-+	rt2800_bbp_write(rt2x00dev, 73, 0x10);
-+
-+	if (rf->channel > 14) {
-+		rt2800_bbp_write(rt2x00dev, 62, 0x1d);
-+		rt2800_bbp_write(rt2x00dev, 63, 0x1d);
-+		rt2800_bbp_write(rt2x00dev, 64, 0x1d);
-+	} else {
-+		rt2800_bbp_write(rt2x00dev, 62, 0x2d);
-+		rt2800_bbp_write(rt2x00dev, 63, 0x2d);
-+		rt2800_bbp_write(rt2x00dev, 64, 0x2d);
-+	}
-+}
-+
- static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 				  struct ieee80211_conf *conf,
- 				  struct rf_channel *rf,
-@@ -3459,6 +3489,12 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 			rt2800_txpower_to_dev(rt2x00dev, rf->channel,
- 					      info->default_power3);
- 
-+	switch (rt2x00dev->chip.rt) {
-+	case RT3883:
-+		rt3883_bbp_adjust(rt2x00dev, rf);
-+		break;
-+	}
-+
- 	switch (rt2x00dev->chip.rf) {
- 	case RF2020:
- 	case RF3020:
-@@ -3542,6 +3578,15 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
- 		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
- 		rt2800_bbp_write(rt2x00dev, 77, 0x98);
-+	} else if (rt2x00_rt(rt2x00dev, RT3883)) {
-+		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
-+		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
-+		rt2800_bbp_write(rt2x00dev, 64, 0x37 - rt2x00dev->lna_gain);
-+
-+		if (rt2x00dev->default_ant.rx_chain_num > 1)
-+			rt2800_bbp_write(rt2x00dev, 86, 0x46);
-+		else
-+			rt2800_bbp_write(rt2x00dev, 86, 0);
- 	} else {
- 		rt2800_bbp_write(rt2x00dev, 62, 0x37 - rt2x00dev->lna_gain);
- 		rt2800_bbp_write(rt2x00dev, 63, 0x37 - rt2x00dev->lna_gain);
-@@ -3554,6 +3599,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		    !rt2x00_rt(rt2x00dev, RT5392)) {
- 			if (rt2x00_has_cap_external_lna_bg(rt2x00dev)) {
- 				rt2800_bbp_write(rt2x00dev, 82, 0x62);
-+				rt2800_bbp_write(rt2x00dev, 82, 0x62);
- 				rt2800_bbp_write(rt2x00dev, 75, 0x46);
- 			} else {
- 				if (rt2x00_rt(rt2x00dev, RT3593))
-@@ -3562,19 +3608,22 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 					rt2800_bbp_write(rt2x00dev, 82, 0x84);
- 				rt2800_bbp_write(rt2x00dev, 75, 0x50);
- 			}
--			if (rt2x00_rt(rt2x00dev, RT3593))
-+			if (rt2x00_rt(rt2x00dev, RT3593) ||
-+			    rt2x00_rt(rt2x00dev, RT3883))
- 				rt2800_bbp_write(rt2x00dev, 83, 0x8a);
- 		}
- 
- 	} else {
- 		if (rt2x00_rt(rt2x00dev, RT3572))
- 			rt2800_bbp_write(rt2x00dev, 82, 0x94);
--		else if (rt2x00_rt(rt2x00dev, RT3593))
-+		else if (rt2x00_rt(rt2x00dev, RT3593) ||
-+			 rt2x00_rt(rt2x00dev, RT3883))
- 			rt2800_bbp_write(rt2x00dev, 82, 0x82);
- 		else
- 			rt2800_bbp_write(rt2x00dev, 82, 0xf2);
- 
--		if (rt2x00_rt(rt2x00dev, RT3593))
-+		if (rt2x00_rt(rt2x00dev, RT3593) ||
-+		    rt2x00_rt(rt2x00dev, RT3883))
- 			rt2800_bbp_write(rt2x00dev, 83, 0x9a);
- 
- 		if (rt2x00_has_cap_external_lna_a(rt2x00dev))
-@@ -3699,6 +3748,23 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		usleep_range(1000, 1500);
- 	}
- 
-+	if (rt2x00_rt(rt2x00dev, RT3883)) {
-+		if (!conf_is_ht40(conf))
-+			rt2800_bbp_write(rt2x00dev, 105, 0x34);
-+		else
-+			rt2800_bbp_write(rt2x00dev, 105, 0x04);
-+
-+		/* AGC init */
-+		if (rf->channel <= 14)
-+			reg = 0x2e + rt2x00dev->lna_gain;
-+		else
-+			reg = 0x20 + ((rt2x00dev->lna_gain * 5) / 3);
-+
-+		rt2800_bbp_write_with_rx_chain(rt2x00dev, 66, reg);
-+
-+		usleep_range(1000, 1500);
-+	}
-+
- 	if (rt2x00_rt(rt2x00dev, RT5592)) {
- 		rt2800_bbp_write(rt2x00dev, 195, 141);
- 		rt2800_bbp_write(rt2x00dev, 196, conf_is_ht40(conf) ? 0x10 : 0x1a);
+34db70b92fae rt2x00: add copy of clk for soc devices
+5c4412e07280 rt2x00: rt2800lib: add support for RT3352 with 20MHz crystal
+98e71f44c51d rt2x00: add support for RT5350 WiSoC
+
 -- 
-2.11.0
+https://patchwork.kernel.org/patch/9528399/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
