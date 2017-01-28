@@ -1,50 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37924 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751799AbdARO7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 09:59:41 -0500
-Date: Wed, 18 Jan 2017 15:47:20 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Daniel Golle <daniel@makrotopia.org>
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH v2 14/14] rt2x00: add support for RT5350 WiSoC
-Message-ID: <20170118144719.GB22837@redhat.com> (sfid-20170118_155944_584427_2DCBCB75)
-References: <874m114lwq.fsf@codeaurora.org>
- <20170116031734.GA32321@makrotopia.org>
- <20170116101743.GF6968@redhat.com>
- <20170117014806.GE1912@makrotopia.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38458 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751119AbdA1ACP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 27 Jan 2017 19:02:15 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH 2/3] mac80211: Make mesh failure moving average configurable
+Date: Fri, 27 Jan 2017 16:01:47 -0800
+Message-ID: <1485561708-31559-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20170128_010357_029333_A1FF194D)
+In-Reply-To: <1485561708-31559-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1485561708-31559-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170117014806.GE1912@makrotopia.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 02:48:07AM +0100, Daniel Golle wrote:
-> On Mon, Jan 16, 2017 at 11:17:44AM +0100, Stanislaw Gruszka wrote:
-> > On Mon, Jan 16, 2017 at 04:17:58AM +0100, Daniel Golle wrote:
-> > > @@ -7131,6 +7236,12 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
-> > >  		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RF_TYPE, RF2820);
-> > >  		rt2800_eeprom_write(rt2x00dev, EEPROM_NIC_CONF0, word);
-> > >  		rt2x00_eeprom_dbg(rt2x00dev, "Antenna: 0x%04x\n", word);
-> > > +	} else if (rt2x00_rt(rt2x00dev, RT5350)) {
-> > > +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RXPATH, 1);
-> > > +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_TXPATH, 1);
-> > > +		rt2x00_set_field16(&word, EEPROM_NIC_CONF0_RF_TYPE, RF3320);
-> 
-> Good catch. This line was probably left over when trying to implement
-> support for RT5350 based on adding codepaths to RF3320 which ended up
-> messy... As EEPROM_NIC_CONF0_RF_TYPE aparently isn't used anywhere else
-> in the code apart from setting rf type which is later on overwritten
-> for RT5350 anyway. So no need to set it at all. I suggest to simply
-> drop that line.
+Currently mesh moving fail average is calculated based on constant
+weight factor. In worst case moving average reaches threshold by
+considering 16 msdu tx ack status and deactivates mesh path. Having
+a constant weight factor might not be suitable for all environments.
+So make it tunable parameter and also lower default weight to 10 so
+that mesh broken link calculation will consider more packet status
+(32 msdus ack status) before dropping mesh path.
 
-I'm not sure about that, but overwrite EEPROM_NIC_CONF0_RXPATH
-and EEPROM_NIC_CONF0_TXPATH should not be needed as well. EEPROM
-should contain proper values.
+In OTA 2-hop topolgy (MP1 <-> MP2 <-> MP3), while running TCP traffic
+of window size of 2M where each nodes are operating in VHT80 mode,
+mesh path between forwarding node (MP2) and border nodes (MP1/MP3) is
+deactivated more often when average weight is 20.
 
-Stanislaw
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/debugfs_netdev.c | 27 +++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h    |  1 +
+ net/mac80211/mesh.c           |  1 +
+ net/mac80211/mesh.h           |  3 +++
+ net/mac80211/mesh_hwmp.c      |  4 +++-
+ 5 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 8f5fff8b2040..3923401a85dd 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -586,6 +586,32 @@ static ssize_t ieee80211_if_parse_tsf(
+ #ifdef CONFIG_MAC80211_MESH
+ IEEE80211_IF_FILE(estab_plinks, u.mesh.estab_plinks, ATOMIC);
+ 
++static ssize_t ieee80211_if_fmt_fail_avg_weight(
++	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
++{
++	return snprintf(buf, buflen, "%d\n", sdata->u.mesh.fail_avg_weight);
++}
++
++static ssize_t ieee80211_if_parse_fail_avg_weight(
++	struct ieee80211_sub_if_data *sdata, const char *buf, int buflen)
++{
++	u8 val;
++	int ret;
++
++	ret = kstrtou8(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	if (val > 100)
++		return -ERANGE;
++
++	sdata->u.mesh.fail_avg_weight = val;
++
++	return buflen;
++}
++
++IEEE80211_IF_FILE_RW(fail_avg_weight);
++
+ /* Mesh stats attributes */
+ IEEE80211_IF_FILE(fwded_mcast, u.mesh.mshstats.fwded_mcast, DEC);
+ IEEE80211_IF_FILE(fwded_unicast, u.mesh.mshstats.fwded_unicast, DEC);
+@@ -711,6 +737,7 @@ static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
+ {
+ 	DEBUGFS_ADD_MODE(tsf, 0600);
+ 	DEBUGFS_ADD_MODE(estab_plinks, 0400);
++	DEBUGFS_ADD_MODE(fail_avg_weight, 0600);
+ }
+ 
+ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 159a1a733725..30babcea3e06 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -711,6 +711,7 @@ struct ieee80211_if_mesh {
+ 	struct mesh_table *mpp_paths; /* Store paths for MPP&MAP */
+ 	int mesh_paths_generation;
+ 	int mpp_paths_generation;
++	u8 fail_avg_weight;
+ };
+ 
+ #ifdef CONFIG_MAC80211_MESH
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 9c23172feba0..491fd76f91bd 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -1368,6 +1368,7 @@ void ieee80211_mesh_init_sdata(struct ieee80211_sub_if_data *sdata)
+ 	ifmsh->last_preq = jiffies;
+ 	ifmsh->next_perr = jiffies;
+ 	ifmsh->csa_role = IEEE80211_MESH_CSA_ROLE_NONE;
++	ifmsh->fail_avg_weight = MESH_FAIL_AVG_WEIGHT;
+ 	/* Allocate all mesh structures when creating the first mesh interface. */
+ 	if (!mesh_allocated)
+ 		ieee80211s_init();
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 7e5f271e3c30..887746022cc6 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -185,6 +185,9 @@ struct mesh_rmc {
+ /* Number of frames buffered per destination for unresolved destinations */
+ #define MESH_FRAME_QUEUE_LEN	10
+ 
++/* Moving failure average weight of mesh peer link (in percent) */
++#define MESH_FAIL_AVG_WEIGHT 10
++
+ /* Public interfaces */
+ /* Various */
+ int ieee80211_fill_mesh_addresses(struct ieee80211_hdr *hdr, __le16 *fc,
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index f0aa1da15bd0..61a824eb2c73 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -301,6 +301,7 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	struct ieee80211_tx_info *txinfo = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	u32 fail_avg = sta->mesh->fail_avg;
++	u8 fail_avg_weight = sta->sdata->u.mesh.fail_avg_weight;
+ 	int failed;
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control))
+@@ -309,7 +310,8 @@ void ieee80211s_update_metric(struct ieee80211_local *local,
+ 	failed = !(txinfo->flags & IEEE80211_TX_STAT_ACK);
+ 
+ 	/* moving average, scaled to 100 */
+-	fail_avg = ((80 * fail_avg + 5) / 100 + 20 * failed);
++	fail_avg = (((100 - fail_avg_weight) * fail_avg + 5) / 100 +
++		    fail_avg_weight * failed);
+ 
+ 	/* bump up fail average since fractional part of average is ignored.
+ 	 * Otherwise fail average always stuck at the same level and
+-- 
+1.9.1
