@@ -1,36 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:42062 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932358AbdAFV11 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33523 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751677AbdA1Ncw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 6 Jan 2017 16:27:27 -0500
-Date: Fri, 06 Jan 2017 16:27:25 -0500 (EST)
-Message-Id: <20170106.162725.481874783893198568.davem@davemloft.net> (sfid-20170106_222730_674967_3C9C36E5)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2017-01-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170106123721.10970-1-johannes@sipsolutions.net>
-References: <20170106123721.10970-1-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Sat, 28 Jan 2017 08:32:52 -0500
+Received: by mail-lf0-f65.google.com with SMTP id x1so28035588lff.0
+        for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2017 05:31:33 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH fix?] bcma: use (get|put)_device when probing/removing device driver
+Date: Sat, 28 Jan 2017 14:31:22 +0100
+Message-Id: <20170128133122.12360-1-zajec5@gmail.com> (sfid-20170128_143257_708476_487FC950)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri,  6 Jan 2017 13:37:20 +0100
+From: Rafał Miłecki <rafal@milecki.pl>
 
-> Here's another fix for something I noticed while reviewing the code in
-> a new suggested patch that added another netlink socket destroy path.
-> 
-> Since the new patch would otherwise cause conflicts, it might be good
-> to pull net or Linus's next RC containing it into net-next, if you can.
-> 
-> Please pull and let me know if there's any problem.
+This allows tracking device state and e.g. makes devm work as expected.
 
-Pulled, I'll try to get this moving into net-next over the weekend.
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Cc: Stable <stable@vger.kernel.org>
+---
+Kalle: this issue is in bcma since /ever/, so I'm Cc-ing stable without
+pointing any version.
 
-Remind me about this early next week if that ends up slipping through
-the cracks.
+If someone reviewes (you or anyone) you may consider taking it as 3.10 fix.
+Can someone confirm this patch is OK?
+---
+ drivers/bcma/main.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks.
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 2c1798e38abd..38688236b3cd 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -633,8 +633,11 @@ static int bcma_device_probe(struct device *dev)
+ 					       drv);
+ 	int err = 0;
+ 
++	get_device(dev);
+ 	if (adrv->probe)
+ 		err = adrv->probe(core);
++	if (err)
++		put_device(dev);
+ 
+ 	return err;
+ }
+@@ -647,6 +650,7 @@ static int bcma_device_remove(struct device *dev)
+ 
+ 	if (adrv->remove)
+ 		adrv->remove(core);
++	put_device(dev);
+ 
+ 	return 0;
+ }
+-- 
+2.11.0
