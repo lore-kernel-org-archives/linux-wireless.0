@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35222 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932113AbdA3PKN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44936 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbdA2Oaq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 30 Jan 2017 10:10:13 -0500
-Received: by mail-lf0-f68.google.com with SMTP id v186so31623252lfa.2
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 07:10:05 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 2/2] brcmfmac: be more verbose when PSM's watchdog fires
-Date: Mon, 30 Jan 2017 16:09:52 +0100
-Message-Id: <20170130150952.7133-2-zajec5@gmail.com> (sfid-20170130_161021_380080_2699C8A7)
-In-Reply-To: <20170130150952.7133-1-zajec5@gmail.com>
-References: <20170130150952.7133-1-zajec5@gmail.com>
+        Sun, 29 Jan 2017 09:30:46 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: linuxwifi@intel.com
+Subject: Re: [regression] iwlwifi: crash in iwl_parse_tlv_firmware()
+References: <87inoyt1ff.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 29 Jan 2017 16:04:43 +0200
+In-Reply-To: <87inoyt1ff.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Sun, 29 Jan 2017 15:56:20 +0200")
+Message-ID: <87efzmt11g.fsf@kamboji.qca.qualcomm.com> (sfid-20170129_153141_489889_13B55745)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-It's important to inform user so he knows things went wrong. He may also
-want to get memory dump for further debugging purposes.
+> updated the kernel on my test laptop and noticed that now iwlwifi
+> crashes every time during boot. This is with tag ath-201701271935
+> ath.git master branch, which essentially is wt-2017-01-27 from
+> wireless-testing plus latest ath patches.
+>
+> I tried v4.10-rc5 and iwlwifi didn't crash so my guess is that this is a
+> regression in the latest iwlwifi pull. Below is the crash log and the
+> location in source. This is all I got via netconsole.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+Forgot to include info about the device (from a working kernel):
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-index 6f8a4b074c31..f4644cf371c7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-@@ -58,10 +58,18 @@ static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
- 					   const struct brcmf_event_msg *evtmsg,
- 					   void *data)
- {
-+	int err;
-+
- 	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
- 
--	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
--					  evtmsg->datalen);
-+	brcmf_err("PSM's watchdog has fired!\n");
-+
-+	err = brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
-+					 evtmsg->datalen);
-+	if (err)
-+		brcmf_err("Failed to get memory dump, %d\n", err);
-+
-+	return err;
- }
- 
- void brcmf_debugfs_init(void)
+[   17.911087] iwlwifi 0000:44:00.0: can't disable ASPM; OS doesn't have ASPM control
+[   17.931205] iwlwifi 0000:44:00.0: loaded firmware version 39.31.5.1 build 35138 op_mode iwldvm
+[   18.073590] iwlwifi 0000:44:00.0: CONFIG_IWLWIFI_DEBUG enabled
+[   18.073679] iwlwifi 0000:44:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+[   18.073757] iwlwifi 0000:44:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
+[   18.073837] iwlwifi 0000:44:00.0: Detected Intel(R) Centrino(R) Wireless-N 1000 BGN, REV=0x6C
+[   18.078383] iwlwifi 0000:44:00.0: L1 Enabled - LTR Disabled
+[   19.359378] iwlwifi 0000:44:00.0 wlan1: renamed from wlan0
+
 -- 
-2.11.0
+Kalle Valo
