@@ -1,67 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35838 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755547AbdABOF3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48498 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751240AbdA2O50 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 2 Jan 2017 09:05:29 -0500
+        Sun, 29 Jan 2017 09:57:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2017-01-29
+Date: Sun, 29 Jan 2017 16:49:02 +0200
+Message-ID: <87a8a9udk1.fsf@kamboji.qca.qualcomm.com> (sfid-20170129_155729_907533_376DA8A7)
 MIME-Version: 1.0
-In-Reply-To: <1483364298.21014.3.camel@sipsolutions.net>
-References: <20170102132747.3491-1-zajec5@gmail.com> <1483364298.21014.3.camel@sipsolutions.net>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 2 Jan 2017 15:05:28 +0100
-Message-ID: <CACna6rzc2hk2xosd54eZVSUCtqgtT5E2vii24rgWBV96PR1W7A@mail.gmail.com> (sfid-20170102_150533_492620_30391C32)
-Subject: Re: [PATCH V2 1/3] cfg80211: allow passing struct device in the
- wiphy_new call
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-        Felix Fietkau <nbd@nbd.name>,
-        Arend van Spriel <arend@broadcom.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2 January 2017 at 14:38, Johannes Berg <johannes@sipsolutions.net> wrote=
-:
->
->> --- a/include/net/cfg80211.h
->> +++ b/include/net/cfg80211.h
->> @@ -3730,8 +3730,8 @@ static inline const char *wiphy_name(const
->> struct wiphy *wiphy)
->>   * Return: A pointer to the new wiphy. This pointer must be
->>   * assigned to each netdev's ieee80211_ptr for proper operation.
->>   */
->> -struct wiphy *wiphy_new_nm(const struct cfg80211_ops *ops, int
->> sizeof_priv,
->> -                        const char *requested_name);
->> +struct wiphy *wiphy_new_nm(struct device *dev, const struct
->> cfg80211_ops *ops,
->> +                        int sizeof_priv, const char
->> *requested_name);
->
-> This is obviously missing documentation updates.
->
->>   */
->> -static inline struct wiphy *wiphy_new(const struct cfg80211_ops
->> *ops,
->> +static inline struct wiphy *wiphy_new(struct device *dev,
->> +                                   const struct cfg80211_ops
->> *ops,
->
-> Ditto.
->
-> It looks like you practically removed all users of set_wiphy_dev(), why
-> not do that completely and remove that entirely?
+Hi Dave,
 
-There are 2 users left:
-1) ipw2x00 - I missed that one
-2) mac80211 - it's a big one as it's used in SET_IEEE80211_DEV
+small but important fixes for 4.10. Hopefully is the last pull request
+for 4.10.
 
-I was planning to work on mac80211 drivers later. This will require
-similar modification of ieee80211_alloc_hw.
+Please let me know if there are any problems.
 
---=20
-Rafa=C5=82
+Kalle
+
+The following changes since commit 60f59ce0278557f7896d5158ae6d12a4855a72cc:
+
+  rtlwifi: rtl_usb: Fix missing entry in USB driver's private data (2016-12=
+-30 15:38:13 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git =
+tags/wireless-drivers-for-davem-2017-01-29
+
+for you to fetch changes up to 2b1d530cb3157f828fcaadd259613f59db3c6d1c:
+
+  MAINTAINERS: ath9k-devel is closed (2017-01-28 09:15:50 +0200)
+
+----------------------------------------------------------------
+wireless-drivers fixes for 4.10
+
+Most important here are fixes to two iwlwifi crashes, but there's also
+a firmware naming fix for iwlwifi and a revert of an older bcma patch.
+
+----------------------------------------------------------------
+Jens Axboe (1):
+      iwlwifi: fix kernel crash when unregistering thermal zone
+
+Johannes Berg (1):
+      iwlwifi: mvm: avoid crash on restart w/o reserved queues
+
+J=C3=BCrg Billeter (1):
+      iwlwifi: fix double hyphen in MODULE_FIRMWARE for 8000
+
+Kalle Valo (2):
+      Merge tag 'iwlwifi-for-kalle-2017-01-23' of git://git.kernel.org/.../=
+iwlwifi/iwlwifi-fixes
+      MAINTAINERS: ath9k-devel is closed
+
+Rafa=C5=82 Mi=C5=82ecki (1):
+      Revert "bcma: init serial console directly from ChipCommon code"
+
+ MAINTAINERS                                   |  1 -
+ drivers/bcma/bcma_private.h                   |  3 +++
+ drivers/bcma/driver_chipcommon.c              | 11 +++--------
+ drivers/bcma/driver_mips.c                    |  3 +++
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  7 ++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c   | 12 ++++++++----
+ 7 files changed, 22 insertions(+), 17 deletions(-)
