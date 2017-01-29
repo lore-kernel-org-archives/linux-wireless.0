@@ -1,86 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:34669 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760068AbdAIMHt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38866 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750802AbdA2N41 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 07:07:49 -0500
-Received: by mail-pg0-f44.google.com with SMTP id 14so29924775pgg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 04:07:49 -0800 (PST)
-Subject: Re: [PATCH] RFC: Universal scan proposal
-To: Johannes Berg <johannes@sipsolutions.net>,
-        Dmitry Shmidt <dimitrysh@google.com>
-References: <94eb2c110db85c2379054172dad0@google.com>
- <1480948100.31788.15.camel@sipsolutions.net>
- <CAH7ZN-wcvoJLTr_zYMwpbjuvMBGwmNhuVYx-MuNU1pOPTf9HEA@mail.gmail.com>
- <1481093061.4092.17.camel@sipsolutions.net>
- <CAH7ZN-wP+9AGrXFUS4RY65-RyfP-J46svBvLdytP2c=QPtiaug@mail.gmail.com>
- <93d4475c-58bd-d497-3347-a988d551f374@broadcom.com>
- <CAH7ZN-wGseBVzV3Vuq+6=kgaSL7e0UnndGXPdu4PQKZw8H47YQ@mail.gmail.com>
- <1481645205.20412.32.camel@sipsolutions.net>
- <CAH7ZN-zm-CUv=QzoUojdyrcONRAHtTG18PiwGZ4sYY0qqft1BA@mail.gmail.com>
- <1483536510.7312.5.camel@sipsolutions.net>
- <CAH7ZN-zenL8SsqUAzMH5-Hb1RmUDDwgqqUKWEbPX=qaPV7e3TA@mail.gmail.com>
- <1483616763.4394.8.camel@sipsolutions.net>
- <cd31be64-579a-a702-c642-b80690aac5b2@broadcom.com>
- <1483623882.4394.20.camel@sipsolutions.net>
- <ac6c15d8-5d4f-722c-7d7e-c43f6a118b53@broadcom.com>
- <1483958921.17582.20.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <eb6a9c5e-0817-3b63-1e2f-d6bbff867b05@broadcom.com> (sfid-20170109_130755_277154_19D8ED31)
-Date: Mon, 9 Jan 2017 13:07:44 +0100
+        Sun, 29 Jan 2017 08:56:27 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Cc: linuxwifi@intel.com
+Subject: [regression] iwlwifi: crash in iwl_parse_tlv_firmware()
+Date: Sun, 29 Jan 2017 15:56:20 +0200
+Message-ID: <87inoyt1ff.fsf@kamboji.qca.qualcomm.com> (sfid-20170129_145636_157794_3672B13D)
 MIME-Version: 1.0
-In-Reply-To: <1483958921.17582.20.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
+updated the kernel on my test laptop and noticed that now iwlwifi
+crashes every time during boot. This is with tag ath-201701271935
+ath.git master branch, which essentially is wt-2017-01-27 from
+wireless-testing plus latest ath patches.
 
-On 9-1-2017 11:48, Johannes Berg wrote:
-> On Thu, 2017-01-05 at 20:59 +0100, Arend Van Spriel wrote:
->>
->> From what Dmitry listed I guess there's really only one.
-> 
-> Ok. I guess I need to go back to that then.
-> 
->> Early on in the thread Luca gave some other examples of scan
->> extensions so may need to consider notification/dump methods that are
->> extensible. It seems awkward to have a single "initiate" command and
->> a couple of "notification/retrieval" commands. It may not be so bad
->> as long as it is clear which retrieval command goes with a
->> notification.
-> 
-> Well, we might not even need different commands. We need different
-> storage internally, but if you request the results for a given scan ID
-> then you might get a totally different result format? Though that
-> wouldn't lend itself well to query "everything you have" which is also
-> useful. But even then, it could be done by passing the appropriate
-> "report type" attribute to the dump command - we need that anyway for
-> trigger.
+I tried v4.10-rc5 and iwlwifi didn't crash so my guess is that this is a
+regression in the latest iwlwifi pull. Below is the crash log and the
+location in source. This is all I got via netconsole.
 
-True. With "report type" attribute you do not mean the actual
-report_type thing, right. Hopefully you mean the parameter attribute
-that implicitly relates to a "report type". The risk here is that it
-requires careful description of what user-space needs to look for if it
-gets a notification. I think having separate notification/retrieval
-commands lowers the risk of misinterpretation.
+[   39.296218] Intel(R) Wireless WiFi driver for Linux
+[   39.296219] Copyright(c) 2003- 2015 Intel Corporation
+[   39.299373] iwlwifi 0000:44:00.0: can't disable ASPM; OS doesn't have ASPM control
+[   39.677192] BUG: unable to handle kernel NULL pointer dereference at 0000000c
+[   39.677212] IP: iwl_parse_tlv_firmware.isra.5+0x9a0/0xd60 [iwlwifi]
+[   39.677213] *pdpt = 000000002f5bd001 *pde = 0000000000000000 
+[   39.677215] 
+[   39.677217] Oops: 0002 [#1] SMP
+[   39.677219] Modules linked in: btrtl(+) snd_seq_midi_event btbcm rfcomm(+) iwlwifi snd_rawmidi btintel bnep joydev input_leds coretemp cfg80211 bluetooth snd_seq snd_timer serio_raw snd_seq_device wmi snd video mac_hid soundcore lpc_ich shpchp parport_pc ppdev lp parport psmouse firewire_ohc
+[   39.677244] CPU: 3 PID: 35 Comm: kworker/3:1 Not tainted 4.10.0-rc5-wt-ath+ #173
+[   39.677245] Hardware name: Hewlett-Packard HP ProBook 6540b/1722, BIOS 68CDD Ver. F.04 01/27/2010
+[   39.677252] Workqueue: events request_firmware_work_func
+[   39.677254] task: f387bac0 task.stack: f3916000
+[   39.677263] EIP: iwl_parse_tlv_firmware.isra.5+0x9a0/0xd60 [iwlwifi]
+[   39.677264] EFLAGS: 00010293 CPU: 3
+[   39.677266] EAX: 00000000 EBX: 0001ec18 ECX: f8fc2060 EDX: 000339f8
+[   39.677267] ESI: f8fc2058 EDI: f8fe0c78 EBP: f3917e54 ESP: f3917df8
+[   39.677268]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+[   39.677270] CR0: 80050033 CR2: 0000000c CR3: 3033cd20 CR4: 000006f0
+[   39.677271] Call Trace:
 
-> I think with that discussion we're getting ahead of ourselves though -
-> do we really know that we just need the two result types
-> 
->  * full, and
->  * partial (for history scan)
-> 
-> and have we even defined the attributes we want in the partial one?
+gdb drivers/net/wireless/intel/iwlwifi/iwlwifi.ko
+(gdb) l *(iwl_parse_tlv_firmware+0x9a0)
+0x2170 is in iwl_parse_tlv_firmware (drivers/net/wireless/intel/iwlwifi/iwl-drv.c:299).
+294     static void set_sec_data(struct iwl_firmware_pieces *pieces,
+295                              enum iwl_ucode_type type,
+296                              int sec,
+297                              const void *data)
+298     {
+299             pieces->img[type].sec[sec].data = data;
+300     }
+301
+302     static void set_sec_size(struct iwl_firmware_pieces *pieces,
+303                              enum iwl_ucode_type type,
+(gdb) 
 
-Not sure if we're getting ahead of ourselves. Yes, we have to determine
-attributes for each scan "report type", but it is not a prerequisite for
-the other topic. I guess to answer the question about the partial
-results attributes we need to know what the possible higher-level
-use-cases are. Other source of information would be to look what is done
-for g-scan in Android "M" or "N", but not sure if that is best approach
-as we may not consider all use-cases.
-
-Regards,
-Arend
+-- 
+Kalle Valo
