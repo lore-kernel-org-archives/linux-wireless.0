@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49868 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750989AbdALPLF (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 10:11:05 -0500
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:35746 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751187AbdA2NCq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 29 Jan 2017 08:02:46 -0500
+Date: Sun, 29 Jan 2017 12:40:52 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: [PATCH] rt2x00: fix clk_get call
+Message-ID: <20170129114052.GB7489@redhat.com> (sfid-20170129_140249_899250_4DAEBE10)
 MIME-Version: 1.0
-Subject: Re: [next] rtlwifi: rtl8192de: fix missing curly braces
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20170110095521.4410-1-vincent.stehle@laposte.net>
-References: <20170110095521.4410-1-vincent.stehle@laposte.net>
-To: Vincent <vincent.stehle@laposte.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Vincent=20Stehl=C3=A9?= <vincent.stehle@laposte.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Joe Perches <joe@perches.com>,
-        Ping-Ke Shih <pkshih@realtek.com>
-Message-Id: <20170112151105.0D38F613D3@smtp.codeaurora.org> (sfid-20170112_161110_213612_20F91B49)
-Date: Thu, 12 Jan 2017 15:11:04 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vincent <vincent.stehle@laposte.net> wrote:
-> Restore some curly braces that have been removed in commit c93ac39da006457f
-> ("rtlwifi: Remove some redundant code") while removing redundant messages
-> and extraneous braces.
-> 
-> This fixes the following smatch warning:
-> 
->   drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:326 rtl92d_download_fw() warn: curly braces intended?
-> 
-> ...and the following coccinelle warning:
-> 
->   drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c:325:2-38: code aligned with following code on line 326
-> 
-> Fixes: c93ac39da006457f ("rtlwifi: Remove some redundant code")
-> Signed-off-by: Vincent Stehlé <vincent.stehle@laposte.net>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Joe Perches <joe@perches.com>
-> Cc: Ping-Ke Shih <pkshih@realtek.com>
+clk_get() takes two arguments and might return ERR_PTR(), so we
+have to nullify pointer on that case, to do not break further call
+to clk_get_rate().
 
-Larry also sent a fix:
+Reported-by: Felix Fietkau <nbd@nbd.name>
+Fixes: 34db70b92fae5 ("rt2x00: add copy of clk for soc devices")
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2x00soc.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-rtlwifi: rtl8192de: Remove a pointless goto
-https://patchwork.kernel.org/patch/9508121/
-
-Patch set to Superseded.
-
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
+index 362f9d3..29250f7 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00soc.c
+@@ -92,7 +92,10 @@ int rt2x00soc_probe(struct platform_device *pdev, const struct rt2x00_ops *ops)
+ 	rt2x00dev->hw = hw;
+ 	rt2x00dev->irq = platform_get_irq(pdev, 0);
+ 	rt2x00dev->name = pdev->dev.driver->name;
+-	rt2x00dev->clk = clk_get(&pdev->dev);
++
++	rt2x00dev->clk = clk_get(&pdev->dev, NULL);
++	if (IS_ERR(rt2x00dev->clk))
++		rt2x00dev->clk = NULL;
+ 
+ 	rt2x00_set_chip_intf(rt2x00dev, RT2X00_CHIP_INTF_SOC);
+ 
 -- 
-https://patchwork.kernel.org/patch/9506837/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+1.8.3.1
