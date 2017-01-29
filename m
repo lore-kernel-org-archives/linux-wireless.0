@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([185.142.180.71]:38305 "EHLO
-        fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750908AbdAMVci (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48336 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750990AbdA2Oyk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 16:32:38 -0500
-Date: Fri, 13 Jan 2017 22:32:30 +0100
-From: Daniel Golle <daniel@makrotopia.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Stanislaw Gruszka <sgruszka@redhat.com>, roman@advem.lv,
-        michel.stempin@wanadoo.fr, c.mignanti@gmail.com, evaxige@qq.com,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>, John Crispin <john@phrozen.org>,
-        Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 35/40] rt2x00: rt2x00pci: set PCI MWI only if supported
-Message-ID: <20170113213225.GA3642@makrotopia.org> (sfid-20170113_223240_660383_6FF74A95)
+        Sun, 29 Jan 2017 09:54:40 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] rt2x00: fix clk_get call
+References: <20170129114052.GB7489@redhat.com>
+Date: Sun, 29 Jan 2017 16:53:38 +0200
+In-Reply-To: <20170129114052.GB7489@redhat.com> (Stanislaw Gruszka's message
+        of "Sun, 29 Jan 2017 12:40:52 +0100")
+Message-ID: <87vasxgbnx.fsf@purkki.adurom.net> (sfid-20170129_155445_240357_AF1883DB)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Claudio Mignanti <c.mignanti@gmail.com>
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-This is needed for devices without support for PCI MWI. See also
-https://dev.openwrt.org/changeset/21850
+> clk_get() takes two arguments and might return ERR_PTR(), so we
+> have to nullify pointer on that case, to do not break further call
+> to clk_get_rate().
+>
+> Reported-by: Felix Fietkau <nbd@nbd.name>
+> Fixes: 34db70b92fae5 ("rt2x00: add copy of clk for soc devices")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00pci.c | 2 ++
- 1 file changed, 2 insertions(+)
+The commit id looks wrong, I think it should be:
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
-index eb6dbcd4fddf..4becfeb75ba8 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00pci.c
-@@ -94,8 +94,10 @@ int rt2x00pci_probe(struct pci_dev *pci_dev, const struct rt2x00_ops *ops)
- 
- 	pci_set_master(pci_dev);
- 
-+#ifdef CONFIG_PCI_SET_MWI
- 	if (pci_set_mwi(pci_dev))
- 		rt2x00_probe_err("MWI not available\n");
-+#endif
- 
- 	if (dma_set_mask(&pci_dev->dev, DMA_BIT_MASK(32))) {
- 		rt2x00_probe_err("PCI DMA not supported\n");
+Fixes: 34db70b92fae ("rt2x00: add copy of clk for soc devices")
+
+I can fix that during commit.
+
 -- 
-2.11.0
+Kalle Valo
