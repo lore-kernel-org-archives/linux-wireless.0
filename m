@@ -1,30 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37140 "EHLO sipsolutions.net"
+Received: from venema.h4ckr.net ([217.24.1.135]:46552 "EHLO venema.h4ckr.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751272AbdA0VA2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 16:00:28 -0500
-Message-ID: <1485550820.14579.2.camel@sipsolutions.net> (sfid-20170127_220054_043953_5ABC0D3C)
-Subject: Re: [PATCH] cfg80211 debugfs: Cleanup some checkpatch issues
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pichugin Dmitry <smokeman85@gmail.com>, davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Fri, 27 Jan 2017 22:00:20 +0100
-In-Reply-To: <20170127192603.GA13522@gmail.com> (sfid-20170127_203712_578214_221D21FF)
-References: <20170127192603.GA13522@gmail.com>
-         (sfid-20170127_203712_578214_221D21FF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1753215AbdA3SlL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jan 2017 13:41:11 -0500
+Message-ID: <49714.217.24.3.26.1485801657.squirrel@webmail.madwifi-project.org> (sfid-20170130_194200_497426_AEF24113)
+In-Reply-To: <877f5g7lwd.fsf@kamboji.qca.qualcomm.com>
+References: <49328.217.24.3.26.1483895726.squirrel@webmail.madwifi-project.org>
+    <87y3yfi78t.fsf@purkki.adurom.net>
+    <49460.217.24.3.26.1484376490.squirrel@webmail.madwifi-project.org>
+    <877f5g7lwd.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 30 Jan 2017 19:40:57 +0100 (CET)
+Subject: Re: Searching new home for ath[59]k-devel mailing lists
+From: "Michael Renzmann" <mrenzmann@madwifi-project.org>
+To: "Kalle Valo" <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2017-01-27 at 22:26 +0300, Pichugin Dmitry wrote:
-> This fixes the checkpatch.pl warnings:
-> * Macros should not use a trailing semicolon.
-> * Spaces required around that '='.
-> * Symbolic permissions 'S_IRUGO' are not preferred.
-> * Macro argument reuse 'buflen' - possible side-effects
+Kalle Valo wrote:
+>>> Are you planning to update the MAINTAINERS file or should I?
+>> It would be great if you could take care of that.
+> Ok, I'll send a patch.
 
-I really see no point in any of this.
+Thanks!
 
-johannes
+>> [1] https://wireless.wiki.kernel.org/en/users/Drivers/ath9k
+> I updated that now.
+
+I've applied similar changes to the ath9k_htc and ath5k pages.
+
+Bye, Mike
