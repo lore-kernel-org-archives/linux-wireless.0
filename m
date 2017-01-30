@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:62014 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752133AbdAKUjp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37214 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751999AbdA3LnC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 11 Jan 2017 15:39:45 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Networking <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] wext: handle NULL exta data in iwe_stream_add_point better
-Date: Wed, 11 Jan 2017 21:39:07 +0100
-Message-ID: <3292373.oxnXTOSWCQ@wuerfel> (sfid-20170111_214353_453969_C57DF835)
-In-Reply-To: <1484147177.29931.14.camel@sipsolutions.net>
-References: <20170111143532.485827-1-arnd@arndb.de> <CAK8P3a2mOT=BG=9yxJ1e-q__5FYq6dfF3t3bT1vqcgFaQAUjog@mail.gmail.com> <1484147177.29931.14.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 30 Jan 2017 06:43:02 -0500
+Message-ID: <1485776574.26003.35.camel@coelho.fi> (sfid-20170130_124752_610064_C2CE15F8)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Mon, 30 Jan 2017 13:42:54 +0200
+In-Reply-To: <87poj4srmg.fsf@kamboji.qca.qualcomm.com>
+References: <87efzmt11g.fsf@kamboji.qca.qualcomm.com>
+         <20170130103432.24613-1-luca@coelho.fi>
+         <87poj4srmg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH] iwlwifi: alloc memory dynamically also for DVM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, January 11, 2017 4:06:17 PM CET Johannes Berg wrote:
+On Mon, 2017-01-30 at 13:40 +0200, Kalle Valo wrote:
+> Luca Coelho <luca@coelho.fi> writes:
 > 
-> Applied. Also fixed the typo in the subject :)
+> > From: Sara Sharon <sara.sharon@intel.com>
+> > 
+> > For old firmwares the memory wasn't allocated, resulting in panic.
+> > Make it dynamically allocated as well. Allow any order of functions
+> > call.
+> > 
+> > Fixes: eef187a7b8a1 ("iwlwifi: enlarge number of ucode sections")
+> > Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > ---
+> > 
+> > Kalle,
+> > 
+> > Could you test this patch to see if it solves the problem?
+> 
+> It does, thank you for quickly fixing this.
+> 
+> Tested-by: Kalle Valo <kvalo@codeaurora.org>
 
-Thanks! Unfortunately I now got another warning for the same function,
-and though I would have expected the patch to fix it, that did not work:
+Great! Thanks a lot for testing it quickly. :)
 
-In file included from /git/arm-soc/drivers/net/wireless/intersil/prism54/islpci_dev.h:27:0,
-                 from /git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.h:24,
-                 from /git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c:32:
-/git/arm-soc/drivers/net/wireless/intersil/prism54/isl_ioctl.c: In function 'prism54_get_scan':
-/git/arm-soc/include/net/iw_handler.h:560:4: error: argument 2 null where non-null expected [-Werror=nonnull]
-    memcpy(stream + point_len, extra, iwe->u.data.length);
 
-The change below kills that warning too, but it gets even uglier there:
+> As this is a serious regression can I apply this directly to
+> wireless-drivers-next?
 
-diff --git a/include/net/iw_handler.h b/include/net/iw_handler.h
-index 1a41043688bc..c2aa73e5e6bb 100644
---- a/include/net/iw_handler.h
-+++ b/include/net/iw_handler.h
-@@ -556,7 +556,7 @@ iwe_stream_add_point(struct iw_request_info *info, char *stream, char *ends,
- 		memcpy(stream + lcp_len,
- 		       ((char *) &iwe->u) + IW_EV_POINT_OFF,
- 		       IW_EV_POINT_PK_LEN - IW_EV_LCP_PK_LEN);
--		if (iwe->u.data.length)
-+		if (iwe->u.data.length && extra)
- 			memcpy(stream + point_len, extra, iwe->u.data.length);
- 		stream += event_len;
- 	}
+Yes, please go ahead.
 
-Let me know if you want a proper follow-up patch, or if you can amend your
-commit, or you have a better idea for resolving that warning.
-
-	Arnd
+--
+Cheers,
+Luca.
