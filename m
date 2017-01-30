@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35922 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751391AbdAQX3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 17 Jan 2017 18:29:41 -0500
-From: Jes.Sorensen@gmail.com
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] rtl8xxxu: Add USB ID for D-Link DWA-131 rev E1 (rtl8192eu)
-Date: Tue, 17 Jan 2017 18:18:54 -0500
-Message-Id: <20170117231856.5075-4-Jes.Sorensen@gmail.com> (sfid-20170118_003535_365619_050C3D72)
-In-Reply-To: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
-References: <20170117231856.5075-1-Jes.Sorensen@gmail.com>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35222 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932113AbdA3PKN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jan 2017 10:10:13 -0500
+Received: by mail-lf0-f68.google.com with SMTP id v186so31623252lfa.2
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2017 07:10:05 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+        Franky Lin <frankyl@broadcom.com>,
+        linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
+Subject: [PATCH 2/2] brcmfmac: be more verbose when PSM's watchdog fires
+Date: Mon, 30 Jan 2017 16:09:52 +0100
+Message-Id: <20170130150952.7133-2-zajec5@gmail.com> (sfid-20170130_161021_380080_2699C8A7)
+In-Reply-To: <20170130150952.7133-1-zajec5@gmail.com>
+References: <20170130150952.7133-1-zajec5@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Axel Köllhofer <AxelKoellhofer@web.de>
+From: Rafał Miłecki <rafal@milecki.pl>
 
-This was tested by David Patiño.
+It's important to inform user so he knows things went wrong. He may also
+want to get memory dump for further debugging purposes.
 
-Reported-by: David Patiño <davidpatino82@gmail.com>
-Signed-off-by: Axel Köllhofer <AxelKoellhofer@web.de>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@gmail.com>
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 016ea24..a8386f4 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -6200,6 +6200,9 @@ static struct usb_device_id dev_table[] = {
- /* TP-Link TL-WN822N v4 */
- {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0108, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192eu_fops},
-+/* D-Link DWA-131 rev E1, tested by David Patiño */
-+{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3319, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8192eu_fops},
- /* Tested by Myckel Habets */
- {USB_DEVICE_AND_INTERFACE_INFO(0x2357, 0x0109, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192eu_fops},
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+index 6f8a4b074c31..f4644cf371c7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+@@ -58,10 +58,18 @@ static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
+ 					   const struct brcmf_event_msg *evtmsg,
+ 					   void *data)
+ {
++	int err;
++
+ 	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
+ 
+-	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
+-					  evtmsg->datalen);
++	brcmf_err("PSM's watchdog has fired!\n");
++
++	err = brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
++					 evtmsg->datalen);
++	if (err)
++		brcmf_err("Failed to get memory dump, %d\n", err);
++
++	return err;
+ }
+ 
+ void brcmf_debugfs_init(void)
 -- 
-2.7.4
+2.11.0
