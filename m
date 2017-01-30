@@ -1,111 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36242 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751619AbdAWWSJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 23 Jan 2017 17:18:09 -0500
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
-        Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 24 Jan 2017 00:03:36 +0200
-Message-Id: <20170123220350.25305-12-luca@coelho.fi> (sfid-20170123_231812_009942_EDBE9833)
-In-Reply-To: <20170123220350.25305-1-luca@coelho.fi>
-References: <20170123220350.25305-1-luca@coelho.fi>
-Subject: [PATCH 11/25] iwlwifi: mvm: change iwl_mvm_tx_csum to return value
+Received: from mail.toke.dk ([52.28.52.200]:56559 "EHLO mail.toke.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754289AbdA3Tnw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jan 2017 14:43:52 -0500
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Klaus Kinski <jpo234@outlook.de>
+Cc: Dave Taht <dave.taht@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k is 20% worse than net80211/madwifi
+References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+        <87lgtsjz6o.fsf@toke.dk>
+        <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
+        <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+Date: Mon, 30 Jan 2017 20:43:47 +0100
+In-Reply-To: <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+        (Klaus Kinski's message of "Mon, 30 Jan 2017 17:00:46 +0000")
+Message-ID: <87o9yo2v0s.fsf@toke.dk> (sfid-20170130_204410_304061_21F26BB1)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Klaus Kinski <jpo234@outlook.de> writes:
 
-Currently the function changes the TX cmd itself.
-Make it more generic by returning a value, as preperation
-to the new TX cmd.
+> The captures I used to create the statistics are here:
+> https://drive.google.com/open?id=0ByFGz3ZH6JcYMGp0a05lYzBPNzA
+>
+> An obvious difference is, that Madwifi sends 5 packets in a row
+> without waiting for an ACK whereas ath9k/mac80211 always seems to wait
+> for an ACK. This seems to point to the "net80211 aggressive mode
+> theory" https://wiki.freebsd.org/WifiAggressiveMode, IMHO.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+I'm not too familiar with that part of the stack, but that seems
+reasonable, yeah. AFAIK the "aggresive mode" is a pre-802.11n feature,
+though, which is why you won't see that in ath9k. In 802.11n this kind
+of bursting was replaced by aggregation, which you're not getting any of
+since you're running in 802.11a mode, obviously.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 66957ac12ca4..7f2fe3ffe547 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -102,14 +102,13 @@ iwl_mvm_bar_check_trigger(struct iwl_mvm *mvm, const u8 *addr,
- #define OPT_HDR(type, skb, off) \
- 	(type *)(skb_network_header(skb) + (off))
- 
--static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
--			    struct ieee80211_hdr *hdr,
--			    struct ieee80211_tx_info *info,
--			    struct iwl_tx_cmd *tx_cmd)
-+static u16 iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
-+			   struct ieee80211_hdr *hdr,
-+			   struct ieee80211_tx_info *info)
- {
- #if IS_ENABLED(CONFIG_INET)
- 	u16 mh_len = ieee80211_hdrlen(hdr->frame_control);
--	u16 offload_assist = le16_to_cpu(tx_cmd->offload_assist);
-+	u16 offload_assist = 0;
- 	u8 protocol = 0;
- 
- 	/*
-@@ -117,7 +116,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	 * compute it
- 	 */
- 	if (skb->ip_summed != CHECKSUM_PARTIAL || IWL_MVM_SW_TX_CSUM_OFFLOAD)
--		return;
-+		goto out;
- 
- 	/* We do not expect to be requested to csum stuff we do not support */
- 	if (WARN_ONCE(!(mvm->hw->netdev_features & IWL_TX_CSUM_NETIF_FLAGS) ||
-@@ -125,7 +124,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		       skb->protocol != htons(ETH_P_IPV6)),
- 		      "No support for requested checksum\n")) {
- 		skb_checksum_help(skb);
--		return;
-+		goto out;
- 	}
- 
- 	if (skb->protocol == htons(ETH_P_IP)) {
-@@ -145,7 +144,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			    protocol != NEXTHDR_HOP &&
- 			    protocol != NEXTHDR_DEST) {
- 				skb_checksum_help(skb);
--				return;
-+				goto out;
- 			}
- 
- 			hp = OPT_HDR(struct ipv6_opt_hdr, skb, off);
-@@ -159,7 +158,7 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP) {
- 		WARN_ON_ONCE(1);
- 		skb_checksum_help(skb);
--		return;
-+		goto out;
- 	}
- 
- 	/* enable L4 csum */
-@@ -191,7 +190,8 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	mh_len /= 2;
- 	offload_assist |= mh_len << TX_CMD_OFFLD_MH_SIZE;
- 
--	tx_cmd->offload_assist = cpu_to_le16(offload_assist);
-+out:
-+	return offload_assist;
- #endif
- }
- 
-@@ -295,7 +295,8 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	    !(tx_cmd->offload_assist & cpu_to_le16(BIT(TX_CMD_OFFLD_AMSDU))))
- 		tx_cmd->offload_assist |= cpu_to_le16(BIT(TX_CMD_OFFLD_PAD));
- 
--	iwl_mvm_tx_csum(mvm, skb, hdr, info, tx_cmd);
-+	tx_cmd->offload_assist |=
-+		cpu_to_le16(iwl_mvm_tx_csum(mvm, skb, hdr, info));
- }
- 
- /*
--- 
-2.11.0
+The lack of bursting will translate to slightly lower throughput, which
+will be why you see fewer packets transmitted by ath9k. Of course, if
+your receiver supported aggregation, the numbers would look dramatically
+better in ath9k's favour... ;)
+
+-Toke
