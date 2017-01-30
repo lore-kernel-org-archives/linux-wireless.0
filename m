@@ -1,49 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50476 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:46958 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751442AbdAMLDk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 13 Jan 2017 06:03:40 -0500
-Message-ID: <1484302390.27366.0.camel@sipsolutions.net> (sfid-20170113_120345_583276_E1E8FAED)
-Subject: Re: [PATCH] mac80211: prevent skb/txq mismatch
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Ben Greear <greearb@candelatech.com>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Date: Fri, 13 Jan 2017 11:13:10 +0100
-In-Reply-To: <CA+BoTQnA4X+OPC2eFQO9tj+a+-z=_FTKA6UR_uJAUrQvzjZZ8Q@mail.gmail.com> (sfid-20170113_100443_344461_0D63BB30)
-References: <1484231321-3179-1-git-send-email-michal.kazior@tieto.com>
-         <1484295383.19860.7.camel@sipsolutions.net>
-         <CA+BoTQnA4X+OPC2eFQO9tj+a+-z=_FTKA6UR_uJAUrQvzjZZ8Q@mail.gmail.com>
-         (sfid-20170113_100443_344461_0D63BB30)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1750971AbdA3L2h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 30 Jan 2017 06:28:37 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH v2] rt2800: enable rt3290 unconditionally on pci probe
+Date: Mon, 30 Jan 2017 12:12:47 +0100
+Message-Id: <1485774767-6655-1-git-send-email-sgruszka@redhat.com> (sfid-20170130_122840_902802_F5CE2A5D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+When we restart system using sysrq RT3290 device do not initalize
+properly, hance always enable it via WLAN_FUN_CTRL register on
+probe.
 
-> > What I don't understand - and you haven't really described - is how
-> > the changes fix it? Could you resend with a paragraph added that
-> > explains that?
-> 
-> "Since downgrading unicast traffic to vif->txq must not be done
-> there's no txq to put a frame on if sta->uploaded is false. Therefore
-> the code is made to fall back to regular tx() op path if the
-> described condition is hit. " -- is this sufficient?
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=85461
+Reported-and-tested-by: Giedrius Statkevičius <edrius.statkevicius@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Makes sense.
-
-> > Also, you're adding a test:
-> > 
-> > >       if (sta && !sta->uploaded)
-> > 
-> > but couldn't do move that into the existing "if (sta)" block?
-> > Everything before that only ever returns NULL anyway.
-> 
-> Good point. It makes more sense to put the sta->uploaded check in if
-> (sta) block. I'll move it.
-> 
-
-Ok, thanks.
-
-johannes
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 560b696..c6e64cc 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -373,9 +373,6 @@ static int rt2800_enable_wlan_rt3290(struct rt2x00_dev *rt2x00dev)
+ 	int i, count;
+ 
+ 	rt2800_register_read(rt2x00dev, WLAN_FUN_CTRL, &reg);
+-	if (rt2x00_get_field32(reg, WLAN_EN))
+-		return 0;
+-
+ 	rt2x00_set_field32(&reg, WLAN_GPIO_OUT_OE_BIT_ALL, 0xff);
+ 	rt2x00_set_field32(&reg, FRC_WL_ANT_SET, 1);
+ 	rt2x00_set_field32(&reg, WLAN_CLK_EN, 0);
+-- 
+1.8.3.1
