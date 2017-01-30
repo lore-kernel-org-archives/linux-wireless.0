@@ -1,49 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:32930 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752084AbdAaTWl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33693 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751988AbdA3ItI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 14:22:41 -0500
-In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-From: Russell King <rmk+kernel@armlinux.org.uk>
-To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-        Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 4.10-rc3 02/13] net: cgroups: fix build errors when
- linux/phy*.h is removed from net/dsa.h
+        Mon, 30 Jan 2017 03:49:08 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <stable@vger.kernel.org>,
+        <tamizhchelvam@codeaurora.org>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHv2] ath10k: fix boot failure in UTF mode/testmode
+Date: Mon, 30 Jan 2017 14:15:58 +0530
+Message-ID: <1485765958-26802-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170130_094919_116466_D884CD62)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-Id: <E1cYdwn-0000W0-Cz@rmk-PC.armlinux.org.uk> (sfid-20170131_205058_025883_7A966A11)
-Date: Tue, 31 Jan 2017 19:18:33 +0000
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-net/core/netprio_cgroup.c:303:16: error: expected declaration specifiers or '...' before string constant
-    MODULE_LICENSE("GPL v2");
-                   ^~~~~~~~
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Add linux/module.h to fix this.
+Rx filter reset and the dynamic tx switch mode (EXT_RESOURCE_CFG)
+configuration are causing the following errors when UTF firmware
+is loaded to the target.
 
-Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+Error message 1:
+[ 598.015629] ath10k_pci 0001:01:00.0: failed to ping firmware: -110
+[ 598.020828] ath10k_pci 0001:01:00.0: failed to reset rx filter: -110
+[ 598.141556] ath10k_pci 0001:01:00.0: failed to start core (testmode): -110
+
+Error message 2:
+[ 668.615839] ath10k_ahb a000000.wifi: failed to send ext resource cfg command : -95
+[ 668.618902] ath10k_ahb a000000.wifi: failed to start core (testmode): -95
+
+Avoiding these configurations while bringing the target in
+testmode is solving the problem.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- net/core/netprio_cgroup.c | 1 +
- 1 file changed, 1 insertion(+)
+v2:
+   *Added stable@vger.kernel.org in cc list
 
-diff --git a/net/core/netprio_cgroup.c b/net/core/netprio_cgroup.c
-index 2ec86fc552df..756637dc7a57 100644
---- a/net/core/netprio_cgroup.c
-+++ b/net/core/netprio_cgroup.c
-@@ -13,6 +13,7 @@
+ drivers/net/wireless/ath/ath10k/core.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 874c2a7..0d12761 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1922,7 +1922,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "firmware %s booted\n",
+ 		   ar->hw->wiphy->fw_version);
  
- #include <linux/slab.h>
- #include <linux/types.h>
-+#include <linux/module.h>
- #include <linux/string.h>
- #include <linux/errno.h>
- #include <linux/skbuff.h>
+-	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map)) {
++	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map) &&
++	    mode == ATH10K_FIRMWARE_MODE_NORMAL) {
+ 		val = 0;
+ 		if (ath10k_peer_stats_enabled(ar))
+ 			val = WMI_10_4_PEER_STATS;
+@@ -1975,10 +1976,13 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	 * possible to implicitly make it correct by creating a dummy vdev and
+ 	 * then deleting it.
+ 	 */
+-	status = ath10k_core_reset_rx_filter(ar);
+-	if (status) {
+-		ath10k_err(ar, "failed to reset rx filter: %d\n", status);
+-		goto err_hif_stop;
++	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
++		status = ath10k_core_reset_rx_filter(ar);
++		if (status) {
++			ath10k_err(ar,
++				   "failed to reset rx filter: %d\n", status);
++			goto err_hif_stop;
++		}
+ 	}
+ 
+ 	/* If firmware indicates Full Rx Reorder support it must be used in a
 -- 
-2.7.4
+1.7.9.5
