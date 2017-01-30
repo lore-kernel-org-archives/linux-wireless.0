@@ -1,73 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:36497 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752123AbdAIUZA (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:37198 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752523AbdA3Kes (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 15:25:00 -0500
-Received: by mail-wm0-f43.google.com with SMTP id c85so109202538wmi.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2017 12:24:59 -0800 (PST)
-Subject: Re: [PATCH 3/3] cfg80211: Specify the reason for connect timeout
-To: Jouni Malinen <jouni@qca.qualcomm.com>,
-        Johannes Berg <johannes@sipsolutions.net>
-References: <1483984388-30237-1-git-send-email-jouni@qca.qualcomm.com>
- <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
+        Mon, 30 Jan 2017 05:34:48 -0500
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
 Cc: linux-wireless@vger.kernel.org,
-        Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a59ef282-921d-6591-ab33-0a8dd3ef4294@broadcom.com> (sfid-20170109_212816_040265_52D10AAD)
-Date: Mon, 9 Jan 2017 21:24:56 +0100
-MIME-Version: 1.0
-In-Reply-To: <1483984388-30237-3-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 30 Jan 2017 12:34:32 +0200
+Message-Id: <20170130103432.24613-1-luca@coelho.fi> (sfid-20170130_113546_608452_4868BD5C)
+In-Reply-To: <87efzmt11g.fsf@kamboji.qca.qualcomm.com>
+References: <87efzmt11g.fsf@kamboji.qca.qualcomm.com>
+Subject: [PATCH] iwlwifi: alloc memory dynamically also for DVM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9-1-2017 18:53, Jouni Malinen wrote:
-> From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-> 
-> This enhances the connect timeout API to also carry the reason for the
-> timeout. These reason codes for the connect time out are represented by
-> enum nl80211_timeout_reason and are passed to user space through a new
-> attribute NL80211_ATTR_TIMEOUT_REASON (u32).
-> 
-> Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
-> ---
+From: Sara Sharon <sara.sharon@intel.com>
 
-[...]
+For old firmwares the memory wasn't allocated, resulting in panic.
+Make it dynamically allocated as well. Allow any order of functions
+call.
 
-> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-> index 4669391..472225d 100644
-> --- a/net/wireless/sme.c
-> +++ b/net/wireless/sme.c
-> @@ -38,6 +38,7 @@ struct cfg80211_conn {
->  		CFG80211_CONN_ASSOCIATE_NEXT,
->  		CFG80211_CONN_ASSOCIATING,
->  		CFG80211_CONN_ASSOC_FAILED,
-> +		CFG80211_CONN_ASSOC_FAILED_TIMEOUT,
+Fixes: eef187a7b8a1 ("iwlwifi: enlarge number of ucode sections")
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
 
-Was kinda expecting AUTH_FAILED_TIMEOUT....
+Kalle,
 
->  		CFG80211_CONN_DEAUTH,
->  		CFG80211_CONN_ABANDON,
->  		CFG80211_CONN_CONNECTED,
-> @@ -140,7 +141,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
->  	return err;
->  }
->  
-> -static int cfg80211_conn_do_work(struct wireless_dev *wdev)
-> +static int cfg80211_conn_do_work(struct wireless_dev *wdev,
-> +				 enum nl80211_timeout_reason *treason)
->  {
->  	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
->  	struct cfg80211_connect_params *params;
-> @@ -172,6 +174,7 @@ static int cfg80211_conn_do_work(struct wireless_dev *wdev)
->  					  params->key, params->key_len,
->  					  params->key_idx, NULL, 0);
->  	case CFG80211_CONN_AUTH_FAILED:
-> +		*treason = NL80211_TIMEOUT_AUTH;
+Could you test this patch to see if it solves the problem?
 
-... but it seems AUTH failure always is a timeout?
+Thanks!
 
-Regards,
-Arend
+
+drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 1d1af4bc1530..d22821501676 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -291,11 +291,33 @@ static struct fw_sec *get_sec(struct iwl_firmware_pieces *pieces,
+ 	return &pieces->img[type].sec[sec];
+ }
+ 
++static void alloc_sec_data(struct iwl_firmware_pieces *pieces,
++			   enum iwl_ucode_type type,
++			   int sec)
++{
++	struct fw_img_parsing *img = &pieces->img[type];
++	struct fw_sec *sec_memory;
++	int size = sec + 1;
++	size_t alloc_size = sizeof(*img->sec) * size;
++
++	if (img->sec && img->sec_counter >= size)
++		return;
++
++	sec_memory = krealloc(img->sec, alloc_size, GFP_KERNEL);
++	if (!sec_memory)
++		return;
++
++	img->sec = sec_memory;
++	img->sec_counter = size;
++}
++
+ static void set_sec_data(struct iwl_firmware_pieces *pieces,
+ 			 enum iwl_ucode_type type,
+ 			 int sec,
+ 			 const void *data)
+ {
++	alloc_sec_data(pieces, type, sec);
++
+ 	pieces->img[type].sec[sec].data = data;
+ }
+ 
+@@ -304,6 +326,8 @@ static void set_sec_size(struct iwl_firmware_pieces *pieces,
+ 			 int sec,
+ 			 size_t size)
+ {
++	alloc_sec_data(pieces, type, sec);
++
+ 	pieces->img[type].sec[sec].size = size;
+ }
+ 
+@@ -319,6 +343,8 @@ static void set_sec_offset(struct iwl_firmware_pieces *pieces,
+ 			   int sec,
+ 			   u32 offset)
+ {
++	alloc_sec_data(pieces, type, sec);
++
+ 	pieces->img[type].sec[sec].offset = offset;
+ }
+ 
+-- 
+2.11.0
