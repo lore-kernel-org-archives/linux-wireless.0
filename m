@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36789 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751642AbdATK6Z (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38074 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750837AbdAaH1K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 05:58:25 -0500
-Received: by mail-oi0-f66.google.com with SMTP id u143so5223282oif.3
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2017 02:58:24 -0800 (PST)
+        Tue, 31 Jan 2017 02:27:10 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <52453214-bab2-dc0b-c684-2389fe028442@broadcom.com>
-References: <20170118142703.9824-1-zajec5@gmail.com> <da843f98-cd01-17f7-45cc-4530e8b87bfe@broadcom.com>
- <52453214-bab2-dc0b-c684-2389fe028442@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 20 Jan 2017 11:58:24 +0100
-Message-ID: <CACna6rwhe+Vupq=7CxQAQfRce2_gH7kNj1QwRyoCpTLms+mn5Q@mail.gmail.com> (sfid-20170120_115828_334543_46A7884B)
-Subject: Re: [PATCH RFC 1/2] brcmfmac: merge two brcmf_err macros into one
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v2] rt2x00: avoid introducing a USB dependency in the rt2x00lib
+ module
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170127141416.GA6491@redhat.com>
+References: <20170127141416.GA6491@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, vishalthanki@gmail.com,
+        nbd@nbd.name
+Message-Id: <20170131072700.0973B6085F@smtp.codeaurora.org> (sfid-20170131_082724_649673_D6339F53)
+Date: Tue, 31 Jan 2017 07:26:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 January 2017 at 11:14, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 20-1-2017 11:13, Arend Van Spriel wrote:
->> On 18-1-2017 15:27, Rafa=C5=82 Mi=C5=82ecki wrote:
->>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>
->>> This allows simplifying the code by adding a simple IS_ENABLED check fo=
-r
->>> CONFIG_BRCMDB symbol.
->
-> Actually it should be CONFIG_BRCMDBG above.
->
-> Kalle,
->
-> Can you fix that in the commit message?
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> As reported by Felix:
+> 
+> Though protected by an ifdef, introducing an usb symbol dependency in
+> the rt2x00lib module is a major inconvenience for distributions that
+> package kernel modules split into individual packages.
+> 
+> Get rid of this unnecessary dependency by calling the usb related
+> function from a more suitable place.
+> 
+> Reported-by: Felix Fietkau <nbd@nbd.name>
+> Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-It's only RFC, I'll make sure to fix that in final version
+Does not apply:
 
---=20
-Rafa=C5=82
+fatal: sha1 information is lacking or useless (drivers/net/wireless/ralink/rt2x00/rt2x00dev.c).
+error: could not build fake ancestor
+Applying: rt2x00: avoid introducing a USB dependency in the rt2x00lib module
+Patch failed at 0001 rt2x00: avoid introducing a USB dependency in the rt2x00lib module
+The copy of the patch that failed is found in: .git/rebase-apply/patch
+
+Patch set to Changes Requested.
+
+-- 
+https://patchwork.kernel.org/patch/9541945/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
