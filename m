@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:36760 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753976AbdAZRaF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31421 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751084AbdAaJPx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 26 Jan 2017 12:30:05 -0500
-Message-ID: <1485449523.26003.4.camel@coelho.fi> (sfid-20170126_183009_605218_F3808AF9)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Date: Thu, 26 Jan 2017 18:52:03 +0200
-In-Reply-To: <20170126162003.31531-1-johannes@sipsolutions.net>
-References: <20170126162003.31531-1-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH] wireless: define cipher/AKM suites using a macro
+        Tue, 31 Jan 2017 04:15:53 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel
+ in non-ETSI
+Date: Tue, 31 Jan 2017 09:12:38 +0000
+Message-ID: <589054CB.3050106@qti.qualcomm.com> (sfid-20170131_101723_841534_77BEA498)
+References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
+         <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com>
+ <1485423406.11038.6.camel@sipsolutions.net>
+In-Reply-To: <1485423406.11038.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2017-01-26 at 17:20 +0100, Johannes Berg wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The spec writes cipher/AKM suites as something like 00-0F-AC:9,
-> but the part after the colon isn't hex, it's decimal, so that
-> we've already had a few mistakes (in other code, or unmerged
-> patches) to e.g. write 0x000FAC10 instead of 0x000FAC0A.
-> 
-> Use a macro to avoid that problem.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-
-Reviewed-by: Luca Coelho <luciano.coelho@intel.com>
-
---
-Luca.
+T24gVGh1cnNkYXkgMjYgSmFudWFyeSAyMDE3IDAzOjA2IFBNLCBKb2hhbm5lcyBCZXJnIHdyb3Rl
+Og0KPg0KPj4gK3N0YXRpYyBib29sIGNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxsb3dlZChz
+dHJ1Y3Qgd2lyZWxlc3NfZGV2DQo+PiAqd2RldikNCj4+ICt7DQo+PiArCWlmICghY2ZnODAyMTFf
+YmVhY29uaW5nX2lmYWNlX2FjdGl2ZSh3ZGV2KSkNCj4+ICsJCXJldHVybiB0cnVlOw0KPj4gKw0K
+Pj4gKwlpZiAoISh3ZGV2LT5jaGFuZGVmLmNoYW4tPmZsYWdzICYgSUVFRTgwMjExX0NIQU5fUkFE
+QVIpKQ0KPj4gKwkJcmV0dXJuIHRydWU7DQo+DQo+IFRoYXQgY291bGQgdXNlIHNvbWUgbG9ja2lu
+ZyBhc3NlcnRpb25zLiBNYXliZSBhbHNvIGluIHRoZQ0KPiBjZmc4MDIxMV9iZWFjb25pbmdfaWZh
+Y2VfYWN0aXZlKCkgZnVuY3Rpb24geW91IGludHJvZHVjZWQgaW4gdGhlDQo+IHByZXZpb3VzIHBh
+dGNoLg0KDQpPay4NCg0KPg0KPj4gKwlpZiAoIWNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxs
+b3dlZCh3ZGV2KSkgew0KPj4gKwkJc3RydWN0IGllZWU4MDIxMV9jaGFubmVsICpjaGFuOw0KPj4g
+Kw0KPj4gKwkJaWYgKHJlcXVlc3QtPm5fY2hhbm5lbHMgIT0gMSkgew0KPj4gKwkJCWVyciA9IC1F
+QlVTWTsNCj4+ICsJCQlnb3RvIG91dF9mcmVlOw0KPj4gKwkJfQ0KPj4gKw0KPj4gKwkJY2hhbiA9
+IHJlcXVlc3QtPmNoYW5uZWxzWzBdOw0KPj4gKwkJaWYgKGNoYW4tPmNlbnRlcl9mcmVxICE9IHdk
+ZXYtPmNoYW5kZWYuY2hhbi0NCj4+PiBjZW50ZXJfZnJlcSkgew0KPj4gKwkJCWVyciA9IC1FQlVT
+WTsNCj4+ICsJCQlnb3RvIG91dF9mcmVlOw0KPj4gKwkJfQ0KPj4gKwl9DQo+DQo+IEknbSBub3Qg
+Y29udmluY2VkIHlvdSBldmVuIGhvbGQgdGhlIHJlbGV2YW50IGxvY2tzIGhlcmUsIHRob3VnaCBv
+ZmYgdGhlDQo+IHRvcCBvZiBteSBoZWFkIEknbSBub3QgZXZlbiBzdXJlIHdoaWNoIGFyZSBuZWVk
+ZWQuDQoNClRoYW5rcyBmb3IgcG9pbnRpbmcgaXQsIGl0IHNob3VsZCBiZSB3aXRoaW4gd2Rldl9s
+b2NrKCkuDQoNCj4NCj4+ICAgCWkgPSAwOw0KPj4gICAJaWYgKG5fc3NpZHMpIHsNCj4+ICAgCQlu
+bGFfZm9yX2VhY2hfbmVzdGVkKGF0dHIsIGluZm8tDQo+Pj4gYXR0cnNbTkw4MDIxMV9BVFRSX1ND
+QU5fU1NJRFNdLCB0bXApIHsNCj4+IEBAIC05MDUzLDYgKzkwNzksNyBAQCBzdGF0aWMgaW50IG5s
+ODAyMTFfcmVtYWluX29uX2NoYW5uZWwoc3RydWN0DQo+PiBza19idWZmICpza2IsDQo+PiAgIAlz
+dHJ1Y3QgY2ZnODAyMTFfcmVnaXN0ZXJlZF9kZXZpY2UgKnJkZXYgPSBpbmZvLT51c2VyX3B0clsw
+XTsNCj4+ICAgCXN0cnVjdCB3aXJlbGVzc19kZXYgKndkZXYgPSBpbmZvLT51c2VyX3B0clsxXTsN
+Cj4+ICAgCXN0cnVjdCBjZmc4MDIxMV9jaGFuX2RlZiBjaGFuZGVmOw0KPj4gKwljb25zdCBzdHJ1
+Y3QgY2ZnODAyMTFfY2hhbl9kZWYgKmNvbXBhdF9jaGFuZGVmOw0KPj4gICAJc3RydWN0IHNrX2J1
+ZmYgKm1zZzsNCj4+ICAgCXZvaWQgKmhkcjsNCj4+ICAgCXU2NCBjb29raWU7DQo+PiBAQCAtOTA4
+MSw2ICs5MTA4LDE0IEBAIHN0YXRpYyBpbnQgbmw4MDIxMV9yZW1haW5fb25fY2hhbm5lbChzdHJ1
+Y3QNCj4+IHNrX2J1ZmYgKnNrYiwNCj4+ICAgCWlmIChlcnIpDQo+PiAgIAkJcmV0dXJuIGVycjsN
+Cj4+DQo+PiArCWlmICghKGNmZzgwMjExX29mZl9jaGFubmVsX29wZXJfYWxsb3dlZCh3ZGV2KSB8
+fA0KPj4gKwkgICAgICBjZmc4MDIxMV9jaGFuZGVmX2lkZW50aWNhbCgmd2Rldi0+Y2hhbmRlZiwg
+JmNoYW5kZWYpKSkNCj4NCj4gSSdkIHByZWZlciB0byB3cml0ZSB0aGF0IGFzICFvZmZfY2hhbm5l
+bCAmJiAhY2hhbmRlZl9pZGVudGljYWwsIHNlZW1zDQo+IGVhc2llciB0byB1bmRlcnN0YW5kIGhl
+cmUuDQoNCk9rLg0KDQoNClRoYW5rcywNCg0KVmFzYW50aA0K
