@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.aperture-lab.de ([138.201.29.205]:34326 "EHLO
-        mail.aperture-lab.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934701AbdAIMmf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 9 Jan 2017 07:42:35 -0500
-Date: Mon, 9 Jan 2017 13:42:31 +0100
-From: Linus =?utf-8?Q?L=C3=BCssing?= <linus.luessing@c0d3.blue>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org, "David S . Miller" <davem@davemloft.net>,
-        Stephen Hemminger <stephen@networkplumber.org>,
-        bridge@lists.linux-foundation.org, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
-        Michael Braun <michael-dev@fami-braun.de>
-Subject: Re: [PATCH net-next] bridge: multicast to unicast
-Message-ID: <20170109124231.GA9086@otheros> (sfid-20170109_134339_792481_447AB8CA)
-References: <20170102193214.31723-1-linus.luessing@c0d3.blue>
- <1483706872.4089.8.camel@sipsolutions.net>
- <20170107151530.GG3134@otheros>
- <1483949149.17582.1.camel@sipsolutions.net>
+Received: from mail.neratec.com ([46.140.151.2]:22796 "EHLO mail.neratec.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750790AbdAaHyr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jan 2017 02:54:47 -0500
+Subject: Re: Packet throughput (and those iperf data rate) with mac80211/ath9k
+ is 20% worse than net80211/madwifi
+To: Klaus Kinski <jpo234@outlook.de>
+References: <HE1PR0701MB1803E46BC8EC38D682361523FC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87lgtsjz6o.fsf@toke.dk>
+ <CAA93jw5w6MaegbE+n9=-+F59vXTjEFGOH94Q=XYxiAqFKHeVfw@mail.gmail.com>
+ <HE1PR0701MB1803A03DD96F300119936D0EFC4B0@HE1PR0701MB1803.eurprd07.prod.outlook.com>
+ <87o9yo2v0s.fsf@toke.dk>
+Cc: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        Dave Taht <dave.taht@gmail.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+From: Wojciech Dubowik <wojciech.dubowik@neratec.com>
+Message-ID: <d23a5b33-9ec5-a3c3-81ed-91d8e9abe67a@neratec.com> (sfid-20170131_085450_143329_6A83315F)
+Date: Tue, 31 Jan 2017 08:54:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1483949149.17582.1.camel@sipsolutions.net>
+In-Reply-To: <87o9yo2v0s.fsf@toke.dk>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 09, 2017 at 09:05:49AM +0100, Johannes Berg wrote:
-> On Sat, 2017-01-07 at 16:15 +0100, Linus Lüssing wrote:
-> 
-> > Actually, I do not quite understand that remark in the mac80211
-> > multicast-to-unicast patch. IP should not care about the ethernet
-> > header?
-> 
-> But it does, for example RFC 1122 states:
-> 
->          When a host sends a datagram to a link-layer broadcast address,
->          the IP destination address MUST be a legal IP broadcast or IP
->          multicast address.
-> 
->          A host SHOULD silently discard a datagram that is received via
->          a link-layer broadcast (see Section 2.4) but does not specify
->          an IP multicast or broadcast destination address.
+Madwifi has default best effort queue "tuned" for throughout
 
-This example is the other way round. It specifies how the IP
-destination should look like in case of link-layer broadcast. Not
-how the link-layer destination should look like in case of a
-multicast/broadcast IP destination.
+and its parameters are different from mac80211 defaults when
 
-Any other examples?
+qos  (WME) is disabled.
+
+You would have to dump qos settings for both systems before
+
+comparing them. I guess the easiest way is to make sure QoS
+
+is enabled and send video type of packets with iperf ... -S 0xa0
+
+Wojtek
+
+
+On 30/01/17 20:43, Toke H�iland-J�rgensen wrote:
+> Klaus Kinski <jpo234@outlook.de> writes:
+>
+>> The captures I used to create the statistics are here:
+>> https://drive.google.com/open?id=0ByFGz3ZH6JcYMGp0a05lYzBPNzA
+>>
+>> An obvious difference is, that Madwifi sends 5 packets in a row
+>> without waiting for an ACK whereas ath9k/mac80211 always seems to wait
+>> for an ACK. This seems to point to the "net80211 aggressive mode
+>> theory" https://wiki.freebsd.org/WifiAggressiveMode, IMHO.
+> I'm not too familiar with that part of the stack, but that seems
+> reasonable, yeah. AFAIK the "aggresive mode" is a pre-802.11n feature,
+> though, which is why you won't see that in ath9k. In 802.11n this kind
+> of bursting was replaced by aggregation, which you're not getting any of
+> since you're running in 802.11a mode, obviously.
+>
+> The lack of bursting will translate to slightly lower throughput, which
+> will be why you see fewer packets transmitted by ath9k. Of course, if
+> your receiver supported aggregation, the numbers would look dramatically
+> better in ath9k's favour... ;)
+>
+> -Toke
