@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55270 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38704 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751080AbdASI4F (ORCPT
+        with ESMTP id S1750764AbdAaHal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 03:56:05 -0500
+        Tue, 31 Jan 2017 02:30:41 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Gavin Li <gavinli@thegavinli.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Gavin Li <git@thegavinli.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Stable <stable@vger.kernel.org>, linux-wireless@vger.kernel.org,
-        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>
-Subject: Re: [PATCH v3] brcmfmac: fix incorrect event channel deduction
-References: <20170117232405.7672-1-gavinli@thegavinli.com>
-        <bab86bb5-7815-e5ea-053d-ed6b18af6677@broadcom.com>
-        <CA+GxvY43AbKOVJFWAxHg1Gku=LD-dveHY8m6=zPPu9qR4+r=Fg@mail.gmail.com>
-        <87inpbh1uj.fsf@purkki.adurom.net>
-        <CA+GxvY6ho89L-Ye7MrbtVM=i+Ck8YSH7JaSG1p=WzH5u_Be0_A@mail.gmail.com>
-Date: Thu, 19 Jan 2017 10:55:57 +0200
-In-Reply-To: <CA+GxvY6ho89L-Ye7MrbtVM=i+Ck8YSH7JaSG1p=WzH5u_Be0_A@mail.gmail.com>
-        (Gavin Li's message of "Thu, 19 Jan 2017 08:51:11 +0000")
-Message-ID: <87lgu7pgwy.fsf@kamboji.qca.qualcomm.com> (sfid-20170119_095609_332684_E221D9CC)
+To: Iain Hunter <drhunter95@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Iain Hunter <i-hunter1@ti.com>
+Subject: Re: [PATCH] wlcore: disable multicast filter in AP mode
+References: <20170130144936.6699-1-i-hunter1@ti.com>
+Date: Tue, 31 Jan 2017 09:22:58 +0200
+In-Reply-To: <20170130144936.6699-1-i-hunter1@ti.com> (Iain Hunter's message
+        of "Mon, 30 Jan 2017 14:49:36 +0000")
+Message-ID: <87r33jg0bx.fsf@purkki.adurom.net> (sfid-20170131_083044_586529_F0959400)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gavin Li <gavinli@thegavinli.com> writes:
+Iain Hunter <drhunter95@gmail.com> writes:
 
-> Should I make a v4 patch with an updated log?
+> Enable AP support allmulticast for MDNS. It can be enabled by bringing up 
+>
+> the interface with ip command with the argument allmulticast on
+>
+> Signed-off-by: Iain Hunter <i-hunter1@ti.com>
 
-No need, I'll just copy your description of the bug to the commit log
-before I commit it.
+The commit log looks now ok, except there's an unnecessare empty line.
+But I can fix that.
+
+> @@ -3281,6 +3281,20 @@ static void wl1271_op_configure_filter(struct ieee80211_hw *hw,
+>  			if (ret < 0)
+>  				goto out_sleep;
+>  		}
+> +
+> +        /*
+> +         * If interface in AP mode and created with allmulticast then disable
+> +         * the firmware filters so that all multicast packets are passed
+> +         * This is mandatory for MDNS based discovery protocols 
+> +         */
+> + 		if (wlvif->bss_type == BSS_TYPE_AP_BSS) {
+> + 			if (*total & FIF_ALLMULTI)
+> +				ret = wl1271_acx_group_address_tbl(wl, wlvif,
+> +								   false,
+> +								   NULL, 0);
+> +              
+> +                }
+> +
+>  	}
+
+Sorry, I missed this earlier but here you don't check ret value at all.
+I think you should bail out from the look if an error happens, like
+other commands in the same loop does.
 
 -- 
 Kalle Valo
