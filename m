@@ -1,65 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34423 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750894AbdARO1Q (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61840 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbdAaE7Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 09:27:16 -0500
-Received: by mail-lf0-f68.google.com with SMTP id q89so1991229lfi.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 06:27:16 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH RFC 1/2] brcmfmac: merge two brcmf_err macros into one
-Date: Wed, 18 Jan 2017 15:27:02 +0100
-Message-Id: <20170118142703.9824-1-zajec5@gmail.com> (sfid-20170118_152720_210083_6A6B58BB)
+        Mon, 30 Jan 2017 23:59:25 -0500
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
+        "Tamizh chelvam" <c_traja@qti.qualcomm.com>,
+        <stable@vger.kernel.org>
+Subject: [PATCHv3] ath10k: fix boot failure in UTF mode/testmode
+Date: Tue, 31 Jan 2017 10:26:09 +0530
+Message-ID: <1485838569-1027-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20170131_060012_382512_9A148D13)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-This allows simplifying the code by adding a simple IS_ENABLED check for
-CONFIG_BRCMDB symbol.
+Rx filter reset and the dynamic tx switch mode (EXT_RESOURCE_CFG)
+configuration are causing the following errors when UTF firmware
+is loaded to the target.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Error message 1:
+[ 598.015629] ath10k_pci 0001:01:00.0: failed to ping firmware: -110
+[ 598.020828] ath10k_pci 0001:01:00.0: failed to reset rx filter: -110
+[ 598.141556] ath10k_pci 0001:01:00.0: failed to start core (testmode): -110
+
+Error message 2:
+[ 668.615839] ath10k_ahb a000000.wifi: failed to send ext resource cfg command : -95
+[ 668.618902] ath10k_ahb a000000.wifi: failed to start core (testmode): -95
+
+Avoiding these configurations while bringing the target in
+testmode is solving the problem.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+v3:
+   *Added Cc:stable@vger.kernel.org in commit log
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 6687812..1fe4aa9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -45,20 +45,16 @@
- #undef pr_fmt
- #define pr_fmt(fmt)		KBUILD_MODNAME ": " fmt
+ drivers/net/wireless/ath/ath10k/core.c |   14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c2afcca..c27e7ea 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1996,7 +1996,8 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "firmware %s booted\n",
+ 		   ar->hw->wiphy->fw_version);
  
-+#ifndef CONFIG_BRCM_TRACING
- /* Macro for error messages. net_ratelimit() is used when driver
-  * debugging is not selected. When debugging the driver error
-  * messages are as important as other tracing or even more so.
-  */
--#ifndef CONFIG_BRCM_TRACING
--#ifdef CONFIG_BRCMDBG
--#define brcmf_err(fmt, ...)	pr_err("%s: " fmt, __func__, ##__VA_ARGS__)
--#else
- #define brcmf_err(fmt, ...)						\
- 	do {								\
--		if (net_ratelimit())					\
-+		if (IS_ENABLED(CONFIG_BRCMDBG) || net_ratelimit())	\
- 			pr_err("%s: " fmt, __func__, ##__VA_ARGS__);	\
- 	} while (0)
--#endif
- #else
- __printf(2, 3)
- void __brcmf_err(const char *func, const char *fmt, ...);
+-	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map)) {
++	if (test_bit(WMI_SERVICE_EXT_RES_CFG_SUPPORT, ar->wmi.svc_map) &&
++	    mode == ATH10K_FIRMWARE_MODE_NORMAL) {
+ 		val = 0;
+ 		if (ath10k_peer_stats_enabled(ar))
+ 			val = WMI_10_4_PEER_STATS;
+@@ -2049,10 +2050,13 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 	 * possible to implicitly make it correct by creating a dummy vdev and
+ 	 * then deleting it.
+ 	 */
+-	status = ath10k_core_reset_rx_filter(ar);
+-	if (status) {
+-		ath10k_err(ar, "failed to reset rx filter: %d\n", status);
+-		goto err_hif_stop;
++	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
++		status = ath10k_core_reset_rx_filter(ar);
++		if (status) {
++			ath10k_err(ar,
++				   "failed to reset rx filter: %d\n", status);
++			goto err_hif_stop;
++		}
+ 	}
+ 
+ 	/* If firmware indicates Full Rx Reorder support it must be used in a
 -- 
-2.10.1
+1.7.9.5
