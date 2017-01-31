@@ -1,74 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:35778 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751692AbdARKtY (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36525 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751656AbdAaL6W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 18 Jan 2017 05:49:24 -0500
-Received: by mail-lf0-f67.google.com with SMTP id v186so1176697lfa.2
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2017 02:49:23 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
+        Tue, 31 Jan 2017 06:58:22 -0500
+Received: by mail-wm0-f46.google.com with SMTP id c85so257583887wmi.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2017 03:58:21 -0800 (PST)
+Subject: Re: [PATCH 2/2] brcmfmac: be more verbose when PSM's watchdog fires
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20170130150952.7133-1-zajec5@gmail.com>
+ <20170130150952.7133-2-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
         Hante Meuleman <hante.meuleman@broadcom.com>,
         Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
         Franky Lin <frankyl@broadcom.com>,
         linux-wireless@vger.kernel.org,
         brcm80211-dev-list.pdl@broadcom.com,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH V2 3/4] brcmfmac: drop brcmf_bus_detach and inline its code
-Date: Wed, 18 Jan 2017 11:48:53 +0100
-Message-Id: <20170118104854.32231-3-zajec5@gmail.com> (sfid-20170118_114927_898759_3692C89F)
-In-Reply-To: <20170118104854.32231-1-zajec5@gmail.com>
-References: <20170118104854.32231-1-zajec5@gmail.com>
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <cd45588f-3d14-8227-1992-1611a9af38e2@broadcom.com> (sfid-20170131_125830_701290_49A4E31F)
+Date: Tue, 31 Jan 2017 12:58:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170130150952.7133-2-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On 30-1-2017 16:09, Rafał Miłecki wrote:
+> From: Rafał Miłecki <rafal@milecki.pl>
+> 
+> It's important to inform user so he knows things went wrong. He may also
+> want to get memory dump for further debugging purposes.
 
-Driver used to call brcmf_bus_detach only from one place and it already
-contained a check for drvr not being NULL. We can get rid of this extra
-function, call brcmf_bus_stop directly and simplify the code.
-There also isn't brcmf_bus_attach function which one could expect so it
-looks more consistent this way.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
 Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 9e6f60a..372d2c4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1075,16 +1075,6 @@ void brcmf_bus_add_txhdrlen(struct device *dev, uint len)
- 	}
- }
- 
--static void brcmf_bus_detach(struct brcmf_pub *drvr)
--{
--	brcmf_dbg(TRACE, "Enter\n");
--
--	if (drvr) {
--		/* Stop the bus module */
--		brcmf_bus_stop(drvr->bus_if);
--	}
--}
--
- void brcmf_dev_reset(struct device *dev)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-@@ -1131,7 +1121,7 @@ void brcmf_detach(struct device *dev)
- 
- 	brcmf_fws_deinit(drvr);
- 
--	brcmf_bus_detach(drvr);
-+	brcmf_bus_stop(drvr->bus_if);
- 
- 	brcmf_proto_detach(drvr);
- 
--- 
-2.10.1
+> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c | 12 ++++++++++--
+>  1 file changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> index 6f8a4b074c31..f4644cf371c7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> @@ -58,10 +58,18 @@ static int brcmf_debug_psm_watchdog_notify(struct brcmf_if *ifp,
+>  					   const struct brcmf_event_msg *evtmsg,
+>  					   void *data)
+>  {
+> +	int err;
+> +
+>  	brcmf_dbg(TRACE, "enter: bsscfgidx=%d\n", ifp->bsscfgidx);
+>  
+> -	return brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
+> -					  evtmsg->datalen);
+> +	brcmf_err("PSM's watchdog has fired!\n");
+> +
+> +	err = brcmf_debug_create_memdump(ifp->drvr->bus_if, data,
+> +					 evtmsg->datalen);
+> +	if (err)
+> +		brcmf_err("Failed to get memory dump, %d\n", err);
+> +
+> +	return err;
+>  }
+>  
+>  void brcmf_debugfs_init(void)
+> 
