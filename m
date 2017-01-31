@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42382 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33578 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750770AbdALOye (ORCPT
+        with ESMTP id S1750947AbdAaHL3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 12 Jan 2017 09:54:34 -0500
+        Tue, 31 Jan 2017 02:11:29 -0500
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v3,1/5] mwifiex: don't wait for main_process in shutdown_drv
+Subject: Re: iwlwifi: alloc memory dynamically also for DVM
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
-References: <1479301749-14803-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        <rajatja@google.com>, <briannorris@google.com>,
-        <dmitry.torokhov@gmail.com>, Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20170112144527.4C56A605A8@smtp.codeaurora.org> (sfid-20170112_155530_716749_83CD9D3B)
-Date: Thu, 12 Jan 2017 14:45:27 +0000 (UTC)
+In-Reply-To: <20170130103432.24613-1-luca@coelho.fi>
+References: <20170130103432.24613-1-luca@coelho.fi>
+To: Luciano Coelho <luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Message-Id: <20170131071129.1C4AA60A7E@smtp.codeaurora.org> (sfid-20170131_081133_343350_C5F3E88C)
+Date: Tue, 31 Jan 2017 07:11:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Xinming Hu <huxm@marvell.com>
+Luciano Coelho <luca@coelho.fi> wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
 > 
-> main_process is not expected to be running when shutdown_drv function
-> is called. currently we wait for main_process completion in the
-> function.
+> For old firmwares the memory wasn't allocated, resulting in panic.
+> Make it dynamically allocated as well. Allow any order of functions
+> call.
 > 
-> Actually the caller has already made sure main_process is completed by
-> performing below actions.
-> (1) disable interrupts in if_ops->disable_int.
-> (2) set adapter->surprise_removed = true, main_process wont be queued.
-> (3) mwifiex_terminate_workqueue(adapter), wait for workqueue to be
-> completed.
-> 
-> This patch removes redundant wait code and takes care of related
-> cleanup.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Fixes: eef187a7b8a1 ("iwlwifi: enlarge number of ucode sections")
+> Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Tested-by: Kalle Valo <kvalo@codeaurora.org>
 
-5 patches applied to wireless-drivers-next.git, thanks.
+Patch applied to wireless-drivers-next.git, thanks.
 
-5bf15e3fb85d mwifiex: don't wait for main_process in shutdown_drv
-fb45bd0c6d6b mwifiex: do not free firmware dump memory in shutdown_drv
-d27121fca129 mwifiex: get rid of drv_info* adapter variables
-41efaf5824e7 mwifiex: wait firmware dump complete during card remove process
-3860e5e39532 mwifiex: move pcie_work and related variables inside card
+d546530e5694 iwlwifi: alloc memory dynamically also for DVM
 
 -- 
-https://patchwork.kernel.org/patch/9431485/
+https://patchwork.kernel.org/patch/9544763/
 
 Documentation about submitting wireless patches and checking status
 from patchwork:
