@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36077 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754536AbdA0KHv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37736 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750764AbdAaH00 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 05:07:51 -0500
-Date: Fri, 27 Jan 2017 10:05:38 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ming Lei <ming.lei@canonical.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        David Gnedt <david.gnedt@davizone.at>,
-        Michal Kazior <michal.kazior@tieto.com>,
-        Daniel Wagner <wagi@monom.org>,
-        Tony Lindgren <tony@atomide.com>,
-        Sebastian Reichel <sre@kernel.org>,
-        Pavel Machek <pavel@ucw.cz>,
-        Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-        Aaro Koskinen <aaro.koskinen@iki.fi>,
-        Grazvydas Ignotas <notasas@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org
-Subject: Re: [PATCH 6/6] wl1251: Set generated MAC address back to NVS data
-Message-ID: <20170127090538.GB24223@pali> (sfid-20170127_110813_349628_B4D8CD86)
-References: <1482598381-16513-1-git-send-email-pali.rohar@gmail.com>
- <1482598381-16513-7-git-send-email-pali.rohar@gmail.com>
- <87inp1ndgm.fsf@codeaurora.org>
+        Tue, 31 Jan 2017 02:26:26 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87inp1ndgm.fsf@codeaurora.org>
+Subject: Re: [V2, 2/5] brcmfmac: provide a value for struct
+ wowlan_support::max_nd_match_sets
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com>
+References: <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-Id: <20170131072526.7A02160A54@smtp.codeaurora.org> (sfid-20170131_082652_241326_1FEED879)
+Date: Tue, 31 Jan 2017 07:25:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 27 January 2017 09:56:09 Kalle Valo wrote:
-> Pali Rohár <pali.rohar@gmail.com> writes:
+Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+> The driver advertises support for WOWLAN_NETDETECT but did not specify
+> maximum amount of netdetect match sets. This was no issue due to a bug
+> in nl80211. As that has been fixed, brcmfmac also needs fixing.
 > 
-> > In case there is no valid MAC address kernel generates random one. This
-> > patch propagate this generated MAC address back to NVS data which will be
-> > uploaded to wl1251 chip. So HW would have same MAC address as linux kernel
-> > uses.
-> >
-> > Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
-> 
-> Why? What issue does this fix?
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-Send permanent MAC address to wl1251 chip, same what is doing wl12xx
-driver.
+4 patches applied to wireless-drivers-next.git, thanks.
+
+2ef0359031b9 brcmfmac: provide a value for struct wowlan_support::max_nd_match_sets
+d29afe91af59 brcmfmac: fix handling firmware results for wowl netdetect
+0b57010fc18e brcmfmac: allow wowlan support to be per device
+2a2a5d1835b6 brcmfmac: add .update_connect_params() callback
 
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+https://patchwork.kernel.org/patch/9541755/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
