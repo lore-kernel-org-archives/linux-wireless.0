@@ -1,58 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:8598 "EHLO mail.neratec.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752670AbdATO3w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 20 Jan 2017 09:29:52 -0500
-From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
-Subject: [RFC 1/2] ath9k: Add tx descriptor flag to corrupt frame fcs
-Date: Fri, 20 Jan 2017 15:29:29 +0100
-Message-Id: <1484922570-23659-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20170120_153007_320787_123701FB)
-In-Reply-To: <1484922570-23659-1-git-send-email-Wojciech.Dubowik@neratec.com>
-References: <1484922570-23659-1-git-send-email-Wojciech.Dubowik@neratec.com>
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:32908 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751580AbdAaTW1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jan 2017 14:22:27 -0500
+In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+From: Russell King <rmk+kernel@armlinux.org.uk>
+To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Woojung Huh <woojung.huh@microchip.com>,
+        Microchip Linux Driver Support <UNGLinuxDriver@microchip.com>
+Subject: [PATCH 4.10-rc3 04/13] net: lan78xx: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1cYdwx-0000WG-L9@rmk-PC.armlinux.org.uk> (sfid-20170131_202439_825101_0556476B)
+Date: Tue, 31 Jan 2017 19:18:43 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When this flag is present the transmitted frame fcs field
-bits are inverted in hardware so the frame is being treated
-as corrupted on the recevieng node.
-It's used by frame corruption simulator coming on the following
-patch.
+drivers/net/usb/lan78xx.c:394:33: sparse: expected ; at end of declaration
+drivers/net/usb/lan78xx.c:394:33: sparse: Expected } at end of struct-union-enum-specifier
+drivers/net/usb/lan78xx.c:394:33: sparse: got interface
+drivers/net/usb/lan78xx.c:403:1: sparse: Expected ; at the end of type declaration
+drivers/net/usb/lan78xx.c:403:1: sparse: got }
 
-Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Add linux/phy.h to lan78xx.c
+
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c | 3 ++-
- drivers/net/wireless/ath/ath9k/mac.h        | 2 ++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/usb/lan78xx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index da84b70..0b7fbfd 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -114,7 +114,8 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 		| SM(i->type, AR_FrameType)
- 		| (i->flags & ATH9K_TXDESC_NOACK ? AR_NoAck : 0)
- 		| (i->flags & ATH9K_TXDESC_EXT_ONLY ? AR_ExtOnly : 0)
--		| (i->flags & ATH9K_TXDESC_EXT_AND_CTL ? AR_ExtAndCtl : 0);
-+		| (i->flags & ATH9K_TXDESC_EXT_AND_CTL ? AR_ExtAndCtl : 0)
-+		| (i->flags & ATH9K_TXDESC_CORRUPT_FCS ? AR_CorruptFCS : 0);
+diff --git a/drivers/net/usb/lan78xx.c b/drivers/net/usb/lan78xx.c
+index 08f8703e4d54..9889a70ff4f6 100644
+--- a/drivers/net/usb/lan78xx.c
++++ b/drivers/net/usb/lan78xx.c
+@@ -35,6 +35,7 @@
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/microchipphy.h>
++#include <linux/phy.h>
+ #include "lan78xx.h"
  
- 	ctl17 |= (i->flags & ATH9K_TXDESC_LDPC ? AR_LDPC : 0);
- 	switch (i->aggr) {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 3bab014..1c30dfd 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -265,6 +265,8 @@ struct ath_desc {
- #define ATH9K_TXDESC_PAPRD		0x70000
- #define ATH9K_TXDESC_PAPRD_S		16
- 
-+#define ATH9K_TXDESC_CORRUPT_FCS	0x80000
-+
- #define ATH9K_RXDESC_INTREQ		0x0020
- 
- struct ar5416_desc {
+ #define DRIVER_AUTHOR	"WOOJUNG HUH <woojung.huh@microchip.com>"
 -- 
 2.7.4
