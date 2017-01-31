@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48498 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56034 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751240AbdA2O50 (ORCPT
+        with ESMTP id S1751580AbdAaTdz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 29 Jan 2017 09:57:26 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2017-01-29
-Date: Sun, 29 Jan 2017 16:49:02 +0200
-Message-ID: <87a8a9udk1.fsf@kamboji.qca.qualcomm.com> (sfid-20170129_155729_907533_376DA8A7)
+        Tue, 31 Jan 2017 14:33:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 31 Jan 2017 11:33:49 -0800
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Thomas Pedersen <thomas@eero.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] mac80211: clear failure average upon mesh path
+ deactivation
+In-Reply-To: <CADjYELxr+OuJxpFUm+OocCaMRmTM1=GZEw1keYOAOCN2T3o4sg@mail.gmail.com>
+References: <1485561708-31559-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1485561708-31559-3-git-send-email-rmanohar@qca.qualcomm.com>
+ <CADjYELxr+OuJxpFUm+OocCaMRmTM1=GZEw1keYOAOCN2T3o4sg@mail.gmail.com>
+Message-ID: <88d1163c1c0ffea8a395f4929b29a7b3@codeaurora.org> (sfid-20170131_203359_591969_FC7F99F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 2017-01-31 09:51, Thomas Pedersen wrote:
+> Hi Rajkumar,
+> 
+> Thanks this looks good, but..
+> 
+> On Fri, Jan 27, 2017 at 4:01 PM, Rajkumar Manoharan
+> <rmanohar@qca.qualcomm.com> wrote:
+>> Mesh moving average should be cleared, whenever mesh paths
+>> to the given station are deactivated due to bad link. This will
+>> give enough room to analysis more tx status than retaining the
+>> current average.
+>> 
+[...]
+>>         ret = rhashtable_walk_init(&tbl->rhead, &iter, GFP_ATOMIC);
+>>         if (ret)
+>> @@ -535,8 +536,11 @@ void mesh_plink_broken(struct sta_info *sta)
+>>                                 sdata->u.mesh.mshcfg.element_ttl,
+>>                                 mpath->dst, mpath->sn,
+>>                                 
+>> WLAN_REASON_MESH_PATH_DEST_UNREACHABLE, bcast);
+>> +                       paths_deactivated = true;
+>>                 }
+>>         }
+>> +       if (paths_deactivated)
+>> +               sta->mesh->fail_avg = 0;
+> 
+> .. why this indirection? Just reset mesh->fail_avg unconditionally in
+> this function?
+> 
+Hmm... As fixed paths are not affected, resetting fail_avg for fixed 
+path may give
+wrong metric. no?
 
-small but important fixes for 4.10. Hopefully is the last pull request
-for 4.10.
-
-Please let me know if there are any problems.
-
-Kalle
-
-The following changes since commit 60f59ce0278557f7896d5158ae6d12a4855a72cc:
-
-  rtlwifi: rtl_usb: Fix missing entry in USB driver's private data (2016-12=
--30 15:38:13 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git =
-tags/wireless-drivers-for-davem-2017-01-29
-
-for you to fetch changes up to 2b1d530cb3157f828fcaadd259613f59db3c6d1c:
-
-  MAINTAINERS: ath9k-devel is closed (2017-01-28 09:15:50 +0200)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.10
-
-Most important here are fixes to two iwlwifi crashes, but there's also
-a firmware naming fix for iwlwifi and a revert of an older bcma patch.
-
-----------------------------------------------------------------
-Jens Axboe (1):
-      iwlwifi: fix kernel crash when unregistering thermal zone
-
-Johannes Berg (1):
-      iwlwifi: mvm: avoid crash on restart w/o reserved queues
-
-J=C3=BCrg Billeter (1):
-      iwlwifi: fix double hyphen in MODULE_FIRMWARE for 8000
-
-Kalle Valo (2):
-      Merge tag 'iwlwifi-for-kalle-2017-01-23' of git://git.kernel.org/.../=
-iwlwifi/iwlwifi-fixes
-      MAINTAINERS: ath9k-devel is closed
-
-Rafa=C5=82 Mi=C5=82ecki (1):
-      Revert "bcma: init serial console directly from ChipCommon code"
-
- MAINTAINERS                                   |  1 -
- drivers/bcma/bcma_private.h                   |  3 +++
- drivers/bcma/driver_chipcommon.c              | 11 +++--------
- drivers/bcma/driver_mips.c                    |  3 +++
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  |  7 ++++---
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c   | 12 ++++++++----
- 7 files changed, 22 insertions(+), 17 deletions(-)
+-Rajkumar
