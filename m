@@ -1,28 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60836 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932496AbdA0MpB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 27 Jan 2017 07:45:01 -0500
-Message-ID: <1485521038.5851.10.camel@sipsolutions.net> (sfid-20170127_134618_233331_5D20D178)
-Subject: Re: [PATCH V2 2/5] brcmfmac: provide a value for struct
- wowlan_support::max_nd_match_sets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jan 2017 13:43:58 +0100
-In-Reply-To: <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20170127_133124_245986_F8210CA0)
-References: <1485520068-5807-1-git-send-email-arend.vanspriel@broadcom.com>
-         <1485520068-5807-3-git-send-email-arend.vanspriel@broadcom.com>
-         (sfid-20170127_133124_245986_F8210CA0)
+Received: from paleale.coelho.fi ([176.9.41.70]:37352 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750822AbdAaHg5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 31 Jan 2017 02:36:57 -0500
+Message-ID: <1485848188.26003.54.camel@coelho.fi> (sfid-20170131_083701_406183_39572132)
+From: Luca Coelho <luca@coelho.fi>
+To: Mel Stimmel <crosscreekconsulting@earthlink.net>,
+        linux-wireless@vger.kernel.org, sgruszka@redhat.com
+Date: Tue, 31 Jan 2017 09:36:28 +0200
+In-Reply-To: <b4724c04-1377-fda3-a65e-8c84fe60838a@earthlink.net>
+References: <b4724c04-1377-fda3-a65e-8c84fe60838a@earthlink.net>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
+Subject: Re: Intel Pro 4965 wireless
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-And to make it show up in patchwork at the right place:
+Hi,
 
-Kalle, you can ignore patch 1, I'm handling it, but you need to apply
-these before I can, the patch series order was wrong.
 
-johannes
+On Mon, 2017-01-30 at 21:04 -0500, Mel Stimmel wrote:
+>      I have a problem that recently arose with my Thinkpad model T61 
+> running Ubuntu 16.04 with the Intel Pro 4965 installed.
+>      This system was working just fine until sometime in Dec., when 
+> after one of the routine updates, the software can't see/find/recognize 
+> the wireless adapter. It's not the adapter, as if I boot the system from 
+> an older CD (show and tell mode) the wifi works just fine.
+>      When I do the command LSHW, it shows the driver as iwl4965, and the 
+> version as 3.13.0-93-generic.
+>      I've been in the computer business since 1958 but are a newby to 
+> Linux so don't any/many of the commands and/or it's inner workings.
+>      Any help that y'all could provide would be greatly appreciated.
+
+Adding Stanislaw, who is the maintainer of iwlegacy (which is the driver
+that supports iwl4965).
+
+
+--
+Cheers,
+Luca.
