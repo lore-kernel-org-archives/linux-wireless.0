@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49312 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751432AbdAaS5W (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:32908 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751784AbdAaTWa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 31 Jan 2017 13:57:22 -0500
-Subject: Re: [PATCH v2] ath10k: add support for controlling tx power to a
- station
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-        ath10k@lists.infradead.org
-References: <1485888165-23504-1-git-send-email-arnagara@qti.qualcomm.com>
-Cc: arnagara@codeaurora.org, linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <cbb69298-391d-b3d5-5a84-5792fe170f95@candelatech.com> (sfid-20170131_195726_074670_AD98F9D4)
-Date: Tue, 31 Jan 2017 10:57:20 -0800
+        Tue, 31 Jan 2017 14:22:30 -0500
+In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+From: Russell King <rmk+kernel@armlinux.org.uk>
+To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 4.10-rc3 07/13] net: mvneta: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
 MIME-Version: 1.0
-In-Reply-To: <1485888165-23504-1-git-send-email-arnagara@qti.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1cYdxD-0000Wd-1D@rmk-PC.armlinux.org.uk> (sfid-20170131_202451_572810_47EE78F1)
+Date: Tue, 31 Jan 2017 19:18:59 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2017 10:42 AM, Ashok Raj Nagarajan wrote:
-> This patch will add the support to control the transmit power for traffic
-> to a station associated with the AP. Userspace provide the transmit power
-> value in mBm units and the allowed range is from 0 to 70. Underlying FW
+drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
+drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
+drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
+drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
 
-How did you come up with 70 mBm as the limit.  This is only 7dBm?
+Add linux/phy_fixed.h to mvneta.c
 
-I would expect it to match the range of normal tx-power which is likely up to
-30 dBm or so on some NICs (not counting regulatory limit).
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ drivers/net/ethernet/marvell/mvneta.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ben
-
+diff --git a/drivers/net/ethernet/marvell/mvneta.c b/drivers/net/ethernet/marvell/mvneta.c
+index e05e22705cf7..eb0eb3e62ca0 100644
+--- a/drivers/net/ethernet/marvell/mvneta.c
++++ b/drivers/net/ethernet/marvell/mvneta.c
+@@ -28,6 +28,7 @@
+ #include <linux/of_mdio.h>
+ #include <linux/of_net.h>
+ #include <linux/phy.h>
++#include <linux/phy_fixed.h>
+ #include <linux/platform_device.h>
+ #include <linux/skbuff.h>
+ #include <net/hwbm.h>
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
