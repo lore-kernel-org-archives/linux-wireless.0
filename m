@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.parknet.co.jp ([210.171.160.6]:45941 "EHLO
-        mail.parknet.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756379AbdACFrW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34719 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750879AbdAaIke (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 3 Jan 2017 00:47:22 -0500
-From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        linux-wireless@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH resend 1/4] nfc: Add support RC-S380P to port100
-Date: Tue, 03 Jan 2017 14:47:18 +0900
-Message-ID: <87ful0lmop.fsf@mail.parknet.co.jp> (sfid-20170103_064750_583099_E8F56568)
+        Tue, 31 Jan 2017 03:40:34 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Jean-Pierre Tosoni <jp.tosoni@acksys.fr>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel
+ in non-ETSI
+Date: Tue, 31 Jan 2017 08:40:06 +0000
+Message-ID: <58904CB0.10405@qti.qualcomm.com> (sfid-20170131_094105_167976_EC0D3A07)
+References: <1485343870-23601-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <1485343870-23601-3-git-send-email-vthiagar@qti.qualcomm.com>
+ <014301d27737$b693eca0$23bbc5e0$@acksys.fr>
+In-Reply-To: <014301d27737$b693eca0$23bbc5e0$@acksys.fr>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 25 January 2017 11:50 PM, Jean-Pierre Tosoni wrote:
+>> -----Message d'origine-----
+>> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] De la part de Vasanthakumar Thiagarajan
+>> Envoy=E9 : mercredi 25 janvier 2017 12:31
+>> =C0 : johannes@sipsolutions.net
+>> Cc : linux-wireless@vger.kernel.org; Vasanthakumar Thiagarajan
+>> Objet : [RFC 2/3] cfg80211: Disallow moving out of operating DFS channel
+>> in non-ETSI
+>>
+>> For non-ETSI regulatory domain, CAC result on DFS channel may not be val=
+id
+>> once moving out of that channel (as done during remain-on-channel,
+>> scannning and off-channel tx).
+>> Running CAC on an operating DFS channel after every off-channel operatio=
+n
+>> will only add complexity and disturb the current link. Better do not all=
+ow
+>> any off-channel switch from a DFS operating channel in non-ETSI domain.
+>>
+>
+> Moving out should be forbidden only to "master" devices i.e. AP, mesh,
+> ad-hoc.
+> "Slave" devices i.e. client stations, are not responsible for detecting
+> radars, hence, they can do an off-channel scan and go back to a "DFS
+> operating channel" without waiting for CAC.
+>
+> It looks like your patch would forbid multichannel scan ?
+>
+>
 
-Signed-off-by: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
----
+No, this patch forbids off-channel switch only for DFS master device.
+cfg80211_beaconing_iface_active() checks if it is a beaconing interface.
+I'll mention this in the commit log.
 
- drivers/nfc/port100.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff -puN drivers/nfc/port100.c~nfc-add-rcs380p drivers/nfc/port100.c
---- linux/drivers/nfc/port100.c~nfc-add-rcs380p	2016-12-18 22:16:53.503673411 +0900
-+++ linux-hirofumi/drivers/nfc/port100.c	2016-12-18 22:16:53.504673416 +0900
-@@ -21,8 +21,9 @@
- 
- #define VERSION "0.1"
- 
--#define SONY_VENDOR_ID    0x054c
--#define RCS380_PRODUCT_ID 0x06c1
-+#define SONY_VENDOR_ID		0x054c
-+#define RCS380S_PRODUCT_ID	0x06c1
-+#define RCS380P_PRODUCT_ID	0x06c3
- 
- #define PORT100_PROTOCOLS (NFC_PROTO_JEWEL_MASK    | \
- 			   NFC_PROTO_MIFARE_MASK   | \
-@@ -1477,7 +1478,8 @@ static struct nfc_digital_ops port100_di
- };
- 
- static const struct usb_device_id port100_table[] = {
--	{ USB_DEVICE(SONY_VENDOR_ID, RCS380_PRODUCT_ID), },
-+	{ USB_DEVICE(SONY_VENDOR_ID, RCS380S_PRODUCT_ID), },
-+	{ USB_DEVICE(SONY_VENDOR_ID, RCS380P_PRODUCT_ID), },
- 	{ }
- };
- MODULE_DEVICE_TABLE(usb, port100_table);
-_
-
--- 
-OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Vasanth
