@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56202 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:33254 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdASJAe (ORCPT
+        with ESMTP id S1750764AbdAaHJ7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 19 Jan 2017 04:00:34 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Gavin Li <gavinli@thegavinli.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Stable <stable@vger.kernel.org>, Gavin Li <git@thegavinli.com>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: Re: [PATCH v3] brcmfmac: fix incorrect event channel deduction
-References: <20170117232405.7672-1-gavinli@thegavinli.com>
-        <bab86bb5-7815-e5ea-053d-ed6b18af6677@broadcom.com>
-        <CA+GxvY43AbKOVJFWAxHg1Gku=LD-dveHY8m6=zPPu9qR4+r=Fg@mail.gmail.com>
-Date: Thu, 19 Jan 2017 10:48:36 +0200
-In-Reply-To: <CA+GxvY43AbKOVJFWAxHg1Gku=LD-dveHY8m6=zPPu9qR4+r=Fg@mail.gmail.com>
-        (Gavin Li's message of "Wed, 18 Jan 2017 10:39:07 -0800")
-Message-ID: <87inpbh1uj.fsf@purkki.adurom.net> (sfid-20170119_100036_792396_0EC3C2E3)
+        Tue, 31 Jan 2017 02:09:59 -0500
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: rt2x00: fix clk_get call
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20170129114052.GB7489@redhat.com>
+References: <20170129114052.GB7489@redhat.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+        Helmut Schaa <helmut.schaa@googlemail.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Felix Fietkau <nbd@nbd.name>
+Message-Id: <20170131070948.CC9D06071B@smtp.codeaurora.org> (sfid-20170131_081002_287563_027A8634)
+Date: Tue, 31 Jan 2017 07:09:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gavin Li <gavinli@thegavinli.com> writes:
+Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> clk_get() takes two arguments and might return ERR_PTR(), so we
+> have to nullify pointer on that case, to do not break further call
+> to clk_get_rate().
+> 
+> Reported-by: Felix Fietkau <nbd@nbd.name>
+> Fixes: 34db70b92fae ("rt2x00: add copy of clk for soc devices")
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-> I think calling this a performance regression is a bit understated; my
-> download speed jumped from 1Mbit/s back up to 40MBit/s after applying
-> the patch due to the sheer amount of packets being incorrectly
-> processed.
->
-> In addition, processing arbitrary data frames as firmware events might
-> be a security vulnerability.
+Patch applied to wireless-drivers-next.git, thanks.
 
-You should always mention valuable information like this in the commit
-log, don't make us maintainers (and others) guessing the symptoms and
-impact.
+33e962c8871f rt2x00: fix clk_get call
 
 -- 
-Kalle Valo
+https://patchwork.kernel.org/patch/9543961/
+
+Documentation about submitting wireless patches and checking status
+from patchwork:
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
