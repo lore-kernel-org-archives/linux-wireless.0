@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35078 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751389AbdANQsc (ORCPT
+Received: from pandora.armlinux.org.uk ([78.32.30.218]:32930 "EHLO
+        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751848AbdAaTWb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 14 Jan 2017 11:48:32 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Daniel Golle <daniel@makrotopia.org>,
-        linux-wireless@vger.kernel.org, lede-dev@lists.infradead.org,
-        openwrt-devel@lists.openwrt.org, john@phrozen.org, nbd@nbd.name,
-        roman@advem.lv, evaxige@qq.com, c.mignanti@gmail.com,
-        michel.stempin@wanadoo.fr, vasilugin@yandex.ru,
-        Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: Re: [RFC] [PULL REQUEST] rt2x00 patches from OpenWrt.org
-References: <20170113035020.GA9063@makrotopia.org>
-        <20170113141554.GA8018@redhat.com>
-Date: Sat, 14 Jan 2017 18:48:25 +0200
-In-Reply-To: <20170113141554.GA8018@redhat.com> (Stanislaw Gruszka's message
-        of "Fri, 13 Jan 2017 15:15:55 +0100")
-Message-ID: <87eg05io4m.fsf@purkki.adurom.net> (sfid-20170114_174855_217121_B1AC57A2)
+        Tue, 31 Jan 2017 14:22:31 -0500
+In-Reply-To: <20170131191704.GA8281@n2100.armlinux.org.uk>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+From: Russell King <rmk+kernel@armlinux.org.uk>
+To: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        target-devel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 4.10-rc3 09/13] iscsi: fix build errors when linux/phy*.h is
+ removed from net/dsa.h
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Message-Id: <E1cYdxN-0000Wr-AS@rmk-PC.armlinux.org.uk> (sfid-20170131_202439_535689_70DFC273)
+Date: Tue, 31 Jan 2017 19:19:09 +0000
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+drivers/target/iscsi/iscsi_target_login.c:1135:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
 
-> Hi
->
-> On Fri, Jan 13, 2017 at 04:50:32AM +0100, Daniel Golle wrote:
->> Please review and comment, so we can get those patches merged!
->
-> As already pointed by Kalle posting patches to mailing list is better
-> way for review. Posing patches is easy with git-format-patch and
-> git-send-email. Ideally patch series should not be long, let say no more
-> than 30 patches - I suggest to split this into two series: second one
-> for RT3853 support and first one for other patches.
+Add linux/module.h to iscsi_target_login.c.
 
-Even 30 patches in a set is quite a lot. I think the pain point is
-somewhere about 10-12 patches, anything longer than that and most people
-lost interest looking at the patches in detail.
+Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+---
+ drivers/target/iscsi/iscsi_target_login.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 450f51deb2a2..eab274d17b5c 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -17,6 +17,7 @@
+  ******************************************************************************/
+ 
+ #include <crypto/hash.h>
++#include <linux/module.h>
+ #include <linux/string.h>
+ #include <linux/kthread.h>
+ #include <linux/idr.h>
 -- 
-Kalle Valo
+2.7.4
